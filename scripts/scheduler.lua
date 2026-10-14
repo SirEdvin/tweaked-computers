@@ -29,7 +29,11 @@ function M.try_maintenance(fn)
 end
 local function phase(name,tick,spend)
   local names={}; for key in pairs(hooks[name]) do names[#names+1]=key end; table.sort(names)
-  for _,key in ipairs(names) do M.try_maintenance(function() spend(1); hooks[name][key](tick,spend) end) end
+  for _,key in ipairs(names) do
+    -- Samplers own admission and must run their fail-closed refusal path even
+    -- when previous phases spent the maintenance ledger. No silent missed tick.
+    M.try_maintenance(function() if name~='sample' then spend(1) end; hooks[name][key](tick,spend) end)
+  end
 end
 function M.advance_timers(rec,tick,spend)
   if rec.status~='running' or not rec.powered then return end

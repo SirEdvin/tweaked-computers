@@ -71,6 +71,22 @@ Store name/wire in state, not ephemeral facades. Calls recheck live authority.
 Use Refresh Peripherals below for current names/types/power per color.
 Incomplete discovery reports pending/limit, never a successful empty prefix.
 
+LOGIC HANDLER
+find("logic_handler", wire) -> facade; NETWORK discovery is not INPUT selection.
+readSignal(input, SignalId) -> signed32; readSignals(input) -> sorted copied signals
+input is red/green/both; identities include type/name/quality (normal by default).
+getInputStatus() -> red_connected/green_connected; getOutput() -> own contribution
+setOutput(signals), clearOutput() -> no values; one bank mirrored to both OUTPUT wires.
+subscribe({input=..., signals={SignalId,...}?, initial=boolean?}, handler_name) -> ID
+unsubscribe(ID) -> boolean; removes queued samples from that binding.
+getLimits() includes 64 slots/filter signals and one-tick sampling.
+signal_changed includes sample_tick, previous/current, changes with disappeared
+current=0, selected connectivity, initial/resync and discovery wire.
+Admission advances the baseline. Outages discard queued transients and resync current
+input. Stop/fault/cable loss clears only the still-owned run/channel bank.
+Controller: INPUT red from stock chest, OUTPUT to inserter with signal A > 0;
+red NETWORK chain to computer; paste examples/logic-controller.lua, Save, then Run.
+
 FAILURES AND PERSISTENCE
 Ordinary errors are plain {code,message,field?,peripheral?,device?} and catchable.
 Earlier successful effects remain after a later fault; no callback transaction.

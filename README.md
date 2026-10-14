@@ -3,9 +3,10 @@
 Development mod for exactly Factorio 2.0.77, with base alone or optional Space Age.
 This checkpoint includes the native compiler/sandbox, durable computer API,
 registry, shared scheduler, powered independently wired device family and
-same-colour peripheral discovery/facades. Editor and device-specific service
-bodies are delivered by subsequent cards; this is not yet the
-integrated playable release. Computer/KV mining is temporarily guarded until the
+same-colour peripheral discovery/facades, native single-document editor and the
+complete logic-handler controller. KV/monitor/configurator service bodies and
+full data-bearing lifecycle remain subsequent milestones; this is not yet the
+integrated public alpha candidate. Computer/KV mining is temporarily guarded until the
 assigned data-bearing lifecycle milestone, preventing destructive plain drops.
 No interpreter, bytecode compiler, continuation backend, OS, filesystem or dynamic
 guest loader is shipped.
@@ -18,6 +19,11 @@ See docs/peripheral-network.md for the complete discovery API, explicit wire
 colours, current-path authority, events and fixed per-type service binding.
 examples/peripheral-program.lua ships an executed native inspection program;
 localized discovery help keys are ready for the editor/help UI.
+See docs/logic-handler.md and docs/program-editor.md for the saved-source controller
+workflow, every logic method, quality/int32 rules, sampled events and writer cleanup.
+examples/logic-controller.lua supplies the exact editable source used by the
+packaged tests.logic_engine cold scenario (add --fixture tests.logic_engine --cold).
+The fixture's player/editor delivery is table-backed, not client typing/focus proof.
 
 See docs/physical-devices.md for footprints, role wiring, initial recipes/power,
 physical host integration and the interim mining guard. docs/computer-runtime.md
