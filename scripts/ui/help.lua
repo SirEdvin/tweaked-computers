@@ -87,6 +87,54 @@ input. Stop/fault/cable loss clears only the still-owned run/channel bank.
 Controller: INPUT red from stock chest, OUTPUT to inserter with signal A > 0;
 red NETWORK chain to computer; paste examples/logic-controller.lua, Save, then Run.
 
+KV DATABASE
+get(key) -> string/nil; set(key,string) -> "OK"; del(key,...) -> count
+exists(key,...) -> count; type(key) -> none/string/hash
+hget(key,field) -> string/nil; hset(key,field,value,...) -> newly added fields
+hdel(key,field,...) -> removed fields; hexists(key,field) -> 0/1
+hgetall(key) -> copied map; hlen(key) -> integer
+expire(key,integer_seconds) -> 0/1; ttl(key) -> -2 absent/-1 persistent/seconds
+persist(key) -> 0/1; getLimits(). Values/fields/keys are byte strings.
+SET replaces any type and clears TTL. Hash edits preserve TTL; final field deletion
+removes the key. Expiry uses absolute simulation ticks, including while mined.
+Each physical database is independent; authorized computers share committed data.
+
+MONITOR
+write(text), blit(text,fg_digits,bg_digits), clear(), clearLine(), scroll(integer)
+getSize() -> width,height; getCursorPos() -> x,y; setCursorPos(x,y)
+getCursorBlink() -> boolean; setCursorBlink(boolean)
+get/setTextColor, get/setBackgroundColor; Color/Colour aliases are identical.
+isColor()/isColour() -> true; getPaletteColor(color) -> r,g,b
+setPaletteColor(color,rgb) or (color,r,g,b); PaletteColour aliases are identical.
+getTextScale(); setTextScale(0.5..5 in half steps); getLimits()
+One byte per cell; clip without wrapping; blit uses equal-length lowercase 0..f.
+Adjacent same-force/orientation powered tiles share a rectangular screen.
+Resize clears changed dimensions. Stop leaves the image; outage hides, not erases.
+Ctrl+left-click (rebindable), empty cursor/no GUI: monitor_touch carries logical
+peripheral, x/y, player_index, sample_tick, wire and deduplicated sorted wires.
+monitor_resize includes old_width/height, width/height and tiles/scale reason.
+
+CONFIGURATOR
+getDevices(target_wire) -> complete device array; getDevice(ID,target_wire) -> data/nil
+getCapabilities(ID,target_wire) -> typed settings/observations/sections
+getConfiguration(ID,target_wire) -> values/unset/observations
+setConfiguration(ID,{set={...},clear={...}},target_wire) -> exact native readback
+getSections(ID,target_wire); addSection(ID,definition,target_wire) -> native index
+setSection(ID,index,patch,target_wire); removeSection(ID,index,target_wire) -> boolean
+getLimits(). NETWORK color and TARGETS color are separate arguments and graphs.
+Full pinned applicable circuit controls are supported; no arbitrary host properties.
+Unknown/read-only/invalid patches refuse before mutation. Native failures have
+explicit local recovery, never promised global rollback. Shared filter edits refuse;
+explicit local group="" detachment preserves effective filters. Re-enumerate indexes.
+
+COMBINED EXAMPLE
+Paste docs/factory-example.md's examples/factory-controller.lua document, Save/Run.
+It configures TARGETS green inserters, samples INPUT red, stores expiring shared KV
+telemetry and redraws/toggles a merged monitor. examples/shared-telemetry.lua runs
+on a second computer: shared red database, separate physical green database.
+Complete signature/type/error/event references are in docs/ and packaged source API
+contracts under openspec/changes/add-native-circuit-computers/api and specs.
+
 FAILURES AND PERSISTENCE
 Ordinary errors are plain {code,message,field?,peripheral?,device?} and catchable.
 Earlier successful effects remain after a later fault; no callback transaction.

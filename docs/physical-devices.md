@@ -1,7 +1,7 @@
 # Physical devices and initial progression (TC04)
 
 Target: exactly Factorio 2.0.77, base alone or optional Space Age. This is a
-physical/runtime development checkpoint, not the integrated release. No VM,
+integrated alpha candidate; graphical/client verification is deferred. No VM,
 interpreter, OS or gameplay filesystem is introduced.
 
 ## Placement and wiring
@@ -14,11 +14,14 @@ south reverses it and west rotates it counterclockwise. All five bodies support
 cardinal orientation. Body collision is inset 0.1 tile from its full selection
 footprint. Small port selection boxes have greater priority than the body.
 
-The coloured development icons are expressly temporary; role names/descriptions
-on the native selectable endpoints distinguish ports independently of wire
-colour. The final cleared Greg Flavored artwork is a separate integration input.
-This checkpoint references native base-game icons; it ships no copied icon bytes.
-Client alignment, clickability and native interaction remain user-deferred.
+The cleared Greg Flavored MIT directional bodies/shadows and item icons are
+integrated in actual prototypes. Cyan diamonds identify NETWORK, amber I marks
+INPUT, lime squares OUTPUT, and violet T marks TARGETS, independently of cable
+color. Native selectable endpoints retain role names/descriptions and priority.
+Bounded status overlays show stopped/unpowered, powered, fault and running blink
+states without replacing entities or their wires. Provenance/notices and exact
+source/output hashes are in assets/manifest.json. Client alignment, clickability
+and native interaction remain user-deferred.
 
 Each role has its own native red and green connectors. There are no internal
 wires or shared native networks between roles. NETWORK, INPUT and TARGETS ports

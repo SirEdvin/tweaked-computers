@@ -1,14 +1,22 @@
-# Tweaked Computers — native runtime and physical devices
+# Tweaked Computers — alpha candidate
 
-Development mod for exactly Factorio 2.0.77, with base alone or optional Space Age.
-This checkpoint includes the native compiler/sandbox, durable computer API,
-registry, shared scheduler, powered independently wired device family and
-same-colour peripheral discovery/facades, native single-document editor and the
-complete logic-handler controller, persistent string/hash KV databases, merging
-in-world color monitors, full typed configurator and integrated data-bearing
-lifecycle. See docs/device-lifecycle.md for mining/replacement, blueprint source
-disclosure, stopped clones, source recovery and force/surface cleanup. This is
-an internal alpha implementation checkpoint, not the published alpha candidate.
+Alpha mod for exactly Factorio 2.0.77, with base alone or optional Space Age.
+This integrated candidate implements all eight capabilities: native guarded
+callbacks, single-document editor, same-color discovery, merging world monitors,
+string/hash KV, logic I/O, full typed configurator and durable device lifecycle.
+Directional/status/item artwork is integrated with selected Greg Flavored MIT
+notices and independent glyph provenance. It is a user-test build, not stable or
+client-verified. Back up saves. Public guides/OpenWiki/publication are separate
+campaign stages; this checkpoint does not publish or merge the feature PR.
+
+Start with [installation and manual checks](docs/alpha-candidate.md) and the
+[editable factory controller](docs/factory-example.md). The combined example uses
+real inserter configuration/stock circuits, expiring shared KV telemetry and a
+merged touchable display. A second computer and independent database demonstrate
+shared versus physical-local contents. Complete API help and source contracts
+ship in the archive; package-manifest.json hashes every payload and records
+unchanged provisional common limits. See docs/device-lifecycle.md for
+mining/replacement, blueprint source disclosure, stopped clones and recovery.
 
 No interpreter, bytecode compiler, continuation backend, OS, filesystem or dynamic
 guest loader is shipped.

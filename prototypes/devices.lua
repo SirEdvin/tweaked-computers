@@ -1,20 +1,28 @@
 local defs=require('scripts.device-definitions')
 local empty={filename='__core__/graphics/empty.png',width=1,height=1}
--- Clearly labelled development icon sprites, not the final Greg Flavored artwork.
+local art=require('assets.sprites')
 for _,kind in ipairs(defs.order) do
   local def=defs.devices[kind]
-  local icon='__base__/graphics/icons/'..def.icon..'.png'
+  local icon=art.devices[kind].icon
   local pictures={}
-  for i,direction in ipairs({'north','east','south','west'}) do
-    local layers={}
-    for index,role in ipairs(def.roles) do
-      local x,y=defs.offset(kind,index,(i-1)*4)
-      layers[#layers+1]={filename=icon,width=64,height=64,scale=0.45,shift={x,y},tint=defs.colors[role]}
+  for _,direction in ipairs({'north','east','south','west'}) do
+    local image=art.devices[kind][direction]
+    pictures[direction]={layers={table.deepcopy(image.shadow),table.deepcopy(image.body)}}
+    -- Status sprites are separate so stopped, powered, faulted and running
+    -- devices update without replacing the native body or its wire endpoints.
+    for _,state in ipairs({'off','unpowered','powered','fault','blinking'}) do
+      local source=image.states[state]
+      for frame=0,(source.frame_count or 1)-1 do
+        local sprite=table.deepcopy(source)
+        sprite.type='sprite'; sprite.name='tc-status-'..kind..'-'..direction..'-'..state..'-'..frame
+        sprite.x=frame*sprite.width
+        sprite.frame_count=nil; sprite.line_length=nil; sprite.animation_speed=nil
+        data:extend{sprite}
+      end
     end
-    pictures[direction]={layers=layers}
   end
   data:extend{{type='electric-energy-interface',name=def.name,icon=icon,icon_size=64,
-    localised_name={'entity-name.'..def.name},localised_description={'entity-description.tc-development'},
+    localised_name={'entity-name.'..def.name},localised_description={'entity-description.tc-device'},
     flags={'placeable-neutral','player-creation'},minable={mining_time=0.3,result=def.name},
     max_health=200,corpse='small-remnants',gui_mode='none',allow_copy_paste=true,
     tile_width=def.width,tile_height=1,selection_priority=40,

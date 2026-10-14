@@ -60,6 +60,15 @@ return {
       end
       assert(configured > 0, "Connect a configurable inserter to the target port")
 
+      -- Configuration/capability readback and subscriptions share one callback
+      -- ceiling. Admit the next setup phase on a later real simulation tick.
+      computer.after(1, "ready")
+    end,
+
+    ready = function(event)
+      local io = peripheral.find("logic_handler", "red")
+      local monitor = peripheral.find("monitor", "red")
+      assert(io and monitor, "Required peripheral disconnected during setup")
       monitor.setTextScale(1)
       io.subscribe({
         input = "red",

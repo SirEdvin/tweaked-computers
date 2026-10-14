@@ -122,10 +122,10 @@ def main():
                 ap.error('--upgrade-fixture requires --cold')
             control += 'script.on_configuration_changed(test.on_configuration_changed)\n'
         if args.production_context:
-            if args.fixture != 'tests.lifecycle_engine' or not args.cold:
-                ap.error('--production-context requires tests.lifecycle_engine and --cold')
+            if args.fixture not in ('tests.lifecycle_engine', 'tests.integration_engine') or not args.cold:
+                ap.error('--production-context requires a fixed supported fixture and --cold')
             control = '-- Native lifecycle fixture runs once in production context.\n'
-            (fixture / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value='tests.lifecycle_engine',allowed_values={'tests.lifecycle_engine'}}}\n")
+            (fixture / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value="+json.dumps(args.fixture)+",allowed_values={"+json.dumps(args.fixture)+"}}}\n")
         (fixture / 'control.lua').write_text(control)
         if args.data_fixture:
             (fixture / 'data.lua').write_text('require('+json.dumps('__'+info['name']+'__.'+args.data_fixture)+')\n')

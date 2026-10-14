@@ -9,6 +9,7 @@ local kv = require('scripts.services.kv')
 local monitor = require('scripts.services.monitor')
 local snapshots = require('scripts.lifecycle-data')
 local blueprints = require('scripts.blueprints')
+local device_art = require('scripts.device-art')
 script.on_event('tc-monitor-activate',monitor.activate)
 editor.register_inspector(require('scripts.ui.network-inspector'))
 script.on_event(defines.events.on_gui_opened,editor.on_opened)
@@ -40,7 +41,7 @@ script.on_event(defines.events.on_tick,function(event) scheduler.tick(event.tick
 -- same lifecycle in a second mod would create duplicate physical helpers.
 if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixture'] then
   local name=settings.startup['tc-smoke-production-fixture'].value
-  assert(name=='tests.lifecycle_engine','unknown production-context fixture')
+  assert(name=='tests.lifecycle_engine' or name=='tests.integration_engine','unknown production-context fixture')
   local test=require(name) -- control parsing only; never a guest source loader
   script.on_init(function()
     registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
