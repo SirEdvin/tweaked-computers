@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Inventory pinned candidate artwork without importing uncleared asset bytes.
+"""Inventory selected pinned artwork, with user-confirmed MIT permission.
 
-This is a provenance audit, not the sprite conversion pipeline. It intentionally
-cannot grant permission based on a repository-level license or a byte non-match.
+The byte comparison is historical evidence, not a separate legal audit.
+The user explicitly approved these selected Greg Flavored assets as MIT.
 """
 import argparse
 import hashlib
@@ -76,7 +76,7 @@ def audit(greg, cc):
             textures, elements = resolve(data["parent"], chain + (identifier,))
         textures = {**textures, **data.get("textures", {})}
         elements = data.get("elements", elements)
-        model_records[path] = {**record(greg, GREG_REV, path), "permission": "unresolved",
+        model_records[path] = {**record(greg, GREG_REV, path), "permission": "MIT-user-confirmed-selected-assets",
                                "parent": data.get("parent"),
                                "cc_exact_matches": cc_by_hash.get(record(greg, GREG_REV, path)["sha256"], [])}
         return textures, elements
@@ -106,15 +106,15 @@ def audit(greg, cc):
             textures.append({"resource": identifier, "path": path, "permission": "missing-input"})
             continue
         entry = {**record(greg, GREG_REV, path), "resource": identifier,
-                 "permission": "unresolved", "origin": "not established per file",
+                 "permission": "MIT-user-confirmed-selected-assets", "origin": "selected Greg Flavored input",
                  "cc_exact_matches": cc_by_hash.get(record(greg, GREG_REV, path)["sha256"], [])}
         if path + ".mcmeta" in paths:
             entry["animation"] = record(greg, GREG_REV, path + ".mcmeta")
         textures.append(entry)
     return {
         "format_version": 1,
-        "status": "blocked-per-file-permission",
-        "purpose": "Candidate audit only; not permission or runtime sprite metadata",
+        "status": "selected-assets-approved",
+        "purpose": "Pinned source inventory; output metadata is in manifest.json",
         "greg_flavored": {"repository": "https://github.com/BirbIrl/ComputerCraft-Greg-Flavored",
                           "revision": GREG_REV,
                           "evidence": [record(greg, GREG_REV, p) for p in ("LICENSE", "README.md")]},
@@ -122,16 +122,16 @@ def audit(greg, cc):
                        "evidence": [record(cc, CC_REV, p) for p in ("LICENSES/LicenseRef-CCPL.txt", "REUSE.toml")]},
         "credited_projects_not_per_file_attribution": ["GregTech Refreshed", "GTCEu: Modern",
                                                        "GregTech Programmer Art", "CC: Tweaked"],
-        "cleared_runtime_assets": [],
-        "distributed_derived_outputs": [],
+        "cleared_runtime_assets": sorted(model_records) + [r["path"] for r in textures],
+        "distributed_derived_outputs": "See assets/manifest.json",
         "candidate_models": [model_records[p] for p in sorted(model_records)],
         "resolved_models": resolved,
         "candidate_textures": textures,
         "external_parent_references": sorted(unresolved_parents),
-        "interpretation": "No exact match does not establish independent authorship or permission. "
-                          "Unused inherited bindings are not selected face texture inputs. "
-                          "All candidate models/textures remain excluded pending per-file origin evidence.",
-        "glyphs": {"status": "not-produced", "required_cell": [6, 9], "required_ascii": [32, 126],
+        "interpretation": "The user explicitly confirmed the specific selected Greg Flavored assets "
+                          "are MIT, not CC:Tweaked assets, and approved their use. No separate legal "
+                          "audit or permission letter was obtained. Unused inherited bindings are not selected inputs.",
+        "glyphs": {"status": "independently-authored-see-manifest", "required_cell": [6, 9], "required_ascii": [32, 126],
                    "required_mosaic": [128, 159], "other_bytes": "outlined replacement box",
                    "excluded_input": "CC and Greg Flavored term_font.png; no font bytes imported"},
     }

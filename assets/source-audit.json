@@ -5,7 +5,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/computer_advanced_off",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_blinking.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "06204341f69e19b2400608839173c8c78582a184e39047a2203f0a3a755dbda9"
     },
     {
@@ -13,7 +13,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/computer_normal_off",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_off.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "ad1d6a0395955319752f21cb0ff4d5b2ffb7cfbe5f856be7a0b83e9b64e805f5"
     },
     {
@@ -21,7 +21,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/computer_advanced_off",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_on.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "01a4170df88f17d40a01fcee9e010c2e8a87de8fad35742942a1f41f3860aedd"
     },
     {
@@ -29,7 +29,7 @@
       "cc_exact_matches": [],
       "parent": "minecraft:block/orientable",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_normal_off.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "686895eccf001fc109d7cc317a6cee852b78862ff63317673ebee7e6783b4f45"
     },
     {
@@ -37,7 +37,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "66883e8497c002ffaa2017bcf95b8e00970495357ad9eafba6b4d6465ca4c22c"
     },
     {
@@ -45,7 +45,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_base.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "b30f7ee26bec7b918431061c6d003222998403cfed66c4ccdabfd0a560913e55"
     },
     {
@@ -53,7 +53,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_d.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "deebf216c880df04532105ebb8726e7ca3ad11c83e02e29da484bab8c4f225d6"
     },
     {
@@ -61,7 +61,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_item.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "78110365643f3a9971227d0160736e4a31ceffb8a30d9a0153c54a5fb4339199"
     },
     {
@@ -69,7 +69,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_l.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "29fec9832177419a6ba688cc22b8288c7a6d153c54a7a2e46c5576877acce9e0"
     },
     {
@@ -77,7 +77,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ld.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "de990bc9492bf869888f9018bdd4431f14b2d10dbfa3428fabb664ea34211066"
     },
     {
@@ -85,7 +85,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lr.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "8a5d147d7106d3b6dfa16f791cbe4ea9607ff34bbff33a4e5b7daa51295375b7"
     },
     {
@@ -93,7 +93,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lrd.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "61611ccd8419d22a5c82dd301585a72c0843f032862d711b3c41c3ec92af3631"
     },
     {
@@ -101,7 +101,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lru.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "aaa148d75666c1eb20d945327803094bcda685a74987f9823382ef81ca03c15d"
     },
     {
@@ -109,7 +109,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lrud.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "25c0b861ad756dfb7d5bf989e9855af21862403b7d6163d57f90953a3edce213"
     },
     {
@@ -117,7 +117,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lu.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "d1037b2a524814e3a2a7b621510331907013da99cce58a85b0075c1adeef1f86"
     },
     {
@@ -125,7 +125,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lud.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "1f11906487c8a42f55051938ef404fd877961bbf1142c03b9052f7e4b44311ae"
     },
     {
@@ -133,7 +133,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_r.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "1cfd229306ad7e4b546959bbd52a3de16e9925ba7d999379118e040fc3898e51"
     },
     {
@@ -141,7 +141,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_rd.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "f8c800239c02664927cacc3cd498f49f3625ed10901f8eb0551eab50159bce59"
     },
     {
@@ -149,7 +149,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ru.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "3652aff21ec3226085ea03d041c4bbbbf951f7b63de36121ea5fef1649c410b9"
     },
     {
@@ -157,7 +157,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_rud.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "92033bdd8a9d258463f03cbd6c96ee4c407b89585126a3352b86d74384c00d21"
     },
     {
@@ -165,7 +165,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_u.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "4df50c1d91f7d6fdf785d7ff75c893828e6c76949385c128c6794e3e905b8637"
     },
     {
@@ -173,7 +173,7 @@
       "cc_exact_matches": [],
       "parent": "computercraft:block/monitor_advanced_base",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ud.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "10ef790f2d3c55f5537f3e647e2084d296553fb1b3305d694fb0b1a80fbcf4dd"
     },
     {
@@ -181,7 +181,7 @@
       "cc_exact_matches": [],
       "parent": "block/cube",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_base.json",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "sha256": "8111a5f6e1525cf3afb58698252e6b2656a2336325214a78713a3522fd558b5e"
     }
   ],
@@ -189,9 +189,9 @@
     {
       "bytes": 88,
       "cc_exact_matches": [],
-      "origin": "not established per file",
+      "origin": "selected Greg Flavored input",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/blank.png",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "png": {
         "alpha_channel": true,
         "bit_depth": 8,
@@ -210,9 +210,9 @@
       },
       "bytes": 322,
       "cc_exact_matches": [],
-      "origin": "not established per file",
+      "origin": "selected Greg Flavored input",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_front_blink.png",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "png": {
         "alpha_channel": true,
         "bit_depth": 8,
@@ -231,9 +231,9 @@
       },
       "bytes": 138,
       "cc_exact_matches": [],
-      "origin": "not established per file",
+      "origin": "selected Greg Flavored input",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_front_static.png",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "png": {
         "alpha_channel": true,
         "bit_depth": 8,
@@ -247,9 +247,9 @@
     {
       "bytes": 354,
       "cc_exact_matches": [],
-      "origin": "not established per file",
+      "origin": "selected Greg Flavored input",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_normal_front.png",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "png": {
         "alpha_channel": true,
         "bit_depth": 8,
@@ -263,9 +263,9 @@
     {
       "bytes": 411,
       "cc_exact_matches": [],
-      "origin": "not established per file",
+      "origin": "selected Greg Flavored input",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/hv_case.png",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "png": {
         "alpha_channel": true,
         "bit_depth": 8,
@@ -279,9 +279,9 @@
     {
       "bytes": 483,
       "cc_exact_matches": [],
-      "origin": "not established per file",
+      "origin": "selected Greg Flavored input",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/hv_case_pattern.png",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "png": {
         "alpha_channel": true,
         "bit_depth": 8,
@@ -295,9 +295,9 @@
     {
       "bytes": 318,
       "cc_exact_matches": [],
-      "origin": "not established per file",
+      "origin": "selected Greg Flavored input",
       "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/monitor_normal_front.png",
-      "permission": "unresolved",
+      "permission": "MIT-user-confirmed-selected-assets",
       "png": {
         "alpha_channel": true,
         "bit_depth": 8,
@@ -325,14 +325,45 @@
     "repository": "https://github.com/cc-tweaked/CC-Tweaked",
     "revision": "c8b3f6af270cd74c7494e2bf45a9f377b90c9b29"
   },
-  "cleared_runtime_assets": [],
+  "cleared_runtime_assets": [
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_blinking.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_off.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_on.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_normal_off.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_base.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_d.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_item.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_l.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ld.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lr.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lrd.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lru.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lrud.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lu.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lud.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_r.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_rd.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ru.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_rud.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_u.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ud.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_base.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/blank.png",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_front_blink.png",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_front_static.png",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_normal_front.png",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/hv_case.png",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/hv_case_pattern.png",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/monitor_normal_front.png"
+  ],
   "credited_projects_not_per_file_attribution": [
     "GregTech Refreshed",
     "GTCEu: Modern",
     "GregTech Programmer Art",
     "CC: Tweaked"
   ],
-  "distributed_derived_outputs": [],
+  "distributed_derived_outputs": "See assets/manifest.json",
   "external_parent_references": [
     "block/cube",
     "minecraft:block/orientable"
@@ -353,7 +384,7 @@
       128,
       159
     ],
-    "status": "not-produced"
+    "status": "independently-authored-see-manifest"
   },
   "greg_flavored": {
     "evidence": [
@@ -371,8 +402,8 @@
     "repository": "https://github.com/BirbIrl/ComputerCraft-Greg-Flavored",
     "revision": "ac6cafc3993c902e2ca95d85b501d3c7e172570c"
   },
-  "interpretation": "No exact match does not establish independent authorship or permission. Unused inherited bindings are not selected face texture inputs. All candidate models/textures remain excluded pending per-file origin evidence.",
-  "purpose": "Candidate audit only; not permission or runtime sprite metadata",
+  "interpretation": "The user explicitly confirmed the specific selected Greg Flavored assets are MIT, not CC:Tweaked assets, and approved their use. No separate legal audit or permission letter was obtained. Unused inherited bindings are not selected inputs.",
+  "purpose": "Pinned source inventory; output metadata is in manifest.json",
   "resolved_models": [
     {
       "model": "computercraft:block/computer_advanced_off",
@@ -671,5 +702,5 @@
       ]
     }
   ],
-  "status": "blocked-per-file-permission"
+  "status": "selected-assets-approved"
 }
