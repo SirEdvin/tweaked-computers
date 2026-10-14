@@ -1,0 +1,18 @@
+site_name: Tweaked Computers — ALPHA
+site_url: https://siredvin.github.io/tweaked-computers/
+repo_url: https://github.com/SirEdvin/tweaked-computers
+repo_name: SirEdvin/tweaked-computers
+docs_dir: docs/player
+site_dir: site
+strict: true
+theme:
+  name: mkdocs
+nav:
+  - Home: index.md
+validation:
+  nav:
+    omitted_files: warn
+  links:
+    not_found: warn
+    anchors: warn
+    unrecognized_links: warn

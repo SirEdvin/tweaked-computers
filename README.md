@@ -1,17 +1,23 @@
-# Tweaked Computers — native foundation
+# Tweaked Computers — ALPHA, in development
 
-Development mod for exactly Factorio 2.0.77, with base alone or optional Space Age.
-This checkpoint establishes the native compiler and sandbox, not playable computer
-entities or the completed computer API. No interpreter, bytecode compiler,
-continuation backend, OS, filesystem or dynamic guest loader is shipped.
+Native circuit computers for Factorio 2.0.77, with base alone or optional Space Age.
+This public bootstrap contains the native compiler/sandbox foundation, not playable
+computer entities or the complete mod. Planned features include an in-game editor,
+same-color discovery, logic handlers, KV databases, monitors and typed configurators.
+No interpreter, OS or gameplay filesystem is shipped.
 
-Programs return a literal versioned named-handler descriptor. Each callback
-receives a fresh closed environment and finishes or faults; explicit durable
-computer state and scheduling are implemented in the next milestone.
+- [Player documentation](https://siredvin.github.io/tweaked-computers/) — currently an honest scaffold, not a complete guide.
+- [Source](https://github.com/SirEdvin/tweaked-computers) and [issues](https://github.com/SirEdvin/tweaked-computers/issues).
+- [Compiler/service foundation](docs/runtime-foundation.md).
+- [Capability and API contracts](openspec/changes/add-native-circuit-computers/README.md).
+- [Documentation maintenance and deployment](docs/documentation-maintenance.md).
 
-See docs/runtime-foundation.md for compiler/service entry points, resource
-ownership, limits, source diagnostics and reproducible checks. The authoritative
-capability/API contracts remain in openspec/changes/add-native-circuit-computers.
+No Factorio Mod Portal release is published at this checkpoint. Client editing,
+focus, touch, rendering, rotation and multiplayer joining have not been verified
+by agents; user client testing follows full implementation. Back up saves before
+trying future alpha releases. Do not mistake planned contracts for shipped behavior.
+
+## Development
 
 Build (output must be outside this checkout):
 
@@ -23,11 +29,11 @@ Packaged official-engine smoke, with fresh output directories:
       --archive /absolute/path/to/artifacts/tweaked-computers_0.1.0.zip \
       --output /absolute/path/to/new-smoke-directory
 
-The smoke creates maps with base and Space Age and executes the same focused
-native adversarial contracts from the ZIP. It does not launch a graphical client
-or bind a server. Client rendering, focus, touch and multiplayer joining are
-explicitly deferred to the user after implementation of every specification.
+The smoke creates maps with base and Space Age and runs focused native adversarial
+contracts from the ZIP. It does not launch a graphical client or bind a server.
 
-New project source is MIT licensed. Pinned Phobos parser/dependency source is
-also MIT; see vendor/phobos/LICENSE.txt, NOTICE.md and manifest.json. No upstream
-artwork is included in this foundation.
+New project source is [MIT licensed](LICENSE). Pinned Phobos parser/dependency
+source is also MIT; see [its license](vendor/phobos/LICENSE.txt),
+[notice](vendor/phobos/NOTICE.md) and [manifest](vendor/phobos/manifest.json).
+No upstream artwork is included in this bootstrap; later artwork integration must
+retain its own notices and independent glyph provenance.
