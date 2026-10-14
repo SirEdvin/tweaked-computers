@@ -87,6 +87,7 @@ def main():
     ap.add_argument('--mode', choices=['base', 'space-age', 'both'], default='both')
     ap.add_argument('--fixture', default='tests.runtime_contract', help='Packaged Lua module exposing run()')
     ap.add_argument('--cold', action='store_true', help='Fixture also exposes on_load/on_tick; exercise two cold server processes')
+    ap.add_argument('--upgrade-fixture', action='store_true', help='After ordinary cold reload, change only test mod version and verify researched migration in another process')
     args = ap.parse_args()
     args.output = args.output.resolve()
     if args.output.is_relative_to(ROOT) or args.output.exists():
@@ -114,6 +115,10 @@ def main():
         control = 'local test = require(' + json.dumps(module) + ')\nscript.on_init(function() test.run(); log("TC_SMOKE_OK") end)\n'
         if args.cold:
             control += 'script.on_load(test.on_load)\nscript.on_event(defines.events.on_tick,test.on_tick)\n'
+        if args.upgrade_fixture:
+            if not args.cold:
+                ap.error('--upgrade-fixture requires --cold')
+            control += 'script.on_configuration_changed(test.on_configuration_changed)\n'
         (fixture / 'control.lua').write_text(control)
         enabled = [{'name':'base','enabled':True},{'name':info['name'],'enabled':True},{'name':'tc-smoke','enabled':True}]
         enabled += [{'name':name,'enabled':mode=='space-age'} for name in ('space-age','quality','elevated-rails')]
@@ -137,7 +142,18 @@ def main():
         if args.cold:
             snapshot = write / 'saves/tc03-snapshot.zip'
             phases = [cold_phase(args.factorio,cfg,mods,folder/'smoke.zip',folder,'cold-first','TC_COLD_SNAPSHOT_REQUESTED',snapshot)]
-            phases.append(cold_phase(args.factorio,cfg,mods,snapshot,folder,'cold-second','TC_COLD_OK'))
+            ordinary_save = write / 'saves/tc-cold-ordinary.zip'
+            shutil.copy2(snapshot, ordinary_save)  # /quit saves over its input map.
+            phases.append(cold_phase(args.factorio,cfg,mods,ordinary_save,folder,'cold-second','TC_COLD_OK'))
+            if args.upgrade_fixture and mode=='base':
+                # Only the copied fixture changes; the tested production ZIP is immutable.
+                fixture_info = json.loads((fixture / 'info.json').read_text())
+                fixture_info['version'] = '0.0.2'
+                (fixture / 'info.json').write_text(json.dumps(fixture_info))
+                fixture.rename(mods / 'tc-smoke_0.0.2')
+                upgrade_save = write / 'saves/tc-configuration-change.zip'
+                shutil.copy2(snapshot, upgrade_save)
+                phases.append(cold_phase(args.factorio,cfg,mods,upgrade_save,folder,'configuration-change','TC_UPGRADE_OK'))
             summary['cases'][-1]['cold_phases'] = phases
             summary['cases'][-1]['snapshot_sha256'] = hashlib.sha256(snapshot.read_bytes()).hexdigest()
             (args.output / 'summary.json').write_text(json.dumps(summary,indent=2)+'\n')

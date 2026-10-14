@@ -59,6 +59,9 @@ function M.advance_timers(rec,tick,spend)
 end
 function M.dispatch(rec,tick)
   if rec.status~='running' or not rec.powered or #rec.queue==0 or rec.last_dispatch_tick==tick then return false end
+  -- Physical sampling can defer under maintenance pressure. Never dispatch from
+  -- an old positive power observation; standalone runtime fixtures have no tag.
+  if rec.physical_version and (rec.physical_error or rec.power_checked_tick~=tick) then return false end
   if not runtime.check_active(rec) then
     runtime.fault(rec,errors.new('E_UNSUPPORTED','unsupported retained computer/source header; source/state retained'),tick)
     return false
