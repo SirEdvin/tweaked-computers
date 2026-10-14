@@ -32,6 +32,7 @@ jobs:
         run: |
           if [ "$EVENT" = workflow_dispatch ]; then
             test "$WORKFLOW_REF" = refs/heads/main
+            git check-ref-format "$PUBLISH_REF"
             case "$PUBLISH_REF" in
               refs/heads/main|refs/heads/tweaked-computers/t_e6cbf814-tc17-publish-the-complete-alpha-on-facto|refs/tags/alpha-*) ;;
               *) echo 'Ref is not approved for publication'; exit 1 ;;
