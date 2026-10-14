@@ -10,6 +10,7 @@ Planning status: no implementation tasks below are completed. Each milestone mus
 - [ ] 1.4 Prototype the actual powered 3×1 and 2×1 composite bodies/endpoints, with temporary clearly marked development art; verify independent native role networks, no internal signal leakage, real selectable wire points and all cardinal rotations in headless and client fixtures.
 - [ ] 1.5 Prove native handler reconstruction from retained source in a second engine process and joining client; verify no on_load mutation, startup replay, function persistence or renewed same-tick credits. Document measured feasibility and stop if the selected model fails.
 - [ ] 1.6 Trace candidate Greg Flavored model/texture inputs and inherited credits to per-file permissions, and document independent glyph provenance; verify the initial asset manifest distinguishes cleared files from blocked distribution rather than inferring permission from the root MIT file.
+  - TC02 partial evidence: `assets/source-audit.json` and `assets/audit_sources.py` trace the pinned refreshed advanced/HV family (23 model files, 21 variants, seven used textures), exact source/notice hashes and unresolved inherited credits. Cleared runtime assets and derived outputs are explicitly empty. Per-file origin/permission remains a real blocker; the independent glyph atlas has not been produced. See `assets/README.md` for the precise permission request and reproducible audit. This is not implementation completion.
 
 ## 2. Deliver an editable computer-to-circuit controller
 
@@ -52,6 +53,7 @@ Planning status: no implementation tasks below are completed. Each milestone mus
 - [ ] 6.1 Complete player/robot placement, rotation, destruction, mining, ghost revival, settings copy and cloning for every body/port family; verify one logical item, no orphan/duplicate drops, preserved wire roles and no deletion of replacements.
 - [ ] 6.2 Complete source/state item snapshots, per-player draft recovery, blueprint source disclosure, empty clone/runtime policy and force/surface cleanup; verify the lifecycle matrix in both cold-load and configuration-change fixtures with maximum accepted data.
 - [ ] 6.3 Produce the requested directional/status/shadow sprites and item icons from cleared source inputs, plus an independent glyph atlas; verify source/output hashes, notices, reproducible transforms, real-client alignment and that blocked assets are absent from distributable archives.
+  - TC02 blocked before conversion: no source artwork/derived sprites/font bytes are imported, and no usable sprite/glyph output contract is claimed. Resolve the per-file provenance gate in `assets/README.md` before completing conversion. Native client alignment/zoom verification is deferred to the user, separately from this permission blocker.
 - [ ] 6.4 Define/review concrete base-material recipes, circuit-network progression and power values; verify fresh/researched forces, base-only loading, expansion coexistence, crafting/unlocks and measured power/pause/restoration behavior, documenting the balance values.
 
 ## 7. Freeze the supported envelope and verify the release candidate
