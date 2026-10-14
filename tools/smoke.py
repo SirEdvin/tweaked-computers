@@ -6,10 +6,78 @@ import json
 from pathlib import Path
 import re
 import shutil
+import socket
 import subprocess
+import time
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
+
+def cold_phase(engine, cfg, mods, save, folder, name, marker, snapshot=None):
+    """Bounded localhost-only cold phase; freeze fixture, then verified console quit."""
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        sock.bind(('127.0.0.1', 0))
+        port = sock.getsockname()[1]
+    settings = folder / 'server-settings.json'
+    settings.write_text(json.dumps({'name':'TC isolated cold smoke', 'description':'test fixture',
+        'visibility':{'public':False,'lan':False}, 'require_user_verification':False,
+        'auto_pause':False, 'max_players':1}))
+    command = [str(engine),'--config',str(cfg),'--mod-directory',str(mods),
+        '--start-server',str(save),'--bind','127.0.0.1','--port',str(port),
+        '--server-settings',str(settings)]
+    (folder / (name+'-command.json')).write_text(json.dumps(command,indent=2)+'\n')
+    path = folder / (name+'-engine.log')
+    cleanup = {'console_quit_requested':False,'console_quit_acknowledged':False,
+               'sigint_attempted':False,'forced_kill':False}
+    passed = False
+    with path.open('w') as output:
+        process = subprocess.Popen(command,stdin=subprocess.PIPE,stdout=output,stderr=subprocess.STDOUT,text=True)
+        assert process.stdin is not None
+        try:
+            deadline = time.monotonic()+90
+            while time.monotonic()<deadline and process.poll() is None:
+                text = path.read_text()
+                ready = marker in text
+                if snapshot is not None:
+                    try:
+                        with zipfile.ZipFile(snapshot) as saved:
+                            ready = ready and saved.testzip() is None
+                    except (FileNotFoundError,zipfile.BadZipFile):
+                        ready = False
+                if ready:
+                    passed = True
+                    break
+                time.sleep(0.1)
+            if process.poll() is None:
+                cleanup['console_quit_requested'] = True
+                process.stdin.write('/quit\n'); process.stdin.flush()
+                try:
+                    process.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    import signal
+                    cleanup['sigint_attempted'] = True
+                    process.send_signal(signal.SIGINT)
+                    try:
+                        process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        cleanup['forced_kill'] = True
+                        process.kill(); process.wait(timeout=5)
+        finally:
+            if process.poll() is None:
+                cleanup['forced_kill'] = True
+                process.kill(); process.wait(timeout=5)
+            process.stdin.close()
+    text = path.read_text()
+    cleanup['console_quit_acknowledged'] = cleanup['console_quit_requested'] and process.returncode==0 and 'Goodbye' in text and 'Exception at tick' not in text
+    result = {'phase':name,'passed':passed and cleanup['console_quit_acknowledged'] and not cleanup['sigint_attempted'] and not cleanup['forced_kill'],
+              'exit_code':process.returncode,'marker':marker,'cleanup':cleanup}
+    if name=='cold-first' and 'TC_COLD_OK' in text:
+        result['passed'] = False
+    (folder / (name+'-result.json')).write_text(json.dumps(result,indent=2)+'\n')
+    if not result['passed']:
+        print(text)
+        raise RuntimeError('cold phase failed: '+json.dumps(result))
+    return result
 
 def main():
     ap = argparse.ArgumentParser()
@@ -18,6 +86,7 @@ def main():
     ap.add_argument('--output', required=True, type=Path)
     ap.add_argument('--mode', choices=['base', 'space-age', 'both'], default='both')
     ap.add_argument('--fixture', default='tests.runtime_contract', help='Packaged Lua module exposing run()')
+    ap.add_argument('--cold', action='store_true', help='Fixture also exposes on_load/on_tick; exercise two cold server processes')
     args = ap.parse_args()
     args.output = args.output.resolve()
     if args.output.is_relative_to(ROOT) or args.output.exists():
@@ -35,13 +104,17 @@ def main():
         folder = args.output / mode
         mods,write = folder / 'mods',folder / 'write'
         mods.mkdir(parents=True); write.mkdir()
+        (write / 'saves').mkdir()
         shutil.copy2(args.archive, mods / args.archive.name)
         fixture = mods / 'tc-smoke_0.0.1'
         fixture.mkdir()
         (fixture / 'info.json').write_text(json.dumps({'name':'tc-smoke','version':'0.0.1','title':'TC isolated smoke', 'author':'test fixture','factorio_version':'2.0','dependencies':['base',info['name']]}))
         # Read fixture source from the same ZIP as production code.
         module = '__' + info['name'] + '__.' + args.fixture
-        (fixture / 'control.lua').write_text('local test = require(' + json.dumps(module) + ')\nscript.on_init(function() test.run(); log("TC_SMOKE_OK") end)\n')
+        control = 'local test = require(' + json.dumps(module) + ')\nscript.on_init(function() test.run(); log("TC_SMOKE_OK") end)\n'
+        if args.cold:
+            control += 'script.on_load(test.on_load)\nscript.on_event(defines.events.on_tick,test.on_tick)\n'
+        (fixture / 'control.lua').write_text(control)
         enabled = [{'name':'base','enabled':True},{'name':info['name'],'enabled':True},{'name':'tc-smoke','enabled':True}]
         enabled += [{'name':name,'enabled':mode=='space-age'} for name in ('space-age','quality','elevated-rails')]
         (mods / 'mod-list.json').write_text(json.dumps({'mods':enabled}))
@@ -61,6 +134,13 @@ def main():
         if not passed:
             print(result.stdout)
             raise SystemExit(1)
+        if args.cold:
+            snapshot = write / 'saves/tc03-snapshot.zip'
+            phases = [cold_phase(args.factorio,cfg,mods,folder/'smoke.zip',folder,'cold-first','TC_COLD_SNAPSHOT_REQUESTED',snapshot)]
+            phases.append(cold_phase(args.factorio,cfg,mods,snapshot,folder,'cold-second','TC_COLD_OK'))
+            summary['cases'][-1]['cold_phases'] = phases
+            summary['cases'][-1]['snapshot_sha256'] = hashlib.sha256(snapshot.read_bytes()).hexdigest()
+            (args.output / 'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
     print(json.dumps(summary))
 
 if __name__ == '__main__':

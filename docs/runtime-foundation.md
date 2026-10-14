@@ -102,6 +102,12 @@ AST, nesting and generated-output ceilings bound opaque native load work.
 
 ## Minimal storage/module conventions
 
+Historical TC01 foundation below. TC03 completes these interfaces in
+docs/computer-runtime.md; use that document for current entity binding,
+activation, scheduler/phase hooks and shared service registration. Compiler ABI
+is now 2; compiler.run additionally returns a host-only third `stop` control
+classification for genuine private stop, never based on a guest error.code.
+
 storage.tweaked_computers has schema_version, next_id, entities, computers,
 devices and player_drafts. registry.initialize is initialization/configuration
 only; registry.get is read access. TC03 completes authoritative identity/binding

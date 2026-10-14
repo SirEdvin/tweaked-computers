@@ -6,7 +6,7 @@ local M = {}
 local function source(body)
   return 'return {api_version=1, handlers={start=function(event) '..body..' end}}'
 end
-function M.run()
+function M.run(report_total)
   local tests=0
   local function report(name) tests=tests+1; if log then log('TC_CONTRACT '..name) end end
   local function compiled(body, id, ledger, tick)
@@ -129,7 +129,9 @@ function M.run()
     assert(not success and diagnostic.code=='E_ARGUMENT' and writes==0)
     report('actual-engine-LuaObject-return-refused')
   end
-  if log then log('TC_CONTRACT_TOTAL '..tests) else print('TC_CONTRACT_TOTAL '..tests) end
+  if report_total~=false then
+    if log then log('TC_CONTRACT_TOTAL '..tests) else print('TC_CONTRACT_TOTAL '..tests) end
+  end
   return tests
 end
 return M

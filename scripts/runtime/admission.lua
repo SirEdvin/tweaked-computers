@@ -28,7 +28,8 @@ function M.reserve(ctx, kind, amount)
   assert(ctx.tick == ctx.ledger.tick, 'stale admission context')
   local ceiling = ({work = limits.callback_work, compile = limits.compile_work, allocations = limits.callback_allocations})[kind]
   assert(ceiling, 'unknown admission kind')
-  if ctx.machine[kind] + amount > ceiling or ctx.ledger.total + amount > limits.host_work_per_tick then
+  local aggregate_ceiling=limits.host_work_per_tick-limits.maintenance_work_per_tick
+  if ctx.machine[kind] + amount > ceiling or ctx.ledger.total + amount > aggregate_ceiling then
     return false
   end
   ctx.machine[kind] = ctx.machine[kind] + amount

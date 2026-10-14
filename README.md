@@ -1,15 +1,17 @@
-# Tweaked Computers — native foundation
+# Tweaked Computers — native computer runtime
 
 Development mod for exactly Factorio 2.0.77, with base alone or optional Space Age.
-This checkpoint establishes the native compiler and sandbox, not playable computer
-entities or the completed computer API. No interpreter, bytecode compiler,
+This checkpoint includes the native compiler/sandbox, durable computer API,
+registry and shared scheduler. Physical devices, editor and peripheral services
+are delivered by subsequent cards; this is not yet a playable mod. No interpreter, bytecode compiler,
 continuation backend, OS, filesystem or dynamic guest loader is shipped.
 
 Programs return a literal versioned named-handler descriptor. Each callback
-receives a fresh closed environment and finishes or faults; explicit durable
-computer state and scheduling are implemented in the next milestone.
+receives a fresh closed environment and finishes or faults; only explicit copied
+Data state, named registrations and event/timer records survive callbacks.
 
-See docs/runtime-foundation.md for compiler/service entry points, resource
+See docs/computer-runtime.md for the implemented API, registry/lifecycle/service
+integration and scheduling contract. docs/runtime-foundation.md records the original compiler
 ownership, limits, source diagnostics and reproducible checks. The authoritative
 capability/API contracts remain in openspec/changes/add-native-circuit-computers.
 
@@ -21,11 +23,13 @@ Packaged official-engine smoke, with fresh output directories:
 
     python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
       --archive /absolute/path/to/artifacts/tweaked-computers_0.1.0.zip \
-      --output /absolute/path/to/new-smoke-directory
+      --output /absolute/path/to/new-smoke-directory \
+      --fixture tests.computer_cold --cold
 
-The smoke creates maps with base and Space Age and executes the same focused
-native adversarial contracts from the ZIP. It does not launch a graphical client
-or bind a server. Client rendering, focus, touch and multiplayer joining are
+The smoke creates maps with base and Space Age and executes focused native
+contracts from the ZIP. With --cold it runs two isolated localhost-only headless
+server processes per mode, preserving a snapshot and verifying reconstruction.
+It does not launch a graphical client. Client rendering, focus, touch and multiplayer joining are
 explicitly deferred to the user after implementation of every specification.
 
 New project source is MIT licensed. Pinned Phobos parser/dependency source is
