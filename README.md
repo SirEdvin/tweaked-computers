@@ -4,10 +4,11 @@ Development mod for exactly Factorio 2.0.77, with base alone or optional Space A
 This checkpoint includes the native compiler/sandbox, durable computer API,
 registry, shared scheduler, powered independently wired device family and
 same-colour peripheral discovery/facades, native single-document editor and the
-complete logic-handler controller. KV/monitor/configurator service bodies and
+complete logic-handler controller and persistent string/hash KV databases. Monitor/configurator service bodies and
 full data-bearing lifecycle remain subsequent milestones; this is not yet the
-integrated public alpha candidate. Computer/KV mining is temporarily guarded until the
-assigned data-bearing lifecycle milestone, preventing destructive plain drops.
+integrated public alpha candidate. KV player/robot mining
+uses guarded data-bearing snapshots; computer mining remains guarded until its
+assigned lifecycle milestone, preventing destructive plain drops.
 No interpreter, bytecode compiler, continuation backend, OS, filesystem or dynamic
 guest loader is shipped.
 
@@ -24,6 +25,12 @@ workflow, every logic method, quality/int32 rules, sampled events and writer cle
 examples/logic-controller.lua supplies the exact editable source used by the
 packaged tests.logic_engine cold scenario (add --fixture tests.logic_engine --cold).
 The fixture's player/editor delivery is table-backed, not client typing/focus proof.
+
+See docs/kv-database.md for every string/hash/expiry command, exact nil/count/error
+semantics, atomic capacity staging, initial limits and data-bearing lifecycle.
+examples/kv-program.lua supplies its native callback example; locale/en/kv.cfg
+supplies help keys. Select `--fixture tests.kv_engine --cold` to exercise compact
+KV contracts plus actual robot mining/replacement and carried-time cold reload.
 
 See docs/physical-devices.md for footprints, role wiring, initial recipes/power,
 physical host integration and the interim mining guard. docs/computer-runtime.md

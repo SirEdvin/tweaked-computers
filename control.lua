@@ -5,6 +5,7 @@ local lifecycle = require('scripts.lifecycle')
 local peripheral = require('scripts.services.peripheral')
 local editor = require('scripts.ui.editor')
 local logic = require('scripts.services.logic')
+local kv = require('scripts.services.kv')
 editor.register_inspector(require('scripts.ui.network-inspector'))
 script.on_event(defines.events.on_gui_opened,editor.on_opened)
 script.on_event(defines.events.on_gui_closed,editor.on_closed)
@@ -15,12 +16,13 @@ script.on_event({defines.events.on_player_left_game,defines.events.on_player_die
   defines.events.on_player_changed_force,defines.events.on_player_changed_surface},editor.on_player_unavailable)
 script.on_event({defines.events.on_player_display_resolution_changed,
   defines.events.on_player_display_scale_changed},editor.on_size)
-script.on_init(function() registry.initialize(); lifecycle.unlocks() end)
-script.on_configuration_changed(function() registry.initialize(); lifecycle.unlocks() end)
+script.on_init(function() registry.initialize(); lifecycle.unlocks(); kv.initialize_existing() end)
+script.on_configuration_changed(function() registry.initialize(); lifecycle.unlocks(); kv.initialize_existing() end)
 script.on_event({defines.events.on_built_entity,defines.events.on_robot_built_entity,
   defines.events.script_raised_built,defines.events.script_raised_revive},lifecycle.on_built)
 script.on_event({defines.events.on_player_mined_entity,defines.events.on_robot_mined_entity,
   defines.events.on_entity_died,defines.events.script_raised_destroy},lifecycle.on_removed)
+script.on_event(defines.events.on_entity_cloned,lifecycle.on_cloned)
 script.on_event(defines.events.on_player_rotated_entity,lifecycle.on_rotated)
 script.on_event(defines.events.on_tick,function(event) scheduler.tick(event.tick) end)
 -- on_load deliberately has no handler: it executes no source and changes no state.
