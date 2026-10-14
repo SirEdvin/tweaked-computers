@@ -1,0 +1,246 @@
+{
+  "format_version": 1,
+  "purpose": "Pinned research inputs; not a shipped asset permission manifest or runtime implementation",
+  "factorio_version": "2.0.77",
+  "repositories": [
+    {
+      "id": "computer-core",
+      "repository": "https://github.com/Relik77/factorio_computer_core",
+      "revision": "92e4ab616d385dfb0247ce2fc195c0e189b01efd",
+      "files": [
+        {
+          "path": "info.json",
+          "sha256": "28419a26d9ac215a5928e101c5fffa3886c3470bd56ef61cd13cc20290848226",
+          "bytes": 389
+        },
+        {
+          "path": "LICENSE",
+          "sha256": "e1c0d17914a226a9d1ffe073b40ba7c4dafd3ec0d711eda11084d307429a77f8",
+          "bytes": 1064
+        },
+        {
+          "path": "logic/computer.lua",
+          "sha256": "7e7793aeb096a2a0d944686315b24628a9a5df1cc1896a5632f54d126e01418a",
+          "bytes": 30116
+        },
+        {
+          "path": "logic/apis/os.lua",
+          "sha256": "e8f6dd695f5c56345fbea20f14365d4f83dc3dbd333be69c2e235bbd35991272",
+          "bytes": 4380
+        },
+        {
+          "path": "logic/apis/lan.lua",
+          "sha256": "7d331ca2ff073abffbaffa8c2639591443e88dd9758fb734ae045e0905f98769",
+          "bytes": 6177
+        },
+        {
+          "path": "logic/apis/disk.lua",
+          "sha256": "bb3b6bebf209f3f238a22e80b391f573aa4cedf6dccd05766e5453a55979f375",
+          "bytes": 1654
+        },
+        {
+          "path": "logic/apis/term.lua",
+          "sha256": "643c01583dd5d770a5bdfb7f600a2ff5480bbbdec77edc3e9e2f58db4fcd94b6",
+          "bytes": 5345
+        },
+        {
+          "path": "logic/apis/wlan.lua",
+          "sha256": "a83f671bb9b679015ea9e2152f99b2a7dc859477814d50c8cdc6b563c5e6ee85",
+          "bytes": 4079
+        },
+        {
+          "path": "logic/apis/speaker.lua",
+          "sha256": "f4d559ef16bf6e1cde8a53469c7bbf7ae776953f6387bda2dafc379e658415ba",
+          "bytes": 6270
+        }
+      ]
+    },
+    {
+      "id": "greg-flavored",
+      "repository": "https://github.com/BirbIrl/ComputerCraft-Greg-Flavored",
+      "revision": "ac6cafc3993c902e2ca95d85b501d3c7e172570c",
+      "files": [
+        {
+          "path": "README.md",
+          "sha256": "bf966e5c342a340b0817d120b1a69edadfde91ac50349a0698aa40164a650ab2",
+          "bytes": 3075
+        },
+        {
+          "path": "LICENSE",
+          "sha256": "578cbb16f275631f9c0ebf888138b7932fb63c8762de307bf4d6e2e026914c01",
+          "bytes": 1064
+        }
+      ]
+    },
+    {
+      "id": "cc-tweaked",
+      "repository": "https://github.com/cc-tweaked/CC-Tweaked",
+      "revision": "c8b3f6af270cd74c7494e2bf45a9f377b90c9b29",
+      "files": [
+        {
+          "path": "LICENSES/LicenseRef-CCPL.txt",
+          "sha256": "fab164eb0cf3ec453d7596829464976ccb66263be1f9c6c38eb2528f3c14c201",
+          "bytes": 3781
+        },
+        {
+          "path": "REUSE.toml",
+          "sha256": "1cbd2428dd5ce715e202d56d5d7decc5a3fc545053a57157eef4a746bb3e52ce",
+          "bytes": 4492
+        },
+        {
+          "path": "projects/core/src/main/java/dan200/computercraft/core/util/Colour.java",
+          "sha256": "22ddc3c25c541c0aeda39d1f3ce1e7f7d22793354b87c1c60621d98750878a07",
+          "bytes": 1317
+        },
+        {
+          "path": "projects/common/src/main/java/dan200/computercraft/shared/peripheral/monitor/ServerMonitor.java",
+          "sha256": "7f5da42b2aa4ced3a385e922a5f192ce30b964d39ac448adad7743d88c39ad61",
+          "bytes": 2894
+        },
+        {
+          "path": "projects/common/src/main/java/dan200/computercraft/shared/peripheral/monitor/Expander.java",
+          "sha256": "9ae35ea0fbd047ae0625ae0213a4fbe8d57dde88a2cf6b5e1faf5f9aa3baa09f",
+          "bytes": 3839
+        }
+      ]
+    },
+    {
+      "id": "phobos",
+      "repository": "https://github.com/JanSharp/phobos",
+      "revision": "2566dd85807b4f2bdff8e40ba4d79bcf8e96de3f",
+      "files": [
+        {
+          "path": "LICENSE.txt",
+          "sha256": "f6b457394bfd87559b9bf8170d263672a9f1524f3bbd25967cde4daaee276314",
+          "bytes": 1116
+        },
+        {
+          "path": "README.md",
+          "sha256": "a53927b268605c88959d361fe32a26e96c84f84b6867e7b28da0bb27d4f1f80a",
+          "bytes": 4192
+        },
+        {
+          "path": "docs/factorio_support.md",
+          "sha256": "d0ada97fbb57b80b856e92f8b97d61e87afe751e4fce29e59614b5fe379197b5",
+          "bytes": 1875
+        }
+      ]
+    }
+  ],
+  "official_factorio_documents": [
+    {
+      "url": "https://lua-api.factorio.com/2.0.77/runtime-api.json",
+      "sha256": "594b4ec98cc5fbee322d7380db49a388ab38b0d69c06f00ead877cffbb37f578",
+      "bytes": 1878804
+    },
+    {
+      "url": "https://lua-api.factorio.com/2.0.77/prototype-api.json",
+      "sha256": "29772ece6140b515d295a504c6f9ac5bc9e653d8b1470e8cd6db825f93fcc756",
+      "bytes": 1739413
+    },
+    {
+      "url": "https://lua-api.factorio.com/2.0.77/auxiliary/libraries.html",
+      "sha256": "2be90c981417c4da479549977b54ae6f056438091289ecbc53669d6575572974",
+      "bytes": 25432
+    },
+    {
+      "url": "https://lua-api.factorio.com/2.0.77/auxiliary/storage.html",
+      "sha256": "fbe98d5e95ddfb42bd6651d0d62798606fa49ca7da69df1360a9558c822fada4",
+      "bytes": 16491
+    }
+  ],
+  "redis_documents": {
+    "repository": "redis/docs",
+    "revision": "46f775c33aefa6159a0027ab60f55dc76ed75a0f",
+    "commands": [
+      {
+        "command": "get",
+        "url": "https://raw.githubusercontent.com/redis/docs/46f775c33aefa6159a0027ab60f55dc76ed75a0f/content/commands/get.md",
+        "sha256": "0d87c23317946693275d616ebed4c26b3c8ecc2289f7b230e77ced9cdb7ff7df",
+        "bytes": 2259
+      },
+      {
+        "command": "set",
+        "url": "https://raw.githubusercontent.com/redis/docs/46f775c33aefa6159a0027ab60f55dc76ed75a0f/content/commands/set.md",
+        "sha256": "525f32be217885840bb9b63798a381cd46ec90211bca89d901120ce2277d89fa",
+        "bytes": 10476
+      },
+      {
+        "command": "del",
+        "url": "https://raw.githubusercontent.com/redis/docs/46f775c33aefa6159a0027ab60f55dc76ed75a0f/content/commands/del.md",
+        "sha256": "8b23888340d6f9e4003783dfd3b373368d337090dfc8d58e1d35d223ed62e812",
+        "bytes": 2531
+      },
+      {
+        "command": "exists",
+        "url": "https://raw.githubusercontent.com/redis/docs/46f775c33aefa6159a0027ab60f55dc76ed75a0f/content/commands/exists.md",
+        "sha256": "78a403a098ce76b3757f052eb5a99d0a1b6124d11f45d615944d3a5b57cc1f5c",
+        "bytes": 2664
+      },
+      {
+        "command": "type",
+        "url": "https://raw.githubusercontent.com/redis/docs/46f775c33aefa6159a0027ab60f55dc76ed75a0f/content/commands/type.md",
+        "sha256": "e1762913c7bb4f9839ba7f3433ea01a0e6bfe57fbdd4480591498ec92e8a54e8",
+        "bytes": 2067
+      },
+      {
+        "command": "hget",
+        "url": "https://raw.githubusercontent.com/redis/docs/46f775c33aefa6159a0027ab60f55dc76ed75a0f/content/commands/hget.md",
+        "sha256": "cbd35fd90fcef4d500e71b80e82841576a0b8cb7b06e6f54eda9641f976669d5",
+        "bytes": 2491
+      },
+      {
+        "command": "hset",
+        "url": "https://raw.githubusercontent.com/redis/docs/46f775c33aefa6159a0027ab60f55dc76ed75a0f/content/commands/hset.md",
+        "sha256": "64bae07c7fb25d3654fe35456097d5b61d51e2d8082baa42e26d058acf244b01",
+        "bytes": 2952
+      },
+      {
+        "command": "hdel",
+        "url": "https://raw.githubusercontent.com/redis/docs/46f775c33aefa6159a0027ab60f55dc76ed75a0f/content/commands/hdel.md",
+        "sha256": "c4a4ea5c5f11a66923a765304d7eaa4f15e43f5917703324851ec0a0be71a478",
+        "bytes": 2779
+      },
+      {
+        "command": "hexists",
+        "url": "https://raw.githubusercontent.com/redis/docs/46f775c33aefa6159a0027ab60f55dc76ed75a0f/content/commands/hexists.md",
+        "sha256": "8cd1383d8a7bc389cff6b628e89074ff901423957d67ae8cc2d74dd90b6007b9",
+        "bytes": 2348
+      },
+      {
+        "command": "hgetall",
+        "url": "https://raw.githubusercontent.com/redis/docs/46f775c33aefa6159a0027ab60f55dc76ed75a0f/content/commands/hgetall.md",
+        "sha256": "60f93b0fb75d0ccd964cef47700481887983f0514091845fc42ffb47c7da769e",
+        "bytes": 2383
+      },
+      {
+        "command": "hlen",
+        "url": "https://raw.githubusercontent.com/redis/docs/46f775c33aefa6159a0027ab60f55dc76ed75a0f/content/commands/hlen.md",
+        "sha256": "d2c81f525aba20d937fadf0f0087b98c233d56f4a19f02af89fc8456aa457155",
+        "bytes": 2095
+      },
+      {
+        "command": "expire",
+        "url": "https://raw.githubusercontent.com/redis/docs/46f775c33aefa6159a0027ab60f55dc76ed75a0f/content/commands/expire.md",
+        "sha256": "8724f37add5b23122fc8f7b78e5c250888a0c2321850a463b0a80709cbe00f6b",
+        "bytes": 10783
+      },
+      {
+        "command": "ttl",
+        "url": "https://raw.githubusercontent.com/redis/docs/46f775c33aefa6159a0027ab60f55dc76ed75a0f/content/commands/ttl.md",
+        "sha256": "ce6a44553adad348441e25b469ce070689de11b908355edff3244d7af341ea54",
+        "bytes": 3161
+      },
+      {
+        "command": "persist",
+        "url": "https://raw.githubusercontent.com/redis/docs/46f775c33aefa6159a0027ab60f55dc76ed75a0f/content/commands/persist.md",
+        "sha256": "88247a5e05f5b9650e146d5fb44bd784efc0654a286a2815cc5f17ab10b071b4",
+        "bytes": 2307
+      }
+    ]
+  },
+  "redis_ttl_implementation": {
+    "url": "https://raw.githubusercontent.com/redis/redis/86b20b1b9e5f03d86db72c3d59bec432e471fbc9/src/expire.c",
+    "sha256": "b12140df5ca15d8e825859c3a23aa1b5e57aeab9cc2f65813a4971301a22e7bb"
+  }
+}

@@ -1,0 +1,159 @@
+{
+  "capabilities": 8,
+  "requirements": 67,
+  "scenarios": 101,
+  "api_companions": 8,
+  "lua_examples": 9,
+  "local_links": 56,
+  "implementation_tasks": 38,
+  "catalogue": {
+    "behavior_classes": 36,
+    "effective_writable_field_entries": 164,
+    "concepts": 29,
+    "enum_groups": 10
+  },
+  "palette_entries_verified": 16,
+  "ttl_reference_values": {
+    "1": 0,
+    "29": 0,
+    "30": 1,
+    "59": 1,
+    "60": 1,
+    "89": 1,
+    "90": 2
+  },
+  "geometry_reference_values": {
+    "1x1@1": [
+      10,
+      6
+    ],
+    "2x2@1": [
+      20,
+      13
+    ],
+    "1x1@0.5": [
+      20,
+      13
+    ],
+    "1x1@5": [
+      2,
+      1
+    ]
+  },
+  "errors": [],
+  "capability_coverage": [
+    {
+      "capability": "computer-runtime",
+      "requirements": 9,
+      "scenarios": 14,
+      "api": "specs/computer-runtime/lua-api.md"
+    },
+    {
+      "capability": "device-configurator",
+      "requirements": 9,
+      "scenarios": 14,
+      "api": "specs/device-configurator/lua-api.md"
+    },
+    {
+      "capability": "device-lifecycle",
+      "requirements": 11,
+      "scenarios": 13,
+      "api": "specs/device-lifecycle/lua-api.md"
+    },
+    {
+      "capability": "kv-database",
+      "requirements": 8,
+      "scenarios": 14,
+      "api": "specs/kv-database/lua-api.md"
+    },
+    {
+      "capability": "logic-handler",
+      "requirements": 8,
+      "scenarios": 13,
+      "api": "specs/logic-handler/lua-api.md"
+    },
+    {
+      "capability": "monitor-display",
+      "requirements": 8,
+      "scenarios": 11,
+      "api": "specs/monitor-display/lua-api.md"
+    },
+    {
+      "capability": "peripheral-network",
+      "requirements": 8,
+      "scenarios": 12,
+      "api": "specs/peripheral-network/lua-api.md"
+    },
+    {
+      "capability": "program-editor",
+      "requirements": 6,
+      "scenarios": 10,
+      "api": "specs/program-editor/lua-api.md"
+    }
+  ],
+  "examples": [
+    {
+      "file": "api/examples.md",
+      "block": 1,
+      "sha256": "3bb062c5f36d38a1ba3f76990a096f3bab9aa4ef24a68f8d69bf19f38a6875eb",
+      "handlers": 5,
+      "registered_references": 8
+    },
+    {
+      "file": "specs/computer-runtime/lua-api.md",
+      "block": 1,
+      "sha256": "2c535344a2691487e7137b01e51046dc39225ef724b6b2f384e7c5e321dd401f",
+      "handlers": 2,
+      "registered_references": 1
+    },
+    {
+      "file": "specs/computer-runtime/lua-api.md",
+      "block": 2,
+      "sha256": "6ced6f4c54d4b45dbdd1b03e034aa53279de1ff65b0ddaf558f6e251a11a3722",
+      "handlers": 1,
+      "registered_references": 0
+    },
+    {
+      "file": "specs/device-configurator/lua-api.md",
+      "block": 1,
+      "sha256": "d831a63b505cde4926c9c7f89998ea8b450e8ebeff2ec9960f3df9e74b44d9a7",
+      "handlers": 1,
+      "registered_references": 0
+    },
+    {
+      "file": "specs/kv-database/lua-api.md",
+      "block": 1,
+      "sha256": "7c697de47da19df190a426a6e10ecf7d9ff004072619d676864406eb2d990c91",
+      "handlers": 2,
+      "registered_references": 1
+    },
+    {
+      "file": "specs/logic-handler/lua-api.md",
+      "block": 1,
+      "sha256": "c1b4cd890430b343ef75d2ccbe389f74f529d13e0df6a1615de8d736fb1689dd",
+      "handlers": 2,
+      "registered_references": 1
+    },
+    {
+      "file": "specs/monitor-display/lua-api.md",
+      "block": 1,
+      "sha256": "21debd2d8deec5adec34a791c0c9eac571439cef0d77128738144a0bbd35d158",
+      "handlers": 3,
+      "registered_references": 2
+    },
+    {
+      "file": "specs/peripheral-network/lua-api.md",
+      "block": 1,
+      "sha256": "da1895af2c09a1f3e0982c6397fa5839bc4d900e7330f34e75cd8fbd658df153",
+      "handlers": 1,
+      "registered_references": 0
+    },
+    {
+      "file": "specs/program-editor/lua-api.md",
+      "block": 1,
+      "sha256": "cf389fcedd152fd2422ae5848e939d68c24a6f407022965d6a0a8eb5c9da2540",
+      "handlers": 2,
+      "registered_references": 1
+    }
+  ]
+}

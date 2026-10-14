@@ -1,0 +1,68 @@
+# Tasks
+
+Planning status: no implementation tasks below are completed. Each milestone must land its own tests and user/API documentation; later integration does not substitute for those checks. Capability requirements and their companion Lua contracts are normative. Feasibility failures require an explicit design review, not a hidden interpreter, relaxed safety bound or reduced peripheral scope.
+
+## 1. Establish the native and physical feasibility gates
+
+- [ ] 1.1 Bootstrap the Factorio 2.0.77 mod and isolated archive-based test harness under the paths in design.md; verify a real fresh map starts with base alone and with Space Age, using localhost-only test servers and retained logs.
+- [ ] 1.2 Pin/import only the reviewed parser front end and required MIT dependencies, record exact source/notice hashes, and parse every planning example plus rejected grammar fixtures in the actual engine; verify no bytecode/interpreter/runtime-stack backend is included.
+- [ ] 1.3 Build the minimal literal-descriptor native compiler/environment with loop/call/allocation guards and protected fatal signals; verify infinite loops, recursion, pcall swallowing and host/string-metatable escapes fail safely beside a second responsive computer.
+- [ ] 1.4 Prototype the actual powered 3×1 and 2×1 composite bodies/endpoints, with temporary clearly marked development art; verify independent native role networks, no internal signal leakage, real selectable wire points and all cardinal rotations in headless and client fixtures.
+- [ ] 1.5 Prove native handler reconstruction from retained source in a second engine process and joining client; verify no on_load mutation, startup replay, function persistence or renewed same-tick credits. Document measured feasibility and stop if the selected model fails.
+- [ ] 1.6 Trace candidate Greg Flavored model/texture inputs and inherited credits to per-file permissions, and document independent glyph provenance; verify the initial asset manifest distinguishes cleared files from blocked distribution rather than inferring permission from the root MIT file.
+
+## 2. Deliver an editable computer-to-circuit controller
+
+- [ ] 2.1 Implement versioned identities/registry, explicit copied state, source revisions and lifecycle ownership; verify invalid Data, alias isolation, removal/replacement identity and unsupported retained headers with pure and packaged-engine tests.
+- [ ] 2.2 Complete the bounded native-language surface and compile/source-location pipeline; verify accepted syntax/return arity, rejected features, helper amplification, parser/emitter nesting/work limits and maximum useful cold/warm source without changing the stated execution model.
+- [ ] 2.3 Implement the shared scheduler, per-tick admission, named events and timers; verify FIFO/fairness, equal deadlines, missed recurring intervals, cancellation after queue admission, visible overflow and same-tick remove/reload resistance.
+- [ ] 2.4 Implement native single-document editing, validation, Save/Run/Apply/Stop/Reset State, bounded output, source conflicts and recoverable drafts; verify actual typed/pasted saved source is the activated revision and native text focus does not disable essential buttons.
+- [ ] 2.5 Implement color-preserving discovery, copied descriptors/wrappers, live witness validation and bounded reconciliation; verify same-color chains, mixed-color rejection, vanilla/ghost/foreign-force exclusion, stale calls and explicit incomplete-result errors.
+- [ ] 2.6 Implement quality-aware logic input reads and one shared output bank through modern native sections; verify red/green/both, signed-32-bit boundaries, exact output contribution, duplicate rejection and native circuit propagation.
+- [ ] 2.7 Implement sampled named subscriptions and generation/channel-scoped output ownership; verify initial/filter/disappearance/connectivity events, outage resync and host cleanup for stop/fault/cable loss without clearing a newer writer's output.
+- [ ] 2.8 Deliver the first usable milestone: enter and save a controller in the real editor, use a red discovery chain and a logic handler to control a powered inserter, and prove item transfer/cessation and cleanup in the packaged engine; ship matching computer/discovery/logic help and fixture source.
+
+## 3. Add a persistent KV peripheral
+
+- [ ] 3.1 Implement independent per-device string/hash storage and the exact command/return/error contract; verify all commands, empty/NUL strings, duplicate variadic operands, wrong types, SET replacement and last-hash-field deletion with table-driven tests.
+- [ ] 3.2 Implement simulation-tick expiry, Redis-style TTL rounding, whole-command staging and bounded reclamation; verify boundary ticks, nonpositive expiry, TTL preservation/removal, atomic capacity refusal and expired-but-unreclaimed state in the engine.
+- [ ] 3.3 Implement database save/load and data-bearing mining/replacement with capacity reserved for metadata; verify maximum accepted snapshots survive robot/player mining, carried-time expiry, power loss and a cold process while clones/blueprints stay empty.
+- [ ] 3.4 Extend the editable controller to record shared telemetry in KV, ship the documented example/help, and verify two computers share one database while a second physical database remains independent.
+
+## 4. Add merging in-world monitors
+
+- [ ] 4.1 Implement the bounded rectangle partition/anchor algorithm and group lifecycle; verify complete rectangles, holes, L-shapes, size limits, split/merge identities, all orientations and no implicit wire bridge between members.
+- [ ] 4.2 Implement the complete terminal model, palette/aliases, blit, clipping, scroll, scale and resize contracts; verify all documented methods and exact geometry/glyph indexing with deterministic model tests, including rejected-call atomicity.
+- [ ] 4.3 Implement independently sourced glyph sprites, dirty world presentation, group power and retained rendering state; verify latest committed revisions eventually display correctly, palette changes repaint and cold load does not clear contents.
+- [ ] 4.4 Implement real world-cell activation and touch/resize delivery; verify borders, non-anchor tiles, rotation, duplicated paths, multiple players and native GUI hover/focus in a graphical client, retaining screenshots outside git.
+- [ ] 4.5 Deliver the next usable milestone: the saved controller shows live KV/circuit status on a merged display and responds to touch; ship the monitor API/help and verify actual rendering/interaction at the supported maximum dimensions and normal game zooms.
+
+## 5. Implement full typed configurator coverage
+
+- [ ] 5.1 Implement separate target-port traversal and rich device enumeration; verify pole relays, connector isolation, color/force/surface rules, actual entity coordinates, stale/replaced IDs, protected internal helpers and complete-result refusal.
+- [ ] 5.2 Generate normalized readable/writable/clearable schemas and a field-coverage ledger from the pinned catalogue; verify all inherited writable entries and referenced concept/enum shapes are accounted for, without exposing raw objects or treating unfinished adapters as supported.
+- [ ] 5.3 Implement common conditions and basic behaviors for containers, belts, inserters, pumps, loaders, splitters, accumulators, mining drills, storage tanks, walls and applicable generic on/off controls; verify each applicable field on actual native entities plus invalid whole-patch refusal and exact readback.
+- [ ] 5.4 Implement typed arithmetic/decider/selector parameter and constant-combinator section adapters; verify nested unions, signal wildcards/quality, indexes, add/update/remove, nonmanual protection and shared-group refusal/detachment without out-of-scope effects.
+- [ ] 5.5 Implement remaining production/status/transport/display/expansion behaviors, including assemblers/furnaces, train stops/rail signals, lamps, display panels, speakers, roboports, turrets, reactors, rocket silos, logistic containers, agricultural/asteroid and platform devices; verify catalogue completeness with concrete mode/prototype evidence for every applicable field.
+- [ ] 5.6 Complete staged validation, native setter ordering, exact target readback and explicit recovery records; inject failures and third-party interference to verify invalid input causes no partial patch and unexpected engine failures never report false success or promise global rollback.
+- [ ] 5.7 Deliver the integrated factory milestone from api/examples.md: the real editor's saved program discovers/configures connected inserters, reacts to stock signals, records expiring telemetry and updates/touches a monitor; verify factory movement and native target GUI settings and ship matching capability/help documentation.
+
+## 6. Complete physical lifecycle, artwork and progression
+
+- [ ] 6.1 Complete player/robot placement, rotation, destruction, mining, ghost revival, settings copy and cloning for every body/port family; verify one logical item, no orphan/duplicate drops, preserved wire roles and no deletion of replacements.
+- [ ] 6.2 Complete source/state item snapshots, per-player draft recovery, blueprint source disclosure, empty clone/runtime policy and force/surface cleanup; verify the lifecycle matrix in both cold-load and configuration-change fixtures with maximum accepted data.
+- [ ] 6.3 Produce the requested directional/status/shadow sprites and item icons from cleared source inputs, plus an independent glyph atlas; verify source/output hashes, notices, reproducible transforms, real-client alignment and that blocked assets are absent from distributable archives.
+- [ ] 6.4 Define/review concrete base-material recipes, circuit-network progression and power values; verify fresh/researched forces, base-only loading, expansion coexistence, crafting/unlocks and measured power/pause/restoration behavior, documenting the balance values.
+
+## 7. Freeze the supported envelope and verify the release candidate
+
+- [ ] 7.1 Exercise representative maximum useful source, network/target graphs, active computers/subscriptions, KV payloads and monitor updates together on actual ticks; record cold startup, input-to-model and input-to-visible latency, and freeze queryable per-device/aggregate limits only when the supported envelope passes.
+- [ ] 7.2 Audit the packaged native sandbox, API argument/return shapes and original-source diagnostics against every companion contract; execute all shipped examples through the real editor/save/run path and confirm no guest host-object, function-persistence or interpreter escape.
+- [ ] 7.3 Run the exact archive through base/Space Age, cold save/load, upgrade/recovery, client editing/touch/visual and multiplayer join/determinism matrices; verify identical retained state/effects and clearly separate headless, mock and actual client evidence.
+- [ ] 7.4 Build the final deterministic archive with source/API help/examples, asset/parser notices, limits and verification report; verify archive inventory/hash and that no required gate, data-loss issue, untested applicable configurator field or unresolved distributed asset remains.
+
+## Workflow follow-up
+
+- Present the implemented change for review with the exact tested artifact and outstanding limitations, if any; do not treat this planning checklist as evidence of implementation.
+- Commit and publish through the user's chosen remote/PR workflow when a repository remote exists. This planning repository currently has no remote; do not invent one or publish without an authorized destination.
+- Archive the OpenSpec change only after implementation and review requirements are satisfied. Publication or deployment beyond that requires the relevant explicit user authorization.
