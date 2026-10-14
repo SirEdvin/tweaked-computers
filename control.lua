@@ -21,6 +21,7 @@ script.on_event({defines.events.on_player_display_resolution_changed,
 script.on_init(function() registry.initialize(); lifecycle.unlocks(); kv.initialize_existing() end)
 script.on_configuration_changed(function() registry.initialize(); lifecycle.unlocks(); kv.initialize_existing() end)
 
+local configurator = require('scripts.services.configurator')
 script.on_event({defines.events.on_built_entity,defines.events.on_robot_built_entity,
   defines.events.script_raised_built,defines.events.script_raised_revive},lifecycle.on_built)
 script.on_event({defines.events.on_player_mined_entity,defines.events.on_robot_mined_entity,
