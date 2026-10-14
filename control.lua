@@ -3,6 +3,16 @@ local registry = require('scripts.registry')
 local scheduler = require('scripts.scheduler')
 local lifecycle = require('scripts.lifecycle')
 local peripheral = require('scripts.services.peripheral')
+local editor = require('scripts.ui.editor')
+script.on_event(defines.events.on_gui_opened,editor.on_opened)
+script.on_event(defines.events.on_gui_closed,editor.on_closed)
+script.on_event(defines.events.on_gui_click,editor.on_click)
+script.on_event(defines.events.on_gui_text_changed,editor.on_text)
+script.on_event({'tc-open-editor','tc-open-selected-computer'},editor.on_input)
+script.on_event({defines.events.on_player_left_game,defines.events.on_player_died,
+  defines.events.on_player_changed_force,defines.events.on_player_changed_surface},editor.on_player_unavailable)
+script.on_event({defines.events.on_player_display_resolution_changed,
+  defines.events.on_player_display_scale_changed},editor.on_size)
 script.on_init(function() registry.initialize(); lifecycle.unlocks() end)
 script.on_configuration_changed(function() registry.initialize(); lifecycle.unlocks() end)
 script.on_event({defines.events.on_built_entity,defines.events.on_robot_built_entity,
