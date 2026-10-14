@@ -4,21 +4,33 @@ local runtime = require('scripts.runtime.computer')
 local compiler = require('scripts.runtime.compiler')
 local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
+local admission = require('scripts.runtime.admission')
 local M = {}
 local hooks={lifecycle={},sample={},notifications={},render={}}
 local refusal={} -- Host-only ephemeral maintenance deferral identity.
+local render_reservation=0
+local monitor_refresh
+function M.register_monitor_refresh(fn)
+  assert(type(fn)=='function' and not monitor_refresh,'invalid monitor event refresh')
+  monitor_refresh=fn
+end
+function M.reserve_render_work(n)
+  assert(render_reservation==0 and errors.integer(n,1,limits.maintenance_work_per_tick),'invalid render reservation')
+  render_reservation=n
+end
 function M.register_phase(phase,name,fn)
   assert(hooks[phase] and type(name)=='string' and type(fn)=='function' and not hooks[phase][name],'invalid scheduler phase hook')
   local n=0; for _ in pairs(hooks[phase]) do n=n+1 end; assert(n<limits.host_hooks,'phase hook capacity')
   hooks[phase][name]=fn
 end
-function M.maintenance(root,tick)
+function M.maintenance(root,tick,for_render)
   local s=root.scheduler
   assert(errors.integer(tick,0,9007199254740991) and tick>=s.last_tick,'scheduler clock moved backwards')
   if s.maintenance_tick~=tick then s.maintenance_tick=tick; s.maintenance_spent=0 end
   return function(n)
     assert(errors.integer(n,0,1000000000),'invalid maintenance cost')
-    if s.maintenance_spent+n>limits.maintenance_work_per_tick then error(refusal,0) end
+    local ceiling=limits.maintenance_work_per_tick-(for_render and 0 or render_reservation)
+    if s.maintenance_spent+n>ceiling then error(refusal,0) end
     s.maintenance_spent=s.maintenance_spent+n
   end
 end
@@ -83,6 +95,10 @@ function M.dispatch(rec,tick)
     return false
   end
   local item=rec.queue[1]
+  if monitor_refresh and item.event.name=='monitor_resize' then
+    if not admission.reserve(ctx,'work',8) then return false end
+    monitor_refresh(item.event)
+  end
   rec.last_dispatch_tick=tick
   table.remove(rec.queue,1); rec.queue_bytes=rec.queue_bytes-item.bytes
   item.event.tick=tick
@@ -118,7 +134,7 @@ function M.tick(tick)
   -- Advance clocks before callback dispatch; the cursor also rotates maintenance
   -- scanning so a large earlier timer set cannot starve later identities.
   local n=#root.order
-  if n==0 then phase('render',tick,spend); return end
+  if n==0 then phase('render',tick,M.maintenance(root,tick,true)); return end
   local start=math.min(root.scheduler.cursor,n)
   local maintenance_start=math.min(root.scheduler.maintenance_cursor or 1,n)
   local admitted=false
@@ -141,6 +157,6 @@ function M.tick(tick)
     end
   end
   if not admitted then root.scheduler.cursor=start%n+1 end
-  phase('render',tick,spend)
+  phase('render',tick,M.maintenance(root,tick,true))
 end
 return M

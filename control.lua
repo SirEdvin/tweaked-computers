@@ -6,6 +6,8 @@ local peripheral = require('scripts.services.peripheral')
 local editor = require('scripts.ui.editor')
 local logic = require('scripts.services.logic')
 local kv = require('scripts.services.kv')
+local monitor = require('scripts.services.monitor')
+script.on_event('tc-monitor-activate',monitor.activate)
 editor.register_inspector(require('scripts.ui.network-inspector'))
 script.on_event(defines.events.on_gui_opened,editor.on_opened)
 script.on_event(defines.events.on_gui_closed,editor.on_closed)
@@ -18,6 +20,7 @@ script.on_event({defines.events.on_player_display_resolution_changed,
   defines.events.on_player_display_scale_changed},editor.on_size)
 script.on_init(function() registry.initialize(); lifecycle.unlocks(); kv.initialize_existing() end)
 script.on_configuration_changed(function() registry.initialize(); lifecycle.unlocks(); kv.initialize_existing() end)
+
 script.on_event({defines.events.on_built_entity,defines.events.on_robot_built_entity,
   defines.events.script_raised_built,defines.events.script_raised_revive},lifecycle.on_built)
 script.on_event({defines.events.on_player_mined_entity,defines.events.on_robot_mined_entity,

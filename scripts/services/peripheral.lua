@@ -111,7 +111,8 @@ function M.services(computer,tick,guard)
     local fn=bindings[rec.kind].methods[method]
     if not fn then errors.raise('E_ARGUMENT','unknown peripheral method') end
     if method=='getLimits' and select('#',...)~=0 then errors.raise('E_ARGUMENT','getLimits expects no arguments') end
-    if method~='getLimits' and (not rec.powered or rec.body.energy<defs.devices[rec.kind].watts/60) then errors.raise('E_UNPOWERED','peripheral is unpowered') end
+    if method~='getLimits' and (not rec.powered or rec.body.energy<defs.devices[rec.kind].watts/60
+      or bindings[rec.kind].available and not bindings[rec.kind].available(rec,spend)) then errors.raise('E_UNPOWERED','peripheral is unpowered') end
     return fn(computer,rec,wire,tick,spend,...)
   end
   local function facade(rec,wire)
@@ -263,7 +264,13 @@ function M.check_outputs(tick,spend)
   local root=registry.get()
   -- Prepay the complete walk and all native zero-bank cleanups independently of
   -- guest credits. Proof may defer; that clears output rather than trusting it.
-  spend(limits.registry_entries*4+limits.aggregate_owned_outputs*256)
+  spend(#root.order*4)
+  local owned=0
+  for _,id in ipairs(root.order) do
+    local rec=registry.record(id)
+    if rec and rec.kind=='logic' and rec.output_owner then owned=owned+1 end
+  end
+  spend(owned*256)
   for _,id in ipairs(root.order) do
     local rec=registry.record(id); local owner=rec and rec.kind=='logic' and rec.output_owner
     if owner then
