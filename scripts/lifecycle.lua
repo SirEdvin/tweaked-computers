@@ -61,6 +61,10 @@ function M.build(body)
   local existing=registry.by_entity(body)
   if existing then return existing end -- duplicate raised build is idempotent
   local kind=defs.by_name[body.name]
+  if kind=='monitor' then
+    local n=0; for _,rec in pairs(registry.get().devices) do if rec.kind=='monitor' then n=n+1 end end
+    if n>=256 then return nil,errors.new('E_CAPACITY','monitor tile capacity reached') end
+  end
   if not defs.cardinal(body.direction) then return nil,errors.new('E_ARGUMENT','cardinal device direction required') end
   local staged={}; local rec
   local ok,e=pcall(function()
@@ -248,7 +252,7 @@ function M.power_losses(tick,spend)
   -- Pay the whole critical walk before restoration notifications or ordinary
   -- lifecycle work can defer. A stale positive observation must never leave
   -- callbacks/services/output live during a real outage.
-  spend(limits.registry_entries*16)
+  spend(#root.order*16)
   for _,id in ipairs(root.order) do
     local rec=registry.record(id)
     if rec and rec.physical_version==1 then

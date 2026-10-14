@@ -219,7 +219,7 @@ function M.run()
   io.output_owner.run_id='newer-writer'; peripheral.revoke(c,io.id,'red','wire_removed')
   assert(io.output_owner and io.output_owner.run_id=='newer-writer')
   io.output_owner.run_id=c.run_id
-  local root=registry.get(); root.scheduler.maintenance_tick=game.tick; root.scheduler.maintenance_spent=limits.maintenance_work_per_tick-(limits.registry_entries*4+limits.aggregate_owned_outputs*256)
+  local root=registry.get(); root.scheduler.maintenance_tick=game.tick; root.scheduler.maintenance_spent=limits.maintenance_work_per_tick-(#root.order*4+256)
   peripheral.check_outputs(game.tick,scheduler.maintenance(root,game.tick))
   assert(not io.output_owner and io.authority_diagnostic.code=='E_NETWORK_PENDING')
   root.scheduler.maintenance_spent=0

@@ -3,8 +3,9 @@
 Development mod for exactly Factorio 2.0.77, with base alone or optional Space Age.
 This checkpoint includes the native compiler/sandbox, durable computer API,
 registry, shared scheduler, powered independently wired device family and
-same-colour peripheral discovery/facades. Editor and device-specific service
-bodies are delivered by subsequent cards; this is not yet the
+same-colour peripheral discovery/facades and merging in-world color monitors.
+The editor and other device-specific service bodies are integrated by subsequent
+cards; this is not yet the
 integrated playable release. Computer/KV mining is temporarily guarded until the
 assigned data-bearing lifecycle milestone, preventing destructive plain drops.
 No interpreter, bytecode compiler, continuation backend, OS, filesystem or dynamic
@@ -18,6 +19,14 @@ See docs/peripheral-network.md for the complete discovery API, explicit wire
 colours, current-path authority, events and fixed per-type service binding.
 examples/peripheral-program.lua ships an executed native inspection program;
 localized discovery help keys are ready for the editor/help UI.
+
+See docs/monitor.md for complete terminal/palette/scale methods, geometric
+grouping without hidden wire bridges, power retention and monitor touch/resize
+callbacks. Ctrl + left click activates a character cell with an empty cursor;
+the action is rebindable in Controls. examples/monitor-program.lua supplies the
+native named-callback example. tests.monitor_engine covers real headless world
+draw objects and a cold mid-sweep reload; player activation checks are mocks,
+not graphical/client evidence.
 
 See docs/physical-devices.md for footprints, role wiring, initial recipes/power,
 physical host integration and the interim mining guard. docs/computer-runtime.md
@@ -46,4 +55,6 @@ explicitly deferred to the user after implementation of every specification.
 
 New project source is MIT licensed. Pinned Phobos parser/dependency source is
 also MIT; see vendor/phobos/LICENSE.txt, NOTICE.md and manifest.json. No upstream
-artwork is included in this foundation.
+CC:Tweaked font bytes are included. Selected Greg Flavored MIT device artwork
+and an independently authored glyph atlas are included with exact provenance,
+notices and reproducible transforms in assets/README.md and assets/manifest.json.
