@@ -3,10 +3,11 @@
 Development mod for exactly Factorio 2.0.77, with base alone or optional Space Age.
 This checkpoint includes the native compiler/sandbox, durable computer API,
 registry, shared scheduler, powered independently wired device family and
-same-colour peripheral discovery/facades. Editor and device-specific service
-bodies are delivered by subsequent cards; this is not yet the
-integrated playable release. Computer/KV mining is temporarily guarded until the
-assigned data-bearing lifecycle milestone, preventing destructive plain drops.
+same-colour peripheral discovery/facades and persistent string/hash KV databases.
+Editor and other device-specific service bodies are delivered by subsequent
+cards; this is not yet the integrated playable release. KV player/robot mining
+uses guarded data-bearing snapshots; computer mining remains guarded until its
+assigned lifecycle milestone, preventing destructive plain drops.
 No interpreter, bytecode compiler, continuation backend, OS, filesystem or dynamic
 guest loader is shipped.
 
@@ -18,6 +19,12 @@ See docs/peripheral-network.md for the complete discovery API, explicit wire
 colours, current-path authority, events and fixed per-type service binding.
 examples/peripheral-program.lua ships an executed native inspection program;
 localized discovery help keys are ready for the editor/help UI.
+
+See docs/kv-database.md for every string/hash/expiry command, exact nil/count/error
+semantics, atomic capacity staging, initial limits and data-bearing lifecycle.
+examples/kv-program.lua supplies its native callback example; locale/en/kv.cfg
+supplies help keys. Select `--fixture tests.kv_engine --cold` to exercise compact
+KV contracts plus actual robot mining/replacement and carried-time cold reload.
 
 See docs/physical-devices.md for footprints, role wiring, initial recipes/power,
 physical host integration and the interim mining guard. docs/computer-runtime.md

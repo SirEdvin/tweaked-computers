@@ -6,6 +6,15 @@ local scheduler=require('scripts.scheduler')
 local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
 local M={}
+-- Fixed host-only item adapters. The computer lifecycle milestone can install
+-- its own adapter without importing services into this ownership module.
+local item_adapters={}
+function M.register_item_adapter(kind,adapter)
+  assert((kind=='kv' or kind=='computer') and not item_adapters[kind])
+  assert(type(adapter.initialize)=='function' and type(adapter.snapshot)=='function'
+    and type(adapter.restore)=='function' and type(adapter.tag)=='string')
+  item_adapters[kind]=adapter
+end
 local function position(rec,index,direction)
   local x,y=defs.offset(rec.kind,index,direction)
   return {x=rec.body.position.x+x,y=rec.body.position.y+y}
@@ -79,7 +88,8 @@ function M.build(body)
     -- The later data-bearing lifecycle milestone owns mined snapshots. Until
     -- then, do not expose a mining path which could discard committed source,
     -- application state or future KV data. Destruction remains explicit loss.
-    if kind=='computer' or kind=='kv' then
+    if item_adapters[kind] then item_adapters[kind].initialize(rec)
+    elseif kind=='computer' or kind=='kv' then
       body.minable=false; rec.mining_guard='awaiting-data-bearing-snapshots'
     end
   end)
@@ -172,10 +182,32 @@ local function refund(event,body)
     for i=1,#event.consumed_items do if give(event.consumed_items[i]) then return end end
   elseif event.stack then give(event.stack) end
 end
+local function consumed(event,body)
+  if event.consumed_items then
+    for i=1,#event.consumed_items do
+      local stack=event.consumed_items[i]
+      if stack.valid_for_read and stack.name==body.name then return stack end
+    end
+  elseif event.stack and event.stack.valid_for_read and event.stack.name==body.name then return event.stack end
+end
 function M.on_built(event)
   local body=event.entity
   if not body or not body.valid or not defs.by_name[body.name] then return end
+  if registry.by_entity(body) then return end -- duplicate build must not replay item data
   local rec,e,retained=M.build(body)
+  if rec and item_adapters[rec.kind] then
+    local adapter=item_adapters[rec.kind]; local stack=consumed(event,body)
+    -- Only a material item carries data. Blueprint/ghost/script tags must not
+    -- duplicate a database, and cloning calls build() without a consumed item.
+    local tags=stack and stack.tags
+    if tags and tags[adapter.tag]~=nil then
+      local ok,err=pcall(adapter.restore,rec,tags[adapter.tag])
+      if not ok then
+        e=type(err)=='table' and err or errors.new('E_ENGINE','item restore failed')
+        retained=not M.remove(rec.id,'item_restore_refused',false); rec=nil
+      end
+    end
+  end
   if not rec then
     if not retained then refund(event,body); body.destroy() end
     log('TC placement refused: '..(e and e.message or 'unknown failure'))
@@ -183,7 +215,28 @@ function M.on_built(event)
 end
 function M.on_removed(event)
   local rec,role=registry.by_entity(event.entity)
-  if rec and rec.physical_version and role=='body' then M.remove(rec.id,'entity_removed',false) end
+  if rec and rec.physical_version and role=='body' then
+    local adapter=item_adapters[rec.kind]
+    if event.buffer and adapter then
+      -- The engine still owns the body and its temporary mining buffer here.
+      -- Serialize before unregistering its exact identity/ports. No guest code.
+      local snapshot=adapter.snapshot(rec,event.tick or game.tick)
+      local target
+      for i=1,#event.buffer do
+        local stack=event.buffer[i]
+        if stack.valid_for_read and stack.name==rec.body.name then target=stack; break end
+      end
+      assert(target,'data-bearing mining result missing; database retained')
+      local tags=target.tags or {}; tags[adapter.tag]=snapshot; target.tags=tags
+    end
+    M.remove(rec.id,'entity_removed',false)
+  end
+end
+function M.on_cloned(event)
+  local body=event.destination
+  if body and body.valid and defs.by_name[body.name]=='kv' then
+    M.on_built{entity=body} -- new physical identity; empty data, no consumed item
+  end
 end
 function M.on_rotated(event)
   local rec,role=registry.by_entity(event.entity)
