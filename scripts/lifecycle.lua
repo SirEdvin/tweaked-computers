@@ -9,8 +9,13 @@ local M={}
 -- Fixed host-only item adapters. The computer lifecycle milestone can install
 -- its own adapter without importing services into this ownership module.
 local item_adapters={}
+local blueprint_adapter
+function M.register_blueprint_adapter(adapter)
+  assert(not blueprint_adapter and type(adapter.after_build)=='function' and type(adapter.on_ghost)=='function')
+  blueprint_adapter=adapter
+end
 function M.register_item_adapter(kind,adapter)
-  assert((kind=='kv' or kind=='computer') and not item_adapters[kind])
+  assert((kind=='kv' or kind=='computer' or kind=='monitor') and not item_adapters[kind])
   assert(type(adapter.initialize)=='function' and type(adapter.snapshot)=='function'
     and type(adapter.restore)=='function' and type(adapter.tag)=='string')
   item_adapters[kind]=adapter
@@ -22,8 +27,19 @@ end
 local function protect(port)
   port.minable=false; port.destructible=false; port.operable=false; port.rotatable=false
 end
-local function create_port(body,role,pos,direction)
-  local port=body.surface.create_entity{name='tc-port-'..role,position=pos,direction=direction,
+local function create_port(body,role,pos,direction,token)
+  local port
+  if token then
+    for _,ghost in ipairs(body.surface.find_entities_filtered{area={{pos.x-0.25,pos.y-0.25},{pos.x+0.25,pos.y+0.25}},type='entity-ghost',force=body.force}) do
+      local tag=ghost.tags and ghost.tags.tc_port
+      if ghost.ghost_name=='tc-port-'..role and type(tag)=='table' and tag.version==1 and tag.token==token
+        and tag.role==role and tag.body==body.name and ghost.position.x==pos.x and ghost.position.y==pos.y then
+        -- create_entity at the same spot would delete this ghost and its wires.
+        local _; _,port=ghost.revive{raise_revive=false}; if port then break end
+      end
+    end
+  end
+  port=port or body.surface.create_entity{name='tc-port-'..role,position=pos,direction=direction,
     force=body.force,quality=body.quality,create_build_effect_smoke=false}
   if not port then errors.raise('E_ENGINE','could not create owned '..role..' port') end
   local ok,e=pcall(function()
@@ -37,6 +53,10 @@ local function create_port(body,role,pos,direction)
   end)
   if not ok then port.destroy(); error(e,0) end
   return port
+end
+function M.normalize_power(rec)
+  local watts=defs.devices[rec.kind].watts
+  rec.body.power_usage=watts/60; rec.body.power_production=0; rec.body.electric_buffer_size=watts/30
 end
 function M.clear_output(rec)
   local port=rec.children.output
@@ -65,7 +85,7 @@ function M.sample_power(rec,tick,spend)
   end
   rec.power_checked_tick=tick
 end
-function M.build(body)
+function M.build(body,token)
   if not body or not body.valid or not defs.by_name[body.name] then return nil end
   local existing=registry.by_entity(body)
   if existing then return existing end -- duplicate raised build is idempotent
@@ -80,7 +100,7 @@ function M.build(body)
     -- Allocate every physical part before publishing the new registry identity.
     for index,role in ipairs(defs.devices[kind].roles) do
       local x,y=defs.offset(kind,index,body.direction)
-      local port=create_port(body,role,{x=body.position.x+x,y=body.position.y+y},body.direction)
+      local port=create_port(body,role,{x=body.position.x+x,y=body.position.y+y},body.direction,token)
       staged[#staged+1]={role=role,entity=port}
     end
     rec=registry.register(kind,body)
@@ -89,6 +109,7 @@ function M.build(body)
     rec.position={x=body.position.x,y=body.position.y}
     rec.powered=body.energy>=defs.devices[kind].watts/60
     rec.power_checked_tick=game.tick
+    M.normalize_power(rec)
     -- The later data-bearing lifecycle milestone owns mined snapshots. Until
     -- then, do not expose a mining path which could discard committed source,
     -- application state or future KV data. Destruction remains explicit loss.
@@ -196,9 +217,13 @@ local function consumed(event,body)
 end
 function M.on_built(event)
   local body=event.entity
+  if blueprint_adapter and blueprint_adapter.on_ghost(event) then return end
   if not body or not body.valid or not defs.by_name[body.name] then return end
   if registry.by_entity(body) then return end -- duplicate build must not replay item data
-  local rec,e,retained=M.build(body)
+  local token=event.tags and event.tags.tc_body_token
+  if type(token)~='string' or #token>128 then token=nil end
+  local rec,e,retained=M.build(body,token)
+  local material_restored=false
   if rec and item_adapters[rec.kind] then
     local adapter=item_adapters[rec.kind]; local stack=consumed(event,body)
     -- Only a material item carries data. Blueprint/ghost/script tags must not
@@ -206,10 +231,19 @@ function M.on_built(event)
     local tags=stack and stack.tags
     if tags and tags[adapter.tag]~=nil then
       local ok,err=pcall(adapter.restore,rec,tags[adapter.tag])
+      material_restored=ok
       if not ok then
         e=type(err)=='table' and err or errors.new('E_ENGINE','item restore failed')
         retained=not M.remove(rec.id,'item_restore_refused',false); rec=nil
       end
+    end
+  end
+  if rec and blueprint_adapter then
+    local ok,err=pcall(blueprint_adapter.after_build,rec,event,material_restored)
+    if not ok then
+      rec.physical_error='blueprint settings refused; source/item data retained'
+      if rec.kind=='computer' then runtime.retire(rec,'faulted','invalid_blueprint') end
+      rec.powered=false; e=err
     end
   end
   if not rec then
@@ -238,8 +272,28 @@ function M.on_removed(event)
 end
 function M.on_cloned(event)
   local body=event.destination
-  if body and body.valid and defs.by_name[body.name]=='kv' then
-    M.on_built{entity=body} -- new physical identity; empty data, no consumed item
+  if not body or not body.valid then return end
+  if defs.by_name[body.name] then
+    local source,role=registry.by_entity(event.source)
+    local rec=M.build(body)
+    if rec and source and role=='body' and blueprint_adapter then blueprint_adapter.clone(rec,source) end
+  elseif body.name:match('^tc%-port%-') and blueprint_adapter then
+    blueprint_adapter.clone_port(event)
+  end
+end
+function M.on_surface_removed(event)
+  local root=registry.get(); if not registry.supported(root) then return end
+  local ids={}; for _,id in ipairs(root.order) do ids[#ids+1]=id end
+  for _,id in ipairs(ids) do local rec=registry.record(id)
+    if rec and rec.surface_index==event.surface_index then M.remove(id,'surface_deleted',false) end
+  end
+end
+function M.on_forces_merging(event)
+  local root=registry.get(); if not registry.supported(root) then return end
+  for _,id in ipairs(root.order) do local rec=registry.record(id)
+    if rec and (rec.force_index==event.source.index or rec.force_index==event.destination.index) then
+      if rec.kind=='computer' then runtime.retire(rec,'stopped','force_merge') else registry.cleanup(rec,rec.run_id,'force_merge'); M.clear_output(rec) end
+    end
   end
 end
 function M.on_rotated(event)
@@ -275,7 +329,9 @@ function M.reconcile(tick,spend)
               rec.physical_error='authority cleanup failed'; rec.powered=false; return
             end
             rec.force_index=rec.body.force.index; rec.surface_index=rec.body.surface.index
+            if rec.kind=='computer' then runtime.retire(rec,'stopped','authority_changed') end
             for _,port in pairs(rec.children) do if port.valid then port.force=rec.body.force end end
+            M.rotate(rec,rec.direction)
           end
           for _,role in ipairs(defs.devices[rec.kind].roles) do
             local port=rec.children[role]

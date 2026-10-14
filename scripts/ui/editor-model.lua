@@ -97,6 +97,17 @@ function M.action(player,token,action,tick,arg)
     if action=='reload' then d.source=review.source end
     s.review=nil; s.validation=nil; s.reset=nil
     return action=='rebase' and 'Draft retained and rebased; Save is still required.' or 'Loaded reviewed saved source.'
+  elseif action=='review-active' then
+    if not rec.active then errors.raise('E_NOT_FOUND','no formerly active source snapshot retained') end
+    s.active_review={source=rec.active.source,revision=rec.active.revision}
+    return 'Formerly active source below is recovery text, not a running program. Copy to Draft does not Save or Run.'
+  elseif action=='copy-active' then
+    local review=s.active_review
+    if not review or not rec.active or review.source~=rec.active.source or review.revision~=rec.active.revision then
+      errors.raise('E_BUSY','active source changed; review its snapshot again')
+    end
+    d.source=review.source; s.validation=nil; s.reset=nil
+    return 'Formerly active source copied into the draft; Save and Run are still separate.'
   elseif action=='recover' then
     local recovered=b.documents[arg]
     if not recovered then errors.raise('E_NOT_FOUND','recovery draft not found') end

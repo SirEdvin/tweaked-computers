@@ -4,11 +4,11 @@ Development mod for exactly Factorio 2.0.77, with base alone or optional Space A
 This checkpoint includes the native compiler/sandbox, durable computer API,
 registry, shared scheduler, powered independently wired device family and
 same-colour peripheral discovery/facades, native single-document editor and the
-complete logic-handler controller, persistent string/hash KV databases and merging in-world color monitors. Configurator service bodies and
-full data-bearing lifecycle remain subsequent milestones; this is not yet the
-integrated public alpha candidate. KV player/robot mining
-uses guarded data-bearing snapshots; computer mining remains guarded until its
-assigned lifecycle milestone, preventing destructive plain drops.
+complete logic-handler controller, persistent string/hash KV databases, merging
+in-world color monitors, full typed configurator and integrated data-bearing
+lifecycle. See docs/device-lifecycle.md for mining/replacement, blueprint source
+disclosure, stopped clones, source recovery and force/surface cleanup. This is
+an internal alpha implementation checkpoint, not the published alpha candidate.
 
 No interpreter, bytecode compiler, continuation backend, OS, filesystem or dynamic
 guest loader is shipped.
@@ -42,7 +42,7 @@ draw objects and a cold mid-sweep reload; player activation checks are mocks,
 not graphical/client evidence.
 
 See docs/physical-devices.md for footprints, role wiring, initial recipes/power,
-physical host integration and the interim mining guard. docs/computer-runtime.md
+physical host integration and initial balance values. docs/computer-runtime.md
 records the implemented computer API, registry/lifecycle/service integration and
 scheduling contract. docs/runtime-foundation.md records the original compiler
 ownership, limits, source diagnostics and reproducible checks. The authoritative

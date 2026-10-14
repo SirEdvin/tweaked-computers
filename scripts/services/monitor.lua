@@ -137,15 +137,16 @@ function M.reconcile(tick,spend)
           end
         end
         local previous=survivor or predecessor
+        local settings=previous and previous.model or registry.record(g.members[1]).monitor_settings
         local changed=not survivor or not same_members(g.members,survivor.members) or g.direction~=survivor.direction
           or g.left~=survivor.left or g.top~=survivor.top
-        local w,h=model.size(g.width_tiles,g.height_tiles,previous and previous.model.scale or 1)
+        local w,h=model.size(g.width_tiles,g.height_tiles,settings and settings.scale or 1)
         spend(w*h*3+#g.members*16+128)
         if not changed then g=survivor else
           g.anchor=survivor and survivor.anchor or g.members[1]
           g.id=survivor and survivor.id or 'tc-monitor-'..string.format('%.0f',registry.sequence())
           g.generation=1; g.kind='monitor'; g.body=registry.record(g.anchor).body
-          g.model=model.new(g.width_tiles,g.height_tiles,previous and previous.model)
+          g.model=model.new(g.width_tiles,g.height_tiles,settings)
           if survivor then
             g.model.revision=survivor.model.revision+1
             if w~=survivor.model.width or h~=survivor.model.height then

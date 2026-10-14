@@ -28,7 +28,8 @@ local function button(parent,name,caption)
 end
 local action_buttons={{'validate','Validate'},{'save','Save'},{'run','Run'},{'apply','Apply'},
   {'stop','Stop'},{'reset','Reset State'},{'help','API Help'},{'close','Close'},
-  {'review','Review Current'},{'template','Template'},{'inspect','Refresh Peripherals'}}
+  {'review','Review Current'},{'template','Template'},{'inspect','Refresh Peripherals'},
+  {'review-active','Recover Active Source'}}
 local function add_actions(c,width,index)
   local actions=c.add{type='table',name='actions',column_count=width>=700 and 4 or width>=420 and 2 or 1,index=index}
   for _,item in ipairs(action_buttons) do button(actions,item[1],item[2]) end
@@ -84,6 +85,11 @@ function M.refresh(player,message)
       ..(s.validation.diagnostic and diagnostic(s.validation.diagnostic) or 'valid')
   else content.validation.caption='' end
   content.review_panel.visible=s.review~=nil
+  content.active_panel.visible=s.active_review~=nil
+  if s.active_review then
+    content.active_panel.review.text=s.active_review.source
+    content.active_panel.caption_label.caption='Formerly active source snapshot, revision '..s.active_review.revision..' (recovery only)'
+  end
   if s.review then content.review_panel.review.text=s.review.source; content.review_panel.caption_label.caption='Current saved revision '..s.review.revision end
   content.confirm_reset.visible=s.reset~=nil
   content.confirm_forget.visible=s.forget~=nil
@@ -131,6 +137,9 @@ function M.open(player,id)
   box(review,'review','',160,true,width)
   local review_actions=review.add{type='flow',name='review_actions',direction='vertical'}
   button(review_actions,'rebase','Rebase — keep draft'); button(review_actions,'reload','Reload — discard draft')
+  local active=c.add{type='flow',name='active_panel',direction='vertical'}
+  label(active,'caption_label',''); box(active,'review','',160,true,width)
+  button(active,'copy-active','Copy snapshot to Draft')
   box(c,'output','',120,true,width)
   local panel=c.add{type='flow',name='help_panel',direction='vertical'}; panel.visible=false
   box(panel,'help_text',help.text,300,true,width)
@@ -203,7 +212,7 @@ function M.on_click(event)
       model.edit(player,s.token,help.template); f.content.source.text=d.source; return 'Template inserted into draft only.'
     end
     local result,err=model.action(player,s.token,action,event.tick,id)
-    if action=='reload' or action=='recover' then f.content.source.text=d.source end
+    if action=='reload' or action=='recover' or action=='copy-active' then f.content.source.text=d.source end
     return result,err
   end)
   M.refresh(player,not ok and diagnostic(message) or message or diagnostic(e))

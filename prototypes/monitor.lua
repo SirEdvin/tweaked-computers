@@ -8,7 +8,7 @@ for _,direction in ipairs(names) do
 end
 entity.icon=art.devices.monitor.icon; entity.icon_size=64
 entity.localised_description={'entity-description.tc-monitor'}
-local item=data.raw.item['tc-monitor']; item.icon=entity.icon; item.icon_size=64
+local item=data.raw['item-with-tags']['tc-monitor']; item.icon=entity.icon; item.icon_size=64
 local sprites={}
 for byte=0,255 do
   local sprite=table.deepcopy(art.glyphs[byte]); sprite.type='sprite'; sprite.name='tc-glyph-'..byte

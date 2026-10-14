@@ -23,7 +23,7 @@ end
 local function empty() return {version=1,entries={},order={},bytes=0,fields=0,cursor=1} end
 local function db(rec)
   local d=rec.database
-  if type(d)~='table' or d.version~=1 then fail('E_UNSUPPORTED','database header unsupported; contents retained') end
+  if type(d)~='table' or d.version~=1 or rec.mining_guard=='unsupported-database' then fail('E_UNSUPPORTED','database representation unsupported; contents retained') end
   return d
 end
 local function live(d,k,tick)
@@ -159,7 +159,8 @@ end
 M.methods=methods
 function M.initialize(rec)
   if rec.database==nil then rec.database=empty() end
-  if type(rec.database)~='table' or rec.database.version~=1 then rec.body.minable=false; rec.mining_guard='unsupported-database'; return end
+  local ok=pcall(M.audit,rec.database,function() end)
+  if not ok then rec.body.minable=false; rec.mining_guard='unsupported-database'; return end
   rec.body.minable=true; rec.mining_guard=nil
 end
 function M.initialize_existing()
@@ -176,7 +177,7 @@ local function noop() end
 -- rather than dynamic key serialization. Even empty/NUL keys are plain values.
 function M.snapshot(rec,tick,spend)
   spend=spend or noop; clock(tick)
-  local d=db(rec); local entries={}
+  local d=db(rec); M.audit(d,spend); local entries={}
   spend(d.bytes+#d.order*80+d.fields*48+128)
   for _,k in ipairs(d.order) do
     local e=d.entries[k]; local item={key=k,type=e.type,deadline=e.deadline}
@@ -209,6 +210,40 @@ local function dense(t,maximum)
   end
   for i=1,count do if t[i]==nil then fail('E_ARGUMENT','sparse snapshot array') end end
   return count
+end
+function M.audit(d,spend)
+  spend=spend or noop
+  if type(d)~='table' or d.version~=1 or type(d.entries)~='table' then fail('E_UNSUPPORTED','unsupported retained database') end
+  local n=dense(d.order,L.keys); local seen={}; local bytes,fields,count=0,0,0
+  for i=1,n do
+    local k=byte(d.order[i],L.key_bytes)
+    if seen[k] or d.entries[k]==nil then fail('E_ARGUMENT','retained database index is not one-to-one') end
+    seen[k]=true; spend(#k+1)
+  end
+  for k,e in pairs(d.entries) do
+    count=count+1
+    if count>L.keys or not seen[k] or type(e)~='table' then fail('E_ARGUMENT','retained database index mismatch') end
+    byte(k,L.key_bytes)
+    if e.deadline~=nil and not errors.integer(e.deadline,0,MAX) then fail('E_ARGUMENT','invalid retained deadline') end
+    local size=0
+    if e.type=='string' then size=#byte(e.value,L.value_bytes)
+    elseif e.type=='hash' and type(e.fields)=='table' then
+      local fc=0
+      for f,v in pairs(e.fields) do
+        fc=fc+1; if fc>L.hash_fields then fail('E_CAPACITY','retained hash field limit') end
+        byte(f,L.key_bytes); byte(v,L.value_bytes); size=size+#f+#v
+        if size>L.hash_bytes then fail('E_CAPACITY','retained hash byte limit') end
+        spend(#f+#v+1)
+      end
+      if fc==0 or e.count~=fc then fail('E_ARGUMENT','retained hash accounting mismatch') end
+      fields=fields+fc
+    else fail('E_ARGUMENT','invalid retained database type') end
+    bytes=bytes+#k+size
+    if e.bytes~=size or bytes>L.bytes or fields>L.total_hash_fields then fail('E_CAPACITY','retained database accounting mismatch') end
+    spend(#k+size+8)
+  end
+  if count~=n or bytes~=d.bytes or fields~=d.fields then fail('E_ARGUMENT','retained database inventory/accounting mismatch') end
+  return true
 end
 function M.import(snapshot,spend)
   spend=spend or noop
@@ -272,7 +307,7 @@ function M.maintenance(tick,spend)
   local cursor=math.min(root.scheduler.kv_cursor or 1,n); local visited=0
   for _=1,n do
     local rec=registry.record(root.order[cursor]); cursor=cursor%n+1
-    if rec and rec.kind=='kv' and rec.database and rec.database.version==1 then
+    if rec and rec.kind=='kv' and rec.database and rec.database.version==1 and rec.mining_guard~='unsupported-database' then
       scheduler.try_maintenance(function() M.reclaim(rec,tick,spend) end)
       visited=visited+1
     end

@@ -87,6 +87,7 @@ def main():
     ap.add_argument('--mode', choices=['base', 'space-age', 'both'], default='both')
     ap.add_argument('--fixture', default='tests.runtime_contract', help='Packaged Lua module exposing run()')
     ap.add_argument('--data-fixture', help='Optional packaged data-stage fixture module')
+    ap.add_argument('--production-context', action='store_true', help='Run the fixed lifecycle fixture in the production mod storage/event context; avoid duplicate native entity owners')
     ap.add_argument('--cold', action='store_true', help='Fixture also exposes on_load/on_tick; exercise two cold server processes')
     ap.add_argument('--upgrade-fixture', action='store_true', help='After ordinary cold reload, change only test mod version and verify researched migration in another process')
     args = ap.parse_args()
@@ -120,6 +121,11 @@ def main():
             if not args.cold:
                 ap.error('--upgrade-fixture requires --cold')
             control += 'script.on_configuration_changed(test.on_configuration_changed)\n'
+        if args.production_context:
+            if args.fixture != 'tests.lifecycle_engine' or not args.cold:
+                ap.error('--production-context requires tests.lifecycle_engine and --cold')
+            control = '-- Native lifecycle fixture runs once in production context.\n'
+            (fixture / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value='tests.lifecycle_engine',allowed_values={'tests.lifecycle_engine'}}}\n")
         (fixture / 'control.lua').write_text(control)
         if args.data_fixture:
             (fixture / 'data.lua').write_text('require('+json.dumps('__'+info['name']+'__.'+args.data_fixture)+')\n')
