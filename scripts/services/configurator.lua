@@ -4,6 +4,7 @@ local adapters=require('scripts.configuration.adapters')
 local data=require('scripts.runtime.data')
 local errors=require('scripts.runtime.errors')
 local common_limits=require('scripts.runtime.limits')
+local sections=require('scripts.configuration.sections')
 local M={}
 local function keys(map) local result={}; for k in pairs(map) do result[#result+1]=k end; table.sort(result); return result end
 function M.describe(item,wire,spend)
@@ -39,8 +40,10 @@ end)
 method('getCapabilities',2,function(rec,spend,id,wire) return adapters.capabilities(targets.lookup(rec,id,wire,spend),spend) end)
 method('getConfiguration',2,function(rec,spend,id,wire) return adapters.snapshot(targets.lookup(rec,id,wire,spend),spend) end)
 method('setConfiguration',3,function(rec,spend,id,patch,wire) return adapters.apply(targets.lookup(rec,id,wire,spend),rec,patch,spend) end)
--- TC11 extends this fixed family before the one registration, not through a
--- guest plugin bus. Its collection handlers must reuse targets.lookup/admission.
+method('getSections',2,function(rec,spend,id,wire) return sections.get(targets.lookup(rec,id,wire,spend),spend) end)
+method('addSection',3,function(rec,spend,id,definition,wire) return sections.add(targets.lookup(rec,id,wire,spend),rec,definition,spend) end)
+method('setSection',4,function(rec,spend,id,index,patch,wire) return sections.set(targets.lookup(rec,id,wire,spend),rec,index,patch,spend) end)
+method('removeSection',3,function(rec,spend,id,index,wire) return sections.remove(targets.lookup(rec,id,wire,spend),rec,index,spend) end)
 M.methods=methods
 peripheral.register_type('configurator',{methods=methods})
 return M

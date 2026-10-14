@@ -6,6 +6,17 @@ local data=require('scripts.runtime.data')
 local M={}
 M.limits={target_nodes=256,target_edges=512,configuration_bytes=16384,configuration_nodes=4096,patch_fields=32,sections=32,section_filters=128}
 local function nop() end
+local function unavailable(item,class,name)
+  if class=='LuaAsteroidCollectorControlBehavior' and name=='connect_to_logistic_network' then return 'native_asteroid_no_logistic_connection' end
+  if class=='LuaTurretControlBehavior' and name=='read_ammo' and item.entity.type=='electric-turret' then return 'ammo_or_fluid_turret_required' end
+  if (class=='LuaAssemblingMachineControlBehavior' or class=='LuaFurnaceControlBehavior') and name=='include_fuel' and not item.entity.get_inventory(defines.inventory.fuel) then return 'fuel_inventory_required' end
+  if class=='LuaRailSignalBaseControlBehavior' and name=='blue_signal' and item.entity.type~='rail-chain-signal' then return 'rail_chain_signal_only' end
+  if class=='LuaLogisticContainerControlBehavior' and name=='circuit_exclusive_mode_of_operation' then
+    local mode=item.entity.prototype.logistic_mode
+    if mode~='requester' and mode~='buffer' then return 'logistic_mode_requester_or_buffer' end
+  end
+end
+M.unavailable=unavailable
 local function sorted(map) local keys={}; for k in pairs(map) do keys[#keys+1]=k end; table.sort(keys); return keys end
 local function behavior(item)
   if item.protected then return nil,nil,'owned_mod_device_protected' end
@@ -24,11 +35,11 @@ function M.summary(item,spend)
   local _,class,reason=behavior(item); local fields=catalog.schemas[class] or {}
   local readable,writable={},{}
   for _,name in ipairs(sorted(fields)) do
-    if fields[name].readable then readable[#readable+1]=name end
-    if fields[name].writable then writable[#writable+1]=name end
+    if fields[name].readable and not unavailable(item,class,name) then readable[#readable+1]=name end
+    if fields[name].writable and not unavailable(item,class,name) then writable[#writable+1]=name end
   end
-  if not reason and #writable==0 then reason=next(fields) and 'adapter_pending_tc11' or 'no_writable_native_settings' end
-  return {behavior=class,readable=readable,writable=writable,sections=false,reason=reason}
+  if not reason and #writable==0 then reason='no_writable_native_settings' end
+  return {behavior=class,readable=readable,writable=writable,sections=class=='LuaConstantCombinatorControlBehavior',reason=reason}
 end
 function M.capabilities(item,spend)
   spend(32)
@@ -37,6 +48,14 @@ function M.capabilities(item,spend)
   local settings={}; local observations={}
   for name,s in pairs(fields) do
     settings[name]=validation.public(s)
+    if class=='LuaCargoLandingPadControlBehavior' and name=='circuit_exclusive_mode_of_operation' and not script.feature_flags.space_travel then
+      settings[name].values={'none','send_contents'}; settings[name].constraints={'set_requests_requires_space_travel'}
+    end
+    local restriction=unavailable(item,class,name)
+    if restriction then
+      settings[name].writable=false; settings[name].unavailable_reason=restriction
+      if restriction=='rail_chain_signal_only' then settings[name].readable=false end
+    end
     if s.writable and s.concept=='CircuitConditionDefinition' then observations[name..'_fulfilled']={kind='boolean',readable=true,writable=false,clearable=false} end
   end
   if cb then
@@ -45,9 +64,9 @@ function M.capabilities(item,spend)
   end
   local writable=false
   for _,s in pairs(fields) do if s.writable then writable=true end end
-  if not reason and not writable then reason=next(fields) and 'adapter_pending_tc11' or 'no_writable_native_settings' end
+  if not reason and not writable then reason='no_writable_native_settings' end
   local caps={api_version=1,behavior=class,settings=settings,observations=observations,
-    sections={supported=false,fields={},limits={sections=M.limits.sections,section_filters=M.limits.section_filters}},reason=reason}
+    sections={supported=class=='LuaConstantCombinatorControlBehavior',fields=validation.public(catalog.section_fields),limits={sections=M.limits.sections,section_filters=M.limits.section_filters}},reason=reason}
   return (data.copy(caps,spend,M.limits.configuration_bytes))
 end
 local function read_snapshot(item,spend)
@@ -55,7 +74,7 @@ local function read_snapshot(item,spend)
   local cb,class=behavior(item); local result={values={},unset={},observations={}}
   for _,name in ipairs(sorted(catalog.schemas[class] or {})) do
     local schema=catalog.schemas[class][name]
-    if schema.readable then
+    if schema.readable and not (unavailable(item,class,name)=='rail_chain_signal_only') then
       local value=cb and cb[name] or nil
       -- Do not use and/or for false values.
       if cb then value=cb[name] end
@@ -94,13 +113,18 @@ function M.preflight(item,patch,spend)
       if name=='disabled' or name:match('_fulfilled$') then errors.raise('E_READ_ONLY','observation cannot be set',name) end
       errors.raise(item.protected and 'E_READ_ONLY' or 'E_ARGUMENT','unknown/protected setting',name)
     end
-    if not schema.writable then errors.raise('E_UNSUPPORTED','native setting adapter pending',name) end
+    if not schema.writable or unavailable(item,class,name) then errors.raise('E_UNSUPPORTED',unavailable(item,class,name) or 'native setting not writable',name) end
     if changes[name] then errors.raise('E_ARGUMENT','repeated set/clear field',name) end
     count=count+1; if count>M.limits.patch_fields then errors.raise('E_LIMIT','patch field limit exceeded') end
     return schema
   end
   for name,value in pairs(patch.set or {}) do
     local schema=admit(name); validation.validate(schema,value,name)
+    if class=='LuaCargoLandingPadControlBehavior' and name=='circuit_exclusive_mode_of_operation' and value=='set_requests' and not script.feature_flags.space_travel then errors.raise('E_UNSUPPORTED','set_requests_requires_space_travel',name) end
+    if schema.concept=='ProgrammableSpeakerCircuitParameters' then
+      local instrument=item.entity.prototype.instruments[value.instrument_id+1]
+      if not instrument or not instrument.notes[value.note_id+1] then errors.raise('E_RANGE','unknown speaker instrument/note',name) end
+    end
     changes[name]={native=validation.native(schema,value),expected=validation.normal(schema,validation.native(schema,value))}
   end
   local n=0
@@ -143,7 +167,10 @@ function M.apply(item,origin,patch,spend)
     for name,change in pairs(changes) do
       if change.clear then
         -- A cleared native condition reads back its engine default, not necessarily nil.
-        local default=schemas[name].concept=='CircuitConditionDefinition' and validation.normal(schemas[name],{comparator='<',constant=0}) or nil
+        local s=schemas[name]; local default
+        if s.concept=='CircuitConditionDefinition' then default=validation.normal(s,{comparator='<',constant=0})
+        elseif s.concept=='ArithmeticCombinatorParameters' or s.concept=='SelectorCombinatorParameters' then default=validation.normal(s,{})
+        elseif s.concept=='DeciderCombinatorParameters' then default=validation.normal(s,{conditions={{}},outputs={{}}}) end
         if not validation.equal(after.values[name],default) and after.values[name]~=nil then errors.raise('E_ENGINE','cleared setting readback differs',name) end
       elseif not validation.equal(after.values[name],change.expected) then errors.raise('E_ENGINE','native setter readback differs',name) end
     end
@@ -153,7 +180,7 @@ function M.apply(item,origin,patch,spend)
   local restored=pcall(function()
     if not item.entity.valid or not cb or not cb.valid then error('target removed') end
     local prior={}
-    for name,s in pairs(schemas) do if s.writable then prior[name]={native=validation.native(s,before.values[name])} end end
+    for name,s in pairs(schemas) do if s.writable and not unavailable(item,class,name) then prior[name]={native=validation.native(s,before.values[name])} end end
     setall(prior)
     local actual=M.snapshot(item,nop)
     if not validation.equal(actual.values,before.values) or not validation.equal(actual.unset,before.unset) then error('restoration readback differs') end

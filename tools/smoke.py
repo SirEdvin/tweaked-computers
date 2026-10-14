@@ -86,6 +86,7 @@ def main():
     ap.add_argument('--output', required=True, type=Path)
     ap.add_argument('--mode', choices=['base', 'space-age', 'both'], default='both')
     ap.add_argument('--fixture', default='tests.runtime_contract', help='Packaged Lua module exposing run()')
+    ap.add_argument('--data-fixture', help='Optional packaged data-stage fixture module')
     ap.add_argument('--cold', action='store_true', help='Fixture also exposes on_load/on_tick; exercise two cold server processes')
     ap.add_argument('--upgrade-fixture', action='store_true', help='After ordinary cold reload, change only test mod version and verify researched migration in another process')
     args = ap.parse_args()
@@ -120,6 +121,8 @@ def main():
                 ap.error('--upgrade-fixture requires --cold')
             control += 'script.on_configuration_changed(test.on_configuration_changed)\n'
         (fixture / 'control.lua').write_text(control)
+        if args.data_fixture:
+            (fixture / 'data.lua').write_text('require('+json.dumps('__'+info['name']+'__.'+args.data_fixture)+')\n')
         enabled = [{'name':'base','enabled':True},{'name':info['name'],'enabled':True},{'name':'tc-smoke','enabled':True}]
         enabled += [{'name':name,'enabled':mode=='space-age'} for name in ('space-age','quality','elevated-rails')]
         (mods / 'mod-list.json').write_text(json.dumps({'mods':enabled}))

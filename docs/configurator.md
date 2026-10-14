@@ -1,36 +1,79 @@
-# Configurator API and basic adapters
+# Device configurator API v1
 
-The NETWORK role reaches computers over the chosen discovery colour. The separate TARGETS role reaches factory devices over a separately chosen colour. Neither role bridges to the other. For example, `peripheral.find("configurator", "red")` followed by `cfg.getDevices("green")` uses red discovery and green factory wiring. Ordinary poles relay target wires; isolated combinator input/output connectors do not relay to one another. Ghosts, different forces/surfaces and wireless transport are not authority.
+Connect NETWORK to computers and TARGETS to factory devices. The two roles never bridge circuits. `peripheral.find("configurator", "red")` selects computer discovery red; `cfg.getDevices("green")` independently selects target green. Ordinary poles relay target wires, but isolated combinator input/output connectors never relay to each other. Ghosts, foreign forces/surfaces and wireless transport are not authority.
 
-## API v1 (dot calls only)
+All methods use dot calls with exact arity. Every addressed operation rechecks the current target path. Opaque IDs survive ordinary reload, not replacement; coordinates are descriptive only. Readback is copied plain data, never a native object. Unknown fields, cycles, metatables, functions, invalid prototypes/qualities/enums and read-only observations are refused.
 
-- `getDevices(target_wire)` returns the complete, ID-sorted unique `DeviceInfo[]` or an explicit failure, never a successful prefix.
-- `getDevice(device_id, target_wire)` returns current metadata or nil for an absent/disconnected/replaced identity.
-- `getCapabilities(device_id, target_wire)` returns a defensive normalized schema.
-- `getConfiguration(device_id, target_wire)` returns `{values={}, unset={}, observations={}}`. False is a value, not unset. Observations are read-only; evaluated conditions can change with simulation independently of settings.
-- `setConfiguration(device_id, {set={...}, clear={...}}, target_wire)` replaces complete root values, leaves omitted roots untouched and returns exact normalized native readback. An empty patch is a validated readback. Repeated clears, set/clear conflicts, unknown keys, read-only fields and invalid nested/prototype/enum values are refused before mutation.
-- `getLimits()` returns the common limits plus target/configuration/section ceilings. Section ceilings reserve the forthcoming collection API; they do not claim section support today.
+## Methods
 
-Every addressed operation repeats current physical traversal. IDs are engine-stable opaque registrations, never coordinates. Same-position replacements receive different IDs. Metadata contains exact prototype/type, actual position, surface index/name, 16-way direction name, quality, selected wire, sorted reached connector names and availability/readable/writable field lists. Internal helpers are never exposed; their public owned body is protected. Reading metadata never creates a native behavior. An unset behavior can advertise applicable settings, but has unset values until an explicit validated update creates it.
+- `getDevices(target_wire)` returns a complete ID-sorted unique inventory, or an explicit error, never an unmarked prefix. Metadata includes prototype/type, actual position, surface index/name, direction, quality, wire, connector names and configuration availability. Owned implementation helpers are hidden; public mod bodies are protected.
+- `getDevice(id, target_wire)` returns the current descriptor or one nil for an absent/disconnected/replaced identity.
+- `getCapabilities(id, target_wire)` returns normalized typed settings, observations and section schemas. Inspect `readable`, `writable`, `clearable`, bounds, enum values, nested required fields, selector variants, constraints and unavailable reasons before writing. Inspection never creates a native behavior.
+- `getConfiguration(id, target_wire)` returns `{values={}, unset={}, observations={}}`. False is a value. `disabled` and evaluated condition fulfillment are read-only observations.
+- `setConfiguration(id, {set={...}, clear={...}}, target_wire)` replaces complete root values, leaves omitted roots unchanged, and returns native normalized readback. An empty patch is a read. Clears are explicit, unique, schema-gated and cannot overlap set fields.
+- `getSections(id, target_wire)` returns native-index-ordered constant-combinator sections. Each has `index`, enum-name `type`, `is_manual`, `active`, `group`, `multiplier`, indexed `filters`, `filters_count` and dynamic `capabilities`.
+- `addSection(id, definition, target_wire)` returns the actual native new index. Definition fields are `active`, `group`, `multiplier`, `filters`; defaults are true, empty group, 1 and empty local filters. Joining an existing group reads that group's effective filters instead of overwriting them with defaults.
+- `setSection(id, index, {set={...}, clear={...}}, target_wire)` returns the selected section. Only the four definition fields can be set; none can be cleared. Use `filters={}` to empty local contents.
+- `removeSection(id, index, target_wire)` returns false if missing, true after verified removal. Indexes shift after removal: always re-enumerate.
+- `getLimits()` returns common and configurator-specific ceilings.
 
-## Schemas and validation
+## Complete native field coverage
 
-`FieldSchema` provides kind, readable/writable/clearable, bounds, enum names, nested fields, required fields, array ceilings and constraints. Returned schemas omit internal native enum resolvers. Integers are finite exact values in their pinned range. Strings/prototype identifiers are bounded and reject NUL. Signals require explicit type/name; quality defaults to normal and reads back explicitly. Existing prototype names are validated against the installed registries, including quality and expansion-dependent types.
+`configuration-coverage.json` is the mechanically generated field-to-adapter/prototype/mode/evidence ledger for all 36 pinned Factorio 2.0.77 behavior classes, 164 inherited field entries, 29 concepts and 10 enum groups. There are no unfinished adapters: 163 entries have applicable native writes; one inherited asteroid-collector logistic-connection switch is natively ineffective and explicitly unavailable. The ledger records that distinction rather than claiming a successful setter from metadata.
 
-Common conditions are flat objects: optional comparator, first_signal, and either constant or second_signal. `fulfilled` is not writable. Comparator values are `=`, `>`, `<`, `≥`, `>=`, `≤`, `<=`, `≠`, `!=`; readback canonicalizes aliases to the native symbols. Omitted comparator/constant read as the pinned native defaults `<` and 0. Only appropriate first-signal condition wildcards are permitted, not `signal-each` or wildcard output/second signals. Optional circuit/logistic conditions and optional signal roots advertise explicit clears. Clearing a native condition produces its native empty/default readback, not an invented nil result. Nonoptional wall/splitter conditions are not advertised as clearable.
+Supported families include all basic container/proxy-container, belt, inserter, loader, splitter, pump, mining, accumulator, tank, wall and generic controls; arithmetic, decider, selector and constant combinators; assembler/furnace recipe/content/status controls; train stops and rail signals; lamp colors, panel messages and speaker circuit parameters; roboports, turrets/artillery, reactors and rocket silos; logistic containers, landing pads, agricultural towers, asteroid collectors and platform hubs. The native class, not a prototype-name allowlist, selects the adapter, including modded entities using those classes. Expansion prototypes are available only when installed.
 
-Working basic classes: container/proxy-container, transport belt, inserter, pump, loader, splitter, accumulator, mining drill, storage tank, wall and generic on/off. Inherited generic condition settings are also available on derived classes. Other behavior-specific fields are explicitly marked `adapter_pending_tc11`, with writable/readable false. Constant sections and later families remain TC11 work, not release-time unsupported excuses. `configuration-coverage.json` inventories all 36 pinned classes, 164 effective writable entries, 29 concepts and 10 enum groups; 84 inherited field entries are implemented and 80 remain pending. Catalogue metadata is not native adapter evidence.
+Actual native restrictions are exposed before mutation:
 
-## Atomicity and recovery
+- `include_fuel` requires a fuel inventory. Electric machines cannot enable it; burner machines can. The native test includes a labelled test-only burner assembler because base has no such assembler.
+- Rail `blue_signal` requires a chain signal.
+- Logistic-container exclusive mode requires requester/buffer mode; other containers remain readable.
+- Landing-pad `set_requests` requires the engine's space-travel feature. Base-only exposes none/send_contents.
+- Electric turrets have no ammunition to read. Asteroid collectors cannot enable their inherited logistic-network connection switch.
+- Speaker instrument/note IDs are checked against the selected target's actual instrument catalogue. Sound playback itself is not claimed by headless checks.
 
-Preflight copies and validates the complete patch, revalidates authority and reserves bounded native/readback/restoration work before setters. Ordering is deterministic: signals/modes first, conditions second, activation/control switches last; fields sort alphabetically within each rank. No simulation advancement occurs between setters. The reservation uses current snapshot and replacement byte/node inventories plus fixed per-field/default overhead; it does not increase the shared callback ceiling.
+## Conditions and parameter objects
 
-Unexpected native setter or readback failures never report success. The adapter attempts restoration of all supported prior settings and verifies readback. Failed restoration retains a plain target-local `configuration_recovery[device_id]` record on the configurator, containing the prior snapshot, validated patch, behavior, tick and creation flag; further writes to that target through this adapter are faulted. Host inspection/repair is required before clearing that record. This is target-local recovery, not rollback of third-party notifications or other devices. If a valid patch needed to create an absent behavior, recovery restores native default settings; the API cannot delete that native behavior object. Stop, disconnection and configurator removal do not undo successful factory settings. There is no periodic settings enforcement.
+Signals use explicit registered `type`/`name`; quality defaults to normal and is explicit on readback. Prototype-object unions become names. Existing installed item/fluid/virtual/entity/recipe/location/asteroid/quality identities are checked; no native object crosses the boundary.
 
-Development limits: 256 reached connector vertices (including the starting port), 512 examined directed edges, 16,384 configuration bytes, 4,096 data nodes, 32 root patch fields, 32 reserved sections and 128 reserved section filters. Common callback, return-data and allocation limits additionally apply. Dense large descriptions can hit those common limits even when the connector graph fits. Limits are provisional, not a measured client-latency promise.
+Conditions are flat `{first_signal=..., comparator=..., constant=...}` or use `second_signal` instead of constant. Accepted comparators are =, >, <, ≥, >=, ≤, <=, ≠, !=; readback canonicalizes aliases. Omitted comparator/constant normalize to < and 0. `fulfilled` is never writable. Clearing conditions yields native defaults, not an invented nil.
 
-## Extension points for TC11
+Arithmetic parameters contain first/second signals or constants, optional red/green network selections, operation and output signal. Arithmetic each input/output is supported; each output requires each input. Deciders accept dense `conditions` and `outputs` arrays, compare_type and/or, per-operand/output networks, output constants and copy_count_from_input. Their legal wildcard roles include each/anything/everything. Ordinary condition first operands allow anything/everything; second operands and ordinary signal roots reject wildcards.
 
-Extend the fixed host family in `scripts/services/configurator.lua` before its single registration. All new methods must validate arity and use `targets.lookup` for the selected factory wire. Match actual `LuaControlBehavior.object_name`, not prototype-name allowlists. Extend the deterministic generator/ledger when implementing a class; never edit generated catalog.lua independently. Add explicit conversion/normalization/variant/prototype invariants in validation.lua for richer types; the frozen selector variant grammar is metadata, not a validated working parameter adapter. Reuse whole-patch preflight, pre-mutation reservation, setter ordering and full native readback/recovery, adding collection-specific bounds rather than property forwarding. Collection/shared-scope operations require their own staged snapshots and authority closure checks.
+Selectors use discriminated operation objects, not a bag of interchangeable fields:
 
-The packaged `examples/configurator-program.lua` is executed through the actual native compiler and peripheral facade in `tests.configurator_engine`. Its `start` configures connected inserters to require signal-A > 4 and records the last configured opaque ID. This is compiler/service/native setter evidence, not user typing or client GUI readback. Graph limits, each basic setting, enum alternatives, nullable clears, invalid patches and cold settings/identity/recovery persistence have headless contracts. Injected setter/readback interference uses explicitly labelled host doubles. Client editing, visible native configuration GUI, wire selection and multiplayer joining remain deferred to the user.
+- select: index_signal or index_constant, select_max;
+- count: count_signal;
+- random: random_update_interval;
+- stack-size / rocket-capacity: no extra fields;
+- quality-filter: a registered quality name or quality/comparator object;
+- quality-transfer: required quality_destination_signal, select_quality_from_signal and applicable quality_source_signal or quality_source_static `{name=...}`.
+
+Fields from another selector operation are rejected. Native network/default/quality forms are normalized on both expected and actual readback; absent static normal quality is not confused with an unset selection.
+
+## Sections, groups and indexed filters
+
+Example for a target constant combinator:
+
+```lua
+local index = cfg.addSection(id, {active=false, filters={
+  {index=4, value={type="item",name="iron-plate",quality="normal",comparator="="}, min=7}
+}}, "green")
+cfg.setSection(id, index, {set={active=true,multiplier=2}}, "green")
+```
+
+Filters are LogisticFilter records, not logic-handler Signal records. They support explicit slot index, value signal/quality/comparator, signed min, optional unsigned max and minimum_delivery_count, and import_from location name. Indexed sparse slots remain sparse; native array assignment would silently discard the index, so the adapter uses native set_slot. Duplicate indexes and duplicate native filter identities are refused. Nonzero min requires an exact quality filter. Readback normalizes the native item import default to the registered nauvis name. Multiplier readback preserves native float32 precision.
+
+Nonmanual sections are read-only, including removal. Shared filter writes are always refused with E_SHARED_SCOPE; the implementation deliberately does not enumerate unbounded global membership. Group assignment changes only the selected reference. Explicit `group=""` detaches and preserves effective filters before any optional local replacement. Never silently detach. Shared active/multiplier/reference operations remain target-local; unconnected member filters are checked unchanged in native fixtures. A plain group assignment cannot be combined with filters while the final group is nonempty.
+
+## Admission, failures and persistence
+
+Preflight copies and validates complete requests and reserves weighted native setter/readback/restoration work on the existing shared ledger. Setters run deterministically: signals/modes, conditions, activation switches; alphabetical within ranks. No simulation advancement occurs during an operation. Large responses are bounded too. Native group contents are opaque until joining; over-envelope native readback is refused inside guarded target-local restoration rather than exposing an unbounded membership list.
+
+Unexpected setter/readback failure never reports success. Supported prior target settings are restored and verified. A failed restoration retains `configuration_recovery[id]` with plain prior state, request, tick and diagnostic; subsequent writes through that configurator are faulted until host repair. Section removal reconstructs only a manual suffix when needed; a nonmanual suffix that cannot be restored is explicitly retained as a recovery fault, never overwritten. Native behavior creation can be restored to native defaults, not deleted. Native group creation/third-party notifications are not globally rolled back.
+
+Successful factory settings survive program stop, disconnection and configurator removal. Player edits remain authoritative until another explicit write; there is no periodic settings enforcement. Cold tests verify native settings, section indexes/filters, entity aliases, outside shared membership and retained recovery aliases in a separate engine process. Invalid patches/admission refusals preserve prior settings.
+
+Development ceilings: 256 reached connector vertices, 512 examined edges, 16,384 configuration bytes, 4,096 Data nodes, 32 root patch fields, 32 sections and 128 slots per section. Common callback/allocation/return caps also apply; these are simultaneous ceilings, not a promise that every maximum can be combined in one callback. No shared production limits were raised.
+
+`examples/configurator-program.lua` configures connected inserters. `examples/configurator-sections.lua` exercises actual registered section methods through the native compiler and separate target wiring. These are native source/service/setter checks, not evidence of client typing, native target GUI rendering, focus, audible playback, graphical latency or multiplayer joining. Those checks remain deferred to the user for the alpha.

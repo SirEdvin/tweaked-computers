@@ -117,7 +117,7 @@ function M.run()
   for _,schemas in pairs(catalog.schemas) do classes=classes+1; for _,s in pairs(schemas) do fields=fields+1; assert(s.kind and type(s.readable)=='boolean' and type(s.writable)=='boolean') end end
   for _ in pairs(catalog.concepts) do concepts=concepts+1 end; for _ in pairs(catalog.enum_values) do enums=enums+1 end
   assert(classes==36 and fields==164 and concepts==29 and enums==10)
-  local caps=adapters.capabilities(inv[targets.identity(arithmetic)],nop); assert(not caps.settings.parameters.writable and caps.settings.parameters.unavailable_reason=='adapter_pending_tc11')
+  local caps=adapters.capabilities(inv[targets.identity(arithmetic)],nop); assert(caps.settings.parameters.writable)
   local copied=adapters.capabilities(inv[id],nop); copied.settings.circuit_condition.fields.constant.min=999
   assert(adapters.capabilities(inv[id],nop).settings.circuit_condition.fields.constant.min==-2147483648)
   report('full-counted-catalogue-schema-copy-and-honest-pending-adapter-ledger')

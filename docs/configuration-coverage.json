@@ -17,1152 +17,2404 @@
       "field": "output_signal",
       "declared_in": "LuaAccumulatorControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "accumulator"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaAccumulatorControlBehavior",
       "field": "read_charge",
       "declared_in": "LuaAccumulatorControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "accumulator"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaAgriculturalTowerControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "agricultural-tower"
+      ],
+      "content": "space-age",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaAgriculturalTowerControlBehavior",
       "field": "circuit_enable_disable",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "agricultural-tower"
+      ],
+      "content": "space-age",
+      "constraints": []
     },
     {
       "behavior": "LuaAgriculturalTowerControlBehavior",
       "field": "connect_to_logistic_network",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "agricultural-tower"
+      ],
+      "content": "space-age",
+      "constraints": []
     },
     {
       "behavior": "LuaAgriculturalTowerControlBehavior",
       "field": "logistic_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "agricultural-tower"
+      ],
+      "content": "space-age",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaAgriculturalTowerControlBehavior",
       "field": "read_contents",
       "declared_in": "LuaAgriculturalTowerControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "agricultural-tower"
+      ],
+      "content": "space-age",
+      "constraints": []
     },
     {
       "behavior": "LuaArithmeticCombinatorControlBehavior",
       "field": "parameters",
       "declared_in": "LuaArithmeticCombinatorControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "arithmetic-combinator"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaArtilleryTurretControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "artillery-turret"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaArtilleryTurretControlBehavior",
       "field": "circuit_enable_disable",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "artillery-turret"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaArtilleryTurretControlBehavior",
       "field": "connect_to_logistic_network",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "artillery-turret"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaArtilleryTurretControlBehavior",
       "field": "logistic_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "artillery-turret"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaArtilleryTurretControlBehavior",
       "field": "read_ammo",
       "declared_in": "LuaArtilleryTurretControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "artillery-turret"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaAssemblingMachineControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "assembling-machine-3",
+        "tc11-burner-assembling-machine"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaAssemblingMachineControlBehavior",
       "field": "circuit_enable_disable",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "assembling-machine-3",
+        "tc11-burner-assembling-machine"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaAssemblingMachineControlBehavior",
       "field": "circuit_read_contents",
       "declared_in": "LuaAssemblingMachineControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "assembling-machine-3",
+        "tc11-burner-assembling-machine"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaAssemblingMachineControlBehavior",
       "field": "circuit_read_ingredients",
       "declared_in": "LuaAssemblingMachineControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "assembling-machine-3",
+        "tc11-burner-assembling-machine"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaAssemblingMachineControlBehavior",
       "field": "circuit_read_recipe_finished",
       "declared_in": "LuaAssemblingMachineControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "assembling-machine-3",
+        "tc11-burner-assembling-machine"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaAssemblingMachineControlBehavior",
       "field": "circuit_read_working",
       "declared_in": "LuaAssemblingMachineControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "assembling-machine-3",
+        "tc11-burner-assembling-machine"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaAssemblingMachineControlBehavior",
       "field": "circuit_recipe_finished_signal",
       "declared_in": "LuaAssemblingMachineControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "assembling-machine-3",
+        "tc11-burner-assembling-machine"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaAssemblingMachineControlBehavior",
       "field": "circuit_set_recipe",
       "declared_in": "LuaAssemblingMachineControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "assembling-machine-3",
+        "tc11-burner-assembling-machine"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaAssemblingMachineControlBehavior",
       "field": "circuit_working_signal",
       "declared_in": "LuaAssemblingMachineControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "assembling-machine-3",
+        "tc11-burner-assembling-machine"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaAssemblingMachineControlBehavior",
       "field": "connect_to_logistic_network",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "assembling-machine-3",
+        "tc11-burner-assembling-machine"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaAssemblingMachineControlBehavior",
       "field": "include_fuel",
       "declared_in": "LuaAssemblingMachineControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "assembling-machine-3",
+        "tc11-burner-assembling-machine"
+      ],
+      "content": "base",
+      "constraints": [
+        "fuel_inventory_required"
+      ]
     },
     {
       "behavior": "LuaAssemblingMachineControlBehavior",
       "field": "include_in_crafting",
       "declared_in": "LuaAssemblingMachineControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "assembling-machine-3",
+        "tc11-burner-assembling-machine"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaAssemblingMachineControlBehavior",
       "field": "logistic_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "assembling-machine-3",
+        "tc11-burner-assembling-machine"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaAsteroidCollectorControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "asteroid-collector"
+      ],
+      "content": "space-age",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaAsteroidCollectorControlBehavior",
       "field": "circuit_enable_disable",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "asteroid-collector"
+      ],
+      "content": "space-age",
+      "constraints": []
     },
     {
       "behavior": "LuaAsteroidCollectorControlBehavior",
       "field": "connect_to_logistic_network",
       "declared_in": "LuaGenericOnOffControlBehavior",
-      "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "status": "native_unavailable",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "asteroid-collector"
+      ],
+      "content": "space-age",
+      "constraints": [
+        "native_asteroid_no_logistic_connection"
+      ]
     },
     {
       "behavior": "LuaAsteroidCollectorControlBehavior",
       "field": "include_hands",
       "declared_in": "LuaAsteroidCollectorControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "asteroid-collector"
+      ],
+      "content": "space-age",
+      "constraints": []
     },
     {
       "behavior": "LuaAsteroidCollectorControlBehavior",
       "field": "logistic_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "asteroid-collector"
+      ],
+      "content": "space-age",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaAsteroidCollectorControlBehavior",
       "field": "read_content",
       "declared_in": "LuaAsteroidCollectorControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "asteroid-collector"
+      ],
+      "content": "space-age",
+      "constraints": []
     },
     {
       "behavior": "LuaAsteroidCollectorControlBehavior",
       "field": "set_filter",
       "declared_in": "LuaAsteroidCollectorControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "asteroid-collector"
+      ],
+      "content": "space-age",
+      "constraints": []
     },
     {
       "behavior": "LuaCargoLandingPadControlBehavior",
       "field": "circuit_exclusive_mode_of_operation",
       "declared_in": "LuaCargoLandingPadControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "cargo-landing-pad"
+      ],
+      "content": "base",
+      "constraints": [
+        "set_requests_requires_space_travel"
+      ]
     },
     {
       "behavior": "LuaConstantCombinatorControlBehavior",
       "field": "enabled",
       "declared_in": "LuaConstantCombinatorControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "constant-combinator"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaContainerControlBehavior",
       "field": "read_contents",
       "declared_in": "LuaContainerControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "wooden-chest"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaDeciderCombinatorControlBehavior",
       "field": "parameters",
       "declared_in": "LuaDeciderCombinatorControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "decider-combinator"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaDisplayPanelControlBehavior",
       "field": "messages",
       "declared_in": "LuaDisplayPanelControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "display-panel"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaFurnaceControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "electric-furnace",
+        "stone-furnace"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaFurnaceControlBehavior",
       "field": "circuit_enable_disable",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "electric-furnace",
+        "stone-furnace"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaFurnaceControlBehavior",
       "field": "circuit_read_contents",
       "declared_in": "LuaFurnaceControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "electric-furnace",
+        "stone-furnace"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaFurnaceControlBehavior",
       "field": "circuit_read_ingredients",
       "declared_in": "LuaFurnaceControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "electric-furnace",
+        "stone-furnace"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaFurnaceControlBehavior",
       "field": "circuit_read_recipe_finished",
       "declared_in": "LuaFurnaceControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "electric-furnace",
+        "stone-furnace"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaFurnaceControlBehavior",
       "field": "circuit_read_working",
       "declared_in": "LuaFurnaceControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "electric-furnace",
+        "stone-furnace"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaFurnaceControlBehavior",
       "field": "circuit_recipe_finished_signal",
       "declared_in": "LuaFurnaceControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "electric-furnace",
+        "stone-furnace"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaFurnaceControlBehavior",
       "field": "circuit_working_signal",
       "declared_in": "LuaFurnaceControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "electric-furnace",
+        "stone-furnace"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaFurnaceControlBehavior",
       "field": "connect_to_logistic_network",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "electric-furnace",
+        "stone-furnace"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaFurnaceControlBehavior",
       "field": "include_fuel",
       "declared_in": "LuaFurnaceControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "electric-furnace",
+        "stone-furnace"
+      ],
+      "content": "base",
+      "constraints": [
+        "fuel_inventory_required"
+      ]
     },
     {
       "behavior": "LuaFurnaceControlBehavior",
       "field": "include_in_crafting",
       "declared_in": "LuaFurnaceControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "electric-furnace",
+        "stone-furnace"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaFurnaceControlBehavior",
       "field": "logistic_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "electric-furnace",
+        "stone-furnace"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaGenericOnOffControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "power-switch"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaGenericOnOffControlBehavior",
       "field": "circuit_enable_disable",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "power-switch"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaGenericOnOffControlBehavior",
       "field": "connect_to_logistic_network",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "power-switch"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaGenericOnOffControlBehavior",
       "field": "logistic_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "power-switch"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaInserterControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "inserter"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaInserterControlBehavior",
       "field": "circuit_enable_disable",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "inserter"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaInserterControlBehavior",
       "field": "circuit_hand_read_mode",
       "declared_in": "LuaInserterControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "inserter"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaInserterControlBehavior",
       "field": "circuit_read_hand_contents",
       "declared_in": "LuaInserterControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "inserter"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaInserterControlBehavior",
       "field": "circuit_set_filters",
       "declared_in": "LuaInserterControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "inserter"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaInserterControlBehavior",
       "field": "circuit_set_stack_size",
       "declared_in": "LuaInserterControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "inserter"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaInserterControlBehavior",
       "field": "circuit_stack_control_signal",
       "declared_in": "LuaInserterControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "inserter"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaInserterControlBehavior",
       "field": "connect_to_logistic_network",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "inserter"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaInserterControlBehavior",
       "field": "logistic_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "inserter"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaLampControlBehavior",
       "field": "blue_signal",
       "declared_in": "LuaLampControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "small-lamp"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaLampControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "small-lamp"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaLampControlBehavior",
       "field": "circuit_enable_disable",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "small-lamp"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaLampControlBehavior",
       "field": "color_mode",
       "declared_in": "LuaLampControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "small-lamp"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaLampControlBehavior",
       "field": "connect_to_logistic_network",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "small-lamp"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaLampControlBehavior",
       "field": "green_signal",
       "declared_in": "LuaLampControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "small-lamp"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaLampControlBehavior",
       "field": "logistic_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "small-lamp"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaLampControlBehavior",
       "field": "red_signal",
       "declared_in": "LuaLampControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "small-lamp"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaLampControlBehavior",
       "field": "rgb_signal",
       "declared_in": "LuaLampControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "small-lamp"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaLampControlBehavior",
       "field": "use_colors",
       "declared_in": "LuaLampControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "small-lamp"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaLoaderControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "loader"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaLoaderControlBehavior",
       "field": "circuit_enable_disable",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "loader"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaLoaderControlBehavior",
       "field": "circuit_read_transfers",
       "declared_in": "LuaLoaderControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "loader"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaLoaderControlBehavior",
       "field": "circuit_set_filters",
       "declared_in": "LuaLoaderControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "loader"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaLoaderControlBehavior",
       "field": "connect_to_logistic_network",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "loader"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaLoaderControlBehavior",
       "field": "logistic_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "loader"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaLogisticContainerControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaLogisticContainerControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "requester-chest",
+        "buffer-chest",
+        "passive-provider-chest"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaLogisticContainerControlBehavior",
       "field": "circuit_condition_enabled",
       "declared_in": "LuaLogisticContainerControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "requester-chest",
+        "buffer-chest",
+        "passive-provider-chest"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaLogisticContainerControlBehavior",
       "field": "circuit_exclusive_mode_of_operation",
       "declared_in": "LuaLogisticContainerControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "requester-chest",
+        "buffer-chest",
+        "passive-provider-chest"
+      ],
+      "content": "base",
+      "constraints": [
+        "logistic_mode_requester_or_buffer"
+      ]
     },
     {
       "behavior": "LuaMiningDrillControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "electric-mining-drill"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaMiningDrillControlBehavior",
       "field": "circuit_enable_disable",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "electric-mining-drill"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaMiningDrillControlBehavior",
       "field": "circuit_read_resources",
       "declared_in": "LuaMiningDrillControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "electric-mining-drill"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaMiningDrillControlBehavior",
       "field": "connect_to_logistic_network",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "electric-mining-drill"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaMiningDrillControlBehavior",
       "field": "logistic_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "electric-mining-drill"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaMiningDrillControlBehavior",
       "field": "resource_read_mode",
       "declared_in": "LuaMiningDrillControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "electric-mining-drill"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaProgrammableSpeakerControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaProgrammableSpeakerControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "programmable-speaker"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaProgrammableSpeakerControlBehavior",
       "field": "circuit_parameters",
       "declared_in": "LuaProgrammableSpeakerControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "programmable-speaker"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaProxyContainerControlBehavior",
       "field": "read_contents",
       "declared_in": "LuaProxyContainerControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "proxy-container"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaPumpControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "pump"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaPumpControlBehavior",
       "field": "circuit_enable_disable",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "pump"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaPumpControlBehavior",
       "field": "connect_to_logistic_network",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "pump"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaPumpControlBehavior",
       "field": "logistic_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "pump"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaPumpControlBehavior",
       "field": "set_filter",
       "declared_in": "LuaPumpControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "pump"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaRailSignalBaseControlBehavior",
       "field": "blue_signal",
       "declared_in": "LuaRailSignalBaseControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "rail-signal",
+        "rail-chain-signal"
+      ],
+      "content": "base",
+      "constraints": [
+        "rail_chain_signal_only"
+      ]
     },
     {
       "behavior": "LuaRailSignalBaseControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaRailSignalBaseControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "rail-signal",
+        "rail-chain-signal"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaRailSignalBaseControlBehavior",
       "field": "close_signal",
       "declared_in": "LuaRailSignalBaseControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "rail-signal",
+        "rail-chain-signal"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaRailSignalBaseControlBehavior",
       "field": "green_signal",
       "declared_in": "LuaRailSignalBaseControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "rail-signal",
+        "rail-chain-signal"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaRailSignalBaseControlBehavior",
       "field": "orange_signal",
       "declared_in": "LuaRailSignalBaseControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "rail-signal",
+        "rail-chain-signal"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaRailSignalBaseControlBehavior",
       "field": "read_signal",
       "declared_in": "LuaRailSignalBaseControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "rail-signal",
+        "rail-chain-signal"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaRailSignalBaseControlBehavior",
       "field": "red_signal",
       "declared_in": "LuaRailSignalBaseControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "rail-signal",
+        "rail-chain-signal"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaReactorControlBehavior",
       "field": "read_fuel",
       "declared_in": "LuaReactorControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "nuclear-reactor"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaReactorControlBehavior",
       "field": "read_temperature",
       "declared_in": "LuaReactorControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "nuclear-reactor"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaReactorControlBehavior",
       "field": "temperature_signal",
       "declared_in": "LuaReactorControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "nuclear-reactor"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaRoboportControlBehavior",
       "field": "available_construction_output_signal",
       "declared_in": "LuaRoboportControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "roboport"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaRoboportControlBehavior",
       "field": "available_logistic_output_signal",
       "declared_in": "LuaRoboportControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "roboport"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaRoboportControlBehavior",
       "field": "read_items_mode",
       "declared_in": "LuaRoboportControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "roboport"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaRoboportControlBehavior",
       "field": "read_logistics",
       "declared_in": "LuaRoboportControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "roboport"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaRoboportControlBehavior",
       "field": "read_robot_stats",
       "declared_in": "LuaRoboportControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "roboport"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaRoboportControlBehavior",
       "field": "roboport_count_output_signal",
       "declared_in": "LuaRoboportControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "roboport"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaRoboportControlBehavior",
       "field": "total_construction_output_signal",
       "declared_in": "LuaRoboportControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "roboport"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaRoboportControlBehavior",
       "field": "total_logistic_output_signal",
       "declared_in": "LuaRoboportControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "roboport"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaRocketSiloControlBehavior",
       "field": "read_mode",
       "declared_in": "LuaRocketSiloControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "rocket-silo"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaSelectorCombinatorControlBehavior",
       "field": "parameters",
       "declared_in": "LuaSelectorCombinatorControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "selector-combinator"
+      ],
+      "content": "base",
+      "constraints": [
+        "operation_variant"
+      ]
     },
     {
       "behavior": "LuaSpacePlatformHubControlBehavior",
       "field": "damage_taken_signal",
       "declared_in": "LuaSpacePlatformHubControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "space-platform-hub"
+      ],
+      "content": "space-age",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaSpacePlatformHubControlBehavior",
       "field": "read_contents",
       "declared_in": "LuaSpacePlatformHubControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "space-platform-hub"
+      ],
+      "content": "space-age",
+      "constraints": []
     },
     {
       "behavior": "LuaSpacePlatformHubControlBehavior",
       "field": "read_damage_taken",
       "declared_in": "LuaSpacePlatformHubControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "space-platform-hub"
+      ],
+      "content": "space-age",
+      "constraints": []
     },
     {
       "behavior": "LuaSpacePlatformHubControlBehavior",
       "field": "read_moving_from",
       "declared_in": "LuaSpacePlatformHubControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "space-platform-hub"
+      ],
+      "content": "space-age",
+      "constraints": []
     },
     {
       "behavior": "LuaSpacePlatformHubControlBehavior",
       "field": "read_moving_to",
       "declared_in": "LuaSpacePlatformHubControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "space-platform-hub"
+      ],
+      "content": "space-age",
+      "constraints": []
     },
     {
       "behavior": "LuaSpacePlatformHubControlBehavior",
       "field": "read_speed",
       "declared_in": "LuaSpacePlatformHubControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "space-platform-hub"
+      ],
+      "content": "space-age",
+      "constraints": []
     },
     {
       "behavior": "LuaSpacePlatformHubControlBehavior",
       "field": "send_to_platform",
       "declared_in": "LuaSpacePlatformHubControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "space-platform-hub"
+      ],
+      "content": "space-age",
+      "constraints": []
     },
     {
       "behavior": "LuaSpacePlatformHubControlBehavior",
       "field": "speed_signal",
       "declared_in": "LuaSpacePlatformHubControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "space-platform-hub"
+      ],
+      "content": "space-age",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaSplitterControlBehavior",
       "field": "input_left_condition",
       "declared_in": "LuaSplitterControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "splitter"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaSplitterControlBehavior",
       "field": "input_right_condition",
       "declared_in": "LuaSplitterControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "splitter"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaSplitterControlBehavior",
       "field": "output_left_condition",
       "declared_in": "LuaSplitterControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "splitter"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaSplitterControlBehavior",
       "field": "output_right_condition",
       "declared_in": "LuaSplitterControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "splitter"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaSplitterControlBehavior",
       "field": "set_filter",
       "declared_in": "LuaSplitterControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "splitter"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaSplitterControlBehavior",
       "field": "set_input_side",
       "declared_in": "LuaSplitterControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "splitter"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaSplitterControlBehavior",
       "field": "set_output_side",
       "declared_in": "LuaSplitterControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "splitter"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaStorageTankControlBehavior",
       "field": "read_contents",
       "declared_in": "LuaStorageTankControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "storage-tank"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTrainStopControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "train-stop"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaTrainStopControlBehavior",
       "field": "circuit_enable_disable",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "train-stop"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTrainStopControlBehavior",
       "field": "connect_to_logistic_network",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "train-stop"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTrainStopControlBehavior",
       "field": "logistic_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "train-stop"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaTrainStopControlBehavior",
       "field": "priority_signal",
       "declared_in": "LuaTrainStopControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "train-stop"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaTrainStopControlBehavior",
       "field": "read_from_train",
       "declared_in": "LuaTrainStopControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "train-stop"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTrainStopControlBehavior",
       "field": "read_stopped_train",
       "declared_in": "LuaTrainStopControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "train-stop"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTrainStopControlBehavior",
       "field": "read_trains_count",
       "declared_in": "LuaTrainStopControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "train-stop"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTrainStopControlBehavior",
       "field": "send_to_train",
       "declared_in": "LuaTrainStopControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "train-stop"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTrainStopControlBehavior",
       "field": "set_priority",
       "declared_in": "LuaTrainStopControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "train-stop"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTrainStopControlBehavior",
       "field": "set_trains_limit",
       "declared_in": "LuaTrainStopControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "train-stop"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTrainStopControlBehavior",
       "field": "stopped_train_signal",
       "declared_in": "LuaTrainStopControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "train-stop"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaTrainStopControlBehavior",
       "field": "trains_count_signal",
       "declared_in": "LuaTrainStopControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "train-stop"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaTrainStopControlBehavior",
       "field": "trains_limit_signal",
       "declared_in": "LuaTrainStopControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "train-stop"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaTransportBeltControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "transport-belt"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaTransportBeltControlBehavior",
       "field": "circuit_enable_disable",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "transport-belt"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTransportBeltControlBehavior",
       "field": "connect_to_logistic_network",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "transport-belt"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTransportBeltControlBehavior",
       "field": "logistic_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "transport-belt"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaTransportBeltControlBehavior",
       "field": "read_contents",
       "declared_in": "LuaTransportBeltControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "transport-belt"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTransportBeltControlBehavior",
       "field": "read_contents_mode",
       "declared_in": "LuaTransportBeltControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "transport-belt"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTurretControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "gun-turret",
+        "laser-turret",
+        "flamethrower-turret"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaTurretControlBehavior",
       "field": "circuit_enable_disable",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "gun-turret",
+        "laser-turret",
+        "flamethrower-turret"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTurretControlBehavior",
       "field": "connect_to_logistic_network",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "gun-turret",
+        "laser-turret",
+        "flamethrower-turret"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTurretControlBehavior",
       "field": "ignore_unlisted_targets_condition",
       "declared_in": "LuaTurretControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "gun-turret",
+        "laser-turret",
+        "flamethrower-turret"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaTurretControlBehavior",
       "field": "logistic_condition",
       "declared_in": "LuaGenericOnOffControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "gun-turret",
+        "laser-turret",
+        "flamethrower-turret"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaTurretControlBehavior",
       "field": "read_ammo",
       "declared_in": "LuaTurretControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "gun-turret",
+        "laser-turret",
+        "flamethrower-turret"
+      ],
+      "content": "base",
+      "constraints": [
+        "ammo_or_fluid_turret_required"
+      ]
     },
     {
       "behavior": "LuaTurretControlBehavior",
       "field": "set_ignore_unlisted_targets",
       "declared_in": "LuaTurretControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "gun-turret",
+        "laser-turret",
+        "flamethrower-turret"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaTurretControlBehavior",
       "field": "set_priority_list",
       "declared_in": "LuaTurretControlBehavior",
-      "status": "pending_tc11",
-      "evidence": null
+      "status": "implemented",
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_full_engine",
+      "prototypes": [
+        "gun-turret",
+        "laser-turret",
+        "flamethrower-turret"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaWallControlBehavior",
       "field": "circuit_condition",
       "declared_in": "LuaWallControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "stone-wall"
+      ],
+      "content": "base",
+      "constraints": [
+        "condition_operand_exclusive",
+        "condition_signal_roles"
+      ]
     },
     {
       "behavior": "LuaWallControlBehavior",
       "field": "open_gate",
       "declared_in": "LuaWallControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "stone-wall"
+      ],
+      "content": "base",
+      "constraints": []
     },
     {
       "behavior": "LuaWallControlBehavior",
       "field": "output_signal",
       "declared_in": "LuaWallControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "stone-wall"
+      ],
+      "content": "base",
+      "constraints": [
+        "registered_signal",
+        "explicit_signal_type"
+      ]
     },
     {
       "behavior": "LuaWallControlBehavior",
       "field": "read_sensor",
       "declared_in": "LuaWallControlBehavior",
       "status": "implemented",
-      "evidence": "tests.configurator_engine"
+      "adapter": "scripts.configuration.adapters.apply",
+      "evidence": "tests.configurator_engine",
+      "prototypes": [
+        "stone-wall"
+      ],
+      "content": "base",
+      "constraints": []
     }
   ],
   "sections": {
-    "status": "pending_tc11"
+    "status": "implemented",
+    "adapter": "scripts.configuration.sections",
+    "evidence": "tests.configurator_full_engine",
+    "fields": [
+      "active",
+      "filters",
+      "group",
+      "multiplier"
+    ],
+    "policy": "nonmanual read-only; shared filter writes refused; explicit local detach preserves effective filters"
   },
   "concepts": [
     "ArithmeticCombinatorParameterOperation",
