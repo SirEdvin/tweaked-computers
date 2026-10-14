@@ -9,6 +9,11 @@ function M.new(context, services)
   local owned = setmetatable({}, {__mode='k'})
   local protected = setmetatable({}, {__mode='k'})
   local callable = setmetatable({}, {__mode='k'})
+  local handle_arguments = setmetatable({}, {__mode='k'}) -- Host-only opt-in, not Data.
+  function G.accept_handle(fn,index)
+    assert(type(fn)=='function' and index==1,'invalid trusted handle introspector')
+    handle_arguments[fn]=index
+  end
   local sentinel = {} -- Private, ephemeral and never returned through guest pcall.
   local function fatal(reason)
     poison = reason or 'callback budget exhausted'
@@ -246,7 +251,11 @@ function M.new(context, services)
       G.spend(1) -- Must precede trusted service's authority/admission/effect boundary.
       local n=select('#',...); integer(n,0,limits.tuple_entries)
       local args=table.pack(...)
-      for i=1,n do args[i]=G.snapshot(args[i]) end
+      for i=1,n do
+        if not (handle_arguments[fn]==i and type(args[i])=='table' and protected[args[i]]) then
+          args[i]=G.snapshot(args[i])
+        end
+      end
       local result=table.pack(fn(table.unpack(args,1,n)))
       if result.n>limits.tuple_entries then fatal('service result width exceeded') end
       for i=1,result.n do
