@@ -1,0 +1,35 @@
+{
+  "format_version": 1,
+  "stage": "alpha-candidate",
+  "engine": "2.0.77",
+  "scope": "Export/alias inventory, not a claim that every graphical/multiplayer acceptance scenario passed",
+  "export_fixture": "tests/api_inventory.lua",
+  "execution_fixture": "tests/integration_engine.lua",
+  "public_namespaces": {
+    "computer": ["getID", "getLabel", "setLabel", "getTick", "getLimits", "getState", "setState", "deleteState", "log", "stop", "on", "off", "after", "every", "cancelTimer"],
+    "peripheral": ["getNames", "isPresent", "getType", "getMethods", "describe", "wrap", "call", "find", "getName", "getWire"],
+    "colors": ["white", "orange", "magenta", "lightBlue", "yellow", "lime", "pink", "gray", "grey", "lightGray", "lightGrey", "cyan", "purple", "blue", "brown", "green", "red", "black"],
+    "colours": "same immutable namespace as colors"
+  },
+  "peripheral_methods": {
+    "kv_database": ["get", "set", "del", "exists", "type", "hget", "hset", "hdel", "hexists", "hgetall", "hlen", "expire", "ttl", "persist", "getLimits"],
+    "logic_handler": ["readSignal", "readSignals", "getInputStatus", "getOutput", "setOutput", "clearOutput", "subscribe", "unsubscribe", "getLimits"],
+    "configurator": ["getDevices", "getDevice", "getCapabilities", "getConfiguration", "setConfiguration", "getLimits", "getSections", "addSection", "setSection", "removeSection"],
+    "monitor": ["write", "blit", "clear", "clearLine", "scroll", "getSize", "getCursorPos", "setCursorPos", "getCursorBlink", "setCursorBlink", "getTextColor", "getTextColour", "setTextColor", "setTextColour", "getBackgroundColor", "getBackgroundColour", "setBackgroundColor", "setBackgroundColour", "isColor", "isColour", "setPaletteColor", "setPaletteColour", "getPaletteColor", "getPaletteColour", "getTextScale", "setTextScale", "getLimits"]
+  },
+  "events": ["start", "timer", "peripheral_attach", "peripheral_detach", "monitor_resize", "monitor_touch", "power_restored", "signal_changed"],
+  "capabilities": {
+    "computer-runtime": {"guide": "docs/computer-runtime.md", "contract": "specs/computer-runtime/lua-api.md", "checks": ["tests/computer_contract.lua", "tests/runtime_contract.lua", "tests/integration_engine.lua"]},
+    "program-editor": {"guide": "docs/program-editor.md", "contract": "specs/program-editor/lua-api.md", "checks": ["tests/editor_contract.lua", "tests/integration_engine.lua"], "client_status": "deferred; GUI delivery is table-backed"},
+    "peripheral-network": {"guide": "docs/peripheral-network.md", "contract": "specs/peripheral-network/lua-api.md", "checks": ["tests/network_engine.lua", "tests/integration_engine.lua"]},
+    "monitor-display": {"guide": "docs/monitor.md", "contract": "specs/monitor-display/lua-api.md", "checks": ["tests/monitor_engine.lua", "tests/integration_engine.lua"], "client_status": "deferred; headless world objects and mock touch only"},
+    "kv-database": {"guide": "docs/kv-database.md", "contract": "specs/kv-database/lua-api.md", "checks": ["tests/kv_engine.lua", "tests/integration_engine.lua"]},
+    "logic-handler": {"guide": "docs/logic-handler.md", "contract": "specs/logic-handler/lua-api.md", "checks": ["tests/logic_engine.lua", "tests/integration_engine.lua"]},
+    "device-configurator": {"guide": "docs/configurator.md", "contract": "specs/device-configurator/lua-api.md", "checks": ["tests/configurator_engine.lua", "tests/configurator_full_engine.lua", "tests/integration_engine.lua"], "field_ledger": "docs/configuration-coverage.json"},
+    "device-lifecycle": {"guide": "docs/device-lifecycle.md", "contract": "specs/device-lifecycle/lua-api.md", "checks": ["tests/lifecycle_engine.lua", "tests/candidate_data.lua", "tests/integration_engine.lua"]}
+  },
+  "contract_root": "openspec/changes/add-native-circuit-computers",
+  "workflow_only_capabilities": ["program-editor", "device-lifecycle"],
+  "deliberate_exclusions": ["VM/interpreter", "OS/filesystem", "guest dynamic load/require", "arbitrary Factorio objects/properties", "direct computer messaging", "cross-color discovery", "original CC font"],
+  "deferred_acceptance": ["native typed/pasted text and focus", "client port and sprite alignment", "normal-zoom and maximum graphical latency", "real player touch", "multiplayer client joining"]
+}
