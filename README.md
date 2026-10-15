@@ -1,81 +1,42 @@
-# Tweaked Computers — alpha candidate
+# Tweaked Computers — ALPHA
 
-Alpha mod for exactly Factorio 2.0.77, with base alone or optional Space Age.
-This integrated candidate implements all eight capabilities: native guarded
-callbacks, single-document editor, same-color discovery, merging world monitors,
-string/hash KV, logic I/O, full typed configurator and durable device lifecycle.
-Directional/status/item artwork is integrated with selected Greg Flavored MIT
-notices and independent glyph provenance. It is a user-test build, not stable or
-client-verified. Back up saves. Public guides/OpenWiki/publication are separate
-campaign stages; this checkpoint does not publish or merge the feature PR.
+Native circuit computers for Factorio 2.0.77, with base alone or optional Space Age.
+The integrated alpha implements native guarded callbacks, a single-document editor,
+same-color peripheral discovery, merging world monitors, string/hash KV storage,
+logic I/O, typed factory configuration and data-bearing device lifecycle.
+No interpreter, OS, shell, gameplay filesystem or dynamic guest loader is shipped.
 
-Start with [installation and manual checks](docs/alpha-candidate.md) and the
-[editable factory controller](docs/factory-example.md). The combined example uses
-real inserter configuration/stock circuits, expiring shared KV telemetry and a
-merged touchable display. A second computer and independent database demonstrate
-shared versus physical-local contents. Complete API help and source contracts
-ship in the archive; package-manifest.json hashes every payload and records
-unchanged provisional common limits. See docs/device-lifecycle.md for
-mining/replacement, blueprint source disclosure, stopped clones and recovery.
+- [Player guide and complete Lua reference](https://siredvin.github.io/tweaked-computers/).
+- [Guide source](docs/player/index.md) and [factory tutorial](docs/player/factory.md).
+- [Public source](https://github.com/SirEdvin/tweaked-computers) and [issues](https://github.com/SirEdvin/tweaked-computers/issues).
+- [Documentation build and deployment](docs/documentation-maintenance.md).
 
-No interpreter, bytecode compiler, continuation backend, OS, filesystem or dynamic
-guest loader is shipped.
+This is a user-test alpha, not stable or client-verified. Back up saves. Graphical
+editing/focus, wire selection, rendering/touch, audible playback and multiplayer
+joining remain user-owned checks. Full-world performance limits are provisional.
+The documentation branch does not itself publish a Mod Portal release or deploy
+the completed site; the final consolidated delivery performs those steps.
 
-Programs return a literal versioned named-handler descriptor. Each callback
-receives a fresh closed environment and finishes or faults; only explicit copied
-Data state, named registrations and event/timer records survive callbacks.
+## Development
 
-See docs/peripheral-network.md for the complete discovery API, explicit wire
-colours, current-path authority, events and fixed per-type service binding.
-examples/peripheral-program.lua ships an executed native inspection program;
-localized discovery help keys are ready for the editor/help UI.
-See docs/logic-handler.md and docs/program-editor.md for the saved-source controller
-workflow, every logic method, quality/int32 rules, sampled events and writer cleanup.
-examples/logic-controller.lua supplies the exact editable source used by the
-packaged tests.logic_engine cold scenario (add --fixture tests.logic_engine --cold).
-The fixture's player/editor delivery is table-backed, not client typing/focus proof.
-
-See docs/kv-database.md for every string/hash/expiry command, exact nil/count/error
-semantics, atomic capacity staging, initial limits and data-bearing lifecycle.
-examples/kv-program.lua supplies its native callback example; locale/en/kv.cfg
-supplies help keys. Select `--fixture tests.kv_engine --cold` to exercise compact
-KV contracts plus actual robot mining/replacement and carried-time cold reload.
-
-See docs/monitor.md for complete terminal/palette/scale methods, geometric
-grouping without hidden wire bridges, power retention and monitor touch/resize
-callbacks. Ctrl + left click activates a character cell with an empty cursor;
-the action is rebindable in Controls. examples/monitor-program.lua supplies the
-native named-callback example. tests.monitor_engine covers real headless world
-draw objects and a cold mid-sweep reload; player activation checks are mocks,
-not graphical/client evidence.
-
-See docs/physical-devices.md for footprints, role wiring, initial recipes/power,
-physical host integration and initial balance values. docs/computer-runtime.md
-records the implemented computer API, registry/lifecycle/service integration and
-scheduling contract. docs/runtime-foundation.md records the original compiler
-ownership, limits, source diagnostics and reproducible checks. The authoritative
-capability/API contracts remain in openspec/changes/add-native-circuit-computers.
-
-Build (output must be outside this checkout):
+Build an installable archive outside the checkout:
 
     python3 tools/build.py --output /absolute/path/to/artifacts
 
-Packaged official-engine smoke, with fresh output directories:
+Use a fresh output directory for the packaged official-engine integration smoke:
 
     python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
       --archive /absolute/path/to/artifacts/tweaked-computers_0.1.0.zip \
       --output /absolute/path/to/new-smoke-directory \
-      --fixture tests.device_engine --cold --upgrade-fixture
+      --fixture tests.integration_engine --production-context --cold
 
-The smoke creates maps with base and Space Age and executes focused native
-contracts from the ZIP. With --cold it runs two isolated localhost-only headless
-server processes per mode, preserving an immutable snapshot and verifying cold
-readback. --upgrade-fixture adds one separate base configuration-change process.
-It does not launch a graphical client. Client rendering, focus, touch and multiplayer joining are
-explicitly deferred to the user after implementation of every specification.
+The harness exercises base and Space Age; cold phases use isolated localhost-only
+servers and acknowledged console shutdown. It never launches a graphical client.
+The source/API contracts remain in openspec/changes/add-native-circuit-computers;
+that change is deliberately unarchived pending review and user client testing.
 
-New project source is MIT licensed. Pinned Phobos parser/dependency source is
-also MIT; see vendor/phobos/LICENSE.txt, NOTICE.md and manifest.json. No upstream
-CC:Tweaked font bytes are included. Selected Greg Flavored MIT device artwork
-and an independently authored glyph atlas are included with exact provenance,
-notices and reproducible transforms in assets/README.md and assets/manifest.json.
+Project source is [MIT licensed](LICENSE). Pinned Phobos parser source retains
+[its license](vendor/phobos/LICENSE.txt), [notice](vendor/phobos/NOTICE.md) and
+manifest. Selected Greg Flavored MIT artwork retains its notices; the glyph atlas
+is independently authored, not an imported CC:Tweaked font. See assets/README.md
+and assets/manifest.json for provenance and reproducible transforms.

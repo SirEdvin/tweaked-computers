@@ -1,0 +1,6 @@
+.hermes/
+.worktrees/
+.venv*/
+__pycache__/
+*.pyc
+/site/
