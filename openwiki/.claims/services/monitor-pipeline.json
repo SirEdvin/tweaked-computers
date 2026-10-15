@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:d2891f40934aa65fbdd0d33dd68a1ec6323706713cfcb48ba7dee78cbfc607c2",
+  "claims": [
+    {
+      "id": "claim_7950a5e927524aa1b68b48d17d9c5116",
+      "statement": "Monitor groups are deterministic complete anchored rectangles partitioned by scope/direction; logical resolution does not create physical discovery edges, and current availability checks the lifecycle power carrier.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/network.lua#L15-L59",
+          "version": "repo-lines-v1:sha256:f9248bee2701d8186ea94ef5ac724062b08d08aeca2516f183b0d7200c5c8513:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjNTc4YjY5YzRhZTNiMmMwNmY5ZjBhNjBlN2M1Nzk1OGFlODVhOTFhMTBiODg0NDg1NTg0NzQzM2FjOGJlYjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZDg2YWExNzI3ZDgxNTU5YWExYjEzYjk1MWFlMTg5NTkyZTYzOTAzNDBhODlkMGRlMjFmOTk3NzU0ZjdlZTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNmNDVhNDhhMTY5NzFiM2M4MGYzNjI4NTNmODE4NjM4ZDQ3ZmM5N2E0MTM3MjViMWFhOWRjYWI2OTE4YzM4NzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM2ZjhjOWY0MWNiMGJhZTcwNjBiMjczMmI1MzE0NGE1MWE3MzZlNTczNDcyOWU4ZjI2MmNkNjI0ZDc0YTA1MjUifQ"
+        },
+        {
+          "resource": "repo://scripts/services/monitor.lua#L26-L89",
+          "version": "repo-lines-v1:sha256:e653c333076b1f40ce503a95e631115213c0c49a8e620956de3753349043cbe0:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkMWEyZTE2MWIwMjgzNTU0YTNkMzNkNjVjODU0ZjUyZGM2ZTY0YjE5NzNlNjJhNzYwMjA2M2RlMWQxYzI3MWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYWNlMjg2NjAyZDAwNWNiMzc0MmNjMzgzMjlmZDlmYzk5NWUzOGIzMzE1NjMxZjU3NzdkYTIyM2Q5YWFkODgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgwMzU0ZDMyNmVkMmZlOWFiMmVhYWFlZjQ0YWQ1ZmUwNTZkMDcyMzg1ZjVkODQ2ZDA0N2UwZjEyZDIwOThhZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhZDk5Yzg5NDY2YTQxNzY1ZjEzYTQ2ZTlkZjU2MDBmNDNjNjVkZDE4MjFjYzUxZDUzNGI2OGViMzRkZDg5MDUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f7425c5614ac45fc82c19366bcad3dc1",
+      "statement": "Regrouping stages retained replacement maps then commits membership atomically; surviving anchors may retain identity and inherited cells copy only when character dimensions match.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/monitor-model.lua#L33-L45",
+          "version": "repo-lines-v1:sha256:e76abe523f097f6a707cb4fd299640bfa6cf9398669f26f4d6430850694ea2c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiOGEwMTBjYjI2Njg3N2YyM2FiZDg4OWE3YWQ1Y2EyMWVkZDI4MTIxYzJiMjI0NTI5NDE4YTc1NjQ1NWU3MmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdiZGZkZTFiYmYwNDZlMGM4NWQ5N2RiMDZlYjYxNDIwNWRiMzk5YWQ1YzU4NGNlODIxZmFhMmFkNjNmOWM0MDQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU2M2Y3MDIyNTkxZTFkMzk2OGM4NWMyYTA2N2E4ZmEzNDE2NmVhZTg2ZTJmZjFlNDQwYmE3MmJiNDc0YjllODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQzZGNlNTU2YTgwZGRlYTlkMDI0MmMxYTliZmNmOGZmMzhmOWQ5MjlhMWFiNjAzZmEzMDUwZDk5NmIyODY3MjIifQ"
+        },
+        {
+          "resource": "repo://scripts/services/monitor.lua#L108-L176",
+          "version": "repo-lines-v1:sha256:a6676fbd54461bb26a30ac30d0c093f8e3949973a68e6411cc19335f166d201e:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA5OTRhMDY3MmViMTEyYmZjMjU3NDlmNDY1ZGVjNDEzNjA5YTU1N2ViOTM4ZTk5MjcwMGRjOThkOTZjOGJkYTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1YjAzYTAwN2JlZjA0MjZiYTZhYzZhNTIzNzQ3Y2FkNDE3ZTNkNWVjNmZjNzM5MGU2NDJmMzYxZjAyNTI1YzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEyOTlhZDQzNWUxMzQyYWMxZDBjYTY1NWU5MjNjNzg4YjBkYWJmMTI5MDJiMjU3NWZmNTAwZTdiNDgzODU1NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1OGJjMjk0ZjM1Y2Q4NGE4Y2MyZWQ4ZGY0Y2RiOWExNDE2ZmM1NDUxZDMwZjA0MWQwZTQzMTZmMDU4MGU1NzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_68a2d8058a9c4c21bbd1e00d84bbf2db",
+      "statement": "Monitor state is byte-cell/palette based with prevalidated clipped writes, bounded scale transitions and one shared cardinal geometry transform for rendering and touch.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/monitor-model.lua#L142-L162",
+          "version": "repo-lines-v1:sha256:e0f200017fd841ccf327d3de07e67348072dd2deb7055e395d3dc218c81dfcdb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxNzdhZjliYmZhYzk2ZmM3NWU3NGI3YjRkOTdkNThjYWM1Yjk3NTkzYmUyNGQ1ZTViNTM4N2Q5ZDAyN2U2YWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhNmIxYmQxNTc2NmE2MjkwMGNlZjgwZjhhZDUwMTczNTM5NmIzZTUxZTcyZDFhNzI2OGM1NzJmYjRhMzZhNjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2NmJkZjdkYmVjYzliOWQ1N2FkNGMzODcxYWQ2MzI5ZTcwOTk1MDllODY1NzFjYjMyYzBjMGVmNTZhZWYyYTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZWZhMGM5MjQ3YzczMzdkMDdlODIzY2M1Mzg3YTZhZWI1MzE3OTBlOWFlOTBmYzdkMmEwNThmODA4OTdmYzkifQ"
+        },
+        {
+          "resource": "repo://scripts/monitor-model.lua#L74-L140",
+          "version": "repo-lines-v1:sha256:2da0d398b9472e7b3527e9b21767bfff2714483c026eb245676b6ce944aacee5:eyJzZWxlY3RlZExpbmVDb3VudCI6NjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwYmE3OWI1N2IwMDNkNWMyMGEwZGIzNzY1NDQ1NzIyMDQzMTM3YjNmMzg2ZGMwOTM2NjBiZjRiMjdlNjcyZDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3MDJmZWU0ZGFkZWM0N2RmMTZiODlmZTNjMzlmOTdmZTdmZGRjNGZmMjI5OTE4OTU4NzU0ZjcyMmZlZTQ4NTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkM2Q3YTYzMjk1NGZlYjBiOWVkYWI5MmNiYzhiY2Q0Mzc5ZWQ4NmU3MmMxY2M2MDU2YWU5YjZkOTc4NjJhMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM5N2FjMTQwYjAyMzgyM2FhODU3ZGUyZjQ1ZTc1Yzg5NjI0NzI4YjMwNDhmNjkwNmExMGEwNmZkMTFkNTk0YTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6899cb0ba64c418f919128d2635810b1",
+      "statement": "World rendering retains native sprite handles and sweep/revision cursors, shares bounded cell allowance with cleanup, hides unpowered objects and restarts mixed-revision sweeps; admitted work replaces legacy layer graphs without on_load mutation.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/rendering.lua#L18-L126",
+          "version": "repo-lines-v1:sha256:9af026d2a72f7fc8af9d220839db25f0e57a08cf872d45d96cef2b34654efcae:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0MDY4MmJhM2RiNTJmNjczNzJmMzA4YjRhZjRjZmQ2MTIwZThhYzQ3YWFiNTlkMjQ3NzlkOGE3M2M0YzdiMjYzIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI4NzMzNTljMGE3MWEyYmRmNTNiMDhiMzlkODMwMTgyYjhmZDRkZjJlMzlhYTZhYzgwN2FmNzJlZjUxNjljZGY4IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1MzEyYzY0YmQxZjU1NGFmODA0MDY3MmMwNmFiYzM5MjEwNGRlNWIzZTVmMGI4NThkY2MzYTM2MDgyMWQ0YTdlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_d9f6250c4db3477d9644a54c580342c3",
+      "statement": "Monitor activation rejects GUI/held-stack/regrouped/unavailable contexts and requires same-scope reach to the actual world-position tile before emitting cell coordinates.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/services/monitor.lua#L273-L311",
+          "version": "repo-lines-v1:sha256:a5411da9ef5eefc40afc83b8d28b4dffbebac066d891cbe733b2db7c6e71e5f1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4MDhiZDY5OTEwOWI0OGU1OGI2Y2Q3YTJmMTQyNWIzZmM4ZTUzNjM2ZTU3NWNjNzFlNzkxMzE5M2IwMjUzYTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiNWJmZjQ0ODA3MzUwZWExMmUxMGUzZDgwZjMxNTYyYzAxNTYwNWM5NjE2YTRjYzliNzlhZjZkNjE2N2YwYWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ4NGQ2OTllYTJkODE5NDM1N2RkYzc3NDlhNDVjNGZjNTk5Y2E2Y2I1NmJkNWY5ZTQ1NGQ1OTRiZWUyMjczM2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjMTVmMTRhMzgzMGNiNmQwMjBiMDgwYmQxMjQ3ODk2MDYzM2NkZDBhM2I2M2E5YmQ4MjBlZThiOGI1ZDJmOWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8d70f32d6aea46ab81ff56587be3ce10",
+      "statement": "Monitor notification delivery rechecks recipient runs and live color authority, deduplicates path/color delivery per subscription, coalesces resize snapshots and refreshes dimensions before dispatch.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/scheduler.lua#L97-L105",
+          "version": "repo-lines-v1:sha256:a387860a437bf8cfae096f073e03fd7fc999fe955fa0c70e2953549a6e11c320:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDY2ZThhMGFhNWIxM2ViYWI1NjZjNDdmYTFhM2MyYjhmODU0MDZkODIxZDMzNjNkODU0MTdmNTg0ODljNjdkZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjE0OGIwNzcyOTE1NDg3NjlmZWE2NDJiZTAxMDA2ODg2ODE4MWJkN2NhOTk0MjhmYTA5NTRmYzFkZTdlMTQwMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDgwNGY5MWVjNjg2ZjYyNTBlYjYzZDU4NGFkYzBjZjQwODU3MzU5YWMzODg1ZmQyOTgzNGQ5MmVjOTMyM2RhMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTMyZmM4MzAwNjMxODI4N2I0MGI5MmRhZWM2ZjQ5OTA4MjBmYjYyNWU1OWIyN2JlM2VmMDY4Zjg3MTZlNDU5ZCJ9"
+        },
+        {
+          "resource": "repo://scripts/services/monitor.lua#L196-L270",
+          "version": "repo-lines-v1:sha256:bc1b644ce702899d57ccdadaa20c82622333e8e29be506b29e1f5f8f500b1d53:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiMjU3NjgyMDFlOGVlNWM5MDYyODFlNTJhMDUwY2MyMWVlZmZjOTEzZDlkOWE2ZDA0MDZhNjE3ZDQyOTdiMzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2Njk2ZjRmZGRiMDMwMTc0MjhiMWRjNmQ1NzE0ZTQ5MmI4Y2EyZjFkYzVhNDMwNmM2MzJmNmZmYWQxYzIyMWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlmMzhlNzRjMWIzYTVhNTI0MDE5MDU3NTc3NGQ4YzU4MTM5NTZmZWE1NmZjYTY5MDU0NzNjZDFhODNjNjlmOWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmNDIzYWI3YmZlZmIzYmQwMTg3ZmE3YjYzOGQwNTFmN2MwMDQ5NWM3MzJlZDBkYWU5ODkzN2E2NDI1YWEyNTgifQ"
+        },
+        {
+          "resource": "repo://scripts/services/monitor.lua#L313-L319",
+          "version": "repo-lines-v1:sha256:84a4866d369b0ec5eee8843af82071d6130703539958662c9ff1ae7732c71cdd:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTc5ODkwNzQxZjA2OGY4NzZjNWE3MzBlZDY5NWE4OWIwYjliNGFiMjA3ZGRiMGYwMGQzNTk3NGExZWM1ZWJkYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTRkMGNjNDczZTU2ZTVkMTRkN2MxZDdlZDJhYjc3NjE5Y2ExNmM1MTM4NTA3NTdiNGRhNmM4Nzk5NmFiN2UzZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTY2ZDRjNTgyZTAyYTgyNzIwZmRiZjFmMmU1OWQ5OWRmYWIwZjM4MGYxZjJjMTE1YTdlODk5OGRjODk3NjZjZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODczMzU5YzBhNzFhMmJkZjUzYjA4YjM5ZDgzMDE4MmI4ZmQ0ZGYyZTM5YWE2YWM4MDdhZjcyZWY1MTY5Y2RmOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_40db19e1312a424098614fe53ae4af71",
+      "statement": "Panel/background/glyph/cursor use explicit supported sprite layers 126/127/128/129 below native wires/info/selection; marking changes no display model and exact-engine mark/cancel/robot checks do not prove native red-X visibility.",
+      "evidence": [
+        {
+          "resource": "repo://docs/rd4-verification.md#L8-L52",
+          "version": "repo-lines-v1:sha256:7fd9e321880e9314afa3d12c999605473ed217c5d10b942cd9a9daca37dc5490:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwNDBkY2UzNWI4MTk2MTAzNjJkNTU4ZTI3MjIxMjIzNzY2ZjNjNWMwMTU5ZGM5ZTQyNDFjN2VkYWMzYjEwYTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2NWQ0MzUxNWYxYTNkODY3MTQwMjMyMTQxMTVhYzQyNzhhZjhiMTkxYzAyMjhhZGMyNzdiNTUxNTBlODY3ZmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUyNWMyYjk3NjVmMzI0YjcyMDJhMTc2MmY1MmUzN2ExZWNjNmRkMDY2NjZkODU3YTE4ZmU2MzJkNzJlZDg2ZmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVkNjA2MDk4Y2YwYTc2YjVmNzJlNmNmZmQ4YWM0YTRkYjJjNDZiOTA1NjNlZmRjZTlkMzcxZDYwNWIwODI2MzEifQ"
+        },
+        {
+          "resource": "repo://scripts/rendering.lua#L1-L23",
+          "version": "repo-lines-v1:sha256:3adb840453279a22e36ea5c5e46f105ad1dd1232e965655416b1a6b6f48ee3df:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiNjUzYjQ5ODM3NzMzNWQxNmFlMDI3NmYzMGI5NDJjYTlkMDE2MDc3OWFlNmEwZTk4YmI0Y2VmMmE3MjBlMmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MzMyZmU2NjdiYzUxYWM0YTUxYmEwZWZlNzM0NDQxYzkwZGVmNTVjNjBhMjZkN2RiMjc1ZWNiYmNmNDJmMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUxNDAzYWU4NzY0OTQ1NjlkZWM2ZTE4OWZlNWNhZDJiYTQ4ODAxNzdlMzMyYmM0OWE1ZmUzMWRhZDA4YWQ4ZjEifQ"
+        },
+        {
+          "resource": "repo://scripts/rendering.lua#L40-L67",
+          "version": "repo-lines-v1:sha256:20d3ff07ca0217df0ced8d939290156900d1ae1df8980ecb3ccdd25eac6d3e69:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4YjE1MGMwNGFkNmQzNjMwYjAwY2NlOGNjNmU5MjA3MTAyNjA2MzhjMjhmZTk2MjFiMTBiOWEwOGU5ZjU1M2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3OTgxMWM1ZmJlMjVjM2Q0ZTVmM2QxZmQzNWFiOWRhNmJjZjhhNjhjNWVkZjlkNmJhOTdmNjg2ODZjMzk2ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5NzU4ODdmNWNlMTk2NTI1ZDliOWE3ZThlZmZkOTFmMDI3MjQ2YTdjNmYyYzJlMzlhYWIzZjRiZDIxNDQ0NTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYzMTU2YTllZDNhNjAyZjFhZWRhMDJiMWVmZTVhODRhMjhiZGFiYzIwZTJlZTYyZGVjYmQ2YTM1NTM1M2UyMWIifQ"
+        },
+        {
+          "resource": "repo://tests/monitor_feedback_engine.lua",
+          "version": "repo-file-v1:sha256:7e29b85cc2d1245d2ac36995c59304187b5700c9e29bf0d1557e53460c26779e"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-15T13:11:13.133Z"
+  }
+}

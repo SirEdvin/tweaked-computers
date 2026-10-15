@@ -1,0 +1,38 @@
+site_name: Tweaked Computers — ALPHA
+site_url: https://siredvin.github.io/tweaked-computers/
+repo_url: https://github.com/SirEdvin/tweaked-computers
+repo_name: SirEdvin/tweaked-computers
+docs_dir: docs/player
+site_dir: site
+strict: true
+theme:
+  name: mkdocs
+nav:
+  - Home: index.md
+  - Playing:
+      - Installation and wiring: getting-started.md
+      - First inserter controller: first-controller.md
+      - Editor and recovery: editor.md
+      - Combined factory controller: factory.md
+      - Runnable programs: examples.md
+      - Moving and preserving data: lifecycle.md
+      - Troubleshooting: troubleshooting.md
+  - Lua API v1:
+      - Shared rules and errors: api/common.md
+      - Native language: api/language.md
+      - Computer: api/computer.md
+      - Peripheral discovery: api/peripheral.md
+      - Monitor and colors: api/monitor.md
+      - KV database: api/kv.md
+      - Logic handler: api/logic.md
+      - Configurator: api/configurator.md
+      - Supported settings: api/settings.md
+      - Nested schemas and enums: api/schemas.md
+      - Effective limits: api/limits.md
+validation:
+  nav:
+    omitted_files: warn
+  links:
+    not_found: warn
+    anchors: warn
+    unrecognized_links: warn

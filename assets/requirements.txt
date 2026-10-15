@@ -1,0 +1,2 @@
+# Offline artwork tooling; not a Factorio runtime dependency.
+Pillow==12.3.0
