@@ -1,0 +1,69 @@
+local defs=require('scripts.device-definitions')
+local empty={filename='__core__/graphics/empty.png',width=1,height=1}
+local art=require('assets.sprites')
+for _,kind in ipairs(defs.order) do
+  local def=defs.devices[kind]
+  local icon=art.devices[kind].icon
+  local pictures={}
+  for _,direction in ipairs({'north','east','south','west'}) do
+    local image=art.devices[kind][direction]
+    pictures[direction]={layers={table.deepcopy(image.shadow),table.deepcopy(image.body)}}
+    -- Status sprites are separate so stopped, powered, faulted and running
+    -- devices update without replacing the native body or its wire endpoints.
+    for _,state in ipairs({'off','unpowered','powered','fault','blinking'}) do
+      local source=image.states[state]
+      for frame=0,(source.frame_count or 1)-1 do
+        local sprite=table.deepcopy(source)
+        sprite.type='sprite'; sprite.name='tc-status-'..kind..'-'..direction..'-'..state..'-'..frame
+        sprite.x=frame*sprite.width
+        sprite.frame_count=nil; sprite.line_length=nil; sprite.animation_speed=nil
+        data:extend{sprite}
+      end
+    end
+  end
+  data:extend{{type='electric-energy-interface',name=def.name,icon=icon,icon_size=64,
+    localised_name={'entity-name.'..def.name},localised_description={'entity-description.tc-device'},
+    flags={'placeable-neutral','player-creation'},minable={mining_time=0.3,result=def.name},
+    max_health=200,corpse='small-remnants',gui_mode='none',allow_copy_paste=true,
+    tile_width=def.width,tile_height=1,selection_priority=40,
+    collision_box={{-def.width/2+0.1,-0.4},{def.width/2-0.1,0.4}},
+    selection_box={{-def.width/2,-0.5},{def.width/2,0.5}},pictures=pictures,
+    energy_source={type='electric',usage_priority='secondary-input',buffer_capacity=(def.watts/30)..'J',
+      input_flow_limit=(def.watts*2)..'W',output_flow_limit='0W',drain='0W'},
+    energy_usage=def.watts..'W',energy_production='0W'},
+    {type=(kind=='computer' or kind=='kv' or kind=='monitor') and 'item-with-tags' or 'item',name=def.name,
+      icon=icon,icon_size=64,subgroup='circuit-network',order='z[tc]-'..kind,
+      place_result=def.name,stack_size=(kind=='computer' or kind=='kv' or kind=='monitor') and 1 or 50},
+    {type='recipe',name=def.name,enabled=false,energy_required=2,
+      ingredients=(function() local out={}; for _,v in ipairs(def.ingredients) do out[#out+1]={type='item',name=v[1],amount=v[2]} end; return out end)(),
+      results={{type='item',name=def.name,amount=1}},auto_recycle=false}}
+end
+for _,role in ipairs(defs.role_order) do
+  local p=table.deepcopy(data.raw['constant-combinator']['constant-combinator'])
+  p.name='tc-port-'..role; p.localised_name={'entity-name.'..p.name}
+  p.localised_description={'entity-description.tc-port-'..role}
+  p.flags={'placeable-off-grid','player-creation','not-deconstructable','not-upgradable','hide-alt-info'}
+  p.hidden=true; p.hidden_in_factoriopedia=true; p.allow_copy_paste=false
+  p.minable=nil; p.corpse=nil; p.dying_explosion=nil
+  p.fast_replaceable_group=nil; p.next_upgrade=nil; p.collision_mask={layers={}}
+  p.collision_box={{0,0},{0,0}}; p.selection_box={{-0.22,-0.22},{0.22,0.22}}
+  p.selection_priority=60; p.tile_width=1; p.tile_height=1
+  p.sprites={north=empty,east=empty,south=empty,west=empty}
+  p.activity_led_sprites=nil; p.activity_led_light=nil
+  p.activity_led_light_offsets={{0,0},{0,0},{0,0},{0,0}}
+  -- Reset inherited vanilla points; the child's position already encodes its role offset.
+  local point={wire={red={-0.07,-0.1},green={0.07,-0.1}},shadow={red={-0.07,0},green={0.07,0}}}
+  p.circuit_wire_connection_points={table.deepcopy(point),table.deepcopy(point),table.deepcopy(point),table.deepcopy(point)}
+  p.circuit_wire_max_distance=9
+  -- Native blueprint wires require a blueprintable/placeable prototype. This
+  -- hidden, uncraftable token is never a logical device cost or a mining drop;
+  -- the body revives its owned ghost itself without consuming any item.
+  p.placeable_by={item=p.name,count=1}
+  data:extend{p,{type='item',name=p.name,icon='__core__/graphics/empty.png',icon_size=1,
+    hidden=true,hidden_in_factoriopedia=true,place_result=p.name,stack_size=1,auto_recycle=false}}
+end
+local effects={}
+for _,kind in ipairs(defs.order) do effects[#effects+1]={type='unlock-recipe',recipe=defs.devices[kind].name} end
+data:extend{{type='technology',name='tc-circuit-computers',icon='__base__/graphics/technology/circuit-network.png',icon_size=256,
+  prerequisites={'circuit-network','advanced-circuit'},effects=effects,
+  unit={count=100,ingredients={{'automation-science-pack',1},{'logistic-science-pack',1}},time=30},order='a-d-e'}}

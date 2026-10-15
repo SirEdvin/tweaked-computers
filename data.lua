@@ -1,1 +1,3 @@
--- Device prototypes are supplied by the physical-device milestone.
+require('prototypes.devices')
+require('prototypes.editor')
+require('prototypes.monitor')

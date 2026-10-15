@@ -11,14 +11,68 @@ https://siredvin.github.io/tweaked-computers/.
     .venv-docs/bin/python -m mkdocs build --strict
 
 Strict validation rejects broken internal page links, missing anchors and omitted
-navigation pages. External source/issues URLs are not network-crawled by MkDocs.
-TC15 must add every player-facing capability/API page to navigation and reconcile
-it against real implementation plus companion contracts; this scaffold has no
-complete API inventory and is not the final guide.
+navigation pages. External source/issues/wiki URLs are not network-crawled by MkDocs.
+The complete guide and public Lua reference live in `docs/player/`; developer
+OpenWiki is separate under `openwiki/`. Do not copy implementation/Claim metadata
+into player pages.
+
+    python3 tools/configuration_catalog.py --check
+    python3 tools/player_docs.py --check --site site --report /outside/repo/docs-inventory.json
+
+`tools/player_docs.py` generates only the readable settings/nested-schema tables,
+common limits and exact shipped runnable examples. After intentional source changes,
+run it without `--check`, review the generated diff, then rebuild and check. It
+compares public methods/aliases with actual exports and the existing API inventory,
+checks event/color coverage and all eight companion-contract/page mappings, and
+checks built internal HTML links/anchors. This is static coverage plus human
+contract review, not runtime/client proof. Do not edit generated pages directly.
+
+For changed Lua examples, reuse the existing exact-engine compile path:
+
+    python3 tools/build.py --output /outside/repo/docs-package
+    python3 tools/player_docs.py --check \
+      --fixture-archive /outside/repo/docs-package/tweaked-computers_0.1.0.zip \
+      --fixture-output /outside/repo/docs-syntax/tweaked-computers_0.1.0.zip
+    python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
+      --archive /outside/repo/docs-syntax/tweaked-computers_0.1.0.zip \
+      --output /outside/repo/new-docs-syntax-run --mode base \
+      --fixture tests.player_documentation
+
+Use fresh output paths and substitute the actual numeric version. The syntax ZIP
+is explicitly a separate test-only archive with an added compile fixture; never
+upload it as a release. The fixture compiles every `lua` fence as a complete native
+document using the actual compiler/limits, but does not claim client delivery or
+repeat full factory/runtime matrices. Existing implementation fixtures own effects.
 
 Dependencies are version/hash locked for the Linux build. To refresh deliberately,
 use pip-tools on Python 3.12 with `mkdocs==1.6.1` as input, inspect the full lockfile
 diff and re-run hosted validation. Do not replace hashes with unpinned installs.
+
+## Required validation
+
+`.github/workflows/ci.yml`, named **Mod CI**, emits the stable **Mod validation**
+check on every pull request and every branch push, without path filters. Branch
+pushes provide evidence on the exact head SHA as well as the PR merge candidate.
+The `main` ruleset requires this check from the GitHub Actions integration; do
+not rename the job without updating that rule. No administrator bypass is needed
+to merge a passing PR. Tags are not CI or publication triggers.
+
+The read-only job reuses the existing package regressions, generated-contract and
+player-documentation checks, then downloads the official Factorio **2.0.77**
+headless archive and verifies its pinned SHA-256 before execution. The packaged
+sandbox runs in base mode; the existing factory integration and separate-process
+save/reload checks run with base and Space Age. Reports and failure logs are kept
+as short-lived Actions artifacts; no release is uploaded or replaced. This is
+not graphical/client, multiplayer-join, stress or real-time latency acceptance.
+
+The required check is deliberately separate from the path-filtered Pages
+workflow below. Making only the latter required would leave runtime-only PRs
+without a check. CI needs no Factorio publishing credentials or model API keys.
+
+The optional model-backed OpenWiki workflow remains dormant unless repository
+variable `OPENWIKI_ENABLED` is explicitly `true`. Configure its provider secrets
+and review its model settings before enabling it. This is not a required check
+and does not affect reading the already-generated developer wiki.
 
 ## Hosted workflow
 
@@ -62,8 +116,9 @@ successful scaffold build. TC17 owns the final complete-site deployment and alph
 
 The user authorized a public repository, full player docs, separate developer
 OpenWiki and actual Factorio alpha. This supersedes the original local-ZIP-only
-endpoint. A ZIP remains the upload artifact. The implementation PR remains open
-for review; publishing the alpha does not authorize merging it or archiving OpenSpec.
+endpoint. A ZIP remains the upload artifact. Publishing an alpha does not by
+itself authorize merging its implementation PR or archiving OpenSpec; merge only
+after explicit maintainer authorization, review and passing required checks.
 
 - TC14 / `t_6534a3be`: public repository and documentation infrastructure.
 - TC15 / `t_0645d3ca`: complete player guide and public API reference.

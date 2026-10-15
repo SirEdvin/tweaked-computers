@@ -1,0 +1,706 @@
+{
+  "candidate_models": [
+    {
+      "bytes": 131,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/computer_advanced_off",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_blinking.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "06204341f69e19b2400608839173c8c78582a184e39047a2203f0a3a755dbda9"
+    },
+    {
+      "bytes": 173,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/computer_normal_off",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_off.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "ad1d6a0395955319752f21cb0ff4d5b2ffb7cfbe5f856be7a0b83e9b64e805f5"
+    },
+    {
+      "bytes": 132,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/computer_advanced_off",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_on.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "01a4170df88f17d40a01fcee9e010c2e8a87de8fad35742942a1f41f3860aedd"
+    },
+    {
+      "bytes": 1039,
+      "cc_exact_matches": [],
+      "parent": "minecraft:block/orientable",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_normal_off.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "686895eccf001fc109d7cc317a6cee852b78862ff63317673ebee7e6783b4f45"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "66883e8497c002ffaa2017bcf95b8e00970495357ad9eafba6b4d6465ca4c22c"
+    },
+    {
+      "bytes": 169,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_base.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "b30f7ee26bec7b918431061c6d003222998403cfed66c4ccdabfd0a560913e55"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_d.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "deebf216c880df04532105ebb8726e7ca3ad11c83e02e29da484bab8c4f225d6"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_item.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "78110365643f3a9971227d0160736e4a31ceffb8a30d9a0153c54a5fb4339199"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_l.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "29fec9832177419a6ba688cc22b8288c7a6d153c54a7a2e46c5576877acce9e0"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ld.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "de990bc9492bf869888f9018bdd4431f14b2d10dbfa3428fabb664ea34211066"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lr.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "8a5d147d7106d3b6dfa16f791cbe4ea9607ff34bbff33a4e5b7daa51295375b7"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lrd.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "61611ccd8419d22a5c82dd301585a72c0843f032862d711b3c41c3ec92af3631"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lru.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "aaa148d75666c1eb20d945327803094bcda685a74987f9823382ef81ca03c15d"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lrud.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "25c0b861ad756dfb7d5bf989e9855af21862403b7d6163d57f90953a3edce213"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lu.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "d1037b2a524814e3a2a7b621510331907013da99cce58a85b0075c1adeef1f86"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lud.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "1f11906487c8a42f55051938ef404fd877961bbf1142c03b9052f7e4b44311ae"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_r.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "1cfd229306ad7e4b546959bbd52a3de16e9925ba7d999379118e040fc3898e51"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_rd.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "f8c800239c02664927cacc3cd498f49f3625ed10901f8eb0551eab50159bce59"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ru.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "3652aff21ec3226085ea03d041c4bbbbf951f7b63de36121ea5fef1649c410b9"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_rud.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "92033bdd8a9d258463f03cbd6c96ee4c407b89585126a3352b86d74384c00d21"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_u.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "4df50c1d91f7d6fdf785d7ff75c893828e6c76949385c128c6794e3e905b8637"
+    },
+    {
+      "bytes": 370,
+      "cc_exact_matches": [],
+      "parent": "computercraft:block/monitor_advanced_base",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ud.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "10ef790f2d3c55f5537f3e647e2084d296553fb1b3305d694fb0b1a80fbcf4dd"
+    },
+    {
+      "bytes": 897,
+      "cc_exact_matches": [],
+      "parent": "block/cube",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_base.json",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "sha256": "8111a5f6e1525cf3afb58698252e6b2656a2336325214a78713a3522fd558b5e"
+    }
+  ],
+  "candidate_textures": [
+    {
+      "bytes": 88,
+      "cc_exact_matches": [],
+      "origin": "selected Greg Flavored input",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/blank.png",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "png": {
+        "alpha_channel": true,
+        "bit_depth": 8,
+        "color_type": 6,
+        "height": 16,
+        "width": 16
+      },
+      "resource": "computercraft:block/blank",
+      "sha256": "38be5a9fb712cb81d81245d38f669df298b6e8490018f0617986489249ce0494"
+    },
+    {
+      "animation": {
+        "bytes": 157,
+        "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_front_blink.png.mcmeta",
+        "sha256": "656053145d63a47cfe87280bcb5771a8aaefa2d797e3736456025cf551368cc3"
+      },
+      "bytes": 322,
+      "cc_exact_matches": [],
+      "origin": "selected Greg Flavored input",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_front_blink.png",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "png": {
+        "alpha_channel": true,
+        "bit_depth": 8,
+        "color_type": 6,
+        "height": 64,
+        "width": 16
+      },
+      "resource": "computercraft:block/computer_front_blink",
+      "sha256": "d7fbff88354bd865c767cbb3366b14efabed99098a617be841841aba464e536b"
+    },
+    {
+      "animation": {
+        "bytes": 157,
+        "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_front_static.png.mcmeta",
+        "sha256": "656053145d63a47cfe87280bcb5771a8aaefa2d797e3736456025cf551368cc3"
+      },
+      "bytes": 138,
+      "cc_exact_matches": [],
+      "origin": "selected Greg Flavored input",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_front_static.png",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "png": {
+        "alpha_channel": true,
+        "bit_depth": 8,
+        "color_type": 6,
+        "height": 16,
+        "width": 16
+      },
+      "resource": "computercraft:block/computer_front_static",
+      "sha256": "845f2a11c77c5bd522dd4dcf7aee80182c569828896ba23687d627eb5e6cd71a"
+    },
+    {
+      "bytes": 354,
+      "cc_exact_matches": [],
+      "origin": "selected Greg Flavored input",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_normal_front.png",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "png": {
+        "alpha_channel": true,
+        "bit_depth": 8,
+        "color_type": 6,
+        "height": 16,
+        "width": 16
+      },
+      "resource": "computercraft:block/computer_normal_front",
+      "sha256": "8744d55abbec94ba8640044b2c294e3ba3618db807ded73727b95fac2c0f7aca"
+    },
+    {
+      "bytes": 411,
+      "cc_exact_matches": [],
+      "origin": "selected Greg Flavored input",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/hv_case.png",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "png": {
+        "alpha_channel": true,
+        "bit_depth": 8,
+        "color_type": 6,
+        "height": 16,
+        "width": 16
+      },
+      "resource": "computercraft:block/hv_case",
+      "sha256": "ea333a8440746fd694b0266ef5dde68333f2e426001ba1ac0484b158c1e8cb0f"
+    },
+    {
+      "bytes": 483,
+      "cc_exact_matches": [],
+      "origin": "selected Greg Flavored input",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/hv_case_pattern.png",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "png": {
+        "alpha_channel": true,
+        "bit_depth": 8,
+        "color_type": 6,
+        "height": 16,
+        "width": 16
+      },
+      "resource": "computercraft:block/hv_case_pattern",
+      "sha256": "cd479a44c4cb5a979ccb394217d51f7bd0b23128d4de0ced0c1c4056353274d4"
+    },
+    {
+      "bytes": 318,
+      "cc_exact_matches": [],
+      "origin": "selected Greg Flavored input",
+      "path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/monitor_normal_front.png",
+      "permission": "MIT-user-confirmed-selected-assets",
+      "png": {
+        "alpha_channel": true,
+        "bit_depth": 8,
+        "color_type": 6,
+        "height": 16,
+        "width": 16
+      },
+      "resource": "computercraft:block/monitor_normal_front",
+      "sha256": "55ae3dbcc539d2ef282376a5534c0d1a05ed478931ba95b02c5e2fb1537ba006"
+    }
+  ],
+  "cc_tweaked": {
+    "evidence": [
+      {
+        "bytes": 3781,
+        "path": "LICENSES/LicenseRef-CCPL.txt",
+        "sha256": "fab164eb0cf3ec453d7596829464976ccb66263be1f9c6c38eb2528f3c14c201"
+      },
+      {
+        "bytes": 4492,
+        "path": "REUSE.toml",
+        "sha256": "1cbd2428dd5ce715e202d56d5d7decc5a3fc545053a57157eef4a746bb3e52ce"
+      }
+    ],
+    "repository": "https://github.com/cc-tweaked/CC-Tweaked",
+    "revision": "c8b3f6af270cd74c7494e2bf45a9f377b90c9b29"
+  },
+  "cleared_runtime_assets": [
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_blinking.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_off.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_on.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_normal_off.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_base.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_d.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_item.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_l.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ld.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lr.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lrd.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lru.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lrud.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lu.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lud.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_r.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_rd.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ru.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_rud.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_u.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ud.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_base.json",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/blank.png",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_front_blink.png",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_front_static.png",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_normal_front.png",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/hv_case.png",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/hv_case_pattern.png",
+    "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/monitor_normal_front.png"
+  ],
+  "credited_projects_not_per_file_attribution": [
+    "GregTech Refreshed",
+    "GTCEu: Modern",
+    "GregTech Programmer Art",
+    "CC: Tweaked"
+  ],
+  "distributed_derived_outputs": "See assets/manifest.json",
+  "external_parent_references": [
+    "block/cube",
+    "minecraft:block/orientable"
+  ],
+  "format_version": 1,
+  "glyphs": {
+    "excluded_input": "CC and Greg Flavored term_font.png; no font bytes imported",
+    "other_bytes": "outlined replacement box",
+    "required_ascii": [
+      32,
+      126
+    ],
+    "required_cell": [
+      6,
+      9
+    ],
+    "required_mosaic": [
+      128,
+      159
+    ],
+    "status": "independently-authored-see-manifest"
+  },
+  "greg_flavored": {
+    "evidence": [
+      {
+        "bytes": 1064,
+        "path": "LICENSE",
+        "sha256": "578cbb16f275631f9c0ebf888138b7932fb63c8762de307bf4d6e2e026914c01"
+      },
+      {
+        "bytes": 3075,
+        "path": "README.md",
+        "sha256": "bf966e5c342a340b0817d120b1a69edadfde91ac50349a0698aa40164a650ab2"
+      }
+    ],
+    "repository": "https://github.com/BirbIrl/ComputerCraft-Greg-Flavored",
+    "revision": "ac6cafc3993c902e2ca95d85b501d3c7e172570c"
+  },
+  "interpretation": "The user explicitly confirmed the specific selected Greg Flavored assets are MIT, not CC:Tweaked assets, and approved their use. No separate legal audit or permission letter was obtained. Unused inherited bindings are not selected inputs.",
+  "purpose": "Pinned source inventory; output metadata is in manifest.json",
+  "resolved_models": [
+    {
+      "model": "computercraft:block/computer_advanced_off",
+      "unused_bindings": {},
+      "used_face_textures": [
+        "computercraft:block/blank",
+        "computercraft:block/computer_normal_front",
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern"
+      ]
+    },
+    {
+      "model": "computercraft:block/computer_advanced_on",
+      "unused_bindings": {},
+      "used_face_textures": [
+        "computercraft:block/computer_front_static",
+        "computercraft:block/computer_normal_front",
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern"
+      ]
+    },
+    {
+      "model": "computercraft:block/computer_advanced_blinking",
+      "unused_bindings": {},
+      "used_face_textures": [
+        "computercraft:block/computer_front_blink",
+        "computercraft:block/computer_normal_front",
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_32",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_16",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_4",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_0"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_base",
+      "unused_bindings": {
+        "screen": "computercraft:block/monitor_screen"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_d",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_36",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_20",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_7",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_0"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_item",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_32",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_15",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_4",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_0"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_l",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_33",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_19",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_4",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_1"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_ld",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_45",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_31",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_7",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_1"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_lr",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_34",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_18",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_4",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_2"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_lrd",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_46",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_30",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_7",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_2"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_lru",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_40",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_24",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_5",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_2"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_lrud",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_43",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_27",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_6",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_2"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_lu",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_39",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_25",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_5",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_1"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_lud",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_42",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_28",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_6",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_1"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_r",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_35",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_17",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_4",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_3"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_rd",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_47",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_29",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_7",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_3"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_ru",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_41",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_23",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_5",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_3"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_rud",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_44",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_26",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_6",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_3"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_u",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_38",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_22",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_5",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_0"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    },
+    {
+      "model": "computercraft:block/monitor_advanced_ud",
+      "unused_bindings": {
+        "back": "computercraft:block/monitors/advanced/monitor_advanced_37",
+        "front": "computercraft:block/monitors/advanced/monitor_advanced_21",
+        "screen": "computercraft:block/monitor_screen",
+        "side": "computercraft:block/monitors/advanced/monitor_advanced_6",
+        "top": "computercraft:block/monitors/advanced/monitor_advanced_0"
+      },
+      "used_face_textures": [
+        "computercraft:block/hv_case",
+        "computercraft:block/hv_case_pattern",
+        "computercraft:block/monitor_normal_front"
+      ]
+    }
+  ],
+  "status": "selected-assets-approved"
+}

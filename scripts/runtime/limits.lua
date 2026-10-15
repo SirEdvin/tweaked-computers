@@ -1,6 +1,6 @@
 -- Development ceilings, not a release latency promise. Keep shared costs versioned.
 return {
-  api_version = 1, compiler_version = 1, storage_version = 1,
+  api_version = 1, compiler_version = 2, storage_version = 1,
   source_bytes = 16384, generated_source_bytes = 131072,
   source_nodes = 4096, source_tokens = 4096, source_nesting = 48,
   handler_names = 64, identifier_bytes = 64, tuple_entries = 128,
@@ -13,5 +13,7 @@ return {
   event_queue_entries = 128, event_queue_bytes = 65536, timers = 64, subscriptions = 64,
   network_nodes = 256, network_edges = 512, topology_latency_ticks = 60,
   peripheral_call_bytes = 65536, peripheral_call_entries = 4096,
-  console_entries = 64, console_bytes = 16384, fail_safe_latency_ticks = 1
+  console_entries = 64, console_bytes = 16384, fail_safe_latency_ticks = 1,
+  registry_entries = 4096, owned_children = 8,
+  maintenance_work_per_tick = 200000, host_hooks = 16
 }

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:5cf65f1a532bf1de2c0d02696a6d2d9a1d1871c646de594360ba45da6d138ad2",
+  "claims": [
+    {
+      "id": "claim_ba6126a0a1e247408e96f3ca6c5d7f00",
+      "statement": "Draft validation, optimistic Save and saved-revision activation are distinct transitions; Run/Apply refuse unsaved or stale text and candidate validation precedes old-run retirement.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/runtime/computer.lua#L46-L76",
+          "version": "repo-lines-v1:sha256:2cb65bd6eb29bc7107e959d0c6ce5ec879100b53be4ff16ab70224117dcd0e29:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1YjZiMmVjMDE5MDgzN2UxYjYxYTY5NzhlYWMyN2Y4ZWNmZTc4NTlkNjM4ZjgwNjY1M2NmMzJlZDI0MzM2NWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4N2YzODUzYzcwMjUyYTQ4YjhhM2Y5MzM5ZWFmNWIwYWZmMTczN2M1MmY0Njk0NGU4ODUzMzM2ZTY4OGNkMjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRlMzQ0MjE2NWI3ZDRlZDRlNjliZjhlODFjOTQwOWRjYjJjYjdiNmU4ZDY4OWVhOWE0NDRhNmFmZjFjN2U4ZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwZjBlNjljYWUzNWNjOTAxM2IxZmJmMGQzZjcxN2NjMjE0MDEzMGQ4NzQwY2ZlYjljMzVjN2MyZTM1OTAyMjIifQ"
+        },
+        {
+          "resource": "repo://scripts/ui/editor-model.lua#L53-L99",
+          "version": "repo-lines-v1:sha256:f2a48c9826252240ca75321c2c35b769c4d239c5cd6488c93c38c3ffedab7716:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhZDM5NzIzNzNhYjdkZGY3N2Y4NGZiYThlNzlmMGI3YjI3Yjc3Y2Y4ZWFkM2JhYjhiOGZkZDlhNTE3YTYyY2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA3OWU4ODI3YjdjNDZkMzU1NTQ3ODUzNTVjMWQ2ZGYwMjA4ZDcxZDM0MDMxMDFjMjA4MmM2NTAwMDVjMmMyNzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNkNGE4YzQ3MzlhMzc4MWVhMmE5YzRkNzg2ZTYzNDA0Njc0MDVmYjllMDgwNzJjN2JkNzExYzcwZmUzMTRkM2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhNjNiOGNkMzY5NjgxMWM4NDRlNGJmN2MwMjY5ZGUwYTRlYmUyZGRmNmQ0MzEyNDgwMDcxM2M0NDgwNTViNzIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d5e4147d87d249d8be485dac10bd3389",
+      "statement": "Editor actions require current player reach/permissions/scope, exact body/generation/session token and owned GUI event ancestry.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/ui/editor-model.lua#L15-L51",
+          "version": "repo-lines-v1:sha256:16ebc9b2f28db8be8f99efe4207aa99d5382590c8354cafe504b045fd313dd36:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxNDQxZTU2YWEzNWZmM2FjMWI0ZjZlOTExZmU5YTkwZGQ4MThiMzNlMjExY2Q4NjQ2MGNkZjAwNDdmMjhmMDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5YmE4MmFjZjMxZTZkZmFiMTkzZjE3YjBhNDVjZTk4ZWQwMjE1ZjVkYjg2ODE4NzkyNWQ3OTJjOTYzNjY2N2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU3YzhmYWZjYjQyOWQ1MjgwYjBiZDAxZWMzODYyYzQ2YzhmN2YxOTAyNmM2ZmM1MjdiNDE1YTEyMGM5NDEzNGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJkMWZjY2NlMGRkMjdkZDYwMTQyYTcyYWQ3YjEwMTRlODgwZTlmNDdiNWE1YjVkODZiMjkxODFkN2MxOGVjZWUifQ"
+        },
+        {
+          "resource": "repo://scripts/ui/editor.lua#L155-L178",
+          "version": "repo-lines-v1:sha256:e228be8882062537593ef20f9ca3c7d1516852ad7aa52b9cae284eb1ca6164bf:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljNmFhMTQwYTg0ZjU4N2U3OWQwZTg3NmE5MjFmMTQ1MTMxMTYxOGM2MWQyODg0MGRlMjE2NzNkNDg5NWIxYmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcxNjlhODQ1NzZhNWUzZjBjZjRhZWRlYTU3NzMwNzYzYWYxMjU0NjE0ZTEyOTcxMDNjOWY3MDYzODFiYzFiNWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzNDZiMDA1NmVjNzUxOTQwNjcwYzBhZGEwMmZkN2IyMzZhN2E0ZmU1MmM1ZDU3ODg4ODY1M2I4NGFkZWEzMGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ab2049d5b5da4d48a43ebb7a355ee3f5",
+      "statement": "Eight per-player recovery drafts are retained without silent eviction; recovery and active-source copy alter drafts only and forgetting requires explicit confirmation.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/ui/editor-model.lua#L100-L152",
+          "version": "repo-lines-v1:sha256:cf8f12187abb232631e799c7bee4daf7f07eb6fcd44bbe27324c887bcfaa5f26:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiNWVhMDQzMmEyMGNjZDAwMTAyOTY5ZGViZjI4NGI3ZjZmNjhkOTViNzI3MTQ1OTlmOGNjNDM2NzE0NzhmOGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4MzcxZTUxMTA4ZDBmYjk2YmJmOTgzZGYyMzhjYzM4MDY1YmM2YTI2NzY5YWM5OWNkNTM2N2M4ZDkzMzg0NjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZWZhMGM5MjQ3YzczMzdkMDdlODIzY2M1Mzg3YTZhZWI1MzE3OTBlOWFlOTBmYzdkMmEwNThmODA4OTdmYzkifQ"
+        },
+        {
+          "resource": "repo://scripts/ui/editor-model.lua#L26-L38",
+          "version": "repo-lines-v1:sha256:12efc4dff1a153c6d2cbe4a79dfb522864ce494b47ac7afc9875175b88c6f368:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1YTJjZTcxMDgxMWI1YjY5NTViODg3ODk4ZjFhZjliZWYxNjRmMWM3YThlZTgyMmEzMzYxZTU4ZmI2ZmE4NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjZGE0NGMwMDljMzI1N2U4MWI2MzU4YjE0MmU2ZTMxMjM3MGQxZWU2ODAyNjBiZjlhYzQ0OGY4MWQwY2IyOWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQxYzQ0N2NlNTk4MGYzYjVjZDdhOThmN2YwNTNhNWExNDQ2ZTZmOTVkMzNhMjdiNGRjMjNlODYzOTIxYzRlZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjZDdhM2IzM2QyYzY4NzVjZjg1ODYyZjA3ZmI4NzcyZDA1OGE4MWE3NmIwNjRmZmM1MGNhMzUwZDg1YjNjYjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c5c04d6adb4844d691ee2d86263d09f3",
+      "statement": "Editor Reset requires a stopped run and matching confirmation generation and clears computer state separately from physical KV data.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/runtime/computer.lua#L38-L44",
+          "version": "repo-lines-v1:sha256:a99a22f4d6bb8f9dff0ba86d3886b70d7a88a56866c42d365a6e700623c1c810:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWUzYjQ2NmNlNjYwZjBjNTIwYjM0YjNjMjIwNjZkY2I5NWUyZjEzZDM5NzA3MmZlNTI2YjhlZDA0MDkwMzNiNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjlhYTBjODU2NDAyZjlmZjk3OTgzYmZiYTBlYTM2ZTZhMGJjMzQwOGE0N2NiMjEwZTcyNTBmNmI2ZWExYmE2ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDU4YjIzNTJhNDgwMmFlMDE0YWQ2Njg1YmI2ZjQ5YTE1OTMyOGEyZTdkNjMwZDEzYTU4Yjk4ZmE2MjM5MmZkMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2Q1OWJhOWI5YzcyN2U5ZGI4ZGUxNDEzMWY3Njg1M2FkMDk2NGQ3ODViODU0NjYyNTE0ZWFkNzI2YmViYTYzOCJ9"
+        },
+        {
+          "resource": "repo://scripts/ui/editor-model.lua#L77-L86",
+          "version": "repo-lines-v1:sha256:453e3fdcacd582e579c7a95d5a67a32fad71141ddec8ac7d5bc9833e0f28cf7e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5OTJmNTE5YWJiYmFkOTdiYjQxMDU1Njg1NzM5NmQxNWUyMmZmNTRmMjY5OTAxMDY1Nzc3NTZiMmY3ZjBiNTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3ZDJlYTU0Y2ZjYTk2ODE1NjlhYzllMjljYWFiN2EwOWQwM2MxZjliNmVhNDA0ZTQ0YWM2YmUwNTc0NmVmYjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRkNTkyM2ExMjZmZGNmNjk5ODI5N2MyMzNhMTQwMzNlOGUxOGEwODA2ZmE0MWZlOGRlZGZkOTg1Nzc2NTE4YmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwODFlNTNkZTJiZTcwYzFiNWM2MjZlZjRhM2E3ZGFhZDRlZDJkMzNjMTA2MjNjN2Q3YzljYTRlMGM5NTFmZTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1188faf0bed6468a95419e64cfa1ca22",
+      "statement": "Editor shortcut/resize/status paths avoid taking over an already opened GUI; status refresh runs at a charged 15-tick cadence.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/ui/editor.lua#L230-L277",
+          "version": "repo-lines-v1:sha256:fe3d63c5fcee7a3f95ad565fb62f05cd57e3a5a2a2145d989bf7789ab0fd7d6b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljZjA5NGY0NTcxODEwZTQxODc5ZTk3ZjBhODkzNWQ2N2VmZjQyMWMyNDYzN2ExMzU0NmMwMmFmZjZmZGJmNTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4M2VmZWNkMmQ1MTk5NjQ5YWQ4YzI5NWFmYWIzNmE1MzM4MDMzOWM5MDRlNjUyYjAwZThiNDk4N2IwNjNiYjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxM2NjZWU4MDFjMjc4YWNiOTJkNzZmZTAyYjkwOTliZGQ1ZDE5YmQzMzBiMGEwZThjMTJkYTA4OTFiMzU3OTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzM1OWMwYTcxYTJiZGY1M2IwOGIzOWQ4MzAxODJiOGZkNGRmMmUzOWFhNmFjODA3YWY3MmVmNTE2OWNkZjgifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-15T06:41:57.498Z"
+  }
+}

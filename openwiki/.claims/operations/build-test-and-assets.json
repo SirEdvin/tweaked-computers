@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:5100be9af7d76bd84ab0f5144fae6e3b29bc4091bbb399bbe2a2857e4edbff54",
+  "claims": [
+    {
+      "id": "claim_ff7fc687d62649a2a466ff6e6ed2684b",
+      "statement": "The builder rejects in-checkout output, verifies parser/asset inventories and hashes, excludes source-only Python/caches and refuses prohibited executable suffixes, then creates deterministic explicit-inventory ZIPs with payload hashes; openwiki is outside its packaged directory list.",
+      "evidence": [
+        {
+          "resource": "repo://tools/build.py#L10-L20",
+          "version": "repo-lines-v1:sha256:eb2fec63b634b286e250db7a54374fd4e90f60224602c4389a681640a87fe72c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjMGNhZjQ0MWExYWFkMjI0MGU3YWFjY2JiMmE3MzkxNWZjNWNlNjJhOTBlYjg1NzgzNmQ5MDVjNjg3NjBjN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4MjdkYzk5ZjhhNmVlMWYxYTE2ZGYzN2Y4OTkwODMwY2M0MTdjN2YzYTc3NTdkOGQyNThiMTBhN2IyNDM5ZTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYzZTcxY2NiOGZlNjBhMTZkMWIxMTc0N2M0YWQ5N2E4YzczZDYzMGQ0YjQ1YzZlNWYzNDA3Nzk1MjIxMzM4MTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRjZTJhOGM5YThlYWE4MjVmMmFiZTNhZTUzZDc1ZjQ1ODNmYjA3NzVhOGFhZTczY2I4NDk4YTQ1ZDlkYjQzZTQifQ"
+        },
+        {
+          "resource": "repo://tools/build.py#L23-L81",
+          "version": "repo-lines-v1:sha256:43b356df850e87959c57f132813dcba1a44abc343e8d40e549b903a590dfaf7e:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhjOWQ2MWUxZGE4OGY2MGZjNjFlYzFjMjM4YzJjNzUyMTgwNDZjMjllZjMzMDg0ZDU4MDQxNzI3ZmViOTNjYzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4MjhiMDBkNTc1MDhjMTk2MThjZGZlZDFjNjMyN2IwMjQ2MDcxZWVkNTU1YzlkMDk0ZGQxZTBlNWE5ZmQzOGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFkNDRhOTllYjQ0NDNmY2MxMTI0ZjFmYzRmNzJmMDFjZWJhMjQ2YTg2NWQxMGNhN2FkMDk5ZGVlNmEwMDQ5NDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImExN2Y4ZTNiODk2NDkyY2MyMDNiMTk2MWJiYWFmYWZkMjQ5YzNkZDliNWMxNTQxOTA4ODhjY2NlMDM1NDE5NjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a1cd8bb8363a42fb8a974dded1e71395",
+      "statement": "The smoke harness requires exact Factorio 2.0.77, fresh external output, copies the exact archive and executes fixtures from it with grouped-result/exit-code evidence.",
+      "evidence": [
+        {
+          "resource": "repo://tools/smoke.py#L82-L150",
+          "version": "repo-lines-v1:sha256:b8156094f0b82faf95db917dae34755225aac1e9f7751d6f2f131d2086b6996d:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyZTMxMjU3ZGMwYWUxZDU5MzAzN2MyODBjOWFkNTA4MTliOGE2YzhjZjcyOGJlMDcxNmQwMGEzZWVjYzA0YmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwOGViYjAyNTNhNjJhZjg3Y2ZjNGUxYjJmZTQ0YzljYWViMGE2MGJjNmE5ODBkNDkzMTQwNzBkODY0NmYzOGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyZjQxODhhMjM4NTU4OTQ0MzA3MDRhZGIyYTEwNDI4MzZmNDlhOTZiYjRhZGQ1Yzk4ZDc2MGI5NzZhNTRjMWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwZWZkMmUxMTM3ZTFlNGMxMjNmMjE1NjBlZDgxNDJmNTdhZDA4YzM5NWE1YTIzZWM4Y2RiMmI1Njg3ODc2NjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_366228bee090474d8e8abe7740b3649d",
+      "statement": "Cold smoke uses isolated localhost-only servers with verified console quit and immutable snapshot readback; fixed lifecycle/integration production-context fixtures avoid a second native registry.",
+      "evidence": [
+        {
+          "resource": "repo://tools/smoke.py#L118-L128",
+          "version": "repo-lines-v1:sha256:eece9fdf7be6d859ab55dc3231832cbb59a84675088d76a52905f492b5bb2e46:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1YzcxYjhmMzIyODBiMGQ0NjMxZTM4ZjQ1Y2YyODBiM2Q4MmRmMTBlYTQ0OGQwZDBiZmI3ZGE3NmIwNzhlZGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhYWJjYzE5MjZiNGE5ZGJmMjBmODNiODIwMjUzYTkzMDczZDg2YmE1OWNkYWZkYjAyNTEyYzE0ZDQ0YzM5NGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyN2ZiYjFkMTYzZDI3MWUwMDgzMWRmNjUyYmE3ZmFlYjVhODU5Mzc3Y2RiOGQ2MWRkYWQyOWNlZmIxMmNkODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQxY2Y3YjY3MzliZTgzZWM2ZjM4NmNhMzVjOWMxZDg2MWUzNDIzYjIzYjAyN2FkYmRlNGJhMzU2ZjVhMTRhMTUifQ"
+        },
+        {
+          "resource": "repo://tools/smoke.py#L151-L168",
+          "version": "repo-lines-v1:sha256:9400d9d2e8588e2b2d6a4772ac6ff7bca6ec57ea27d4daabdb373daa94b85d51:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1YzcxYjhmMzIyODBiMGQ0NjMxZTM4ZjQ1Y2YyODBiM2Q4MmRmMTBlYTQ0OGQwZDBiZmI3ZGE3NmIwNzhlZGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0ZDhhMzIzZGM2OGNhMjYxMzE5Mjc4YmVhY2Y1Nzc1ZWQ5MWJmYThmNjA5Zjg5NDNhMmQ1ZGUyNzc3NWIwNTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNiYTc1ZWM2Mjg1ODc5NWE5NmI5MDEyOWI0Mjc0OGQzMjI5MGNiZjY5MjVmNTA2MjE1YmE5MjZkODdiYmYxMzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4ODQ5ZWQ5ZTMyZGU3ZDgwODU0ZTU4YTI2Yzc1YWZmMDcwNzIyN2U3NTgwNGY0MThiMGIyNjExZGQ2ZWFiNjMifQ"
+        },
+        {
+          "resource": "repo://tools/smoke.py#L16-L79",
+          "version": "repo-lines-v1:sha256:fc5c72bdf759bb463a3062fa33897158123a7d25691907374135c09e2d7d032c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkMWI3YjJjMDRmMjgzNTFhODQzN2FjNTQ4ZDViYWE0ODc4MGE4NTIwZTY2ZjAyMTZlNTY5Y2E4MzcyOTg5NjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhMDY3MzUzZjBiODY3YmMxNjE4NDE4YWY0ZTM5YjQ5MGMwZDA1OGQyNzMzYzVhODdkMzA4YTUyZTYzNzEzMDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY1ZDg3OGRiOGZlMDE2OWFjZmY2YTJiM2MxZDVjZmQzMjBhNjE1MDk2MWY2YTY2YWVjOTIyOThjZjEwYjUxMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllZGZlZmE4OWY2MDRlY2JiZDVkNjcyODk0OTMzOWU4MjIyYmZlOTRjMDVkNTJiNjc2ZjQ3M2NiODVjZTViZGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d9d9e01ce8904ec6b4c64a0fab266f99",
+      "statement": "Selected pinned Greg Flavored artwork retains original MIT/project notices and manifest provenance, while the monitor byte glyphs are independently authored rather than imported font pixels.",
+      "evidence": [
+        {
+          "resource": "repo://assets/README.md#L105-L127",
+          "version": "repo-lines-v1:sha256:7426b76e4889f1d5ecac549061562b21549a6db3dafa0ba29727cf717c3e5828:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzZDg1ZjA3ZTBmZDExNDhjMGI5NzAzMzYwNGY3NmY3ZDc4YzViMzZlZTQ1YWRjNWRjYThiMDEzNzFiZjg3ZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzNTlmYTA1ZTRkMjBiZjkxYzQyMGY5NmE2ZmNiM2E1YWRmYzBiYjEwMDNhMWIwZGIyODAyOGE4NzZkNTk4MGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI0ZjVjNDQxM2Q4MmQ5MDgyNGQ4YTY3OGU1NGU5Zjk1MWI0ZWVlMDZhZDE4Y2E2ZDA4NDE0NTI0ZTI2NGYyYjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ3M2IyYTA4ZTM0YjY2ZWY3YmZjYTIyM2RkOWFhNjNlMjlmZmY2ZWRmY2JkYmYxYTAzOTI5ZTMxY2NlYzgwZDYifQ"
+        },
+        {
+          "resource": "repo://assets/README.md#L15-L40",
+          "version": "repo-lines-v1:sha256:3572cf73fd3f306780497df0c2efb1080876daf3033cdb9a535673caf1c090aa:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4YzRmYzEzYmNiNGVmM2ZiNDNjMjY5NTlmODE2ZjJhYzI2MjRiOWYxOGE5NzdhNDg2NGVlMzIyYWNiYzY3MTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiNjQwZmI0MTlmYmRlNmFlMjRlYzYxYzE5NjE0ZTdmMTZkNmQ0YzBjZWMzNWEwZGQyZWUyMTNhYmQ0MDM0ZmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5OGNhOTVlZjhjNTU0NWEwNjI1ZDZjNzQ5ZGM3NGIyOTczZmRjNGVhMzFmNGE1NWJhZWQ1ODc4ZmQ2NjQzZjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNmMzM4YjIxMGRmOTE2ZWM2Y2VjNzI4ZGM0MjM4YTM5MTk1MzBmMTE0ZmVhZTIzMzczNDU2YTRiNmU0MGZkNWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3d829e2926ea4fbfafe1723b1f6ea5d2",
+      "statement": "The vendored Phobos import is an eight-module parser dependency closure with pinned original/installed hashes, preserved MIT notice and host compilation probes but no upstream VM/bytecode backend.",
+      "evidence": [
+        {
+          "resource": "repo://vendor/phobos/NOTICE.md#L3-L23",
+          "version": "repo-lines-v1:sha256:379fe0d948ba5ac349736c370c34a286301c55ecdfc15b9529765713ebc9967d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkNDM0ODMzZDkzNjgzNTg4ZjFiZDE4MzU5NzFiZWI4NWFkZmU0NGEwYWJmYzA1YzkwZDIyMzk0YjNjYTNiZGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzOTAyOGQxMGI3YWY3MWRmYWQwZGNkODYxZDIzNTNjMGFiYzI5YzU0MGMxNzRiMDRiZWY4OGI2NDhlYTc5YzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhmMmRlNzNlNmQyZDczMGEyZmI2NmFlYTI0NmYzY2JkYWQ2ODUxNDljNzczZWZjNTIwMzExY2MwOTA2OWIwY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_56451cf609ff44f5bd1d561d419b1078",
+      "statement": "The player-doc pipeline is distinct from OpenWiki: filtered PR/main builds and trusted main-workflow manual refs feed a separate protected minimal-permission Pages deployment, while MkDocs builds docs/player with complete player-guide and Lua API navigation.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/docs.yml#L3-L81",
+          "version": "repo-lines-v1:sha256:babde50be6ab147d5eab6566929da1bc6449b643083ca260a8bd923163281133:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NmRjNDgxNDlmNWE4M2QxZWQ2ZGJiMzliYmM3ZTJiOTAyYWEzZDM0ZDZiZDVhZTRiMjkxYjY4ZGYwY2E3OWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4ZWQ3NDA5N2Y5NTE5YTVhN2ZiYTRmYjYwYjkxYWM2NmU5ZTYwN2JjNWE4NjExZDhiMDEzMDk4ZDRjMjA4YzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4ZWY2MWUyOWQ2NmY3ZmMyODJmYjFlODZlZmY4MDU2YjVjODVhYTJiNmJiNTA5ODU5NmZkODM5N2RiNDFjYjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://mkdocs.yml#L1-L38",
+          "version": "repo-lines-v1:sha256:75fdb0c77c0efa0f760c56b32fb0d2ece1bf3dc62b698edb55b72c486113db42:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwNTZlZGMxMTAwZWU1M2I0NWU2MTJkYTBiYjVjYWU1ZjBjOWNiYTdmMjQ2NGExNTE2YWNiNTI2ZTRjNjhiNDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyYzRmODkzMzJkYjMzOWUyNTk5OGNhNTdkYTBiOTYxZjQxYmI3N2VkNDVjMzg5YThkZTgyZjQyYzFmYmQwOWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d3106341023842a4a432e25510b436fb",
+      "statement": "OpenWiki installs a separate daily/manual full-history model-backed update/PR workflow and managed AGENTS retrieval guidance; generated automation preserves completed-page progress on failure and has no PR-event or Pages deployment path.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/openwiki-update.yml#L1-L88",
+          "version": "repo-lines-v1:sha256:bb97ae74933353bc8cb7293ccf61e9685819bd0a25cb3f5e281ae3aa0bcc9bdc:eyJzZWxlY3RlZExpbmVDb3VudCI6ODgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2MDI3ODdhZjZkY2MwODM0ZGUxMjFjYmIxY2I5NWY5NDU5YjcyMWVhYjAzNDlmMTA1MDFiOTk2YzFjNzdmZmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2NzE4ZjA2N2I1ZTVjMWYwOTkxYTZlNzQ3MjZmZTJhMjNkMjY0MzQ1ZTA4ZTRlYWQwNGZhZjczYzI3ZWQ0NDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://AGENTS.md#L1-L16",
+          "version": "repo-lines-v1:sha256:8926524de63a1266e7592d9f1256ec367b67e9fa0583f343808e3e51f19d4990:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmMTgwZjljMTI2OTAzYmNjMzMxYWE5NTQ1NmU0OTQ0NGE3ZDRkMDExZThhMmE4M2Y1ZGM4NzAyMzkxODEyZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA5Zjc4NzE0ODkzYWE3Nzk0MmNlYTFjNGEyZTAyMzFkYmI3ZmEyYTQxYTcwYzgxNDYwYTNjNjc1NjJkYTNhYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-15T07:15:32.900Z"
+  }
+}

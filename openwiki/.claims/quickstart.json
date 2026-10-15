@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:64f720302421fb1357f26155f69bdfbcc09a44f6e5f3cdc3ebe0879b3b7860c0",
+  "claims": [
+    {
+      "id": "claim_64cae4f8e9bd4bcea5dbd77d48d5d5e6",
+      "statement": "The developer entry flow separates prototype loading from trusted control-time service/event registration and one shared runtime tick, without normal on_load guest execution.",
+      "evidence": [
+        {
+          "resource": "repo://control.lua#L1-L39",
+          "version": "repo-lines-v1:sha256:29c4ecc9b8fdde3e429cacd6d47631c503a72e4f5967e2a9e8d89044b6059ce7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5NTlmZWI1ODI5M2JhM2MyMjZjMWFjODdkY2FmYjFhMzBmYzZkN2E3NDY5NDkxNTZmNmI2NGJiN2E5NWQxNjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4YWU4YzVjNzMwY2RjZTgzNjcwODYyOWZlNDJiM2M4OTlhNmE4MDA4OTY5OGE5MTU3M2QwOTYzNjUwNGQ3NGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyYjcyYzdkMGZkYzMxODIzYzhjMmFiODIwZjJjN2E5YzViNDZkODcwNjkxMTU5MzM5YzVkMWRmMjI1NDM0ZTIifQ"
+        },
+        {
+          "resource": "repo://data.lua#L1-L3",
+          "version": "repo-lines-v1:sha256:7c20cbd85a4c66545173ea398387fa1992f3a346886f1586b152ae673a5a2e9b:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjA0ZjE0ZjVhY2FhNTJiNmNlNmQ2OWRkMzQ3NWYzMmE3YTY3NTVmYjgwOTFhNmRiZmMwOTMyNzA1NGE2YzM5YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGRjZmRkOWJkNDFiMmQzNWI2MGJjNGIyZjkxNjFmODIyMWNhZWFmMDk2MWVkNmIyZDRhYmU0MDVkMGE5M2FhNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a59094030ee6490baf266d15e0b82fe0",
+      "statement": "Persistent execution uses source/version metadata, named callbacks and explicit copied Data rather than saved executable guest state.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/runtime/compiler.lua#L263-L290",
+          "version": "repo-lines-v1:sha256:f221bf946c366afd250ac8cd3b44fa49e208bdd138113276b8dba64d7d691497:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MzgyZDNlZTM0YjMxNTQwMTM4MTc2MDcyNWE3ZTQwOWVhYjVhYzRmZjU3YmMwNjA5ZDhhOGI0M2MzNmZhYjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1MmMwM2Y5NGQ3MDI5NDBmN2FlODQxNmY0MjQ3NzBiOGU3Y2MyZDMwZjFmMmQ0MTdjYTE0MWRiYzEzZTkzMjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZWZhMGM5MjQ3YzczMzdkMDdlODIzY2M1Mzg3YTZhZWI1MzE3OTBlOWFlOTBmYzdkMmEwNThmODA4OTdmYzkifQ"
+        },
+        {
+          "resource": "repo://scripts/runtime/computer.lua#L59-L81",
+          "version": "repo-lines-v1:sha256:4c105a30c84740f622fee1562fc522533fc178cfc909de72694ca73995c5654f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4YWJiYjY2YjZlZmYzZGFiZjI0ZjI4NGRhNTkzYTNiMmNkNDdmYmJjMGU1MDkzZDYyM2Q3YmRmYmMwZGYwMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MzMyZmU2NjdiYzUxYWM0YTUxYmEwZWZlNzM0NDQxYzkwZGVmNTVjNjBhMjZkN2RiMjc1ZWNiYmNmNDJmMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMxMDMxZTc4YmEyYTg0OTQ3YTY2ZDkzMjQ5MGJhZmFmZmI0YThmYTVjNzM2MDkzOWJiNTcyYjdiY2I0NzRmZDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYwNmQ3NGUyYTc1ZmU3NzFiMGQ2NDE2ZDQ0MzRiZWRkNzA1MWI3M2FhZDMwM2I4ZDE2ZjE0ZWFhZDA0NTNmNWQifQ"
+        },
+        {
+          "resource": "repo://scripts/runtime/data.lua#L5-L45",
+          "version": "repo-lines-v1:sha256:1749f8b9426cd449e76ef54b6346abe606b87a0f84ab5e4fddb1a56b3a0bf9f9:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiYWViMDRiMmM2MWY4YjBlNTM4NTE0ODk0OGJhNGI5ZGQ1ODZiYTAxM2ZlODA1YzdiZmU0YTE1NzJkYjQ4OWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzOTA2Y2M5YmRhZDM4YjFlNWEyMWIxM2Y0MTg5NWVkZTRhZTAwYzBjMzM4MmNlNTI5MjJiZjJlNGRmYzI5MDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY3OWU2ODU0OWEwZDZlMDAzODRlNzZlMzZlNGM1MGUyMDQ3NGRhZGUwNmEzMjAxM2NlNmJkMzYxYjUxNWQzZjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjZmE2YmVlNGEzNzgzNmNiYjZhNzM5ODBjMjgxZmZhYmI3YWFhYjg2YjU3ODBjMDA4NDkyOGY0OWJmMDE2ZDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7fdd78270bee4c31b3b6fc9e1a87f8d2",
+      "statement": "Build/test workflows require external output and exact engine version, with fixed production-context lifecycle fixtures to avoid duplicate ownership registries.",
+      "evidence": [
+        {
+          "resource": "repo://tools/build.py#L15-L20",
+          "version": "repo-lines-v1:sha256:8c911cc2e2171dc37dea911b282523e966fe1299ffa3751479940402c151b994:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmJjNDgxNzIwNTkxMjhkNTA2YWQxYjVlYzVmNjdkNjZhNDk1YWJlMTlhODBiMTAyMWZiZDMzMDRhNGQxNjQ4ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDgyN2RjOTlmOGE2ZWUxZjFhMTZkZjM3Zjg5OTA4MzBjYzQxN2M3ZjNhNzc1N2Q4ZDI1OGIxMGE3YjI0MzllNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWU3MWFlNDY4YjM0YTBkMDY4ZGFjYTI3MzY3MjFhYWI0ODUxNTJjMTVmZTc4YjYyNDBkN2Y3NDQxMGE0OTViOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGNlMmE4YzlhOGVhYTgyNWYyYWJlM2FlNTNkNzVmNDU4M2ZiMDc3NWE4YWFlNzNjYjg0OThhNDVkOWRiNDNlNCJ9"
+        },
+        {
+          "resource": "repo://tools/smoke.py#L124-L128",
+          "version": "repo-lines-v1:sha256:385a85546272dc7d78105ac193f87629a6f8e8daef7135cb1a0129455266d7f7:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODhjZjY0MzFiZmI3MGQ5YmM4OWJlZDM3OTljYWQwNTkzZDI4ZTY0YmYyYTAyNTgyOWI2NWYxMTA4MzU1MDc3MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWFhYmNjMTkyNmI0YTlkYmYyMGY4M2I4MjAyNTNhOTMwNzNkODZiYTU5Y2RhZmRiMDI1MTJjMTRkNDRjMzk0ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTA4NDJkZDc4MGU2ZjE1ZWVmYzVhMDJjNWI5MDYwNTRjMjVhYjFiOWZjNmJhMzExNTNmYzliOTI5N2IwYTNmZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDFjZjdiNjczOWJlODNlYzZmMzg2Y2EzNWM5YzFkODYxZTM0MjNiMjNiMDI3YWRiZGU0YmEzNTZmNWExNGExNSJ9"
+        },
+        {
+          "resource": "repo://tools/smoke.py#L82-L105",
+          "version": "repo-lines-v1:sha256:808a5d4b10b95ab12b0939b4dc3fa29672fab64cf774aa6172506e84b8e508dd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyZTMxMjU3ZGMwYWUxZDU5MzAzN2MyODBjOWFkNTA4MTliOGE2YzhjZjcyOGJlMDcxNmQwMGEzZWVjYzA0YmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExOTE1ZTdkNzJhNGYxNGIyOGNkMzk0ZDNlYzUzZGM2NTQ3NzAyOWQ3ODBkZDk4MDM2YzA2N2E2YmQ4N2NkNWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyZjQxODhhMjM4NTU4OTQ0MzA3MDRhZGIyYTEwNDI4MzZmNDlhOTZiYjRhZGQ1Yzk4ZDc2MGI5NzZhNTRjMWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI3MWJmZTM2ZjRkOWE5MjU2ZGIwYTdmMjMxYTIyY2QxOWE1ZjMxNGMxYjJlZWI1ODU0NDViNmUwYTU3N2RmYzQifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-15T06:41:57.498Z"
+  }
+}

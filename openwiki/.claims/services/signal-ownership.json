@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:82ab1444e37e14dff5473d40db9ea3b9202b6c4f271d61a6ddbd7de46b40f2c0",
+  "claims": [
+    {
+      "id": "claim_dcd28b1be7774e68b8d7c766e2567b0c",
+      "statement": "Logic separates discovery wire authority from input color selection, normalizes typed quality identities and int32 counts, and writes one canonical output bank rather than per-color banks.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/device-definitions.lua#L11-L14",
+          "version": "repo-lines-v1:sha256:faea803855ff42839310e03b5624698e2b6c71fb73c103d87d9dab0222338ec8:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjg3YzgxZDdiODAzNDYxMGVkOWEwNGRlMTkxZTViNmMwNjVjZDNiODQ2ZjJjODZmMDJjZjQwZmVjNzVjNDg4YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGM2NzM4YmUwYjk3MTJjMzU5YTJlMmQ3MzZjM2ZiOWFlOWQ2NDdhMTcwYzM0YzE0ZmVlYjAwNzQ4OWFiNjUzNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTE1MTcxNjNkMzM3ZDVmMTQyODlhZDFhMGZkMjMwNmExYTYxOGZkZTNjMDkyNmU1NTNkOTE3NTc3ZTdkYTRiMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTY5MDUwYTMyMTU0OWYwZDg4MmM3YTliN2VhMzhkMTRhMmU3NGVhODVlNGQxNzZkM2UyODA4Y2Q4MWI4NDRmYSJ9"
+        },
+        {
+          "resource": "repo://scripts/services/logic.lua#L17-L59",
+          "version": "repo-lines-v1:sha256:fe2f3e59637b7459dbde8fa669eba0766be94291939c1d562ecbd7e55502d6cc:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1ZmQ0ZmRhODNjMjUyNTg3YWM1YTA2OTkzY2Q3YmE0N2I3Mjc5NjJmMzUyMzA4MjBiODk3NTcxODI0ZGU2NDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzOGU5MTk4ZWMzNGUwZTM2NTdlNDEyNzBmZjI4YTU1ZTllZDhlODkxZWYwOWViZDc0ZWI2ZTY0YTBiODJiMGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIzOWE5ODAzYmJmN2JjYmM4Y2IyN2NiNTViODQ0ZjQ2MTM2ZGMyM2NmOTc5Yzc0NDU0NGJkNThmM2Y4M2MxMTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU0YTE5NzQ3NWQ2NWJiNmY3OTU5NDc2YzJkZjZlZTVlM2RhNTJjNzk1ZjA2MWJhYzJjNTQ4ODc5OGMwNmUzMjkifQ"
+        },
+        {
+          "resource": "repo://scripts/services/logic.lua#L191-L204",
+          "version": "repo-lines-v1:sha256:0e3b079b8cbf2d8c83674d13ba431e15d8e1c1ef90f1b40e32d00d418b892487:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2NDExZWY2ZmZmNTgxOTVjYTVlOTExNjJiYzE5YzJjYzRkYmViNWY0ZmM2YjVlYWU1MDYxNjdiNGIyY2I2M2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzMmI3ZjAxYjFlZTAwZWVmZWFlMDIyMDcwODQ3NjAzNzgwYWFkYTAxN2FlZDJlNDgyMzc2NDg4N2RlMmI2NTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkMGYyOGU2Yjc5ZmM1ZGJlNTY5YWQ5NzQyZjliYjg0NzU1MjEzZWIwNWMyZWI5MzczYzU1OTBlNjgyMzk3Y2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkZGQyYWUyZGNmYzU0ZWI2MTUxOTA4Zjg2YTFiMWQ2NGNlZWQ1MDBmNGU0ZWEwNGE1YWJiYTgyZTA2MjFkMjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f7fda3718d59485082658ec8575b3a90",
+      "statement": "Full native input reads reserve conservative prototype-universe materialization work before get_signals and bound each/combined inventory with signed-int32 wrapping.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/services/logic.lua#L70-L92",
+          "version": "repo-lines-v1:sha256:63231eea710092ee63d340aa35e386b7d59b51974aafa4583e5d220e7968b846:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZDQwMzg5NmJiZjk4ZGU5N2UxODJjNGU3MmIxODM2YmI0N2ZhNjFlNzdmNDk4ZjJhYmI0MjYzNGRkOTI4OTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkM2RlNTA4OTBjNGQ0NDMwN2Q5MWZlOGMwMzI1NDIwZWJhMTM1MTAyN2IxZjMwZTY2ODRiMmEyOGZjNjY1N2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgwMzU0ZDMyNmVkMmZlOWFiMmVhYWFlZjQ0YWQ1ZmUwNTZkMDcyMzg1ZjVkODQ2ZDA0N2UwZjEyZDIwOThhZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlhNDhiZDE1Njc3ZjMyMzE3YmE0ZmVhMTAzYmZiYzg1YWE5ZTYxMGUwYWFjZmFjMTE0NzhiMTQyMDIwOTJmNDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_55480aa114c04638ad703acb4e65f22d",
+      "statement": "Output publication stages an inactive native section with identity/count readback, records exact writer/run/wire/path ownership and attempts old-bank restoration or clears with recovery on native failure.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/services/logic.lua#L114-L151",
+          "version": "repo-lines-v1:sha256:7b7acd1a1d3e74c07119467649890c8adedab1fcae1ce75c249a40f04ff0e4d0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmNzI1NTBiMzJjNTFhYjcyZDQwNGQ1NDFjMDMxOWZmOTA0NDNiMjViZmExOTBjYTk5NGEyYjAyNDlmMmNkZTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4MjIzNGY1OGNjY2M3ZDNmYzFjY2JkNjMzNDg3N2ZiZTQ5Y2E2Y2QwNDlhNDI3MzkwNTkwNjUyODgwMmI4ODYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE1NGE0OTc0YmJmNTdmM2RiNDAwY2E0ZjcwMjI5YWU5ZDY1ZDJkMTM2NmI3M2QzMjMyYTU0ZGUwZDI4YmNiZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ3ZjRiNThkYzdhZTlmYmVkYzIxNDBmOWQyMmIyNDg5YWNmNzIwZmYxNDQyNmJjOWM0ZTg1NjRlYWRkZTA2MjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8af0b1573326407e83fc84a5cc7fe803",
+      "statement": "Signal subscriptions retain named handlers/baselines and copied current/previous/delta/connection events; baseline changes only after successful enqueue with full publication admission.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/services/logic.lua#L161-L183",
+          "version": "repo-lines-v1:sha256:cce54c76050501e348e7aacd3dfdfcff7daf4933d7fcb7f5500a1ab594e525cc:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3NmJjMDg1YWQwMjhmYjhmN2VjNjcyODU1OTgzMDM4OTU5M2Y4YjFkZWE2MDMxNTUyMGI0ZThiNWRkZGFlMmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyNjMzYThhZWVkNzQ0MmQ5ZjcwNjE4OTY3Y2YxMzZmYTBkMGQ1MjY4NzAzMTVmYmZmYTRmNTdiNzcxNDc0NjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc2OWQ4MjljYTM3ZmIzNmMzMWQ2OTI2NjQzNmNhYTM1NWZlMWIwNDlkZGRjYTY4NjY4YzdlNWFmMmEyNjNkMTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1ZjliZWU2OWRjNDE4ZDg0NGUyZTk4NjY1MjRhMTMxNTRlM2E3NGQwNTQ0ZmYyYmI2YThhZWU1ODAwY2NjOTgifQ"
+        },
+        {
+          "resource": "repo://scripts/services/logic.lua#L301-L334",
+          "version": "repo-lines-v1:sha256:e5d4a3344da1b6a168ce551f7825009b70c11e9a50c270853be365f5fea03a24:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0YWU0OWMyOTMzNDk0OWI3MGU2YWUyY2FhNTQ0NzM5MWMxZTZjZDc0OTAxZjlkZTYxM2E1NzJkNmU4NmFkM2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkNjFhZjFiNDVkZjQ1ZjljNGNmNzc1MTllM2MzYmY1NGEwNTc3ZjljYTYzNGQ2MTgyODliYWYyZjkxYTA1MmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM2ZmM4MDQxODgxM2NlOGZlMmYzNzViNDNiZDc2OWU1YzI4NDBkZTY0MzdmZDExNTVkNzRkMDUwYTBmMGNmOTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI4ODNjMThiODMzM2RiY2Y3MGJiZTc4M2VmOWYyODNlNGVkZjdlNTBjYTRiOThhOGNiZTgyMWFlYzY0NzU1MjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e8f2523291fd4fc59056a95e25e0fa7a",
+      "statement": "Sampling refusal faults affected subscribers rather than silently losing observations; outage marks resync and authority cleanup revokes matching subscriptions/queued events and exact-owned outputs without executing source.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/services/logic.lua#L234-L298",
+          "version": "repo-lines-v1:sha256:1ef4a707a37ff672bec3e709ad692bcd1093ca6c9edade831e6c73744d5637e9:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0NDc1ZDlkNDk5Y2I1MjZjMDg3YjYyYWExNTQ3NmE5OTg2OTMwZmQxNDhkOWI1YTI4YTVmMmE0YWZiNTBiZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzNjBjMDM5OTJiMGE5NTU2OTQ4ZDI2OWJlZWUwNTU5Njk3NzY0OGVlNmRiMjRkYzBjMmUyZjkzMTk2NTFmOTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAyZjk5ZDUwNTA5YjE4NTc2YjUxOTgyNzkzOGMwN2RiYzc3NmNhNjE0MjJiNDNkZGY1OTY3ZmQwNTkxOTY4NWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyZmJmNjI5Yjk2ODk2Y2MxOTBlMDRlOGRiOWM1YzgwMzQ0NTA4MWMwNjZjMjc2NjQ2MzI1NTcyM2Q3YWEwZDYifQ"
+        },
+        {
+          "resource": "repo://scripts/services/logic.lua#L336-L354",
+          "version": "repo-lines-v1:sha256:c4b74518c853c63f98689346ff29b4a47030d4272fb75e0afed1bfd41864ce12:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3OGIwY2Y2MTgwNDlhOGU0MGQ1ZmE5NzMzMDRlZGRhMmU3M2Q4ZWVkMmU1MzYwOTY0YWJlYmJjMmEzYWIwYTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyYjkxNWI5YWU4ZTg4MzAzODg2M2M1YWZjYmQ3NDRiZjg5YTA4NjczZmEwZTU1OGIzZDIwN2MwYjBlNDk4OTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2ZTRjODMxNDJjN2NhZTIwMmE3OTdiODNhYjBiYTQxYWVjYTQzZTVmYTQ2ZTgzNjM2YjEwM2UyNzc4MDRhMjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzM1OWMwYTcxYTJiZGY1M2IwOGIzOWQ4MzAxODJiOGZkNGRmMmUzOWFhNmFjODA3YWY3MmVmNTE2OWNkZjgifQ"
+        },
+        {
+          "resource": "repo://scripts/services/peripheral.lua#L263-L309",
+          "version": "repo-lines-v1:sha256:ea56e67d172a3595a59c6d1653310dc60a56ef0bd3e48b9b03135ec32998644f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjMDhjMWVjYjBlNDAzMmE3MGE1ZmI4ZDdjZDljZTE2YjFjZWQyOGY0ZWI1M2EyZjYzZTg3Mzc1ZGMyY2IyYTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0ODczMWFiMTM2ZGUyYWFlYTEzZThlOWU5MjJlNjA2ODY1MDQyOTNmYjg4YWNiMDc1NzgwNGViMzI5MzA1ZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmODk0YzIxZmRlMjE0OTI3NWJjOGI1M2RkNzg5Njc1Y2IzODI1ZDZhOTBmMjkwYWJiMzMzZmY5MjJkMzNmODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ4NDdhMWM2NTFiZWJkZTA0ZDI4NjIyZjBiMGFkZmE1OTIyZWVjYTRiZTIyZTM2NmVmMDUyNjY4MjEyNDYyMDgifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-15T06:41:57.498Z"
+  }
+}

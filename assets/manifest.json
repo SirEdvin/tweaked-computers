@@ -1,0 +1,5759 @@
+{
+  "authored_inputs": [
+    {
+      "path": "assets/generate.py",
+      "sha256": "eac8eb58234312c215774a18e9ef2950d70030ca05997e3c446997d70eee872a"
+    },
+    {
+      "path": "assets/glyphs.txt",
+      "sha256": "d1f2c39ca4a7f6205eaafc80a6645d1df4cad38cc4a05e99c9014ea7f3dc3123"
+    }
+  ],
+  "deferred": [
+    "native client sprite alignment, normal zoom legibility, world glyph presentation, rotations and touch integration"
+  ],
+  "devices": {
+    "computer": {
+      "directions": {
+        "east": {
+          "body": "sprites/computer-east-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "role_centers": {
+            "network": [
+              -0.3125,
+              0
+            ]
+          },
+          "shadow": "sprites/computer-east-shadow.png",
+          "states": {
+            "blinking": "sprites/computer-east-blinking.png",
+            "fault": "sprites/computer-east-fault.png",
+            "off": "sprites/computer-east-off.png",
+            "powered": "sprites/computer-east-powered.png",
+            "unpowered": "sprites/computer-east-unpowered.png"
+          }
+        },
+        "north": {
+          "body": "sprites/computer-north-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "role_centers": {
+            "network": [
+              0,
+              0.3125
+            ]
+          },
+          "shadow": "sprites/computer-north-shadow.png",
+          "states": {
+            "blinking": "sprites/computer-north-blinking.png",
+            "fault": "sprites/computer-north-fault.png",
+            "off": "sprites/computer-north-off.png",
+            "powered": "sprites/computer-north-powered.png",
+            "unpowered": "sprites/computer-north-unpowered.png"
+          }
+        },
+        "south": {
+          "body": "sprites/computer-south-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "role_centers": {
+            "network": [
+              0,
+              -0.3125
+            ]
+          },
+          "shadow": "sprites/computer-south-shadow.png",
+          "states": {
+            "blinking": "sprites/computer-south-blinking.png",
+            "fault": "sprites/computer-south-fault.png",
+            "off": "sprites/computer-south-off.png",
+            "powered": "sprites/computer-south-powered.png",
+            "unpowered": "sprites/computer-south-unpowered.png"
+          }
+        },
+        "west": {
+          "body": "sprites/computer-west-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "role_centers": {
+            "network": [
+              0.3125,
+              0
+            ]
+          },
+          "shadow": "sprites/computer-west-shadow.png",
+          "states": {
+            "blinking": "sprites/computer-west-blinking.png",
+            "fault": "sprites/computer-west-fault.png",
+            "off": "sprites/computer-west-off.png",
+            "powered": "sprites/computer-west-powered.png",
+            "unpowered": "sprites/computer-west-unpowered.png"
+          }
+        }
+      },
+      "footprint": [
+        1,
+        1
+      ],
+      "icon": "icons/computer.png",
+      "roles": [
+        [
+          "network",
+          0
+        ]
+      ]
+    },
+    "configurator": {
+      "directions": {
+        "east": {
+          "body": "sprites/configurator-east-body.png",
+          "frame_size": [
+            320,
+            320
+          ],
+          "pivot": [
+            160,
+            160
+          ],
+          "role_centers": {
+            "network": [
+              -0.3125,
+              -0.5
+            ],
+            "target": [
+              -0.3125,
+              0.5
+            ]
+          },
+          "shadow": "sprites/configurator-east-shadow.png",
+          "states": {
+            "blinking": "sprites/configurator-east-blinking.png",
+            "fault": "sprites/configurator-east-fault.png",
+            "off": "sprites/configurator-east-off.png",
+            "powered": "sprites/configurator-east-powered.png",
+            "unpowered": "sprites/configurator-east-unpowered.png"
+          }
+        },
+        "north": {
+          "body": "sprites/configurator-north-body.png",
+          "frame_size": [
+            320,
+            320
+          ],
+          "pivot": [
+            160,
+            160
+          ],
+          "role_centers": {
+            "network": [
+              -0.5,
+              0.3125
+            ],
+            "target": [
+              0.5,
+              0.3125
+            ]
+          },
+          "shadow": "sprites/configurator-north-shadow.png",
+          "states": {
+            "blinking": "sprites/configurator-north-blinking.png",
+            "fault": "sprites/configurator-north-fault.png",
+            "off": "sprites/configurator-north-off.png",
+            "powered": "sprites/configurator-north-powered.png",
+            "unpowered": "sprites/configurator-north-unpowered.png"
+          }
+        },
+        "south": {
+          "body": "sprites/configurator-south-body.png",
+          "frame_size": [
+            320,
+            320
+          ],
+          "pivot": [
+            160,
+            160
+          ],
+          "role_centers": {
+            "network": [
+              0.5,
+              -0.3125
+            ],
+            "target": [
+              -0.5,
+              -0.3125
+            ]
+          },
+          "shadow": "sprites/configurator-south-shadow.png",
+          "states": {
+            "blinking": "sprites/configurator-south-blinking.png",
+            "fault": "sprites/configurator-south-fault.png",
+            "off": "sprites/configurator-south-off.png",
+            "powered": "sprites/configurator-south-powered.png",
+            "unpowered": "sprites/configurator-south-unpowered.png"
+          }
+        },
+        "west": {
+          "body": "sprites/configurator-west-body.png",
+          "frame_size": [
+            320,
+            320
+          ],
+          "pivot": [
+            160,
+            160
+          ],
+          "role_centers": {
+            "network": [
+              0.3125,
+              0.5
+            ],
+            "target": [
+              0.3125,
+              -0.5
+            ]
+          },
+          "shadow": "sprites/configurator-west-shadow.png",
+          "states": {
+            "blinking": "sprites/configurator-west-blinking.png",
+            "fault": "sprites/configurator-west-fault.png",
+            "off": "sprites/configurator-west-off.png",
+            "powered": "sprites/configurator-west-powered.png",
+            "unpowered": "sprites/configurator-west-unpowered.png"
+          }
+        }
+      },
+      "footprint": [
+        2,
+        1
+      ],
+      "icon": "icons/configurator.png",
+      "roles": [
+        [
+          "network",
+          -0.5
+        ],
+        [
+          "target",
+          0.5
+        ]
+      ]
+    },
+    "kv": {
+      "directions": {
+        "east": {
+          "body": "sprites/kv-east-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "role_centers": {
+            "network": [
+              -0.3125,
+              0
+            ]
+          },
+          "shadow": "sprites/kv-east-shadow.png",
+          "states": {
+            "blinking": "sprites/kv-east-blinking.png",
+            "fault": "sprites/kv-east-fault.png",
+            "off": "sprites/kv-east-off.png",
+            "powered": "sprites/kv-east-powered.png",
+            "unpowered": "sprites/kv-east-unpowered.png"
+          }
+        },
+        "north": {
+          "body": "sprites/kv-north-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "role_centers": {
+            "network": [
+              0,
+              0.3125
+            ]
+          },
+          "shadow": "sprites/kv-north-shadow.png",
+          "states": {
+            "blinking": "sprites/kv-north-blinking.png",
+            "fault": "sprites/kv-north-fault.png",
+            "off": "sprites/kv-north-off.png",
+            "powered": "sprites/kv-north-powered.png",
+            "unpowered": "sprites/kv-north-unpowered.png"
+          }
+        },
+        "south": {
+          "body": "sprites/kv-south-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "role_centers": {
+            "network": [
+              0,
+              -0.3125
+            ]
+          },
+          "shadow": "sprites/kv-south-shadow.png",
+          "states": {
+            "blinking": "sprites/kv-south-blinking.png",
+            "fault": "sprites/kv-south-fault.png",
+            "off": "sprites/kv-south-off.png",
+            "powered": "sprites/kv-south-powered.png",
+            "unpowered": "sprites/kv-south-unpowered.png"
+          }
+        },
+        "west": {
+          "body": "sprites/kv-west-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "role_centers": {
+            "network": [
+              0.3125,
+              0
+            ]
+          },
+          "shadow": "sprites/kv-west-shadow.png",
+          "states": {
+            "blinking": "sprites/kv-west-blinking.png",
+            "fault": "sprites/kv-west-fault.png",
+            "off": "sprites/kv-west-off.png",
+            "powered": "sprites/kv-west-powered.png",
+            "unpowered": "sprites/kv-west-unpowered.png"
+          }
+        }
+      },
+      "footprint": [
+        1,
+        1
+      ],
+      "icon": "icons/kv.png",
+      "roles": [
+        [
+          "network",
+          0
+        ]
+      ]
+    },
+    "logic": {
+      "directions": {
+        "east": {
+          "body": "sprites/logic-east-body.png",
+          "frame_size": [
+            320,
+            320
+          ],
+          "pivot": [
+            160,
+            160
+          ],
+          "role_centers": {
+            "input": [
+              -0.3125,
+              -1
+            ],
+            "network": [
+              -0.3125,
+              0
+            ],
+            "output": [
+              -0.3125,
+              1
+            ]
+          },
+          "shadow": "sprites/logic-east-shadow.png",
+          "states": {
+            "blinking": "sprites/logic-east-blinking.png",
+            "fault": "sprites/logic-east-fault.png",
+            "off": "sprites/logic-east-off.png",
+            "powered": "sprites/logic-east-powered.png",
+            "unpowered": "sprites/logic-east-unpowered.png"
+          }
+        },
+        "north": {
+          "body": "sprites/logic-north-body.png",
+          "frame_size": [
+            320,
+            320
+          ],
+          "pivot": [
+            160,
+            160
+          ],
+          "role_centers": {
+            "input": [
+              -1,
+              0.3125
+            ],
+            "network": [
+              0,
+              0.3125
+            ],
+            "output": [
+              1,
+              0.3125
+            ]
+          },
+          "shadow": "sprites/logic-north-shadow.png",
+          "states": {
+            "blinking": "sprites/logic-north-blinking.png",
+            "fault": "sprites/logic-north-fault.png",
+            "off": "sprites/logic-north-off.png",
+            "powered": "sprites/logic-north-powered.png",
+            "unpowered": "sprites/logic-north-unpowered.png"
+          }
+        },
+        "south": {
+          "body": "sprites/logic-south-body.png",
+          "frame_size": [
+            320,
+            320
+          ],
+          "pivot": [
+            160,
+            160
+          ],
+          "role_centers": {
+            "input": [
+              1,
+              -0.3125
+            ],
+            "network": [
+              0,
+              -0.3125
+            ],
+            "output": [
+              -1,
+              -0.3125
+            ]
+          },
+          "shadow": "sprites/logic-south-shadow.png",
+          "states": {
+            "blinking": "sprites/logic-south-blinking.png",
+            "fault": "sprites/logic-south-fault.png",
+            "off": "sprites/logic-south-off.png",
+            "powered": "sprites/logic-south-powered.png",
+            "unpowered": "sprites/logic-south-unpowered.png"
+          }
+        },
+        "west": {
+          "body": "sprites/logic-west-body.png",
+          "frame_size": [
+            320,
+            320
+          ],
+          "pivot": [
+            160,
+            160
+          ],
+          "role_centers": {
+            "input": [
+              0.3125,
+              1
+            ],
+            "network": [
+              0.3125,
+              0
+            ],
+            "output": [
+              0.3125,
+              -1
+            ]
+          },
+          "shadow": "sprites/logic-west-shadow.png",
+          "states": {
+            "blinking": "sprites/logic-west-blinking.png",
+            "fault": "sprites/logic-west-fault.png",
+            "off": "sprites/logic-west-off.png",
+            "powered": "sprites/logic-west-powered.png",
+            "unpowered": "sprites/logic-west-unpowered.png"
+          }
+        }
+      },
+      "footprint": [
+        3,
+        1
+      ],
+      "icon": "icons/logic.png",
+      "roles": [
+        [
+          "input",
+          -1
+        ],
+        [
+          "network",
+          0
+        ],
+        [
+          "output",
+          1
+        ]
+      ]
+    },
+    "monitor": {
+      "directions": {
+        "east": {
+          "body": "sprites/monitor-east-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "role_centers": {
+            "network": [
+              -0.484375,
+              0
+            ]
+          },
+          "shadow": "sprites/monitor-east-shadow.png",
+          "states": {
+            "blinking": "sprites/monitor-east-blinking.png",
+            "fault": "sprites/monitor-east-fault.png",
+            "off": "sprites/monitor-east-off.png",
+            "powered": "sprites/monitor-east-powered.png",
+            "unpowered": "sprites/monitor-east-unpowered.png"
+          }
+        },
+        "north": {
+          "body": "sprites/monitor-north-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "role_centers": {
+            "network": [
+              0,
+              0.484375
+            ]
+          },
+          "shadow": "sprites/monitor-north-shadow.png",
+          "states": {
+            "blinking": "sprites/monitor-north-blinking.png",
+            "fault": "sprites/monitor-north-fault.png",
+            "off": "sprites/monitor-north-off.png",
+            "powered": "sprites/monitor-north-powered.png",
+            "unpowered": "sprites/monitor-north-unpowered.png"
+          }
+        },
+        "south": {
+          "body": "sprites/monitor-south-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "role_centers": {
+            "network": [
+              0,
+              -0.484375
+            ]
+          },
+          "shadow": "sprites/monitor-south-shadow.png",
+          "states": {
+            "blinking": "sprites/monitor-south-blinking.png",
+            "fault": "sprites/monitor-south-fault.png",
+            "off": "sprites/monitor-south-off.png",
+            "powered": "sprites/monitor-south-powered.png",
+            "unpowered": "sprites/monitor-south-unpowered.png"
+          }
+        },
+        "west": {
+          "body": "sprites/monitor-west-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "role_centers": {
+            "network": [
+              0.484375,
+              0
+            ]
+          },
+          "shadow": "sprites/monitor-west-shadow.png",
+          "states": {
+            "blinking": "sprites/monitor-west-blinking.png",
+            "fault": "sprites/monitor-west-fault.png",
+            "off": "sprites/monitor-west-off.png",
+            "powered": "sprites/monitor-west-powered.png",
+            "unpowered": "sprites/monitor-west-unpowered.png"
+          }
+        }
+      },
+      "footprint": [
+        1,
+        1
+      ],
+      "icon": "icons/monitor.png",
+      "roles": [
+        [
+          "network",
+          0
+        ]
+      ]
+    }
+  },
+  "format_version": 1,
+  "generated_metadata": [
+    {
+      "path": "assets/sprites.lua",
+      "sha256": "b6bd646d7ce76c6bf2a3018bd731e36eeac92b369ff3f153fd483bb2be636641"
+    }
+  ],
+  "glyphs": {
+    "ascii": [
+      32,
+      126
+    ],
+    "cell": [
+      6,
+      9
+    ],
+    "columns": 16,
+    "foreground": "white opaque mask; transparent background; tint via runtime palette",
+    "mosaic": [
+      128,
+      159
+    ],
+    "mosaic_bits": "bits 0..4 row-major 3x3; bottom-right always background",
+    "path": "glyphs/atlas.png",
+    "provenance": "glyphs.txt independently authored for Tweaked Computers; no font/image/system-font inputs",
+    "replacement": "all bytes outside ASCII/mosaic map to outlined box; byte 32 and 128 blank",
+    "rows": 16,
+    "slots": 256
+  },
+  "inputs": [
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+      "sha256": "06204341f69e19b2400608839173c8c78582a184e39047a2203f0a3a755dbda9",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_blinking.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+      "sha256": "ad1d6a0395955319752f21cb0ff4d5b2ffb7cfbe5f856be7a0b83e9b64e805f5",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_off.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+      "sha256": "01a4170df88f17d40a01fcee9e010c2e8a87de8fad35742942a1f41f3860aedd",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_advanced_on.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/computer_normal_off.json",
+      "sha256": "686895eccf001fc109d7cc317a6cee852b78862ff63317673ebee7e6783b4f45",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/computer_normal_off.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced.json",
+      "sha256": "66883e8497c002ffaa2017bcf95b8e00970495357ad9eafba6b4d6465ca4c22c",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_base.json",
+      "sha256": "b30f7ee26bec7b918431061c6d003222998403cfed66c4ccdabfd0a560913e55",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_base.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_d.json",
+      "sha256": "deebf216c880df04532105ebb8726e7ca3ad11c83e02e29da484bab8c4f225d6",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_d.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_item.json",
+      "sha256": "78110365643f3a9971227d0160736e4a31ceffb8a30d9a0153c54a5fb4339199",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_item.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_l.json",
+      "sha256": "29fec9832177419a6ba688cc22b8288c7a6d153c54a7a2e46c5576877acce9e0",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_l.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_ld.json",
+      "sha256": "de990bc9492bf869888f9018bdd4431f14b2d10dbfa3428fabb664ea34211066",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ld.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_lr.json",
+      "sha256": "8a5d147d7106d3b6dfa16f791cbe4ea9607ff34bbff33a4e5b7daa51295375b7",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lr.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_lrd.json",
+      "sha256": "61611ccd8419d22a5c82dd301585a72c0843f032862d711b3c41c3ec92af3631",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lrd.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_lru.json",
+      "sha256": "aaa148d75666c1eb20d945327803094bcda685a74987f9823382ef81ca03c15d",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lru.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_lrud.json",
+      "sha256": "25c0b861ad756dfb7d5bf989e9855af21862403b7d6163d57f90953a3edce213",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lrud.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_lu.json",
+      "sha256": "d1037b2a524814e3a2a7b621510331907013da99cce58a85b0075c1adeef1f86",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lu.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_lud.json",
+      "sha256": "1f11906487c8a42f55051938ef404fd877961bbf1142c03b9052f7e4b44311ae",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_lud.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_r.json",
+      "sha256": "1cfd229306ad7e4b546959bbd52a3de16e9925ba7d999379118e040fc3898e51",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_r.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_rd.json",
+      "sha256": "f8c800239c02664927cacc3cd498f49f3625ed10901f8eb0551eab50159bce59",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_rd.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_ru.json",
+      "sha256": "3652aff21ec3226085ea03d041c4bbbbf951f7b63de36121ea5fef1649c410b9",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ru.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_rud.json",
+      "sha256": "92033bdd8a9d258463f03cbd6c96ee4c407b89585126a3352b86d74384c00d21",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_rud.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_u.json",
+      "sha256": "4df50c1d91f7d6fdf785d7ff75c893828e6c76949385c128c6794e3e905b8637",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_u.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_advanced_ud.json",
+      "sha256": "10ef790f2d3c55f5537f3e647e2084d296553fb1b3305d694fb0b1a80fbcf4dd",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_advanced_ud.json"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/models/block/monitor_base.json",
+      "sha256": "8111a5f6e1525cf3afb58698252e6b2656a2336325214a78713a3522fd558b5e",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/models/block/monitor_base.json"
+    },
+    {
+      "alpha_sha256": "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1",
+      "height": 16,
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/textures/block/blank.png",
+      "rgba_sha256": "5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+      "sha256": "38be5a9fb712cb81d81245d38f669df298b6e8490018f0617986489249ce0494",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/blank.png",
+      "width": 16
+    },
+    {
+      "alpha_sha256": "facf4005f8e3187bd1ed51ff1e1a703deb36ddf24432cf383de536336137e290",
+      "height": 64,
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/textures/block/computer_front_blink.png",
+      "rgba_sha256": "f451112b25d42fd28704136a52a4df4bcade51fa7fa7016bbbf838859e146536",
+      "sha256": "d7fbff88354bd865c767cbb3366b14efabed99098a617be841841aba464e536b",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_front_blink.png",
+      "width": 16
+    },
+    {
+      "alpha_sha256": "2c3a4cfc01795e4828f32cb7ac8fc9ef9cfaadc57743b2d5b4e22e94fa35d569",
+      "height": 16,
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/textures/block/computer_front_static.png",
+      "rgba_sha256": "45169123d417d2bc46525e14a929c187f0f47e83a927743b4b7bfe44055e98e0",
+      "sha256": "845f2a11c77c5bd522dd4dcf7aee80182c569828896ba23687d627eb5e6cd71a",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_front_static.png",
+      "width": 16
+    },
+    {
+      "alpha_sha256": "2630057af69dc63d6bd91d4e5a8f311a51807be7734eb657964f9977c8df8eb3",
+      "height": 16,
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/textures/block/computer_normal_front.png",
+      "rgba_sha256": "2701acb2899253fdf7ff8193d250c03ea438e18c509d468978cce86574c423f3",
+      "sha256": "8744d55abbec94ba8640044b2c294e3ba3618db807ded73727b95fac2c0f7aca",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_normal_front.png",
+      "width": 16
+    },
+    {
+      "alpha_sha256": "3d6876a0146de8576eb2395a858de1213d1b92c65b779df3a331cfd5a4584546",
+      "height": 16,
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/textures/block/hv_case.png",
+      "rgba_sha256": "231714bfc57650451751012e6734f44ad4c5762db0f359b851c7c34dc712dec9",
+      "sha256": "ea333a8440746fd694b0266ef5dde68333f2e426001ba1ac0484b158c1e8cb0f",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/hv_case.png",
+      "width": 16
+    },
+    {
+      "alpha_sha256": "3d6876a0146de8576eb2395a858de1213d1b92c65b779df3a331cfd5a4584546",
+      "height": 16,
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/textures/block/hv_case_pattern.png",
+      "rgba_sha256": "13fe3c6989c43067feb4eb1892d699a55aee972e7120ad68826d571a3b737433",
+      "sha256": "cd479a44c4cb5a979ccb394217d51f7bd0b23128d4de0ced0c1c4056353274d4",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/hv_case_pattern.png",
+      "width": 16
+    },
+    {
+      "alpha_sha256": "82f696184d27b80e564d8057737b4d7e9b8d11f868e23f29647de065bba9e2d9",
+      "height": 16,
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/textures/block/monitor_normal_front.png",
+      "rgba_sha256": "ff2e3dc918dfd8ba36d034338c21f0f7788d7ecb6520f87dc0d9cb2afabbb476",
+      "sha256": "55ae3dbcc539d2ef282376a5534c0d1a05ed478931ba95b02c5e2fb1537ba006",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/monitor_normal_front.png",
+      "width": 16
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/textures/block/computer_front_blink.png.mcmeta",
+      "sha256": "656053145d63a47cfe87280bcb5771a8aaefa2d797e3736456025cf551368cc3",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_front_blink.png.mcmeta"
+    },
+    {
+      "license": "MIT",
+      "notice": "assets/notices/Greg-Flavored-MIT.txt",
+      "path": "assets/upstream/computercraft/textures/block/computer_front_static.png.mcmeta",
+      "sha256": "656053145d63a47cfe87280bcb5771a8aaefa2d797e3736456025cf551368cc3",
+      "upstream_path": "resourcepack/refreshed/Computer Craft Greg Refreshed 1.20.1/assets/computercraft/textures/block/computer_front_static.png.mcmeta"
+    }
+  ],
+  "notices": [
+    {
+      "path": "assets/notices/Greg-Flavored-MIT.txt",
+      "sha256": "578cbb16f275631f9c0ebf888138b7932fb63c8762de307bf4d6e2e026914c01"
+    },
+    {
+      "path": "assets/notices/Greg-Flavored-README.md",
+      "sha256": "bf966e5c342a340b0817d120b1a69edadfde91ac50349a0698aa40164a650ab2"
+    },
+    {
+      "path": "assets/notices/Tweaked-Computers-MIT.txt",
+      "sha256": "9a70647c2c91c4ebfb013c3b7c7ee93c01d4fe40c9e929e7959ddc6913a364fe"
+    }
+  ],
+  "outputs": [
+    {
+      "alpha_sha256": "3eccbcf12e7b620b2533277c98ec32b2715e2c2aea1670a13fc624f479fe63ad",
+      "device": "computer",
+      "direction": "north",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/hv_case.png",
+        "assets/upstream/computercraft/textures/block/hv_case_pattern.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-north-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "5bdf098efe329054b3ae64ac49d28813750e56c2ed137f55c739e4cfa9cef9a4",
+      "scale": 0.5,
+      "sha256": "43da32d29b7a9d7a79522cc9ae6169264f869f56be1a1157f9f945b0c42a1a04",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1d0bf9d96cad8cc165e6482dd98d3a0af8d2506dfd91f4e5cd6d2ff4787540ef",
+      "device": "computer",
+      "direction": "north",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-north-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e3d73b7f44c5d9336ddb062cfd2d04f0d9d57aedd57088320c7788a6a6d82505",
+      "scale": 0.5,
+      "sha256": "167a81c9c276a8847100013fa67f25ace1fd4326870fa2e63aa25a174033a9c4",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "computer",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-north-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "computer",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-north-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "846caa44b9b2f572402423748741d2e29ca126147751eb894cd8b9012b22749b",
+      "device": "computer",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-north-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "36113d790799caa4a1a146d919bf54ab8ba1dd72591230fce45a08bf7a25ddae",
+      "scale": 0.5,
+      "sha256": "33ee28d8fedcad52d1dc1b9151efa81e618f6f1e72522063978d43ac5fba9a86",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "e6eb06a535c80b5ca821e26028ffa49a5be4e2921b4de85c53d21a7c37418db1",
+      "device": "computer",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-north-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "fcef0cc8f8ebe85e5b80c403ee6bdbfac1bb42f694e4ae153b90710899780071",
+      "scale": 0.5,
+      "sha256": "edfcf365322d827252611de9cf86a5e862ca79c08843fb7812d19dba52c162f8",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "5c98deebc6b5ff53c9c7e1adcf2aa41c06b1b4fd5c1d5fcd75e10ea31cce2ac5",
+      "device": "computer",
+      "direction": "north",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-north-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "98c48a04d2c72e184283a7ca2fb5d3c2e793ec6696f41f0f3bda643a1f978de9",
+      "scale": 0.5,
+      "sha256": "be601f87a22e7785846c07ee0611b1ed30b8b9e0c1ff77a5177486317be450eb",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "3eccbcf12e7b620b2533277c98ec32b2715e2c2aea1670a13fc624f479fe63ad",
+      "device": "computer",
+      "direction": "east",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/hv_case.png",
+        "assets/upstream/computercraft/textures/block/hv_case_pattern.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-east-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "09ef51fcb87b984712f84b0ca9ced13cb31404d1471106945aeac60c7d75f48c",
+      "scale": 0.5,
+      "sha256": "7869d5a058153cf12d603cb0b924aa7aed0b6b57f7d38aeca9d15ff6b4583019",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1d0bf9d96cad8cc165e6482dd98d3a0af8d2506dfd91f4e5cd6d2ff4787540ef",
+      "device": "computer",
+      "direction": "east",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-east-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e3d73b7f44c5d9336ddb062cfd2d04f0d9d57aedd57088320c7788a6a6d82505",
+      "scale": 0.5,
+      "sha256": "167a81c9c276a8847100013fa67f25ace1fd4326870fa2e63aa25a174033a9c4",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "computer",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-east-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "computer",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-east-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "fbee5983a87a7bbe6cda0e1d76e68c385edb2406bb6e6c065463c8de85e0d7a7",
+      "device": "computer",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-east-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "598b4f0f0778e4231a1c703b051ddbb9871418c9125cc1d4f5bdc4c90781d465",
+      "scale": 0.5,
+      "sha256": "22d56c469808b21765ce9d1a91a300b03e8d6d8b69f5caa5296f8da5214ec5a9",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "846264667c3b8897e225f7ca7b2ae38ae24ed61df8a3990e5ae9e723d2cd071e",
+      "device": "computer",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-east-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "a8cb5658ec6c152329f3b009f481583752f3525b270c1bd9f09dad5147ed1daa",
+      "scale": 0.5,
+      "sha256": "cd87bf109ab71c408224da1466c995a51c34d6f8bc1ab7e6e600ce7ec0a34447",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "a17f7894c02eee7e385ba08c713decc3262c8e09640b11a623ef33235bb78395",
+      "device": "computer",
+      "direction": "east",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-east-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "6deb7c0b8940f10f61bc12dafddd975d76cc8b8ece5e9d90a354319193482f82",
+      "scale": 0.5,
+      "sha256": "ee82d6ae25a9c32cc5229f6d539bacd87e6e0d56324cd3f9e29f97a6842d9326",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "3eccbcf12e7b620b2533277c98ec32b2715e2c2aea1670a13fc624f479fe63ad",
+      "device": "computer",
+      "direction": "south",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/blank.png",
+        "assets/upstream/computercraft/textures/block/computer_normal_front.png",
+        "assets/upstream/computercraft/textures/block/hv_case.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-south-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "09cbeaaa49e53cb99f3631972b44e80b4e1f49c96e4e275c14fb31ac085ed550",
+      "scale": 0.5,
+      "sha256": "5bcd146b3f9bfa213ce6f1b25d63964bbd0ec5c1d1647f854bf21ab4c0ae24fe",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1d0bf9d96cad8cc165e6482dd98d3a0af8d2506dfd91f4e5cd6d2ff4787540ef",
+      "device": "computer",
+      "direction": "south",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-south-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e3d73b7f44c5d9336ddb062cfd2d04f0d9d57aedd57088320c7788a6a6d82505",
+      "scale": 0.5,
+      "sha256": "167a81c9c276a8847100013fa67f25ace1fd4326870fa2e63aa25a174033a9c4",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "computer",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-south-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "computer",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-south-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "527ab684c6c87eb8969504919d6fb7dbd4381329d9f12da5fc40c845348c7b35",
+      "device": "computer",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/computer_front_static.png"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-south-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "a79f5f6ea0c58460b5e98c2a7badbb7947554baf8987ffff088adc1fd44ff0da",
+      "scale": 0.5,
+      "sha256": "48e6bafbd1ce19b2531657c05bf3a21318965f26ddf5710ae8b464819f5c20c4",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "ea51f2740a934eb7839a9e752374dba2d92327643d15cb92f9a81805b19becd5",
+      "device": "computer",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-south-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "79f0b1136f1aea1878b9c412e006903437fe9baea241c7daff088b41bdf00936",
+      "scale": 0.5,
+      "sha256": "12286d363dd5834b560e9e3c8bb88fc6d16634026bc342da0b5ba91a869becc9",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "dd81b36212cb641fa63bd5de49541b02032408b5b497d43f5aba497c2aa4c9fd",
+      "device": "computer",
+      "direction": "south",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/computer_front_blink.png"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-south-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f9543b4476667b6f7eefb3094022d1dcf07263da467e679acc62f0250f7ac5bf",
+      "scale": 0.5,
+      "sha256": "d6f4dda94c6c99f58f9e151bffe79d3566d5c4f77708f06f55f4e9f29da6292d",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "3eccbcf12e7b620b2533277c98ec32b2715e2c2aea1670a13fc624f479fe63ad",
+      "device": "computer",
+      "direction": "west",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/blank.png",
+        "assets/upstream/computercraft/textures/block/computer_normal_front.png",
+        "assets/upstream/computercraft/textures/block/hv_case.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-west-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "89edd59f83bf0773c6526378937bea919b3832c0482adaa1fa53b36d37b9bbd1",
+      "scale": 0.5,
+      "sha256": "1fcba56069b1d7d89dc48a69a3eb1129b616581978194723209c6693742c1b88",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1d0bf9d96cad8cc165e6482dd98d3a0af8d2506dfd91f4e5cd6d2ff4787540ef",
+      "device": "computer",
+      "direction": "west",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-west-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e3d73b7f44c5d9336ddb062cfd2d04f0d9d57aedd57088320c7788a6a6d82505",
+      "scale": 0.5,
+      "sha256": "167a81c9c276a8847100013fa67f25ace1fd4326870fa2e63aa25a174033a9c4",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "computer",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-west-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "computer",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-west-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "39063914b99a589e3fa9f28f18bf8cb4abec5472401b5c78f38368acfe254781",
+      "device": "computer",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/computer_front_static.png"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-west-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "612c8fd33802674ec32f1b62f8f654f98a815967dcd69c8ff32c980e7229cd66",
+      "scale": 0.5,
+      "sha256": "5d4fa6ad6b5f0bd491db5a74f4397c682df84f1078c38b7858fa7f639d6d15fa",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "d5b84520cd8b9eb6fed1a470c63b7038b7f237d1b89037563cc74d7647dc8c80",
+      "device": "computer",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-west-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "c063358e7e938ea7225467f4d3f33c5509d7232a5f9357ec2d34293cf6dcb184",
+      "scale": 0.5,
+      "sha256": "81739113d0a16378d5a67af46d8ae3173e0ba34fd66a787fa3f51809d04fef85",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "ea147bbf98d03b7bc60a92d66786911552d1025633f79e4b369b17076a589dd8",
+      "device": "computer",
+      "direction": "west",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/computer_front_blink.png"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/computer-west-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "5ff7cd08e7a17cfbb34b2d2869b7781d2eee0058691354c81b73582abd887ceb",
+      "scale": 0.5,
+      "sha256": "e1043c932cd3bba54080b3353d10681cb352a8098b7dedba2bc349e5e889c725",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "b7b6fa5f134839320ee7c68277fead3df4ebdd4679c172ba68f7cec116573b71",
+      "device": "computer",
+      "height": 64,
+      "icon_size": 64,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/blank.png",
+        "assets/upstream/computercraft/textures/block/computer_normal_front.png",
+        "assets/upstream/computercraft/textures/block/hv_case.png"
+      ],
+      "layer": "icon",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/icons/computer.png",
+      "rgba_sha256": "b69faeccd31801e1d2f59cb8ff0f9bf907f8303e1afc2764b8e0065b1162c7f1",
+      "sha256": "a808c4e7110b2c7fddb784ace93800f17bfdccc0bfc14745abf1ca9091df14d0",
+      "width": 64
+    },
+    {
+      "alpha_sha256": "3eccbcf12e7b620b2533277c98ec32b2715e2c2aea1670a13fc624f479fe63ad",
+      "device": "kv",
+      "direction": "north",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/hv_case.png",
+        "assets/upstream/computercraft/textures/block/hv_case_pattern.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-north-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e6ab3dcea52890d26b6d40997087c1d330a15cce61609f6079394a0b161e8948",
+      "scale": 0.5,
+      "sha256": "4d657d3923426d3c92239e9b8d7d6ef9b23260570f11f18660ee9bff361643eb",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1d0bf9d96cad8cc165e6482dd98d3a0af8d2506dfd91f4e5cd6d2ff4787540ef",
+      "device": "kv",
+      "direction": "north",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-north-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e3d73b7f44c5d9336ddb062cfd2d04f0d9d57aedd57088320c7788a6a6d82505",
+      "scale": 0.5,
+      "sha256": "167a81c9c276a8847100013fa67f25ace1fd4326870fa2e63aa25a174033a9c4",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "kv",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-north-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "kv",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-north-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "846caa44b9b2f572402423748741d2e29ca126147751eb894cd8b9012b22749b",
+      "device": "kv",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-north-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "36113d790799caa4a1a146d919bf54ab8ba1dd72591230fce45a08bf7a25ddae",
+      "scale": 0.5,
+      "sha256": "33ee28d8fedcad52d1dc1b9151efa81e618f6f1e72522063978d43ac5fba9a86",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "e6eb06a535c80b5ca821e26028ffa49a5be4e2921b4de85c53d21a7c37418db1",
+      "device": "kv",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-north-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "fcef0cc8f8ebe85e5b80c403ee6bdbfac1bb42f694e4ae153b90710899780071",
+      "scale": 0.5,
+      "sha256": "edfcf365322d827252611de9cf86a5e862ca79c08843fb7812d19dba52c162f8",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "5c98deebc6b5ff53c9c7e1adcf2aa41c06b1b4fd5c1d5fcd75e10ea31cce2ac5",
+      "device": "kv",
+      "direction": "north",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-north-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "98c48a04d2c72e184283a7ca2fb5d3c2e793ec6696f41f0f3bda643a1f978de9",
+      "scale": 0.5,
+      "sha256": "be601f87a22e7785846c07ee0611b1ed30b8b9e0c1ff77a5177486317be450eb",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "3eccbcf12e7b620b2533277c98ec32b2715e2c2aea1670a13fc624f479fe63ad",
+      "device": "kv",
+      "direction": "east",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/hv_case.png",
+        "assets/upstream/computercraft/textures/block/hv_case_pattern.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-east-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "d3188e7586422493777efa64a61702f1741e307da75285b1d46e5f6c8ec60203",
+      "scale": 0.5,
+      "sha256": "e1e41f75295945453855dbb8d7e02d1ebd9d31bb41ab3a4b7b37b380a5d9b85e",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1d0bf9d96cad8cc165e6482dd98d3a0af8d2506dfd91f4e5cd6d2ff4787540ef",
+      "device": "kv",
+      "direction": "east",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-east-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e3d73b7f44c5d9336ddb062cfd2d04f0d9d57aedd57088320c7788a6a6d82505",
+      "scale": 0.5,
+      "sha256": "167a81c9c276a8847100013fa67f25ace1fd4326870fa2e63aa25a174033a9c4",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "kv",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-east-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "kv",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-east-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "fbee5983a87a7bbe6cda0e1d76e68c385edb2406bb6e6c065463c8de85e0d7a7",
+      "device": "kv",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-east-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "598b4f0f0778e4231a1c703b051ddbb9871418c9125cc1d4f5bdc4c90781d465",
+      "scale": 0.5,
+      "sha256": "22d56c469808b21765ce9d1a91a300b03e8d6d8b69f5caa5296f8da5214ec5a9",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "846264667c3b8897e225f7ca7b2ae38ae24ed61df8a3990e5ae9e723d2cd071e",
+      "device": "kv",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-east-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "a8cb5658ec6c152329f3b009f481583752f3525b270c1bd9f09dad5147ed1daa",
+      "scale": 0.5,
+      "sha256": "cd87bf109ab71c408224da1466c995a51c34d6f8bc1ab7e6e600ce7ec0a34447",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "a17f7894c02eee7e385ba08c713decc3262c8e09640b11a623ef33235bb78395",
+      "device": "kv",
+      "direction": "east",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-east-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "6deb7c0b8940f10f61bc12dafddd975d76cc8b8ece5e9d90a354319193482f82",
+      "scale": 0.5,
+      "sha256": "ee82d6ae25a9c32cc5229f6d539bacd87e6e0d56324cd3f9e29f97a6842d9326",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "3eccbcf12e7b620b2533277c98ec32b2715e2c2aea1670a13fc624f479fe63ad",
+      "device": "kv",
+      "direction": "south",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/blank.png",
+        "assets/upstream/computercraft/textures/block/computer_normal_front.png",
+        "assets/upstream/computercraft/textures/block/hv_case.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-south-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "8fed9e7db4bbcefc3e08179f8b7325ef99e9a153db8cf8995d756acdd624a455",
+      "scale": 0.5,
+      "sha256": "cf5157377cf54479b721b46289bc157b6512e5bdec8b6b57c89757aef5cd7d16",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1d0bf9d96cad8cc165e6482dd98d3a0af8d2506dfd91f4e5cd6d2ff4787540ef",
+      "device": "kv",
+      "direction": "south",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-south-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e3d73b7f44c5d9336ddb062cfd2d04f0d9d57aedd57088320c7788a6a6d82505",
+      "scale": 0.5,
+      "sha256": "167a81c9c276a8847100013fa67f25ace1fd4326870fa2e63aa25a174033a9c4",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "kv",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-south-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "kv",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-south-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "4b6d80cc1b564c4d148adb0436b3ce42ba0b1f29396e5a1c9193ba24ac3d75a4",
+      "device": "kv",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-south-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "13b1a12fd3f3b4f8736d023bbe3849dfb8b54d883ca03e43fab80e157242d4e2",
+      "scale": 0.5,
+      "sha256": "7ca34ba58a6daee47db05fe429fdf46178c3218e70e5651ddcb44860ce1d366e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "ea51f2740a934eb7839a9e752374dba2d92327643d15cb92f9a81805b19becd5",
+      "device": "kv",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-south-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "79f0b1136f1aea1878b9c412e006903437fe9baea241c7daff088b41bdf00936",
+      "scale": 0.5,
+      "sha256": "12286d363dd5834b560e9e3c8bb88fc6d16634026bc342da0b5ba91a869becc9",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "e062fef61e8fb87373f4b58b5bc933aac7e47d5b5ccb9a27d75b7c39a85698e1",
+      "device": "kv",
+      "direction": "south",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-south-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "9457594f35955c5b7ae367b8a45b99a5a0ae9980550f82550edd6285fe8d7386",
+      "scale": 0.5,
+      "sha256": "c7f643a0e738c6562aa58c8edfe7fbadf3f272c3dc38813af68628af6b5a875e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "3eccbcf12e7b620b2533277c98ec32b2715e2c2aea1670a13fc624f479fe63ad",
+      "device": "kv",
+      "direction": "west",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/blank.png",
+        "assets/upstream/computercraft/textures/block/computer_normal_front.png",
+        "assets/upstream/computercraft/textures/block/hv_case.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-west-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f6a5b0d18b847421feab26396c2e3cbe266ddf618c0dce3f2aef9789a14e62c2",
+      "scale": 0.5,
+      "sha256": "70933d21c07be3dcd4562a1ec2682870bf0401ce59d2f072f7a3ebaf0dee587e",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1d0bf9d96cad8cc165e6482dd98d3a0af8d2506dfd91f4e5cd6d2ff4787540ef",
+      "device": "kv",
+      "direction": "west",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-west-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e3d73b7f44c5d9336ddb062cfd2d04f0d9d57aedd57088320c7788a6a6d82505",
+      "scale": 0.5,
+      "sha256": "167a81c9c276a8847100013fa67f25ace1fd4326870fa2e63aa25a174033a9c4",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "kv",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-west-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "kv",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-west-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "24d2073fbe3f18becfe5b3a5d50bfc135b728d7aff06d465fcf985a30de6437e",
+      "device": "kv",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-west-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "7aca4abe22ee9a713a1ef7645a6cf0343c2740e707bebe5da8c36f5b793c546c",
+      "scale": 0.5,
+      "sha256": "7e944e2bae38ca3c6f7f5f706109d6f4665c7da11437a57522a2ac68071d7471",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "d5b84520cd8b9eb6fed1a470c63b7038b7f237d1b89037563cc74d7647dc8c80",
+      "device": "kv",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-west-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "c063358e7e938ea7225467f4d3f33c5509d7232a5f9357ec2d34293cf6dcb184",
+      "scale": 0.5,
+      "sha256": "81739113d0a16378d5a67af46d8ae3173e0ba34fd66a787fa3f51809d04fef85",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "d667120e271fa3b786a526d9570296f5e2200e73cdf002d3e38e6e8796e55f0f",
+      "device": "kv",
+      "direction": "west",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/kv-west-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "b724ada2b4b9aafbfca61e640c74df2fd31d940d1361dc8234dfe26f353a769b",
+      "scale": 0.5,
+      "sha256": "8a2228c255f573ec9d424150cf7ce414fbc233da18845ae348363c74dcca1291",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "b7b6fa5f134839320ee7c68277fead3df4ebdd4679c172ba68f7cec116573b71",
+      "device": "kv",
+      "height": 64,
+      "icon_size": 64,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/blank.png",
+        "assets/upstream/computercraft/textures/block/computer_normal_front.png",
+        "assets/upstream/computercraft/textures/block/hv_case.png"
+      ],
+      "layer": "icon",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/icons/kv.png",
+      "rgba_sha256": "30a7f18a98f353ae80c508026b9e288508d693d48c02b24bafa1b73c0002d454",
+      "sha256": "260ef65f109ebe3cab0f8626fbb963e4d4636e19325585a1e95c5dfa0c9b5e26",
+      "width": 64
+    },
+    {
+      "alpha_sha256": "1f58b546c5fcbd0ea6542039d19001bb0acbbfed317861c58e395d118b6557fe",
+      "device": "monitor",
+      "direction": "north",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/monitor_advanced.json",
+        "assets/upstream/computercraft/models/block/monitor_advanced_base.json",
+        "assets/upstream/computercraft/models/block/monitor_base.json",
+        "assets/upstream/computercraft/textures/block/hv_case.png",
+        "assets/upstream/computercraft/textures/block/monitor_normal_front.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-north-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "2ffcfb79b91269e2bfe8a308cc1a7382cbb67d35ea36f5dcc3034987442e8929",
+      "scale": 0.5,
+      "sha256": "a2b3bba917be7b3332a62747e158ca5c60f2faf6ea7d29d7bb29f64657e0abee",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1d0bf9d96cad8cc165e6482dd98d3a0af8d2506dfd91f4e5cd6d2ff4787540ef",
+      "device": "monitor",
+      "direction": "north",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-north-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e3d73b7f44c5d9336ddb062cfd2d04f0d9d57aedd57088320c7788a6a6d82505",
+      "scale": 0.5,
+      "sha256": "167a81c9c276a8847100013fa67f25ace1fd4326870fa2e63aa25a174033a9c4",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "monitor",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-north-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "monitor",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-north-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "09f819de29f3d20cd0efd673ebcdb0957b2d915bb3dd1914e22fd29342f05e3a",
+      "device": "monitor",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-north-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "34e055b5067d329ed01ad300fb4de73dda4e686c2ff1ba6bbd640e7b18c90f67",
+      "scale": 0.5,
+      "sha256": "82cd96e9615d93599db4f5dd31089144729dd37746cd016144ee0a7e0ef22d56",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "09f819de29f3d20cd0efd673ebcdb0957b2d915bb3dd1914e22fd29342f05e3a",
+      "device": "monitor",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-north-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e8eb1e0647bae2869ed71a8e2375bddececa6c10ca4dbf64b9d289b14bd00220",
+      "scale": 0.5,
+      "sha256": "e34460d9a76d1d3a4dbe3c656cdc786c4ef6cf50ffaeadda6338c474a249e0df",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "7e0336cedb035d52bfb479ce9bc387a51b4bde16adb92853c23b42abe1c2bc81",
+      "device": "monitor",
+      "direction": "north",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-north-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "17f77331ed344788fd59208b64c506e5e3bbf287b474f5f1355203b24a1cd95e",
+      "scale": 0.5,
+      "sha256": "302f096b6c8c0e7e805529d231b81ec63da4e5685e94ce8af969d7ae86d219e5",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "1f58b546c5fcbd0ea6542039d19001bb0acbbfed317861c58e395d118b6557fe",
+      "device": "monitor",
+      "direction": "east",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/monitor_advanced.json",
+        "assets/upstream/computercraft/models/block/monitor_advanced_base.json",
+        "assets/upstream/computercraft/models/block/monitor_base.json",
+        "assets/upstream/computercraft/textures/block/hv_case.png",
+        "assets/upstream/computercraft/textures/block/monitor_normal_front.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-east-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e1977af352d08e55d58449ba3640efd8a45a676308fd607a94bf6a01657c276d",
+      "scale": 0.5,
+      "sha256": "1c05755a3354a19e1b46e1014be92f05c405a391dbd53cb3b1370d1d2f9aedfd",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1d0bf9d96cad8cc165e6482dd98d3a0af8d2506dfd91f4e5cd6d2ff4787540ef",
+      "device": "monitor",
+      "direction": "east",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-east-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e3d73b7f44c5d9336ddb062cfd2d04f0d9d57aedd57088320c7788a6a6d82505",
+      "scale": 0.5,
+      "sha256": "167a81c9c276a8847100013fa67f25ace1fd4326870fa2e63aa25a174033a9c4",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "monitor",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-east-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "monitor",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-east-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "823c3becad6d127f180718742e9861661cbb7d1a682cd2ce76d17b9c2e2ff9ec",
+      "device": "monitor",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-east-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e0890e9e28662a9b1caa1ce6a25e1a5229c16630007e9403feccb1926a98bfa6",
+      "scale": 0.5,
+      "sha256": "16dd1af36251896b6754dfe762f300860e947d43ac6d451a8efd8cb4b78ea9b1",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "823c3becad6d127f180718742e9861661cbb7d1a682cd2ce76d17b9c2e2ff9ec",
+      "device": "monitor",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-east-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "b34d55dda9092842aedc564f6f63b3d7c63cd71e9ee7f6a246f09497423f296c",
+      "scale": 0.5,
+      "sha256": "2b35972bf23333beb0f87a7794c6c696ffda38dc3eebf7b37081d05193be1906",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "e43a3ea888f6d2840bde38d8b8b2183b125c5df381abea4f1c1f26ca85fc4000",
+      "device": "monitor",
+      "direction": "east",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-east-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "bf444e6932c398dd29de93b1cb6a9d40650ccf5168009b44f3ba2984dabebfb5",
+      "scale": 0.5,
+      "sha256": "20cf2e7550e0ff506fbe38bbb48caa65c73cceab72f773a17c75a670718a56c4",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "1f58b546c5fcbd0ea6542039d19001bb0acbbfed317861c58e395d118b6557fe",
+      "device": "monitor",
+      "direction": "south",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/monitor_advanced.json",
+        "assets/upstream/computercraft/models/block/monitor_advanced_base.json",
+        "assets/upstream/computercraft/models/block/monitor_base.json",
+        "assets/upstream/computercraft/textures/block/hv_case.png",
+        "assets/upstream/computercraft/textures/block/monitor_normal_front.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-south-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "b628325cafa43d3228355576959df6ab7537719dee4611fa5d160e91a3e96455",
+      "scale": 0.5,
+      "sha256": "59d88bab6601d4809da6e62186cd3350fd8fa2fc38d0ecc1b51a0794de8f8c32",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1d0bf9d96cad8cc165e6482dd98d3a0af8d2506dfd91f4e5cd6d2ff4787540ef",
+      "device": "monitor",
+      "direction": "south",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-south-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e3d73b7f44c5d9336ddb062cfd2d04f0d9d57aedd57088320c7788a6a6d82505",
+      "scale": 0.5,
+      "sha256": "167a81c9c276a8847100013fa67f25ace1fd4326870fa2e63aa25a174033a9c4",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "monitor",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-south-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "monitor",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-south-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "b54c434fcf6bf0577c2f1244d686692c9267ab453f6e38668cb62710c74ce529",
+      "device": "monitor",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-south-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "ba73d108188e353d1b65d16d5431a242bb92ffeac0ead603dbfff1fe0650c366",
+      "scale": 0.5,
+      "sha256": "2b3b30e4d176689b3d1df61dfd77ca820a1a2986d547edc8183287e027242aad",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "b54c434fcf6bf0577c2f1244d686692c9267ab453f6e38668cb62710c74ce529",
+      "device": "monitor",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-south-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "25a71df16f20b46af0c314b5b179928205807c30287f5049c0c562ef810dce05",
+      "scale": 0.5,
+      "sha256": "3497de61b3e61240528a4016c854d8a41953b3ea6e2b49ca5b711bc6ef0df50e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "60d20500ea879fb1a0e1548f611c4a2b325d64e3e4d82974f696cd0caa68ee5a",
+      "device": "monitor",
+      "direction": "south",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-south-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "08177f5d4de1edf4871de851305b30e870d98fd118ccffd91215c7f5d1c2acaf",
+      "scale": 0.5,
+      "sha256": "6c15d191e5aac372f033c186e6850cdb74ec2d3d8de53e0611c272454f2531f6",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "1f58b546c5fcbd0ea6542039d19001bb0acbbfed317861c58e395d118b6557fe",
+      "device": "monitor",
+      "direction": "west",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/monitor_advanced.json",
+        "assets/upstream/computercraft/models/block/monitor_advanced_base.json",
+        "assets/upstream/computercraft/models/block/monitor_base.json",
+        "assets/upstream/computercraft/textures/block/hv_case.png",
+        "assets/upstream/computercraft/textures/block/monitor_normal_front.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-west-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "1f7da8fc1e9f2263a1f1e883fb5c8117310f348375b3d1b97e04679b5da850a0",
+      "scale": 0.5,
+      "sha256": "abe29cafc4f6e3a51f0d6fdf73f023cea0582435ab4513c5d696fa65f1852099",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1d0bf9d96cad8cc165e6482dd98d3a0af8d2506dfd91f4e5cd6d2ff4787540ef",
+      "device": "monitor",
+      "direction": "west",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-west-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e3d73b7f44c5d9336ddb062cfd2d04f0d9d57aedd57088320c7788a6a6d82505",
+      "scale": 0.5,
+      "sha256": "167a81c9c276a8847100013fa67f25ace1fd4326870fa2e63aa25a174033a9c4",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "monitor",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-west-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c65206769723a13afe80c0d925531639ceef9c2eb97eee3b1b542739ec40597f",
+      "device": "monitor",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-west-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "scale": 0.5,
+      "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "d74e814911ce6648a378d6f2096a8cb3920bf0a9ee6c3e74d7d05e7ebaac0057",
+      "device": "monitor",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-west-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "b55de7d5a9839899d3451c2adc0893d3f66649e5f1a927ed728434fd10de2d09",
+      "scale": 0.5,
+      "sha256": "50e04584f77bee00bfd9b0faf633c5cdbf36ea3a171346b4380aa65355d8371c",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "d74e814911ce6648a378d6f2096a8cb3920bf0a9ee6c3e74d7d05e7ebaac0057",
+      "device": "monitor",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-west-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "ad818109b046fd81cd2d3389263a42e1d70340ca4f852d6871304bf106139cd8",
+      "scale": 0.5,
+      "sha256": "16b51cda5e3e90b3016084a0d64451d2a7cfe1b59903f856e76e3432f80ed651",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "76f4369838cf4f79a45cba8557ce33ef49b9f27240e25a3731657ab6b6d35708",
+      "device": "monitor",
+      "direction": "west",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/monitor-west-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "ec8eba99b3713e65da973551e4120449b561e8843c81fbcc65153c96c163fe5d",
+      "scale": 0.5,
+      "sha256": "2b6e7205cd4719ce30e5d276fe325c53583ab6fdf401bcb6b2ea8caff3d275d3",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "eeebc0a1438073ba87176faf50b30b86c5276bd4f295a444689317647fd6ff82",
+      "device": "monitor",
+      "height": 64,
+      "icon_size": 64,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/monitor_advanced.json",
+        "assets/upstream/computercraft/models/block/monitor_advanced_base.json",
+        "assets/upstream/computercraft/models/block/monitor_base.json",
+        "assets/upstream/computercraft/textures/block/hv_case.png",
+        "assets/upstream/computercraft/textures/block/monitor_normal_front.png"
+      ],
+      "layer": "icon",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/icons/monitor.png",
+      "rgba_sha256": "0a3790bd39eaf48e0b7f013a9284bdd5eb614a9dc0c6a3a73d6b481a1b6212de",
+      "sha256": "59f95904e965d638a3875a5e49c1b02fb9ae90a598375a943b6f8d5f707f655b",
+      "width": 64
+    },
+    {
+      "alpha_sha256": "d2b0acc81e40bcf922089fc5d8c3de5bf1613a6edc56e38082961d7b4962c7f0",
+      "device": "logic",
+      "direction": "north",
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/hv_case.png",
+        "assets/upstream/computercraft/textures/block/hv_case_pattern.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-north-body.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "1e34818e0a2efd4ac2fb6a64212ed60828fc7480d72317a12d85a7aaf48738e8",
+      "scale": 0.5,
+      "sha256": "f9871aace6f43c63b774fff1a1cb647484678aae7e58c207058f52f373e63435",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "7602cae2e978dedc23493605eb6d711b1f51571d0043abd0f6cedbd9e7ff70a9",
+      "device": "logic",
+      "direction": "north",
+      "draw_as_shadow": true,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-north-shadow.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d74225302c6b6780fe1abd7a07a70c288ff26fe98eb68d5b83d1581088610941",
+      "scale": 0.5,
+      "sha256": "e9b5f63f5f6383f99717face6f1877d1a5355788627d1ff62a1391f05cbb9614",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "logic",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-north-off.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "logic",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-north-unpowered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "2bc00c57e6d04a2fb0d89847deea519c04e3d9999ae88ce3b121208f6fc15ab5",
+      "device": "logic",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-north-powered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "c93d202fe9902271b0d81620f0b99550f21346c8f69cbc5189a95170e6553239",
+      "scale": 0.5,
+      "sha256": "5c95d57c8c490a2586162ee63f4829a04b3ce1d21879499abb349e32e25e82b8",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "cd347de330809ce5ac73672d25e3201dca6fd4d16efcb2df2afcb1e056bd16cb",
+      "device": "logic",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-north-fault.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "81b910f5dedae0c481e77b0977cc98ce081c98b498181eb49e88eef6f1d2fcbe",
+      "scale": 0.5,
+      "sha256": "42683ca7de2d10c4fffa2ae5365b78c90843dbf059c78dc40862d59a4b375552",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "ffab55dbc7d02f13b0d28cd7c6abefc7ac535b49e392bca486c4affd896ff6a7",
+      "device": "logic",
+      "direction": "north",
+      "frame_count": 4,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-north-blinking.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "7ce8e4009d9934e5301367a74f6e11f418d420fc887ca2aed0c3e1e0182ba84e",
+      "scale": 0.5,
+      "sha256": "370a20bb8d8178a2639071a05d94b3f90f227534a950c35e50430a191409b345",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 1280
+    },
+    {
+      "alpha_sha256": "0b72aed77a03b5936b9eb38e28a0a71df32aff019db6c1d74a5cb141f295de5b",
+      "device": "logic",
+      "direction": "east",
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/hv_case.png",
+        "assets/upstream/computercraft/textures/block/hv_case_pattern.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-east-body.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "bd9ae6d687d7538550138f2696cd56e4bfca75c2878ee75c01668fcddc920eab",
+      "scale": 0.5,
+      "sha256": "db783db70f8e247142619d90240221ede82af5012b60b428ddde33752eeb8578",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "59752cce534fe4dea975e3508cc5cef42ec50c3f55689943ed48e395fb502d73",
+      "device": "logic",
+      "direction": "east",
+      "draw_as_shadow": true,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-east-shadow.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "6d48e9082ae64844ae331d019793598dd8c88789efbec84bf621b6fe582c0338",
+      "scale": 0.5,
+      "sha256": "75bd9a0d26113e36be8035eec1d28528b0372879513324e93fe3a88d16953db2",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "logic",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-east-off.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "logic",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-east-unpowered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f80366dd8f80fc7b97312ccf31b85a35f4d40e0eeab534dc6edbb36e79a52140",
+      "device": "logic",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-east-powered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "b42af69716ceb4490cc112e2d865b0f14470077615eaa43739c94de729d2aebe",
+      "scale": 0.5,
+      "sha256": "a257561a330cc6825daabd29270ab512033ba83924ad35a1621898a4fee7333b",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "9d2d3a557ccd80962777caa818e0efb4287035f7f0ee703ca26b0f997093608d",
+      "device": "logic",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-east-fault.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "5c7bc3e4380ba2236918b946a899cd326e9b6f63a64f46c0b675009ec3a19a0e",
+      "scale": 0.5,
+      "sha256": "7b77922d62da801254e8673fd88c4a9971a65f4e4928b35bca981c7f5af3b042",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "6a3e746d3fdc0391d26d005a2e0df6967a0ad6dc0f1bd8e34d41ab03f39a56a6",
+      "device": "logic",
+      "direction": "east",
+      "frame_count": 4,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-east-blinking.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "9e38978762b07450e2ef837ef804729d70d5405d273deca85b29815868fd8d03",
+      "scale": 0.5,
+      "sha256": "4bd5ac9e656a4bef0b25bc58416c30e343b7229e1bdc69be22ffe640d3a15872",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 1280
+    },
+    {
+      "alpha_sha256": "d2b0acc81e40bcf922089fc5d8c3de5bf1613a6edc56e38082961d7b4962c7f0",
+      "device": "logic",
+      "direction": "south",
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/blank.png",
+        "assets/upstream/computercraft/textures/block/computer_normal_front.png",
+        "assets/upstream/computercraft/textures/block/hv_case.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-south-body.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "37aa12bbf37b259d7f135ea6b8beea99bd16f55bfe15b9e661300cd9d60b96c1",
+      "scale": 0.5,
+      "sha256": "f55fd03a9f0283142a36e89dcf4950ac63ac9cf7e1380a5a60d5b13f961e3ef9",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "7602cae2e978dedc23493605eb6d711b1f51571d0043abd0f6cedbd9e7ff70a9",
+      "device": "logic",
+      "direction": "south",
+      "draw_as_shadow": true,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-south-shadow.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d74225302c6b6780fe1abd7a07a70c288ff26fe98eb68d5b83d1581088610941",
+      "scale": 0.5,
+      "sha256": "e9b5f63f5f6383f99717face6f1877d1a5355788627d1ff62a1391f05cbb9614",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "logic",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-south-off.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "logic",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-south-unpowered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "b78e944b808e5f4608d7fdcd4fbabd0fcaa4253ce4fbd6aca3d2f856882934c3",
+      "device": "logic",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-south-powered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "2b3d3d6519eb0894c860509ec4562dd6f05da038db3b0a404295f751b84f39d0",
+      "scale": 0.5,
+      "sha256": "fcc4a2a01d30006bb5f2514fdcb30bec0e4a0e089114d2b27b4b983f9720190d",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "fdddaa627f46081dbc2a775450ff6f1ff4299da5df7e5d103301a9c0f56e30ad",
+      "device": "logic",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-south-fault.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "ffc5b28c309c4718536d98e87712182834fa2fe1d9263bc9c26a20cbaf5e36a6",
+      "scale": 0.5,
+      "sha256": "f80e2e4b80411b67128399dd0e198db740c29100c140e2f6352183583a25781f",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "cd43ba835950563f50b0d61b5f78ba88b7abf60e95340bc952090538d7849423",
+      "device": "logic",
+      "direction": "south",
+      "frame_count": 4,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-south-blinking.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "64cfbfa1204e0717e6814cbd78a7b8cbe30de67190ef9fc1996c0106740327b5",
+      "scale": 0.5,
+      "sha256": "1afa3475f95823c8c26663162c81e17273ceb5e9b8e85e93014df785d35465b0",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 1280
+    },
+    {
+      "alpha_sha256": "0b72aed77a03b5936b9eb38e28a0a71df32aff019db6c1d74a5cb141f295de5b",
+      "device": "logic",
+      "direction": "west",
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/blank.png",
+        "assets/upstream/computercraft/textures/block/computer_normal_front.png",
+        "assets/upstream/computercraft/textures/block/hv_case.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-west-body.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "a69ae06d334f69e2d5b7d5b0b4dea83efc7e8d429cc9087f073fef350b0501f0",
+      "scale": 0.5,
+      "sha256": "ccc16f3b1ae1632b3417a57acca09ee07fdaf374a5aefb84c6e50c54ad1d1314",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "59752cce534fe4dea975e3508cc5cef42ec50c3f55689943ed48e395fb502d73",
+      "device": "logic",
+      "direction": "west",
+      "draw_as_shadow": true,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-west-shadow.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "6d48e9082ae64844ae331d019793598dd8c88789efbec84bf621b6fe582c0338",
+      "scale": 0.5,
+      "sha256": "75bd9a0d26113e36be8035eec1d28528b0372879513324e93fe3a88d16953db2",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "logic",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-west-off.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "logic",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-west-unpowered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "b7897188c4343f89c2f010f11b732e0fdd24a579608d605d7fbbb24cf6302fe2",
+      "device": "logic",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-west-powered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "6956de811daa4cd11bc143ef6df2f5932db14ff39562b79b8f37f8f917c9b9e4",
+      "scale": 0.5,
+      "sha256": "3c83e7f51fa0c81f196cf72c98b694597c190b28309e9af501f54851d534f757",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "3198bbee77b9bdda22fe71cb7ae893bcda6774e704c02b7696526dea8b392f2f",
+      "device": "logic",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-west-fault.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "f1c7df5605849da9130ad918bfabae615f415b7967b905f0f16fba4a0bce1fcb",
+      "scale": 0.5,
+      "sha256": "8d1b2f134b839b098aedbec20621875b5ff252457789ddb2269887fcc9e12125",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "358eb1f473a1b43935a4c19842d4de293d75d3ccf596cadaa4d69e40b3439c56",
+      "device": "logic",
+      "direction": "west",
+      "frame_count": 4,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/logic-west-blinking.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "6146925ce417ebf18fbffa7e79060a3013c1af789726c4921a43170b088a4c68",
+      "scale": 0.5,
+      "sha256": "4a211ee4deda2d0dae5b6737e285cce25abc69850f64aeaed1e29a9530f107f5",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 1280
+    },
+    {
+      "alpha_sha256": "01a86350c96f464097a3af0a07b2eff5fabc3805d9550f10942847f3827c818a",
+      "device": "logic",
+      "height": 64,
+      "icon_size": 64,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/blank.png",
+        "assets/upstream/computercraft/textures/block/computer_normal_front.png",
+        "assets/upstream/computercraft/textures/block/hv_case.png"
+      ],
+      "layer": "icon",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/icons/logic.png",
+      "rgba_sha256": "5a062eb90adb4d5e1d0bfcd9252f56d4d3a553c2dac4ebe3b2694d49328ded02",
+      "sha256": "552bd71b91a3cb60897530ce1946582e0d4f2b03e4b0126b08c435f01f576060",
+      "width": 64
+    },
+    {
+      "alpha_sha256": "5d986c57a02efd09abfe3491b2593ba9bf2f9cd9e1976c5b50ad3b5fa684a056",
+      "device": "configurator",
+      "direction": "north",
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/hv_case.png",
+        "assets/upstream/computercraft/textures/block/hv_case_pattern.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-north-body.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "04eab95b193e1dd60f0c82422f707d8d43e413c2c519aaf578d54ff2db40c6f5",
+      "scale": 0.5,
+      "sha256": "2291c7714b3d784dd0079aee56453b7cc5fef6ef1ca6a59775ccd58f10a21e4d",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "ffa697e4a42aba781328ee4fb17e668ccf9ee21b38a5b0b8d05d61436945b162",
+      "device": "configurator",
+      "direction": "north",
+      "draw_as_shadow": true,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-north-shadow.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "e18e2dce6e3e588439b48a7fe389cdf09d52dffe57cac56e07581afae7eb8718",
+      "scale": 0.5,
+      "sha256": "4cf619defdd104de69712b1a987133ac1cb4eec458622303e9e05fd10c0ee57c",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "configurator",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-north-off.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "configurator",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-north-unpowered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "2bc00c57e6d04a2fb0d89847deea519c04e3d9999ae88ce3b121208f6fc15ab5",
+      "device": "configurator",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-north-powered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "c93d202fe9902271b0d81620f0b99550f21346c8f69cbc5189a95170e6553239",
+      "scale": 0.5,
+      "sha256": "5c95d57c8c490a2586162ee63f4829a04b3ce1d21879499abb349e32e25e82b8",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "cd347de330809ce5ac73672d25e3201dca6fd4d16efcb2df2afcb1e056bd16cb",
+      "device": "configurator",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-north-fault.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "81b910f5dedae0c481e77b0977cc98ce081c98b498181eb49e88eef6f1d2fcbe",
+      "scale": 0.5,
+      "sha256": "42683ca7de2d10c4fffa2ae5365b78c90843dbf059c78dc40862d59a4b375552",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "ffab55dbc7d02f13b0d28cd7c6abefc7ac535b49e392bca486c4affd896ff6a7",
+      "device": "configurator",
+      "direction": "north",
+      "frame_count": 4,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-north-blinking.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "7ce8e4009d9934e5301367a74f6e11f418d420fc887ca2aed0c3e1e0182ba84e",
+      "scale": 0.5,
+      "sha256": "370a20bb8d8178a2639071a05d94b3f90f227534a950c35e50430a191409b345",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 1280
+    },
+    {
+      "alpha_sha256": "404f9b31623d5a7b193245874d88795946389f2fb8a50cfc4ac9aa1d49143665",
+      "device": "configurator",
+      "direction": "east",
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/hv_case.png",
+        "assets/upstream/computercraft/textures/block/hv_case_pattern.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-east-body.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "76b29ba4c9db0e7ef9280309beb084897ac259183b11c127206f08a4bd73dea5",
+      "scale": 0.5,
+      "sha256": "53c24de7f26e77458b196d1188621b2b9c88b03c1ce67853132debe721681bac",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "679b13592b14ccd04e976694a96da4a7cacf34af199bb88d36c6bb34bf9f4ecd",
+      "device": "configurator",
+      "direction": "east",
+      "draw_as_shadow": true,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-east-shadow.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "4ea1d1c13f844ed181c575ba1f8f7d5f5daecb672b60b02f60e4743cc7c5c6df",
+      "scale": 0.5,
+      "sha256": "cecd199e038a18963a761a264af2e59d96e1e6a657da8d1ad79952e1d0e9645c",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "configurator",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-east-off.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "configurator",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-east-unpowered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f80366dd8f80fc7b97312ccf31b85a35f4d40e0eeab534dc6edbb36e79a52140",
+      "device": "configurator",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-east-powered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "b42af69716ceb4490cc112e2d865b0f14470077615eaa43739c94de729d2aebe",
+      "scale": 0.5,
+      "sha256": "a257561a330cc6825daabd29270ab512033ba83924ad35a1621898a4fee7333b",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "9d2d3a557ccd80962777caa818e0efb4287035f7f0ee703ca26b0f997093608d",
+      "device": "configurator",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-east-fault.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "5c7bc3e4380ba2236918b946a899cd326e9b6f63a64f46c0b675009ec3a19a0e",
+      "scale": 0.5,
+      "sha256": "7b77922d62da801254e8673fd88c4a9971a65f4e4928b35bca981c7f5af3b042",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "6a3e746d3fdc0391d26d005a2e0df6967a0ad6dc0f1bd8e34d41ab03f39a56a6",
+      "device": "configurator",
+      "direction": "east",
+      "frame_count": 4,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-east-blinking.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "9e38978762b07450e2ef837ef804729d70d5405d273deca85b29815868fd8d03",
+      "scale": 0.5,
+      "sha256": "4bd5ac9e656a4bef0b25bc58416c30e343b7229e1bdc69be22ffe640d3a15872",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 1280
+    },
+    {
+      "alpha_sha256": "5d986c57a02efd09abfe3491b2593ba9bf2f9cd9e1976c5b50ad3b5fa684a056",
+      "device": "configurator",
+      "direction": "south",
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/blank.png",
+        "assets/upstream/computercraft/textures/block/computer_normal_front.png",
+        "assets/upstream/computercraft/textures/block/hv_case.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-south-body.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "711eb4e653c3cf798fa0e8bf7d30e892c67363d2178dcfaef6b0daaa62162dc8",
+      "scale": 0.5,
+      "sha256": "d8d15edc687408d730bee82d09b5ae5e891165ae400381235e16b7ac837a592f",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "ffa697e4a42aba781328ee4fb17e668ccf9ee21b38a5b0b8d05d61436945b162",
+      "device": "configurator",
+      "direction": "south",
+      "draw_as_shadow": true,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-south-shadow.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "e18e2dce6e3e588439b48a7fe389cdf09d52dffe57cac56e07581afae7eb8718",
+      "scale": 0.5,
+      "sha256": "4cf619defdd104de69712b1a987133ac1cb4eec458622303e9e05fd10c0ee57c",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "configurator",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-south-off.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "configurator",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-south-unpowered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "b78e944b808e5f4608d7fdcd4fbabd0fcaa4253ce4fbd6aca3d2f856882934c3",
+      "device": "configurator",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-south-powered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "2b3d3d6519eb0894c860509ec4562dd6f05da038db3b0a404295f751b84f39d0",
+      "scale": 0.5,
+      "sha256": "fcc4a2a01d30006bb5f2514fdcb30bec0e4a0e089114d2b27b4b983f9720190d",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "fdddaa627f46081dbc2a775450ff6f1ff4299da5df7e5d103301a9c0f56e30ad",
+      "device": "configurator",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-south-fault.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "ffc5b28c309c4718536d98e87712182834fa2fe1d9263bc9c26a20cbaf5e36a6",
+      "scale": 0.5,
+      "sha256": "f80e2e4b80411b67128399dd0e198db740c29100c140e2f6352183583a25781f",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "cd43ba835950563f50b0d61b5f78ba88b7abf60e95340bc952090538d7849423",
+      "device": "configurator",
+      "direction": "south",
+      "frame_count": 4,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-south-blinking.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "64cfbfa1204e0717e6814cbd78a7b8cbe30de67190ef9fc1996c0106740327b5",
+      "scale": 0.5,
+      "sha256": "1afa3475f95823c8c26663162c81e17273ceb5e9b8e85e93014df785d35465b0",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 1280
+    },
+    {
+      "alpha_sha256": "404f9b31623d5a7b193245874d88795946389f2fb8a50cfc4ac9aa1d49143665",
+      "device": "configurator",
+      "direction": "west",
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/blank.png",
+        "assets/upstream/computercraft/textures/block/computer_normal_front.png",
+        "assets/upstream/computercraft/textures/block/hv_case.png"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-west-body.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "032f7bfaed8823c9910eb4c391e73714517a3e13b6d9afe49e28ca4da82b1a22",
+      "scale": 0.5,
+      "sha256": "e046bde124cafd07a58b0c9b84760d8b29f49e59e2f6c4fae692f08425b69966",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "679b13592b14ccd04e976694a96da4a7cacf34af199bb88d36c6bb34bf9f4ecd",
+      "device": "configurator",
+      "direction": "west",
+      "draw_as_shadow": true,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-west-shadow.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "4ea1d1c13f844ed181c575ba1f8f7d5f5daecb672b60b02f60e4743cc7c5c6df",
+      "scale": 0.5,
+      "sha256": "cecd199e038a18963a761a264af2e59d96e1e6a657da8d1ad79952e1d0e9645c",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "configurator",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-west-off.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "f627ca4c2c322f15db26152df306bd4f983f0146409b81a4341b9b340c365a16",
+      "device": "configurator",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-west-unpowered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "d58201a30b35a60612306667b083ca4dfaf9efa107386fff36188e42c34c3c19",
+      "scale": 0.5,
+      "sha256": "27c1504ad3ef9d451004759bb68f4b022a993d7401bb350f9d8219cb0baaafde",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "b7897188c4343f89c2f010f11b732e0fdd24a579608d605d7fbbb24cf6302fe2",
+      "device": "configurator",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-west-powered.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "6956de811daa4cd11bc143ef6df2f5932db14ff39562b79b8f37f8f917c9b9e4",
+      "scale": 0.5,
+      "sha256": "3c83e7f51fa0c81f196cf72c98b694597c190b28309e9af501f54851d534f757",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "3198bbee77b9bdda22fe71cb7ae893bcda6774e704c02b7696526dea8b392f2f",
+      "device": "configurator",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_on.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-west-fault.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "f1c7df5605849da9130ad918bfabae615f415b7967b905f0f16fba4a0bce1fcb",
+      "scale": 0.5,
+      "sha256": "8d1b2f134b839b098aedbec20621875b5ff252457789ddb2269887fcc9e12125",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 320
+    },
+    {
+      "alpha_sha256": "358eb1f473a1b43935a4c19842d4de293d75d3ccf596cadaa4d69e40b3439c56",
+      "device": "configurator",
+      "direction": "west",
+      "frame_count": 4,
+      "frame_height": 320,
+      "frame_width": 320,
+      "height": 320,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/upstream/computercraft/models/block/computer_advanced_blinking.json",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/sprites/configurator-west-blinking.png",
+      "pivot": [
+        160,
+        160
+      ],
+      "rgba_sha256": "6146925ce417ebf18fbffa7e79060a3013c1af789726c4921a43170b088a4c68",
+      "scale": 0.5,
+      "sha256": "4a211ee4deda2d0dae5b6737e285cce25abc69850f64aeaed1e29a9530f107f5",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 1280
+    },
+    {
+      "alpha_sha256": "db45508d688b96d1adcc14fae632f8d52203987336051701ad38b0701d4f71f9",
+      "device": "configurator",
+      "height": 64,
+      "icon_size": 64,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt",
+        "assets/upstream/computercraft/models/block/computer_advanced_off.json",
+        "assets/upstream/computercraft/models/block/computer_normal_off.json",
+        "assets/upstream/computercraft/textures/block/blank.png",
+        "assets/upstream/computercraft/textures/block/computer_normal_front.png",
+        "assets/upstream/computercraft/textures/block/hv_case.png"
+      ],
+      "layer": "icon",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt",
+        "assets/notices/Greg-Flavored-MIT.txt"
+      ],
+      "path": "assets/icons/configurator.png",
+      "rgba_sha256": "457a1b5a0ae3c819d4f876cc3c4820ab6d36445be4830ce5a863df70f22082a7",
+      "sha256": "82dded0c55ee18f4aa04a9f344ca01941dc211a360393ff2d0e7e88d679e641e",
+      "width": 64
+    },
+    {
+      "alpha_sha256": "044028dbbdef02dd41d5f89b54bc7fca8d7428d4fd00ce13ea64bd03cebbdcfd",
+      "cell": [
+        6,
+        9
+      ],
+      "columns": 16,
+      "height": 144,
+      "input_paths": [
+        "assets/generate.py",
+        "assets/glyphs.txt"
+      ],
+      "layer": "glyph",
+      "license": "MIT",
+      "notice": "assets/notices/Tweaked-Computers-MIT.txt",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/glyphs/atlas.png",
+      "rgba_sha256": "cedcdec699d42e25133c055b674532a1619f3e9cb54c27ce7b0a0e81ecf0e049",
+      "rows": 16,
+      "sha256": "9730201dae888432ef8f8b956505b5238d524d6fd40562c073a048b82ed405e9",
+      "width": 96
+    }
+  ],
+  "permission_basis": "User explicitly confirmed selected Greg Flavored files are MIT, not CC:Tweaked assets; no separate legal audit or permission letter claimed.",
+  "repository": "https://github.com/BirbIrl/ComputerCraft-Greg-Flavored",
+  "revision": "ac6cafc3993c902e2ca95d85b501d3c7e172570c",
+  "status": "implemented-client-verification-deferred",
+  "transform": {
+    "encoder": "RGBA8 filter 0, zlib level 9, no ancillary chunks",
+    "monitor": "north face remapped to flat top, interior 60x60 logical units; 2-unit bezel; ground-centred square",
+    "projection": "(4*x - 0.75*h, 4*z - 2*h); source units 1/16 tile; cardinal clockwise rotations",
+    "sampling": "nearest pixel centre",
+    "shadow": "ground footprint translated (+12,+8) high-resolution pixels, alpha 85",
+    "status": "source computer glow plus authored top beacon; transparent off/unpowered; red-cross fault; four-frame blink",
+    "zlib_version": "1.3.2"
+  }
+}

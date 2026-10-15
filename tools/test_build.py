@@ -1,0 +1,44 @@
+"""Package regressions: source-only tools and prohibited executable payloads."""
+import os
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import patch
+import zipfile
+
+import build
+
+
+class PackageInventoryTests(unittest.TestCase):
+    def test_portal_payload_keeps_notices_not_python_tools(self):
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            archive = build.build(output)
+            with zipfile.ZipFile(archive) as package:
+                names = package.namelist()
+                self.assertFalse(any(Path(name).suffix.lower() in
+                                     ('.exe', '.bat', '.ps1', '.sh', '.py', '.pyc')
+                                     for name in names))
+                for notice in ('assets/notices/Greg-Flavored-MIT.txt',
+                               'assets/notices/Tweaked-Computers-MIT.txt',
+                               'vendor/phobos/LICENSE.txt'):
+                    name = next(name for name in names if name.endswith('/' + notice))
+                    self.assertEqual(package.read(name), (build.ROOT / notice).read_bytes())
+                self.assertTrue((build.ROOT / 'assets/generate.py').is_file())
+
+    def test_explicit_inventory_rejects_prohibited_suffixes(self):
+        # Synthetic inventory entries test rejection before payload access; no
+        # fake executable is created and the production source stays untouched.
+        original = Path.is_file
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            for suffix in ('.exe', '.bat', '.ps1', '.sh', '.py', '.EXE'):
+                with self.subTest(suffix=suffix):
+                    name = 'prohibited-payload' + suffix
+                    fake = build.ROOT / name
+                    with patch.object(build, 'TOP', build.TOP + (name,)), \
+                         patch.object(Path, 'is_file', lambda p: p == fake or original(p)):
+                        with self.assertRaisesRegex(ValueError, 'Mod Portal forbids executable'):
+                            build.build(output)
+
+
+if __name__ == '__main__':
+    unittest.main()

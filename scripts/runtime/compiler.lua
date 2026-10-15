@@ -10,13 +10,19 @@ local globals = {}
 for _, name in ipairs({'assert','error','ipairs','pairs','next','pcall','select','tonumber','tostring','type',
   'math','string','table','colors','colours','computer','peripheral'}) do globals[name] = true end
 
-local function location(node)
-  local tok = node and (node.function_token or node.return_token or node.op_token or node.open_token or node.local_token)
-  return (node and node.line) or (tok and tok.line) or 1
+local function position(node)
+  if not node then return 1,1 end
+  local tok=node.function_token or node.return_token or node.op_token or node.open_token or node.local_token
+    or node.while_token or node.repeat_token or node.for_token or node.do_token or node.break_token
+    or node.if_token or node.semi_colon_token
+  if node.line or tok then return node.line or tok.line or 1,node.column or tok.column or 1 end
+  return position((node.lhs and node.lhs[1]) or node.ex or node.name or (node.ifs and node.ifs[1]))
 end
+
+local function coordinates(node) local line,column=position(node); return line..','..column end
 local function reject(node, message, code)
   local err = errors.new(code or 'E_PROGRAM', message)
-  err.line, err.column = location(node), (node and node.column) or 1
+  err.line, err.column = position(node)
   error(err, 0)
 end
 local function identifier(name, node)
@@ -60,7 +66,7 @@ local function emit(main)
     for i,p in ipairs(n.params) do names[i] = identifier(p.name,p) end
     if #names > limits.tuple_entries then reject(n, 'parameter width exceeded', 'E_LIMIT') end
     if n.is_vararg then names[#names+1] = '...' end
-    local result = 'function('..table.concat(names, ',')..') __tc.step('..location(n)..'); '..body(n)..' end'
+    local result = 'function('..table.concat(names, ',')..') __tc.enter('..coordinates(n)..','..#n.params..'); '..body(n)..' end'
     return leave(result)
   end
   function expr(n)
@@ -124,7 +130,8 @@ local function emit(main)
     if k == 'empty' then s = ';'
     elseif k == 'localstat' then
       local names = {}; for i,p in ipairs(n.lhs) do names[i] = identifier(p.name,p) end
-      s = 'local '..table.concat(names,',')..(n.rhs and #n.rhs > 0 and ' = __tc.values('..list(n.rhs)..')' or '')..';'
+      if #names>limits.tuple_entries then reject(n,'local width exceeded','E_LIMIT') end
+      s = 'local '..table.concat(names,',')..' = __tc.bind('..#names..(n.rhs and #n.rhs > 0 and ','..list(n.rhs) or '')..');'
     elseif k == 'localfunc' then
       local name = identifier(n.name.name,n.name)
       s = 'local '..name..'; '..name..'=__tc.closure('..func(n.func_def)..');'
@@ -135,40 +142,48 @@ local function emit(main)
       if #n.lhs > limits.tuple_entries then reject(n,'assignment width exceeded','E_LIMIT') end
       temp = temp + 1
       local prefix = '__tc_a'..temp..'_'
-      local out, targets, checks, rhs = {'do'}, {}, {}, {}
-      local count = 0
+      local count=#n.lhs
+      local indexed=0
+      local out,targets={'do', 'local '..prefix..'targets=__tc.assignment_targets('..count..');'},{}
       for i,lhs in ipairs(n.lhs) do
         if lhs.node_type == 'local_ref' or lhs.node_type == 'upval_ref' then targets[i] = identifier(lhs.name,lhs)
         elseif lhs.node_type == 'index' and not global(lhs) then
-          out[#out+1] = 'local '..prefix..'t'..i..','..prefix..'k'..i..' = '..expr(lhs.ex)..','..expr(lhs.suffix)..';'
-          targets[i] = prefix..'t'..i..'['..prefix..'k'..i..']'
-          count = count + 1
-          checks[#checks+1] = prefix..'t'..i..','..prefix..'k'..i..','..prefix..'r'..i
+          indexed=indexed+1
+          out[#out+1] = prefix..'targets['..i..']={'..expr(lhs.ex)..','..expr(lhs.suffix)..'};'
+          targets[i] = prefix..'targets['..i..'][1]['..prefix..'targets['..i..'][2]]'
         else reject(lhs, 'global assignment is forbidden') end
-        rhs[i] = prefix..'r'..i
       end
-      out[#out+1] = 'local '..table.concat(rhs,',')..' = __tc.values('..list(n.rhs)..');'
-      if count > 0 then out[#out+1] = '__tc.writes('..count..','..table.concat(checks,',')..');' end
-      out[#out+1] = table.concat(targets,',')..' = '..table.concat(rhs,',')..'; end'
-      s = table.concat(out, '\n')
+      local rhs=#n.rhs>0 and ','..list(n.rhs) or ''
+      out[#out+1] = 'local '..prefix..'values=__tc.assignment_values('..count..rhs..');'
+      out[#out+1] = '__tc.assignment_check('..count..','..prefix..'targets,'..prefix..'values);'
+      -- Two bounded private vectors avoid multiplying the native local/register
+      -- count by tuple width. Publish statically emitted native writes in Lua
+      -- 5.2's right-to-left order, after all target/RHS evaluations and checks.
+      for i=count,1,-1 do out[#out+1]=targets[i]..'='..prefix..'values['..i..'];' end
+      out[#out+1]='end'
+      if indexed==0 then
+        -- Plain lexical writes need no heap staging or private native locals.
+        s=table.concat(targets,',')..'=__tc.move('..count..rhs..');'
+      else s = table.concat(out, '\n') end
     elseif k == 'call' then s = expr(n)..';'
     elseif k == 'retstat' then s = 'do return __tc.values('..list(n.exp_list)..') end'
     elseif k == 'breakstat' then s = 'do break end'
     elseif k == 'dostat' then s = 'do '..body(n)..' end'
-    elseif k == 'whilestat' then s = 'while '..expr(n.condition)..' do __tc.step('..location(n.while_token)..'); '..body(n)..' end'
-    elseif k == 'repeatstat' then s = 'repeat __tc.step('..location(n.repeat_token)..'); '..body(n)..' until '..expr(n.condition)
+    elseif k == 'whilestat' then s = 'while '..expr(n.condition)..' do __tc.step('..coordinates(n.while_token)..'); '..body(n)..' end'
+    elseif k == 'repeatstat' then s = 'repeat __tc.step('..coordinates(n.repeat_token)..'); '..body(n)..' until '..expr(n.condition)
     elseif k == 'fornum' then
-      s = 'for '..identifier(n.var.name,n.var)..' = __tc.number('..expr(n.start)..'),__tc.number('..expr(n.stop)..'),__tc.number('..(n.step and expr(n.step) or '1')..') do __tc.step('..location(n.for_token)..'); '..body(n)..' end'
+      s = 'for '..identifier(n.var.name,n.var)..' = __tc.number('..expr(n.start)..'),__tc.number('..expr(n.stop)..'),__tc.number('..(n.step and expr(n.step) or '1')..') do __tc.loop('..coordinates(n.for_token)..',1); '..body(n)..' end'
     elseif k == 'forlist' then
       local names = {}; for i,p in ipairs(n.name_list) do names[i] = identifier(p.name,p) end
-      s = 'for '..table.concat(names,',')..' in __tc.iter('..list(n.exp_list)..') do __tc.step('..location(n.for_token)..'); '..body(n)..' end'
+      if #names>limits.tuple_entries then reject(n,'iterator width exceeded','E_LIMIT') end
+      s = 'for '..table.concat(names,',')..' in __tc.iter('..list(n.exp_list)..') do __tc.loop('..coordinates(n.for_token)..','..#names..'); '..body(n)..' end'
     elseif k == 'ifstat' then
       local out = {}
       for i,b in ipairs(n.ifs) do out[#out+1] = (i == 1 and 'if ' or 'elseif ')..expr(b.condition)..' then '..body(b) end
       if n.elseblock then out[#out+1] = 'else '..body(n.elseblock) end
       out[#out+1] = 'end'; s = table.concat(out,'\n')
     else reject(n,'unsupported statement: '..tostring(k)) end
-    return leave(text('__tc.step('..location(n)..'); '..s))
+    return leave(text('__tc.step('..coordinates(n)..'); '..s))
   end
   local ret, stat = nil, main.body.first
   while stat do
@@ -271,7 +286,7 @@ function M.run(plan, name, event, services, context)
     local handlers = factory()
     return guard.call(handlers[name],guard.snapshot(event))
   end)
-  if not ok then return false,guard.diagnostic(result) end
+  if not ok then return false,guard.diagnostic(result),guard.stop_requested() and 'stop' or nil end
   return true
 end
 return M
