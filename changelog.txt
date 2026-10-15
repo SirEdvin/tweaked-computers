@@ -1,0 +1,11 @@
+---------------------------------------------------------------------------------------------------
+Version: 0.1.3
+Date: 2026-10-15
+  Bugfixes:
+    - Fix non-recoverable HorizontalFlow style error when opening a computer or recovery workspace.
+  Changes:
+    - Audit editor GUI construction and style usage against Factorio 2.0.77.
+    - Add strict GUI API regression guards and click/open-event coverage.
+    - Run packaged workspace and cold editor suites in base and Space Age CI.
+  Info:
+    - ALPHA: back up saves. Native graphical-client and multiplayer acceptance remains pending.

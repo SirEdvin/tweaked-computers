@@ -12,18 +12,69 @@ end
 local function refused(fn,code)
   local ok,e=pcall(fn); assert(not ok and type(e)=='table' and e.code==code,'expected '..code)
 end
+-- Fail-closed coverage of the GUI surface this mod uses, audited against
+-- https://lua-api.factorio.com/2.0.77/runtime-api.json and core/prototypes/style.lua.
+-- textfield and text-box both use TextBoxStyle. Extend deliberately for new APIs;
+-- do not let a permissive table accept engine-incompatible GUI code again.
+local function names(text)
+  local out={}; for name in text:gmatch('%S+') do out[name]=true end; return out
+end
+local common_style=names('height width size minimal_height maximal_height minimal_width maximal_width horizontally_stretchable')
+local text_style=names('label text-box textfield button tab checkbox')
+local common_args=names('type name caption tooltip enabled visible style tags index')
+local type_args={
+  flow=names('direction'),frame=names('direction'),label={},button=names('mouse_button_filter'),
+  ['text-box']=names('text'),textfield=names('text'),['empty-widget']={},
+  ['tabbed-pane']={},tab={},['scroll-pane']=names('horizontal_scroll_policy vertical_scroll_policy'),
+  ['drop-down']=names('items selected_index'),checkbox=names('state'),sprite=names('sprite'),
+  ['table']=names('column_count')}
+local style_types={tc_editor_text='text-box',tc_editor_button='button',tc_editor_frame='frame',
+  tc_editor_tabs='tabbed-pane',tc_editor_tab='tab',draggable_space_header='empty-widget'}
+local reserved=names([[
+  allow_decimal allow_negative allow_none_state anchor auto_center auto_toggle badge_text caption children children_names
+  clicked_sprite column_count direction drag_target draw_horizontal_line_after_headers draw_horizontal_lines draw_vertical_lines
+  elem_filters elem_tooltip elem_type elem_value enabled entity force game_controller_interaction gui horizontal_scroll_policy
+  hovered_sprite icon_selector ignored_by_interaction index is_password items left_label_caption left_label_tooltip location locked
+  lose_focus_on_confirm minimap_player_index mouse_button_filter name number numeric object_name parent player_index position quality
+  raise_hover_events read_only resize_to_sprite right_label_caption right_label_tooltip selectable selected_index selected_tab_index
+  show_percent_for_small_numbers slider_value sprite state style surface_index switch_state tabs tags text toggled tooltip type valid
+  value vertical_centering vertical_scroll_policy visible word_wrap zoom add add_item add_tab bring_to_front clear clear_items
+  close_dropdown destroy focus force_auto_center get_index_in_parent get_item get_mod get_slider_discrete_values get_slider_maximum
+  get_slider_minimum get_slider_value_step remove_item remove_tab scroll_to_bottom scroll_to_element scroll_to_item scroll_to_left
+  scroll_to_right scroll_to_top select select_all set_item set_slider_discrete_values set_slider_minimum_maximum set_slider_value_step swap_children
+]])
+local function style_supported(spec,key)
+  if common_style[key] then return true end
+  if key=='font' then return text_style[spec.type] end
+  if key=='single_line' then return spec.type=='label' end
+  if key=='rich_text_setting' then return spec.type=='label' or spec.type=='text-box' or spec.type=='textfield' end
+  if key=='horizontal_spacing' then return spec.type=='table' or (spec.type=='flow' and spec.direction~='vertical') end
+  if key=='vertical_spacing' then return spec.type=='table' or spec.type=='tabbed-pane' or (spec.type=='flow' and spec.direction=='vertical') end
+  error('unaudited LuaStyle property '..key)
+end
 local function gui(parent,spec)
+  local args=assert(type_args[spec.type],'unaudited GUI element type '..tostring(spec.type))
+  for key in pairs(spec) do assert(common_args[key] or args[key],'invalid '..spec.type..' constructor field '..key) end
+  assert(not spec.name or not reserved[spec.name],'GUI child shadows LuaGuiElement API: '..tostring(spec.name))
+  assert(not parent or not spec.name or not parent[spec.name],'duplicate GUI child '..tostring(spec.name))
+  assert(not spec.direction or spec.direction=='horizontal' or spec.direction=='vertical','invalid GUI direction')
+  assert(not spec.style or style_types[spec.style]==spec.type,'unaudited or incompatible GUI style '..tostring(spec.style))
+  if spec.type=='checkbox' then assert(type(spec.state)=='boolean','checkbox requires state') end
+  if spec.type=='table' then assert(type(spec.column_count)=='number' and spec.column_count>0,'table requires columns') end
   -- Pinned LuaStyle height/width/size are write-only aliases. Catch accidental
   -- use of these as getters, and text-only rich-text settings on button styles.
   local style_values={}
   local style=setmetatable({},{__index=function(_,key)
     assert(key~='height' and key~='width' and key~='size','write-only LuaStyle getter '..key)
+    style_supported(spec,key)
     return style_values[key]
   end,__newindex=function(_,key,value)
-    if key=='rich_text_setting' then assert(spec.type=='label' or spec.type=='text-box' or spec.type=='textfield','rich text style subclass') end
+    assert(style_supported(spec,key),'unsupported '..key..' on '..spec.type..'/'..(spec.direction or 'horizontal'))
     if key=='height' then style_values.minimal_height=value; style_values.maximal_height=value
     elseif key=='width' then style_values.minimal_width=value; style_values.maximal_width=value
-    elseif key=='size' then style_values.minimal_height=value; style_values.minimal_width=value
+    elseif key=='size' then
+      local w=type(value)=='table' and value[1] or value; local h=type(value)=='table' and value[2] or value
+      style_values.minimal_height=h; style_values.maximal_height=h; style_values.minimal_width=w; style_values.maximal_width=w
     else style_values[key]=value end
   end})
   local e={valid=true,parent=parent,children={},type=spec.type,name=spec.name or '',style=style,tags=spec.tags or {},
@@ -32,7 +83,6 @@ local function gui(parent,spec)
   setmetatable(e,{__index=function(t,k) if k=='text' then return rawget(t,'_text') end end,
     __newindex=function(t,k,v) if k=='text' then rawset(t,'_text',v); t.text_writes=t.text_writes+1 else rawset(t,k,v) end end})
   function e.add(child)
-    assert(not (child.type=='scroll-pane' and child.direction),'invalid scroll-pane direction')
     local c=gui(e,child)
     table.insert(e.children,child.index or (#e.children+1),c); e[c.name]=c; return c
   end
@@ -63,6 +113,41 @@ function M.run()
   storage.tweaked_computers=nil; registry.initialize()
   local groups=0; local tick=100
   local function group(name,fn) tick=tick+1; fn(); groups=groups+1; log('TC_CONTRACT '..name) end
+  group('editor-gui-api-guards-reject-invalid-spacing-style-and-construction',function()
+    local function rejects(fn)
+      local ok=pcall(fn); assert(not ok,'GUI API guard accepted an invalid operation')
+    end
+    for _,direction in ipairs({'horizontal','vertical'}) do
+      local e=gui(nil,{type='flow',direction=direction})
+      local valid=direction..'_spacing'; local invalid=direction=='horizontal' and 'vertical_spacing' or 'horizontal_spacing'
+      e.style[valid]=4; assert(e.style[valid]==4)
+      rejects(function() e.style[invalid]=4 end)
+    end
+    local default=gui(nil,{type='flow'}); default.style.horizontal_spacing=4
+    rejects(function() default.style.vertical_spacing=4 end)
+    for _,kind in ipairs({'label','button','frame','text-box','scroll-pane','tab','sprite','empty-widget','textfield'}) do
+      local e=gui(nil,{type=kind})
+      rejects(function() e.style.horizontal_spacing=4 end)
+      rejects(function() e.style.vertical_spacing=4 end)
+    end
+    for _,kind in ipairs({'label','text-box','textfield'}) do
+      local e=gui(nil,{type=kind}); e.style.rich_text_setting=defines.rich_text_setting.disabled
+    end
+    local b=gui(nil,{type='button'})
+    rejects(function() b.style.rich_text_setting=defines.rich_text_setting.disabled end)
+    rejects(function() b.style.single_line=true end)
+    rejects(function() b.style.unknown_property=true end)
+    b.style.size={24,28}; assert(b.style.minimal_width==24 and b.style.maximal_height==28)
+    for _,key in ipairs({'height','width','size'}) do rejects(function() return b.style[key] end) end
+    for key in pairs(reserved) do rejects(function() gui(nil,{type='label',name=key}) end) end
+    rejects(function() gui(nil,{type='scroll-pane',direction='vertical'}) end)
+    rejects(function() gui(nil,{type='label',text='not a textfield'}) end)
+    rejects(function() gui(nil,{type='flow',direction='diagonal'}) end)
+    rejects(function() gui(nil,{type='button',style='tc_editor_text'}) end)
+    rejects(function() gui(nil,{type='checkbox'}) end)
+    default.add{type='label',name='unique'}
+    rejects(function() default.add{type='label',name='unique'} end)
+  end)
   local function make(x)
     return registry.register('computer',assert(game.surfaces[1].create_entity{name='constant-combinator',position={x,80},force='player'}))
   end

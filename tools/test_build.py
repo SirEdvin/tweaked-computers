@@ -20,7 +20,7 @@ class PackageInventoryTests(unittest.TestCase):
                                      for name in names))
                 for notice in ('assets/notices/Greg-Flavored-MIT.txt',
                                'assets/notices/Tweaked-Computers-MIT.txt',
-                               'vendor/phobos/LICENSE.txt'):
+                               'vendor/phobos/LICENSE.txt', 'changelog.txt'):
                     name = next(name for name in names if name.endswith('/' + notice))
                     self.assertEqual(package.read(name), (build.ROOT / notice).read_bytes())
                 self.assertTrue((build.ROOT / 'assets/generate.py').is_file())

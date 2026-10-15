@@ -128,7 +128,7 @@ data, not a wiring fix or a way to clear a database.
 ## Integrated redesign playtest
 
 This short user-owned native-client review is not yet performed. Use the exact
-0.1.2 candidate and a backed-up test save, retaining the old mod/world for rollback.
+0.1.3 release and a backed-up test save, retaining the old mod/world for rollback.
 
 - Place/rotate all five devices; check ordinary-zoom silhouettes, icons/status,
   direct red/green Network contacts and distinct logic Input/Output / configurator
