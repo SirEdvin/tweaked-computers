@@ -14,8 +14,12 @@ No interpreter, OS, shell, gameplay filesystem or dynamic guest loader is shippe
 This is a user-test alpha, not stable or client-verified. Back up saves. Graphical
 editing/focus, wire selection, rendering/touch, audible playback and multiplayer
 joining remain user-owned checks. Full-world performance limits are provisional.
-The documentation branch does not itself publish a Mod Portal release or deploy
-the completed site; the final consolidated delivery performs those steps.
+Install from the [Factorio Mod Portal](https://mods.factorio.com/mod/tweaked-computers)
+and follow the guide above. Report problems with engine/mod versions, wiring,
+source and diagnostics; remove private literals before sharing.
+
+The source includes a separate [developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.0/openwiki).
+See [0.1.0 alpha release notes](docs/alpha-release.md) for scope and limitations.
 
 ## Development
 

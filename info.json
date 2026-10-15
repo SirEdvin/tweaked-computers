@@ -1,9 +1,10 @@
 {
   "name": "tweaked-computers",
   "version": "0.1.0",
-  "title": "Tweaked Computers (Alpha)",
+  "title": "Tweaked Computers (ALPHA)",
   "author": "Tweaked Computers contributors",
   "factorio_version": "2.0",
   "description": "ALPHA: native named-callback circuit computers, source editor, monitors, KV databases, logic and typed factory configurators. Back up saves. Client and multiplayer validation is pending.",
+  "homepage": "https://siredvin.github.io/tweaked-computers/",
   "dependencies": ["base = 2.0.77", "? space-age = 2.0.77"]
 }

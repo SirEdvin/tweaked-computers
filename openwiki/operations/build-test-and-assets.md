@@ -5,7 +5,7 @@ description: Reproducible external-output packaging, exact-engine focused smoke,
 tags: [build, testing, assets, licenses, operations, documentation]
 verified:
   - by: openwiki/0.7.1
-    at: 2026-10-15T06:56:25.402Z
+    at: 2026-10-15T07:08:34.832Z
 sources:
   - id: openwiki-source-d558e38ccd1b08e055e4f3f5
     resource: repo://.github/workflows/docs.yml
@@ -23,7 +23,7 @@ sources:
     resource: repo://tools/smoke.py
   - id: openwiki-source-08ded4ecd7f943b2b7d08274
     resource: repo://vendor/phobos/NOTICE.md
-generated: { by: "hermes", at: "2026-10-15T06:56:25.402Z" }
+generated: { by: "hermes", at: "2026-10-15T07:08:34.832Z" }
 ---
 
 # Build, targeted tests, artwork and documentation operations
@@ -87,7 +87,7 @@ Asset checking regenerates into an external destination and validates output/pro
 
 ## Player site is separate from developer OpenWiki
 
-`mkdocs.yml` builds only `docs/player/` into ignored `site/`. `requirements-docs.txt` locks docs dependencies with hashes. Follow [documentation maintenance](../../docs/documentation-maintenance.md) for local installation and trusted-ref dispatch. `python -m mkdocs build --strict` validates the player site; it does not generate or index OpenWiki.
+`mkdocs.yml` builds only `docs/player/` into ignored `site/`, with navigation for the complete player guide and Lua API reference. `requirements-docs.txt` locks docs dependencies with hashes. Follow [documentation maintenance](../../docs/documentation-maintenance.md) for local installation and trusted-ref dispatch. `python -m mkdocs build --strict` validates the player site; it does not generate or index OpenWiki.
 
 The existing `.github/workflows/docs.yml` validates player docs on relevant PRs and main pushes. Its read-only build checks out the selected immutable source, builds strictly and records `site/source-commit.txt`. PRs do not upload/deploy Pages artifacts. Deployment is a separate main-workflow job with only Pages/id-token write permissions, serialized protected `github-pages` environment and no source checkout. Manual dispatch must run workflow code from main and accepts only main, the exact authorized publication branch or `alpha-*` tags; it can publish a review branch without merging it. Wiki-only changes do not trigger those player-doc path filters, and this card does not redeploy the live site or alter that player-doc automation.
 

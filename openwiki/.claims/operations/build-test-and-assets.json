@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:fb291fe2041381aa732c2c37300aacfe7c1718e67dce80b32af7ad6d6e6ed434",
+  "pageVersion": "sha256:49f7a985048ae9d27935c6a6559ba51b60753eef4bfb0ea980d74aa529f85fe8",
   "claims": [
     {
       "id": "claim_ff7fc687d62649a2a466ff6e6ed2684b",
@@ -70,15 +70,15 @@
     },
     {
       "id": "claim_56451cf609ff44f5bd1d561d419b1078",
-      "statement": "The player-doc pipeline is distinct from OpenWiki: filtered PR/main builds and trusted main-workflow manual refs feed a separate protected minimal-permission Pages deployment, while MkDocs builds docs/player.",
+      "statement": "The player-doc pipeline is distinct from OpenWiki: filtered PR/main builds and trusted main-workflow manual refs feed a separate protected minimal-permission Pages deployment, while MkDocs builds docs/player with complete player-guide and Lua API navigation.",
       "evidence": [
         {
           "resource": "repo://.github/workflows/docs.yml#L3-L81",
           "version": "repo-lines-v1:sha256:babde50be6ab147d5eab6566929da1bc6449b643083ca260a8bd923163281133:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NmRjNDgxNDlmNWE4M2QxZWQ2ZGJiMzliYmM3ZTJiOTAyYWEzZDM0ZDZiZDVhZTRiMjkxYjY4ZGYwY2E3OWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4ZWQ3NDA5N2Y5NTE5YTVhN2ZiYTRmYjYwYjkxYWM2NmU5ZTYwN2JjNWE4NjExZDhiMDEzMDk4ZDRjMjA4YzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4ZWY2MWUyOWQ2NmY3ZmMyODJmYjFlODZlZmY4MDU2YjVjODVhYTJiNmJiNTA5ODU5NmZkODM5N2RiNDFjYjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         },
         {
-          "resource": "repo://mkdocs.yml#L1-L18",
-          "version": "repo-lines-v1:sha256:a2fa4dd2ef835ad0fdc58c8ba34026cb7a807fd1d80674336dbc2110407044a0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwNTZlZGMxMTAwZWU1M2I0NWU2MTJkYTBiYjVjYWU1ZjBjOWNiYTdmMjQ2NGExNTE2YWNiNTI2ZTRjNjhiNDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyYzRmODkzMzJkYjMzOWUyNTk5OGNhNTdkYTBiOTYxZjQxYmI3N2VkNDVjMzg5YThkZTgyZjQyYzFmYmQwOWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://mkdocs.yml#L1-L38",
+          "version": "repo-lines-v1:sha256:75fdb0c77c0efa0f760c56b32fb0d2ece1bf3dc62b698edb55b72c486113db42:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwNTZlZGMxMTAwZWU1M2I0NWU2MTJkYTBiYjVjYWU1ZjBjOWNiYTdmMjQ2NGExNTE2YWNiNTI2ZTRjNjhiNDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyYzRmODkzMzJkYjMzOWUyNTk5OGNhNTdkYTBiOTYxZjQxYmI3N2VkNDVjMzg5YThkZTgyZjQyYzFmYmQwOWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     },
@@ -99,6 +99,6 @@
   ],
   "verification": {
     "by": "openwiki/0.7.1",
-    "at": "2026-10-15T06:56:25.402Z"
+    "at": "2026-10-15T07:08:34.832Z"
   }
 }
