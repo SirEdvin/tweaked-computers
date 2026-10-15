@@ -102,6 +102,17 @@ function M.unbind_child(id,role)
   end
   return entity
 end
+-- Publish a fully staged physical replacement without replacing logical data,
+-- generations, aliases, queues or active runs. All native work precedes this call.
+function M.replace_physical(rec,body,children)
+  local root=writable()
+  assert(M.record(rec.id)==rec and body.valid and not root.entities[body.unit_number])
+  for _,child in pairs(children) do assert(child.valid and not root.entities[child.unit_number]) end
+  for unit,binding in pairs(root.entities) do if binding.id==rec.id then root.entities[unit]=nil end end
+  rec.body=body; rec.children=children; rec.layout_version=2
+  root.entities[body.unit_number]={id=rec.id,role='body',generation=rec.generation}
+  for role,child in pairs(children) do root.entities[child.unit_number]={id=rec.id,role=role,generation=rec.generation} end
+end
 function M.register_cleanup(name,fn)
   assert(type(name)=='string' and type(fn)=='function' and not cleanup[name],'invalid/duplicate host cleanup')
   local n=0; for _ in pairs(cleanup) do n=n+1 end; assert(n<limits.host_hooks,'host cleanup capacity')

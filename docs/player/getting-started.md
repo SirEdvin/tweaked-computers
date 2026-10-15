@@ -44,18 +44,24 @@ paths remain during outages, but active peripheral calls fail `E_UNPOWERED`.
 Computer callbacks pause; logic output clears; monitor presentation hides but its
 image survives. KV expiry still follows simulation ticks.
 
-## Body versus role ports
+## Direct device wiring and role sockets
 
-Select the body to rotate/mine the whole device. The small selectable role ports
-have priority over the body and cannot be mined or operated independently.
-North-facing layouts run left to right; east rotates clockwise, south reverses,
-west rotates counterclockwise. Rotation keeps existing native role wires.
+Connect red or green wire directly to the visible computer, database or monitor.
+Its hover name identifies that device, not a separate NETWORK tile. The monitor's
+wire contacts are on its bezel. Select the main body to rotate, mine or mark the
+whole device; there is no separately placeable Network block.
 
-| Body footprint, north-facing | Role order | Role marker |
-| --- | --- | --- |
-| Computer, KV, monitor: 1×1 | NETWORK | Cyan diamond |
-| Logic: 3×1 | INPUT / NETWORK / OUTPUT | Amber I / cyan diamond / lime square |
-| Configurator: 2×1 | NETWORK / TARGETS | Cyan diamond / violet T |
+Logic has separate named Input and Output sockets around its central Network
+connection. Configurator has a separate Factory targets socket beside Network.
+Those auxiliary sockets cannot be mined or operated independently. North-facing
+roles run left to right; east rotates clockwise, south reverses and west rotates
+counterclockwise. Rotation keeps existing native role wires.
+
+| Device footprint, north-facing | Connection layout |
+| --- | --- |
+| Computer, KV, monitor: 1×1 | Network directly on device |
+| Logic: 3×1 | Input / Network on device / Output |
+| Configurator: 2×1 | Network on device / Factory targets |
 
 Each role has separate red and green connectors. There are **no internal wires**
 between roles. Cable color and role-marker color are unrelated.

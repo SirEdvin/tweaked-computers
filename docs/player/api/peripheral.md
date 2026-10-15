@@ -1,7 +1,7 @@
 # Peripheral discovery and calls
 
 The computer sees powered or unpowered peripherals through uninterrupted red or
-green wires between mod-owned **NETWORK** ports on its force/surface. Computers
+green wires directly between the devices’ **Network** connections on its force/surface. Computers
 relay discovery but are not programmable peripherals. Vanilla poles/machines,
 ghosts and INPUT/OUTPUT/TARGETS ports do not relay it. There is no cross-color path,
 wireless transport, coordinate addressing or encoded computer-message protocol.

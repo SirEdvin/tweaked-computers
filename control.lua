@@ -22,7 +22,7 @@ script.on_event({defines.events.on_player_left_game,defines.events.on_player_die
 script.on_event({defines.events.on_player_display_resolution_changed,
   defines.events.on_player_display_scale_changed},editor.on_size)
 script.on_init(function() registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing() end)
-script.on_configuration_changed(function() registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing() end)
+script.on_configuration_changed(function() registry.initialize(); lifecycle.upgrade_existing(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing() end)
 script.on_event(defines.events.on_player_setup_blueprint,blueprints.on_setup)
 script.on_event(defines.events.on_entity_settings_pasted,blueprints.on_pasted)
 script.on_event({defines.events.on_pre_surface_deleted,defines.events.on_pre_surface_cleared},lifecycle.on_surface_removed)
@@ -41,7 +41,7 @@ script.on_event(defines.events.on_tick,function(event) scheduler.tick(event.tick
 -- same lifecycle in a second mod would create duplicate physical helpers.
 if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixture'] then
   local name=settings.startup['tc-smoke-production-fixture'].value
-  assert(name=='tests.lifecycle_engine' or name=='tests.integration_engine','unknown production-context fixture')
+  assert(name=='tests.lifecycle_engine' or name=='tests.integration_engine' or name=='tests.redesign_engine' or name=='tests.rd1_upgrade_engine','unknown production-context fixture')
   local test=require(name) -- control parsing only; never a guest source loader
   script.on_init(function()
     registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
@@ -50,7 +50,7 @@ if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixt
   script.on_load(test.on_load)
   script.on_event(defines.events.on_tick,test.on_tick)
   script.on_configuration_changed(function()
-    registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
+    registry.initialize(); lifecycle.upgrade_existing(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
     test.on_configuration_changed()
   end)
 end

@@ -14,7 +14,7 @@ This small factory uses only a computer and logic handler. The complete
 3. In the stock chest's normal circuit controls, enable **Read contents**. Connect
    it to logic **INPUT red**. Put five normal-quality iron plates in this chest.
 4. Connect computer **NETWORK red** directly to logic **NETWORK red**. An optional
-   KV NETWORK port can relay this path; a vanilla power pole cannot.
+   KV device can relay this path; a vanilla power pole cannot.
 5. Connect logic **OUTPUT green** to the inserter. In the inserter's native GUI,
    enable circuit-controlled enable/disable with **virtual signal A > 0**.
    The handler emits the same bank on red and green; green here is just convenient

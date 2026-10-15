@@ -7,7 +7,7 @@ configurator workers install their own methods; this checkpoint alone provides
 
 ## Wiring and first use
 
-Wire the computer's NETWORK endpoint to the database's NETWORK endpoint, then
+Wire the visible computer directly to the database's Network connection, then
 the database's NETWORK endpoint to the monitor's NETWORK endpoint, all red.
 Both devices are discoverable over red. Computers can relay discovery, but are
 not programmable peripherals. The same setup can independently use green.

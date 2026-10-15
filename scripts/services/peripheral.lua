@@ -111,8 +111,9 @@ function M.services(computer,tick,guard)
     local fn=bindings[rec.kind].methods[method]
     if not fn then errors.raise('E_ARGUMENT','unknown peripheral method') end
     if method=='getLimits' and select('#',...)~=0 then errors.raise('E_ARGUMENT','getLimits expects no arguments') end
-    if method~='getLimits' and (not rec.powered or rec.body.energy<defs.devices[rec.kind].watts/60
-      or bindings[rec.kind].available and not bindings[rec.kind].available(rec,spend)) then errors.raise('E_UNPOWERED','peripheral is unpowered') end
+    if method~='getLimits' and (not rec.powered
+      or (bindings[rec.kind].available and not bindings[rec.kind].available(rec,spend))
+      or (not bindings[rec.kind].available and not lifecycle.has_power(rec))) then errors.raise('E_UNPOWERED','peripheral is unpowered') end
     return fn(computer,rec,wire,tick,spend,...)
   end
   local function facade(rec,wire)

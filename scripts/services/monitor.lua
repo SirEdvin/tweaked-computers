@@ -33,7 +33,7 @@ function M.available(g,spend)
   spend(#g.members*16+1)
   for _,id in ipairs(g.members) do
     local r=registry.record(id)
-    if not r or not r.body.valid or not r.powered or r.body.energy<defs.devices.monitor.watts/60
+    if not r or not r.body.valid or not r.powered or not lifecycle.has_power(r)
       or r.force_index~=g.force_index or r.surface_index~=g.surface_index or r.direction~=g.direction
       or r.body.direction~=g.direction or r.body.force.index~=g.force_index or r.body.surface.index~=g.surface_index
       or r.body.position.x<g.left or r.body.position.x>=g.left+g.world_width

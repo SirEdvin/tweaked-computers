@@ -273,7 +273,7 @@ function M.sample(tick,spend)
   local samples={}
   for _,name in ipairs(names) do
     local rec=registry.record(name)
-    if rec and rec.powered and rec.body.valid and rec.body.energy>=defs.devices.logic.watts/60 then
+    if rec and rec.powered and rec.body.valid and lifecycle.has_power(rec) then
       local ok,result=pcall(function()
         local admitted,value=scheduler.try_maintenance(function()
           local needs=devices[name]; local connected=status(rec); local red,green

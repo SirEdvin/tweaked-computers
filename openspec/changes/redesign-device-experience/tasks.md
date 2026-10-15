@@ -8,10 +8,10 @@ Each section is one cohesive Kanban milestone, not a separate card per checkbox.
 
 Parents: none. Owns `peripheral-network` and physical/migration portions of `device-lifecycle`.
 
-- [ ] 1.1 Implement and exact-engine-check the circuit-capable visible shell/private-power carrier, then integrate all device connectors through the existing lifecycle seam; verify real red/green computer-to-monitor discovery, passive network signals, private power behavior, role isolation and device-specific hover metadata without generic NETWORK targets.
-- [ ] 1.2 Unify cardinal socket positions, selection, open/mark/mine behavior and blueprint endpoints; verify all five footprints/rotations, no native combinator UI, no orphan helpers or duplicate drops, and unchanged authorization/cross-color/vanilla-relay refusal.
-- [ ] 1.3 Implement staged upgrade from the alpha 0.1.1 carrier layout, including wire/data identity retention and older blueprint/tagged-item compatibility; verify a populated old-save fixture in a cold new process, safe conversion refusal, exact data/wire readback and no startup replay.
-- [ ] 1.4 Update player wiring/upgrade instructions and developer lifecycle documentation with the actual layout and evidence; deliver the shared socket layout to RD2 and a small native selection/wiring checklist, explicitly not claiming client hover was verified headlessly.
+- [x] 1.1 Implement and exact-engine-check the circuit-capable visible shell/private-power carrier, then integrate all device connectors through the existing lifecycle seam; verify real red/green computer-to-monitor discovery, passive network signals, private power behavior, role isolation and device-specific hover metadata without generic NETWORK targets.
+- [x] 1.2 Unify cardinal socket positions, selection, open/mark/mine behavior and blueprint endpoints; verify all five footprints/rotations, no native combinator UI, no orphan helpers or duplicate drops, and unchanged authorization/cross-color/vanilla-relay refusal.
+- [x] 1.3 Implement staged upgrade from the alpha 0.1.1 carrier layout, including wire/data identity retention and older blueprint/tagged-item compatibility; verify a populated old-save fixture in a cold new process, safe conversion refusal, exact data/wire readback and no startup replay.
+- [x] 1.4 Update player wiring/upgrade instructions and developer lifecycle documentation with the actual layout and evidence; deliver the shared socket layout to RD2 and a small native selection/wiring checklist, explicitly not claiming client hover was verified headlessly.
 
 ## 2. RD2 — Complete industrial visual family
 

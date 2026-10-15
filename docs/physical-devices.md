@@ -6,48 +6,51 @@ interpreter, OS or gameplay filesystem is introduced.
 
 ## Placement and wiring
 
-Every logical item places one electrically powered body and owned circuit
-endpoints. Computers, KV databases and monitor tiles occupy 1×1. Logic handlers
-occupy 3×1 (INPUT, NETWORK, OUTPUT); configurators occupy 2×1 (NETWORK, TARGETS).
-The unrotated north-facing layout runs left to right. East rotates it clockwise,
-south reverses it and west rotates it counterclockwise. All five bodies support
-cardinal orientation. Body collision is inset 0.1 tile from its full selection
-footprint. Small port selection boxes have greater priority than the body.
+The visible device is now the native red/green Network endpoint, not an invisible
+NETWORK tile layered over a separate body. Computer, KV and monitor occupy 1×1;
+logic occupies 3×1 and configurator 2×1. A hidden, nonselectable electric carrier
+supplies each shell at the unchanged wattage. It has no collision, item, mining
+result, blueprint entry, independent deconstruction or native GUI.
 
-The cleared Greg Flavored MIT directional bodies/shadows and item icons are
-integrated in actual prototypes. Cyan diamonds identify NETWORK, amber I marks
-INPUT, lime squares OUTPUT, and violet T marks TARGETS, independently of cable
-color. Native selectable endpoints retain role names/descriptions and priority.
-Bounded status overlays show stopped/unpowered, powered, fault and running blink
-states without replacing entities or their wires. Provenance/notices and exact
-source/output hashes are in assets/manifest.json. Client alignment, clickability
-and native interaction remain user-deferred.
+For logic, Input / Network / Output run left to right when north-facing. Only
+Input and Output need small device-specific auxiliary sockets. Configurator has
+Network / Factory targets; only Factory targets is auxiliary. Every role accepts
+both cable colors. East rotates clockwise, south reverses, west counterclockwise.
+The body owns ordinary selection, rotation, mining and deconstruction; auxiliary
+sockets expose only their named role, never a generic NETWORK identity.
 
-Each role has its own native red and green connectors. There are no internal
-wires or shared native networks between roles. NETWORK, INPUT and TARGETS ports
-have zero combinator sections, are disabled and cannot be opened/edited/pasted
-through native player controls. Incoming wires on a single endpoint retain normal
-native continuity. OUTPUT is a separate controlled constant combinator, able to
-contribute one bank equally to red/green. TC04 checks that native capability;
-the full typed logic/output ownership API belongs to the logic milestone.
+All roles remain electrically independent, with no internal wires. Network
+shells, Input and Factory targets have zero combinator sections and are disabled
+and inoperable. Output contributes its single controlled bank to both colors.
+Opening a selected computer uses the existing linked normal-open custom input or
+Ctrl+Shift+E, with the existing reach/force/surface/session guards; it does not
+open the native constant-combinator dialog. Client selection/focus remains a
+small user-owned review, not a headless claim.
 
-Owned endpoints cannot be mined/deconstructed/blueprinted/upgraded or rotated
-independently, yield no drops and have no collision. The body remains the logical
-item. Placement stages all parts before publishing an identity. Failure destroys
-only the exact staged objects and returns exactly one consumed player/robot item,
-preserving its native metadata. Removal invokes the existing source-independent
-cleanup hooks and destroys exact retained child references only after successful
-registry removal. Failed teardown retains the whole recovery record. Rotation
-moves existing endpoints without replacing identities or their real wires.
+Placement allocates all parts before publishing a logical identity. A failed
+allocation destroys only its staged objects and refunds the consumed material
+item. Rotation retains the same native endpoints and real wires. Mining produces
+one item with the established computer/KV/monitor snapshot policy, and removes
+all owned parts. See [device-lifecycle.md](device-lifecycle.md) for data and
+blueprint rules. The old interim non-minable computer/KV guard is superseded by
+that data-bearing lifecycle; unsupported/corrupt formats still remain guarded.
 
-IMPORTANT interim data-loss guard: computer/KV bodies are currently non-minable,
-with `mining_guard='awaiting-data-bearing-snapshots'`. Plain mining must not discard
-committed source/state or future database contents. The later lifecycle/snapshot
-milestone MUST replace this guard with bounded transactional data-bearing mining,
-not simply remove it. This is not a reduced final lifecycle contract. Explicit
-entity destruction still has the destruction policy. Logic/configurator basic
-one-drop removal is implemented; complete robots/ghosts/clone/settings-copy and
-snapshot lifecycle remains with its assigned downstream cards.
+## Shared socket contract for artwork (RD2)
+
+`scripts/device-definitions.lua` is the sole host metadata source:
+`offset(kind,index,direction)` gives auxiliary role centers; `contact(kind,role,
+color,direction)` gives wire studs relative to the body; `points(kind,role,pad)`
+produces the installed cardinal prototype connection/shadow points. Coordinates
+are tile units; north contact x is the role center ±0.07 (red/green). Contact y is
+−0.1 except monitors, whose −0.48 lies in the unchanged two-pixel bezel, outside
+cell content. `transform` rotates these offsets. `pad_box` is ±0.22 tile.
+
+RD2 must consume those coordinates, preserve the footprints and monitor cell
+geometry, and supply the new artwork. This RD1 source retains existing sprites,
+not a claim that the completed five-silhouette redesign is already installed.
+Device-specific native names/descriptions are present; native graphical hover,
+wire/art alignment and ordinary-scale usability still require the short checklist
+in [rd1-verification.md](rd1-verification.md).
 
 ## Reviewable initial balance
 
@@ -114,55 +117,53 @@ player rotation events. These functions are host-only, not guest capabilities:
 - `power_losses`, `reconcile`, `sample_power`, `unlocks`: admitted scheduler or
   synchronized initialization/configuration helpers, never on_load.
 
-Physical records extend the parent registry schema with `physical_version=1`,
-`direction`, copied `position`, `power_checked_tick`, optional `power_revision`,
-`mining_guard`, and retained `physical_error` diagnostics. `kind` is exactly
-computer/kv/monitor/logic/configurator. Children are keyed by input/network/output/
-targets as applicable. Native binding/owner identity is still supplied by
-`registry.by_entity`, not lookup by coordinates or network ID. Combine this
-mapping with `connector.owner`, `wire_connector_id` and colour in the graph worker;
-never promote INPUT/OUTPUT/TARGETS into discovery vertices. All LuaObjects remain
-host-only. Guest descriptors must be copied, bounded plain values.
+Physical records retain `physical_version=1`; new shells have `layout_version=2`.
+The body is bound as `body`, while children contain `power` plus Input/Output or
+Factory targets as applicable. Do not index `children.network` for new devices:
+use `endpoint(rec,role)` or `connector`. `power_entity(rec)` resolves the current
+carrier; `has_power(rec)` validates its exact ownership/scope/location and buffer.
+All service consumers use those seams, including monitor-member power checks.
+The graph admits a body only when its exact connector is the layout-2 Network
+endpoint. It never grants discovery merely because an entity is a body or shares
+a native circuit-network ID.
 
-Body native EEI configuration GUI is disabled (`gui_mode='none'`) so it cannot
-be used to edit production/demand. The editor worker must provide its intended
-native custom interaction entry (or a guarded, intercepted native opening path),
-not assume that this checkpoint contains an editor. Port native GUI is disabled
-with `operable=false` and copy/paste prohibition.
+`upgrade(rec)` and `upgrade_existing()` perform synchronized staged conversion
+from the retained old named EEI prototypes. They snapshot every native role/color
+wire (including unsupported and ghost connections), allocate distinct shell/power/
+pads, copy current power/output sections and validate all connections before
+`registry.replace_physical` publishes ownership. Only then are old components
+retired. Logical record/state/database/model/run/generation/queue/timer aliases
+remain intact; no guest activation occurs. Monitor anchor body references are
+updated, stale editor sessions invalidated, and drafts retained. Refused conversion
+keeps the old data and physical wires with a `migration_error` diagnostic. Repair
+the cause and retry only in a synchronized host context or another configuration
+change; there is no destructive automatic reset or on_load conversion.
+
+Legacy prototype `placeable_by` still accepts the logical item so old blueprint
+EEI ghosts can revive. New blueprints wire the shell directly and add only the
+required auxiliary ghosts. Both new and old rotated/mirrored helper wires transfer
+onto the already-owned endpoint; no generic helper is adopted into the new layout.
+Private power never appears in blueprints. Area-cloned power duplicates and
+unmatched socket clones are removed, without replacing the new owner's parts.
 
 ## Focused verification boundaries
 
-`tests/device_contract.lua` checks geometry/tuning definitions, not client views.
-`tests/device_engine.lua` runs shipped host handlers/modules with actual native
-bodies, connectors, circuit propagation, power, assemblers and registry in the
-fixture mod's isolated storage. It is not a claimed player/robot client placement
-or click test. The partial allocation failure uses an explicitly host-only surface
-proxy; the first staged child, construction robot cargo and refund inventory are
-real native objects. Production event registration is shipped, while mocked event
-payloads do not prove native player/robot event delivery.
+See [rd1-verification.md](rd1-verification.md) for exact reproducible commands and
+scope. `tests.redesign_engine` and `tests.redesign_data` exercise the installed
+layout/points, twenty cardinal native shells, private drain, passive role signals,
+mark/cancel state and allocation/wire rollback. `tests.network_engine` retains
+its real graph, authority and compiled facade contracts. `tests.lifecycle_engine`
+exercises snapshots, rotation, native clones/blueprints, destruction, force/surface
+changes, actual construction-robot mining and cold reload using new shells.
 
-The batch checks all five cardinal footprints, rotated live-wire identity,
-independent logic/configurator role networks, no internal signal leaks, mirrored
-native output, one logical basic drop, exact replacement/removal, atomic allocation
-rollback/refund, retained cleanup refusal, fresh/researched unlocks and actual
-unmodified native crafting. A protected infinite-loop source faults beside a
-healthy powered computer. A real disconnected electrical buffer measures one-tick
-consumption; outage/pause/output-zero/restoration run on actual ticks. Participants
-are quiesced before snapshot capture. Cold readback preserves body/port/run/source/
-state/power/ledger identities without on_load mutation or startup replay.
+`tools/rd1_upgrade.py` constructs an old save from pinned alpha source in an
+isolated scratch checkout, injects only the opt-in fixture, then cold-loads the
+unchanged candidate ZIP in a new process with a test-mod configuration change.
+It preserves a copy of the old save and exercises running source/state/KV/deadlines/
+monitor/output/wires/drafts plus old blueprints/tagged items, including both
+preflight and staged-allocation conversion refusal. Fixtures have explicit
+synthetic host-only fault injection, not a player-created corrupt-save claim.
 
-The same harness separately reloads the snapshot normally, then changes only the
-copied test mod version in a third base process to verify configuration-change
-unlocks. `/quit` overwrites its input map: each resumed phase uses a copy so the
-original frozen snapshot remains immutable. The production archive never changes.
-
-    python3 tools/build.py --output /absolute/outside/artifacts
-    python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
-      --archive /absolute/outside/artifacts/tweaked-computers_0.1.0.zip \
-      --output /absolute/outside/new-smoke --fixture tests.device_engine \
-      --cold --upgrade-fixture
-
-No graphical client, screenshots, joining-peer matrix, fuzz/performance campaign,
-publication or deployment belongs to this checkpoint. Final artwork, complete
-peripheral services, snapshot lifecycle and integrated acceptance remain explicit
-other milestones, not silently declared complete here.
+Historical `tests/device_engine` describes the earlier TC04/interim checkpoint;
+it is not the RD1 acceptance command. No graphical client, multiplayer-join,
+performance or final artwork acceptance is claimed by these headless fixtures.

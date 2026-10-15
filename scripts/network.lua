@@ -15,7 +15,8 @@ end
 function M.discovery_vertex(connector,origin,wire)
   if not connector or not connector.valid or connector.is_ghost or not M.same_scope(connector.owner,origin) then return nil end
   local rec,role=registry.by_entity(connector.owner)
-  if not rec or role~='network' or lifecycle.connector(rec,'network',wire)~=connector then return nil end
+  if not rec or (role~='network' and not (role=='body' and rec.layout_version==2))
+    or lifecycle.connector(rec,'network',wire)~=connector then return nil end
   return rec
 end
 -- Shared primitive for the separate configurator target policy. Count admission

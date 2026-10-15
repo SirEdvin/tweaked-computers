@@ -6,59 +6,54 @@ local snapshots=require('scripts.lifecycle-data')
 local errors=require('scripts.runtime.errors')
 local limits=require('scripts.runtime.limits')
 local scheduler=require('scripts.scheduler')
+local wires=require('scripts.physical-wires')
 local M={}
 local disclosure='Tweaked Computers: includes saved source code and labels (which may contain literals). Excludes application state, KV data, active runs, timers and outputs.'
 M.disclosure=disclosure
-local function port_role(name) return type(name)=='string' and name:match('^tc%-port%-(%a+)$') end
+local port_role=defs.port_role
 -- Mapping is obtained from the real engine selection/create_blueprint call.
 function M.prepare(blueprint,mapping)
   local entities=blueprint.get_blueprint_entities() or {}
   if #entities>limits.registry_entries then errors.raise('E_LIMIT','blueprint selection too large') end
-  local byunit,byindex,max={}, {},0; local additions={}; local selected={}
+  local byunit,max={},0; local endpoints={}; local output={}; local selected=0
   for _,e in ipairs(entities) do
-    byindex[e.entity_number]=e; max=math.max(max,e.entity_number)
+    max=math.max(max,e.entity_number)
     local native=mapping[e.entity_number]
     if native and native.valid and native.name==e.name then byunit[native.unit_number]=e.entity_number end
   end
   for _,e in ipairs(entities) do
     local native=mapping[e.entity_number]; local rec,role=registry.by_entity(native)
     if rec and role=='body' then
+      selected=selected+1
       local token='tc-blueprint-'..string.format('%.0f',registry.sequence())
+      e.name=defs.devices[rec.kind].entity_name
       e.tags=e.tags or {}; e.tags.tc_settings=snapshots.settings(rec); e.tags.tc_body_token=token
-      -- EEI native defaults must not copy a fixture/mod's arbitrary power settings.
-      e.power_usage=nil; e.power_production=nil; e.buffer_size=nil
-      selected[#selected+1]={rec=rec,entity=e}
-      for i,r in ipairs(defs.devices[rec.kind].roles) do
-        local p=rec.children[r]
-        local x,y=defs.offset(rec.kind,i,rec.direction)
-        local number=byunit[p.unit_number]
+      e.power_usage=nil; e.power_production=nil; e.buffer_size=nil; e.wires={}
+      local network=lifecycle.endpoint(rec,'network')
+      byunit[network.unit_number]=e.entity_number
+      endpoints[#endpoints+1]={entry=e,port=network}; output[#output+1]=e
+      for i,r in ipairs(defs.devices[rec.kind].roles) do if r~='network' then
+        local port=lifecycle.endpoint(rec,r); local x,y=defs.offset(rec.kind,i,rec.direction)
+        local number=byunit[port.unit_number]
         if not number then max=max+1; number=max end
-        local entry={entity_number=number,name='tc-port-'..r,position={x=e.position.x+x,y=e.position.y+y},
-          direction=rec.direction,quality=rec.body.quality.name,tags={tc_port={version=1,token=token,role=r,body=rec.body.name}},wires={}}
-        additions[#additions+1]={entry=entry,port=p}; byunit[p.unit_number]=number
-      end
-    end
+        local entry={entity_number=number,name=defs.pad_name(rec.kind,r),position={x=e.position.x+x,y=e.position.y+y},
+          direction=rec.direction,quality=rec.body.quality.name,tags={tc_port={version=1,token=token,role=r,body=e.name}},wires={}}
+        endpoints[#endpoints+1]={entry=entry,port=port}; output[#output+1]=entry; byunit[port.unit_number]=number
+      end end
+    elseif not rec and not port_role(e.name) and not defs.power_kind(e.name) then output[#output+1]=e end
   end
-  if #selected==0 then return false end
+  if selected==0 then return false end
   local wire_count=0
-  local replaced={}; for _,a in ipairs(additions) do replaced[a.entry.entity_number]=true end
-  local output={}
-  for _,e in ipairs(entities) do if not replaced[e.entity_number] then output[#output+1]=e end end
-  for _,a in ipairs(additions) do
-    for _,color in ipairs({'red','green'}) do
-      local c=a.port.get_wire_connector(defines.wire_connector_id['circuit_'..color],false)
-      for _,connection in ipairs(c and c.connections or {}) do
-        wire_count=wire_count+1
-        if wire_count>limits.network_edges*8 then errors.raise('E_LIMIT','blueprint role-wire capacity exceeded') end
-        local target=connection.target; local n=byunit[target.owner.unit_number]
-        if n and target.owner.valid then
-          a.entry.wires[#a.entry.wires+1]={a.entry.entity_number,c.wire_connector_id,n,target.wire_connector_id}
-        end
+  for _,a in ipairs(endpoints) do
+    for _,edge in ipairs(wires.snapshot(a.port)) do
+      wire_count=wire_count+1
+      if wire_count>limits.network_edges*8 then errors.raise('E_LIMIT','blueprint role-wire capacity exceeded') end
+      local target=edge.target; local number=byunit[target.owner.unit_number]
+      if number and target.owner.valid then
+        a.entry.wires[#a.entry.wires+1]={a.entry.entity_number,edge.cid,number,target.wire_connector_id}
       end
     end
-    output[#output+1]=a.entry
   end
-  -- Stage all snapshots and edges before changing the user's blueprint.
   blueprint.set_blueprint_entities(output)
   local old=blueprint.blueprint_description or ''
   if not old:find(disclosure,1,true) then blueprint.blueprint_description=old..(old=='' and '' or '\n\n')..disclosure end
@@ -74,7 +69,7 @@ function M.on_setup(event)
   end
 end
 local function matches(rec,ghost,role,tags)
-  if not rec or not rec.body.valid or rec.blueprint_token~=tags.token or rec.body.name~=tags.body
+  if not rec or not rec.body.valid or rec.blueprint_token~=tags.token or defs.by_name[rec.body.name]~=defs.by_name[tags.body]
     or rec.body.surface~=ghost.surface or rec.body.force~=ghost.force then return false end
   local i
   for index,r in ipairs(defs.devices[rec.kind].roles) do if r==role then i=index end end
@@ -83,20 +78,12 @@ local function matches(rec,ghost,role,tags)
   return ghost.position.x==rec.body.position.x+x and ghost.position.y==rec.body.position.y+y
 end
 local function adopt_port(rec,role,port)
-  local old=registry.unbind_child(rec.id,role)
-  if old and old.valid then
-    for _,color in ipairs({'red','green'}) do
-      local cid=defines.wire_connector_id['circuit_'..color]
-      local from=old.get_wire_connector(cid,false); local to=port.get_wire_connector(cid,true)
-      for _,connection in ipairs(from and from.connections or {}) do to.connect_to(connection.target,false,connection.origin) end
-    end
-    old.destroy()
-  end
-  registry.bind_child(rec.id,role,port)
-  port.minable=false; port.destructible=false; port.operable=false; port.rotatable=false; port.direction=rec.direction
-  local cb=port.get_or_create_control_behavior(); cb.enabled=false
-  for i=cb.sections_count,1,-1 do cb.remove_section(i) end
-  if role=='output' then rec.output_owner=nil; rec.output_bank=nil end
+  local endpoint=lifecycle.endpoint(rec,role)
+  assert(endpoint and endpoint.valid,'owned endpoint unavailable')
+  -- Transfer real rotated/mirrored ghost/clone wires onto the already-owned
+  -- endpoint. Legacy generic ports must never become selectable new-layout parts.
+  wires.apply(wires.snapshot(port),endpoint,{[port.unit_number]=endpoint})
+  port.destroy()
 end
 function M.adopt_ghost(ghost,rec)
   if not ghost.valid or ghost.name~='entity-ghost' then return false end
@@ -133,6 +120,9 @@ function M.on_ghost(event)
 end
 function M.on_pasted(event)
   local source,source_role=registry.by_entity(event.source); local target,target_role=registry.by_entity(event.destination)
+  -- Native settings paste must never turn the Network shell into a signal source,
+  -- even when the pasted-from entity is vanilla or otherwise not our authority.
+  if target and target_role=='body' then lifecycle.reset_network(target) end
   if not source or not target or source_role~='body' or target_role~='body' or source.kind~=target.kind then return end
   local player=game.get_player(event.player_index)
   if not player or player.force.index~=source.force_index or player.force.index~=target.force_index

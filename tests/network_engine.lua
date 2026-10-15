@@ -23,9 +23,9 @@ local function disconnect(a,b,wire)
   assert(connector(a,wire).disconnect_from(connector(b,wire)))
 end
 local function build(surface,kind,x,y,force)
-  local body=assert(surface.create_entity{name=defs.devices[kind].name,position={x,y},force=force or 'player'})
+  local body=assert(surface.create_entity{name=defs.devices[kind].entity_name,position={x,y},force=force or 'player'})
   lifecycle.on_built{entity=body}
-  local rec=assert(registry.by_entity(body)); body.energy=defs.devices[kind].watts/30
+  local rec=assert(registry.by_entity(body)); lifecycle.power_entity(rec).energy=defs.devices[kind].watts/30
   rec.powered=true; return rec
 end
 local function inventory(c,wire) return peripheral.inventory(c,wire,nop) end

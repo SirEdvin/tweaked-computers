@@ -14,16 +14,63 @@ M.devices={
     ingredients={{'iron-plate',8},{'electronic-circuit',8},{'advanced-circuit',2}}}
 }
 M.by_name={}
-for kind,def in pairs(M.devices) do M.by_name[def.name]=kind end
+for kind,def in pairs(M.devices) do
+  -- Keep the alpha EEI names loadable. Items keep their names; new placements
+  -- use a different native prototype, never a same-name type substitution.
+  def.entity_name=def.name..'-shell'; def.power_name=def.name..'-power'
+  M.by_name[def.name]=kind; M.by_name[def.entity_name]=kind
+end
 M.role_order={'input','network','output','targets'}
-M.colors={input={0.25,0.65,1},network={0.75,0.4,1},output={1,0.6,0.2},targets={0.25,1,0.55}}
+M.colors={input={1,0.6,0.2},network={0.25,0.8,1},output={0.55,1,0.25},targets={0.75,0.4,1}}
+M.pad_box={{-0.22,-0.22},{0.22,0.22}}
+function M.transform(x,y,direction)
+  if direction==0 then return x,y end
+  if direction==4 then return -y,x end
+  if direction==8 then return -x,-y end
+  if direction==12 then return y,-x end
+  error('cardinal direction required',0)
+end
 function M.offset(kind,index,direction)
   local def=assert(M.devices[kind]); local x=index-(def.width+1)/2
-  if direction==0 then return x,0 end
-  if direction==4 then return 0,x end
-  if direction==8 then return -x,0 end
-  if direction==12 then return 0,-x end
-  error('cardinal direction required',0)
+  return M.transform(x,0,direction)
+end
+function M.pad_name(kind,role) return M.devices[kind].name..'-'..role..'-socket' end
+function M.port_role(name)
+  if type(name)~='string' then return nil end
+  local legacy=name:match('^tc%-port%-(%a+)$')
+  if legacy then return legacy end
+  for _,kind in ipairs(M.order) do
+    for _,role in ipairs(M.devices[kind].roles) do
+      if role~='network' and name==M.pad_name(kind,role) then return role end
+    end
+  end
+end
+function M.power_kind(name)
+  for _,kind in ipairs(M.order) do if name==M.devices[kind].power_name then return kind end end
+end
+-- Contact centers in tile units, relative to the body; RD2 consumes this same
+-- metadata. Each role's studs sit toward its north face, not its selection center.
+function M.contact(kind,role,color,direction)
+  local def=assert(M.devices[kind]); local index
+  for i,r in ipairs(def.roles) do if r==role then index=i end end
+  assert(index and (color=='red' or color=='green'),'invalid device contact')
+  return M.transform(index-(def.width+1)/2+(color=='red' and -0.07 or 0.07),kind=='monitor' and -0.48 or -0.1,direction)
+end
+function M.points(kind,role,pad)
+  local out={}
+  for _,d in ipairs({0,4,8,12}) do
+    local point={wire={},shadow={}}
+    for _,c in ipairs({'red','green'}) do
+      local x,y=M.contact(kind,role,c,d)
+      if pad then
+        local index; for i,r in ipairs(M.devices[kind].roles) do if r==role then index=i end end
+        local px,py=M.offset(kind,index,d); x=x-px; y=y-py
+      end
+      point.wire[c]={x,y}; point.shadow[c]={x+0.15,y+0.1}
+    end
+    out[#out+1]=point
+  end
+  return out
 end
 function M.cardinal(direction) return direction==0 or direction==4 or direction==8 or direction==12 end
 return M

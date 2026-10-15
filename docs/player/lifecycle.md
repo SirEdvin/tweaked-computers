@@ -4,6 +4,27 @@ Mine or rotate the whole body, not an owned role port. Mining produces one logic
 item; helpers have no drops. Rotation retains identity and role wires. Destruction
 is data loss, not an alternative to mining. Back up saves before upgrades or repair.
 
+## Upgrading from alpha 0.1.1
+
+Back up the entire save and old mod ZIP before upgrading. The redesigned devices
+use new circuit-capable shells without changing public Lua v1, logical IDs or
+recipe/item names. During the mod configuration change, existing bodies are
+converted only after replacement power, sockets and every role/color wire have
+been staged. Data, absolute KV deadlines, live monitor contents, active runs and
+unsaved recovery drafts are retained; conversion does not run startup again.
+Existing editor sessions must be reopened against the new physical body.
+
+Old tagged material items still restore their committed data into a fresh stopped
+identity. Old blueprints still restore saved source/settings and native wires,
+not application state or database contents. No extra socket items are required.
+
+If conversion is refused, the old device/data/wires remain and an upgrade
+refusal diagnostic is logged. Keep the backup and report the error; do not mine,
+delete or reset retained data to force conversion. After the underlying cause is
+repaired, conversion can be retried by a synchronized host action or a subsequent
+mod configuration change. Rollback means restoring the complete backup with the
+old mod, not loading an upgraded save in the old version.
+
 ## What survives?
 
 | Transition | Computer | KV database | Monitor | Logic output / factory settings |
@@ -42,7 +63,7 @@ The blueprint description discloses source inclusion. Inspect/remove source befo
 sharing. State, KV contents, active source/run, subscriptions, outputs and managed
 target IDs are not embedded.
 
-Owned helper ghosts carry the role-wire graph for rotated native revival. Building
+Network blueprint wires attach directly to the device. Owned auxiliary socket ghosts preserve their separate role wires through rotated native revival. Building
 the body adopts/revives its exact helpers without consuming extra device items.
 Hidden port tokens are not craftable supplies; never build ports independently.
 Unowned helper remnants are removed instead of becoming usable peripherals.

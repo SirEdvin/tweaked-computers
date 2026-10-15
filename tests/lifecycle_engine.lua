@@ -17,16 +17,16 @@ local function nop() end
 local function f() return storage.tc12 end
 local function group(name) f().groups=f().groups+1; log('TC_CONTRACT '..name) end
 local function build(kind,x,y,surface)
-  local b=assert((surface or game.surfaces[1]).create_entity{name=defs.devices[kind].name,position={x,y},force='player'})
-  lifecycle.on_built{entity=b}; local r=assert(registry.by_entity(b)); b.energy=defs.devices[kind].watts/30; r.powered=true
+  local b=assert((surface or game.surfaces[1]).create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
+  lifecycle.on_built{entity=b}; local r=assert(registry.by_entity(b)); lifecycle.power_entity(r).energy=defs.devices[kind].watts/30; r.powered=true
   return r
 end
 local function mine(rec)
-  local inv=game.create_inventory(1); inv[1].set_stack{name=rec.body.name,count=1,quality=rec.body.quality}
+  local inv=game.create_inventory(1); inv[1].set_stack{name=defs.devices[rec.kind].name,count=1,quality=rec.body.quality}
   lifecycle.on_removed{entity=rec.body,buffer=inv,tick=game.tick}; rec.body.destroy(); return inv
 end
 local function replace(inv,x,y)
-  local body=assert(game.surfaces[1].create_entity{name=inv[1].name,position={x,y},force='player'})
+  local body=assert(game.surfaces[1].create_entity{name=defs.devices[defs.by_name[inv[1].name]].entity_name,position={x,y},force='player'})
   lifecycle.on_built{entity=body,consumed_items=inv}; return assert(registry.by_entity(body))
 end
 local source="return {api_version=1,handlers={start=function(e) computer.setState('boots',(computer.getState('boots') or 0)+1); computer.after(600,'wake') end,wake=function(e) computer.setState('wakes',1) end}}"
@@ -83,8 +83,8 @@ function M.run()
   group('malicious-and-unsupported-snapshots-inert-recoverable-without-data-replacement')
   for i,kind in ipairs(defs.order) do
     local r=build(kind,i*4,12)
-    local child=r.children.network
-    for _,dir in ipairs({4,8,12,0}) do local previous=r.body.direction; r.body.direction=dir; local rotated,rotation_error=lifecycle.rotate(r,previous); assert(rotated,type(rotation_error)=='table' and rotation_error.message or tostring(rotation_error)); assert(r.direction==dir and child==r.children.network and lifecycle.connector(r,'network','red'),kind..' direction '..dir..' body '..r.body.direction..' retained '..r.direction..' error '..tostring(r.physical_error)) end
+    local child=lifecycle.endpoint(r,'network')
+    for _,dir in ipairs({4,8,12,0}) do local previous=r.body.direction; r.body.direction=dir; local rotated,rotation_error=lifecycle.rotate(r,previous); assert(rotated,type(rotation_error)=='table' and rotation_error.message or tostring(rotation_error)); assert(r.direction==dir and child==lifecycle.endpoint(r,'network') and lifecycle.connector(r,'network','red'),kind..' direction '..dir..' body '..r.body.direction..' retained '..r.direction..' error '..tostring(r.physical_error)) end
     if kind=='computer' then runtime.save(r.id,source,0); r.state.keep='not copied'
     elseif kind=='kv' then kv.methods.set(nil,r,'red',game.tick,nop,'secret','not copied') end
     f()[kind]=r.id
@@ -120,15 +120,15 @@ function M.run()
   local mapping=bp.create_blueprint{surface=surf,force='player',area={{2,8},{24,16}}}
   assert(blueprints.prepare(bp,mapping)); assert(bp.blueprint_description:find(blueprints.disclosure,1,true))
   local entities=bp.get_blueprint_entities(); local ports=0
-  for _,e in ipairs(entities) do if e.name:match('^tc%-port%-') then ports=ports+1 end
+  for _,e in ipairs(entities) do if defs.port_role(e.name) then ports=ports+1 end
     if e.tags and e.tags.tc_settings then assert(not e.tags.tc_settings.state and not e.tags.tc_settings.database) end
   end
-  local expected_ports=0; for _,kind in ipairs(defs.order) do expected_ports=expected_ports+#defs.devices[kind].roles end
+  local expected_ports=0; for _,kind in ipairs(defs.order) do expected_ports=expected_ports+#defs.devices[kind].roles-1 end
   assert(ports==expected_ports,'all owned blueprint roles must be represented: '..ports..' / '..expected_ports)
   f().blueprint_inventory=inventory
   group('native-blueprint-source-disclosure-no-state-kv-and-complete-role-wire-graph')
   -- Destruction and surface deletion never delete a replacement by location.
-  local srf=game.create_surface('tc12-delete',{width=32,height=32}); local gone=build('computer',0,0,srf); local oldchild=gone.children.network
+  local srf=game.create_surface('tc12-delete',{width=32,height=32}); local gone=build('computer',0,0,srf); local oldchild=gone.children.power
   local id=gone.id; lifecycle.on_surface_removed{surface_index=srf.index}; game.delete_surface(srf)
   assert(not registry.record(id) and not oldchild.valid)
   group('surface-delete-route-retires-exact-owned-objects-on-init-events-suppressed')
@@ -175,8 +175,8 @@ function M.on_tick(event)
     local surf=game.surfaces[1]
     surf.clone_area{source_area={{2,8},{24,16}},destination_area={{2,48},{24,56}},clone_entities=true,clone_tiles=true,clone_decoratives=false,clear_destination_entities=false,expand_map=true}
     while registry.get().pending_clone_ports and #registry.get().pending_clone_ports>0 do blueprints.reconcile_clones(event.tick,nop) end
-    local ports=surf.find_entities_filtered{area={{2,48},{24,56}},name={'tc-port-network','tc-port-input','tc-port-output','tc-port-targets'}}
-    assert(#ports==8,'area clone left duplicate/orphan ports: '..#ports)
+    local ports=surf.find_entities_filtered{area={{2,48},{24,56}},name={'tc-logic-input-socket','tc-logic-output-socket','tc-configurator-targets-socket'}}
+    assert(#ports==3,'area clone left duplicate/orphan ports: '..#ports)
     for _,p in ipairs(ports) do assert(registry.by_entity(p),'area clone helper unowned') end
     log('TC_NATIVE_ALL_FAMILY_CLONES_OK area-helper-ownership')
     -- Blueprint ghosts are native; engine preserves endpoint wires through rotation.
@@ -194,7 +194,7 @@ function M.on_tick(event)
         local r=assert(registry.by_entity(b)); x.revived[r.kind]=r.id
         if r.kind=='computer' then assert(r.saved_source==source and r.status=='stopped' and next(r.state)==nil)
         elseif r.kind=='kv' then assert(next(r.database.entries)==nil) end
-      elseif ghost.valid and not ghost.ghost_name:match('^tc%-port%-') then assert(select(2,ghost.revive{raise_revive=true})) end
+      elseif ghost.valid and not defs.port_role(ghost.ghost_name) then assert(select(2,ghost.revive{raise_revive=true})) end
     end
     local bc=registry.record(x.revived.computer); local bd=registry.record(x.revived.kv); local bl=registry.record(x.revived.logic)
     assert(bc and bd and bl)
@@ -210,7 +210,7 @@ function M.on_tick(event)
     local cross=assert(registry.by_entity(crossbody)); assert(cross.saved_source==source and next(cross.state)==nil and cross.status=='stopped')
     local force=game.create_force('tc12-moved'); moving.body.force=force
     lifecycle.reconcile(event.tick,nop)
-    assert(moving.body.surface==moving.children.network.surface and moving.children.network.force==force and moving.state_bytes==65536)
+    assert(moving.body.surface==lifecycle.endpoint(moving,'network').surface and lifecycle.endpoint(moving,'network').force==force and moving.state_bytes==65536)
     assert(lifecycle.connector(moving,'network','red'))
     x.moving=moving.id; x.cross=cross.id; x.cross_surface=srf.index
     game.merge_forces(force,'player'); x.phase='force_wait'
@@ -219,7 +219,7 @@ function M.on_tick(event)
     local moving=registry.record(x.moving)
     if moving.body.force.index~=game.forces.player.index then return end
     assert(moving.force_index==game.forces.player.index and moving.state_bytes==65536)
-    local cross=registry.record(x.cross); x.cross_child=cross.children.network
+    local cross=registry.record(x.cross); x.cross_child=lifecycle.endpoint(cross,'network')
     game.delete_surface(x.cross_surface); x.phase='surface_wait'
   elseif x.phase=='surface_wait' then
     if game.surfaces[x.cross_surface] then return end
@@ -231,12 +231,12 @@ function M.on_tick(event)
     local program="return {api_version=1,handlers={start=function(e) local l=peripheral.find('logic_handler','red'); assert(l); l.setOutput({{signal={type='virtual',name='signal-A'},count=9}}) end}}"
     runtime.save(writer.id,program,0); assert(runtime.activate(writer.id,event.tick)); assert(scheduler.dispatch(writer,event.tick))
     assert(output.output_owner and output.output_owner.computer_id==writer.id,'native output writer missing')
-    local child=writer.children.network; writer.active.compiler_version=99
+    local child=lifecycle.endpoint(writer,'network'); writer.active.compiler_version=99
     assert(writer.body.die()); assert(not registry.record(writer.id) and not child.valid and not output.output_owner and output.children.output.get_control_behavior().sections_count==0)
     log('TC_NATIVE_DESTRUCTION_OUTPUT_CLEANUP_OK malformed-source-independent')
     -- Maximum accepted source+state item, mined by an actual construction robot.
     local r=registry.record(x.computer)
-    r.body.energy=defs.devices.computer.watts/30; lifecycle.sample_power(r,event.tick,nop)
+    lifecycle.power_entity(r).energy=defs.devices.computer.watts/30; lifecycle.sample_power(r,event.tick,nop)
     x.expected_active=source..string.rep(' ',limits.source_bytes-#source)
     runtime.save(r.id,x.expected_active,r.saved_revision); assert(runtime.activate(r.id,event.tick))
     assert(scheduler.dispatch(r,event.tick)); fixture_state(r)
@@ -260,7 +260,7 @@ function M.on_tick(event)
     assert(r.state_bytes==65536 and r.status=='stopped' and r.active.source==x.expected_active and next(r.timers)==nil)
     x.robot_id=r.id; x.alias=r; x.state_alias=r.state; x.active_alias=r.active
     stack.clear(); x.generator.power_production=0
-    for _,id in ipairs(registry.get().order) do local rec=registry.record(id); rec.body.power_usage=0 end
+    for _,id in ipairs(registry.get().order) do local rec=registry.record(id); lifecycle.power_entity(rec).power_usage=0 end
     x.database_alias=registry.record(x.kv).database
     local g=monitor.resolve(registry.record(x.monitor)); x.monitor_alias=g.model
     local root=registry.get(); root.scheduler.maintenance_spent=limits.maintenance_work_per_tick
