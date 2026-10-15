@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:eb60e32533d7d8598ee2a30551df7fc1e2fbb9e4b4ebdde154f69a3931906ed5",
+  "pageVersion": "sha256:a9f7426d97e1e6fd3d4273560c37a058cf34ee50545a5f21a0d12fb7164b5fc4",
   "claims": [
     {
       "id": "claim_3dd5f2bf4681436193ce0efd0b3761b6",
-      "statement": "Normal control parsing registers trusted modules/events and one scheduler tick; initialization/configuration changes initialize retained state, while normal production installs no on_load source execution.",
+      "statement": "Control parsing registers trusted services, GUI tab/selection/checkbox and lifecycle events plus one scheduler tick; configuration changes stage legacy physical upgrades, while normal production has no on_load handler or guest execution.",
       "evidence": [
         {
-          "resource": "repo://control.lua#L1-L39",
-          "version": "repo-lines-v1:sha256:29c4ecc9b8fdde3e429cacd6d47631c503a72e4f5967e2a9e8d89044b6059ce7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5NTlmZWI1ODI5M2JhM2MyMjZjMWFjODdkY2FmYjFhMzBmYzZkN2E3NDY5NDkxNTZmNmI2NGJiN2E5NWQxNjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4YWU4YzVjNzMwY2RjZTgzNjcwODYyOWZlNDJiM2M4OTlhNmE4MDA4OTY5OGE5MTU3M2QwOTYzNjUwNGQ3NGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyYjcyYzdkMGZkYzMxODIzYzhjMmFiODIwZjJjN2E5YzViNDZkODcwNjkxMTU5MzM5YzVkMWRmMjI1NDM0ZTIifQ"
+          "resource": "repo://control.lua#L1-L59",
+          "version": "repo-lines-v1:sha256:60c17d7e6877d91eebdbb55b9a2b620f893ff6bbb3c4baa517f6478b24cfbfbc:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5NTlmZWI1ODI5M2JhM2MyMjZjMWFjODdkY2FmYjFhMzBmYzZkN2E3NDY5NDkxNTZmNmI2NGJiN2E5NWQxNjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MzMyZmU2NjdiYzUxYWM0YTUxYmEwZWZlNzM0NDQxYzkwZGVmNTVjNjBhMjZkN2RiMjc1ZWNiYmNmNDJmMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     },
@@ -81,6 +81,6 @@
   ],
   "verification": {
     "by": "openwiki/0.7.1",
-    "at": "2026-10-15T06:41:57.498Z"
+    "at": "2026-10-15T13:11:13.133Z"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:82ab1444e37e14dff5473d40db9ea3b9202b6c4f271d61a6ddbd7de46b40f2c0",
+  "pageVersion": "sha256:def65d8a30ce33283dec61bf476dc28550a1a71a8695e8b5f29a1c84205a0100",
   "claims": [
     {
       "id": "claim_dcd28b1be7774e68b8d7c766e2567b0c",
@@ -56,25 +56,21 @@
     },
     {
       "id": "claim_e8f2523291fd4fc59056a95e25e0fa7a",
-      "statement": "Sampling refusal faults affected subscribers rather than silently losing observations; outage marks resync and authority cleanup revokes matching subscriptions/queued events and exact-owned outputs without executing source.",
+      "statement": "Sampling refusal faults affected subscribers rather than losing observations; current physical power uses lifecycle.has_power, outages mark resync and authority cleanup revokes matching subscriptions/queued events and exact-owned outputs without guest source execution.",
       "evidence": [
         {
-          "resource": "repo://scripts/services/logic.lua#L234-L298",
-          "version": "repo-lines-v1:sha256:1ef4a707a37ff672bec3e709ad692bcd1093ca6c9edade831e6c73744d5637e9:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0NDc1ZDlkNDk5Y2I1MjZjMDg3YjYyYWExNTQ3NmE5OTg2OTMwZmQxNDhkOWI1YTI4YTVmMmE0YWZiNTBiZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzNjBjMDM5OTJiMGE5NTU2OTQ4ZDI2OWJlZWUwNTU5Njk3NzY0OGVlNmRiMjRkYzBjMmUyZjkzMTk2NTFmOTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAyZjk5ZDUwNTA5YjE4NTc2YjUxOTgyNzkzOGMwN2RiYzc3NmNhNjE0MjJiNDNkZGY1OTY3ZmQwNTkxOTY4NWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyZmJmNjI5Yjk2ODk2Y2MxOTBlMDRlOGRiOWM1YzgwMzQ0NTA4MWMwNjZjMjc2NjQ2MzI1NTcyM2Q3YWEwZDYifQ"
+          "resource": "repo://scripts/services/logic.lua#L234-L355",
+          "version": "repo-lines-v1:sha256:aee1e36b81b5cc211d1c105868b35f577d1c834afc97b814afc3114198285742:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxNDQ3NWQ5ZDQ5OWNiNTI2YzA4N2I2MmFhMTU0NzZhOTk4NjkzMGZkMTQ4ZDliNWEyOGE1ZjJhNGFmYjUwYmQxIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI4NzMzNTljMGE3MWEyYmRmNTNiMDhiMzlkODMwMTgyYjhmZDRkZjJlMzlhYTZhYzgwN2FmNzJlZjUxNjljZGY4IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwMmY5OWQ1MDUwOWIxODU3NmI1MTk4Mjc5MzhjMDdkYmM3NzZjYTYxNDIyYjQzZGRmNTk2N2ZkMDU5MTk2ODVhIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
         },
         {
-          "resource": "repo://scripts/services/logic.lua#L336-L354",
-          "version": "repo-lines-v1:sha256:c4b74518c853c63f98689346ff29b4a47030d4272fb75e0afed1bfd41864ce12:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3OGIwY2Y2MTgwNDlhOGU0MGQ1ZmE5NzMzMDRlZGRhMmU3M2Q4ZWVkMmU1MzYwOTY0YWJlYmJjMmEzYWIwYTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyYjkxNWI5YWU4ZTg4MzAzODg2M2M1YWZjYmQ3NDRiZjg5YTA4NjczZmEwZTU1OGIzZDIwN2MwYjBlNDk4OTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2ZTRjODMxNDJjN2NhZTIwMmE3OTdiODNhYjBiYTQxYWVjYTQzZTVmYTQ2ZTgzNjM2YjEwM2UyNzc4MDRhMjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzM1OWMwYTcxYTJiZGY1M2IwOGIzOWQ4MzAxODJiOGZkNGRmMmUzOWFhNmFjODA3YWY3MmVmNTE2OWNkZjgifQ"
-        },
-        {
-          "resource": "repo://scripts/services/peripheral.lua#L263-L309",
-          "version": "repo-lines-v1:sha256:ea56e67d172a3595a59c6d1653310dc60a56ef0bd3e48b9b03135ec32998644f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjMDhjMWVjYjBlNDAzMmE3MGE1ZmI4ZDdjZDljZTE2YjFjZWQyOGY0ZWI1M2EyZjYzZTg3Mzc1ZGMyY2IyYTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0ODczMWFiMTM2ZGUyYWFlYTEzZThlOWU5MjJlNjA2ODY1MDQyOTNmYjg4YWNiMDc1NzgwNGViMzI5MzA1ZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmODk0YzIxZmRlMjE0OTI3NWJjOGI1M2RkNzg5Njc1Y2IzODI1ZDZhOTBmMjkwYWJiMzMzZmY5MjJkMzNmODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ4NDdhMWM2NTFiZWJkZTA0ZDI4NjIyZjBiMGFkZmE1OTIyZWVjYTRiZTIyZTM2NmVmMDUyNjY4MjEyNDYyMDgifQ"
+          "resource": "repo://scripts/services/peripheral.lua#L263-L312",
+          "version": "repo-lines-v1:sha256:63f572635f64aaedfcdfbe41d823c9b0322cddf20f901029159ed4ad6bafa0e5:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MzMyZmU2NjdiYzUxYWM0YTUxYmEwZWZlNzM0NDQxYzkwZGVmNTVjNjBhMjZkN2RiMjc1ZWNiYmNmNDJmMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3MzM1OWMwYTcxYTJiZGY1M2IwOGIzOWQ4MzAxODJiOGZkNGRmMmUzOWFhNmFjODA3YWY3MmVmNTE2OWNkZjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFmMDRjYTBkYzgyMjI1ODk2MmU3Mjc3MDU3NjNiMDU0ODI4ZjA5NTc3ZDM1ZTc0NDVjZDAwN2ZiZmYwMDQxM2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.1",
-    "at": "2026-10-15T06:41:57.498Z"
+    "at": "2026-10-15T13:11:13.133Z"
   }
 }

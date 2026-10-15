@@ -3,14 +3,11 @@ type: lifecycle
 title: Physical ownership, material data and lifecycle
 description: Entity families, exact role bindings, power and teardown, data-bearing mining, blueprint wire revival and stopped clone/replacement semantics.
 tags: [devices, lifecycle, persistence, blueprints, ownership]
-verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-15T06:41:57.498Z
 sources:
+  - id: openwiki-source-82a65e3d95618d2a67d88dfc
+    resource: repo://prototypes/devices.lua
   - id: openwiki-source-d804efd8219272266fe9cedb
     resource: repo://scripts/blueprints.lua
-  - id: openwiki-source-199ebbbf763b15ba60eb9147
-    resource: repo://scripts/device-definitions.lua
   - id: openwiki-source-efb72cb67b97c27491e72b6a
     resource: repo://scripts/lifecycle-data.lua
   - id: openwiki-source-765149bc0fcb867d9e5de6c4
@@ -19,14 +16,17 @@ sources:
     resource: repo://scripts/registry.lua
   - id: openwiki-source-0ddacafef71462f8b63089cd
     resource: repo://scripts/runtime/computer.lua
-generated: { by: "hermes", at: "2026-10-15T06:41:57.498Z" }
+generated: { by: "hermes", at: "2026-10-15T13:11:13.133Z" }
+verified:
+  - by: openwiki/0.7.1
+    at: 2026-10-15T13:11:13.133Z
 ---
 
 # Physical ownership, material data and lifecycle
 
 ## A device is an owned family
 
-`device-definitions.lua` is shared host tuning for recipes, widths, power and cardinal port offsets. Computers, KV stores and monitor tiles have a `network` child; logic has separate `input`, `network`, `output`; configurators have `network`, `targets`. The body is the electric interface; role children are protected circuit entities, not player inventory items. Passive ports have no output sections and stay disabled. Only the logic output role deliberately publishes a bank.
+`device-definitions.lua` is shared host tuning for recipes, widths, power, cardinal socket coordinates/colors and pad boxes. At `layout_version=2`, every visible body is a circuit-capable constant-combinator shell and the Network endpoint. Private, nonselectable electric carriers supply the original power policy. Only logic Input/Output and configurator Factory targets require separate protected, device-specific selectable role pads. Computers, KV and monitors have no selectable Network helper. Passive shells/pads have no output sections and stay disabled; settings paste normalizes Network again. Only logic Output deliberately publishes a bank.
 
 `lifecycle.build` allocates physical parts before publishing an identity, binds each exact child and records body position/direction/scope. Duplicate raised builds return the existing identity rather than replaying material import. Rollback removes staged parts unless cleanup failure requires an inert recoverable record. Registry lookup checks the exact retained object against the role binding: reused native numbers or a replacement at the same position cannot retarget the old ID.
 
@@ -57,14 +57,18 @@ The mining event serializes into the actual matching native result stack before 
 
 Blueprint preparation stages saved-source/settings plus all selected role helper entities and selected native wire edges before updating the blueprint. It appends an explicit disclosure that saved source/labels may contain literals, while state/KV/active runs/timers/outputs are excluded. Treat exported source as intentionally disclosed text, not a secrets vault.
 
-A blueprint body token links role ghosts to the exact family. Adoption checks token, family, role, force/surface and exact rotated offset. Native ghost revival transfers actual wires; replacing a matching ghost with `create_entity` would delete them. Helper adoption clears inherited sections/output ownership and binds a single protected child. Unexpected external helper placements are destroyed rather than left usable and unowned.
+A blueprint body token links auxiliary role ghosts to the exact family. New Network edges refer directly to the shell. Adoption checks token, family, role, force/surface and exact rotated offset. Native ghost revival preserves actual wires, then transfers them to the existing owned endpoint and destroys the temporary port; legacy generic ports do not become new-layout selectable parts. Unexpected external helper placements are destroyed rather than left usable and unowned.
 
 Area clone events can arrive for helpers separately from bodies. A bounded retained pending list reconciles each clone helper to a destination with matching source ID/role/scope/offset; it replaces the freshly created helper or destroys an orphan. This preserves native wire reconstruction without cloning writer ownership or KV contents.
+
+## Staged legacy conversion
+
+`lifecycle.upgrade` retains old prototypes/graphs while staging a new shell, power carrier and auxiliary pads. It snapshots every actual role/color wire, native output section/filter/active/multiplier state and removal mark, reserves original power, transfers wires, then publishes the new exact bindings without replacing logical service/draft/state identities. Refusal destroys only staged objects/edges, retaining original data and wires. Normal configuration change invokes `upgrade_existing`; ordinary on_load performs no conversion. Legacy bodies retain explicit `placeable_by`, so old blueprint ghosts/items remain buildable and are converted through the same path. Restore the old world backup for rollback, not a reverse migration of an upgraded save.
 
 ## Maintenance seams and tests
 
 Material adapters register `initialize`, `snapshot`, `restore` and a fixed tag during control parsing. Ownership stays independent from service data formats. Keep state-bearing import separate from settings-only import and preserve explicit review/copy-to-draft for formerly active text.
 
-`tests/device_engine.lua` covers physical contracts; `tests/lifecycle_engine.lua` covers exact owned teardown, native blueprints/clones and material data. Use the production-context harness for lifecycle/integration fixtures so a second event registry does not fabricate duplicate helpers. No graphical rotations, mining UX or multiplayer join were run for this wiki. See [operations](../operations/build-test-and-assets.md).
+`tests/redesign_engine.lua` covers physical shell/role contracts; `tests/lifecycle_engine.lua` covers exact owned teardown, native blueprints/clones and material data. `tools/rd1_upgrade.py` builds a populated pinned-alpha save with only an opt-in test hook, then cold-upgrades the unchanged candidate and checks refusal/data/wires. Use production context for those ownership fixtures so a second event registry does not fabricate duplicate helpers. No graphical rotations, mining UX or multiplayer join is established. See [operations](../operations/build-test-and-assets.md).
 
 Related: [runtime reconstruction](../architecture/runtime-and-state.md), [network authority](../network/discovery-and-authority.md), [KV data audit](../services/kv-staging-and-expiry.md), [editor recovery](../authoring/editor-revisions.md).

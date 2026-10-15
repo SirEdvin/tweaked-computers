@@ -3,9 +3,6 @@ type: architecture
 title: Discovery, target traversal and current authority
 description: Why mod-only peripheral discovery, native configurator target traversal, delayed notifications and current service authority are separate mechanisms.
 tags: [network, discovery, authorization, peripherals]
-verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-15T06:41:57.498Z
 sources:
   - id: openwiki-source-cb60da2bf5fe82e8150a4867
     resource: repo://scripts/configuration/targets.lua
@@ -13,7 +10,10 @@ sources:
     resource: repo://scripts/network.lua
   - id: openwiki-source-84bfcd6a80f737a0b75f8c1c
     resource: repo://scripts/services/peripheral.lua
-generated: { by: "hermes", at: "2026-10-15T06:41:57.498Z" }
+generated: { by: "hermes", at: "2026-10-15T13:11:13.133Z" }
+verified:
+  - by: openwiki/0.7.1
+    at: 2026-10-15T13:11:13.133Z
 ---
 
 # Discovery, target traversal and current authority
@@ -22,7 +22,7 @@ generated: { by: "hermes", at: "2026-10-15T06:41:57.498Z" }
 
 `network.discover` performs a complete bounded BFS from the computer's explicit red or green `network` connector. A discovery vertex must be a live same-force/surface owned `network` role, and must equal the connector returned by lifecycle ownership checks. It follows real physical edges of that color; an ordinary pole/combinator is not a traversable bridge, nor are input/output/target roles. Computers can be intermediate vertices, but are not returned as peripherals.
 
-Edge counts are checked before fetching native connection arrays, including ignored external edges. Node/edge or work refusal is a failure, not a truncated successful inventory. Parents record a physical witness path. Group identities are not graph vertices: neighboring monitor tiles may resolve to a single logical anchor after traversal, but geometric grouping never creates a hidden network wire.
+For layout 2, registry role `body` is admitted only when the exact connector also equals `lifecycle.connector(rec, 'network', wire)`; legacy role `network` remains supported. This does not grant discovery through arbitrary owned parts: power/Input/Output/Targets are not Network vertices. Edge counts are checked before fetching native connection arrays, including ignored external edges. Node/edge or work refusal is a failure, not a truncated successful inventory. Parents record a physical witness path. Group identities are not graph vertices: neighboring monitor tiles may resolve to a single logical anchor after traversal, but geometric grouping never creates a hidden network wire.
 
 `peripheral.inventory` maps discovered members through the fixed per-type resolver, validates scope and deduplicates logical identities. The four public families are KV database, monitor, logic handler and configurator. The monitor resolver can map a reachable tile to its group anchor without making every other tile a wire bridge.
 

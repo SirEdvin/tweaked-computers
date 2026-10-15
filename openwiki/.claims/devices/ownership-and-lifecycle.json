@@ -1,42 +1,38 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:e39d4628f895b2a1b6a7ebee64067d52390b5f2a9726130d6f0a7852de599249",
+  "pageVersion": "sha256:8ba9e7a19551073528063e2a498899f65205bcbaaa2d958401a4c58fd8419c39",
   "claims": [
     {
       "id": "claim_d1f3174ada4842828470390e5b20150e",
-      "statement": "Device families have physically separate role ports; passive helpers are protected/disabled, with no constant sections, rather than being independent player items.",
+      "statement": "Layout 2 uses a visible passive circuit-shell Network endpoint, private power and only necessary protected role pads; passive endpoints are disabled/sectionless, never independent player inventory.",
       "evidence": [
         {
-          "resource": "repo://scripts/device-definitions.lua#L3-L28",
-          "version": "repo-lines-v1:sha256:44c1cc02990a941c3a0fe38108fbd17f16ccd135fb67e4441861ad61813ee46e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllNmY2ODMyMTYyM2U0MzQ5NWNkYjBjMzdmN2M0ZGNiY2UwMGEyODAwMjMwNjJiNzMwY2MwZGQyZTdjM2ZmZDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjYzUwZjY2YzAyNWE5MDZlZjQ3MmZiNDdlZTY3YWE0MzFjZTE1ZTBjOGI4OTU5MTA4ZjQxZTc0ZGY2ZWE2M2EiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1NmVmN2VmYmM5ZGVhMTU2MjcxZjlhZTdmNDMxYTJjYTY4MmY5ZThkNDk4Y2FkYmFhNDdiYmZjZWE1MTRhNTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzM1OWMwYTcxYTJiZGY1M2IwOGIzOWQ4MzAxODJiOGZkNGRmMmUzOWFhNmFjODA3YWY3MmVmNTE2OWNkZjgifQ"
+          "resource": "repo://prototypes/devices.lua",
+          "version": "repo-file-v1:sha256:bc7d298047eec9934b4e79321e06f6a719eda831bab4165be5417302652a9afb"
         },
         {
-          "resource": "repo://scripts/lifecycle.lua#L27-L55",
-          "version": "repo-lines-v1:sha256:35cbfa70e45e008918e5cbbb8850424d9dd31133474aaed6c7aa22bd6f761531:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyNmM1ODc3NTQyM2FmMDc1MWE4ZDk1NzY5ZjJiNzE1MGE0NjQwNGIzYzJhY2E3NTFiZDJkNWIwMzgxZTlkZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJjOWFhMTM2NTJjMjQ4Zjk0NDU1MGU3ZWRhYmY0MmZlZjZmNDJiMDRiZjkxMTYzNDM0MDZlZWQ5MDM4ZjBjODYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRiODUwMTJmZTg0MmFmZTU4MjY3NmMyOTBhYzJkMTFiZjc2MjdkY2Y4Yjc4OTVmMjIwZTg2YzJmNmNiY2I3ZDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUwNTNjNDBmMGRjOWE1MmEzZTdjYzdlYTNhYjk2YWM0MWFhN2MzNjQxZDUwMmIyNjliOGIxMGFmZTY2ZGE4YWUifQ"
+          "resource": "repo://scripts/lifecycle.lua#L28-L92",
+          "version": "repo-lines-v1:sha256:4cd1a4159b681760d4e3a0fcc8e72a1c742295442773422d3c0d62fe532c9964:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyNmM1ODc3NTQyM2FmMDc1MWE4ZDk1NzY5ZjJiNzE1MGE0NjQwNGIzYzJhY2E3NTFiZDJkNWIwMzgxZTlkZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmMjY3ZjljZTk0ZjUwMmVhM2Q2ZDI1Zjc4YWUwYmM2YzQ3NDA4ZmIzZmVlZTc2MmI5OWFhMTMxNmE1MjE5MWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRiODUwMTJmZTg0MmFmZTU4MjY3NmMyOTBhYzJkMTFiZjc2MjdkY2Y4Yjc4OTVmMjIwZTg2YzJmNmNiY2I3ZDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzMyODE2YzBkZmRiNTY5YjNkNmI1YWNlZTkwYjQwNjI0ZWFmYTNjNzA2YzdmYmFlNzY5YTU3MWIwYzRmODcifQ"
         }
       ]
     },
     {
       "id": "claim_0cf0b437fe994fdc9922a24bd0083db7",
-      "statement": "Build stages components before registry publication and connector/rotation/removal paths act on exact owned objects and scope/offsets, refusing stale or failed physical bindings.",
+      "statement": "Build stages components before registry publication; connector, rotation and removal use exact owned objects and scope/offset checks.",
       "evidence": [
         {
-          "resource": "repo://scripts/lifecycle.lua#L88-L188",
-          "version": "repo-lines-v1:sha256:1f3732726ba7abf8989b4c34ebe740662156a38445a9fdff162c17698ab7056b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI2YzkyNjJhZDU1YjNlMTY0MjZjYjEyYjY0MTdiNDA2YWJjYjFiMGIwOGYxZGQ5MzdiOWZiZTE3ZDE0ZTFkOGMyIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI3MDg1NTFjYmJhYmRlYWQ0YmI3OWU5MTYyNmYyYjBkZDViZjBkZmU1N2JmYjU5YTY0MWU1MDZjMTYyZGEyYzM3IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1MTk1ODMzN2M2Njg2YWUwZTBlNDI1YWU2OGUwOTVlMjJkZjQ0NzczMzM5MmU4MmM2NjNhNTQxYzA3NmI3MDRlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI1MTk5MjQ5ZWExNTIyZTFhNDFmYjY0YzNmMGVhNzY1N2U4NzA5Njk3ODc3NGRhNDQ3MDNhYWJiODljMDAxMzBiIn0"
-        },
-        {
-          "resource": "repo://scripts/registry.lua#L46-L55",
-          "version": "repo-lines-v1:sha256:ae3f668598b7ef465e3a2696fe0f434e033e3aaaf23e498a1f55c5c02283caa9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5YWNkMjBhY2QwYzQ3NWYwYjgyZjlhZTYyNmMxNjZiYjg5NTdlNzIyZDJhYmZkMWM4YjM1NDFjMjMwMmMzODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiYmNiNGQzYzExZDA4MGYwOTEzYjFjNmM0ZTI3YTU4ZjNiZDQ5MjA4Njg0YTQ3N2U0MWQxZDllZjNkNTJiOWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUyYjQzNWY3MDA5ZjkzMmQxMGNiMGVmN2EzYzBiY2ZkYjA3NDkwZGFiOTJmZDg2YmQ5ODQwNWM2YjdkOWI4NjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM3NTAxNGIzMWIwYjFhZWJiNWI5ZDg3ODEyMWFlOGVmMDI4MTdmMTQ1M2NmZDI1Y2Q0YTdiOGFlMzU3ODhiNDEifQ"
+          "resource": "repo://scripts/lifecycle.lua#L121-L235",
+          "version": "repo-lines-v1:sha256:ff69750d83978bcd9f84ea6831cd49ce721e462e9c178665a03a77a01f2ed43e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI2YzkyNjJhZDU1YjNlMTY0MjZjYjEyYjY0MTdiNDA2YWJjYjFiMGIwOGYxZGQ5MzdiOWZiZTE3ZDE0ZTFkOGMyIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODMzMmZlNjY3YmM1MWFjNGE1MWJhMGVmZTczNDQ0MWM5MGRlZjU1YzYwYTI2ZDdkYjI3NWVjYmJjZjQyZjE1IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1MTk1ODMzN2M2Njg2YWUwZTBlNDI1YWU2OGUwOTVlMjJkZjQ0NzczMzM5MmU4MmM2NjNhNTQxYzA3NmI3MDRlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJhODA5NTA5ODA1MjkwNzUzZjJiOWFmYzY3MjBkZWVlYmE1OTRmMjg1Njg4MGQzZTY1MDljNDc2MGNiOTBmN2Y5In0"
         }
       ]
     },
     {
       "id": "claim_40d77e68169b45c6b848a222025223ef",
-      "statement": "Early physical power-loss handling tears down effects; computer outages preserve start/timer work, restoration requests input resync, and deferred physical maintenance cannot authorize stale dispatch.",
+      "statement": "Critical power-loss processing uses actual owned power and connectors before ordinary maintenance; computer outage preserves start/timer work and restoration resynchronizes input.",
       "evidence": [
         {
-          "resource": "repo://scripts/lifecycle.lua#L311-L387",
-          "version": "repo-lines-v1:sha256:c93388c3a01395b4c76ef0d1307b82e3abc7a7b3c76393b6bb4df5d9aec63de9:eyJzZWxlY3RlZExpbmVDb3VudCI6NzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA5OTRhMDY3MmViMTEyYmZjMjU3NDlmNDY1ZGVjNDEzNjA5YTU1N2ViOTM4ZTk5MjcwMGRjOThkOTZjOGJkYTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllYTAyNzNlMzM3YTI0NzM3NjI3ZTUzNTZhN2FkY2JjMTQxYWI1NGQ0ZjkzY2Y5ZmQ5ODQwOGFjYmYyNTJhYWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUxMjdhOWI1N2E4MzNkNDlhZjNjNDgwMGZhOTdhNzAxNzFhMmRiMzc3NTIxZDA2ZDQwZWJlYzdjMWE4MjE2M2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzM1OWMwYTcxYTJiZGY1M2IwOGIzOWQ4MzAxODJiOGZkNGRmMmUzOWFhNmFjODA3YWY3MmVmNTE2OWNkZjgifQ"
+          "resource": "repo://scripts/lifecycle.lua#L441-L517",
+          "version": "repo-lines-v1:sha256:7bbe20a0d5eff3366daa8ebcd65acc7bab9e3ab5dbae00807e8158b2ac78c306:eyJzZWxlY3RlZExpbmVDb3VudCI6NzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA5OTRhMDY3MmViMTEyYmZjMjU3NDlmNDY1ZGVjNDEzNjA5YTU1N2ViOTM4ZTk5MjcwMGRjOThkOTZjOGJkYTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllYTAyNzNlMzM3YTI0NzM3NjI3ZTUzNTZhN2FkY2JjMTQxYWI1NGQ0ZjkzY2Y5ZmQ5ODQwOGFjYmYyNTJhYWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUxMjdhOWI1N2E4MzNkNDlhZjNjNDgwMGZhOTdhNzAxNzFhMmRiMzc3NTIxZDA2ZDQwZWJlYzdjMWE4MjE2M2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzM1OWMwYTcxYTJiZGY1M2IwOGIzOWQ4MzAxODJiOGZkNGRmMmUzOWFhNmFjODA3YWY3MmVmNTE2OWNkZjgifQ"
         },
         {
           "resource": "repo://scripts/runtime/computer.lua#L143-L164",
@@ -60,39 +56,49 @@
     },
     {
       "id": "claim_507edbbbe4284a459902ffa75d7a6e1a",
-      "statement": "Material data is read only from consumed item tags and takes precedence over blueprint settings; mining snapshots precede unregistering and clones use settings-only reconstruction.",
+      "statement": "Material restoration reads consumed-item tags before blueprint settings; mining snapshots precede unregistering, while clones import settings only.",
       "evidence": [
         {
-          "resource": "repo://scripts/blueprints.lua#L116-L149",
-          "version": "repo-lines-v1:sha256:6a6b772267624dbf7ed7e5f5a76c66c499131613a53c68c39a5736091b72bbc1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxZGQ4OGFlNjMyZDMwOTM1YzA5ZTM0OTNmMDIyMTkzZDY5NWNkZDFmMmM2ZGI0MTAzMjM2ZmE1ZjkzNWE3YTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1YWZkNjFhYjRkNmIyZDJlM2NiNDU1N2U5Zjk0NDVkZTBhMGYwYTc4YWZmMWZlNDY1OTFjZjA3NzkzMGZiNDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzMjFmMWMxOTc1NzhiMjk5NGJhNjVlOGM0MTAzM2U5ZWEwYmUyOWNiODQ4M2U0MDkxYWE4NDk4NzBkMzliZTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQxNmViYzBiZWU0MzcxOTcyMzEyM2FkMjJhMWQ4NjVhNmNhYTgwNDhkMDc4N2QxZWI5YjgxZWY1MWI0NWMyNzIifQ"
+          "resource": "repo://scripts/blueprints.lua#L103-L140",
+          "version": "repo-lines-v1:sha256:fb0eaea0b71405a3305c5777263b1eb61fd2d0fcc1cde56142f64cae63fd46cf:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxZGQ4OGFlNjMyZDMwOTM1YzA5ZTM0OTNmMDIyMTkzZDY5NWNkZDFmMmM2ZGI0MTAzMjM2ZmE1ZjkzNWE3YTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MzMyZmU2NjdiYzUxYWM0YTUxYmEwZWZlNzM0NDQxYzkwZGVmNTVjNjBhMjZkN2RiMjc1ZWNiYmNmNDJmMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzMjFmMWMxOTc1NzhiMjk5NGJhNjVlOGM0MTAzM2U5ZWEwYmUyOWNiODQ4M2U0MDkxYWE4NDk4NzBkMzliZTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg2ZjVjYjFmMTZjOGNkY2ZmMmE3ZTAwNGJlMWVjODVhNTc2NWU3MjFiYWM3ZmE4NGM1NDFjYmVhYzBhMDg5OWEifQ"
         },
         {
-          "resource": "repo://scripts/lifecycle.lua#L218-L282",
-          "version": "repo-lines-v1:sha256:f52df7ca4f4ef7d0aa48b9452cfe5dbb1ec61bafc171bb5b2ffa2845c2912622:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2YTk2NGU0NzJhNmIxOTM3ZDNhM2JmOGRiODcyMDM0ZDRlMWRjOThkNmZmMzUxMTM1MjExODZkNWFlMWEwZTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3OTgxMWM1ZmJlMjVjM2Q0ZTVmM2QxZmQzNWFiOWRhNmJjZjhhNjhjNWVkZjlkNmJhOTdmNjg2ODZjMzk2ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBhYjFjNTIyODY0YjFhYzhlOWVhZDgzZDA4Njg2NDc2ODUzMWY3NmNlNDFlMmMwOWY0NTc2M2ExMTAxMjc5NmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMzNGRhMTJlMTE4ZWVkMzdlNTE5YjkyMDc0NzkyMzRhYzkzYmI3OWEzOGEyYzBhZTA4MDM1ZTY5OWRiMmQ4YjcifQ"
+          "resource": "repo://scripts/lifecycle.lua#L345-L413",
+          "version": "repo-lines-v1:sha256:6f1f6c4f73c308ae03f0ac7c8c056e8be4e914f3102668fe5461dcad824d490c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2YTk2NGU0NzJhNmIxOTM3ZDNhM2JmOGRiODcyMDM0ZDRlMWRjOThkNmZmMzUxMTM1MjExODZkNWFlMWEwZTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MzMyZmU2NjdiYzUxYWM0YTUxYmEwZWZlNzM0NDQxYzkwZGVmNTVjNjBhMjZkN2RiMjc1ZWNiYmNmNDJmMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUxMjdhOWI1N2E4MzNkNDlhZjNjNDgwMGZhOTdhNzAxNzFhMmRiMzc3NTIxZDA2ZDQwZWJlYzdjMWE4MjE2M2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk4MzFmNTE0ZDE4OWQ0NDhkYWRjMjE1N2YyMDk5NDZiZWJkYjQ2ODE4ZTRjZWVjYzQ3ZDNjOGI2OTlmNjZhMmEifQ"
         }
       ]
     },
     {
       "id": "claim_1316994964f74d59a0f09a4adfc37a23",
-      "statement": "Blueprint capture stages saved-source disclosure and native helper-wire graphs, while exact-token/scope/offset ghost adoption and bounded clone reconciliation prevent orphan or duplicate helper ownership.",
+      "statement": "Blueprint capture discloses saved source and carries direct shell Network edges plus auxiliary role ghosts; exact token/scope/offset adoption transfers native wires, while clone reconciliation removes unmatched helpers.",
       "evidence": [
         {
-          "resource": "repo://scripts/blueprints.lua#L10-L65",
-          "version": "repo-lines-v1:sha256:cdb246826ae37e84a11d593c17aee63cc6c5c9170a2b40be89e1249799fc9210:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxYTZkZWU1YjlhODA0ZjNlOTI2MTUyN2E2NzYzZWQxNjg4MDI5MzBmNWRjMDQzODVmZTQzMTAzOGMxYzdjNGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZlNTA2NGRlZmRkN2VhZTc4YjdlNGEzMDQ4M2U5NWUyYTBhYzA5NWMzYmZkNjYwMDAyNmI4OTkzNzI1MjA5NjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJkMzkzODdjNzBkODE1NDliNzczNGE1NjZmOTEyMDI2NTYwYTZkOWI1YTk3ZjQxMDFlNWE4YjQ5YmExMDM5YzMifQ"
-        },
-        {
-          "resource": "repo://scripts/blueprints.lua#L151-L185",
+          "resource": "repo://scripts/blueprints.lua#L141-L175",
           "version": "repo-lines-v1:sha256:cfab2807b64aeafe8df179d662dc425a18fcd042f601ba54c0f1b65234162a78:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkNWVmZGUzMjlmOTFiOGVkZWJhZDIzOTdlNTEzMjAwMWMwNDEyYWZhNDk4Yzg2ZWE2MTAwYWUzMDE2OTY2NjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI0YzM3Y2YwODllZDg4ZTE2YmRmOTY2NDZkOTY3NzVjMDdhZjZiNjA1N2Q2ZTdhZTVkNjYzMDZmZDY2M2JlOTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVhZGY0NzM4ZWVjMTY2YWMzYzVmODIxYjUzMjBhYzQ2ZmJkZjU5NjM2Nzc4ZGYwOTFlNTE5YTZjZmMxMWFkYWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzM1OWMwYTcxYTJiZGY1M2IwOGIzOWQ4MzAxODJiOGZkNGRmMmUzOWFhNmFjODA3YWY3MmVmNTE2OWNkZjgifQ"
         },
         {
-          "resource": "repo://scripts/blueprints.lua#L76-L114",
-          "version": "repo-lines-v1:sha256:f541d1d0aea53df225642fc517cc4a63bd2cd06b1455c0f7eb817dafe02cd86c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNlNGQzZGI2OGYyODk0YTE0ZGIyYzI1OTg4MTA4ZTcyNDc5MjczN2Y3YmZjOGRhMzY2ZWVjODFkZDI2NzljMmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE2Y2I1MWI5MmMyZTA0ZTIxMTk4NGFhMDI4NjMyM2RkM2Q5N2QyNjM2ZjdiYmY3NGIwNmFjOGMzMmZhZjI3MTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUxMGZlMjBlZDA3ZTJhNDMzOTY4MTFhN2RlNWZiOGZlZGI3YTI0NTYyMWQ3OWNjZDZjOWIzNmZiOTNmNzg5MGEifQ"
+          "resource": "repo://scripts/blueprints.lua#L15-L119",
+          "version": "repo-lines-v1:sha256:a732f83acd48c2faa0af95b55787b9a6cd7833250b41410dd808fce0015ccee8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwOTA1ZWY4YzI2YzljOWRiZjE3ZDE1ZWI2OGNjYzkwZmY5NGZmMTFmM2I4NjAxMDczZDA2NDdmMGZlOGRmNGQ2IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJlMGJiMTc1YzA3MWZkMDVkMzNjOGY3NGE3YTU3ZmVmZTdlODQ5OGViNmFlMGVlOGEyNjZlZWRiZjI4ODU5OWMyIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJhZTUxYTg2YzdhODYyY2VmZWU0N2FkNTRmMTVjMGRmNDYwZGE4OTJmZTQ3Y2JlMTg2MjZkMTQ0MzY5ODc2MzBhIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI3NTY1ZjRlM2Y0ZTgyZDkxYmM4YmViNWU1ZDU4YTg5NTg2YmVkMTZiNWUyNGVlNTVlZDU0NWY3NTc1ZGI2YmY3In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_8bcd26685e6f494a8e91f100263c6c77",
+      "statement": "Legacy conversion stages all replacement parts, role/color wires, output sections and removal marks before exact physical publication; refusal destroys staging and retains original data/wires, while successful conversion retains logical identities/drafts without replaying guest startup.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/lifecycle.lua#L265-L344",
+          "version": "repo-lines-v1:sha256:dd572c54f739e6450cc619c0b513a66a2b5e7d141c62186e3efb5b6ac469163e:eyJzZWxlY3RlZExpbmVDb3VudCI6ODAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYwMGFjZjVhN2U4YjMxNGYyYzA5OTJkYzEwYWE1MjE1ZGI0MTE3MDNlMzVkMTk1N2IwMGM2ZTY4Yzk4NTBiOGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MzMyZmU2NjdiYzUxYWM0YTUxYmEwZWZlNzM0NDQxYzkwZGVmNTVjNjBhMjZkN2RiMjc1ZWNiYmNmNDJmMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwNGY2OTNmNTFhMzcyMTBkNzRjNmI5MTM0ZTczNzc0YzljMWEzNmIwZmM3OTNiYWQwMDBmYWNkOTRlZjcwZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVhZWI4MmJhMzRkMTdiOTU4MmQ0NjllNjdkZWM1YjUzM2RhMGQzOGI4ZDEwOTc0NzU2ZGRhY2RhMzhjZGYxMmEifQ"
+        },
+        {
+          "resource": "repo://scripts/registry.lua",
+          "version": "repo-file-v1:sha256:66a35e8e143f19fa99c6bd92dc880d3bc99790171eb7afedc3056b42664c14ab"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.1",
-    "at": "2026-10-15T06:41:57.498Z"
+    "at": "2026-10-15T13:11:13.133Z"
   }
 }

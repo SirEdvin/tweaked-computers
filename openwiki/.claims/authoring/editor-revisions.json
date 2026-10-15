@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:5cf65f1a532bf1de2c0d02696a6d2d9a1d1871c646de594360ba45da6d138ad2",
+  "pageVersion": "sha256:d5ed516bd68f31cb0e135579585a66de699c3e17144078d1103d7a1f8ac12916",
   "claims": [
     {
       "id": "claim_ba6126a0a1e247408e96f3ca6c5d7f00",
@@ -18,25 +18,25 @@
     },
     {
       "id": "claim_d5e4147d87d249d8be485dac10bd3389",
-      "statement": "Editor actions require current player reach/permissions/scope, exact body/generation/session token and owned GUI event ancestry.",
+      "statement": "Editor actions require current player reach/permissions/scope, exact body/generation/session token and owned GUI ancestry including visible active subtree and exact widgets.",
       "evidence": [
         {
           "resource": "repo://scripts/ui/editor-model.lua#L15-L51",
           "version": "repo-lines-v1:sha256:16ebc9b2f28db8be8f99efe4207aa99d5382590c8354cafe504b045fd313dd36:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxNDQxZTU2YWEzNWZmM2FjMWI0ZjZlOTExZmU5YTkwZGQ4MThiMzNlMjExY2Q4NjQ2MGNkZjAwNDdmMjhmMDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5YmE4MmFjZjMxZTZkZmFiMTkzZjE3YjBhNDVjZTk4ZWQwMjE1ZjVkYjg2ODE4NzkyNWQ3OTJjOTYzNjY2N2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU3YzhmYWZjYjQyOWQ1MjgwYjBiZDAxZWMzODYyYzQ2YzhmN2YxOTAyNmM2ZmM1MjdiNDE1YTEyMGM5NDEzNGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJkMWZjY2NlMGRkMjdkZDYwMTQyYTcyYWQ3YjEwMTRlODgwZTlmNDdiNWE1YjVkODZiMjkxODFkN2MxOGVjZWUifQ"
         },
         {
-          "resource": "repo://scripts/ui/editor.lua#L155-L178",
-          "version": "repo-lines-v1:sha256:e228be8882062537593ef20f9ca3c7d1516852ad7aa52b9cae284eb1ca6164bf:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljNmFhMTQwYTg0ZjU4N2U3OWQwZTg3NmE5MjFmMTQ1MTMxMTYxOGM2MWQyODg0MGRlMjE2NzNkNDg5NWIxYmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcxNjlhODQ1NzZhNWUzZjBjZjRhZWRlYTU3NzMwNzYzYWYxMjU0NjE0ZTEyOTcxMDNjOWY3MDYzODFiYzFiNWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzNDZiMDA1NmVjNzUxOTQwNjcwYzBhZGEwMmZkN2IyMzZhN2E0ZmU1MmM1ZDU3ODg4ODY1M2I4NGFkZWEzMGEifQ"
+          "resource": "repo://scripts/ui/editor.lua#L307-L335",
+          "version": "repo-lines-v1:sha256:4dd905e4c130687573e2d52fdc393ed281eb15d35f1138a11b6380a78e35ab75:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlOTc1NDM5ZjI4YTVmMWM2NDhlYjViMDBhZGE1ZWM4N2M1Yzg0OWUwYmM1MzIzMDZlMjkwNzZiMTFiY2VjMTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MzMyZmU2NjdiYzUxYWM0YTUxYmEwZWZlNzM0NDQxYzkwZGVmNTVjNjBhMjZkN2RiMjc1ZWNiYmNmNDJmMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZkMGM3M2I5MDA3ZDE1YjM5NTMxM2UxNWYzY2E0NDRhZmY4NDMwMTNjOWI1ZGZlODlhZThlZTJmNDJjNmJjZGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjViMzcyZTI4OGQyZDUxNDNiYjlmZjcwNWI4NzUxOTExYzg0YmQ0ZWE5Mzc1MTYxOWIxZWMxYzU4MTJhZWE3MWQifQ"
         }
       ]
     },
     {
       "id": "claim_ab2049d5b5da4d48a43ebb7a355ee3f5",
-      "statement": "Eight per-player recovery drafts are retained without silent eviction; recovery and active-source copy alter drafts only and forgetting requires explicit confirmation.",
+      "statement": "Eight per-player drafts are retained without silent eviction; reviewed recovery and active-source copying change only draft text, while forgetting requires identity/byte rechecks and explicit confirmation.",
       "evidence": [
         {
-          "resource": "repo://scripts/ui/editor-model.lua#L100-L152",
-          "version": "repo-lines-v1:sha256:cf8f12187abb232631e799c7bee4daf7f07eb6fcd44bbe27324c887bcfaa5f26:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiNWVhMDQzMmEyMGNjZDAwMTAyOTY5ZGViZjI4NGI3ZjZmNjhkOTViNzI3MTQ1OTlmOGNjNDM2NzE0NzhmOGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4MzcxZTUxMTA4ZDBmYjk2YmJmOTgzZGYyMzhjYzM4MDY1YmM2YTI2NzY5YWM5OWNkNTM2N2M4ZDkzMzg0NjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZWZhMGM5MjQ3YzczMzdkMDdlODIzY2M1Mzg3YTZhZWI1MzE3OTBlOWFlOTBmYzdkMmEwNThmODA4OTdmYzkifQ"
+          "resource": "repo://scripts/ui/editor-model.lua#L100-L172",
+          "version": "repo-lines-v1:sha256:09d81c68761ab07bc4e468ef1a84f951d9da7ad93381aada645772eb15a65329:eyJzZWxlY3RlZExpbmVDb3VudCI6NzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiNWVhMDQzMmEyMGNjZDAwMTAyOTY5ZGViZjI4NGI3ZjZmNjhkOTViNzI3MTQ1OTlmOGNjNDM2NzE0NzhmOGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4MzcxZTUxMTA4ZDBmYjk2YmJmOTgzZGYyMzhjYzM4MDY1YmM2YTI2NzY5YWM5OWNkNTM2N2M4ZDkzMzg0NjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZWZhMGM5MjQ3YzczMzdkMDdlODIzY2M1Mzg3YTZhZWI1MzE3OTBlOWFlOTBmYzdkMmEwNThmODA4OTdmYzkifQ"
         },
         {
           "resource": "repo://scripts/ui/editor-model.lua#L26-L38",
@@ -60,17 +60,43 @@
     },
     {
       "id": "claim_1188faf0bed6468a95419e64cfa1ca22",
-      "statement": "Editor shortcut/resize/status paths avoid taking over an already opened GUI; status refresh runs at a charged 15-tick cadence.",
+      "statement": "Shortcut/resize/status paths do not take over an already opened GUI; refresh runs at a charged 15-tick cadence without source reassignment.",
       "evidence": [
         {
-          "resource": "repo://scripts/ui/editor.lua#L230-L277",
-          "version": "repo-lines-v1:sha256:fe3d63c5fcee7a3f95ad565fb62f05cd57e3a5a2a2145d989bf7789ab0fd7d6b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljZjA5NGY0NTcxODEwZTQxODc5ZTk3ZjBhODkzNWQ2N2VmZjQyMWMyNDYzN2ExMzU0NmMwMmFmZjZmZGJmNTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4M2VmZWNkMmQ1MTk5NjQ5YWQ4YzI5NWFmYWIzNmE1MzM4MDMzOWM5MDRlNjUyYjAwZThiNDk4N2IwNjNiYjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxM2NjZWU4MDFjMjc4YWNiOTJkNzZmZTAyYjkwOTliZGQ1ZDE5YmQzMzBiMGEwZThjMTJkYTA4OTFiMzU3OTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzM1OWMwYTcxYTJiZGY1M2IwOGIzOWQ4MzAxODJiOGZkNGRmMmUzOWFhNmFjODA3YWY3MmVmNTE2OWNkZjgifQ"
+          "resource": "repo://scripts/ui/editor.lua#L163-L210",
+          "version": "repo-lines-v1:sha256:d50c3e7795d06ba8cc78e15b167c4301d460883b55fcaa4de4f6b255c6b0cc99:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjYWQyOThmZjA0NDI0OGVmODM3MzQzNGE1MjczN2YyMGNmZmNjNGE4NjUxMWUzZWM1OWIwZTdjYjYyNThhZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MzMyZmU2NjdiYzUxYWM0YTUxYmEwZWZlNzM0NDQxYzkwZGVmNTVjNjBhMjZkN2RiMjc1ZWNiYmNmNDJmMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU3NTRkOWI4MzlkYWJiZmMzNzQ1MTZhYTBiYWRmMGY0ZDg0NjMxZTM4ZmNiZjM0MDNiZDYwODM4Njg4ZjZiYTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU5NjdhOWE2OWI2NmFiYjgyYmUwMWQyNzViYjJkNDczMmI0Y2M0MGZhM2I3YjAzNzkyNzY3MzRjNDE4Y2M1YTUifQ"
+        },
+        {
+          "resource": "repo://scripts/ui/editor.lua#L478-L541",
+          "version": "repo-lines-v1:sha256:abcb5c0163b1fe54d7c690e63b4c13ad7bc323fb0877e5e051aab8246acd4375:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljZjA5NGY0NTcxODEwZTQxODc5ZTk3ZjBhODkzNWQ2N2VmZjQyMWMyNDYzN2ExMzU0NmMwMmFmZjZmZGJmNTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4M2VmZWNkMmQ1MTk5NjQ5YWQ4YzI5NWFmYWIzNmE1MzM4MDMzOWM5MDRlNjUyYjAwZThiNDk4N2IwNjNiYjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxM2NjZWU4MDFjMjc4YWNiOTJkNzZmZTAyYjkwOTliZGQ1ZDE5YmQzMzBiMGEwZThjMTJkYTA4OTFiMzU3OTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzM1OWMwYTcxYTJiZGY1M2IwOGIzOWQ4MzAxODJiOGZkNGRmMmUzOWFhNmFjODA3YWY3MmVmNTE2OWNkZjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_82c5da5ae2a649109438a0126e1621dd",
+      "statement": "The five native tabs share one mounted source and compact action row; Focus restores the previous tab, Console Follow off freezes its snapshot, and supporting events use owned-frame routing.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/ui/editor-layout.lua",
+          "version": "repo-file-v1:sha256:45115fc1ca18b69660b5546c13e8b1bdbb23f0821c58aeaf9f0341a142c1d270"
+        },
+        {
+          "resource": "repo://scripts/ui/editor.lua#L211-L305",
+          "version": "repo-lines-v1:sha256:27591d6962efcc921983273e9694692764c71f8abeb83fecfe59193cfd21be8e:eyJzZWxlY3RlZExpbmVDb3VudCI6OTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkYjIyNWViZjdkZGFlOGJlY2ZkNmQ0YmFmYzhiMGRhY2NmOTc3OGUyNDY0MjkyMmUyODJlNDYxM2M1MTUyZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExNDI1NjEzOWU4MTk3NDhiZjUyYjU5MDZmM2M1M2E5ZTI2ZTU0MTU0M2JkNGNlNTc2NDIwODQzNzYyMjBiZjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBiMWFjYjBiNjNmNjkwM2NmZDM2ODU2NjhlZGU4ZDdhNzVhYTE3NDg5NzQwYjcxYzYxYzhiZDk2YzU0NWYyZTgifQ"
+        },
+        {
+          "resource": "repo://scripts/ui/editor.lua#L352-L467",
+          "version": "repo-lines-v1:sha256:92c84ec5bd8c916397f0f12aea1243b30a9cd6f28ae0337627c5b4e269af1c03:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJhNzIyOTdmZjg5YTUxYjc0YTk5NWRkOTBmM2YyYWJmMmExYjE5Y2U0MzJhZTY0ZDhlOWFiZmZiMjNlOTc2ODU5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODMzMmZlNjY3YmM1MWFjNGE1MWJhMGVmZTczNDQ0MWM5MGRlZjU1YzYwYTI2ZDdkYjI3NWVjYmJjZjQyZjE1IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI5MTUxMzJjZDQyZmQ2Y2NlZTRjNjFhNjA5M2IxNWU1NDgwY2NiOGVkNzYzNzNjZWVkNDQ0NGNjNDNjNGUyODI4IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0MmI2MjUyMWU2ZTk3OWQ1N2E3MWRhNDE0ZTcxZjIxNTU4NjcxZDYxZjQzYTQ3ZjA4ODI2M2VhMzllZGU1NDQwIn0"
+        },
+        {
+          "resource": "repo://scripts/ui/editor.lua#L65-L79",
+          "version": "repo-lines-v1:sha256:4c57f3b7b2528aef090bcb08779a82df339cdc805cad7a2ed9766a95c749178c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmMTc1MzhjZGQ4YTRkNmZhM2RmZjIyZTY1NzQ1MzU4MTRkODdkNzJjZDMxZGFhMmVmMmM4OGI0MzNhOTFlYTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MzMyZmU2NjdiYzUxYWM0YTUxYmEwZWZlNzM0NDQxYzkwZGVmNTVjNjBhMjZkN2RiMjc1ZWNiYmNmNDJmMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2ZDA1Y2E2ZDJmZmZiYWVhM2JmOGYwNjlkMGQyYjg1NTI3MTQ1NzVjYjk0NjUyOTcyYWYzMmNkNjI0MDc4OGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFkZjIwMTVjNDNkZjhmNzA2MWE3ZWYyMmM0ZGU3ZGQwZDM4NmU0MzA3ZWU2ZDFiMzZjODAwNmVkMWE4ODhhMTkifQ"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.1",
-    "at": "2026-10-15T06:41:57.498Z"
+    "at": "2026-10-15T13:11:13.133Z"
   }
 }

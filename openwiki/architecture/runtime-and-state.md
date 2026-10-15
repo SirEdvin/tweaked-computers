@@ -5,7 +5,7 @@ description: How the Factorio control entrypoint composes host services around p
 tags: [architecture, persistence, lifecycle, runtime]
 verified:
   - by: openwiki/0.7.1
-    at: 2026-10-15T06:41:57.498Z
+    at: 2026-10-15T13:11:13.133Z
 sources:
   - id: openwiki-source-647cc954e0352bb51785a5d7
     resource: repo://control.lua
@@ -17,7 +17,7 @@ sources:
     resource: repo://scripts/runtime/computer.lua
   - id: openwiki-source-0bf68f272e97a323da18a610
     resource: repo://scripts/scheduler.lua
-generated: { by: "hermes", at: "2026-10-15T06:41:57.498Z" }
+generated: { by: "hermes", at: "2026-10-15T13:11:13.133Z" }
 ---
 
 # Runtime composition, durable state and cold reconstruction
@@ -26,7 +26,7 @@ generated: { by: "hermes", at: "2026-10-15T06:41:57.498Z" }
 
 `data.lua` imports device, editor and monitor prototypes; `control.lua` imports trusted host modules while Factorio parses control code. Those imports register service providers, cleanup hooks and scheduler phases. The control entrypoint installs native entity, GUI, blueprint and custom-input handlers, and one normal `on_tick` calling `scheduler.tick`. Initialization/configuration changes initialize the registry and material adapters. Normal production deliberately registers no `on_load`: it neither runs guest source nor renews clocks during loading. The opt-in exact-name production test fixture at the bottom of `control.lua` is a separate harness path, not guest loading.
 
-The dependency direction matters: registry owns identities and cleanup dispatch; runtime owns a computer generation and its services; scheduler dispatches it; physical lifecycle owns entities and power. Services register themselves with those lower-level owners during control parsing. Avoid importing a service into physical ownership merely to get its material serializer: lifecycle exposes item-adapter registration for that seam.
+Configuration changes first call `lifecycle.upgrade_existing` to stage legacy physical families onto circuit-capable shells. GUI tab, selection and checkbox events are registered beside the existing open/text/click routes; they do not execute guest source. The dependency direction matters: registry owns identities and cleanup dispatch; runtime owns a computer generation and its services; scheduler dispatches it; physical lifecycle owns entities and power. Services register themselves with those lower-level owners during control parsing. Avoid importing a service into physical ownership merely to get its material serializer: lifecycle exposes item-adapter registration for that seam.
 
 ## What survives a save
 

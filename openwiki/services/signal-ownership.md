@@ -3,9 +3,6 @@ type: service
 title: Signal sampling and output ownership
 description: Typed logic input normalization, sampled named subscriptions, mirrored native output banks and exact writer/run/path cleanup.
 tags: [logic, signals, sampling, ownership, safety]
-verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-15T06:41:57.498Z
 sources:
   - id: openwiki-source-199ebbbf763b15ba60eb9147
     resource: repo://scripts/device-definitions.lua
@@ -13,14 +10,17 @@ sources:
     resource: repo://scripts/services/logic.lua
   - id: openwiki-source-84bfcd6a80f737a0b75f8c1c
     resource: repo://scripts/services/peripheral.lua
-generated: { by: "hermes", at: "2026-10-15T06:41:57.498Z" }
+generated: { by: "hermes", at: "2026-10-15T13:11:13.133Z" }
+verified:
+  - by: openwiki/0.7.1
+    at: 2026-10-15T13:11:13.133Z
 ---
 
 # Signal sampling and output ownership
 
 ## Three physical roles, two independent color choices
 
-The logic body owns separate INPUT, NETWORK and OUTPUT children. NETWORK color authorizes which computer can call the peripheral; an input selector (`red`, `green`, `both`) chooses the sampled INPUT wires. These choices are not interchangeable. OUTPUT is one native constant-combinator bank visible on both output colors, not independent red/green programs.
+The visible logic shell is Network and owns separate Input and Output pads plus private power. Network color authorizes which computer can call the peripheral; an input selector (`red`, `green`, `both`) chooses the sampled Input wires. These choices are not interchangeable. Output is one native constant-combinator bank visible on both output colors, not independent red/green programs. Sampling checks `lifecycle.has_power(rec)` rather than the now-passive body's energy.
 
 `logic.lua` normalizes explicit item/fluid/virtual signal identities plus quality (default `normal`), rejects wildcard identities and unknown prototypes/qualities, checks signed int32 counts and sorts by type/name/quality. Output accepts a bounded dense array, rejects duplicate identities and removes zeros. Combined input sums wrap signed int32 and omit zero totals, retaining quality distinctions.
 

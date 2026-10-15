@@ -3,19 +3,25 @@ type: service
 title: Monitor grouping, retained rendering and input
 description: Geometric rectangular monitor partitioning, logical peripheral resolution, byte-cell state and resumable world presentation with authorized touch delivery.
 tags: [monitor, rendering, grouping, input, events]
-verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-15T06:41:57.498Z
 sources:
+  - id: openwiki-source-e2370dab408e5b9c26e94588
+    resource: repo://docs/rd4-verification.md
   - id: openwiki-source-6cb73c4f41436e6fd8ec0717
     resource: repo://scripts/monitor-model.lua
+  - id: openwiki-source-cf29203f009f2866aa4dd8f4
+    resource: repo://scripts/network.lua
   - id: openwiki-source-562ddd59792f21328a7d3825
     resource: repo://scripts/rendering.lua
   - id: openwiki-source-0bf68f272e97a323da18a610
     resource: repo://scripts/scheduler.lua
   - id: openwiki-source-560d8f7667f960a94117249a
     resource: repo://scripts/services/monitor.lua
-generated: { by: "hermes", at: "2026-10-15T06:41:57.498Z" }
+  - id: openwiki-source-c19d5636b19952e9b43975ab
+    resource: repo://tests/monitor_feedback_engine.lua
+generated: { by: "hermes", at: "2026-10-15T13:11:13.133Z" }
+verified:
+  - by: openwiki/0.7.1
+    at: 2026-10-15T13:11:13.133Z
 ---
 
 # Monitor grouping, retained rendering and input
@@ -34,13 +40,19 @@ A surviving anchor can retain its logical ID; otherwise a new monotonic group ID
 
 `monitor-model.lua` owns plain byte cells `{byte, fg_index, bg_index}`, cursor, palette, colors, scale, dimensions and revision. Writes are byte-oriented, clipped to visible cells, do not wrap automatically and still advance the cursor by full input length. `blit` validates equal byte lengths and lowercase hexadecimal colors before mutation. Clear/scroll/scale reserve their bounded full-model work. Scale accepts half-steps from 0.5 to 5; dimension changes clear cells, while a scale change with equal character dimensions keeps them. British color aliases reuse the same methods.
 
-A cell is not rich text or a native GUI string. The renderer selects the independently authored `tc-glyph-BYTE` sprite and separately paints background rectangles. Palette changes bump model revision; old cells store palette indexes so rendering observes updated colors. The geometry model shares a single logical-units/world transform with touch hit testing, including cardinal orientation and bezel margins.
+A cell is not rich text or a native GUI string. The renderer selects the independently authored `tc-glyph-BYTE` sprite and separately paints tinted/scaled `tc-monitor-fill` sprites. Palette changes bump model revision; old cells store palette indexes so rendering observes updated colors. The geometry model shares a single logical-units/world transform with touch hit testing, including cardinal orientation and bezel margins.
 
 ## Retained dirty presentation
 
 `rendering.lua` reserves maintenance headroom and keeps host render-object handles with the group. It compares cell byte/color/palette values plus native handle validity before replacing draw objects. A model revision triggers a bounded sweep; `sweep_cursor`/`sweep_revision` survive save/load. When a model changes during a sweep, completion restarts against the new revision instead of falsely marking it presented.
 
 The same per-tick cell allowance covers retired-object cleanup before new presentation. A fair group cursor shares that allowance; geometry/scale changes retire old grids once and build new panels. Unpowered groups hide native draw objects and preserve model contents for restoration. Cursor blink is a separate retained draw object. These are bounded model/presentation mechanisms, not proof of GPU resource rendering, normal-zoom legibility or a measured player-input-to-visible latency bound.
+
+## Explicit world-feedback layers
+
+All content uses supported sprite layers: panel `higher-object-under` (126), backgrounds `higher-object-above` (127), glyphs `train-stop-top` (128), cursor `item-in-inserter-hand` (129). These lie above the body/object (124) and below wires (131), entity-info-icon (153) and selection (187). The authored opaque 1×1 fill replaces rectangles; glyphs no longer use light-effect. No fake X or mark/cancel handler changes cells, palette, cursor or grouping. The real visible shell receives native deconstruction orders.
+
+Retained rendering graphs use `layer_version=2`. Admitted synchronized rendering retires legacy graphs through existing bounded cleanup; load performs no draw/state mutation. The 60000 maintenance reservation, 1024-cell/tick allowance and one-object-per-fill policy stay unchanged. `tests.monitor_feedback_engine` checks native mark/cancel subsets, cold aliases/marks, actual draw properties and actual robot removal. These prove state/layer properties, not genuine red-X visibility; see the [integrated playtest](../../docs/player/editor.md#integrated-redesign-playtest).
 
 ## Authorized touch and coalesced resize
 

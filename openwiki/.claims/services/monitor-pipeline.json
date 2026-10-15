@@ -1,14 +1,18 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:ece626b35f93fd56ee5d5aab47639a60970e422ba9c2dd62741046c5935bbafb",
+  "pageVersion": "sha256:d2891f40934aa65fbdd0d33dd68a1ec6323706713cfcb48ba7dee78cbfc607c2",
   "claims": [
     {
       "id": "claim_7950a5e927524aa1b68b48d17d9c5116",
-      "statement": "Monitor groups are deterministic complete anchored rectangles partitioned by scope/direction and logical resolution does not add physical network edges.",
+      "statement": "Monitor groups are deterministic complete anchored rectangles partitioned by scope/direction; logical resolution does not create physical discovery edges, and current availability checks the lifecycle power carrier.",
       "evidence": [
         {
+          "resource": "repo://scripts/network.lua#L15-L59",
+          "version": "repo-lines-v1:sha256:f9248bee2701d8186ea94ef5ac724062b08d08aeca2516f183b0d7200c5c8513:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjNTc4YjY5YzRhZTNiMmMwNmY5ZjBhNjBlN2M1Nzk1OGFlODVhOTFhMTBiODg0NDg1NTg0NzQzM2FjOGJlYjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZDg2YWExNzI3ZDgxNTU5YWExYjEzYjk1MWFlMTg5NTkyZTYzOTAzNDBhODlkMGRlMjFmOTk3NzU0ZjdlZTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNmNDVhNDhhMTY5NzFiM2M4MGYzNjI4NTNmODE4NjM4ZDQ3ZmM5N2E0MTM3MjViMWFhOWRjYWI2OTE4YzM4NzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM2ZjhjOWY0MWNiMGJhZTcwNjBiMjczMmI1MzE0NGE1MWE3MzZlNTczNDcyOWU4ZjI2MmNkNjI0ZDc0YTA1MjUifQ"
+        },
+        {
           "resource": "repo://scripts/services/monitor.lua#L26-L89",
-          "version": "repo-lines-v1:sha256:82fe75ac7180a34db84a85ef927b0685442febb8277c9b85e7c1945062c10d77:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkMWEyZTE2MWIwMjgzNTU0YTNkMzNkNjVjODU0ZjUyZGM2ZTY0YjE5NzNlNjJhNzYwMjA2M2RlMWQxYzI3MWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYWNlMjg2NjAyZDAwNWNiMzc0MmNjMzgzMjlmZDlmYzk5NWUzOGIzMzE1NjMxZjU3NzdkYTIyM2Q5YWFkODgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgwMzU0ZDMyNmVkMmZlOWFiMmVhYWFlZjQ0YWQ1ZmUwNTZkMDcyMzg1ZjVkODQ2ZDA0N2UwZjEyZDIwOThhZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhZDk5Yzg5NDY2YTQxNzY1ZjEzYTQ2ZTlkZjU2MDBmNDNjNjVkZDE4MjFjYzUxZDUzNGI2OGViMzRkZDg5MDUifQ"
+          "version": "repo-lines-v1:sha256:e653c333076b1f40ce503a95e631115213c0c49a8e620956de3753349043cbe0:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkMWEyZTE2MWIwMjgzNTU0YTNkMzNkNjVjODU0ZjUyZGM2ZTY0YjE5NzNlNjJhNzYwMjA2M2RlMWQxYzI3MWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYWNlMjg2NjAyZDAwNWNiMzc0MmNjMzgzMjlmZDlmYzk5NWUzOGIzMzE1NjMxZjU3NzdkYTIyM2Q5YWFkODgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgwMzU0ZDMyNmVkMmZlOWFiMmVhYWFlZjQ0YWQ1ZmUwNTZkMDcyMzg1ZjVkODQ2ZDA0N2UwZjEyZDIwOThhZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhZDk5Yzg5NDY2YTQxNzY1ZjEzYTQ2ZTlkZjU2MDBmNDNjNjVkZDE4MjFjYzUxZDUzNGI2OGViMzRkZDg5MDUifQ"
         }
       ]
     },
@@ -42,15 +46,11 @@
     },
     {
       "id": "claim_6899cb0ba64c418f919128d2635810b1",
-      "statement": "World rendering retains native handles and revision/sweep cursors, shares a bounded cell budget with teardown, hides unpowered presentation and restarts sweeps when model revision changes.",
+      "statement": "World rendering retains native sprite handles and sweep/revision cursors, shares bounded cell allowance with cleanup, hides unpowered objects and restarts mixed-revision sweeps; admitted work replaces legacy layer graphs without on_load mutation.",
       "evidence": [
         {
-          "resource": "repo://scripts/rendering.lua#L18-L51",
-          "version": "repo-lines-v1:sha256:6a6725d2cdddf04baab2edd234421815988434447ecaefdb799f706f9605b332:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0NTg3NDYxOTM5YjcyNjc4MzNhNzAwOGRlZjg5OWNkZDk3NDdjOWE2NWYyMDdiOGJjOWE1MjRlNzcxNWI0ZWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkNWIxMTdjZmU1NGI4YzNmNzU4MDQ2NzM0MThlMjE0YzAyZWU5MmNkYTZjNGVlZTI4N2M3ZDhjMzlhOTRlNTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhOTE1ZGExODRjMDc2ZjMwNzI0Y2M2MDhiYmQ5ZTA1MmY4NGM2YjEwN2E5YTcxYTIxOWRiMTc4MTIwYzQwYTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2OTVmZDI3Y2VjM2U4NjE4OGQxODg0ODkxNDE1NGYzNmM2OWViZDUwZGQ5ODc5ZmFkNTRhM2FjODY4NGU3NjAifQ"
-        },
-        {
-          "resource": "repo://scripts/rendering.lua#L63-L118",
-          "version": "repo-lines-v1:sha256:f4b50da9068eaddcce589d4ec25b2e23bbd6f5a4edb94bc6057d1f463e2fdeb8:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlNTdiYzRjMDZiNmY0N2RiMDk0OThiNzE4MzkwNjA0ZGY5YzEzZmVhNDU0MGJjZDZkM2ZiZjU2MGM4MGFhMDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlMTgxYWNkNmE2NmE1NDViODNiZGFhZGVlMjg0OWQ4OTU3YzdhY2U3ZDhiZGFhMzkwMGQ1NmY5MWZjODA3ODEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRhZWQyYmIyZTMzYzkzNmQ1MWUxNWIwZDIxMzk3MmMwMzVlNDAyYWE5Y2E2N2I2ZjYwYTIyMzA0ZGYzNGQ0YjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzM1OWMwYTcxYTJiZGY1M2IwOGIzOWQ4MzAxODJiOGZkNGRmMmUzOWFhNmFjODA3YWY3MmVmNTE2OWNkZjgifQ"
+          "resource": "repo://scripts/rendering.lua#L18-L126",
+          "version": "repo-lines-v1:sha256:9af026d2a72f7fc8af9d220839db25f0e57a08cf872d45d96cef2b34654efcae:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0MDY4MmJhM2RiNTJmNjczNzJmMzA4YjRhZjRjZmQ2MTIwZThhYzQ3YWFiNTlkMjQ3NzlkOGE3M2M0YzdiMjYzIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI4NzMzNTljMGE3MWEyYmRmNTNiMDhiMzlkODMwMTgyYjhmZDRkZjJlMzlhYTZhYzgwN2FmNzJlZjUxNjljZGY4IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1MzEyYzY0YmQxZjU1NGFmODA0MDY3MmMwNmFiYzM5MjEwNGRlNWIzZTVmMGI4NThkY2MzYTM2MDgyMWQ0YTdlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
         }
       ]
     },
@@ -81,10 +81,32 @@
           "version": "repo-lines-v1:sha256:84a4866d369b0ec5eee8843af82071d6130703539958662c9ff1ae7732c71cdd:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTc5ODkwNzQxZjA2OGY4NzZjNWE3MzBlZDY5NWE4OWIwYjliNGFiMjA3ZGRiMGYwMGQzNTk3NGExZWM1ZWJkYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTRkMGNjNDczZTU2ZTVkMTRkN2MxZDdlZDJhYjc3NjE5Y2ExNmM1MTM4NTA3NTdiNGRhNmM4Nzk5NmFiN2UzZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTY2ZDRjNTgyZTAyYTgyNzIwZmRiZjFmMmU1OWQ5OWRmYWIwZjM4MGYxZjJjMTE1YTdlODk5OGRjODk3NjZjZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODczMzU5YzBhNzFhMmJkZjUzYjA4YjM5ZDgzMDE4MmI4ZmQ0ZGYyZTM5YWE2YWM4MDdhZjcyZWY1MTY5Y2RmOCJ9"
         }
       ]
+    },
+    {
+      "id": "claim_40db19e1312a424098614fe53ae4af71",
+      "statement": "Panel/background/glyph/cursor use explicit supported sprite layers 126/127/128/129 below native wires/info/selection; marking changes no display model and exact-engine mark/cancel/robot checks do not prove native red-X visibility.",
+      "evidence": [
+        {
+          "resource": "repo://docs/rd4-verification.md#L8-L52",
+          "version": "repo-lines-v1:sha256:7fd9e321880e9314afa3d12c999605473ed217c5d10b942cd9a9daca37dc5490:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwNDBkY2UzNWI4MTk2MTAzNjJkNTU4ZTI3MjIxMjIzNzY2ZjNjNWMwMTU5ZGM5ZTQyNDFjN2VkYWMzYjEwYTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2NWQ0MzUxNWYxYTNkODY3MTQwMjMyMTQxMTVhYzQyNzhhZjhiMTkxYzAyMjhhZGMyNzdiNTUxNTBlODY3ZmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUyNWMyYjk3NjVmMzI0YjcyMDJhMTc2MmY1MmUzN2ExZWNjNmRkMDY2NjZkODU3YTE4ZmU2MzJkNzJlZDg2ZmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVkNjA2MDk4Y2YwYTc2YjVmNzJlNmNmZmQ4YWM0YTRkYjJjNDZiOTA1NjNlZmRjZTlkMzcxZDYwNWIwODI2MzEifQ"
+        },
+        {
+          "resource": "repo://scripts/rendering.lua#L1-L23",
+          "version": "repo-lines-v1:sha256:3adb840453279a22e36ea5c5e46f105ad1dd1232e965655416b1a6b6f48ee3df:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiNjUzYjQ5ODM3NzMzNWQxNmFlMDI3NmYzMGI5NDJjYTlkMDE2MDc3OWFlNmEwZTk4YmI0Y2VmMmE3MjBlMmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MzMyZmU2NjdiYzUxYWM0YTUxYmEwZWZlNzM0NDQxYzkwZGVmNTVjNjBhMjZkN2RiMjc1ZWNiYmNmNDJmMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUxNDAzYWU4NzY0OTQ1NjlkZWM2ZTE4OWZlNWNhZDJiYTQ4ODAxNzdlMzMyYmM0OWE1ZmUzMWRhZDA4YWQ4ZjEifQ"
+        },
+        {
+          "resource": "repo://scripts/rendering.lua#L40-L67",
+          "version": "repo-lines-v1:sha256:20d3ff07ca0217df0ced8d939290156900d1ae1df8980ecb3ccdd25eac6d3e69:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4YjE1MGMwNGFkNmQzNjMwYjAwY2NlOGNjNmU5MjA3MTAyNjA2MzhjMjhmZTk2MjFiMTBiOWEwOGU5ZjU1M2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3OTgxMWM1ZmJlMjVjM2Q0ZTVmM2QxZmQzNWFiOWRhNmJjZjhhNjhjNWVkZjlkNmJhOTdmNjg2ODZjMzk2ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5NzU4ODdmNWNlMTk2NTI1ZDliOWE3ZThlZmZkOTFmMDI3MjQ2YTdjNmYyYzJlMzlhYWIzZjRiZDIxNDQ0NTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYzMTU2YTllZDNhNjAyZjFhZWRhMDJiMWVmZTVhODRhMjhiZGFiYzIwZTJlZTYyZGVjYmQ2YTM1NTM1M2UyMWIifQ"
+        },
+        {
+          "resource": "repo://tests/monitor_feedback_engine.lua",
+          "version": "repo-file-v1:sha256:7e29b85cc2d1245d2ac36995c59304187b5700c9e29bf0d1557e53460c26779e"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.1",
-    "at": "2026-10-15T06:41:57.498Z"
+    "at": "2026-10-15T13:11:13.133Z"
   }
 }

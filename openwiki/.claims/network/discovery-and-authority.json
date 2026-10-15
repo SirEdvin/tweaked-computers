@@ -1,32 +1,28 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:63a78fb49f1aca25a558490351c814e96eeb52832eb347f71d377122cc9aaeda",
+  "pageVersion": "sha256:94effacecfc8314cb0df9cea386183a1259b65488e5a2c85e3426a2efdc3b7ca",
   "claims": [
     {
       "id": "claim_d93d3a4a9a7b4dcbbf0d7f5e70cee79c",
-      "statement": "Peripheral discovery is a complete bounded same-color/scope BFS restricted to exact owned network-role connectors, not ordinary native circuit bridges or logical monitor groups.",
+      "statement": "Peripheral discovery is a complete bounded same-color/scope BFS restricted to exact lifecycle Network connectors; layout-2 body role is allowed only for its real Network connector, never private power or other roles/native bridges/groups.",
       "evidence": [
         {
-          "resource": "repo://scripts/network.lua#L7-L58",
-          "version": "repo-lines-v1:sha256:637401b7118671c6805fa0db4c940692b27d243526c732ae175b4f2335c019de:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFhYTc1OWQ3MTUyMmRiZjdlYWFiMDEwZjZhMzAwMzlmMWU4ZDViNDdhZmEyMzcyOTExNmZkM2U2ZmVjMzc2MzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZDg2YWExNzI3ZDgxNTU5YWExYjEzYjk1MWFlMTg5NTkyZTYzOTAzNDBhODlkMGRlMjFmOTk3NzU0ZjdlZTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiY2U0NGRmNGYyNzE5ZTk4YTM2MDM0MDE2OGMzNTZhYmE4YjdlNTcyMTg0Y2VmMTY2NzdiMTBmMWJlYTgxMGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM2ZjhjOWY0MWNiMGJhZTcwNjBiMjczMmI1MzE0NGE1MWE3MzZlNTczNDcyOWU4ZjI2MmNkNjI0ZDc0YTA1MjUifQ"
+          "resource": "repo://scripts/network.lua#L7-L59",
+          "version": "repo-lines-v1:sha256:cb2e298776b7e1c1f85888bdc6d14b5bde0f1c307931a51afbb355dd4c95aa80:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFhYTc1OWQ3MTUyMmRiZjdlYWFiMDEwZjZhMzAwMzlmMWU4ZDViNDdhZmEyMzcyOTExNmZkM2U2ZmVjMzc2MzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ZDg2YWExNzI3ZDgxNTU5YWExYjEzYjk1MWFlMTg5NTkyZTYzOTAzNDBhODlkMGRlMjFmOTk3NzU0ZjdlZTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiY2U0NGRmNGYyNzE5ZTk4YTM2MDM0MDE2OGMzNTZhYmE4YjdlNTcyMTg0Y2VmMTY2NzdiMTBmMWJlYTgxMGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM2ZjhjOWY0MWNiMGJhZTcwNjBiMjczMmI1MzE0NGE1MWE3MzZlNTczNDcyOWU4ZjI2MmNkNjI0ZDc0YTA1MjUifQ"
         }
       ]
     },
     {
       "id": "claim_382fa5fe4b8d4f31a2f7271d2003be38",
-      "statement": "Peripheral inventory resolves/deduplicates logical identities and callback-local facades reprove current run, wire and generation authority on every invocation, including captured getLimits.",
+      "statement": "Inventory resolves/deduplicates logical identities; callback-local facades reprove current computer run, selected wire and peripheral generation on every service invocation including captured getLimits.",
       "evidence": [
-        {
-          "resource": "repo://scripts/services/peripheral.lua#L165-L173",
-          "version": "repo-lines-v1:sha256:a6444ad2e04156ce4b5f91729b84774a5cce83f0e0022a86986c1f87524f641b:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTgzMzhkMjgwNDc5NmRmYjI2ZTAwMjg4ZGJkZWMwNjQ0YzU1MzhiMDQwZDM0NTdjNzM1ZTZmOThkOWEzNGI4MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODcyNjFkOTgwYjhkM2E1ZjM2MWI1ZDA3MWRlZmRlNWJkYWZiMTQyMzhkOTQ2YjA2ZGIwZWQ0ZWRmYjk2MmI4ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzdhMzQ5NzNmNjI4YzFlOGZmZWJiNTczYTZlNzBmMTdjNmVlNjVkM2YwMWMxODI5NTUyZmMyYzhiZmQ2ZTMyMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzA0MWI0NTA4MmVmOTg1ODIzYzQzNzFhMDQ0ZWYxYjQzN2I5YjVlNDRiZjRmZTg5NWY1NjM0ZDVmZWQ2YThiOSJ9"
-        },
         {
           "resource": "repo://scripts/services/peripheral.lua#L34-L64",
           "version": "repo-lines-v1:sha256:6dfe0679a5680e7a73db4e8bdc5a2b62a326ae83c1d0fb429f29487efa52950c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwMmQ1YjEzMTJjYjk3NzJhYzA0NDBmNWUxMmUxMmQ3YmQ3MGU2YzFlMWVjOTU0MGUzZWIxODI4ODMwYzRlZGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmMDY1YTAzOTMxYzE2MTE1ZjE3YWNlY2YwZDY5ZGNiMWM3NmJmZmE2YWI3YzQ2OWZhMzNiNmVjYThhMDc4NTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyMGQ4NWIxNjYwZjBjOGZlY2VjZWZmOTRkNTZiZTJmOTlhZDM5YWQyOWM0NzEzYjMzMzlhNTM0Y2MwZmYwMWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlkZDU2MGI1MGExZDMyZmNjY2I1Zjc5NTU0MTJhYjY0ZDFiOGRlN2VlODE1OTBkZTZkZDU3MGViMmFlYWI4MDAifQ"
         },
         {
-          "resource": "repo://scripts/services/peripheral.lua#L90-L126",
-          "version": "repo-lines-v1:sha256:5b141a5b138aa1c3fa6c0ddf5f5a4a59745e7754ddc75f08be2fd549fd99905c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2ZGJiNjg3OGJiNTVhYjM1ZTFiNWE2YzdmNDJiMzE5MDFkNmNkY2UzNzQzNzAzNDg5YTZiYTI4ZTc5OTZkMGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5NTBhNjIyOWY3MzM5OTJjYzdkMzIyZDQ1NGY2MmI1MDhmMTJlMGI4ODMxOWYyZjMxMTI1ZmNhZmY0NGY2NzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxMzY1N2Q0NTQwYmIzNjZiNmY3MDhhNGZlM2VjYjgwMDEzNmZjNDIyN2U1MzU2ZjgxMjc1MjIzODJiNTYwNGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAxYzg0MmJlY2E1M2YzODU4MWU2Y2VkMTBkZjBhOTNhNGQ0YWNiMzY5MDZmMDAyZTUyY2YyYmUxNTNhNTVkNWYifQ"
+          "resource": "repo://scripts/services/peripheral.lua#L90-L127",
+          "version": "repo-lines-v1:sha256:821da895a05ac732e0d54e5b80dcbe95dfb7e4bf2ea331c596c66be1387b54e8:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2ZGJiNjg3OGJiNTVhYjM1ZTFiNWE2YzdmNDJiMzE5MDFkNmNkY2UzNzQzNzAzNDg5YTZiYTI4ZTc5OTZkMGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5NTBhNjIyOWY3MzM5OTJjYzdkMzIyZDQ1NGY2MmI1MDhmMTJlMGI4ODMxOWYyZjMxMTI1ZmNhZmY0NGY2NzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxMzY1N2Q0NTQwYmIzNjZiNmY3MDhhNGZlM2VjYjgwMDEzNmZjNDIyN2U1MzU2ZjgxMjc1MjIzODJiNTYwNGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAxYzg0MmJlY2E1M2YzODU4MWU2Y2VkMTBkZjBhOTNhNGQ0YWNiMzY5MDZmMDAyZTUyY2YyYmUxNTNhNTVkNWYifQ"
         }
       ]
     },
@@ -45,7 +41,7 @@
       "statement": "Topology notifications use a bounded fair sweep with a new-run baseline and retained change jobs, so deferred inventories never authorize live calls.",
       "evidence": [
         {
-          "resource": "repo://scripts/services/peripheral.lua#L186-L255",
+          "resource": "repo://scripts/services/peripheral.lua#L187-L256",
           "version": "repo-lines-v1:sha256:1fa0d155888884b95ace2cfff7fdf127c411eeb38fcb59a184916c4ceef0573b:eyJzZWxlY3RlZExpbmVDb3VudCI6NzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlMjQwZmJmNzQ1ZGE4M2RmMzA0YjhlMGE1N2Y1MWEzNjgzZDQ0NGRmYzY4YTBlOThkNzE5NzliODNkMmYyNTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3OTgxMWM1ZmJlMjVjM2Q0ZTVmM2QxZmQzNWFiOWRhNmJjZjhhNjhjNWVkZjlkNmJhOTdmNjg2ODZjMzk2ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmYWFiYzY0NmExZWRhNjJiOTU5NzUyNThmYThmMmU2YjllOTU4ZWFlNDk1N2QyMzQ5YWE2ZTQwZmE2MjJhZWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5YTcwYTk1YjVlZmI1ODZhY2M4YjEwMzA0MGJhZTRlZmMzNTU4NmQ3MDA2MmI2Zjc5MzFiMjgwMThjNzE3YWMifQ"
         }
       ]
@@ -55,7 +51,7 @@
       "statement": "Output authority is checked in lifecycle independently of delayed notifications, and absent/deferred proof clears the bank while cleanup matches exact computer/run ownership.",
       "evidence": [
         {
-          "resource": "repo://scripts/services/peripheral.lua#L257-L310",
+          "resource": "repo://scripts/services/peripheral.lua#L258-L311",
           "version": "repo-lines-v1:sha256:b623e87243c2bc9fc067c2c7fe9d84601ba4d5e3307fdd80ef48cef9ff3bbe94:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0N2EwZDIxYjUwYmZjYTE3MzI0ZGEyYWUzNDU2MmUxN2ViMDBmOWNkNDU1MThlOWFiYjk1OWIxNGFjMzg4MjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmZTY1M2YyYTM0MDBlNDA0NDhhODUyMjkwYmNmODE1NTE4MWFlOTg0MjYzNzg2MzJhY2UwOGE4Nzg5ODAyNTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRkNTY4NjZlNTE2OWEzNjUxNzZiYzc4ZDE0MGZjNzgxNjc2YWIyNzE1OGU3YjlmODUyYTdiYzI3OWVmNzg2YjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzM1OWMwYTcxYTJiZGY1M2IwOGIzOWQ4MzAxODJiOGZkNGRmMmUzOWFhNmFjODA3YWY3MmVmNTE2OWNkZjgifQ"
         }
       ]
@@ -63,6 +59,6 @@
   ],
   "verification": {
     "by": "openwiki/0.7.1",
-    "at": "2026-10-15T06:41:57.498Z"
+    "at": "2026-10-15T13:11:13.133Z"
   }
 }

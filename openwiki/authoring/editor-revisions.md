@@ -3,17 +3,19 @@ type: workflow
 title: Editor revisions, authority and recovery
 description: The native GUI and plain editor model keep drafts, saved revisions and active execution separate while rechecking player and entity authority.
 tags: [editor, revisions, authorization, recovery]
-verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-15T06:41:57.498Z
 sources:
   - id: openwiki-source-0ddacafef71462f8b63089cd
     resource: repo://scripts/runtime/computer.lua
+  - id: openwiki-source-92ddf1aa156aebd2c038aa1c
+    resource: repo://scripts/ui/editor-layout.lua
   - id: openwiki-source-9bdd101d2a3d48be3d3699c7
     resource: repo://scripts/ui/editor-model.lua
   - id: openwiki-source-56946c7bbf28112aad8ee479
     resource: repo://scripts/ui/editor.lua
-generated: { by: "hermes", at: "2026-10-15T06:41:57.498Z" }
+generated: { by: "hermes", at: "2026-10-15T13:11:13.133Z" }
+verified:
+  - by: openwiki/0.7.1
+    at: 2026-10-15T13:11:13.133Z
 ---
 
 # Editor revisions, authority and recovery
@@ -45,12 +47,18 @@ Formerly active source has a distinct review/copy path: the copy verifies the ac
 
 Reset also has a two-step model transition. The GUI requires `stopped`, captures run generation, and rechecks both on confirmation. Runtime reset clears only explicit computer state, not the separate physical KV database. Ordinary Stop retains source/state and calls teardown.
 
+## Five tabs without replacing the document
+
+`editor.lua` creates a native tabbed pane with Editor, Console, Peripherals, Reference and Maintenance. The source stays mounted across navigation, Focus and routine refresh; only an explicit reviewed source replacement changes its text. Editor has one Validate/Save/contextual Run-or-Apply/Stop row. Focus hides supporting navigation and remembers the prior tab. `editor-layout.lua` clamps physical window position using GUI scale; the minimum supported effective size is 760×480 GUI units. Four resolution/scale calculations and schema-aware table-backed construction are not native visual acceptance.
+
+Console Follow off retains its selectable snapshot until explicit Refresh/resume. Peripherals performs real selected-color inspection and separates refused/pending from empty inventories. Reference uses bounded search/category/topic state and native text selection; the starter inserts only into an empty draft. Maintenance holds reviewed saved/active/retained source and identity-specific destructive confirmations. New tab/selection/checkbox routes pass through the same owned-frame envelope and exact widget checks as clicks/text.
+
 ## Refresh and extension seams
 
 Live status/output refresh is registered in the render phase every 15 ticks and charged through maintenance admission. Display-size changes resize/reflow widgets without rewriting `player.opened` or focus. Add actions in both the model and view; keep all data-loss/activation decisions in the model so mocks can test them without pretending to prove native client focus.
 
 The optional network inspector is registered during control parsing and reports red/green results independently. Help and template insertion remain host authoring aids; a template only replaces an empty draft. They do not enlarge guest authority.
 
-`tests/editor_contract.lua` and `tests/editor_cold.lua` exercise revision/recovery contracts and retention; integration/lifecycle fixtures cover Save/Run and material recovery. Native typing, paste/focus, button delivery, display-scale layout and multiplayer editing remain user-owned client checks; this wiki run executes none of them.
+`tests/editor_contract.lua`, `tests/editor_workspace.lua` and `tests/editor_cold.lua` exercise revision/recovery, tab/focus/ownership/layout and cold retention; integration/lifecycle fixtures cover Save/Run and material recovery. The [integrated candidate](../../docs/rd5-candidate.md) identifies exact packaged checks. Native typing, paste/focus, button delivery, graphical layout and multiplayer editing remain user-owned client checks; headless and GUI mocks do not pass them.
 
 Related: [runtime activation](../architecture/runtime-and-state.md), [material lifecycle](../devices/ownership-and-lifecycle.md), [operations and verification boundaries](../operations/build-test-and-assets.md).

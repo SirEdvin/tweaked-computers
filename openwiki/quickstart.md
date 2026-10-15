@@ -3,30 +3,38 @@ type: quickstart
 title: Developer quickstart and task routing
 description: Start here to maintain Tweaked Computers internals, find owners and trust boundaries, and select a focused build or test without confusing player guides with developer architecture.
 tags: [quickstart, architecture, development, routing]
-verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-15T06:41:57.498Z
 sources:
   - id: openwiki-source-647cc954e0352bb51785a5d7
     resource: repo://control.lua
   - id: openwiki-source-0f322ac3f67e0772fa67765f
     resource: repo://data.lua
+  - id: openwiki-source-c579e13e7a45ccc214422220
+    resource: repo://docs/rd5-candidate.md
+  - id: openwiki-source-765149bc0fcb867d9e5de6c4
+    resource: repo://scripts/lifecycle.lua
+  - id: openwiki-source-562ddd59792f21328a7d3825
+    resource: repo://scripts/rendering.lua
   - id: openwiki-source-4cee717286544161165260f8
     resource: repo://scripts/runtime/compiler.lua
   - id: openwiki-source-0ddacafef71462f8b63089cd
     resource: repo://scripts/runtime/computer.lua
   - id: openwiki-source-5d48cd00e5813afcd8f4727c
     resource: repo://scripts/runtime/data.lua
+  - id: openwiki-source-56946c7bbf28112aad8ee479
+    resource: repo://scripts/ui/editor.lua
   - id: openwiki-source-ed1a70dfaf29a8bea3029be3
     resource: repo://tools/build.py
   - id: openwiki-source-76b87832ddf6312873ab8b07
     resource: repo://tools/smoke.py
-generated: { by: "hermes", at: "2026-10-15T06:41:57.498Z" }
+generated: { by: "hermes", at: "2026-10-15T13:11:13.133Z" }
+verified:
+  - by: openwiki/0.7.1
+    at: 2026-10-15T13:11:13.133Z
 ---
 
 # Developer quickstart and task routing
 
-Tweaked Computers is a Factorio 2.0.77 alpha implementation with optional Space Age. It composes native guarded named callbacks, a single-document editor, role-separated discovery and logic I/O, local string/hash KV, merging monitors, typed native configurators and material lifecycle policies. It is not an OS/filesystem/interpreter and is not client-verified stable software. Back up saves; limits and performance envelopes remain provisional.
+Tweaked Computers is a Factorio 2.0.77 alpha implementation with optional Space Age. It composes native guarded named callbacks, a five-tab single-document workspace, visible circuit-shell Network endpoints with isolated auxiliary roles, local string/hash KV, merging monitors with explicit below-feedback sprite strata, typed native configurators and material lifecycle policies. The [0.1.2 integrated candidate](../docs/rd5-candidate.md) records the focused verification and publication handoff. It is not an OS/filesystem/interpreter and is not client-verified stable software. Back up saves; limits and performance envelopes remain provisional.
 
 This is the developer OpenWiki: it explains source ownership, data/control flow, invariants, failure paths and extension seams. The separate [player guide](../docs/player/index.md) is the player-site source; existing [alpha installation/checklist](../docs/alpha-candidate.md) and [factory example](../docs/factory-example.md) are useful behavioral context, not substitutes for internal architecture. Planned contracts under OpenSpec must be compared with actual source before claiming effective behavior.
 
