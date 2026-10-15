@@ -67,7 +67,7 @@ the image. Power restoration reveals retained content, not a newly blank model.
 The renderer puts content below native world feedback rather than drawing a
 custom removal symbol. Native red-X visibility while the display changes is
 still a user-owned graphical check for this alpha; headless state tests alone do
-not establish it. See the [short candidate check](../rd4-verification.md#short-user-owned-native-check-still-unperformed).
+not establish it. See the [integrated playtest](editor.md#integrated-redesign-playtest).
 
 ## Blueprint disclosure and copies
 

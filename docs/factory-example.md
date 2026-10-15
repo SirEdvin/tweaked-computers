@@ -95,7 +95,7 @@ Change `count < 100` to `count < 3` in the editor. Save without Apply: the old a
 revision still fills at stock=5. Apply/Run the saved revision: a new run retains
 `enabled` state, cancels old timers/subscriptions and now stops at stock=5. An
 invalid candidate never retires the old run. Close/Escape retains an unsaved draft.
-For conflicts, Review Current and explicitly Rebase or Reload; never silently
+For conflicts, use Maintenance → Review current saved source and explicitly Rebase or Reload; never silently
 replace another player's newer source. Stop before confirming Reset State.
 
 A cold save/load retains active/saved source, enabled state, timer/subscription

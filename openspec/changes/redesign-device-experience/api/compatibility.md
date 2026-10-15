@@ -23,7 +23,7 @@ These are host-only adapter actions, not new guest APIs. The current model remai
 | rebase | Maintenance reviewed resolution | Preserve draft and recheck current saved revision. |
 | reload | Maintenance reviewed resolution | Explicitly discard draft only after review. |
 | review-active / copy-active | Maintenance source recovery | Review before replacing draft; copying never saves/runs. |
-| recover | Maintenance retained-drafts panel | Select/review source before replacing current draft; no autoactivation. |
+| review-recovery / recover | Maintenance retained-drafts panel | Select/review source before replacing current draft; no autoactivation. |
 | forget / confirm-forget / cancel-forget | Maintenance retained-drafts panel | Explicit confirmation; never evict the open document. |
 | open_recovery / recovery_action | Standalone recovery entry | Still available without an accessible computer; review and confirmed forget only. |
 | close | Native title close / Escape | Retain draft; do not stop execution. |

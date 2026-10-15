@@ -6,12 +6,12 @@ save before manual repair; redact secrets or private source literals before repo
 
 ## Computer and editor
 
-- Cannot open: select the body or NETWORK port and try the normal open action or
+- Cannot open: select the visible computer body and try the normal open action or
   rebindable Ctrl+Shift+E. Check force, surface, reach and permissions. Use native
   buttons while typing. Graphical focus/control delivery remains alpha testing.
 - Save changed nothing: Save changes committed source only. Apply/Run activates
   the displayed saved revision after validation. Unsaved text is never run implicitly.
-- Conflict/E_BUSY: Review Current, then explicitly Rebase (keep draft) or Reload
+- Conflict/E_BUSY: open Maintenance → Review current saved source, then explicitly Rebase (keep draft) or Reload
   (discard draft); a second intervening save requires another review.
 - Fault: inspect original line/column and active revision. Invalid syntax/subset
   needs repair; `E_BUDGET` needs less per-callback work, not pcall/busy loops or

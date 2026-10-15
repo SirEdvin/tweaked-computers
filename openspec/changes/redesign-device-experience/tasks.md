@@ -1,6 +1,9 @@
 # Tasks
 
-Approval hold: all five RD cards must remain blocked until the user validates this plan. No implementation, dispatch, release, merge or protection changes are authorized by creation of these artifacts.
+Approval amendment (2026-10-15): the user approved implementation and requested
+0.1.2 ALPHA publication after integration. The former planning hold is superseded.
+RD5 owns the integrated candidate only; RD6 `t_f930ba9e` owns actual publication.
+No default-branch merge, protection change or OpenSpec archival is authorized here.
 
 Each section is one cohesive Kanban milestone, not a separate card per checkbox. Workers implement their own focused tests and documentation, commit/push scoped handoffs, and explicitly distinguish headless/model evidence from user-owned native visual review. Merge the pinned plan and verified prerequisite commits in isolated worktrees before editing; dependency edges do not transfer code.
 
@@ -58,9 +61,14 @@ and user-owned. These checked implementation tasks do not close that client chec
 
 Parents: RD2, RD3, RD4. Owns cross-capability integration only; earlier cards owe their own tests/docs.
 
-- [ ] 5.1 Merge all verified prerequisite commits and resolve cross-stream behavior; run the focused packaged regression set once on the integrated candidate, verifying upgrade/data/wires, author-save-run flow, role isolation and monitor mark/cancel state, with commit ancestry and exact artifact hashes recorded.
-- [ ] 5.2 Reconcile player guides/API compatibility and refresh source-grounded developer OpenWiki for the integrated source; verify documentation build/links and that docs describe devices/tabs rather than internal helper tiles or superseded controls.
-- [ ] 5.3 Deliver the installable review candidate, complete contact sheets, test results and one concise user playtest checklist; verify exact archive content/version/hash and distinguish implementation completion from deferred native visual acceptance. Do not publish, merge the default branch, change protections or mark unperformed client checks passed.
+- [x] 5.1 Merge all verified prerequisite commits and resolve cross-stream behavior; run the focused packaged regression set once on the integrated candidate, verifying upgrade/data/wires, author-save-run flow, role isolation and monitor mark/cancel state, with commit ancestry and exact artifact hashes recorded.
+- [x] 5.2 Reconcile player guides/API compatibility and refresh source-grounded developer OpenWiki for the integrated source; verify documentation build/links and that docs describe devices/tabs rather than internal helper tiles or superseded controls.
+- [x] 5.3 Deliver the installable review candidate, complete contact sheets, test results and one concise user playtest checklist; verify exact archive content/version/hash and distinguish implementation completion from deferred native visual acceptance. Do not publish, merge the default branch, change protections or mark unperformed client checks passed.
+
+RD5 integration/evidence: `docs/rd5-candidate.md`, external candidate manifest and
+full focused logs. Version 0.1.2 is prepared but unpublished; native graphical
+acceptance (including the remaining 3.1 client portion) is still user-owned and
+unperformed. One integrated checklist lives in `docs/player/editor.md`.
 
 ## Workflow follow-up
 

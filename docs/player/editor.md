@@ -125,8 +125,14 @@ For a fault: read Console's first error, Stop if necessary, repair source/wiring
 power, Validate, Save and Run. Reset State is a deliberate last step for application
 data, not a wiring fix or a way to clear a database.
 
-## Short native-client playtest (not yet performed)
+## Integrated redesign playtest
 
+This short user-owned native-client review is not yet performed. Use the exact
+0.1.2 candidate and a backed-up test save, retaining the old mod/world for rollback.
+
+- Place/rotate all five devices; check ordinary-zoom silhouettes, icons/status,
+  direct red/green Network contacts and distinct logic Input/Output / configurator
+  Factory targets. Open/mine/mark the visible body, not a private power helper.
 - At **1280×720** and **1920×1080**, try **100%** and **150%** GUI scale. Drag the
   window; change scale/resolution and check clamping, readable tabs, close and
   the complete Editor action row. At 1280×720 / 150%, expect a compact code area.
@@ -138,6 +144,15 @@ data, not a wiring fix or a way to clear a database.
 - Wire a device on each color, inspect/select it, disconnect it, and Refresh.
   Try reviewed rebase/reload, cancel reset/forget, then close/reopen a dirty draft.
   Open standalone recovery after the original computer is unavailable.
+- On a powered 2×2 monitor, keep text/background/cursor changing; mark one
+  non-anchor tile and confirm the genuine native red X remains visible. Repeat
+  dark/unpowered and rotated. Save/load, cancel, restore power and check retained
+  image/palette/cursor and Ctrl+click coordinates. Then allow robot removal and
+  check normal splitting with no floating fragments or extra drops.
+- Upgrade a copy of a populated 0.1.1 world; inspect existing role/color wires,
+  source/state/KV/display and retained drafts. Reopen the editor; conversion must
+  not replay startup. Report a failure with version/hash, orientation, power,
+  wiring and a screenshot, with private source literals removed.
 
 These are small user checks of native delivery/rendering, not a request for a broad
 client, multiplayer or stress matrix. Automated layout/model checks do not pass them.

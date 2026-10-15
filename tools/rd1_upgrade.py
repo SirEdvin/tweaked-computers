@@ -56,7 +56,7 @@ def main():
         mods, write = folder / 'mods', folder / 'write'
         mods.mkdir(parents=True)
         (write / 'saves').mkdir(parents=True)
-        archive_path = mods / args.archive.name
+        archive_path = mods / Path(baseline['path']).name
         shutil.copy2(baseline['path'], archive_path)
         testmod = mods / 'tc-smoke_0.0.1'
         testmod.mkdir()
@@ -86,6 +86,8 @@ def main():
         shutil.copy2(snapshot, ordinary)
         phases.append(cold_phase(args.factorio, cfg, mods, ordinary, folder, 'cold-second', 'TC_COLD_OK'))
         # Replace only the isolated mod copy; assert the exact production bytes.
+        archive_path.unlink()
+        archive_path = mods / args.archive.name
         shutil.copy2(args.archive, archive_path)
         assert hashlib.sha256(archive_path.read_bytes()).hexdigest() == summary['candidate_sha256']
         info['version'] = '0.0.2'
