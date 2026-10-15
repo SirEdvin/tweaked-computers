@@ -76,8 +76,8 @@ Parent: RD5. Card: `t_f930ba9e`. Authorized explicitly by the user on 2026-10-15
 
 - [x] 6.1 Verify RD1–RD5 ancestry, reconcile approval/delivery notes, update release/install/source documentation and retain the source-grounded developer OpenWiki.
 - [x] 6.2 Build deterministic `tweaked-computers_0.1.2.zip` and verify the final archive with focused base/Space Age, populated-0.1.1 upgrade, cold persistence, wiring authority and GUI model/render-state checks; retain deferred native QA honestly.
-- [ ] 6.3 Commit/push exact source, publish an immutable matching GitHub alpha prerelease/tag with checked ZIP/checksums, deploy player docs from that source and verify the live source marker.
-- [ ] 6.4 Publish to the existing Factorio Mods listing using the official upload API; read back exactly one 0.1.2 release with matching filename/compatibility/SHA-1 and edited description/source metadata. Never replace an existing different release.
+- [x] 6.3 Commit/push exact source, publish an immutable matching GitHub alpha prerelease/tag with checked ZIP/checksums, deploy player docs from that source and verify the live source marker.
+- [x] 6.4 Publish to the existing Factorio Mods listing using the official upload API; read back exactly one 0.1.2 release with matching filename/compatibility/SHA-1 and edited description/source metadata. Never replace an existing different release.
 
 ## Workflow follow-up
 
