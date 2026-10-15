@@ -459,6 +459,12 @@ function M.new(context, services)
       G.scalar(a); G.scalar(b); return a<b
     end)
     G.check()
+    -- Comparators are guest callbacks and may have changed the original table.
+    -- Recheck the complete publication before restoring any sorted slots.
+    local count=inventory(t)
+    G.spend(n)
+    for i=1,n do if t[i]==nil then count=count+1 end end
+    if count>limits.table_entries then errors.raise('E_LIMIT','sort publication exceeds table capacity') end
     for i=1,n do t[i]=staged[i] end
   end
   env.math=G.namespace(mathlib,'math function')
