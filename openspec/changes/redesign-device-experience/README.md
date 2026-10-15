@@ -14,7 +14,17 @@ Start with [review.html](review.html) in a browser: a native-styled tab/focus la
 | RD4 | Correct monitor layers and native deconstruction feedback | RD1, RD2 |
 | RD5 | Integrated candidate, player documentation and source-grounded developer OpenWiki | RD2, RD3, RD4 |
 
-Kanban identifiers and verified held state are recorded in `task-map.json` after card creation. Each milestone owns its focused checks and documentation; RD5 verifies integration rather than deferring all testing to the end.
+Verified Kanban cards (all blocked, no worker runs):
+
+| Milestone | Card |
+| --- | --- |
+| RD1 | `t_af128150` |
+| RD2 | `t_8cfd8907` |
+| RD3 | `t_43cde3d0` |
+| RD4 | `t_6c52f091` |
+| RD5 | `t_d31d7ca7` |
+
+Full checked graph, checklist ownership and isolated worktrees are recorded in `task-map.json`. Each milestone owns its focused checks and documentation; RD5 verifies integration rather than deferring all testing to the end.
 
 ## Reading map
 

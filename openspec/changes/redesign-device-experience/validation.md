@@ -7,4 +7,4 @@
 - Mockup pixels and five-device schematic sheet inspected. Screenshots remain outside Git. This is browser evidence only, not Factorio GUI, game sprites, native hover, red-X visibility or migration evidence.
 - No runtime code or release artifacts changed. Native acceptance belongs to future implementation and the user's short in-game review.
 
-Kanban graph, checklist ownership, blocked state, worktree isolation and remote planning ref are verified after card creation and recorded in task-map.json.
+Kanban readback verified all five cards blocked with no start time or current run, distinct project worktrees and Albina assignment. The graph is acyclic, RD5 depends transitively on every other milestone, and all 17 checklist rows have exactly one owner. The pushed planning commit matches the remote ref. Details are recorded in task-map.json.
