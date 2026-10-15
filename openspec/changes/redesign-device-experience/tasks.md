@@ -17,9 +17,14 @@ Parents: none. Owns `peripheral-network` and physical/migration portions of `dev
 
 Parents: RD1. Owns `device-visual-identity` and attributable artwork requirements.
 
-- [ ] 2.1 Author five distinct complete device designs following the approved silhouettes: low operator console, storage cabinet, flat monitor, continuous three-bay logic instrument and two-bay configurator; inspect a contact sheet at ordinary and enlarged scale and verify no peripheral is a repeated/recolored computer body.
-- [ ] 2.2 Export/install all cardinal sprites, shadows, icons and relevant status states using RD1 socket geometry; verify exact alignment/footprints and native data-stage loading, preserving monitor cell/bezel geometry and existing functional behavior.
-- [ ] 2.3 Deliver editable sources, reproducible export, source/output provenance and retained notices; verify generated packaged bytes and update player device identification plus developer art instructions. Native in-world visual acceptance remains a short user checklist, not a headless claim.
+- [x] 2.1 Author five distinct complete device designs following the approved silhouettes: low operator console, storage cabinet, flat monitor, continuous three-bay logic instrument and two-bay configurator; inspect a contact sheet at ordinary and enlarged scale and verify no peripheral is a repeated/recolored computer body.
+- [x] 2.2 Export/install all cardinal sprites, shadows, icons and relevant status states using RD1 socket geometry; verify exact alignment/footprints and native data-stage loading, preserving monitor cell/bezel geometry and existing functional behavior.
+- [x] 2.3 Deliver editable sources, reproducible export, source/output provenance and retained notices; verify generated packaged bytes and update player device identification plus developer art instructions. Native in-world visual acceptance remains a short user checklist, not a headless claim.
+
+RD2 implementation/evidence: `docs/rd2-verification.md` and `assets/README.md`.
+All directions, 160 status samples, ordinary/enlarged views, icons and native-contact
+overlays are generated externally for review. Native in-world appearance remains
+user-deferred; these checked implementation tasks do not mark graphical acceptance.
 
 ## 3. RD3 — Code-first tabbed computer workspace
 

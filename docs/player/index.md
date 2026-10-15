@@ -50,6 +50,8 @@ explains implementation internals; this site, not that wiki, is the player and
 public Lua API reference. This link identifies the source-grounded developer
 wiki snapshot independently of the repository's default branch.
 
-Project source and selected Greg Flavored device artwork are MIT licensed with
-retained notices. The character atlas is independently authored. No original
-CC:Tweaked font or complete CraftOS/Computer Core/Redis compatibility is implied.
+Project source, the original industrial device family and the independently
+authored character atlas are MIT licensed. Approved historical Greg Flavored
+inputs and their complete MIT notices remain in the source/package; the new
+family does not sample them. No original CC:Tweaked font or complete
+CraftOS/Computer Core/Redis compatibility is implied.

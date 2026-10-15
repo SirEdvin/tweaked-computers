@@ -11,7 +11,7 @@ from pathlib import Path
 import subprocess
 import sys
 import zipfile
-from generate import ROOT, digest, png_read, png_write, canvas, paint
+from generate import ROOT, digest, png_read, png_write
 
 
 def check(output):
@@ -51,12 +51,41 @@ def check(output):
             assert all(pixels[y * w][3] == pixels[y * w + w - 1][3] == 0 for y in range(h))
         alpha = Counter(p[3] for p in pixels)
         assert set(alpha) <= {0, 85, 255}
-        if record.get('state') in ('off', 'unpowered'):
-            assert alpha == {0: w * h}
-        elif record['layer'] in ('body','shadow','icon'):
+        if record['layer'] in ('body','shadow','icon','status'):
             assert alpha[0] and (alpha[85] if record['layer'] == 'shadow' else alpha[255])
         if record['layer'] == 'shadow':
             assert all(p[:3] == (0,0,0) for p in pixels)
+    # Exact sprite/native geometry mapping, including monitor's half-open raster.
+    layout=json.loads((ROOT/'socket-layout.json').read_text())
+    contacts=0
+    silhouettes={}
+    for kind,device in manifest['devices'].items():
+        for direction,view in device['directions'].items():
+            assert view['roles']==layout['devices'][kind]['directions'][direction]
+            w,h,pixels=png_read((ROOT/view['body']).read_bytes())
+            for role,entry in view['roles'].items():
+                for color,(x,y) in entry['contacts'].items():
+                    px,py=round(w/2+x*64),round(h/2+y*64)
+                    expected=(221,120,103,255) if color=='red' else (147,186,120,255)
+                    assert pixels[py*w+px]==(expected if kind=='monitor' else (234,216,162,255)), (kind,direction,role,color)
+                    contacts+=1
+            if direction=='north':
+                silhouettes[kind]=tuple(p[3] for p in pixels)
+            if kind=='monitor':
+                visible=[(i%w-w//2,i//w-h//2) for i,p in enumerate(pixels) if p[3]]
+                assert len(visible)==64*64
+                assert (min(x for x,y in visible),max(x for x,y in visible),min(y for x,y in visible),max(y for x,y in visible))==(-32,31,-32,31)
+                for y in range(-30,30):
+                    for x in range(-30,30): assert pixels[(h//2+y)*w+w//2+x]==(17,29,32,255)
+            for state,path in view['states'].items():
+                sw,sh,status_pixels=png_read((ROOT/path).read_bytes())
+                for frame in range(sw//w):
+                    lit=[(x-w//2,y-h//2) for y in range(h) for x in range(w) if status_pixels[y*sw+frame*w+x][3]]
+                    assert 1<=len(lit)<=9
+                    if kind=='monitor':
+                        assert all(-32<=x<=31 and -32<=y<=31 and not (-30<=x<30 and -30<=y<30) for x,y in lit), (direction,state)
+    assert contacts==64
+    assert len(set(silhouettes.values()))==5, 'family must not reuse the same silhouette'
     # Check the byte mapping independently of the renderer's source branches.
     w, h, pixels = png_read((ROOT / 'glyphs/atlas.png').read_bytes())
     assert (w,h) == (96,144)
@@ -116,23 +145,15 @@ def check(output):
         text=package.read('tweaked-computers_0.0.1/assets/notices/Greg-Flavored-MIT.txt')
         assert b'Copyright (c) 2024 BirbIrl' in text and b'Permission is hereby granted' in text
         assert not any('term_font' in n or 'CCPL.txt' in n for n in names)
-    # Asset inspection contact sheet, NOT a client screenshot or acceptance.
-    preview=canvas(640,800)
-    kinds=('computer','kv','monitor','logic','configurator')
-    for row,kind in enumerate(kinds):
-        for column,direction in enumerate(('north','east','south','west')):
-            base=png_read((ROOT/f'sprites/{kind}-{direction}-body.png').read_bytes())
-            status=png_read((ROOT/f'sprites/{kind}-{direction}-powered.png').read_bytes())
-            scale=1 if base[0]==160 else 2
-            for y in range(160):
-                for x in range(160):
-                    paint(preview,column*160+x,row*160+y,base[2][y*scale*base[0]+x*scale])
-                    paint(preview,column*160+x,row*160+y,status[2][y*scale*base[0]+x*scale])
-    (output/'contact-sheet.png').write_bytes(png_write(preview))
+    # Complete correctly scaled contact sheets; wide devices are not shrunk.
+    from contact_sheet import main as contact_sheet
+    contact_sheet(output/'contact-sheets',None)
     summary={'passed':True,'source_inputs':len(manifest['inputs']),'png_outputs':len(records),
              'glyph_slots':256,'ascii_slots':95,'mosaic_slots':32,'byte_exact_regeneration':True,
              'archive_sha256':digest(archive.read_bytes()),'archive':str(archive),
-             'client_evidence':False,'static_checks':'source/output/decoded-alpha hashes, dimensions, transparent bounds, glyph masks, regeneration, ZIP notices/inventory'}
+             'contacts_checked':contacts,'distinct_silhouettes':len(silhouettes),
+             'monitor_interior_pixels':60*60,'monitor_bezel_units':2,
+             'client_evidence':False,'static_checks':'source/output/decoded-alpha hashes, dimensions, transparent bounds, exact socket pixels, fixed monitor raster, compact statuses, distinct silhouettes, glyph masks, regeneration, ZIP notices/inventory'}
     (output/'static-summary.json').write_text(json.dumps(summary,indent=2)+'\n')
     print(json.dumps(summary,sort_keys=True))
 

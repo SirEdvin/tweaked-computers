@@ -44,6 +44,26 @@ paths remain during outages, but active peripheral calls fail `E_UNPOWERED`.
 Computer callbacks pause; logic output clears; monitor presentation hides but its
 image survives. KV expiry still follows simulation ticks.
 
+## Recognize the devices
+
+The world sprites and inventory icons use the same industrial forms:
+
+| Device | Look for |
+| --- | --- |
+| Computer | Low sloped console with dark inset screen, keyboard and cooling grille |
+| KV database | Ribbed cabinet with stacked storage cartridges; no keyboard or screen |
+| Monitor | Flat dark glass tile with a thin metal bezel and edge wire contacts |
+| Logic handler | One three-bay instrument: Input chevron, central processing/Network, double-chevron Output |
+| Configurator | One two-bay controller: service dial/Network beside the Factory targets terminal bank |
+
+The small Network diamond and Factory targets crosshair supplement the device
+shape and socket position. Their colors do not restrict which wire color you use.
+A powered stopped computer has a grey dash; running uses an alternating amber
+beacon. Green means a powered peripheral, amber slash means unpowered and a tiny
+red cross means fault (monitors use compact bezel dots). These status cues are
+not deconstruction markers and do not replace the native removal X. The body
+keeps its identity in every state. Native appearance remains part of alpha review.
+
 ## Direct device wiring and role sockets
 
 Connect red or green wire directly to the visible computer, database or monitor.

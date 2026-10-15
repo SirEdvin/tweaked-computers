@@ -25,6 +25,23 @@ class PackageInventoryTests(unittest.TestCase):
                     self.assertEqual(package.read(name), (build.ROOT / notice).read_bytes())
                 self.assertTrue((build.ROOT / 'assets/generate.py').is_file())
 
+    def test_actual_gameplay_art_bytes_match_provenance(self):
+        import hashlib
+        import json
+        art=json.loads((build.ROOT/'assets/manifest.json').read_text())
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            archive=build.build(output)
+            with zipfile.ZipFile(archive) as package:
+                prefix=next(n[:-len('info.json')] for n in package.namelist() if n.endswith('/info.json'))
+                for record in art['outputs']+art['notices']+art['generated_metadata']:
+                    data=package.read(prefix+record['path'])
+                    self.assertEqual(hashlib.sha256(data).hexdigest(),record['sha256'])
+                    self.assertEqual(data,(build.ROOT/record['path']).read_bytes())
+                pngs={n[len(prefix):] for n in package.namelist() if n.startswith(prefix+'assets/') and n.endswith('.png') and '/upstream/' not in n}
+                self.assertEqual(pngs,{r['path'] for r in art['outputs']})
+                self.assertEqual(json.loads(package.read(prefix+'assets/manifest.json')),art)
+                self.assertEqual(package.read(prefix+'assets/socket-layout.json'),(build.ROOT/'assets/socket-layout.json').read_bytes())
+
     def test_explicit_inventory_rejects_prohibited_suffixes(self):
         # Synthetic inventory entries test rejection before payload access; no
         # fake executable is created and the production source stays untouched.

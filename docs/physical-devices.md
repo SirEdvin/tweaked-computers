@@ -45,12 +45,15 @@ are tile units; north contact x is the role center ±0.07 (red/green). Contact y
 −0.1 except monitors, whose −0.48 lies in the unchanged two-pixel bezel, outside
 cell content. `transform` rotates these offsets. `pad_box` is ±0.22 tile.
 
-RD2 must consume those coordinates, preserve the footprints and monitor cell
-geometry, and supply the new artwork. This RD1 source retains existing sprites,
-not a claim that the completed five-silhouette redesign is already installed.
-Device-specific native names/descriptions are present; native graphical hover,
-wire/art alignment and ordinary-scale usability still require the short checklist
-in [rd1-verification.md](rd1-verification.md).
+RD2 exports those coordinates in the pinned engine and consumes them in
+`assets/industrial.py`; `assets/socket-layout.json` records the definition hash.
+The original five-design family is installed in all four directions, icons,
+shadows and status frames, with unchanged footprints and monitor cell geometry.
+See [art authoring/provenance](../assets/README.md) and
+[RD2 verification](rd2-verification.md). Device-specific native names/descriptions
+are present; native graphical hover, wire/art alignment and ordinary-scale
+usability still require the short user checklist. Contact sheets are generated
+asset inspection, not native-client screenshots.
 
 ## Reviewable initial balance
 
