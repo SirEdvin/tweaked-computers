@@ -35,15 +35,15 @@ local function submit(c,source,index,save_only,action)
   local ok,e=pcall(function()
     game={tick=tick,get_player=function(i) if i==p.index then return p end end,connected_players={p}}
     assert(editor.open(p,c.id)); local frame=p.gui.screen[editor.frame_name]
-    frame.content.source.text=source
-    editor.on_text{player_index=p.index,element=frame.content.source,tick=tick}
-    editor.on_click{player_index=p.index,element=frame.content.actions.save,tick=tick}
+    frame.content.editor.source.text=source
+    editor.on_text{player_index=p.index,element=frame.content.editor.source,tick=tick}
+    editor.on_click{player_index=p.index,element=frame.content.editor.actions.save,tick=tick}
     assert(c.saved_source==source,'actual Save must consume draft text')
     if not save_only then
-      editor.on_click{player_index=p.index,element=frame.content.actions[action or 'run'],tick=tick}
+      editor.on_click{player_index=p.index,element=frame.content.editor.actions.activate,tick=tick}
       assert(c.status=='running' and c.active.source==source,serpent.line(c.candidate_diagnostic))
     end
-    editor.on_click{player_index=p.index,element=frame.content.actions.close,tick=tick}
+    editor.on_click{player_index=p.index,element=frame.title.close,tick=tick}
   end)
   game=real; if not ok then error(e,0) end
 end

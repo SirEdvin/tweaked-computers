@@ -157,11 +157,11 @@ function M.on_tick(event)
     local ok,err=pcall(function()
       game={tick=event.tick,get_player=function(index) if index==p.index then return p end end,connected_players={p}}
       assert(editor.open(p,c.id)); local frame=p.gui.screen[editor.frame_name]
-      frame.content.source.text=source
-      editor.on_text{player_index=p.index,element=frame.content.source,tick=event.tick}
-      editor.on_click{player_index=p.index,element=frame.content.actions.save,tick=event.tick}
+      frame.content.editor.source.text=source
+      editor.on_text{player_index=p.index,element=frame.content.editor.source,tick=event.tick}
+      editor.on_click{player_index=p.index,element=frame.content.editor.actions.save,tick=event.tick}
       assert(c.saved_source==source and c.status=='stopped')
-      editor.on_click{player_index=p.index,element=frame.content.actions.run,tick=event.tick}
+      editor.on_click{player_index=p.index,element=frame.content.editor.actions.activate,tick=event.tick}
       assert(c.status=='running' and c.active.source==source)
     end)
     game=real_game; if not ok then error(err,0) end

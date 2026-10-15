@@ -13,8 +13,24 @@ local function refused(fn,code)
   local ok,e=pcall(fn); assert(not ok and type(e)=='table' and e.code==code,'expected '..code)
 end
 local function gui(parent,spec)
-  local e={valid=true,parent=parent,children={},type=spec.type,name=spec.name or '',style={},tags=spec.tags or {},
-    text=spec.text or '',caption=spec.caption,visible=spec.visible~=false,items=spec.items or {},selected_index=0}
+  -- Pinned LuaStyle height/width/size are write-only aliases. Catch accidental
+  -- use of these as getters, and text-only rich-text settings on button styles.
+  local style_values={}
+  local style=setmetatable({},{__index=function(_,key)
+    assert(key~='height' and key~='width' and key~='size','write-only LuaStyle getter '..key)
+    return style_values[key]
+  end,__newindex=function(_,key,value)
+    if key=='rich_text_setting' then assert(spec.type=='label' or spec.type=='text-box' or spec.type=='textfield','rich text style subclass') end
+    if key=='height' then style_values.minimal_height=value; style_values.maximal_height=value
+    elseif key=='width' then style_values.minimal_width=value; style_values.maximal_width=value
+    elseif key=='size' then style_values.minimal_height=value; style_values.minimal_width=value
+    else style_values[key]=value end
+  end})
+  local e={valid=true,parent=parent,children={},type=spec.type,name=spec.name or '',style=style,tags=spec.tags or {},
+    _text=spec.text or '',text_writes=0,caption=spec.caption,visible=spec.visible~=false,enabled=true,
+    items=spec.items or {},selected_index=spec.selected_index or 0,state=spec.state,sprite=spec.sprite,tabs={}}
+  setmetatable(e,{__index=function(t,k) if k=='text' then return rawget(t,'_text') end end,
+    __newindex=function(t,k,v) if k=='text' then rawset(t,'_text',v); t.text_writes=t.text_writes+1 else rawset(t,k,v) end end})
   function e.add(child)
     assert(not (child.type=='scroll-pane' and child.direction),'invalid scroll-pane direction')
     local c=gui(e,child)
@@ -31,6 +47,11 @@ local function gui(parent,spec)
   function e.get_index_in_parent() for i,c in ipairs(e.parent.children) do if c==e then return i end end end
   function e.force_auto_center() e.centered=true end
   function e.focus() e.focused=true end
+  function e.clear() for i=#e.children,1,-1 do e.children[i].destroy() end end
+  function e.add_tab(tab,content) e.tabs[#e.tabs+1]={tab=tab,content=content} end
+  function e.scroll_to_bottom() e.scrolls=(e.scrolls or 0)+1 end
+  function e.select(first,last) e.selection={first,last} end
+  function e.select_all() e.selection={1,#e.text} end
   return e
 end
 function M.player(index,body)
@@ -131,6 +152,7 @@ function M.run()
     refused(function() model.action(p,s.token,'save',tick) end,'E_UNREACHABLE')
     assert(replacement.saved_revision==0 and replacement.saved_source=='' and d.source==source(37))
     local next_session=model.open(p,replacement.id)
+    model.action(p,next_session.token,'review-recovery',tick,old.id)
     model.action(p,next_session.token,'recover',tick,old.id)
     assert(replacement.saved_source=='' and replacement.status=='stopped')
     assert(model.session(p.index).id==replacement.id)
@@ -140,39 +162,40 @@ function M.run()
     game={get_player=function(index) if index==a.index then return a elseif index==b.index then return b end end,
       connected_players={a,b},tick=real_game.tick}
     local function click(p,element) editor.on_click{player_index=p.index,element=element,tick=tick} end
-    local function edit(p,f,text) f.content.source.text=text; editor.on_text{player_index=p.index,element=f.content.source,tick=tick} end
+    local function edit(p,f,text) f.content.editor.source.text=text; editor.on_text{player_index=p.index,element=f.content.editor.source,tick=tick} end
     group('editor-mocked-native-buttons-through-real-runtime',function()
       assert(editor.open(a,rec.id)); local f=a.gui.screen[editor.frame_name]
-      edit(a,f,source(23)); click(a,f.content.actions.save)
+      edit(a,f,source(23)); click(a,f.content.editor.actions.save)
       assert(rec.saved_source==source(23) and rec.status=='stopped')
-      tick=tick+1; click(a,f.content.actions.run)
+      tick=tick+1; click(a,f.content.editor.actions.activate)
       assert(rec.active.source==source(23) and scheduler.dispatch(rec,tick+1) and rec.state.value==23)
-      assert(f.content.source.focused and f.content.source.style.rich_text_setting==defines.rich_text_setting.disabled)
-      assert(f.content.output.read_only and f.content.output.style.rich_text_setting==defines.rich_text_setting.disabled)
-      assert(f.content.help_panel.help_text.read_only and f.content.help_panel.template_text.text:find('api_version',1,true))
-      click(a,f.content.actions.help); assert(f.content.help_panel.visible)
+      assert(f.content.editor.source.focused and f.content.editor.source.style.rich_text_setting==defines.rich_text_setting.disabled)
+      assert(f.content.console.output.read_only and f.content.console.output.style.rich_text_setting==defines.rich_text_setting.disabled)
+      assert(f.content.reference.reference_text.read_only and #f.content.tabs==5)
     end)
     group('editor-mocked-inactive-forged-cross-player-events',function()
       local f=a.gui.screen[editor.frame_name]; local run=rec.run_id; local saved=rec.saved_revision
-      a.opened={another_gui=true}; click(a,f.content.actions.stop); edit(a,f,'forged')
+      a.opened={another_gui=true}; click(a,f.content.editor.actions.stop); edit(a,f,'forged')
       assert(rec.run_id==run and rec.status=='running' and rec.saved_revision==saved)
-      a.opened=f; click(b,f.content.actions.stop); assert(rec.status=='running')
+      a.opened=f; click(b,f.content.editor.actions.stop); assert(rec.status=='running')
       local fake=gui(nil,{type='button',name='stop'}); click(a,fake); assert(rec.status=='running')
-      a.permission_group={allows_action=function() return false end}; click(a,f.content.actions.stop)
+      a.permission_group={allows_action=function() return false end}; click(a,f.content.editor.actions.stop)
       assert(rec.status=='running'); a.permission_group=nil
     end)
     group('editor-mocked-dirty-close-reopen-bounds-and-layout',function()
       local f=a.gui.screen[editor.frame_name]
       edit(a,f,source(29)); local saved=rec.saved_source
-      click(a,f.content.actions.close); assert(not f.valid and rec.saved_source==saved and rec.status=='running')
-      assert(editor.open(a,rec.id)); f=a.gui.screen[editor.frame_name]; assert(f.content.source.text==source(29))
-      edit(a,f,string.rep('x',limits.source_bytes+1)); assert(f.content.source.text==source(29))
-      f.content.recovery.selected_index=1; editor.refresh(a); assert(f.content.recovery.selected_index==1)
+      click(a,f.title.close); assert(not f.valid and rec.saved_source==saved and rec.status=='running')
+      assert(editor.open(a,rec.id)); f=a.gui.screen[editor.frame_name]; assert(f.content.editor.source.text==source(29))
+      edit(a,f,string.rep('x',limits.source_bytes+1)); assert(f.content.editor.source.text==source(29))
+      f.content.selected_tab_index=5; editor.on_tab{player_index=a.index,element=f.content,tick=tick}
+      f.content.maintenance.recovery.selected_index=1; editor.refresh(a); assert(f.content.maintenance.recovery.selected_index==1)
       for i=1,limits.console_entries+4 do runtime.log(rec,'[font=anything]'..i,tick) end
-      editor.refresh(a); assert(#rec.logs==limits.console_entries and f.content.output.text:find('older output discarded',1,true))
+      f.content.selected_tab_index=2; editor.on_tab{player_index=a.index,element=f.content,tick=tick}
+      editor.refresh(a); assert(#rec.logs==limits.console_entries and f.content.console.output.text:find('older output discarded',1,true))
       a.display_resolution={width=480,height=420}; a.display_scale=1.5
       local before=a.opened; editor.on_size{player_index=a.index}
-      assert(a.opened==before and f.style.width==300 and f.content.actions.children[1].name=='validate')
+      assert(a.opened==before and f.style.minimal_width==288 and f.content.editor.actions.children[1].name=='validate')
       editor.on_closed{player_index=a.index,element=f}; assert(not f.valid)
       local _,bag=model.session(a.index); assert(bag.documents[rec.id].source==source(29))
       assert(editor.open(a,rec.id)); editor.on_player_unavailable{player_index=a.index}
@@ -180,12 +203,12 @@ function M.run()
     end)
     group('editor-mocked-recovery-panel-never-executes',function()
       local oldrun=rec.run_id; editor.open_recovery(a)
-      local f=a.gui.screen[editor.frame_name]; f.content.recovery.selected_index=1
-      click(a,f.content.recovery_actions.review)
-      assert(f.content.review.text==source(29) and f.content.review.read_only and rec.run_id==oldrun)
-      click(a,f.content.recovery_actions.forget); assert(f.content.confirm_forget.visible)
-      click(a,f.content.confirm_forget['cancel-forget']); assert(f.content.review.text==source(29))
-      click(a,f.content.recovery_actions.close)
+      local f=a.gui.screen[editor.frame_name]; local c=f.recovery_content; c.recovery.selected_index=1
+      click(a,c.actions.review)
+      assert(c.review.text==source(29) and c.review.read_only and rec.run_id==oldrun)
+      click(a,c.actions.forget); assert(c.confirm_forget.visible)
+      click(a,c.confirm_forget.buttons['cancel-forget']); assert(c.review.text==source(29))
+      click(a,f.title.close)
     end)
   end)
   game=real_game
@@ -202,4 +225,5 @@ function M.run()
   log('TC_CONTRACT_TOTAL '..groups)
 end
 M.source=source
+M.gui=gui
 return M

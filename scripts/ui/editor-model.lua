@@ -108,20 +108,35 @@ function M.action(player,token,action,tick,arg)
     end
     d.source=review.source; s.validation=nil; s.reset=nil
     return 'Formerly active source copied into the draft; Save and Run are still separate.'
-  elseif action=='recover' then
+  elseif action=='review-recovery' then
     local recovered=b.documents[arg]
     if not recovered then errors.raise('E_NOT_FOUND','recovery draft not found') end
-    d.source=recovered.source; s.validation=nil; s.reset=nil
+    s.recovery_review={id=arg,source=recovered.source}; s.forget=nil
+    return 'Review retained source before copying it into this draft or forgetting it.'
+  elseif action=='recover' then
+    local recovered=b.documents[arg]; local review=s.recovery_review
+    if not recovered then errors.raise('E_NOT_FOUND','recovery draft not found') end
+    if not review or review.id~=arg or review.source~=recovered.source then
+      errors.raise('E_BUSY','review the selected recovery source before replacing this draft')
+    end
+    d.source=review.source; s.validation=nil; s.reset=nil
     return 'Recovery text copied into this draft; Save and Run remain separate.'
   elseif action=='forget' then
     if arg==s.id then errors.raise('E_ARGUMENT','cannot forget the open document; use reviewed Reload instead') end
     if not b.documents[arg] then errors.raise('E_NOT_FOUND','recovery draft not found') end
-    -- Separate native confirmation; never silently evict a dirty or removed draft.
-    s.forget=arg; return 'Confirm Forget to permanently delete the selected recovery draft.'
+    local review=s.recovery_review
+    if not review or review.id~=arg or review.source~=b.documents[arg].source then
+      errors.raise('E_BUSY','review the selected recovery draft before forgetting it')
+    end
+    -- Identity and reviewed bytes are checked again at the destructive boundary.
+    s.forget=arg; s.forget_source=review.source
+    return 'Confirm Forget to permanently delete the reviewed recovery draft.'
   elseif action=='confirm-forget' then
-    if not s.forget or s.forget==s.id then errors.raise('E_BUSY','choose a recovery draft first') end
-    b.documents[s.forget]=nil; s.forget=nil; return 'Selected recovery draft forgotten.'
-  elseif action=='cancel-forget' then s.forget=nil; return 'Forget cancelled.'
+    if not s.forget or s.forget==s.id or not b.documents[s.forget]
+      or b.documents[s.forget].source~=s.forget_source then errors.raise('E_BUSY','forget confirmation expired; review again') end
+    b.documents[s.forget]=nil; s.forget=nil; s.forget_source=nil; s.recovery_review=nil
+    return 'Selected recovery draft forgotten.'
+  elseif action=='cancel-forget' then s.forget=nil; s.forget_source=nil; return 'Forget cancelled.'
   end
   errors.raise('E_ARGUMENT','unknown editor action')
 end
@@ -135,14 +150,19 @@ function M.recovery_action(index,token,action,id)
   if not s or s.token~=token or s.mode~='recovery' then errors.raise('E_UNREACHABLE','recovery session changed') end
   if action=='review' then
     if not b.documents[id] then errors.raise('E_NOT_FOUND','draft not found') end
-    s.selected=id; s.forget=nil; return 'Recovery text below can be copied; it is never activated here.'
+    s.selected=id; s.selected_source=b.documents[id].source; s.forget=nil
+    return 'Recovery text below can be copied; it is never activated here.'
   elseif action=='forget' then
     if not s.selected or not b.documents[s.selected] then errors.raise('E_NOT_FOUND','review a draft first') end
-    s.forget=s.selected; return 'Confirm Forget to permanently delete this draft.'
+    if b.documents[s.selected].source~=s.selected_source then errors.raise('E_BUSY','draft changed; review again') end
+    s.forget=s.selected; s.forget_source=s.selected_source
+    return 'Confirm Forget to permanently delete this draft.'
   elseif action=='confirm-forget' then
-    if not s.forget or s.forget~=s.selected then errors.raise('E_BUSY','review and select Forget first') end
-    b.documents[s.forget]=nil; s.selected=nil; s.forget=nil; return 'Draft forgotten.'
-  elseif action=='cancel-forget' then s.forget=nil; return 'Forget cancelled.' end
+    if not s.forget or s.forget~=s.selected or not b.documents[s.forget]
+      or b.documents[s.forget].source~=s.forget_source then errors.raise('E_BUSY','review and select Forget first') end
+    b.documents[s.forget]=nil; s.selected=nil; s.selected_source=nil; s.forget=nil; s.forget_source=nil
+    return 'Draft forgotten.'
+  elseif action=='cancel-forget' then s.forget=nil; s.forget_source=nil; return 'Forget cancelled.' end
   errors.raise('E_ARGUMENT','unknown recovery action')
 end
 function M.close(index,token)

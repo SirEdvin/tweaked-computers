@@ -17,9 +17,9 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs/player'
 CHANGE = ROOT / 'openspec/changes/add-native-circuit-computers'
 EXAMPLES = {
-    'peripheral-program': 'Wire a computer NETWORK to any device NETWORK on red. Inspect both colors in the output pane.',
+    'peripheral-program': 'Wire a computer NETWORK to any device NETWORK on red. Inspect each color in Peripherals; read program output in Console.',
     'logic-controller': 'Follow [your first inserter controller](first-controller.md). Stock INPUT red, discovery NETWORK red, OUTPUT to the inserter.',
-    'kv-program': 'Connect one powered database NETWORK on red. Save/Run; inspect the delayed status/TTL in the output pane.',
+    'kv-program': 'Connect one powered database NETWORK on red. Save/Run; inspect the delayed status/TTL in Console.',
     'monitor-program': 'Connect a powered monitor NETWORK on red. Run, then activate a character cell; use matching adjacent tiles to test resize.',
     'configurator-program': 'Discovery NETWORK red; separate TARGETS green to one inserter. Sets A > 4, not A > 0. Supply an external A signal of at least 5 for motion.',
     'configurator-sections': 'Discovery NETWORK red; TARGETS green to one constant combinator. Adds a section, activates it and saves its actual index in computer state; it intentionally writes no signal filters.',
