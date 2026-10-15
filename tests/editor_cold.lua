@@ -33,7 +33,9 @@ local function snapshot()
     active_source=rec.active.source,active_revision=rec.active.revision,saved_source=rec.saved_source,
     saved_revision=rec.saved_revision,draft=d.source,base_source=d.base_source,base_revision=d.base_revision,
     token=s.token,boots=rec.state.boots,ledger_tick=r.ledger.tick,total=r.ledger.total,compile=m.compile,
-    work=m.work,allocations=m.allocations,scheduler_tick=r.scheduler.last_tick,sequence=r.next_sequence}
+    work=m.work,allocations=m.allocations,scheduler_tick=r.scheduler.last_tick,sequence=r.next_sequence,
+    tab=s.tab,focus=s.focus,before_focus=s.before_focus,follow=s.follow,search=s.search,category=s.category,topic=s.topic,
+    review_source=s.review and s.review.source,review_revision=s.review and s.review.revision}
 end
 local function frozen()
   local f=storage.tc06_fixture; local now=snapshot()
@@ -58,10 +60,10 @@ function M.run()
   local original_game=game
   game={get_player=function() return player end,tick=original_game.tick}
   local ok,e=pcall(function()
-    f.content.source.text=old_source
-    editor.on_text{player_index=player.index,element=f.content.source,tick=original_game.tick}
-    editor.on_click{player_index=player.index,element=f.content.actions.save,tick=original_game.tick}
-    editor.on_click{player_index=player.index,element=f.content.actions.run,tick=original_game.tick}
+    f.content.editor.source.text=old_source
+    editor.on_text{player_index=player.index,element=f.content.editor.source,tick=original_game.tick}
+    editor.on_click{player_index=player.index,element=f.content.editor.actions.save,tick=original_game.tick}
+    editor.on_click{player_index=player.index,element=f.content.editor.actions.activate,tick=original_game.tick}
   end)
   game=original_game; if not ok then error(e,0) end
   assert(rec.saved_revision==1 and rec.active.revision==1 and rec.active.source==old_source)
@@ -84,7 +86,8 @@ function M.on_tick(event)
     assert(ctx.machine.compile==f.snapshot.compile and ctx.ledger.total==f.snapshot.total)
     local player=contracts.player(f.player,rec.body)
     assert(editor.open(player,rec.id)); local gui=player.gui.screen[editor.frame_name]
-    assert(gui.content.source.text==draft_source and rec.active.source==old_source and rec.saved_source==saved_source)
+    assert(gui.content.editor.source.text==draft_source and rec.active.source==old_source and rec.saved_source==saved_source)
+    assert(gui.content.selected_tab_index==1 and not model.session(player.index).focus,'explicit reopen starts in Editor')
     model.close(player.index,model.session(player.index).token); gui.destroy()
     f.phase='resumed'
   elseif f.phase=='armed' then
@@ -95,6 +98,29 @@ function M.on_tick(event)
     local player=contracts.player(f.player,rec.body); local s=model.session(player.index)
     model.edit(player,s.token,saved_source); model.action(player,s.token,'save',event.tick)
     model.edit(player,s.token,draft_source)
+    -- Table-backed real UI routes: retain bounded presentation/review state in
+    -- the same cold save as dirty/saved/active sources and spent credits.
+    assert(editor.open(player,rec.id)); local gui=player.gui.screen[editor.frame_name]
+    local original_game=game
+    game={get_player=function() return player end,tick=event.tick}
+    local ok,e=pcall(function()
+      local function tab(index)
+        gui.content.selected_tab_index=index
+        editor.on_tab{player_index=player.index,element=gui.content,tick=event.tick}
+      end
+      tab(4); local search=gui.content.reference.filters.search; search.text='state'
+      editor.on_text{player_index=player.index,element=search,tick=event.tick}
+      local category=gui.content.reference.filters.category; category.selected_index=4
+      editor.on_selection{player_index=player.index,element=category,tick=event.tick}
+      tab(2); gui.content.console.follow.state=false
+      editor.on_checked{player_index=player.index,element=gui.content.console.follow,tick=event.tick}
+      tab(5)
+      editor.on_click{player_index=player.index,element=gui.content.maintenance.review_actions.review,tick=event.tick}
+      editor.on_click{player_index=player.index,element=gui.title.toggle_focus,tick=event.tick}
+    end)
+    game=original_game; if not ok then error(e,0) end
+    local retained=model.session(player.index)
+    assert(retained.focus and retained.tab==1 and retained.before_focus==5 and retained.follow==false and retained.search=='state')
     assert(rec.saved_revision==2 and rec.active.revision==1)
     for id,timer in pairs(rec.timers) do f.timer=id; f.deadline=timer.deadline end
     assert(f.timer)

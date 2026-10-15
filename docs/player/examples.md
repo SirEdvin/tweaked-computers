@@ -9,7 +9,7 @@ claiming graphical keyboard/focus/touch delivery.
 
 ## peripheral-program
 
-Wire a computer NETWORK to any device NETWORK on red. Inspect both colors in the output pane.
+Wire a computer NETWORK to any device NETWORK on red. Inspect each color in Peripherals; read program output in Console.
 
 ```lua
 return {
@@ -77,7 +77,7 @@ return {
 
 ## kv-program
 
-Connect one powered database NETWORK on red. Save/Run; inspect the delayed status/TTL in the output pane.
+Connect one powered database NETWORK on red. Save/Run; inspect the delayed status/TTL in Console.
 
 ```lua
 return {

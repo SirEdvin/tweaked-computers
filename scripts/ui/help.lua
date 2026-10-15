@@ -1,5 +1,5 @@
 -- Plain native text: no rich text, guest evaluator, shell or file imports.
-return {
+local M={
   template=[[return {
   api_version = 1,
   handlers = {
@@ -16,6 +16,12 @@ return {
 One document. Native named callbacks; no OS, shell, VM or filesystem.
 
 WORKFLOW
+Editor is the writing workspace. Focus hides tabs without replacing your source.
+Console holds bounded output; turn Follow off to pause its selectable snapshot.
+Peripherals inspects the red or green channel, with explicit pending results.
+Reference filters this complete help by category/search; Select text uses native Copy.
+Insert starter only changes an empty draft. It never saves or runs it.
+Maintenance holds reviewed revision resolution, retained drafts and stopped-only reset.
 Type/paste into the source box. Validate checks the draft without effects.
 Save commits source, but does not change the active run. Run/Apply validates and
 activates the displayed saved revision only. Save first if the draft is dirty.
@@ -23,7 +29,7 @@ Invalid replacements preserve the old run. State survives replacement.
 Stop cancels callbacks/timers and clears only this run's still-owned logic output.
 Reset State requires Stop and a separate confirmation; it never clears a KV.
 Close/Escape retains the draft. Reopen the same body to recover it.
-Conflict: Review Current, read its source, then Rebase (retain your draft) or
+Conflict: Review opens Maintenance; read current source, then Rebase (retain draft) or
 Reload (discard your draft). The revision is checked again on either action.
 Eight bounded recovery drafts per player; no automatic dirty-draft eviction.
 Ctrl+Shift+E (rebindable) opens the selected computer, or recovery drafts.
@@ -44,6 +50,7 @@ getID() -> string; getLabel() -> string/nil; setLabel(label/nil)
 getTick() -> simulation tick; getLimits() -> defensive limit snapshot
 getState(key) -> copied Data/nil; setState(key, value); deleteState(key) -> boolean
 log(text) -> bounded plain output
+stop() -> does not return; ends this callback/run and cannot be caught by pcall
 on(event_name, handler_name) -> subscription ID; off(ID) -> boolean
 General events: peripheral_attach, peripheral_detach, monitor_resize,
 monitor_touch, power_restored. Events include name/tick/sequence/computer_id/run_id.
@@ -68,7 +75,7 @@ Only same-color physical mod NETWORK ports relay discovery; vanilla poles,
 INPUT/OUTPUT/TARGETS ports and color changes are not discovery paths.
 Types: monitor, kv_database, logic_handler, configurator. Each has getLimits().
 Store name/wire in state, not ephemeral facades. Calls recheck live authority.
-Use Refresh Peripherals below for current names/types/power per color.
+Use Peripherals / Refresh for current names/types/power on the selected color.
 Incomplete discovery reports pending/limit, never a successful empty prefix.
 
 LOGIC HANDLER
@@ -144,3 +151,22 @@ Quotas are initial development ceilings, not a guaranteed real-time latency boun
 Full capability method guides ship in docs/ with the installed mod.
 ]]
 }
+-- Categorized views of the same complete shipped reference, not a second API list.
+M.categories={'All topics','Authoring','Language','Computer','Peripherals','Examples','Safety'}
+local sections={
+  WORKFLOW={'Workspace and revisions','Authoring'}, LANGUAGE={'Supported Lua','Language'},
+  COMPUTER={'State, events and timers','Computer'}, PERIPHERALS={'Discovery and identity','Peripherals'},
+  ['LOGIC HANDLER']={'Logic handler','Peripherals'}, ['KV DATABASE']={'KV database','Peripherals'},
+  MONITOR={'Monitor','Peripherals'}, CONFIGURATOR={'Configurator','Peripherals'},
+  ['COMBINED EXAMPLE']={'Factory examples','Examples'},
+  ['FAILURES AND PERSISTENCE']={'Failures and persistence','Safety'}
+}
+M.topics={}; local topic={title='Lua API v1 overview',category='Authoring',text=''}
+M.topics[1]=topic
+for line in string.gmatch(M.text..'\n','([^\n]*)\n') do
+  local section=sections[line]
+  if section then topic={title=section[1],category=section[2],text=''}; M.topics[#M.topics+1]=topic end
+  topic.text=topic.text..line..'\n'
+end
+M.topics[#M.topics+1]={title='Starter controller',category='Examples',text=M.template,example=true}
+return M

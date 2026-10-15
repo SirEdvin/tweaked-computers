@@ -1,148 +1,195 @@
-# Program editor — Lua API v1
+# Program workspace — Lua API v1
 
-This editor uses Factorio's native multiline text box and visible buttons. It is
-one source document per computer, not a shell, OS, terminal emulator or filesystem.
-Client typing/paste/focus/layout and multiplayer usability testing is deferred to
-the user. Headless handler checks do not establish those client properties.
+The player guide is [Editor, source revisions and recovery](player/editor.md).
+This page describes the host UI architecture and focused verification. No guest
+method/event/language/runtime or filesystem is added by this redesign. Factorio
+**2.0.77** remains pinned; native client appearance, typing, clipboard, caret/focus
+and multiplayer delivery remain **unverified user-owned playtesting**.
 
-## Open and write a program
+## Native hierarchy and design
 
-Select a computer (its owned NETWORK port also resolves to the same body), then
-use the normal Open GUI control or the rebindable **Open computer editor / recovery
-drafts** action, initially Ctrl+Shift+E. The linked normal-open path is implemented
-but actual client delivery is unverified. Do not rely on a custom shortcut while
-the source field is focused: use the native buttons.
+The editor is a draggable, screen-clamped native frame, not the planning HTML.
+Its restrained native frame/tab/input styles use Factorio's steel/charcoal panels,
+amber selected tabs and a declared `tc-editor-mono` font. That FontPrototype uses
+`from='default-mono'`, a family in the pinned engine's `core/locale/en/info.json`
+(Noto Mono first). It does not refer to a nonexistent `default-mono` FontPrototype.
+The data-stage fixture checks every explicit `tc_` style font against `data.raw.font`.
+Headless loading is not proof of client font rendering.
 
-Use **Template** in an empty draft, or copy the example from **API Help**. The
-shipped example is:
-
-```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      computer.log("Controller started")
-      computer.on("peripheral_attach", "attached")
-    end,
-    attached = function(event)
-      computer.log(event.peripheral .. " attached on " .. event.wire)
-    end
-  }
-}
+```text
+frame: tc_program_editor (player / token / id / generation / ui_version tags)
+  title: heading + drag space → frame, status, Focus / Exit focus, Close
+  content: native tabbed-pane
+    Editor: source, empty-draft starter invitation, one action row,
+            concise revisions, contextual feedback / Review conflict
+    Console: Refresh / Go to source line, Follow, bounded output, diagnostics
+    Peripherals: Red / Green selector, Refresh, timestamp, icon/name/type/state rows,
+                 selected opaque identity details
+    Reference: Search / category / topic, selectable text, explicit select/insert
+    Maintenance: revision review/rebase/reload, active-source review/copy,
+                 retained-draft review/copy/confirmed forget, stopped-only reset
 ```
 
-1. Edit the source. This changes only your draft.
-2. **Validate** checks the draft through the guarded native compiler. It does not
-   run a handler, commit source, replace an active run or clear application data.
-3. **Save** commits the exact draft with a saved-source revision check. Saving an
-   invalid program is allowed; activation is not. The existing active revision
-   continues, and status shows draft base, saved and active revisions separately.
-4. **Run** / **Apply** validate and activate the displayed saved revision. First
-   save any unsaved edits, and resolve any stale base. Neither button silently
-   saves your draft or activates another player's unseen newer revision. Only
-   successful validation retires the old run and queues its named `start` handler.
-5. **Stop** cancels work/timers/subscriptions and invokes host fail-safe cleanup.
-   Source, application state, KV contents and display contents remain.
-6. **Reset State** requires a stopped computer and the separate **Confirm Reset
-   State** button. It clears only this computer's explicit state, never a KV.
-   Cancel, reopening, editing or activating a new generation expires confirmation.
+Editor is selected on explicit open. Focus saves the previous tab, selects Editor,
+hides tab widgets/nonessential status chrome, and keeps all four action buttons.
+Exiting restores the previous tab. The source remains in its original parent and
+is never destroyed/recreated by tab/focus/resize/status operations. Source assignment
+occurs only on explicit source replacement or refused over-limit input restoration;
+normal Save/Validate/Run/Stop do not rewrite the text widget. No unsupported caret
+readback/free-resize API or automatic focus restoration is promised.
 
-Callbacks use the versioned bounded native language and dot-call APIs described
-in [computer-runtime.md](computer-runtime.md). No host objects or loader/IO/OS APIs
-are introduced by the editor. Earlier accepted effects are not rolled back when
-a later callback faults; only its still-owned fail-safe resources are cleaned up.
+The visual decision is concentrated in the quiet code surface, not dashboard cards.
+Supporting tasks have their own tab rather than competing with source in a global
+scroll column. Maintenance alone can scroll its long review/action content.
 
-## Conflicts and draft recovery
+## Layout contract (model evidence, not graphical acceptance)
 
-Two players have independent drafts, each with a base saved revision. A stale
-Save reports a conflict and retains both the committed source and rejected draft.
+`scripts/ui/editor-layout.lua` is pure geometry. GUI style dimensions use effective
+GUI units; `frame.location` clamps in physical pixels using display scale. Sizing
+keeps a 32-unit screen allowance, caps the window at 1040×940 and preserves a dragged
+position rather than re-centering on refresh/resize. On first open it is centered.
+There is no resize handle. Minimum supported effective screen is **760×480**;
+smaller displays may require reducing GUI scale and are not claimed usable.
 
-- **Review Current** displays a read-only snapshot of the current saved revision.
-- After reading it, **Rebase — keep draft** adopts that base while preserving your
-  text. It is a reviewed manual overwrite decision, not an automatic merge. Save
-  is still required.
-- **Reload — discard draft** replaces your text with the reviewed saved source.
-- Both actions recheck the current source/revision. If another player saved since
-  the review, review again; no stale acknowledgement is accepted.
+Native styles explicitly fix frame padding, tab top margin/header height and compact
+button height rather than relying on hidden inherited spacing. The modeled source
+height is window height minus 200 normally, or minus 108 in focus. Normal code
+height is at least 70% of usable tab content at all four required nonempty layouts;
+focus exceeds 85%. The empty-draft starter invitation shares the contextual message
+row instead of taking space from source or adding a fifth toolbar button.
 
-Close/Escape always retains the draft; closing does not save, activate or stop.
-Disconnect/death/force/surface change also retains documents. Reopening the exact
-computer restores your text. A removed/replaced computer never retargets an old
-draft. Select a recovery identity in the current editor and **Copy selected draft**
-to import its text into the current draft; that does not save or run it.
+| Physical resolution | GUI scale | Window (GUI units) | Normal source height | Focus source height |
+| --- | --- | --- | --- | --- |
+| 1280×720 | 100% | 1040×688 | 488 | 580 |
+| 1280×720 | 150% | 821×448 | 248 | 340 |
+| 1920×1080 | 100% | 1040×940 | 740 | 832 |
+| 1920×1080 | 150% | 1040×688 | 488 | 580 |
 
-Ctrl+Shift+E with no selected computer opens the independent recovery viewer.
-You can review/copy text there even after the old body was destroyed. Forgetting
-a draft requires **Forget reviewed** followed by **Confirm Forget**; cancelling
-retains it. This viewer cannot activate a computer or clear application state.
+These dimensions are asserted in table-backed construction/layout tests. They do
+not prove that the native client's tab visibility, caret, scrollbars, hover, font
+rasterization or physical controls render/behave as intended. See the concise
+[client checklist](player/editor.md#short-native-client-playtest-not-yet-performed).
 
-There are eight document slots per player, each with at most `source_bytes`
-(currently 16,384) bytes of draft text and a bounded base-source snapshot. One
-review snapshot and small plain session/diagnostic records are separate. No dirty
-slot is evicted automatically. When all eight are occupied, opening a ninth body
-opens the recovery viewer and requests explicit deletion of a slot. Over-limit
-text entry restores the previous accepted draft rather than silently truncating
-it. Saving the game retains the drafts; an unsaved game cannot guarantee recovery.
+## Authority, durable drafts and event routing
 
-## Output and help
+`scripts.ui.editor-model` remains the sole authoring mutation authority. Plain state
+lives at `storage.tweaked_computers.player_drafts[player_index]`, with up to eight
+`documents[id]={source,base_source,base_revision}` and one optional session.
+No GUI/player objects, callbacks, functions or compiled code enter this storage.
+`on_load` performs no editor work.
 
-The rolling console retains the newest `console_entries` / `console_bytes`
-(currently 64 / 16,384). Its heading explicitly warns that older output is
-discarded. Logs, source, review text, diagnostics and help use disabled native rich
-text: player/program text is not interpreted as Factorio tags. Runtime diagnostics
-show the active revision, handler and original source location when available;
-candidate diagnostics identify draft/saved base revision separately.
+`model.open`, `current`, `edit` and `action` revalidate current force/surface/reach,
+native GUI permissions, exact body unit/generation/registry binding and session
+token. Save is a checked commit, separate from activation. Run/Apply can only consume
+the displayed saved source; invalid replacements preserve the active generation.
+Stop retains source/state/KV/display. Reset requires stopped status and a confirmed
+run-generation identity. Every source snapshot/revision is rechecked before an
+explicit rebase/reload/copy; no automatic conflict merge/reload is added.
 
-**API Help** lists the v1 document shape, approved namespaces, state/event/timer
-signatures, dot-call convention, discovery rules and the actual shipped template.
-**Refresh Peripherals** inspects red and green separately, showing complete
-names/types/power, or an explicit pending/error result. There is no mixed-color
-path, network-ID shortcut, or apparently complete prefix. In an editor-only
-checkpoint before the sibling discovery integration, the pane explicitly says
-that discovery is not installed and does not claim an empty successful inventory.
+The GUI adapter additionally requires the exact player's opened frame, schema tag,
+token/id/generation, an actual descendant inside a bounded 16-level fixed tree, and
+a visible/enabled active tab subtree. Click actions compare the **exact constructed
+widget**, not just its name. Foreign/inactive/stale/hidden children cannot mutate a
+backend or presentation state. Title Close / Escape may retire an unavailable
+session while preserving its draft; they do not require a reachable computer.
 
-## Host integration (not a guest API)
+`control.lua` registers native click, text, tab-selection, dropdown-selection and
+checkbox-change handlers. The existing close/open/player-unavailable/display-size
+routes remain. Native tab changes are explicitly handled; a click-only handler is
+not sufficient. Closing never reopens the workspace over another GUI.
 
-`scripts.ui.editor-model` owns plain authoring records under
-`storage.tweaked_computers.player_drafts[player_index]`. Each contains `documents`
-keyed by opaque computer ID and an optional session. Each document stores
-`source`, `base_source`, `base_revision`; session stores exact ID/body unit/generation,
-an opaque token and bounded review/confirmation state. No player/GUI objects,
-functions or compiled code are persisted here. `on_load` performs no editor work.
+An older saved GUI tree lacking `ui_version=2` is retired on the next admitted
+refresh/size event, never on load. Its draft is retained and the player is asked to
+reopen. It is not navigated/rebuilt invisibly into an active editing session.
 
-`model.open(player,id)`, `edit(player,token,text)` and
-`action(player,token,action,tick,argument?)` use the real runtime save/activate/stop/
-reset methods. Actions require current force/surface, reachability, native GUI
-permissions, exact registry/body identity and session token. The GUI adapter adds
-proof that the event belongs to the player's exact opened frame and a real child
-of it. Hidden/inactive/foreign/stale elements cannot mutate the computer.
+## Bounded host presentation
 
-`scripts.ui.editor.register_inspector(fn)` registers one trusted parsing-time
-host callback `fn(record,wire,tick)` returning a complete dense array of plain
-`{name,type,powered}` descriptors, or `nil, diagnostic`. The discovery worker's
-production traversal must supply it; do not implement another graph in the UI.
-The callback must bound/admit its own work and never return an incomplete prefix.
-The downstream TC07 card merges editor and discovery parents and wires this
-adapter before claiming the full controller milestone. No user source calls it.
+Session presentation fields are bounded scalars/indexes: selected tab, prior focus
+tab, focus, Console follow, red/green channel, reference category/topic, search
+(maximum 128 bytes) and topic indexes (the finite shipped help inventory).
+Peripherals retains at most one channel's complete `network_nodes` descriptor
+snapshot or a diagnostic. It stores generated opaque IDs, fixed type names and
+power booleans, not arbitrary guest labels. Recovery/revision previews are bounded
+by `source_bytes`, and identity/source bytes are rechecked before replacement or
+confirmed deletion. Changing a recovery selection invalidates its review/confirmation.
+Older pending forget records without the new reviewed-byte marker safely refuse.
+The open document cannot be forgotten.
 
-Status/output refresh is a charged scheduler rendering hook, at four updates per
-second while an authorized editor is actually open. Display-size events resize
-and reflow controls without reopening the frame over another GUI or changing its
-source/focus. Core font/style existence is checked during the data stage; actual
-client rendering, font appearance and control delivery remain unverified.
+A charged scheduler render hook updates open frames at 4 Hz. It never assigns source,
+focuses a widget or changes tabs. Only the selected supporting tab refreshes its
+presentation; no background discovery graph or hidden recovery/help rebuild occurs.
+The active status/Console fault marker may update without stealing navigation.
 
-## Verification boundaries
+Console retains the runtime's newest 64 entries / 16,384 bytes. With Follow off,
+the selectable output snapshot is **not assigned**, even on tab return; native
+scroll/selection are not repeatedly reset. Refresh is an explicit one-shot snapshot;
+Follow resumes updates/scroll-to-bottom on changed text. Older ring entries remain
+discarded. No terminal, REPL or unsupported Clear command is implied. Source-line
+navigation is explicit, selects a line using the pinned `select` API, and refuses an
+active diagnostic that belongs to a different draft. Source/diagnostic/help fields
+have rich text disabled; diagnostic tooltip brackets are escaped for presentation.
 
-`tests.editor_contract` exercises production authoring actions plus mocked GUI
-handler routes, including source consumption, conflicts/review recheck, invalid
-replacement, confirmation, permissions, exact body replacement, draft capacity,
-rich-text disabling, rolling output, inactive/cross-player event refusal, dirty
-close/reopen and malicious active source beside a healthy peer.
+Peripherals calls the one parsing-time registered inspector only on opening its
+tab, choosing a channel or pressing Refresh. `register_inspector(fn)` accepts the
+existing fixed host callback `fn(record,wire,tick)` → complete dense
+`{name,type,powered}` descriptors or `nil,diagnostic`. The production
+`scripts.ui.network-inspector` uses the real peripheral traversal and shared work
+admission, not a second UI graph/cache. It must never return an incomplete prefix.
+The UI distinguishes complete-empty, unpowered, disconnected-from-the-refreshed-path
+and pending/refused/unknown. It shows the snapshot tick; it does not claim continuous
+live authorization. Friendly labels never replace API names or mix red and green.
 
-`tests.editor_cold` runs these contracts and a real powered computer in two
-separate official engine processes. It edits/saves/runs source through table-backed
-GUI handlers, then freezes distinct active/saved/draft revisions and spent credits.
-Cold readback precedes resumed work, verifies no `on_load` mutation or startup
-replay, restores draft text, and completes the original timer exactly once.
-This is real native runtime/persistence evidence, not evidence of physical keyboard,
-clipboard, GUI focus, graphical rendering or multiplayer client delivery.
+Reference is a categorized view of the same complete `help.text`; concatenating the
+non-starter topics reproduces it byte-for-byte. Search is literal, not a guest
+pattern. Select text invokes native selection only, not automatic clipboard access.
+Insert starter refuses every nonempty draft and never saves or activates it.
+
+## Complete action map
+
+| Action(s) | Exact location / safeguard |
+| --- | --- |
+| validate / save / run-or-apply / stop | Editor's only action row; no implicit Save-and-Run |
+| template | Empty Editor invitation; Reference's starter topic; empty-only |
+| review / rebase / reload | Maintenance saved-source review; Editor conflict button opens that reviewed workflow |
+| review-active / copy-active | Maintenance active-snapshot preview; copy only after current-snapshot recheck |
+| review-recovery / recover | Maintenance retained identity → preview → explicit draft replacement; no save/run |
+| forget / confirm-forget / cancel-forget | Maintenance identity-specific review and separate confirmation; never open document |
+| reset / confirm-reset / cancel-reset | Maintenance stopped-only application-state section; run-generation confirmation |
+| open_recovery / recovery_action | Independent viewer without an accessible computer; review/select/native copy and confirmed forget only |
+| close / native Escape | Title / close event; retain draft, do not stop |
+| text edit | Mounted Editor source; exact session/identity and source byte limit |
+| inspect / wire selection | Peripherals; one explicit color and timestamped complete/deferred result |
+| follow / refresh-console / show-location | Console; held snapshot / explicit matching-source navigation |
+| tab / focus / search / category / topic / select-reference | Bounded host presentation only; same ownership checks |
+
+`api/compatibility.md` in the redesign change preserves the original action placement
+contract. `review-recovery` adds the explicit reviewed preview required there, not
+a new guest API.
+
+## Focused automated checks
+
+- `tests.editor_contract`: original 12 authoring/runtime/model/GUI-mock groups,
+  updated for nested widgets and one contextual activation button. Checks draft
+  consumption, real runtime effects, conflicts/rechecks, invalid candidates, reset,
+  permissions, capacity, body replacement, dirty close/reopen and healthy-peer safety.
+- `tests.editor_workspace`: native hierarchy and scale geometry **via mocks**, source
+  identity/write-count checks, separate starter/validation/save/activation, paused
+  Console snapshots, full reference inventory, real engine red/green connector
+  discovery/disconnection and shared-credit refusal, every Maintenance action,
+  strict nested event ownership, explicit diagnostic navigation and old-GUI retirement.
+  It explicitly reports no client-created player rather than fabricating GUI evidence.
+- `tests.editor_cold`: actual powered body in two separate official engine processes;
+  table-backed GUI source edit/save/run, dirty/saved/active divergence, saved focus/
+  prior tab/search/category/topic/follow/review, plain durable state, exhausted same-tick
+  compile admission, cold readback **before resumed work**, no load mutation/startup
+  replay and once-only original timer. Explicit reopen starts in Editor with the same
+  draft. Save-readability and acknowledged `/quit` are required; forced kill is failure.
+- `tests.candidate_data`: packaged prototype/frame/font references. GUI mocks additionally
+  enforce pinned write-only LuaStyle size aliases and text-only rich-text style use.
+  These checks still are not actual graphical widget construction.
+
+Build with `python3 tools/build.py --output <outside-repo-dir>` and run the existing
+`tools/smoke.py` against the exact ZIP, fixture `tests.editor_workspace`, then
+`tests.editor_cold --cold`, in base and Space Age. Do not substitute a checkout source
+loader for the packaged GUI. `tests.integration_engine` and `tests.logic_engine`
+use the new nested widget paths; RD5 owns the later integrated candidate matrix.
