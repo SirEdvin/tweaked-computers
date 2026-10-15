@@ -11,6 +11,9 @@ permissions:
 
 jobs:
   update:
+    # Keep this optional model-backed updater dormant until a maintainer has
+    # configured its provider credentials and deliberately enabled it.
+    if: ${{ vars.OPENWIKI_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository

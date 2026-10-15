@@ -1,0 +1,91 @@
+name: Mod CI
+
+# No path filters: runtime-only and documentation-only PRs must both emit the
+# required check. Push runs also attach evidence to the exact branch head, not
+# only GitHub's synthetic PR merge commit (used by the task completion gate).
+on:
+  pull_request:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mod-ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Mod validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Install locked documentation dependencies
+        run: python -m pip install --require-hashes -r requirements-docs.txt
+      - name: Check package, generated contracts and player documentation
+        shell: bash
+        run: |
+          set -euo pipefail
+          export TMPDIR="$RUNNER_TEMP"
+          mkdir -p "$RUNNER_TEMP/tc-ci/reports"
+          python tools/test_build.py
+          python tools/planning_examples.py --check
+          python tools/configuration_catalog.py --check
+          python -m mkdocs build --strict --site-dir "$RUNNER_TEMP/tc-ci/site"
+          python tools/player_docs.py --check --site "$RUNNER_TEMP/tc-ci/site" \
+            --report "$RUNNER_TEMP/tc-ci/reports/player-docs.json"
+          python tools/build.py --output "$RUNNER_TEMP/tc-ci/package" \
+            > "$RUNNER_TEMP/tc-ci/reports/package.json"
+      - name: Install verified Factorio 2.0.77 headless engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 240 \
+            https://factorio.com/get-download/2.0.77/headless/linux64 \
+            --output "$RUNNER_TEMP/tc-ci/factorio.tar.xz"
+          printf '%s  %s\n' \
+            c4efc11529f74d37c96933e291e0db73fd9f5aa4738913d9301b24680b3e947f \
+            "$RUNNER_TEMP/tc-ci/factorio.tar.xz" | sha256sum --check --strict
+          tar -xf "$RUNNER_TEMP/tc-ci/factorio.tar.xz" -C "$RUNNER_TEMP/tc-ci"
+          "$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio" --version \
+            > "$RUNNER_TEMP/tc-ci/reports/engine-version.txt"
+      - name: Check packaged sandbox and cold factory integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
+          engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/runtime" --mode base \
+            --fixture tests.runtime_contract
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/integration" --mode both \
+            --fixture tests.integration_engine --data-fixture tests.candidate_data \
+            --production-context --cold
+      - name: Retain focused verification reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mod-validation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/tc-ci/reports/
+            ${{ runner.temp }}/tc-ci/runtime/**/summary.json
+            ${{ runner.temp }}/tc-ci/runtime/**/engine.log
+            ${{ runner.temp }}/tc-ci/integration/**/summary.json
+            ${{ runner.temp }}/tc-ci/integration/**/engine.log
+            ${{ runner.temp }}/tc-ci/integration/**/*-engine.log
+            ${{ runner.temp }}/tc-ci/integration/**/*-result.json
+          if-no-files-found: warn
+          retention-days: 14
+          overwrite: false
+          include-hidden-files: false

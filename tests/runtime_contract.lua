@@ -119,6 +119,26 @@ function M.run(report_total)
   assert(not a and not b and ae.code=='E_BUDGET' and be.code=='E_BUDGET')
   assert(warm.machine.compile==cold.machine.compile and warm.ledger.total==cold.ledger.total)
   report('retained-generated-data-and-cold-warm-admission')
+  -- A comparator can change the original table while native sorting uses a
+  -- staged copy. Its effects remain, but final sorted writes must still fit.
+  local targets,values={},{}
+  for i=1,limits.tuple_entries do targets[i]='t[offset+'..(i+2)..']'; values[i]='true' end
+  local assignment=table.concat(targets,',')..'='..table.concat(values,',')
+  assert(limits.table_entries%limits.tuple_entries==0,'review sort fixture for changed limits')
+  for _,room in ipairs({false,true}) do
+    local text=source('local t={2,1}; local changed=false; local ok,e=pcall(table.sort,t,function(a,b) '..
+      'if not changed then changed=true; t[1],t[2]=nil,nil; for chunk=0,'..(limits.table_entries/limits.tuple_entries-1)..
+      ' do local offset=chunk*'..limits.tuple_entries..'; '..assignment..' end; '..
+      (room and ('t['..(limits.table_entries+1)..'],t['..(limits.table_entries+2)..']=nil,nil; ') or '')..
+      'end; return a<b end); '..
+      (room and 'assert(ok and t[1]==1 and t[2]==2); ' or 'assert(not ok and e.code=="E_LIMIT" and t[1]==nil and t[2]==nil); ')..
+      'local count=0; for k,v in pairs(t) do count=count+1 end; assert(count=='..limits.table_entries..')')
+    local candidate,err=compiler.compile(text,admission.context(admission.new(),'sort-capacity-compile',0))
+    assert(candidate,err and err.message)
+    local ok,diag=compiler.run(candidate,'start',{}, {},admission.context(admission.new(),'sort-capacity-run',0))
+    assert(ok,diag and diag.message)
+  end
+  report('sort-capacity-after-comparator-mutation')
   if game then
     p,c=compiled('local host=computer.hostFixture(); computer.log("unsafe")')
     writes=0
