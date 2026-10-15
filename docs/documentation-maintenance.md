@@ -48,6 +48,32 @@ Dependencies are version/hash locked for the Linux build. To refresh deliberatel
 use pip-tools on Python 3.12 with `mkdocs==1.6.1` as input, inspect the full lockfile
 diff and re-run hosted validation. Do not replace hashes with unpinned installs.
 
+## Required validation
+
+`.github/workflows/ci.yml`, named **Mod CI**, emits the stable **Mod validation**
+check on every pull request and every branch push, without path filters. Branch
+pushes provide evidence on the exact head SHA as well as the PR merge candidate.
+The `main` ruleset requires this check from the GitHub Actions integration; do
+not rename the job without updating that rule. No administrator bypass is needed
+to merge a passing PR. Tags are not CI or publication triggers.
+
+The read-only job reuses the existing package regressions, generated-contract and
+player-documentation checks, then downloads the official Factorio **2.0.77**
+headless archive and verifies its pinned SHA-256 before execution. The packaged
+sandbox runs in base mode; the existing factory integration and separate-process
+save/reload checks run with base and Space Age. Reports and failure logs are kept
+as short-lived Actions artifacts; no release is uploaded or replaced. This is
+not graphical/client, multiplayer-join, stress or real-time latency acceptance.
+
+The required check is deliberately separate from the path-filtered Pages
+workflow below. Making only the latter required would leave runtime-only PRs
+without a check. CI needs no Factorio publishing credentials or model API keys.
+
+The optional model-backed OpenWiki workflow remains dormant unless repository
+variable `OPENWIKI_ENABLED` is explicitly `true`. Configure its provider secrets
+and review its model settings before enabling it. This is not a required check
+and does not affect reading the already-generated developer wiki.
+
 ## Hosted workflow
 
 `.github/workflows/docs.yml`, named **Player documentation**, builds changed player
@@ -90,8 +116,9 @@ successful scaffold build. TC17 owns the final complete-site deployment and alph
 
 The user authorized a public repository, full player docs, separate developer
 OpenWiki and actual Factorio alpha. This supersedes the original local-ZIP-only
-endpoint. A ZIP remains the upload artifact. The implementation PR remains open
-for review; publishing the alpha does not authorize merging it or archiving OpenSpec.
+endpoint. A ZIP remains the upload artifact. Publishing an alpha does not by
+itself authorize merging its implementation PR or archiving OpenSpec; merge only
+after explicit maintainer authorization, review and passing required checks.
 
 - TC14 / `t_6534a3be`: public repository and documentation infrastructure.
 - TC15 / `t_0645d3ca`: complete player guide and public API reference.
