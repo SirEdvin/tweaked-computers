@@ -18,7 +18,7 @@ and [physical-devices.md](physical-devices.md) for authoring and wiring.
 4. Wire logic OUTPUT red or green to a powered inserter. Set its native
    enable/disable condition to virtual signal A > 0. Aim it from the supply chest
    to the stock chest. Both output colors receive exactly the same contribution.
-5. Open the computer normally or use the rebindable Ctrl+Shift+E action. Paste the
+5. Clear the cursor and Ctrl + left-click the computer. Paste the
    document between `[[` and `]]` in `examples/logic-controller.lua` into its source
    box. Validate, Save, then Run. Save alone does not change the active run.
 6. The controller enables the inserter below 100 normal-quality iron plates,

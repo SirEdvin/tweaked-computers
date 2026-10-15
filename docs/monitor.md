@@ -111,7 +111,7 @@ state only. See [RD4 evidence and the short client check](rd4-verification.md).
 ## Touch and resize callbacks
 
 With an empty cursor and no open GUI, Ctrl + left click a world character cell.
-The control is rebindable under Controls → Activate monitor character cell.
+The shared control is rebindable under Controls → Interact with computer / monitor / recovery drafts.
 It consumes the corresponding game action, not an extra linked building/mining
 action. The actual clicked member must be within native player reach and belong
 to the player's force/surface. Bezel, letterboxing, outside, GUI-hover/focus and

@@ -1,5 +1,4 @@
 -- Fixed host adapter for the native editor. No separate discovery graph/cache.
-local registry=require('scripts.registry')
 local runtime=require('scripts.runtime.computer')
 local admission=require('scripts.runtime.admission')
 local peripheral=require('scripts.services.peripheral')
@@ -15,7 +14,7 @@ return function(record,wire,tick)
     table.sort(names,function(a,b) spend(#a+#b+1); return a<b end)
     local result={}
     for _,name in ipairs(names) do
-      spend(8); local rec=registry.record(name)
+      spend(8); local rec=peripheral.resolve_inventory_item(inventory,name)
       if not rec then errors.raise('E_NETWORK_PENDING','discovered identity changed') end
       result[#result+1]={name=name,type=inventory[name].type,powered=rec.powered}
     end

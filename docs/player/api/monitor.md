@@ -103,8 +103,8 @@ One event per subscription, not per path/tile/color; duplicate registrations are
 still independent. Current authority and recipient run are checked at delivery.
 
 - Touch adds `x:integer`, `y:integer`, `player_index:integer`, `sample_tick:Tick`.
-  With empty cursor/no other GUI, Ctrl+left-click a cell (rebindable **Activate
-  monitor character cell**). Clicked member must be in native reach and same
+  With empty cursor/no other GUI, Ctrl+left-click a cell (rebindable shared
+  **Interact with computer / monitor / recovery drafts** action). Clicked member must be in native reach and same
   force/surface. Bezel, letterbox, GUI hover/focus, outside or unpowered activation
   is ignored. No building/mining double action, mouse drag or keyboard API implied.
 - Resize adds `old_width`, `old_height`, `width`, `height` integers and

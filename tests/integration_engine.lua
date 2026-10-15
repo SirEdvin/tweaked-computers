@@ -7,6 +7,7 @@ local kv=require('scripts.services.kv')
 local monitor=require('scripts.services.monitor')
 local model=require('scripts.monitor-model')
 local editor=require('scripts.ui.editor')
+local interaction=require('scripts.ui.interaction')
 local players=require('tests.editor_contract')
 local defs=require('scripts.device-definitions')
 local limits=require('scripts.runtime.limits')
@@ -48,6 +49,8 @@ local function submit(c,source,index,save_only,action)
   game=real; if not ok then error(e,0) end
 end
 function M.run()
+  assert(script.get_event_handler('tc-interact')==interaction.on_input,'production Ctrl-click must use the shared router')
+  assert(script.get_event_handler(defines.events.on_gui_opened)==interaction.on_opened,'native open must only suppress implementation dialogs')
   storage.tc13={phase='boot',start=game.tick,samples={},groups=0}
   local s=game.surfaces[1]; local tiles={}
   for y=-16,16 do for x=-16,24 do tiles[#tiles+1]={name='landfill',position={x,y}} end end
@@ -95,7 +98,7 @@ local function touch()
   local g=assert(monitor.resolve(registry.record(f().tiles[1])))
   local p={valid=true,index=7103,force=game.forces.player,surface=game.surfaces[1],cursor_stack={valid_for_read=false},can_reach_entity=function() return true end,print=nop}
   local cw,ch,ox,oy=model.geometry(g); local x,y=model.world(g,ox+cw/2,oy+ch/2)
-  assert(monitor.activate_for_player({input_name='tc-monitor-activate',tick=game.tick,cursor_position={x=x,y=y}},p))
+  assert(monitor.activate_for_player({input_name='tc-interact',tick=game.tick,cursor_position={x=x,y=y}},p))
   -- Engine has no client player; forward this admitted job through the real
   -- authority/deduplication delivery with the same explicit table-backed player.
   local state=registry.get().monitors; local job=state.touches[#state.touches]

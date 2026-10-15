@@ -271,8 +271,10 @@ function M.notifications(tick,spend)
   end
 end
 function M.activate_for_player(event,player)
-  if event.input_name~='tc-monitor-activate' or event.in_gui or event.element then return false end
-  if not player or not player.valid or player.opened or player.cursor_stack.valid_for_read then return false end
+  if event.input_name~='tc-interact' or event.in_gui or event.element then return false end
+  if not player or not player.valid or player.opened or player.cursor_ghost then return false end
+  local cursor=player.cursor_stack
+  if cursor and cursor.valid_for_read then return false end
   local state=root(); if not state or state.version~=1 then return false end
   if state.job then return false end
   local pos=event.cursor_position

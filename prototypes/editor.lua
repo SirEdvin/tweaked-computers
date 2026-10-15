@@ -16,6 +16,6 @@ styles.tc_editor_tab={type='tab_style',parent='tab',font='default-semibold',
   height=32,top_padding=6,bottom_padding=6,increase_height_when_selected=false,
   minimal_width=88,horizontal_align='center'}
 data:extend{
-  {type='custom-input',name='tc-open-editor',key_sequence='CONTROL + SHIFT + E',consuming='none'},
-  {type='custom-input',name='tc-open-selected-computer',key_sequence='',linked_game_control='open-gui',consuming='none'}
+  {type='custom-input',name='tc-interact',key_sequence='CONTROL + mouse-button-1',
+    action='lua',consuming='game-only',block_modifiers=true,include_selected_prototype=false}
 }
