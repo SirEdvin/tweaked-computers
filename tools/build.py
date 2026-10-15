@@ -47,7 +47,7 @@ def build(destination):
     for name in DIRS:
         directory = ROOT / name
         if directory.exists():
-            files += [p for p in directory.rglob('*') if p.is_file() and '__pycache__' not in p.parts and p.suffix != '.pyc']
+            files += [p for p in directory.rglob('*') if p.is_file() and '__pycache__' not in p.parts and p.suffix not in ('.py', '.pyc')]
 
     # Ship authoritative source/API contracts too; their relative links remain
     # valid. Exclude orchestration reports, research caches and agent context.
@@ -55,6 +55,8 @@ def build(destination):
         files += sorted((ROOT / CONTRACT / folder).rglob('*.md'))
         files += sorted((ROOT / CONTRACT / folder).rglob('*.json'))
     for p in files:
+        if p.suffix.lower() in ('.exe', '.bat', '.ps1', '.sh', '.py'):
+            raise ValueError(f'Mod Portal forbids executable payloads: {p}')
         if p.is_symlink():
             raise ValueError(f'symlink in package: {p}')
     payload = {p.relative_to(ROOT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}

@@ -45,7 +45,7 @@ The [public repository](https://github.com/SirEdvin/tweaked-computers) includes
 source, notices and examples; report problems in its
 [issue tracker](https://github.com/SirEdvin/tweaked-computers/issues).
 The separately generated
-[developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/215da3b6884cd8fa166e8f565d69707b6524a9bb/openwiki)
+[developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.1/openwiki)
 explains implementation internals; this site, not that wiki, is the player and
 public Lua API reference. This link identifies the source-grounded developer
 wiki snapshot independently of the repository's default branch.

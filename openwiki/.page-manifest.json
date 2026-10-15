@@ -37,11 +37,11 @@
       "completedRunId": "165377f4-3bd0-48ef-862f-eb4735afe66a"
     },
     "/openwiki/operations/build-test-and-assets.md": {
-      "pageVersion": "sha256:49f7a985048ae9d27935c6a6559ba51b60753eef4bfb0ea980d74aa529f85fe8",
+      "pageVersion": "sha256:5100be9af7d76bd84ab0f5144fae6e3b29bc4091bbb399bbe2a2857e4edbff54",
       "completedBy": "hermes",
-      "completedRunId": "1ab987e1-eb48-48de-a0a8-bfb0f5a0d8de",
-      "gitHead": "aeb13a19ccf6ac03ba063b81e0938ec115449f76",
-      "sourceFingerprint": "sha256:66f22eaa89fd9747b19f78090243a94ed0d84debffbfbb2151f3f61542f0d210"
+      "completedRunId": "1ac12d7d-6614-4611-9bd2-5883b5b7b9fb",
+      "gitHead": "349f559c6cbf101b4510826cdb824715b8d5813b",
+      "sourceFingerprint": "sha256:3874e789252add69c20ffc50ad6b34b21e26d9df0f6fae1d20e5fb1655303065"
     },
     "/openwiki/quickstart.md": {
       "gitHead": "6f8542178b70612a3cfdb03ff3ede1a79d29d427",

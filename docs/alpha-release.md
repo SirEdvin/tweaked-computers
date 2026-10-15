@@ -1,4 +1,4 @@
-# Tweaked Computers 0.1.0 — ALPHA
+# Tweaked Computers 0.1.1 — ALPHA
 
 First public user-test alpha for **Factorio 2.0.77**, with base alone or optional
 Space Age. Back up your save before installing or upgrading. This is not stable
@@ -32,8 +32,8 @@ Computer Core or Redis compatibility.
 4. Use the [complete public Lua reference](https://siredvin.github.io/tweaked-computers/api/common/)
    for signatures, errors, limits, wiring and lifecycle rules.
 
-[Public source](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.0)
-and [developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.0/openwiki)
+[Public source](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.1)
+and [developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.1/openwiki)
 are separate from the player guide. The consolidated feature PR remains open for
 review; publication is not a merge or an OpenSpec archive.
 

@@ -5,7 +5,7 @@ description: Reproducible external-output packaging, exact-engine focused smoke,
 tags: [build, testing, assets, licenses, operations, documentation]
 verified:
   - by: openwiki/0.7.1
-    at: 2026-10-15T07:08:34.832Z
+    at: 2026-10-15T07:15:32.900Z
 sources:
   - id: openwiki-source-d558e38ccd1b08e055e4f3f5
     resource: repo://.github/workflows/docs.yml
@@ -23,7 +23,7 @@ sources:
     resource: repo://tools/smoke.py
   - id: openwiki-source-08ded4ecd7f943b2b7d08274
     resource: repo://vendor/phobos/NOTICE.md
-generated: { by: "hermes", at: "2026-10-15T07:08:34.832Z" }
+generated: { by: "hermes", at: "2026-10-15T07:15:32.900Z" }
 ---
 
 # Build, targeted tests, artwork and documentation operations
@@ -38,7 +38,7 @@ From the repository root, use an absolute external destination:
 python3 tools/build.py --output /absolute/external/artifacts
 ```
 
-The builder refuses output inside the checkout. It validates pinned parser hashes/exact Lua inventory and asset input/output/notice hashes, then packages explicit top-level files and runtime directories, including docs/examples/tests plus capability/API contracts. It excludes orchestration reports by selecting contract subdirectories, not the whole OpenSpec change. Every payload has a SHA-256 in `package-manifest.json`; ZIP ordering, timestamps and modes are deterministic. `openwiki/` is not in the runtime directory inventory, so the developer wiki is a repository deliverable, not silently added to the mod payload.
+The builder refuses output inside the checkout. It validates pinned parser hashes/exact Lua inventory and asset input/output/notice hashes, then packages explicit top-level files and runtime directories, including docs/examples/tests plus capability/API contracts. Python source tooling and bytecode caches are excluded; prohibited executable suffixes are rejected before archive creation. The generators remain in public source rather than the runtime ZIP, as required by the Mod Portal upload validator. It excludes orchestration reports by selecting contract subdirectories, not the whole OpenSpec change. Every payload has a SHA-256 in `package-manifest.json`; ZIP ordering, timestamps and modes are deterministic. `openwiki/` is not in the runtime directory inventory, so the developer wiki is a repository deliverable, not silently added to the mod payload.
 
 Inspect the builder's inventory before adding generated files beneath packaged directories. It includes files recursively there; do not put caches, secrets or verification logs under `docs`, `assets`, `tests` or another packaged directory. It rejects symlinks and duplicate paths. Builds write no application source, whereas asset generation/catalogue generation can change tracked outputs.
 

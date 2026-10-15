@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:49f7a985048ae9d27935c6a6559ba51b60753eef4bfb0ea980d74aa529f85fe8",
+  "pageVersion": "sha256:5100be9af7d76bd84ab0f5144fae6e3b29bc4091bbb399bbe2a2857e4edbff54",
   "claims": [
     {
       "id": "claim_ff7fc687d62649a2a466ff6e6ed2684b",
-      "statement": "The builder rejects in-checkout output, verifies parser/asset inventories and hashes, and creates deterministic explicit-inventory ZIPs with payload hashes; openwiki is outside its packaged directory list.",
+      "statement": "The builder rejects in-checkout output, verifies parser/asset inventories and hashes, excludes source-only Python/caches and refuses prohibited executable suffixes, then creates deterministic explicit-inventory ZIPs with payload hashes; openwiki is outside its packaged directory list.",
       "evidence": [
         {
           "resource": "repo://tools/build.py#L10-L20",
           "version": "repo-lines-v1:sha256:eb2fec63b634b286e250db7a54374fd4e90f60224602c4389a681640a87fe72c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjMGNhZjQ0MWExYWFkMjI0MGU3YWFjY2JiMmE3MzkxNWZjNWNlNjJhOTBlYjg1NzgzNmQ5MDVjNjg3NjBjN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4MjdkYzk5ZjhhNmVlMWYxYTE2ZGYzN2Y4OTkwODMwY2M0MTdjN2YzYTc3NTdkOGQyNThiMTBhN2IyNDM5ZTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYzZTcxY2NiOGZlNjBhMTZkMWIxMTc0N2M0YWQ5N2E4YzczZDYzMGQ0YjQ1YzZlNWYzNDA3Nzk1MjIxMzM4MTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRjZTJhOGM5YThlYWE4MjVmMmFiZTNhZTUzZDc1ZjQ1ODNmYjA3NzVhOGFhZTczY2I4NDk4YTQ1ZDlkYjQzZTQifQ"
         },
         {
-          "resource": "repo://tools/build.py#L23-L79",
-          "version": "repo-lines-v1:sha256:e78e870a3e756862e68cf305becefe0b10f1af8f599a9e06838de938b2e5249d:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhjOWQ2MWUxZGE4OGY2MGZjNjFlYzFjMjM4YzJjNzUyMTgwNDZjMjllZjMzMDg0ZDU4MDQxNzI3ZmViOTNjYzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4MjhiMDBkNTc1MDhjMTk2MThjZGZlZDFjNjMyN2IwMjQ2MDcxZWVkNTU1YzlkMDk0ZGQxZTBlNWE5ZmQzOGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFkNDRhOTllYjQ0NDNmY2MxMTI0ZjFmYzRmNzJmMDFjZWJhMjQ2YTg2NWQxMGNhN2FkMDk5ZGVlNmEwMDQ5NDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImExN2Y4ZTNiODk2NDkyY2MyMDNiMTk2MWJiYWFmYWZkMjQ5YzNkZDliNWMxNTQxOTA4ODhjY2NlMDM1NDE5NjUifQ"
+          "resource": "repo://tools/build.py#L23-L81",
+          "version": "repo-lines-v1:sha256:43b356df850e87959c57f132813dcba1a44abc343e8d40e549b903a590dfaf7e:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhjOWQ2MWUxZGE4OGY2MGZjNjFlYzFjMjM4YzJjNzUyMTgwNDZjMjllZjMzMDg0ZDU4MDQxNzI3ZmViOTNjYzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4MjhiMDBkNTc1MDhjMTk2MThjZGZlZDFjNjMyN2IwMjQ2MDcxZWVkNTU1YzlkMDk0ZGQxZTBlNWE5ZmQzOGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFkNDRhOTllYjQ0NDNmY2MxMTI0ZjFmYzRmNzJmMDFjZWJhMjQ2YTg2NWQxMGNhN2FkMDk5ZGVlNmEwMDQ5NDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImExN2Y4ZTNiODk2NDkyY2MyMDNiMTk2MWJiYWFmYWZkMjQ5YzNkZDliNWMxNTQxOTA4ODhjY2NlMDM1NDE5NjUifQ"
         }
       ]
     },
@@ -99,6 +99,6 @@
   ],
   "verification": {
     "by": "openwiki/0.7.1",
-    "at": "2026-10-15T07:08:34.832Z"
+    "at": "2026-10-15T07:15:32.900Z"
   }
 }
