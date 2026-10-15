@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:eb60e32533d7d8598ee2a30551df7fc1e2fbb9e4b4ebdde154f69a3931906ed5",
+  "claims": [
+    {
+      "id": "claim_3dd5f2bf4681436193ce0efd0b3761b6",
+      "statement": "Normal control parsing registers trusted modules/events and one scheduler tick; initialization/configuration changes initialize retained state, while normal production installs no on_load source execution.",
+      "evidence": [
+        {
+          "resource": "repo://control.lua#L1-L39",
+          "version": "repo-lines-v1:sha256:29c4ecc9b8fdde3e429cacd6d47631c503a72e4f5967e2a9e8d89044b6059ce7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5NTlmZWI1ODI5M2JhM2MyMjZjMWFjODdkY2FmYjFhMzBmYzZkN2E3NDY5NDkxNTZmNmI2NGJiN2E5NWQxNjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4YWU4YzVjNzMwY2RjZTgzNjcwODYyOWZlNDJiM2M4OTlhNmE4MDA4OTY5OGE5MTU3M2QwOTYzNjUwNGQ3NGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyYjcyYzdkMGZkYzMxODIzYzhjMmFiODIwZjJjN2E5YzViNDZkODcwNjkxMTU5MzM5YzVkMWRmMjI1NDM0ZTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_96c89d1574e44aa99945ce755dd5d9e6",
+      "statement": "Registry retains plain identities, records, ordering, ledger and cursors and leaves unknown root schemas inert rather than resetting them.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/registry.lua#L57-L77",
+          "version": "repo-lines-v1:sha256:c9a75560a0474fd700fdcddb49ee74a3050de4a7725afff9df64e3ac23a7d088:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0YWRjOGIxM2M0MzZmNDc3MTY0MzRlMTNlOGQ0MTJiNjhjZTRhMWIzYjE1MmI0YWI5N2NhNDkwNjE4ZTlkOTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmM2MwNTRjYjkyNDkwZjU0ODU0NDljNDUxY2M4M2RhMDc2OWFjNzU3YjEyN2I0ZThhNWMyMDM3YjQwODkyZTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjczNTFmNTQ1ZmM0MDg2NzJlN2Q1OGJjMDBjYzM0OTcyNzZjNzg3NzIyODQxNDFjYTkzNGFlMWNlOTgyYWI3ZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRkMThjYmJkM2IyOGIyNTVhYzUxNmYxYTVhNDVhZDJmOGU3NjA1OTYxMTY1OTFhNjAxM2JjNGM0ZmYyN2M4YWMifQ"
+        },
+        {
+          "resource": "repo://scripts/registry.lua#L7-L29",
+          "version": "repo-lines-v1:sha256:e0b7031f6d825c24043aa778283e42e239c976bebb2c2974f8a34c82c0cd2ff2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYyZTRkNzdmMmU1MjY2ODAwMDhjOTQzNmI2YTlkNTJkM2I5MmM4MjlhMDdkOTAzMDVhMDc5ZWFiYTQyNGJlMjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkZWJiNmEyN2M1NzJiZjhlYTY3ZDVkYTYzNTg2MDRiNDE2MGJmOTVhMDg0YTA4MDJiMzE3ODE4NWYyYWE1N2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0NDkzMjcyMzEwOWM4OTVlY2QyYzE3MmRjNmVhZDc5YzY3MzBjNmYyMmY5Njg0N2U1YmZjMTJjODU1ZTk4ZGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU2ZThiYmQzZmUwZDg0Njc3ODE0ODUxYzM0YTg1MTQwZDRjY2Y3MDljOGM2OWNhNzJkMGEzMDAyM2FiNjE0NjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4902e7019fc348ca9442ac56631e70c8",
+      "statement": "Save is optimistic revision replacement only; activation validates before retiring an old generation and stores source/version/handler metadata, enqueuing start only at activation.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/runtime/computer.lua#L46-L81",
+          "version": "repo-lines-v1:sha256:47bd8708f1ef1a3d1e365ce3a326caab759ef89163d60b888a0b64de14c941ee:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1YjZiMmVjMDE5MDgzN2UxYjYxYTY5NzhlYWMyN2Y4ZWNmZTc4NTlkNjM4ZjgwNjY1M2NmMzJlZDI0MzM2NWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4MzMyZmU2NjdiYzUxYWM0YTUxYmEwZWZlNzM0NDQxYzkwZGVmNTVjNjBhMjZkN2RiMjc1ZWNiYmNmNDJmMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRlMzQ0MjE2NWI3ZDRlZDRlNjliZjhlODFjOTQwOWRjYjJjYjdiNmU4ZDY4OWVhOWE0NDRhNmFmZjFjN2U4ZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYwNmQ3NGUyYTc1ZmU3NzFiMGQ2NDE2ZDQ0MzRiZWRkNzA1MWI3M2FhZDMwM2I4ZDE2ZjE0ZWFhZDA0NTNmNWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d504f23c71eb425eb0fe7182e33a605b",
+      "statement": "Each callback dispatch recompiles exact retained source and reconstructs a fresh guarded native environment instead of trusting saved generated text or closures.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/runtime/compiler.lua#L263-L290",
+          "version": "repo-lines-v1:sha256:f221bf946c366afd250ac8cd3b44fa49e208bdd138113276b8dba64d7d691497:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MzgyZDNlZTM0YjMxNTQwMTM4MTc2MDcyNWE3ZTQwOWVhYjVhYzRmZjU3YmMwNjA5ZDhhOGI0M2MzNmZhYjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1MmMwM2Y5NGQ3MDI5NDBmN2FlODQxNmY0MjQ3NzBiOGU3Y2MyZDMwZjFmMmQ0MTdjYTE0MWRiYzEzZTkzMjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZWZhMGM5MjQ3YzczMzdkMDdlODIzY2M1Mzg3YTZhZWI1MzE3OTBlOWFlOTBmYzdkMmEwNThmODA4OTdmYzkifQ"
+        },
+        {
+          "resource": "repo://scripts/scheduler.lua#L76-L110",
+          "version": "repo-lines-v1:sha256:ef26cba83db25428ce5a8aeb6e36d9fd15274a9858a7261000d97d883a49f4c5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4ZjI3ZjVmNGEyODAzYWE2ZjZmM2ZmMmI1OWVlYzljNzVmNDBlNTdlMDkyOGI3ZTIxOTdkODlhM2M3NjI3ZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1MjA5OGViZWY2MTU1OGNiNTMwN2NjOGQwZGViNzc5NjMzYmYxZTAyMTUyNWM1MjFkOTlmZDc4YjJiMDc5NjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM0NjhjN2I1NDNiMjY0OWZkMjQxZWEzMzJlY2U3N2Q1ZGY1YmY0YmYzYzhjZGE3ZWI4YjdjMjdjNmJmNTNjMmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2873f2050a0044aeb0dc00cd27d96ce1",
+      "statement": "Runtime retirement clears queue/timers/subscriptions through registered cleanup while fault diagnostics retain source/run context; explicit state is copied and separately accounted.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/runtime/computer.lua#L193-L213",
+          "version": "repo-lines-v1:sha256:b8a043faa46ea64e279c24e4f3f26bce3ff087e93082be542ddc6b831233e5e1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2NjE0OTI4MWQ2NWUwMDY0MDljZGQzMTJkNmMwNjAyZjIzYzBlNDYyZGFmMTRkYTA4ODJkYTIyNmNkMDk2YTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwZjNiODU5MTRiMjZhZjlhNDg2ZjIxOWY4MmM0Y2U5MjZjMzY1NGVmMTU0NDY3ZmQzY2NlMGUxYTBjODExY2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYwZmNmZGExZTNiYzliNTk2NWZkYzNlMDYwNTA2NjE3N2VkMzc0YWY3MGYyNzg1YTk3MTgyZTUxMTAxNDc0YTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUwNDBmMTQ4NTA2N2MyYjZlOTU5MWUxYjJiMTE4NjhjOWJiZWYwZGE2NjdiNmU5ZTg3NTA3NjczNzU0ZTVlM2YifQ"
+        },
+        {
+          "resource": "repo://scripts/runtime/computer.lua#L24-L44",
+          "version": "repo-lines-v1:sha256:d9dace45ad2112bcd1ae5333e4d91c97ff2ccba0a21456addd27f517a94cd756:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4YTdkZDYyNzU0Y2QzMWUxYjAyYTFmYTEyZGFjNTNmNDVkNGQ0MGRjMzNmNjY1YjMwMTMzOTNhMjIzMWMwMTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5YWEwYzg1NjQwMmY5ZmY5Nzk4M2JmYmEwZWEzNmU2YTBiYzM0MDhhNDdjYjIxMGU3MjUwZjZiNmVhMWJhNmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5ZGUxNDFkY2VhNzYyNmEwNWUxNmJlNWZiNTNhZmVlNzYyMGE0M2E3ZGJjNDg2NWUxYzIwYWRjN2M1NWFmOGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdkNTliYTliOWM3MjdlOWRiOGRlMTQxMzFmNzY4NTNhZDA5NjRkNzg1Yjg1NDY2MjUxNGVhZDcyNmJlYmE2MzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e332a671a3f844b79e938c56a7667606",
+      "statement": "Host service providers are ephemeral registrations whose methods are merged only into computer/peripheral namespaces with collision checks.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/runtime/computer.lua#L166-L170",
+          "version": "repo-lines-v1:sha256:71c46a3c1ef5cd77d395a29bc44de28e4992862891e29b23a417f7b46bc35fd7:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTc2YzY4YWZkMTVkMGQzZGExMGQ4ODY4ZDM0N2FmOTBkNmIyZDk4NjQ5ZDlkNDQwNWE2ODA1YWFiYTViZDM5MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDgzMzJmZTY2N2JjNTFhYzRhNTFiYTBlZmU3MzQ0NDFjOTBkZWY1NWM2MGEyNmQ3ZGIyNzVlY2JiY2Y0MmYxNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjhjZTg1MGI4YTUzZjczN2I5NmU0MWI4MjVkZGZhYWI1YjkxMTRkYjdjMDQzZjNlZGEwNjBlOWU2ZTM4NmFjMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmE5MTU0MjdlNWJmOTE2N2ZkZDM2Y2FkNGE0ODcyNGE1N2ZlZTAwNGQ0MzM0OWZhNDQ2NGUxNGNkMmM2OTA3ZSJ9"
+        },
+        {
+          "resource": "repo://scripts/runtime/computer.lua#L250-L259",
+          "version": "repo-lines-v1:sha256:344add710e689b0e679fbd907bb8bfd57c600d0a6ddbcf988c872f1098a8bed3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4MmFmZmFkNjVjNDI0NjFkOWU3NDU5YTVjYTViYjEzN2EzYjVjODJhOThjNWU2YmUzM2RiNDhlYzEyY2QwYWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwNGQ3MWQwNWRkOGFkNDMwNjI5YmNlNmJkOTRiOWM5YTRmNjVmMDQ5YjRlMGJhYTJmZTM3MTNhMmFjYTUwZjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFkNDdlZDMxMjZhMzI3YTI1ZWRmNDg1MmRlNGYzN2QyOTQ1NzUyN2MyNmUzYTNmYmU4ODc2ZTlkZDIzNzFlZTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZWZhMGM5MjQ3YzczMzdkMDdlODIzY2M1Mzg3YTZhZWI1MzE3OTBlOWFlOTBmYzdkMmEwNThmODA4OTdmYzkifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-15T06:41:57.498Z"
+  }
+}

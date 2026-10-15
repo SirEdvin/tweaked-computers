@@ -75,7 +75,7 @@ These entries extend delivery scope without renumbering the original 38 implemen
 
 - [x] D1 / TC14 / `t_6534a3be`: Create public GitHub source, initial main and a verified hosted player-docs build/deployment workflow supporting selected trusted alpha refs. This is infrastructure/scaffold only, not the complete player guide.
 - [ ] D2 / TC15 / `t_0645d3ca`: Publish complete player-facing Markdown documentation covering the whole mod and every public API against actual implementation and companion contracts.
-- [ ] D3 / TC16 / `t_8d2c465c`: Generate and verify the separate developer OpenWiki from the implemented repository.
+- [x] D3 / TC16 / `t_8d2c465c`: Generate and verify the separate developer OpenWiki from the implemented repository. Managed init plus setup-disclosure update completed; 12 factual pages, 65 source-grounded Claims, representative search/read and bounded evidence/link/version checks pass. No runtime/client retest or generated updater run is claimed.
 - [ ] D4 / TC17 / `t_e6cbf814`: Present the consolidated feature PR, deploy the complete live guide and actually publish an unused-version ALPHA on Factorio Mod Portal with public source/wiki links and honest deferred-client warnings.
 
 See `docs/documentation-maintenance.md` for remote, workflow, approved source-ref procedure and output paths. Each downstream card marks only its own additional delivery entry.

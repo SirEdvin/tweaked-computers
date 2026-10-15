@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:ebec3f38f568bd4b47376750b83f4ed1b3f8b09669b06d34547bc7eb7540a86d",
+  "claims": [
+    {
+      "id": "claim_396b5d82c85c45899e48d104c4ff02d2",
+      "statement": "The shared scheduler rejects invalid/replayed clocks and runs sorted lifecycle/sample/notification hooks, fair timer and callback scans, then render work.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/scheduler.lua#L112-L160",
+          "version": "repo-lines-v1:sha256:4658e1be11fef4899bcacf9bc1e5712fc19ce4ae69dc416277824938f8e4c7f0:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0MTU2MTYyM2FkMTY2OGZmMWRiNjIwMDE0YmUzMDIxNDdmNTFkNDJhMGExYjA2NzUyOWE2NzZiMDFiMzNkZjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMxM2M0YzQwYzc1N2YwNTM0ZTllOWEzOWQxMzU5N2Y0MTE4NjBmNTY0OGU0NDAyNzMyMTQ2NWUzZTVhZWMxNzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI4Y2U4NTBiOGE1M2Y3MzdiOTZlNDFiODI1ZGRmYWFiNWI5MTE0ZGI3YzA0M2YzZWRhMDYwZTllNmUzODZhYzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZWZhMGM5MjQ3YzczMzdkMDdlODIzY2M1Mzg3YTZhZWI1MzE3OTBlOWFlOTBmYzdkMmEwNThmODA4OTdmYzkifQ"
+        },
+        {
+          "resource": "repo://scripts/scheduler.lua#L42-L48",
+          "version": "repo-lines-v1:sha256:7adc46ebdfea2696632740d980825a3f116e47d96049d6ec15095f89acc723e2:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDUxZDk0NTNkNDUxNDJhMGU0YjdlNjMzOWNlNWQ4MGY3ODYyODIxYjliNTA2OWEzMmM1ZWRmZDNhZDEzMDU1ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzc5ODExYzVmYmUyNWMzZDRlNWYzZDFmZDM1YWI5ZGE2YmNmOGE2OGM1ZWRmOWQ2YmE5N2Y2ODY4NmMzOTY4MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2VjNWRiNzhmMGU3MTQ3YTg1Y2M1OWM2M2Q4MDhjMTJlMWNjMzM5YzllNWM3MmIzNTAxMmNjOGQ5NmZlZjFmOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODZhNmZkZDNlMzhiYWQyNmY5YmVkZDBkZjdkNjUwMTYwNmQyYTNhZmYwNTc4MGM4ZDJjMjBhNmQ4OGM5ZjJiZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_fad1f45c5d7145ce89fb65f5c0b62644",
+      "statement": "Admission is a plain per-real-tick aggregate/per-identity ledger reset only by clock advancement, not stop/removal or reconstruction, with atomic per-kind and aggregate reservation checks.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/registry.lua#L129-L140",
+          "version": "repo-lines-v1:sha256:cd0590983f904d26933bc9dd0e8b47026ae0c2df03b50c847e1aa9dcad9b78d1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkMDczOGRmNjRkMWM5NDhjZjA4YWJhODFhZjc3OWZiMWVhYzNiMjA4NjgwNmVjNzkxNjcwY2Q0NDA4ZGQwZDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE0NzE2ZjlkMmNjMTExMWVhYTZkMjNhMjRjZGJjMWVlMzkzMzgyZGM0NDg5YmJmOWYwNGViZTRlN2Q0NWJhMjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZWZhMGM5MjQ3YzczMzdkMDdlODIzY2M1Mzg3YTZhZWI1MzE3OTBlOWFlOTBmYzdkMmEwNThmODA4OTdmYzkifQ"
+        },
+        {
+          "resource": "repo://scripts/runtime/admission.lua#L5-L37",
+          "version": "repo-lines-v1:sha256:3b5d82cb1bc991a755deb9e60512e6fa72f5bc3e5bc9ef150072b9da3c9d71a6:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhYWUzMWRhZmRkYmI2NmJiMzMxYzQ3YzMwNzNkNWE2YTJkNWM1ZGFjYWE3Mzk5ZjdmYTY1NjIwOTZkNzMzYzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIzNDg4ZGQ5NjJjYjFjNzM1YjdhNzQ2ZDBiYzVmZGZlY2EyOGY4YTExNmNjODJkMzcxMmRhNWViZTU1ODQyNzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZWZhMGM5MjQ3YzczMzdkMDdlODIzY2M1Mzg3YTZhZWI1MzE3OTBlOWFlOTBmYzdkMmEwNThmODA4OTdmYzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_99bbae4ea4fd4836821dbc4bdf48d4e9",
+      "statement": "Dispatch waits for complete aggregate callback headroom, fresh physical power authority and one-per-tick eligibility instead of faulting untouched queued work on E_BUSY.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/scheduler.lua#L76-L110",
+          "version": "repo-lines-v1:sha256:ef26cba83db25428ce5a8aeb6e36d9fd15274a9858a7261000d97d883a49f4c5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4ZjI3ZjVmNGEyODAzYWE2ZjZmM2ZmMmI1OWVlYzljNzVmNDBlNTdlMDkyOGI3ZTIxOTdkODlhM2M3NjI3ZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1MjA5OGViZWY2MTU1OGNiNTMwN2NjOGQwZGViNzc5NjMzYmYxZTAyMTUyNWM1MjFkOTlmZDc4YjJiMDc5NjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM0NjhjN2I1NDNiMjY0OWZkMjQxZWEzMzJlY2U3N2Q1ZGY1YmY0YmYzYzhjZGE3ZWI4YjdjMjdjNmJmNTNjMmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c877cc6c96a64d65a7a402cfec85a0ec",
+      "statement": "Maintenance uses a separate retained counter and private recognizable refusal, reserving render headroom and letting samplers run their own fail-closed admission path.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/scheduler.lua#L17-L48",
+          "version": "repo-lines-v1:sha256:e85078503b4b061acf8e9dff1619c80decafb94e538c19afd4932f8a2741faa0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0NmY1NTg0ZDk4NDU1MzQyY2Q0NDYzNmI1ZDJhNWQzMWY2YTYyZGIyNTgzNDBmM2M5NzYzYTE0NTUyZTYyNGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3OTgxMWM1ZmJlMjVjM2Q0ZTVmM2QxZmQzNWFiOWRhNmJjZjhhNjhjNWVkZjlkNmJhOTdmNjg2ODZjMzk2ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUzNzg0NjVjZmMxNTRiZjU3MmVlNDVlNDRjMDU5NTFkNDBiZWIzMDU4NWZmMDAyN2E4Yzk4NmRjMTVkNmE2YTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg2YTZmZGQzZTM4YmFkMjZmOWJlZGQwZGY3ZDY1MDE2MDZkMmEzYWZmMDU3ODBjOGQyYzIwYTZkODhjOWYyYmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_96db95f3b8c54961839c7fc2d3fbe24b",
+      "statement": "Named timers order overdue delivery by deadline/sequence, coalesce recurring missed intervals into one queued notification, and cancel pending queue entries as well as timer records.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/runtime/computer.lua#L224-L248",
+          "version": "repo-lines-v1:sha256:2b3df7bc38d7403c2f1445b04f051d52f404010b6d5585033bd7f9cb4123304d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYjE3YjA0MzE1ZDgzYjkyMzAxNjA1MjQ3Mzk1MmExOTMzYTczZDU2YTk0OTEwZjgwZDBkMjQ5YTc0MmVjOGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjMjViMGI4MTllNjVjMGUzZmIxMGVhNjBkZWNmMmQ0ZGU2YTljMDgwN2Y3MjBiOGY0ZjEwZmI5MjQxOTNiNTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1ZTg3MzhjZmRmODhmOWYyMGFkYTM5OTI4YmJkNTFiNGViMWFmYTBhZjY3NWE2ZGZjNmQ5N2E4OGFiNDZkMzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY5MmQ0Njg3NTY2ZjNjYWNiMmUyNTczN2E2OTlkY2RmMWQ4YjNiMGEyZmY4MDk5YzgwMjY2YjA1MjI5ZTVlZGQifQ"
+        },
+        {
+          "resource": "repo://scripts/scheduler.lua#L50-L74",
+          "version": "repo-lines-v1:sha256:dd903ce8cca84bc64923c9dd40dc543b7de2a4adc5435d0904ef89a18d0625a7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkOTkyMmRmYTllOWFhNTQ1NGU5NTg0MmEwNDdmYjkwYjJhYmRmOTM1ODBlZjlmNzI5NjdiOTM1NzQyZjkyNTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3OTgxMWM1ZmJlMjVjM2Q0ZTVmM2QxZmQzNWFiOWRhNmJjZjhhNjhjNWVkZjlkNmJhOTdmNjg2ODZjMzk2ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJjYjEyY2RjMWY3MDI2OTY0ZjFlNmM1ZGUwNmE4NDg1ZjlkYjU0NjFkNjc1NmYyYzIxMDg3OGQ2Y2NkYTc3OWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU5Y2FkZmQ4YWM0NDE3MGJmNDkzY2RmNGM0MTk0NDIwZjMzM2VlZDNhNjcxY2NkMjFmMzllNWRmNmUyODk5NGQifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-15T06:41:57.498Z"
+  }
+}
