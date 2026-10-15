@@ -66,5 +66,16 @@ Planning status: no implementation tasks below are completed. Each milestone mus
 ## Workflow follow-up
 
 - Present the implemented change for review with the exact tested artifact and outstanding limitations, if any; do not treat this planning checklist as evidence of implementation.
-- Commit and publish through the user's chosen remote/PR workflow when a repository remote exists. This planning repository currently has no remote; do not invent one or publish without an authorized destination.
-- Archive the OpenSpec change only after implementation and review requirements are satisfied. Publication or deployment beyond that requires the relevant explicit user authorization.
+- Public delivery is now user-authorized at `SirEdvin/tweaked-computers` (SSH origin; default `main`). TC14 bootstraps source/infrastructure only. TC17 owns the consolidated implementation PR and public alpha; publication does not authorize merging that PR.
+- Archive the OpenSpec change only after implementation and review requirements are satisfied. The public-delivery amendment below authorizes the named repository, docs/wiki and Factorio alpha; unrelated publication/deployment remains unauthorized.
+
+## Additional user-authorized public delivery
+
+These entries extend delivery scope without renumbering the original 38 implementation tasks. A ZIP is an upload artifact, not the final delivery. Client verification remains user-deferred until all specifications are implemented; do not label the alpha stable or client-verified.
+
+- [x] D1 / TC14 / `t_6534a3be`: Create public GitHub source, initial main and a verified hosted player-docs build/deployment workflow supporting selected trusted alpha refs. This is infrastructure/scaffold only, not the complete player guide.
+- [ ] D2 / TC15 / `t_0645d3ca`: Publish complete player-facing Markdown documentation covering the whole mod and every public API against actual implementation and companion contracts.
+- [ ] D3 / TC16 / `t_8d2c465c`: Generate and verify the separate developer OpenWiki from the implemented repository.
+- [ ] D4 / TC17 / `t_e6cbf814`: Present the consolidated feature PR, deploy the complete live guide and actually publish an unused-version ALPHA on Factorio Mod Portal with public source/wiki links and honest deferred-client warnings.
+
+See `docs/documentation-maintenance.md` for remote, workflow, approved source-ref procedure and output paths. Each downstream card marks only its own additional delivery entry.

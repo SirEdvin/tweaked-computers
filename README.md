@@ -9,6 +9,10 @@ notices and independent glyph provenance. It is a user-test build, not stable or
 client-verified. Back up saves. Public guides/OpenWiki/publication are separate
 campaign stages; this checkpoint does not publish or merge the feature PR.
 
+Public [player documentation](https://siredvin.github.io/tweaked-computers/) is currently a scaffold;
+[source and issues](https://github.com/SirEdvin/tweaked-computers) and
+[documentation deployment](docs/documentation-maintenance.md) are available.
+
 Start with [installation and manual checks](docs/alpha-candidate.md) and the
 [editable factory controller](docs/factory-example.md). The combined example uses
 real inserter configuration/stock circuits, expiring shared KV telemetry and a
