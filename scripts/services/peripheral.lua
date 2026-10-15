@@ -63,6 +63,7 @@ local function target(inventory,name)
   if not rec or rec.id~=name or rec.generation~=item.generation then return nil end
   return rec,item
 end
+M.resolve_inventory_item=target -- Host-only: logical displays are not registry tile IDs.
 function M.revoke(computer,name,wire,reason)
   local root=registry.get()
   -- Exact current writer only. The cleanup walk is covered by callers' fixed

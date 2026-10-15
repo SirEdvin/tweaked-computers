@@ -94,7 +94,12 @@ backend or presentation state. Title Close / Escape may retire an unavailable
 session while preserving its draft; they do not require a reachable computer.
 
 `control.lua` registers native click, text, tab-selection, dropdown-selection and
-checkbox-change handlers. The existing close/open/player-unavailable/display-size
+checkbox-change handlers. `scripts.ui.interaction` is the sole world-opening route:
+the shared Ctrl + left-click input opens a computer, activates a monitor cell, or
+opens recovery on empty ground. Held items/wires, cursor ghosts and another open
+GUI refuse the gesture. Native open events never create workspaces; native device
+shell/socket dialogs are suppressed without closing other entity dialogs. The old
+linked Open GUI and Ctrl+Shift+E bindings are removed. Close/player-unavailable/display-size
 routes remain. Native tab changes are explicitly handled; a click-only handler is
 not sufficient. Closing never reopens the workspace over another GUI.
 

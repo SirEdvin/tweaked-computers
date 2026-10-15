@@ -4,6 +4,8 @@ local contracts=require('tests.editor_contract')
 local registry=require('scripts.registry')
 local model=require('scripts.ui.editor-model')
 local editor=require('scripts.ui.editor')
+local interaction=require('scripts.ui.interaction')
+local monitor=require('scripts.services.monitor')
 local layout=require('scripts.ui.editor-layout')
 local runtime=require('scripts.runtime.computer')
 local scheduler=require('scripts.scheduler')
@@ -21,10 +23,18 @@ function M.run()
   local original_game=game; local surface=game.surfaces[1]; local groups=0; local tick=200
   local function group(name,fn) tick=tick+1; fn(); groups=groups+1; log('TC_CONTRACT '..name) end
   local function build(kind,x,y)
-    local body=assert(surface.create_entity{name=defs.devices[kind].name,position={x,y},force='player'})
+    local body=assert(surface.create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
     local rec=assert(lifecycle.build(body)); rec.powered=true; return rec
   end
   local rec=build('computer',0,120); local db=build('kv',3,120); local mon=build('monitor',0,123)
+  -- The shared interaction path installs the real monitor provider. Initialize
+  -- its logical group instead of relying on the old fixture's default binding.
+  for _=1,200 do
+    monitor.reconcile(tick,function() end)
+    if not registry.get().monitors.job then break end
+  end
+  assert(monitor.resolve(mon) and not registry.get().monitors.job)
+  local monitor_id=monitor.resolve(mon).id
   local function connector(r,wire) return assert(lifecycle.connector(r,'network',wire)) end
   assert(connector(rec,'red').connect_to(connector(db,'red')))
   assert(connector(rec,'green').connect_to(connector(mon,'green')))
@@ -47,18 +57,74 @@ function M.run()
       editor.on_text{player_index=(p or a).index,element=f.content.editor.source,tick=tick}
     end
     local f,c,source_widget
-    group('workspace-computer-click-and-native-open-event-routes',function()
+    group('workspace-only-explicit-control-click-opens-editor',function()
       a.selected=rec.body
-      editor.on_input{player_index=a.index,input_name='tc-open-selected-computer',tick=tick}
+      a.opened=rec.body
+      interaction.on_opened{player_index=a.index,entity=rec.body,tick=tick}
+      assert(a.opened==nil and not a.gui.screen[editor.frame_name],'ordinary open must not create a workspace')
+      interaction.on_input{player_index=a.index,input_name='tc-open-selected-computer',tick=tick}
+      assert(not a.gui.screen[editor.frame_name],'legacy linked open must be inert')
+      interaction.on_input{player_index=a.index,input_name='tc-open-editor',tick=tick}
+      assert(not a.gui.screen[editor.frame_name],'legacy keyboard open must be inert')
+      interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick}
       local opened=a.gui.screen[editor.frame_name]
       assert(opened and a.opened==opened and #opened.content.tabs==5)
       editor.on_closed{player_index=a.index,element=opened}; a.opened=nil
       assert(not opened.valid)
-      editor.on_opened{player_index=a.index,entity=rec.body,tick=tick}
-      opened=a.gui.screen[editor.frame_name]
-      assert(opened and a.opened==opened and #opened.content.tabs==5)
+    end)
+    group('workspace-world-gesture-refuses-held-wires-ghosts-gui-and-denied-input',function()
+      local function input(extra)
+        local event={player_index=a.index,input_name='tc-interact',tick=tick}
+        for k,v in pairs(extra or {}) do event[k]=v end
+        interaction.on_input(event)
+        assert(not a.gui.screen[editor.frame_name] and not model.session(a.index))
+      end
+      a.selected=rec.body
+      local cursor={valid_for_read=true,name='red-wire'}; a.cursor_stack=cursor
+      input(); assert(a.cursor_stack==cursor and cursor.valid_for_read and cursor.name=='red-wire')
+      cursor.name='green-wire'; input(); assert(cursor.name=='green-wire')
+      a.cursor_stack={valid_for_read=false}; a.cursor_ghost='tc-computer'; input(); a.cursor_ghost=nil
+      input{in_gui=true}; input{element={valid=true}}
+      local other={other_gui=true}; a.opened=other; input(); assert(a.opened==other); a.opened=nil
+      a.permission_group={allows_action=function() return false end}; input(); a.permission_group=nil
+      a.can_reach_entity=function() return false end; input(); a.can_reach_entity=function() return true end
+      assert(connector(rec,'red').is_connected_to(connector(db,'red')))
+      assert(connector(rec,'green').is_connected_to(connector(mon,'green')))
+      -- Real engine wiring is untouched by ordinary UI events on either end.
+      for _,color in ipairs({'red','green'}) do
+        local target=color=='red' and db or mon
+        assert(connector(rec,color).disconnect_from(connector(target,color)))
+        for _,r in ipairs({rec,target}) do
+          a.opened=r.body; interaction.on_opened{player_index=a.index,entity=r.body,tick=tick}
+          assert(a.opened==nil and not a.gui.screen[editor.frame_name])
+        end
+        assert(connector(rec,color).connect_to(connector(target,color)))
+        assert(connector(rec,color).is_connected_to(connector(target,color)))
+      end
+    end)
+    group('workspace-all-device-native-dialogs-suppressed-vanilla-untouched',function()
+      local devices={rec,db,mon,build('logic',12,120),build('configurator',18,120)}
+      for _,r in ipairs(devices) do
+        assert(not r.body.operable,'implementation shell must not expose a native dialog')
+        local parts={r.body}; for _,child in pairs(r.children) do parts[#parts+1]=child end
+        for _,part in ipairs(parts) do
+          a.selected=part; a.opened=part
+          interaction.on_opened{player_index=a.index,entity=part,tick=tick}
+          assert(not a.opened and not a.gui.screen[editor.frame_name])
+        end
+        if r.kind~='computer' then
+          a.selected=r.body; interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick}
+          assert(not a.gui.screen[editor.frame_name],'non-computers must not open native configuration or recovery')
+        end
+      end
+      local vanilla=assert(surface.create_entity{name='constant-combinator',position={24,120},force='player'})
+      a.opened=vanilla; interaction.on_opened{player_index=a.index,entity=vanilla,tick=tick}; assert(a.opened==vanilla)
+      interaction.on_opened{player_index=a.index,entity=rec.body,tick=tick}; assert(a.opened==vanilla)
+      a.opened=nil; a.selected=nil
+      interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick}
+      local opened=a.gui.screen[editor.frame_name]
+      assert(opened and model.session(a.index).mode=='recovery','control-click empty ground opens recovery')
       editor.on_closed{player_index=a.index,element=opened}; a.opened=nil
-      assert(not opened.valid)
     end)
     group('workspace-five-native-tabs-compact-actions-draggable-source',function()
       assert(editor.open(a,rec.id)); f=a.gui.screen[editor.frame_name]; c=f.content.editor; source_widget=c.source
@@ -141,9 +207,9 @@ function M.run()
       assert(p.rows.device_1.icon.sprite=='item/tc-kv')
       click(p.rows.device_1.peripheral_1); assert(p.details.text:find(db.id,1,true) and p.details.text:find('Unpowered',1,true))
       select(p.filter.wire,2)
-      assert(s.inventory.wire=='green' and #s.inventory.items==1 and s.inventory.items[1].name==mon.id)
+      assert(s.inventory.wire=='green' and s.inventory.items and #s.inventory.items==1 and s.inventory.items[1].name==monitor_id,serpent.line(s.inventory))
       assert(p.rows.device_1.icon.sprite=='item/tc-monitor')
-      click(p.rows.device_1.peripheral_1); assert(s.peripheral==mon.id)
+      click(p.rows.device_1.peripheral_1); assert(s.peripheral==monitor_id)
       assert(connector(rec,'green').disconnect_from(connector(mon,'green')))
       click(p.filter.inspect)
       assert(#s.inventory.items==0 and p.rows.empty and p.details.text:find('Disconnected',1,true))

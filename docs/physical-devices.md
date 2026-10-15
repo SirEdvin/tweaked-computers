@@ -22,9 +22,11 @@ sockets expose only their named role, never a generic NETWORK identity.
 All roles remain electrically independent, with no internal wires. Network
 shells, Input and Factory targets have zero combinator sections and are disabled
 and inoperable. Output contributes its single controlled bank to both colors.
-Opening a selected computer uses the existing linked normal-open custom input or
-Ctrl+Shift+E, with the existing reach/force/surface/session guards; it does not
-open the native constant-combinator dialog. Client selection/focus remains a
+Opening a computer requires Ctrl + left-click with an empty cursor; ordinary
+open and the old Ctrl+Shift+E route are disabled. Existing reach/force/surface/session
+guards remain. Ctrl-click empty ground opens recovery; a monitor cell receives a
+touch instead. No implementation-only native constant-combinator dialog is exposed.
+Client selection/focus remains a
 small user-owned review, not a headless claim.
 
 Placement allocates all parts before publishing a logical identity. A failed

@@ -22,6 +22,15 @@ for _,kind in ipairs(defs.order) do
 end
 assert(count==160)
 local styles=data.raw['gui-style'].default
+local inputs=data.raw['custom-input']
+local interact=assert(inputs['tc-interact'])
+assert(interact.key_sequence=='CONTROL + mouse-button-1' and not interact.alternative_key_sequence)
+assert(not interact.linked_game_control or interact.linked_game_control=='')
+assert(interact.action=='lua' and interact.consuming=='game-only' and interact.block_modifiers)
+assert(not inputs['tc-open-editor'] and not inputs['tc-open-selected-computer'] and not inputs['tc-monitor-activate'])
+for name in pairs(inputs) do
+  if name:sub(1,3)=='tc-' then assert(name=='tc-interact','unexpected mod input '..name) end
+end
 for name,kind in pairs({tc_editor_text='textbox_style',tc_editor_button='button_style',tc_editor_frame='frame_style',
   tc_editor_tabs='tabbed_pane_style',tc_editor_tab='tab_style',draggable_space_header='empty_widget_style'}) do
   assert(styles[name] and styles[name].type==kind,'incompatible editor style '..name)

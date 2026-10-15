@@ -16,5 +16,3 @@ for byte=0,255 do
   sprites[#sprites+1]=sprite
 end
 data:extend(sprites)
-data:extend{{type='custom-input',name='tc-monitor-activate',key_sequence='CONTROL + mouse-button-1',
-  action='lua',consuming='game-only',block_modifiers=true,include_selected_prototype=false}}

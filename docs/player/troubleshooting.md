@@ -6,8 +6,9 @@ save before manual repair; redact secrets or private source literals before repo
 
 ## Computer and editor
 
-- Cannot open: select the visible computer body and try the normal open action or
-  rebindable Ctrl+Shift+E. Check force, surface, reach and permissions. Use native
+- Cannot open: clear the cursor and Ctrl + left-click the visible computer body.
+  Ordinary clicks do not open workspaces. Check the shared interaction binding in
+  Controls, force, surface, reach and permissions. Use native
   buttons while typing. Graphical focus/control delivery remains alpha testing.
 - Save changed nothing: Save changes committed source only. Apply/Run activates
   the displayed saved revision after validation. Unsaved text is never run implicitly.

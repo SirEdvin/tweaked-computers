@@ -11,6 +11,8 @@ local limits=require('scripts.runtime.limits')
 local defs=require('scripts.device-definitions')
 local model=require('scripts.monitor-model')
 local monitor=require('scripts.services.monitor')
+local interaction=require('scripts.ui.interaction')
+local editor_contract=require('tests.editor_contract')
 local renderer=require('scripts.rendering')
 local example_source=require('examples.monitor-program')
 local M={}; local loaded=false
@@ -201,11 +203,24 @@ function M.run()
   -- Touch mapping and event publication use actual authority; custom-input
   -- production player validation is exercised separately with an injected lookup.
   local cw,ch,ox,oy=model.geometry(display); local px,py=model.world(display,ox+cw/2,oy+ch/2)
-  assert(monitor.activate_for_player({input_name='tc-monitor-activate',tick=game.tick,in_gui=false,cursor_position={x=px,y=py}},player))
-  assert(not monitor.activate_for_player({input_name='tc-monitor-activate',tick=game.tick,in_gui=true,cursor_position={x=px,y=py}},player))
+  assert(monitor.activate_for_player({input_name='tc-interact',tick=game.tick,in_gui=false,cursor_position={x=px,y=py}},player))
+  assert(not monitor.activate_for_player({input_name='tc-interact',tick=game.tick,in_gui=true,cursor_position={x=px,y=py}},player))
   local foreign={valid=true,index=2,force=game.create_force('tc09-foreign'),surface=b0.body.surface,cursor_stack={valid_for_read=false},can_reach_entity=function() return true end,print=nop}
-  assert(not monitor.activate_for_player({input_name='tc-monitor-activate',tick=game.tick,in_gui=false,cursor_position={x=px,y=py}},foreign))
+  assert(not monitor.activate_for_player({input_name='tc-interact',tick=game.tick,in_gui=false,cursor_position={x=px,y=py}},foreign))
   local job=registry.get().monitors.touches[1]
+  local original_game=game
+  local world_player=editor_contract.player(3001,b0.body); world_player.cursor_stack={valid_for_read=false}
+  local ok,err=pcall(function()
+    game={get_player=function(index) assert(index==world_player.index); return world_player end,tick=original_game.tick}
+    local event={input_name='tc-interact',player_index=world_player.index,tick=original_game.tick,cursor_position={x=px,y=py}}
+    local before=#registry.get().monitors.touches
+    world_player.selected=b0.body; assert(interaction.on_input(event))
+    world_player.selected=nil; assert(interaction.on_input(event),'position-based monitor touch must precede recovery')
+    assert(#registry.get().monitors.touches==before+2 and not world_player.opened and #world_player.gui.screen.children==0)
+    world_player.cursor_ghost='tc-computer'; assert(not interaction.on_input(event)); world_player.cursor_ghost=nil
+    assert(#registry.get().monitors.touches==before+2)
+  end)
+  game=original_game; if not ok then error(err,0) end
   monitor.deliver(job,display,c,game.tick,nop,player)
   assert(#c.queue==1 and c.queue[1].event.x==1 and #c.queue[1].event.wires==2 and c.queue[1].event.wire=='red')
   registry.get().monitors.touches={}; c.queue={}; c.queue_bytes=0

@@ -25,8 +25,8 @@ This small factory uses only a computer and logic handler. The complete
 
 ## Enter and run
 
-Select the computer and use its normal open action or the rebindable
-**Ctrl+Shift+E** editor action. Copy the whole `return { ... }` document from
+Clear the cursor and **Ctrl + left-click the computer** to open its workspace.
+Ordinary clicks remain available for wiring. Copy the whole `return { ... }` document from
 [logic-controller](examples.md#logic-controller), not the repository's outer
 `return [[...]]` host wrapper. Use **Validate**, **Save**, then **Run**.
 Use buttons while the source text box has focus; do not depend on shortcuts

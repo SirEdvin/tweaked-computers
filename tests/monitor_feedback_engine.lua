@@ -111,7 +111,7 @@ function M.run()
         -- actual body reach target and the production pending event payload.
         local player={valid=true,index=1,force=marked.body.force,surface=marked.body.surface,
           cursor_stack={valid_for_read=false},can_reach_entity=function(body) return body==marked.body end,print=nop}
-        assert(monitor.activate_for_player({input_name='tc-monitor-activate',tick=game.tick,
+        assert(monitor.activate_for_player({input_name='tc-interact',tick=game.tick,
           cursor_position={x=wx,y=wy}},player))
         local state=registry.get().monitors; assert(#state.touches==1)
         local event=state.touches[1].payload

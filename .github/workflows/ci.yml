@@ -75,6 +75,9 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/gui-cold" --mode both \
             --fixture tests.editor_cold --cold
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/monitor-cold" --mode both \
+            --fixture tests.monitor_engine --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/integration" --mode both \
             --fixture tests.integration_engine --data-fixture tests.candidate_data \
             --production-context --cold
@@ -93,6 +96,10 @@ jobs:
             ${{ runner.temp }}/tc-ci/gui-cold/**/engine.log
             ${{ runner.temp }}/tc-ci/gui-cold/**/*-engine.log
             ${{ runner.temp }}/tc-ci/gui-cold/**/*-result.json
+            ${{ runner.temp }}/tc-ci/monitor-cold/**/summary.json
+            ${{ runner.temp }}/tc-ci/monitor-cold/**/engine.log
+            ${{ runner.temp }}/tc-ci/monitor-cold/**/*-engine.log
+            ${{ runner.temp }}/tc-ci/monitor-cold/**/*-result.json
             ${{ runner.temp }}/tc-ci/integration/**/summary.json
             ${{ runner.temp }}/tc-ci/integration/**/engine.log
             ${{ runner.temp }}/tc-ci/integration/**/*-engine.log

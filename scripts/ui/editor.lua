@@ -472,20 +472,6 @@ function M.on_closed(event)
   if not player or event.element~=f then return end
   model.close(player.index,s.token); f.destroy() -- Never reopen over the next GUI.
 end
-function M.on_opened(event)
-  if not event.entity then return end
-  local rec=registry.by_entity(event.entity)
-  if rec and rec.kind=='computer' then M.open(game.get_player(event.player_index),rec.id) end
-end
-function M.on_input(event)
-  local player=game.get_player(event.player_index)
-  if not player or not player.valid or player.opened then return end
-  local group=player.permission_group
-  if group and not group.allows_action(defines.input_action.custom_input) then return end
-  local rec=registry.by_entity(player.selected)
-  if rec and rec.kind=='computer' then M.open(player,rec.id)
-  elseif event.input_name=='tc-open-editor' then M.open_recovery(player) end
-end
 function M.on_player_unavailable(event)
   local player=game.get_player(event.player_index); local s=model.session(event.player_index)
   if s then model.close(event.player_index,s.token) end

@@ -39,8 +39,8 @@ The shared monitor does not create an unwired bridge between its members.
 
 ## Enter the source
 
-Open the computer with the rebindable Ctrl+Shift+E shortcut while selecting it,
-or through its native open action. Copy the document between the outer long
+Open the computer with Ctrl + left-click after clearing the cursor.
+Copy the document between the outer long
 brackets in [factory-controller.lua](../examples/factory-controller.lua), not the
 host wrapper `return [[...]]`, into the source text box. Validate, **Save**, then
 **Run**. This is one document: there are no filenames, imports or shell commands.

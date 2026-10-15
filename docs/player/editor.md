@@ -1,9 +1,13 @@
 # Editor, source revisions and recovery
 
-A computer has one Lua source document, not files or a terminal. Select the
-computer and use the normal open action, or **Open computer editor / recovery
-drafts** (initially **Ctrl+Shift+E**, rebindable in Controls). With no selected
-computer and no other GUI open, the latter opens standalone recovery drafts.
+A computer has one Lua source document, not files or a terminal. With an empty
+cursor and no GUI open, **Ctrl + left-click the computer** to open its workspace.
+Ordinary clicks do not open it and remain available for wiring. **Ctrl + left-click
+empty ground** for standalone recovery drafts; on a monitor cell, the same gesture
+activates the cell instead. The shared interaction action is rebindable in Controls;
+the old normal-open and Ctrl+Shift+E actions were removed in 0.1.4. Held items/wires
+and cursor ghosts refuse opening. Native buttons inside the workspace still use
+normal clicks.
 
 The workspace uses native text entry and buttons. **Native client typing, paste,
 focus and appearance are still awaiting your playtest**; the implementation's
@@ -92,7 +96,7 @@ affected identity. Selection changes cancel the pending review/forget, and the
 reviewed bytes are checked again before copying or deletion. You cannot forget
 the currently open document; use reviewed Reload instead.
 
-With no accessible computer, **Ctrl+Shift+E** opens independent recovery. Select a
+With an empty cursor, **Ctrl + left-click empty ground** for independent recovery. Select a
 draft, review it, **Select text** and use native Copy; no automatic clipboard access
 is claimed. This viewer can confirm forgetting a reviewed slot, but cannot run a
 computer or reset application data.
@@ -128,10 +132,13 @@ data, not a wiring fix or a way to clear a database.
 ## Integrated redesign playtest
 
 This short user-owned native-client review is not yet performed. Use the exact
-0.1.3 release and a backed-up test save, retaining the old mod/world for rollback.
+0.1.4 release and a backed-up test save, retaining the old mod/world for rollback.
 
 - Place/rotate all five devices; check ordinary-zoom silhouettes, icons/status,
-  direct red/green Network contacts and distinct logic Input/Output / configurator
+  ordinary-click red/green wiring without a workspace opening, then clear the
+  cursor and Ctrl + left-click a computer to open it. Check empty-ground recovery,
+  monitor cell activation and that held wires/items/ghosts do not open a workspace.
+  Check direct red/green Network contacts and distinct logic Input/Output / configurator
   Factory targets. Open/mine/mark the visible body, not a private power helper.
 - At **1280×720** and **1920×1080**, try **100%** and **150%** GUI scale. Drag the
   window; change scale/resolution and check clamping, readable tabs, close and
