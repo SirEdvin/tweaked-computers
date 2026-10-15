@@ -11,10 +11,38 @@ https://siredvin.github.io/tweaked-computers/.
     .venv-docs/bin/python -m mkdocs build --strict
 
 Strict validation rejects broken internal page links, missing anchors and omitted
-navigation pages. External source/issues URLs are not network-crawled by MkDocs.
-TC15 must add every player-facing capability/API page to navigation and reconcile
-it against real implementation plus companion contracts; this scaffold has no
-complete API inventory and is not the final guide.
+navigation pages. External source/issues/wiki URLs are not network-crawled by MkDocs.
+The complete guide and public Lua reference live in `docs/player/`; developer
+OpenWiki is separate under `openwiki/`. Do not copy implementation/Claim metadata
+into player pages.
+
+    python3 tools/configuration_catalog.py --check
+    python3 tools/player_docs.py --check --site site --report /outside/repo/docs-inventory.json
+
+`tools/player_docs.py` generates only the readable settings/nested-schema tables,
+common limits and exact shipped runnable examples. After intentional source changes,
+run it without `--check`, review the generated diff, then rebuild and check. It
+compares public methods/aliases with actual exports and the existing API inventory,
+checks event/color coverage and all eight companion-contract/page mappings, and
+checks built internal HTML links/anchors. This is static coverage plus human
+contract review, not runtime/client proof. Do not edit generated pages directly.
+
+For changed Lua examples, reuse the existing exact-engine compile path:
+
+    python3 tools/build.py --output /outside/repo/docs-package
+    python3 tools/player_docs.py --check \
+      --fixture-archive /outside/repo/docs-package/tweaked-computers_0.1.0.zip \
+      --fixture-output /outside/repo/docs-syntax/tweaked-computers_0.1.0.zip
+    python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
+      --archive /outside/repo/docs-syntax/tweaked-computers_0.1.0.zip \
+      --output /outside/repo/new-docs-syntax-run --mode base \
+      --fixture tests.player_documentation
+
+Use fresh output paths and substitute the actual numeric version. The syntax ZIP
+is explicitly a separate test-only archive with an added compile fixture; never
+upload it as a release. The fixture compiles every `lua` fence as a complete native
+document using the actual compiler/limits, but does not claim client delivery or
+repeat full factory/runtime matrices. Existing implementation fixtures own effects.
 
 Dependencies are version/hash locked for the Linux build. To refresh deliberately,
 use pip-tools on Python 3.12 with `mkdocs==1.6.1` as input, inspect the full lockfile

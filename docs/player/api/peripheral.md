@@ -1,0 +1,87 @@
+# Peripheral discovery and calls
+
+The computer sees powered or unpowered peripherals through uninterrupted red or
+green wires between mod-owned **NETWORK** ports on its force/surface. Computers
+relay discovery but are not programmable peripherals. Vanilla poles/machines,
+ghosts and INPUT/OUTPUT/TARGETS ports do not relay it. There is no cross-color path,
+wireless transport, coordinate addressing or encoded computer-message protocol.
+Unknown external wires are left intact; normal continuity on one connector remains.
+
+## Complete methods
+
+Every discovery call requires an explicit wire, `"red"` or `"green"`; no default
+or `"both"`. Names/types are strings, and calls use dots with strict arity.
+
+| Signature | Exact returns |
+| --- | --- |
+| `peripheral.getNames(wire)` | Complete sorted unique string array, possibly empty |
+| `peripheral.isPresent(name, wire)` | Boolean physical presence, independent of power |
+| `peripheral.getType(name, wire)` | Type string or one nil if absent |
+| `peripheral.getMethods(name, wire)` | Sorted public method/alias array or one nil |
+| `peripheral.describe(name, wire)` | PeripheralInfo snapshot or one nil |
+| `peripheral.wrap(name, wire)` | Ephemeral protected dot-call facade or one nil |
+| `peripheral.call(name, wire, method, ...)` | Exact addressed method returns |
+| `peripheral.find(type_name, wire)` | Zero or more facades in name order; **multiple returns**, not an array |
+| `peripheral.getName(facade)` | Bound string name of genuine facade |
+| `peripheral.getWire(facade)` | Bound `"red"` or `"green"` |
+
+Types: `monitor`, `kv_database`, `logic_handler`, `configurator`. Unknown string
+types yield zero find matches. `local m = peripheral.find("monitor", "red")`
+selects the first; `{peripheral.find("monitor", "red")}` collects all. More than
+128 results fails before creating a partial tuple: enumerate names and wrap.
+
+`PeripheralInfo` contains `name`, `type`, optional `label`, `powered:boolean`,
+`position={x:number,y:number}`, `surface={index:integer,name:string}`,
+`quality:string`, cardinal `direction`, `footprint={width:integer,height:integer}`,
+and `wire`. Actual world coordinates are descriptive, not authority. A monitor's
+position/footprint describe its logical rectangle's world extents, not terminal
+character dimensions. No native entities/connectors/method objects are exposed.
+
+Every peripheral exposes `getLimits()` while reachable even if unpowered. Other
+methods fail `E_UNPOWERED`. Descriptions remain available and unpowered relays
+still connect valid physical paths.
+
+## Wrappers and stale identities
+
+A facade binds an opaque identity/generation, current run and selected color.
+Every captured method rechecks current authority before work. It cannot be saved
+as Data. Store name/color then wrap again in the next callback. Replacing a body
+creates a new name even at identical coordinates/label. `getName` and `getWire`
+can inspect the genuine callback-local binding after detach but grant no access.
+
+A merged monitor is one logical peripheral through any reachable member, not a
+hidden wire bridge between unwired members/colors. A KV reached on both colors
+has one database; sharing content does not relay discovery.
+
+## Events
+
+`computer.on("peripheral_attach", "attached")` and
+`computer.on("peripheral_detach", "detached")` register transitions, **not** an
+initial snapshot. Query getNames for initial inventory. Both events add
+`peripheral:string`, `peripheral_type:string`, `wire:Wire` to BaseEvent. Detach
+adds `reason`: `wire_removed`, `removed`, `regrouped`, `force_changed`,
+`surface_changed`, `limit` or `unavailable`.
+
+Revocation/owned-output cleanup occurs before guest notification and does not need
+a handler. Simultaneous detachments precede attachments, sorted by name; colors
+remain independent. Power loss alone is not physical detach. Topology notifications
+are bounded maintenance, not the source of call authority. A captured stale method
+fails `E_UNREACHABLE`; fresh absent lookups return false/nil only after a **complete**
+search. Pending/incomplete search fails `E_NETWORK_PENDING`/`E_LIMIT`, never a
+successful empty prefix. Retry on a later tick, not in a busy loop.
+
+A search reaches at most 256 physical nodes including source, examines at most
+512 directed adjacency entries (ignored external edges count too), and cannot
+return a partial inventory. Notification maintenance attempts three channel
+inventories per tick fairly; the queried 60-tick topology ceiling is provisional,
+not a guarantee under arbitrary world load. Shared calls use synchronized order,
+not exclusive locks or callback-wide transactions.
+
+## Use and troubleshooting
+
+Run [peripheral-program](../examples.md#peripheral-program) with at least one
+powered NETWORK-connected device; it inspects both colors and logs metadata. Use
+Refresh Peripherals to compare the same paths. Check exact role/color/force/surface
+before interpreting missing as empty. A monitor regroup can invalidate an old
+name; re-enumerate, do not retarget by coordinates. For service-specific errors
+see [shared errors](common.md#errors) and the selected device reference.

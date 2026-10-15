@@ -74,7 +74,7 @@ Planning status: no implementation tasks below are completed. Each milestone mus
 These entries extend delivery scope without renumbering the original 38 implementation tasks. A ZIP is an upload artifact, not the final delivery. Client verification remains user-deferred until all specifications are implemented; do not label the alpha stable or client-verified.
 
 - [x] D1 / TC14 / `t_6534a3be`: Create public GitHub source, initial main and a verified hosted player-docs build/deployment workflow supporting selected trusted alpha refs. This is infrastructure/scaffold only, not the complete player guide.
-- [ ] D2 / TC15 / `t_0645d3ca`: Publish complete player-facing Markdown documentation covering the whole mod and every public API against actual implementation and companion contracts.
+- [x] D2 / TC15 / `t_0645d3ca`: Complete player-facing Markdown guide and every public API reference, built/link-inventoried against actual exports and all eight companion contracts; exact shipped examples compile in Factorio 2.0.77. Scoped branch publication is TC15; full live-site deployment remains D4/TC17.
 - [ ] D3 / TC16 / `t_8d2c465c`: Generate and verify the separate developer OpenWiki from the implemented repository.
 - [ ] D4 / TC17 / `t_e6cbf814`: Present the consolidated feature PR, deploy the complete live guide and actually publish an unused-version ALPHA on Factorio Mod Portal with public source/wiki links and honest deferred-client warnings.
 
