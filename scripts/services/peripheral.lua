@@ -10,6 +10,11 @@ local data=require('scripts.runtime.data')
 local M={}
 local types={kv='kv_database',monitor='monitor',logic='logic_handler',configurator='configurator'}
 local bindings={}; local revocations={}
+local monitor_sync
+function M.register_monitor_sync(binding)
+  assert(not monitor_sync and type(binding.set)=='function' and type(binding.get)=='function')
+  monitor_sync=binding
+end
 local directions={[0]='north',[4]='east',[8]='south',[12]='west'}
 -- Closed family, fixed host methods; no guest extension/plugin registration.
 -- resolve(member) may map a physical monitor tile to its logical anchor record.
@@ -112,9 +117,13 @@ function M.services(computer,tick,guard)
     local fn=bindings[rec.kind].methods[method]
     if not fn then errors.raise('E_ARGUMENT','unknown peripheral method') end
     if method=='getLimits' and select('#',...)~=0 then errors.raise('E_ARGUMENT','getLimits expects no arguments') end
-    if method~='getLimits' and (not rec.powered
-      or (bindings[rec.kind].available and not bindings[rec.kind].available(rec,spend))
-      or (not bindings[rec.kind].available and not lifecycle.has_power(rec))) then errors.raise('E_UNPOWERED','peripheral is unpowered') end
+    -- Logical providers prove all current members themselves. Their cached
+    -- aggregate powered flag can lag paid topology maintenance after restoration.
+    local available=bindings[rec.kind].available
+    if method~='getLimits' and ((available and not available(rec,spend))
+      or (not available and (not rec.powered or not lifecycle.has_power(rec)))) then
+      errors.raise('E_UNPOWERED','peripheral is unpowered')
+    end
     return fn(computer,rec,wire,tick,spend,...)
   end
   local function facade(rec,wire)
@@ -136,6 +145,14 @@ function M.services(computer,tick,guard)
     end
   end
   method('getNames',1,function(wire) return sorted(M.inventory(computer,wire,spend),spend) end)
+  method('setMonitorSyncGroup',1,function(members)
+    if not monitor_sync then errors.raise('E_UNSUPPORTED','monitor provider unavailable') end
+    return monitor_sync.set(computer,tick,spend,members)
+  end)
+  method('getMonitorSyncGroup',0,function()
+    if not monitor_sync then errors.raise('E_UNSUPPORTED','monitor provider unavailable') end
+    return monitor_sync.get(computer,spend)
+  end)
   method('isPresent',2,function(name,wire) return lookup(name,wire)~=nil end)
   method('getType',2,function(name,wire) local rec=lookup(name,wire); return rec and types[rec.kind] or nil end)
   method('getMethods',2,function(name,wire) local rec=lookup(name,wire); if rec then return sorted(bindings[rec.kind].methods,spend) end; return nil end)

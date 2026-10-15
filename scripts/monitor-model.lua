@@ -1,8 +1,12 @@
 -- Plain byte-cell terminal state; no rendering objects or guest references.
 local errors=require('scripts.runtime.errors')
-local M={limits={width_tiles=4,height_tiles=4,cells=4704,write_bytes=16384,
+local M={limits={width_tiles=6,height_tiles=6,cells=10584,write_bytes=16384,
   render_latency_ticks=256,tiles=256,aggregate_cells=80000,render_cells_per_tick=1024,
-  peripheral_call_bytes=65536,peripheral_call_entries=4096}}
+  peripheral_call_bytes=65536,peripheral_call_entries=4096,
+  sync_group_refs=8,sync_group_members=4,sync_group_cells=10584,sync_groups_per_run=1,
+  render_snapshot_cells=80000,render_staging_cells=10584,render_retired_cells=10584,
+  render_staging_frames=256,render_retired_frames=256,render_commit_objects=42352,
+  render_commit_work=160000,render_object_limit=203872,render_retained_cells=362336}}
 local MAX=9007199254740991
 local palette={0xF0F0F0,0xF2B233,0xE57FD8,0x99B2F2,0xDEDE6C,0x7FCC19,0xF2B2CC,0x4C4C4C,
   0x999999,0x4C99B2,0xB266E5,0x3366CC,0x7F664C,0x57A64E,0xCC4C4C,0x111111}
@@ -28,7 +32,22 @@ function M.size(w,h,scale)
 end
 local function blank(m) return {32,m.fg,m.bg} end
 local function clear(m)
-  local cells={}; for i=1,m.width*m.height do cells[i]=blank(m) end; m.cells=cells
+  local cells={}; for i=1,m.width*m.height do cells[i]=blank(m) end; m.cells=cells; m.cells_shared=nil
+end
+-- Cell records and palette triples are immutable. Only the flat root is copied
+-- on the first admitted in-place write after a snapshot, not on every write.
+local function copy_cost(m) return m.cells_shared and m.width*m.height or 0 end
+local function own(m)
+  if m.cells_shared then
+    local cells={}; for i,c in ipairs(m.cells) do cells[i]=c end
+    m.cells=cells; m.cells_shared=nil
+  end
+end
+function M.capture(m,spend)
+  spend(80)
+  local s={}; for _,k in ipairs({'x','y','blink','fg','bg','scale','revision','width','height'}) do s[k]=m[k] end
+  s.palette={}; for i,p in ipairs(m.palette) do s.palette[i]=p end
+  s.cells=m.cells; m.cells_shared=true; return s
 end
 function M.new(w,h,inherit)
   local m={x=1,y=1,blink=false,fg=0,bg=15,scale=1,palette={},revision=1}
@@ -84,7 +103,8 @@ local function write(m,spend,text,fg,bg)
   end
   local first,last=math.max(1,2-m.x),math.min(#text,m.width-m.x+1)
   local visible=m.y>=1 and m.y<=m.height and math.max(0,last-first+1) or 0
-  spend(#text+visible*4+1)
+  spend(#text+visible*4+1+(visible>0 and copy_cost(m) or 0))
+  if visible>0 then own(m) end
   if m.y>=1 and m.y<=m.height then
     for i=first,last do
       local f,b=m.fg,m.bg
@@ -98,7 +118,8 @@ method('write',1,function(m,s,t) write(m,s,t) end)
 method('blit',3,function(m,s,t,f,b) write(m,s,t,f,b) end)
 method('clear',0,function(m,s) s(m.width*m.height*3+1); clear(m); m.revision=m.revision+1 end)
 method('clearLine',0,function(m,s)
-  s(m.width*3+1)
+  s(m.width*3+1+(m.y>=1 and m.y<=m.height and copy_cost(m) or 0))
+  if m.y>=1 and m.y<=m.height then own(m) end
   if m.y>=1 and m.y<=m.height then for x=1,m.width do m.cells[(m.y-1)*m.width+x]=blank(m) end; m.revision=m.revision+1 end
 end)
 method('scroll',1,function(m,s,lines)
@@ -111,7 +132,7 @@ method('scroll',1,function(m,s,lines)
       cells[i]=source>=1 and source<=m.height and m.cells[(source-1)*m.width+x] or blank(m)
     end
   end
-  m.cells=cells; m.revision=m.revision+1
+  m.cells=cells; m.cells_shared=nil; m.revision=m.revision+1
 end)
 method('getPaletteColor',1,function(m,s,c) c=color(c); local p=m.palette[c+1]; return p[1],p[2],p[3] end)
 calls.setPaletteColor=function(m,s,...)

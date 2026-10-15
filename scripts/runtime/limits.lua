@@ -12,6 +12,7 @@ return {
   string_bytes = 16384, table_entries = 1024,
   event_queue_entries = 128, event_queue_bytes = 65536, timers = 64, subscriptions = 64,
   network_nodes = 256, network_edges = 512, topology_latency_ticks = 60,
+  sync_group_refs = 8, sync_group_members = 4, sync_group_cells = 10584, sync_groups_per_run = 1,
   peripheral_call_bytes = 65536, peripheral_call_entries = 4096,
   console_entries = 64, console_bytes = 16384, fail_safe_latency_ticks = 1,
   registry_entries = 4096, owned_children = 8,

@@ -13,7 +13,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
-def cold_phase(engine, cfg, mods, save, folder, name, marker, snapshot=None):
+def cold_phase(engine, cfg, mods, save, folder, name, marker, snapshot=None, timeout=90):
     """Bounded localhost-only cold phase; freeze fixture, then verified console quit."""
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.bind(('127.0.0.1', 0))
@@ -34,7 +34,7 @@ def cold_phase(engine, cfg, mods, save, folder, name, marker, snapshot=None):
         process = subprocess.Popen(command,stdin=subprocess.PIPE,stdout=output,stderr=subprocess.STDOUT,text=True)
         assert process.stdin is not None
         try:
-            deadline = time.monotonic()+90
+            deadline = time.monotonic()+timeout
             while time.monotonic()<deadline and process.poll() is None:
                 text = path.read_text()
                 ready = marker in text
@@ -122,7 +122,7 @@ def main():
                 ap.error('--upgrade-fixture requires --cold')
             control += 'script.on_configuration_changed(test.on_configuration_changed)\n'
         if args.production_context:
-            if args.fixture not in ('tests.lifecycle_engine', 'tests.integration_engine', 'tests.redesign_engine', 'tests.monitor_feedback_engine', 'tests.rd1_upgrade_engine') or not args.cold:
+            if args.fixture not in ('tests.lifecycle_engine', 'tests.integration_engine', 'tests.redesign_engine', 'tests.monitor_feedback_engine', 'tests.rd1_upgrade_engine', 'tests.monitor_budget_engine', 'tests.monitor_presentation_engine', 'tests.monitor_plot_baseline_engine') or not args.cold:
                 ap.error('--production-context requires a fixed supported fixture and --cold')
             control = '-- Native lifecycle fixture runs once in production context.\n'
             (fixture / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value="+json.dumps(args.fixture)+",allowed_values={"+json.dumps(args.fixture)+"}}}\n")
@@ -153,7 +153,11 @@ def main():
             phases = [cold_phase(args.factorio,cfg,mods,folder/'smoke.zip',folder,'cold-first','TC_COLD_SNAPSHOT_REQUESTED',snapshot)]
             ordinary_save = write / 'saves/tc-cold-ordinary.zip'
             shutil.copy2(snapshot, ordinary_save)  # /quit saves over its input map.
-            phases.append(cold_phase(args.factorio,cfg,mods,ordinary_save,folder,'cold-second','TC_COLD_OK'))
+            # This fixture additionally drives four complete rediscovery/resize
+            # cycles through production timers. Extend wall time, not its tick
+            # deadline or any guest/shared resource ceiling.
+            phase_timeout = 240 if args.fixture=='tests.monitor_presentation_engine' else 90
+            phases.append(cold_phase(args.factorio,cfg,mods,ordinary_save,folder,'cold-second','TC_COLD_OK',timeout=phase_timeout))
             if args.upgrade_fixture and mode=='base':
                 # Only the copied fixture changes; the tested production ZIP is immutable.
                 fixture_info = json.loads((fixture / 'info.json').read_text())

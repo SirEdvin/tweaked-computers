@@ -7,7 +7,7 @@ return [[return {api_version=1,handlers={start=function(event)
   assert(type(computer.log)=='function' and type(computer.stop)=='function')
   assert(type(computer.on)=='function' and type(computer.off)=='function')
   assert(type(computer.after)=='function' and type(computer.every)=='function' and type(computer.cancelTimer)=='function')
-  for _,method in ipairs({'getNames','isPresent','getType','getMethods','describe','wrap','call','find','getName','getWire'}) do
+  for _,method in ipairs({'getNames','isPresent','getType','getMethods','describe','wrap','call','find','getName','getWire','setMonitorSyncGroup','getMonitorSyncGroup'}) do
     assert(type(peripheral[method])=='function')
   end
   local expected={

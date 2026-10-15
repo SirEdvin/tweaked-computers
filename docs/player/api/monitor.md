@@ -1,7 +1,7 @@
 # Merged monitors and terminal methods
 
 Place compatible monitor tiles adjacent with matching force, surface and cardinal
-orientation. A complete rectangle up to 4×4 shares one screen. Holes, L-shapes and
+orientation. Every complete rectangle from 1×1 through 6×6 shares one screen, including 1×6, 3×6 and 6×3. Holes, L-shapes and
 oversized arrays partition deterministically: smallest world `(y,x,id)` tile first,
 largest complete anchored rectangle, equal area prefers world width then height.
 Power **every** member. Connect computer NETWORK red/green to any member NETWORK.
@@ -12,6 +12,25 @@ All methods are dot calls. No extra arguments, implicit coercion or combined col
 masks. Every operation uses current authority; see [shared errors](common.md#errors).
 Rejected validation/admission leaves the current operation unchanged; earlier
 successful calls are not rolled back.
+
+## Automatic buffered presentation
+
+Existing methods need no flush or registration. They update the shared model
+before returning; reads and other authorized writers see it immediately. After
+callbacks, the host captures fixed immutable cells/palette/cursor/geometry and
+prepares replacements invisibly. The previous complete image remains until a
+whole publication is admitted. New writes coalesce behind an admitted frame,
+which finishes rather than restarting forever. No hidden yield or callback-wide
+transaction is introduced. A first write after capture pays for a copy-on-write
+cell root; clear/scroll already replace their roots. Rejected calls preserve both
+the model and its snapshot/participation bookkeeping.
+
+For several independently grouped screens, optionally use
+`peripheral.setMonitorSyncGroup(members)` and `peripheral.getMonitorSyncGroup()`;
+see [selection and status](peripheral.md#synchronized-monitor-presentation).
+This aligns presentation epochs, not independent program clocks. A program that
+draws four rows and returns still creates a legitimate intermediate application
+image; buffering cannot infer that later callbacks will finish the plot.
 
 ## Complete terminal reference
 
@@ -80,7 +99,8 @@ Each tile is 64 logical display units, with a two-unit bezel per outer edge.
 Columns = max(1,floor((64×W−4)/(6×scale))); rows =
 max(1,floor((64×H−4)/(9×scale))). W/H follow display-local right/down, rotated
 clockwise by orientation, not necessarily world X/Y. The grid is centered.
-A 1×1 scale-1 display is 10×6; 4×4 at 0.5 is 84×56 (4,704 cells).
+A 1×1 scale-1 display is 10×6; 6×6 at 0.5 is 126×84 (10,584 cells).
+At scale 1, 3×6 is 31×42 and 6×3 is 63×20. Buffers use actual grids, not square padding.
 
 Surviving anchor keeps the logical name; multiple retained anchors merge under the
 smallest stable anchor ID. Splits without a surviving anchor receive fresh names
@@ -118,15 +138,30 @@ faults that run and triggers owned-output cleanup.
 
 ## Bounds, example and troubleshooting
 
-Device limits: width_tiles=4, height_tiles=4, cells=4704, write_bytes=16384;
-256 admitted tiles, 80,000 aggregate cells, 64 pending touches. Render checks at
-most 1,024 cells/tick across displays, only draws changed cells, and retains exact
-sweep cursors on deferral. The 256-tick render target is provisional, not graphical
-or mixed-world latency evidence. Continuous changes can keep presentation dirty.
+Device limits: width_tiles=6, height_tiles=6, cells=10584, write_bytes=16384;
+256 admitted tiles, 80,000 aggregate model cells, 64 pending touches. Preparation
+and retirement share 1,024 cell checks/tick. Pending snapshots cap at 80,000 cells;
+admitted staging and queued retirement each cap at 10,584 cells and 256 frames.
+Invalid fronts remain accounted until retirement can accept them. Queried bounds
+include render_commit_objects=42352, render_commit_work=160000,
+render_object_limit=203872 and render_retained_cells=362336 logical cell slots
+(not host bytes). The 60,000 baseline reservation can boost to 160,000, with a
+baseline opportunity between boosts, inside the unchanged 200,000 maintenance /
+1,000,000 total tick ceiling. Exact progress and spent credits survive cold load.
+The 256-tick stable-world render target is provisional, not a 60-UPS/FPS or
+graphical-latency guarantee. Continuous producers retain bounded newest-pending
+state while complete admitted frames still publish.
 
 Run [monitor-program](../examples.md#monitor-program) to draw READY and echo touch
 coordinates/resize. If text clips, query getSize, move cursor explicitly and avoid
-newlines. If grouping surprises you, inspect orientation, holes and 4×4 bounds.
+newlines. If grouping surprises you, inspect orientation, holes and 6×6 bounds.
 Power every tile; an unpowered member blanks the whole group without erasing data.
 For wrong touch coordinates check local rotation and actual cells rather than the
 bezel. Native client readability/input remains player-owned alpha testing.
+
+Back up before upgrading from 0.1.4. Unchanged saved walls are reevaluated under
+the six-tile policy: absorbed names detach, surviving anchors retain settings,
+and changed character dimensions clear contents and notify resize. Unaffected
+complete images are adopted under paid work; partial legacy sweeps rebuild.
+Ordinary load performs no rendering or source execution. Roll back with the
+pre-upgrade save and matching old mod, not an in-place downgrade of new buffers.

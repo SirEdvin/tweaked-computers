@@ -11,6 +11,11 @@ ROOT = Path(__file__).resolve().parents[1]
 TOP = ('info.json', 'data.lua', 'control.lua', 'settings.lua', 'README.md', 'LICENSE', 'changelog.txt')
 DIRS = ('scripts', 'prototypes', 'locale', 'vendor', 'assets', 'docs', 'examples', 'tests')
 CONTRACT = 'openspec/changes/add-native-circuit-computers'
+CONTRACT_EXTENSIONS = (
+    'openspec/changes/buffer-monitor-presentation/specs/monitor-display/spec.md',
+    'openspec/changes/buffer-monitor-presentation/specs/monitor-display/lua-api.md',
+    'openspec/changes/buffer-monitor-presentation/specs/peripheral-network/spec.md',
+)
 
 def build(destination):
     info = json.loads((ROOT / 'info.json').read_text())
@@ -54,6 +59,7 @@ def build(destination):
     for folder in ('api', 'specs'):
         files += sorted((ROOT / CONTRACT / folder).rglob('*.md'))
         files += sorted((ROOT / CONTRACT / folder).rglob('*.json'))
+    files += [ROOT / name for name in CONTRACT_EXTENSIONS]
     for p in files:
         if p.suffix.lower() in ('.exe', '.bat', '.ps1', '.sh', '.py'):
             raise ValueError(f'Mod Portal forbids executable payloads: {p}')
