@@ -39,9 +39,14 @@ Parents: none. Owns `program-editor`; consumes unchanged backend APIs.
 
 Parents: RD1, RD2. Owns `monitor-display` delta.
 
-- [ ] 4.1 Trace actual body deconstruction state and implement explicit display layering below native selection/wire/removal feedback with supported rendering primitives; verify draw properties, existing render budgets and cleanup, without inventing a rectangle render_layer or a fake permanent X.
-- [ ] 4.2 Preserve cells, cursor, palette, grouping and touch during mark/cancel and reload; verify a marked subset, power changes, ongoing updates and actual robot removal with focused model/exact-engine state checks, including non-anchor coordinates and no artificial resize/reset.
-- [ ] 4.3 Document the fix and a short user visual check for the genuine red X on lit/dark monitor arrays while content changes; provide exact candidate/evidence and explicitly leave native X visibility unverified until the user checks it.
+- [x] 4.1 Trace actual body deconstruction state and implement explicit display layering below native selection/wire/removal feedback with supported rendering primitives; verify draw properties, existing render budgets and cleanup, without inventing a rectangle render_layer or a fake permanent X.
+- [x] 4.2 Preserve cells, cursor, palette, grouping and touch during mark/cancel and reload; verify a marked subset, power changes, ongoing updates and actual robot removal with focused model/exact-engine state checks, including non-anchor coordinates and no artificial resize/reset.
+- [x] 4.3 Document the fix and a short user visual check for the genuine red X on lit/dark monitor arrays while content changes; provide exact candidate/evidence and explicitly leave native X visibility unverified until the user checks it.
+
+RD4 implementation/evidence: `docs/rd4-verification.md`. Sprite strata, native
+mark/cancel state, cold preservation and robot removal are exact-engine checks;
+native red-X visibility and graphical selection/wire readability remain unverified
+and user-owned. These checked implementation tasks do not close that client check.
 
 ## 5. RD5 — Integrated redesign candidate and review handoff
 

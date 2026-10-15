@@ -94,6 +94,20 @@ render progress, actual draw handles and shared spent credits; no user source or
 render mutation runs on load. Unknown monitor state versions remain inert with
 recovery data preserved.
 
+## Native world feedback and marking
+
+Monitor content now uses explicit sprite layers above the body but below native
+wires, selection and information icons. Mark the visible monitor body, not its
+private power carrier. Mark/cancel does not clear cells, change cursor/palette or
+regroup an array; only actual removal follows normal split/resize behavior.
+Power loss hides content, not the engine's deconstruction order. No custom X is
+drawn. Old saved render objects are rebuilt through admitted rendering/cleanup,
+not on_load, while the committed display model remains intact.
+
+The genuine red X's visible contrast and layering still require native graphical
+review; exact-engine headless checks establish object properties and preserved
+state only. See [RD4 evidence and the short client check](rd4-verification.md).
+
 ## Touch and resize callbacks
 
 With an empty cursor and no open GUI, Ctrl + left click a world character cell.

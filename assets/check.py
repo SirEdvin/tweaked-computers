@@ -18,7 +18,7 @@ def check(output):
     manifest = json.loads((ROOT / 'manifest.json').read_text())
     records = manifest['outputs']
     paths = [r['path'] for r in records]
-    assert len(paths) == len(set(paths)) == 146
+    assert len(paths) == len(set(paths)) == 147
     for record in manifest['inputs']:
         assert digest((ROOT.parent / record['path']).read_bytes()) == record['sha256']
         if record['path'].endswith('.png'):
@@ -46,7 +46,11 @@ def check(output):
         assert digest(bytes(c for p in pixels for c in p)) == record['rgba_sha256']
         assert digest(bytes(p[3] for p in pixels)) == record['alpha_sha256']
         assert png_read(png_write(image)) == image
-        if record['layer'] != 'glyph':
+        if record['layer'] == 'display-fill':
+            assert record['path']=='assets/glyphs/pixel.png'
+            assert (w,h,pixels)==(1,1,[(255,255,255,255)])
+            assert record['input_paths']==['assets/generate.py']
+        elif record['layer'] != 'glyph':
             assert all(pixels[x][3] == pixels[(h - 1) * w + x][3] == 0 for x in range(w))
             assert all(pixels[y * w][3] == pixels[y * w + w - 1][3] == 0 for y in range(h))
         alpha = Counter(p[3] for p in pixels)

@@ -191,6 +191,8 @@ def generate(output):
         emit('icons/'+kind+'.png',icon(industrial.body(kind,2,size,entry['directions']['south'])),device=kind,layer='icon',icon_size=64)
         devices[kind]['icon']='icons/'+kind+'.png'
     emit('glyphs/atlas.png',glyph_image(),layer='glyph',cell=[6,9],columns=16,rows=16)
+    # Opaque authored mask: sprites, unlike runtime rectangles, support layers.
+    emit('glyphs/pixel.png',(1,1,[(255,255,255,255)]),layer='display-fill')
     authored=['assets/generate.py','assets/glyphs.txt',*sorted(device_inputs)]
     manifest={'format_version':2,'status':'implemented-client-verification-deferred',
         'repository':audit['greg_flavored']['repository'],'revision':audit['greg_flavored']['revision'],

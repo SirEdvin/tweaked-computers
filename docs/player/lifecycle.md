@@ -56,6 +56,19 @@ Monitor material items retain scale, palette, text/background colors and blink,
 not an obsolete merged image or cursor. Ordinary save/load, unlike mining, keeps
 the complete display model. See [monitor identities](api/monitor.md#geometry-identity-and-power).
 
+## Marking a monitor for removal
+
+Use the deconstruction planner on the visible monitor body. Marking/cancelling
+keeps the current cells, cursor, palette, scale and merged identity; it does not
+reset the display. Only actual robot mining/removal changes topology and invokes
+normal split/resize rules. You can cancel one tile before removal without losing
+the image. Power restoration reveals retained content, not a newly blank model.
+
+The renderer puts content below native world feedback rather than drawing a
+custom removal symbol. Native red-X visibility while the display changes is
+still a user-owned graphical check for this alpha; headless state tests alone do
+not establish it. See the [short candidate check](../rd4-verification.md#short-user-owned-native-check-still-unperformed).
+
 ## Blueprint disclosure and copies
 
 Blueprints include saved source and labels, which may contain private literals.
