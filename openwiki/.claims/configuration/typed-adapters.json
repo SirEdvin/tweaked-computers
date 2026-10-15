@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:90467632d06756592f59a880322a0036877e273b926abe742c6cc1cc16c0daa0",
+  "claims": [
+    {
+      "id": "claim_60a08a2612c84c0796c10c0a64f6774b",
+      "statement": "Configurator methods independently resolve current targets through the explicit-color targets graph before adapter access, separate from peripheral discovery.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/configuration/targets.lua#L14-L50",
+          "version": "repo-lines-v1:sha256:d792bec2f3ac34a004ab3cfaaba224237c8e5f10e2d98e80e544ccc66924ac3d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkNmIxNjVhZTcyYTI2MDllMDNjZjUyOWRmMjQ2NGVkYjNiYTNhZDk3ZTI4YmI4YTUzMjZmNzg5NDg1NGRhNTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwNTI3MDk1NTEwNWNmM2ZjZjE0MWFlMDI0ZWUzZjQ0ZTM2NzJkYWExMmI1NGM5NjY4ZDMwOTJlMzIxMThkNDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5ODllMjFjOWU0ZjgwZmYyZjdiMDExMjJiNmFjNjhlMjUzOWU1M2QwNmY5ZDNkYTcwZDg2ZTg5Yjg2ZjAyY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZWZhMGM5MjQ3YzczMzdkMDdlODIzY2M1Mzg3YTZhZWI1MzE3OTBlOWFlOTBmYzdkMmEwNThmODA4OTdmYzkifQ"
+        },
+        {
+          "resource": "repo://scripts/services/configurator.lua#L31-L48",
+          "version": "repo-lines-v1:sha256:79a196962bc4c5bddb5dfb20f124fc55cb51dea1703cc010e68460b5c2edccd4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFhODZhMmU0ZDcwOTg1OGY5YzQ2OTlhYmI1ZmExZDljNWZkYmU1OTE2YmYwOGQzYjAzMzc4ZjkxMGM2OGUwNjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0NGMwZDExZTFlYTgyMTVlMDQyYTU0ZGExYjI2ZThkZjk0NzAxZGYyOGQ3NGMyMGQxNmNiNGE1MjMyZDlmNmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk4YTUxZmMzNWVhNGI3MmVjOWFmMTQ3MmE2ZmVjNWE0NzgxMmJkOWNkMWNiZjM0YmFhMjdlYWU5NzIzODE2YjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzM1OWMwYTcxYTJiZGY1M2IwOGIzOWQ4MzAxODJiOGZkNGRmMmUzOWFhNmFjODA3YWY3MmVmNTE2OWNkZjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_aa6a1a8c6ddc4e8b8bd2bddcd7b0a7f2",
+      "statement": "The catalogue generator requires explicit behavior adapter coverage and generates both runtime schemas and a coverage ledger, with a read-only --check mode.",
+      "evidence": [
+        {
+          "resource": "repo://tools/configuration_catalog.py#L84-L144",
+          "version": "repo-lines-v1:sha256:2b37411a85fa2b45b6ac1f6a96500336e1707a4006fdd59a70f5cd54511f9bdc:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmNGI4MzM4NDVlNmE4NDllY2JkNzZlMDIxMDk0M2YwMTRjY2NhOWEwZTc1ZmI5MzQ0NWM4ODAyYWM3ODVlYjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0ODllYWE3OTQ1OGFjMzJkNzJjNTYzNTdkMzMzODg1ODEwMjU4YWQzZjFjNmE0OTg5ZjEzMDA0MGRlNmUwNjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEwOGE2MWU4MjkwMThmYzFiODE1ODE1MmMyZWEwYjViNjAzNTY1ZjgyMzA5NmZjMTVhNDU2Y2UzMzE4MzJjNzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ef9db444d2f64e97957287a7e2a87746",
+      "statement": "Configurator validation checks typed/prototype/role constraints and capabilities expose native context restrictions rather than permitting arbitrary property writes or behavior creation during discovery.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/configuration/adapters.lua#L44-L70",
+          "version": "repo-lines-v1:sha256:55581f3e002285a2ad44db1c60cdc07c5a8899194bb4d3afe254415e14d15896:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhNzhjYTdjNjU5NzQ1NDUxZjFjNGIwMDAyZWY2NzkxZjZlOWU4NWU1ZmZhODY3ZDNmZmFjMWJlMjlhOGViNDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4YWJlY2Q0M2QwODc4MDJlYmU2YzYzOWY2NThlYjM5MTE4ZDAzZDE5Njg3Yzk0YzI4NjkzZDIzZWU0ZDRjMjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjExNzJjZmI5MTllNjljM2JmOWIyZTc1OWY2ODc4OWQ1MmY2OTdlOTUxZDg2Y2Q1MmE3MTY1ZDNmYmYyYjY5ZmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc3OTc1MGJlNjZlMDc5MTMzZjRjOTkzNTE0ZWVkMDcxNWJmY2YwZjQ4MjIyMWExZGMzYWEyMDlhOWZiNmIxYjAifQ"
+        },
+        {
+          "resource": "repo://scripts/configuration/adapters.lua#L9-L31",
+          "version": "repo-lines-v1:sha256:abfc2318f03ba35b1589f36a375a00d51a12a021c3eaaaf553c24a8791accdd4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3MDU4NTVlNzAzNWUyNmIwYjAzYWJkYWE1YjJhYWJlOTIxNWJjYTlhYjhjNWQ2YjVjZDI3NTk5MGJkNTFiZWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiY2ZkMmRhOGM2NGJjNjQwNGFkODQ4M2ZlMTI0MjlhMTJjNDkzYWEyZDA4YmIzOWVlNTQxNDcwOTRkMDVmYTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlmNWMwNTAyN2I1MTQxMmQyMmNiOTM2YzYwY2U3YTFhMmZkYjEwYzQ0MDY4ZjE2YjE4MWE2MzI4NjUxYjUyMzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiMmMxYzlhMGJkNWZhYmVhYjlkZDIwM2ZhODI4ZDcwNmFiZTBiZTE4NDY4MjFiZDZhZjc4NGZlM2YwNmQ0YmIifQ"
+        },
+        {
+          "resource": "repo://scripts/configuration/validation.lua#L13-L83",
+          "version": "repo-lines-v1:sha256:f73ce57d680e437215dfb47f8230b6c469f55b8cdacb493144cf54c62d4b9941:eyJzZWxlY3RlZExpbmVDb3VudCI6NzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiMmM2OGY1OWMwMDcxYjc5N2M4YWUxZTJjY2Y2Y2UyMDgyNzdiZGJiYzQ1ZTM2MGY5YjA0YWE1NjllYTI3NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0ZDM4OTdhMGY5ZDY5YzlkYjgxYmM5Nzc0MTVlNDBiNzIyYTVkNDRkZGU1YmQ4ZjcyNjQ1MWJhZWQyNDhhNDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5MDIzMTQxMGM5YzY2OGRkZTRjZWQwNTJmYjI1OWQ2OTNhY2UxN2NmNjNjMjVlNmY1OGUwMjAzZjRhY2E1MzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcwNzg4NWNjOGQxMmUzNGVmOWQ5ZmI0ZWU2N2RkYWQwZWEwZmRlNjFmNmQ1NzU0NWE5NmY0YTg2NDc0NzI0YTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_10db7e8b72754c92bf0815effe3be697",
+      "statement": "Configuration patches are completely preflighted and work-reserved before native setters, then activation-last writes are normalized and read back, including native clear defaults.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/configuration/adapters.lua#L90-L175",
+          "version": "repo-lines-v1:sha256:ba0a687f3691cfed9159e7221069a9beea5067200989929d4c82827b3af276a7:eyJzZWxlY3RlZExpbmVDb3VudCI6ODYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4MGE0NTdlNjAwODEwYjc3OGFhYmFlNTYwN2Q0Y2VjYzNlOTUzMGY1ZjdiMDBkYjcyMzhkNjVmZWMyYzczMWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4ODk0NmIzMTE3NjdkYjE0NWEzMWE0Y2Y4MzI0NDdhYzEwMGQyYmRmNWQwMzlkNzkyZDY1ZDY1Yzg1MTAzYTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE0MjdlZDg2ODZiMjg1ZjMzMWU3OWQzZmNiYTc3ZGRhMGE3MGVhZDA0N2JlN2RlM2JmZGZlN2VhYzc2NGIyM2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk0MGY4MGEwYTQwZjRmNmVmMjI5MDdlNjk3NWE4MDc5NDgxZDQzNThiOWU2Mjc4ZTMyM2ZkZjg0ZjZjMDE0N2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_51f9ce497b504b1ebbf42ecd85c0f902",
+      "statement": "Native update failures attempt verified target-local restoration; failed restoration retains recovery state and does not claim external-world rollback.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/configuration/adapters.lua#L179-L194",
+          "version": "repo-lines-v1:sha256:0f655d0d417e81fd033b801e5f47392b6fffe4dd60d563c56d08769e65e1d02b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlZDYxMTAxYTI3ZjNjNGMxOTMxMjE1YzMxMDM4MmIzOTY3ZWFhY2VkNjMyYzcyZDA1NDcxZmE0Y2U3MDg0MGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjNmFmZWE0ODY3ZTQ3NzYyZjk5YzEyODNmYjg2MDRhOTVmMTY3OTFjOWQwMGNhOThiYzhlMWZhNDgyOGI5ZDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk0MGY4MGEwYTQwZjRmNmVmMjI5MDdlNjk3NWE4MDc5NDgxZDQzNThiOWU2Mjc4ZTMyM2ZkZjg0ZjZjMDE0N2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZWZhMGM5MjQ3YzczMzdkMDdlODIzY2M1Mzg3YTZhZWI1MzE3OTBlOWFlOTBmYzdkMmEwNThmODA4OTdmYzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5e9bbd15e69d498aaa5a2c169f6ca9d4",
+      "statement": "Constant sections refuse nonmanual/shared-filter writes, explicitly detach preserving effective filters, verify native readback and limit removal recovery to manual suffixes.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/configuration/sections.lua#L193-L226",
+          "version": "repo-lines-v1:sha256:c1c780930f0e2679bf6d6a94a881134e42d12e7508148e96c41fad42fd4911b6:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlNTc5OTJlNmZlN2Q0YzI2NjdiMTcxM2MzODZlMDZhZmNmNzBhMTk4ZDMzYzA0ZDgwZmIyYWI1MmRkOGMzZWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0MTllZDA0ZmE1NWZmNzliOTQxMGJiNjM3ZGQ4NjMyY2M3ZTk0Zjk1ZjViNDhjMGZiNTMyN2E3NDFhMDhlMWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ2MTc5MDlkODY1Yzc3ODY3NWRkNTA0NzVjZTExYTBhMTU3MDRjOTZmMTQwZjM2MDIwNWNiZTk1ZjhlMTlkODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZWZhMGM5MjQ3YzczMzdkMDdlODIzY2M1Mzg3YTZhZWI1MzE3OTBlOWFlOTBmYzdkMmEwNThmODA4OTdmYzkifQ"
+        },
+        {
+          "resource": "repo://scripts/configuration/sections.lua#L95-L160",
+          "version": "repo-lines-v1:sha256:6a4e33c4708d17d04766f1fd3b3d45c5f2f1afa423cadaec99074f94b94ff741:eyJzZWxlY3RlZExpbmVDb3VudCI6NjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3M2E0NWQxMGExYzJmOGUyYTcyYWU1NjVhZDNlOTY1N2U2YjMyMGE3NTM0NTY0ZWQzNTU5ZDdhZjUzYTNkMWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0MTllZDA0ZmE1NWZmNzliOTQxMGJiNjM3ZGQ4NjMyY2M3ZTk0Zjk1ZjViNDhjMGZiNTMyN2E3NDFhMDhlMWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJlNjA1NDNjNTQ0NDJlNTAyN2VhMTk0YWI3NWM4NjliNWMyYWZjNmZiOTk3NTVhMzg3ZDE0NTM2ZTY1NWFhYTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQxNDA1ZTgxMmU2NWVhMmJlOTIyNTBlZWQzZmNiNmNiZGExMGUyNjNlMzdjOWM3YzlmYTM2Y2I4YmRhMGU3YTEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.1",
+    "at": "2026-10-15T06:41:57.498Z"
+  }
+}
