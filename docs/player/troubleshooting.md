@@ -47,7 +47,7 @@ back to OUTPUT. A power resync is current input, not a replay of all lost sample
 
 ## Monitor
 
-Power every member, align orientation, fill the rectangle and respect 4×4 bounds.
+Power every member, align orientation, fill the rectangle and respect 6×6 bounds.
 Group changes can rename screens or clear changed-size images; re-enumerate.
 Outage hides without erasing, Stop leaves the last image. Cursor can be offscreen;
 query size/position and set it explicitly. write/blit never wrap or execute newline;

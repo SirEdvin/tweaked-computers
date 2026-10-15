@@ -2,7 +2,7 @@
 
 Place `tc-monitor` tiles with the same force, surface and cardinal orientation
 next to each other. A complete rectangle shares one display. Holes, L-shapes
-and arrays exceeding 4×4 partition deterministically: smallest world `(y,x,id)`
+and arrays exceeding 6×6 partition deterministically: smallest world `(y,x,id)`
 unassigned tile first, largest complete anchored rectangle, equal area preferring
 world width then height. Every tile belongs to one rectangle.
 
@@ -75,7 +75,7 @@ A tile is 64 logical units. The whole rectangle has a two-unit bezel per edge;
 center the grid inside it. Columns = max(1,floor((64*W-4)/(6*scale))), rows =
 max(1,floor((64*H-4)/(9*scale))). W/H follow local display right/down, rotated
 clockwise with north/east/south/west. Rendering and touch use the same transform.
-A 1×1 at scale 1 has 10×6 cells; 4×4 at 0.5 has 84×56 = 4704 cells.
+A 1×1 at scale 1 has 10×6 cells; 6×6 at 0.5 has 126×84 = 10584 cells.
 
 The surviving anchor keeps its opaque logical identity. When multiple retained
 anchors merge, the smallest stable anchor ID wins. Split rectangles without a
@@ -134,22 +134,28 @@ queue overflow visibly faults that run through existing output cleanup.
 
 ## Bounds and alpha evidence
 
-Development ceilings: 4×4 tiles/group, 4704 cells/group, 256 admitted tiles,
-80000 aggregate cell ceiling (actual supported tile/geometry bounds stay below
-it), 16384 bytes per write/color string, 64 pending touch activations. Rendering
-checks up to 1024 cells per tick across displays, drawing only changed cells.
-60000 work units are reserved inside—not on top of—the existing 200000
-maintenance / 1000000 total tick envelope. Retired grids drain before another
-geometry generation accumulates; work refusal retains exact sweep/job cursors.
-The queried 256-tick render latency is a provisional development target, not a
-frozen measured graphical or mixed-workload release guarantee. Continuous model
-updates may keep a sweep dirty; once idle, a complete matching-revision sweep is
-required before it is marked presented. Maximum-world integration belongs to
-the final candidate's resource gate.
+Development ceilings: independently 1..6 tiles on each axis, 10584 cells/display,
+256 admitted tiles, 80000 aggregate model cells, 16384 bytes/write and 64 pending
+touch activations. Automatic buffering seals immutable actual-size snapshots
+after callbacks, prepares replacements hidden and prepays complete native
+publication. Existing programs need no flush. Newest pending snapshots coalesce;
+already admitted snapshots finish even under continuous writers. Preparation
+and retirement share 1024 cell checks/tick.
+
+An optional selected group has at most four logical displays and 10584 combined
+cells. Every member must participate before a round seals; all then publish in
+one simulation tick. This is not a write lock or an application-frame detector.
+See the [exact API and capacities](player/api/peripheral.md).
+
+The 60000 baseline render reservation may grow to 160000 on demand, with baseline
+service opportunities between boosts, inside the unchanged 200000 maintenance /
+1000000 host tick envelope. Staging and queued retirement each retain at most
+10584 cells and 256 frame records. Work refusal retains paid progress. The
+256-tick stable-world target is checked headlessly, not a graphical/60-UPS promise.
 
 `tests.monitor_engine` exercises model contracts, real wires/groups/rotations,
-world draw objects, all 256 atlas sprite slots, maximum 4×4 geometry, shared
-admission, queued-resize coalescence and cold mid-sweep persistence. Its player
+world draw objects, all 256 atlas sprite slots, maximum 6×6 geometry, shared
+admission, queued-resize coalescence and cold presentation persistence. Its player
 activation checks are explicitly table-backed mocks; headless runs do not create
 a native player or prove zoom/contrast/font/GUI input/multiplayer behavior.
 Those native-client checks remain deferred to the user for this alpha.

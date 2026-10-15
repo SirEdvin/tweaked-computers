@@ -44,8 +44,23 @@ script.on_event(defines.events.on_tick,function(event) scheduler.tick(event.tick
 -- same lifecycle in a second mod would create duplicate physical helpers.
 if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixture'] then
   local name=settings.startup['tc-smoke-production-fixture'].value
-  assert(name=='tests.lifecycle_engine' or name=='tests.integration_engine' or name=='tests.redesign_engine' or name=='tests.monitor_feedback_engine' or name=='tests.rd1_upgrade_engine','unknown production-context fixture')
+  assert(name=='tests.lifecycle_engine' or name=='tests.integration_engine' or name=='tests.redesign_engine' or name=='tests.monitor_feedback_engine' or name=='tests.rd1_upgrade_engine' or name=='tests.monitor_budget_engine' or name=='tests.monitor_presentation_engine' or name=='tests.monitor_plot_baseline_engine','unknown production-context fixture')
   local test=require(name) -- control parsing only; never a guest source loader
+  script.on_init(function()
+    registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
+    test.run(); log('TC_SMOKE_OK')
+  end)
+  script.on_load(test.on_load)
+  script.on_event(defines.events.on_tick,test.on_tick)
+  script.on_configuration_changed(function()
+    registry.initialize(); lifecycle.upgrade_existing(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
+    test.on_configuration_changed()
+  end)
+end
+-- Isolated released-save upgrade driver. The companion is never shipped.
+if script.active_mods['tc-buffer-upgrade'] and settings.startup['tc-buffer-upgrade-run']
+  and settings.startup['tc-buffer-upgrade-run'].value then
+  local test=require('tests.monitor_upgrade_engine')
   script.on_init(function()
     registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
     test.run(); log('TC_SMOKE_OK')

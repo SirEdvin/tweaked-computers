@@ -20,7 +20,7 @@ jobs:
   validate:
     name: Mod validation
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
@@ -81,6 +81,30 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/integration" --mode both \
             --fixture tests.integration_engine --data-fixture tests.candidate_data \
             --production-context --cold
+      - name: Check buffered presentation and released-save migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          export TMPDIR="$RUNNER_TEMP"
+          archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
+          engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
+          for fixture in monitor_snapshot_contract monitor_budget_contract; do
+            python tools/smoke.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture"
+          done
+          for fixture in monitor_presentation_engine monitor_budget_engine monitor_plot_baseline_engine monitor_feedback_engine; do
+            python tools/smoke.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" \
+              --production-context --cold
+          done
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/monitor_buffer_engine" --mode both \
+            --fixture tests.monitor_buffer_engine --cold
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 120 \
+            https://github.com/SirEdvin/tweaked-computers/releases/download/alpha-0.1.4/tweaked-computers_0.1.4.zip \
+            --output "$RUNNER_TEMP/tc-ci/legacy_0.1.4.zip"
+          python tools/monitor_upgrade.py --factorio "$engine" --archive "$archive" \
+            --legacy "$RUNNER_TEMP/tc-ci/legacy_0.1.4.zip" --output "$RUNNER_TEMP/tc-ci/upgrade"
       - name: Retain focused verification reports
         if: ${{ always() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -88,6 +112,9 @@ jobs:
           name: mod-validation-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/tc-ci/reports/
+            ${{ runner.temp }}/tc-ci/**/summary.json
+            ${{ runner.temp }}/tc-ci/**/*-engine.log
+            ${{ runner.temp }}/tc-ci/**/*-result.json
             ${{ runner.temp }}/tc-ci/runtime/**/summary.json
             ${{ runner.temp }}/tc-ci/runtime/**/engine.log
             ${{ runner.temp }}/tc-ci/gui-workspace/**/summary.json

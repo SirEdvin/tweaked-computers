@@ -42,6 +42,10 @@ provisional safety ceilings, not simultaneous maximum-world guarantees.
 | `network_nodes` | 256 |
 | `network_edges` | 512 |
 | `topology_latency_ticks` | 60 |
+| `sync_group_refs` | 8 |
+| `sync_group_members` | 4 |
+| `sync_group_cells` | 10584 |
+| `sync_groups_per_run` | 1 |
 | `peripheral_call_bytes` | 65536 |
 | `peripheral_call_entries` | 4096 |
 | `console_entries` | 64 |

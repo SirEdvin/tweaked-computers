@@ -24,6 +24,8 @@ or `"both"`. Names/types are strings, and calls use dots with strict arity.
 | `peripheral.find(type_name, wire)` | Zero or more facades in name order; **multiple returns**, not an array |
 | `peripheral.getName(facade)` | Bound string name of genuine facade |
 | `peripheral.getWire(facade)` | Bound `"red"` or `"green"` |
+| `peripheral.setMonitorSyncGroup(members)` | No values; atomically replace this run's monitor presentation selection; `{}` clears |
+| `peripheral.getMonitorSyncGroup()` | Exactly one defensive status table; does not drive rendering |
 
 Types: `monitor`, `kv_database`, `logic_handler`, `configurator`. Unknown string
 types yield zero find matches. `local m = peripheral.find("monitor", "red")`
@@ -52,6 +54,38 @@ can inspect the genuine callback-local binding after detach but grant no access.
 A merged monitor is one logical peripheral through any reachable member, not a
 hidden wire bridge between unwired members/colors. A KV reached on both colors
 has one database; sharing content does not relay discovery.
+
+## Synchronized monitor presentation
+
+Pass a dense array of exact `{name=..., wire="red"/"green"}` records, not facades.
+Up to eight supplied references are checked before deduplication; red wins when
+both valid paths address the same logical screen. Canonical members sort by name.
+The group supports four logical screens and 10,584 summed actual cells, with mixed
+shapes/scales/orientations. Four 6×6 scale-1 screens fit; four at scale 0.5 do not.
+Registration requires powered monitors and current same-force/surface authority.
+Wrong shape/key/arity is E_ARGUMENT; excessive refs E_LIMIT; nonmonitors
+E_WRONGTYPE; missing paths E_UNREACHABLE; outages E_UNPOWERED; capacity E_CAPACITY;
+another run's selection E_BUSY. Every refusal preserves the prior selection.
+
+Selection controls presentation, not write ownership: other authorized writers
+still mutate shared models immediately. Every member needs a successful mutator
+after registration/last seal, including an unchanged setter; getters do not count.
+Then the post-dispatch boundary captures all current models and later publishes
+them together. There is no timeout or flush API. A static member deliberately
+holds the round. Re-registering identical canonical members is idempotent.
+
+Status contains `members`, `status` (`none`, `waiting`, `preparing`, `blocked`),
+`presented_sequence`, optional `presented_tick` and optional `{code,message}`
+`diagnostic`. It reports presenter progress, not a fresh network proof. Blockage
+takes priority over preparation, then waiting; only complete publication advances
+the acknowledgement. Computer outage suspends ownership; Stop/fault/Apply/removal
+or definitive selected-path revocation releases the entire selection without
+clearing models/fronts. The host never silently switches its retained wire.
+Geometry changes reset participation; over-capacity growth blocks the whole group
+until it fits or is reconfigured, without rejecting an otherwise valid scale.
+
+Try the [shared sine trace](../examples.md#monitor-plot-program). See the
+[monitor reference](monitor.md) for snapshot, producer-clock and upgrade caveats.
 
 ## Events
 

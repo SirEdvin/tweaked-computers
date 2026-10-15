@@ -19,10 +19,11 @@ and follow the guide above. Report problems with engine/mod versions, wiring,
 source and diagnostics; remove private literals before sharing.
 
 The source includes a separate [developer OpenWiki](openwiki/quickstart.md).
-See the [0.1.4 ALPHA interaction hotfix notes](docs/interaction-release.md),
+See the [0.1.5 monitor buffering evidence](docs/monitor-buffer-verification.md),
+[0.1.4 interaction hotfix notes](docs/interaction-release.md),
 [integrated verification](docs/rd5-candidate.md) and
 [native-client playtest](docs/player/editor.md#integrated-redesign-playtest).
-The immutable release source is [alpha-0.1.4](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.4);
+The release source is [alpha-0.1.5](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.5);
 [0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development
@@ -34,7 +35,7 @@ Build an installable archive outside the checkout:
 Use a fresh output directory for the packaged official-engine integration smoke:
 
     python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
-      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.4.zip \
+      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.5.zip \
       --output /absolute/path/to/new-smoke-directory \
       --fixture tests.integration_engine --production-context --cold
 
@@ -42,6 +43,9 @@ The harness exercises base and Space Age; cold phases use isolated localhost-onl
 servers and acknowledged console shutdown. It never launches a graphical client.
 The source/API contracts remain in openspec/changes/add-native-circuit-computers;
 that change is deliberately unarchived pending review and user client testing.
+The shipped `buffer-monitor-presentation` API extension documents automatic
+snapshots, every 1..6-by-1..6 rectangle and optional selected-group publication.
+Graphical validation is explicitly deferred to the user's alpha review.
 
 Project source is [MIT licensed](LICENSE). Pinned Phobos parser source retains
 [its license](vendor/phobos/LICENSE.txt), [notice](vendor/phobos/NOTICE.md) and

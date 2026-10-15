@@ -9,14 +9,36 @@ local M = {}
 local hooks={lifecycle={},sample={},notifications={},render={}}
 local refusal={} -- Host-only ephemeral maintenance deferral identity.
 local render_reservation=0
+local max_render_reservation=160000
+local function render_state_valid(s,tick)
+  if type(s)~='table' then return false end
+  if not errors.integer(s.last_tick,-1,tick) then return false end
+  if s.maintenance_tick~=nil and (not errors.integer(s.maintenance_tick,0,tick)
+    or not errors.integer(s.maintenance_spent,0,limits.maintenance_work_per_tick)) then return false end
+  if s.render_demand_work~=nil or s.render_demand_tick~=nil then
+    if not errors.integer(s.render_demand_work,0,max_render_reservation)
+      or not errors.integer(s.render_demand_tick,0,tick) then return false end
+  end
+  if s.render_reserved_work~=nil and not errors.integer(s.render_reserved_work,0,max_render_reservation) then return false end
+  if s.last_render_boost_tick~=nil and not errors.integer(s.last_render_boost_tick,0,tick) then return false end
+  return true
+end
 local monitor_refresh
 function M.register_monitor_refresh(fn)
   assert(type(fn)=='function' and not monitor_refresh,'invalid monitor event refresh')
   monitor_refresh=fn
 end
 function M.reserve_render_work(n)
-  assert(render_reservation==0 and errors.integer(n,1,limits.maintenance_work_per_tick),'invalid render reservation')
+  assert(render_reservation==0 and errors.integer(n,1,max_render_reservation),'invalid render reservation')
   render_reservation=n
+end
+-- Host-only presenter demand; it cannot change the already frozen current tick.
+function M.request_render_work(root,tick,n,spend)
+  local s=root.scheduler
+  assert(errors.integer(tick,0,9007199254740991) and render_state_valid(s,tick)
+    and tick>=s.last_tick and tick>=(s.render_demand_tick or 0)
+    and errors.integer(n,0,max_render_reservation),'invalid render demand')
+  spend(4); s.render_demand_work=n; s.render_demand_tick=tick
 end
 function M.register_phase(phase,name,fn)
   assert(hooks[phase] and type(name)=='string' and type(fn)=='function' and not hooks[phase][name],'invalid scheduler phase hook')
@@ -25,11 +47,22 @@ function M.register_phase(phase,name,fn)
 end
 function M.maintenance(root,tick,for_render)
   local s=root.scheduler
-  assert(errors.integer(tick,0,9007199254740991) and tick>=s.last_tick,'scheduler clock moved backwards')
-  if s.maintenance_tick~=tick then s.maintenance_tick=tick; s.maintenance_spent=0 end
+  assert(errors.integer(tick,0,9007199254740991) and render_state_valid(s,tick)
+    and tick>=s.last_tick,'invalid maintenance state or backwards clock')
+  if s.maintenance_tick~=tick then
+    local requested=s.render_demand_work or 0
+    local reserved=render_reservation
+    if requested>reserved and (not s.last_render_boost_tick or tick-s.last_render_boost_tick>=2) then
+      reserved=requested; s.last_render_boost_tick=tick
+    end
+    s.maintenance_tick=tick; s.maintenance_spent=0; s.render_reserved_work=reserved
+  elseif s.render_reserved_work==nil then
+    s.render_reserved_work=render_reservation -- Legacy same-tick ledger, no credit reset.
+  end
+  local ceiling=limits.maintenance_work_per_tick-(for_render and 0 or s.render_reserved_work)
   return function(n)
+    assert(s.maintenance_tick==tick,'stale maintenance admission')
     assert(errors.integer(n,0,1000000000),'invalid maintenance cost')
-    local ceiling=limits.maintenance_work_per_tick-(for_render and 0 or render_reservation)
     if s.maintenance_spent+n>ceiling then error(refusal,0) end
     s.maintenance_spent=s.maintenance_spent+n
   end
@@ -114,7 +147,8 @@ function M.tick(tick)
   if not registry.supported(root) then return end -- Unknown storage stays inert.
   local ledger=root.ledger
   if type(ledger)~='table' or ledger.version~=1 or not errors.integer(ledger.total,0,1000000000)
-    or not errors.integer(ledger.tick,-1,9007199254740991) or tick<ledger.tick then
+    or not errors.integer(ledger.tick,-1,9007199254740991) or tick<ledger.tick
+    or not render_state_valid(root.scheduler,tick) then
     -- Validate the shared retained clock/header before timers or callbacks can
     -- mutate anything. Do not repair/reset an unknown ledger on reload.
     for _,rec in pairs(root.computers) do

@@ -38,7 +38,8 @@ local function connect(a,b,wire) assert(lifecycle.connector(a,'network',wire).co
 local function settle()
   for _=1,200 do
     monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
-    local s=registry.get().monitors; if not s.job and (not s.retired or #s.retired==0) then return end
+    local s=registry.get().monitors; local p=s.presentation
+    if not s.job and p and #p.retired==0 and #p.orphans==0 and #p.jobs==0 and p.pending_cells==0 then return end
   end
   error('group lifecycle failed to settle')
 end
@@ -105,7 +106,7 @@ function M.run()
   end
   atomic(m,'E_RANGE',function() model.scale(m,1,1,nop,1.1) end)
   atomic(m,'E_BUSY',function() model.calls.clear(m,function() error({code='E_BUSY'},0) end) end)
-  model.scale(m,4,4,nop,0.5); assert(m.width*m.height==model.limits.cells)
+  model.scale(m,6,6,nop,0.5); assert(m.width*m.height==model.limits.cells)
   local spent=0
   model.calls.blit(m,function(n) spent=spent+n; assert(spent<=limits.callback_work) end,
     string.rep('x',model.limits.write_bytes),string.rep('0',model.limits.write_bytes),string.rep('f',model.limits.write_bytes))
@@ -114,8 +115,8 @@ function M.run()
   local partition=monitor.partition(fake); local seen={}; local area=0
   for _,rect in ipairs(partition) do area=area+rect.world_width*rect.world_height; for _,id in ipairs(rect.members) do assert(not seen[id]); seen[id]=true end end
   assert(area==8 and #partition==4); assert(value_equal(partition,monitor.partition(fake)))
-  local row={}; for x=1,5 do row[x]={id='a'..x,position={x=x,y=0},direction=0,force_index=1,surface_index=1} end
-  partition=monitor.partition(row); assert(#partition==2 and partition[1].world_width==4)
+  local row={}; for x=1,7 do row[x]={id='a'..x,position={x=x,y=0},direction=0,force_index=1,surface_index=1} end
+  partition=monitor.partition(row); assert(#partition==2 and partition[1].world_width==6)
   report('deterministic-hole-l-shape-and-oversized-partition')
   for _,d in ipairs({0,4,8,12}) do
     local g0={left=10,top=20,world_width=2,world_height=1,direction=d,
@@ -135,10 +136,10 @@ function M.run()
   connect(c,b0,'red'); connect(c,a,'green')
   c.status='running'; c.run_id=c.id..'/fixture'; c.active={source='',api_version=1,
     compiler_version=limits.compiler_version,storage_version=limits.storage_version,handlers={start=true}}
-  guest(c,"local m=peripheral.find('monitor','red'); assert(m); local w,h=m.getSize(); assert(w==20 and h==6); m.write('NATIVE'); local limits=m.getLimits(); limits.cells=0; assert(m.getLimits().cells==4704); local p=m.getPaletteColour(colors.white); assert(p>0)")
+  guest(c,"local m=peripheral.find('monitor','red'); assert(m); local w,h=m.getSize(); assert(w==20 and h==6); m.write('NATIVE'); local limits=m.getLimits(); limits.cells=0; assert(m.getLimits().cells==10584); local p=m.getPaletteColour(colors.white); assert(p>0)")
   assert(display.model.cells[1][1]==78)
   local before=copy(display.model)
-  guest(c,"local m=peripheral.find('monitor','red'); local ok,e=pcall(m.blit,'x','F','0'); assert(not ok and e.code=='E_ARGUMENT'); ok,e=pcall(m.setCursorPos,{},1); assert(not ok and e.code=='E_ARGUMENT'); local size=m.getLimits(); size.cells=1; assert(m.getLimits().cells==4704); assert(type(m.getPaletteColor(colors.white))=='number')")
+  guest(c,"local m=peripheral.find('monitor','red'); local ok,e=pcall(m.blit,'x','F','0'); assert(not ok and e.code=='E_ARGUMENT'); ok,e=pcall(m.setCursorPos,{},1); assert(not ok and e.code=='E_ARGUMENT'); local size=m.getLimits(); size.cells=1; assert(m.getLimits().cells==10584); assert(type(m.getPaletteColor(colors.white))=='number')")
   assert(value_equal(before,display.model))
   local hidden=build('kv',2,0); connect(b0,hidden,'green')
   assert(not peripheral.inventory(c,'red',nop)[hidden.id],'geometric group bridged wires')
@@ -234,17 +235,17 @@ function M.run()
   report('mock-world-activation-with-authentic-deduplicated-channel-events-and-resize')
   -- Maximum physical rectangle, all 256 literal byte slots, mixed-revision sweep.
   local maximum={}
-  for y=0,3 do for x=0,3 do maximum[#maximum+1]=build('monitor',10+x,10+y) end end
-  settle(); local maxg=group(maximum[1]); assert(#maxg.members==16)
-  model.scale(maxg.model,4,4,nop,0.5); assert(maxg.model.width*maxg.model.height==4704)
+  for y=0,5 do for x=0,5 do maximum[#maximum+1]=build('monitor',10+x,10+y) end end
+  settle(); local maxg=group(maximum[1]); assert(#maxg.members==36)
+  model.scale(maxg.model,6,6,nop,0.5); assert(maxg.model.width*maxg.model.height==10584)
   for row=0,3 do
     local bytes={}; for byte=row*64,row*64+63 do bytes[#bytes+1]=string.char(byte) end
     model.calls.setCursorPos(maxg.model,nop,1,row+1); model.calls.write(maxg.model,nop,table.concat(bytes))
   end
-  renderer.tick(game.tick,nop); assert(maxg.render.presented_revision~=maxg.model.revision)
+  renderer.tick(game.tick,nop); assert(not maxg.render or maxg.render.presented_revision~=maxg.model.revision)
   model.calls.setPaletteColor(maxg.model,nop,1,0x112233)
   local count=0
-  repeat count=count+1; renderer.tick(game.tick,nop) until maxg.render.presented_revision==maxg.model.revision or count>30
+  repeat count=count+1; renderer.tick(game.tick,nop) until maxg.render and maxg.render.presented_revision==maxg.model.revision or count>30
   assert(count<=30)
   for byte=0,255 do
     local i=math.floor(byte/64)*maxg.model.width+byte%64+1; local cell=maxg.render.cells[i]
@@ -299,12 +300,13 @@ function M.on_tick(event)
   assert(c.status=='running',serpent.line(c.diagnostic))
   local g=group(registry.record(fixture.tile))
   if fixture.phase=='armed' and c.state.boots==1 and g.render and g.render.presented_revision==g.model.revision then
-    -- Save a real render sweep after exactly one paid cell at the actual tick.
-    -- This trusted fixture controls remaining maintenance, not guest quanta.
+    -- Save a post-dispatch accepted write beside the prior complete front.
+    -- Actual partially prepared/coalesced cold state is covered by the full-world
+    -- monitor_presentation_engine fixture, not by inventing a second tick here.
     model.calls.setCursorPos(g.model,nop,1,1); model.calls.write(g.model,nop,'COLD')
-    registry.get().scheduler.maintenance_spent=limits.maintenance_work_per_tick-(model.limits.tiles*8+1+48)
-    assert(not scheduler.try_maintenance(function() renderer.tick(event.tick,scheduler.maintenance(registry.get(),event.tick,true)) end))
-    assert(g.render.sweep_cursor==2 and g.render.presented_revision~=g.model.revision)
+    local spent=registry.get().scheduler.maintenance_spent; local front=g.render
+    renderer.tick(event.tick,scheduler.maintenance(registry.get(),event.tick,true))
+    assert(registry.get().scheduler.maintenance_spent==spent and g.render==front and g.render.presented_revision~=g.model.revision)
     -- A different writer can resize after notifications but before this computer
     -- dispatches. A retained stale payload must normalize at actual dispatch.
     runtime.emit(c.id,'monitor_resize',{peripheral=g.id,wire='red',wires={'red'},old_width=10,old_height=6,
