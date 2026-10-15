@@ -1,10 +1,10 @@
 # Device experience redesign — review package
 
-Status: planning only; explicit user approval is required before any new task is available for work.
+Status: implementation approved on 2026-10-15; RD1–RD5 integrated, RD6 authorized to publish 0.1.2 ALPHA. Native graphical review remains user-owned and deferred. The original browser review is a historical planning artifact, not a native-client screenshot.
 
 Start with [review.html](review.html) in a browser: a native-styled tab/focus layout concept and schematic silhouettes for all five devices. It is not a native screenshot, final game art or a playable prototype.
 
-## Proposed milestones
+## Approved milestones
 
 | Milestone | Outcome | Prerequisites |
 | --- | --- | --- |
@@ -13,8 +13,9 @@ Start with [review.html](review.html) in a browser: a native-styled tab/focus la
 | RD3 | Complete code-first tabbed computer UI with preserved recovery/authority | None |
 | RD4 | Correct monitor layers and native deconstruction feedback | RD1, RD2 |
 | RD5 | Integrated candidate, player documentation and source-grounded developer OpenWiki | RD2, RD3, RD4 |
+| RD6 | Actual 0.1.2 ALPHA portal/GitHub release and live player documentation | RD5 |
 
-Verified Kanban cards (all blocked, no worker runs):
+Kanban implementation/release cards (the original blocked planning hold is superseded):
 
 | Milestone | Card |
 | --- | --- |
@@ -23,6 +24,7 @@ Verified Kanban cards (all blocked, no worker runs):
 | RD3 | `t_43cde3d0` |
 | RD4 | `t_6c52f091` |
 | RD5 | `t_d31d7ca7` |
+| RD6 | `t_f930ba9e` |
 
 Full checked graph, checklist ownership and isolated worktrees are recorded in `task-map.json`. Each milestone owns its focused checks and documentation; RD5 verifies integration rather than deferring all testing to the end.
 
@@ -42,4 +44,4 @@ Implementation baseline: `cb300e62ebad6a4a9a38a0679f21e251009f1d16`. Existing ca
 
 ## Approval boundary
 
-All new cards are assigned to Albina and created blocked. No timed release and no dependency promotion may substitute for explicit user validation. No redesign code has been written; no release/default-branch merge/protection change is authorized here. The old publication task is outside this redesign campaign.
+The user explicitly approved the redesign and requested an actual 0.1.2 release on 2026-10-15. This supersedes the frozen planning hold/no-release wording in the original review and task-map snapshot. RD1–RD5 deliver integrated implementation; RD6 owns publication, immutable source and live docs. See `tasks.md` and the release notes. Default-branch merge, PR #1 merge, protection changes and OpenSpec archival remain unauthorized. Deferred native-client checks are not marked passed or imposed as a new publication gate.

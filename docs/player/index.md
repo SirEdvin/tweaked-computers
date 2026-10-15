@@ -41,11 +41,11 @@ versions, wiring, source and error code; remove private literals before sharing.
 
 ## Source and developer documentation
 
-The [public repository](https://github.com/SirEdvin/tweaked-computers) includes
+The [0.1.2 ALPHA source](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.2) includes
 source, notices and examples; report problems in its
 [issue tracker](https://github.com/SirEdvin/tweaked-computers/issues).
 The separately generated
-[developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.1/openwiki)
+[developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.2/openwiki)
 explains implementation internals; this site, not that wiki, is the player and
 public Lua API reference. This link identifies the source-grounded developer
 wiki snapshot independently of the repository's default branch.

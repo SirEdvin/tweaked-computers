@@ -66,12 +66,21 @@ Parents: RD2, RD3, RD4. Owns cross-capability integration only; earlier cards ow
 - [x] 5.3 Deliver the installable review candidate, complete contact sheets, test results and one concise user playtest checklist; verify exact archive content/version/hash and distinguish implementation completion from deferred native visual acceptance. Do not publish, merge the default branch, change protections or mark unperformed client checks passed.
 
 RD5 integration/evidence: `docs/rd5-candidate.md`, external candidate manifest and
-full focused logs. Version 0.1.2 is prepared but unpublished; native graphical
+full focused logs. Version 0.1.2 was prepared unpublished for RD6; native graphical
 acceptance (including the remaining 3.1 client portion) is still user-owned and
 unperformed. One integrated checklist lives in `docs/player/editor.md`.
 
+## 6. RD6 — Public 0.1.2 ALPHA release
+
+Parent: RD5. Card: `t_f930ba9e`. Authorized explicitly by the user on 2026-10-15.
+
+- [x] 6.1 Verify RD1–RD5 ancestry, reconcile approval/delivery notes, update release/install/source documentation and retain the source-grounded developer OpenWiki.
+- [x] 6.2 Build deterministic `tweaked-computers_0.1.2.zip` and verify the final archive with focused base/Space Age, populated-0.1.1 upgrade, cold persistence, wiring authority and GUI model/render-state checks; retain deferred native QA honestly.
+- [ ] 6.3 Commit/push exact source, publish an immutable matching GitHub alpha prerelease/tag with checked ZIP/checksums, deploy player docs from that source and verify the live source marker.
+- [ ] 6.4 Publish to the existing Factorio Mods listing using the official upload API; read back exactly one 0.1.2 release with matching filename/compatibility/SHA-1 and edited description/source metadata. Never replace an existing different release.
+
 ## Workflow follow-up
 
-- User reviews this planning package and explicitly authorizes releasing the held cards; approval is not inferred from time or unrelated messages.
-- After implementation, the orchestrator presents a consolidated review PR/candidate. User checks direct wiring/selection, editor usability and all five in-world silhouettes, plus native monitor X mark/cancel. Broad client/stress matrices remain out of scope.
-- Release, merge, CI policy changes and OpenSpec archival are separate authorized follow-ups; do not reopen or repeat TC17 publication to satisfy this campaign.
+- Explicit user approval supersedes the historical planning hold and authorizes RD6 publication; it does not authorize main/PR #1 merge, protection changes or OpenSpec archival.
+- User checks direct wiring/selection, editor usability, all five in-world silhouettes and native monitor X mark/cancel with the integrated playtest checklist. Native graphical review remains deferred, not passed and not a new publication gate.
+- Broad client/stress matrices remain out of scope. Do not reopen or repeat TC17's 0.1.1 publication to satisfy this campaign.

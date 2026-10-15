@@ -1,4 +1,16 @@
 {
+  "snapshot_scope": "Historical pre-approval planning graph; original counts and status fields below are retained, not current board state.",
+  "approval_amendment": {
+    "date": "2026-10-15",
+    "approval": "explicit-user-approval-of-implementation-and-0.1.2-alpha-publication",
+    "integrated_rd5_commit": "7e929000339a6288662621b1b26148b4d12d9e8c",
+    "release_task": "t_f930ba9e",
+    "release_parent": "t_d31d7ca7",
+    "release_checklist_ids": ["6.1", "6.2", "6.3", "6.4"],
+    "current_checklist": "tasks.md",
+    "native_client_acceptance": "user-owned; deferred, not passed",
+    "main_merge_protection_changes_archival": "not authorized"
+  },
   "board": "tweaked-computers",
   "change": "redesign-device-experience",
   "approval": "awaiting-explicit-user-validation",

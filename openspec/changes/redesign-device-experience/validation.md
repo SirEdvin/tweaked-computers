@@ -1,5 +1,11 @@
 # Planning validation
 
+Historical snapshot: these results describe the planning checkpoint only. The
+user approved implementation and 0.1.2 ALPHA publication on 2026-10-15; current
+implementation evidence is in `docs/rd5-candidate.md` and release evidence is in
+`docs/redesign-release.md`. Original blocked-card statements below are not current
+delivery status. Native graphical checks remain deferred, not passed.
+
 - `openspec validate redesign-device-experience --strict --json`: valid. Two informational archive-order notices for modified device-lifecycle/program-editor requirements; their baseline lives in the unarchived original change. See README.
 - `openspec status --change redesign-device-experience --json`: all required planning artifacts present. This means planning complete, not implementation complete.
 - Source audit: 5 capability files, 20 requirements, 36 scenarios and 17 unique unchecked implementation rows across five cohesive milestones. All 17 existing editor-model action names appear in the compatibility mapping.

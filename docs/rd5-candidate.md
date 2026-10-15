@@ -1,7 +1,8 @@
 # Integrated redesign candidate — 0.1.2 ALPHA
 
-This is the RD5 installable review candidate, not a public release. RD6 owns
-Factorio Mods/GitHub publication and live documentation deployment. The package
+This document records the RD5 installable review candidate. The subsequent
+[RD6 0.1.2 ALPHA release](redesign-release.md) carries the integrated implementation
+with release documentation updated and final archive checks rerun. The package
 remains pinned to Factorio 2.0.77, base alone or optional Space Age, and Lua API v1.
 Back up worlds and the old ZIP before upgrading. Never overwrite published 0.1.1.
 

@@ -1,5 +1,10 @@
 # Proposal
 
+Approval amendment (2026-10-15): the user approved this redesign and explicitly
+requested actual 0.1.2 ALPHA publication. The planning-only dispatch/publication
+holds below are historical; RD6 owns the authorized release after RD5 integration.
+Default-branch merge, protection changes and archival remain outside that approval.
+
 ## Why
 
 The published alpha exposes connector helper entities as generic NETWORK targets, crowds computer authoring into one scrolling form, and gives different devices nearly identical computer-derived silhouettes. The user's playtest also reports missing monitor deconstruction crosses; a presentation-focused redesign is needed without sacrificing working programs, topology isolation or saved data.

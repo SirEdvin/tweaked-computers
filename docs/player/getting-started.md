@@ -5,13 +5,16 @@
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot; removal/destruction of a device is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
-   the Mod Portal, install the intended ALPHA version, enable it, and restart when
-   prompted. The listing is published as the final alpha-delivery step; before it
-   exists, use only an explicitly supplied candidate ZIP, not GitHub's source ZIP.
-3. For manual installation, place `tweaked-computers_VERSION.zip` in your Factorio
+   the Mod Portal, select **0.1.2 ALPHA**, enable it, and restart when prompted.
+   This version includes the direct device wiring, industrial artwork and tabbed
+   editor redesign. Back up an existing 0.1.1 world before its automatic migration.
+3. For manual installation, download `tweaked-computers_0.1.2.zip` from the
+   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.2)
+   and place it in your Factorio
    user-data `mods` directory without unpacking it. Remove conflicting duplicate
    versions, enable the mod, and restart. The ZIP's internal folder must match its
-   numeric version. Record the exact engine/mod versions when reporting a bug.
+   numeric version. GitHub's automatic source archives are not installable mod ZIPs.
+   Record the exact engine/mod versions when reporting a bug.
 4. Load a copy of the save first. Tested engine: **2.0.77**. Base alone works;
    Space Age is optional, not a required dependency. Expansion settings and quality
    names require their corresponding installed prototypes. This guide does not

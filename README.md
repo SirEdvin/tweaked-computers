@@ -19,10 +19,11 @@ and follow the guide above. Report problems with engine/mod versions, wiring,
 source and diagnostics; remove private literals before sharing.
 
 The source includes a separate [developer OpenWiki](openwiki/quickstart.md).
-See the [0.1.2 integrated review candidate](docs/rd5-candidate.md) and
+See the [0.1.2 ALPHA release notes](docs/redesign-release.md),
+[integrated verification](docs/rd5-candidate.md) and
 [native-client playtest](docs/player/editor.md#integrated-redesign-playtest).
-Public 0.1.2 publication remains owned by the downstream release milestone;
-[0.1.1 release notes](docs/alpha-release.md) are historical.
+The immutable release source is [alpha-0.1.2](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.2);
+[0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development
 
