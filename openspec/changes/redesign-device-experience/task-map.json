@@ -1,0 +1,151 @@
+{
+  "board": "tweaked-computers",
+  "change": "redesign-device-experience",
+  "approval": "awaiting-explicit-user-validation",
+  "dispatched": false,
+  "plan_commit": "02cb814d6351a17e490b3673a871e3478ee04af0",
+  "implementation_baseline": "cb300e62ebad6a4a9a38a0679f21e251009f1d16",
+  "verified_count": 5,
+  "checklist_count": 17,
+  "topological_order": [
+    "t_af128150",
+    "t_43cde3d0",
+    "t_8cfd8907",
+    "t_6c52f091",
+    "t_d31d7ca7"
+  ],
+  "tasks": [
+    {
+      "key": "RD1",
+      "n": 1,
+      "title": "Direct device wiring and coherent physical interaction",
+      "parents": [],
+      "skills": [
+        "factorio-modding"
+      ],
+      "files": "prototypes/devices.lua; scripts/device-definitions.lua; scripts/lifecycle.lua; scripts/registry.lua; scripts/network.lua; migration, blueprint and power paths; locale/en/devices.cfg",
+      "contracts": "specs/peripheral-network/spec.md and physical/migration requirements in specs/device-lifecycle/spec.md",
+      "id": "t_af128150",
+      "parent_ids": [],
+      "checklist_ids": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "workspace_path": "/home/siredvin/projects/tweaked-computers/.worktrees/t_af128150",
+      "status": "blocked",
+      "current_run_id": null,
+      "started_at": null
+    },
+    {
+      "key": "RD2",
+      "n": 2,
+      "title": "Redesign the complete industrial device artwork family",
+      "parents": [
+        "RD1"
+      ],
+      "skills": [
+        "factorio-modding",
+        "frontend-design"
+      ],
+      "files": "assets/generate.py or a simpler suitable reproducible art export; editable artwork; graphics/; scripts/device-art.lua; icons/status definitions; provenance and art documentation",
+      "contracts": "specs/device-visual-identity/spec.md and attributable artwork in specs/device-lifecycle/spec.md",
+      "id": "t_8cfd8907",
+      "parent_ids": [
+        "t_af128150"
+      ],
+      "checklist_ids": [
+        "2.1",
+        "2.2",
+        "2.3"
+      ],
+      "workspace_path": "/home/siredvin/projects/tweaked-computers/.worktrees/t_8cfd8907",
+      "status": "blocked",
+      "current_run_id": null,
+      "started_at": null
+    },
+    {
+      "key": "RD3",
+      "n": 3,
+      "title": "Build the code-first tabbed computer workspace",
+      "parents": [],
+      "skills": [
+        "factorio-modding",
+        "frontend-design"
+      ],
+      "files": "scripts/ui/editor.lua; scripts/ui/editor-model.lua only where necessary; scripts/ui/help.lua; native styles/localization and control.lua GUI event registration",
+      "contracts": "specs/program-editor/spec.md and api/compatibility.md",
+      "id": "t_43cde3d0",
+      "parent_ids": [],
+      "checklist_ids": [
+        "3.1",
+        "3.2",
+        "3.3",
+        "3.4"
+      ],
+      "workspace_path": "/home/siredvin/projects/tweaked-computers/.worktrees/t_43cde3d0",
+      "status": "blocked",
+      "current_run_id": null,
+      "started_at": null
+    },
+    {
+      "key": "RD4",
+      "n": 4,
+      "title": "Restore native monitor deconstruction feedback and layering",
+      "parents": [
+        "RD1",
+        "RD2"
+      ],
+      "skills": [
+        "factorio-modding"
+      ],
+      "files": "scripts/rendering.lua; monitor presentation/lifecycle hooks; control.lua only for required native mark/cancel events; focused rendering/state regressions",
+      "contracts": "specs/monitor-display/spec.md plus existing geometry/touch contracts",
+      "id": "t_6c52f091",
+      "parent_ids": [
+        "t_af128150",
+        "t_8cfd8907"
+      ],
+      "checklist_ids": [
+        "4.1",
+        "4.2",
+        "4.3"
+      ],
+      "workspace_path": "/home/siredvin/projects/tweaked-computers/.worktrees/t_6c52f091",
+      "status": "blocked",
+      "current_run_id": null,
+      "started_at": null
+    },
+    {
+      "key": "RD5",
+      "n": 5,
+      "title": "Integrate the redesign candidate and review documentation",
+      "parents": [
+        "RD2",
+        "RD3",
+        "RD4"
+      ],
+      "skills": [
+        "factorio-modding"
+      ],
+      "files": "integration conflicts; packaging; player docs; existing developer OpenWiki; candidate manifest and focused user playtest checklist",
+      "contracts": "all redesigned capabilities for integration only; do not repeat completed feature work",
+      "id": "t_d31d7ca7",
+      "parent_ids": [
+        "t_8cfd8907",
+        "t_43cde3d0",
+        "t_6c52f091"
+      ],
+      "checklist_ids": [
+        "5.1",
+        "5.2",
+        "5.3"
+      ],
+      "workspace_path": "/home/siredvin/projects/tweaked-computers/.worktrees/t_d31d7ca7",
+      "status": "blocked",
+      "current_run_id": null,
+      "started_at": null
+    }
+  ]
+}
