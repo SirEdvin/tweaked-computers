@@ -19,10 +19,10 @@ and follow the guide above. Report problems with engine/mod versions, wiring,
 source and diagnostics; remove private literals before sharing.
 
 The source includes a separate [developer OpenWiki](openwiki/quickstart.md).
-See the [0.1.2 ALPHA release notes](docs/redesign-release.md),
+See the [0.1.3 ALPHA GUI hotfix notes](docs/gui-hotfix-release.md),
 [integrated verification](docs/rd5-candidate.md) and
 [native-client playtest](docs/player/editor.md#integrated-redesign-playtest).
-The immutable release source is [alpha-0.1.2](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.2);
+The immutable release source is [alpha-0.1.3](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.3);
 [0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development
@@ -34,7 +34,7 @@ Build an installable archive outside the checkout:
 Use a fresh output directory for the packaged official-engine integration smoke:
 
     python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
-      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.2.zip \
+      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.3.zip \
       --output /absolute/path/to/new-smoke-directory \
       --fixture tests.integration_engine --production-context --cold
 

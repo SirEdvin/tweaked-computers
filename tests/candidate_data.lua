@@ -21,8 +21,22 @@ for _,kind in ipairs(defs.order) do
   end
 end
 assert(count==160)
+local styles=data.raw['gui-style'].default
+for name,kind in pairs({tc_editor_text='textbox_style',tc_editor_button='button_style',tc_editor_frame='frame_style',
+  tc_editor_tabs='tabbed_pane_style',tc_editor_tab='tab_style',draggable_space_header='empty_widget_style'}) do
+  assert(styles[name] and styles[name].type==kind,'incompatible editor style '..name)
+end
+-- Includes the font set dynamically on the runtime title label, not just styles.
+for _,font in ipairs({'tc-editor-mono','default-semibold','default-large-semibold'}) do
+  assert(data.raw.font[font],'undeclared runtime/editor font '..font)
+end
+local function check_style(style)
+  if style.font then assert(data.raw.font[style.font],'undeclared font '..style.font) end
+  if style.parent then assert(styles[style.parent],'undeclared parent style '..style.parent) end
+  for _,value in pairs(style) do if type(value)=='table' then check_style(value) end end
+end
 for name,style in pairs(data.raw['gui-style'].default) do
-  if type(name)=='string' and name:sub(1,3)=='tc_' and type(style)=='table' and style.font then assert(data.raw.font[style.font],'undeclared font '..style.font) end
+  if type(name)=='string' and name:sub(1,3)=='tc_' and type(style)=='table' then check_style(style) end
 end
 for byte=0,255 do assert(data.raw.sprite['tc-glyph-'..byte].filename==art.glyphs[byte].filename) end
 log('TC_CANDIDATE_DATA_OK 160 status frames; 256 independent glyphs; 5 actual body/item families; declared fonts')

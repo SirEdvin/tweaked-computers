@@ -8,7 +8,7 @@ from pathlib import Path
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-TOP = ('info.json', 'data.lua', 'control.lua', 'settings.lua', 'README.md', 'LICENSE')
+TOP = ('info.json', 'data.lua', 'control.lua', 'settings.lua', 'README.md', 'LICENSE', 'changelog.txt')
 DIRS = ('scripts', 'prototypes', 'locale', 'vendor', 'assets', 'docs', 'examples', 'tests')
 CONTRACT = 'openspec/changes/add-native-circuit-computers'
 

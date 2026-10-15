@@ -31,7 +31,9 @@ local function box(parent,name,text,height,readonly)
 end
 local function flow(parent,name,direction)
   local e=parent.add{type='flow',name=name,direction=direction or 'vertical'}
-  e.style.vertical_spacing=4; return e
+  if direction=='horizontal' then e.style.horizontal_spacing=4
+  else e.style.vertical_spacing=4 end
+  return e
 end
 local function button(parent,name,caption)
   local e=parent.add{type='button',name=name,caption=caption,style='tc_editor_button',mouse_button_filter={'left'}}

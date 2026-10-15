@@ -47,6 +47,19 @@ function M.run()
       editor.on_text{player_index=(p or a).index,element=f.content.editor.source,tick=tick}
     end
     local f,c,source_widget
+    group('workspace-computer-click-and-native-open-event-routes',function()
+      a.selected=rec.body
+      editor.on_input{player_index=a.index,input_name='tc-open-selected-computer',tick=tick}
+      local opened=a.gui.screen[editor.frame_name]
+      assert(opened and a.opened==opened and #opened.content.tabs==5)
+      editor.on_closed{player_index=a.index,element=opened}; a.opened=nil
+      assert(not opened.valid)
+      editor.on_opened{player_index=a.index,entity=rec.body,tick=tick}
+      opened=a.gui.screen[editor.frame_name]
+      assert(opened and a.opened==opened and #opened.content.tabs==5)
+      editor.on_closed{player_index=a.index,element=opened}; a.opened=nil
+      assert(not opened.valid)
+    end)
     group('workspace-five-native-tabs-compact-actions-draggable-source',function()
       assert(editor.open(a,rec.id)); f=a.gui.screen[editor.frame_name]; c=f.content.editor; source_widget=c.source
       assert(f.content.type=='tabbed-pane' and #f.content.tabs==5 and f.content.selected_tab_index==1)
@@ -54,6 +67,8 @@ function M.run()
         assert(f.content.tabs[i].tab==f.content[name..'_tab'] and f.content.tabs[i].content==f.content[name])
       end
       assert(f.title.drag.drag_target==f and f.title.heading.drag_target==f)
+      assert(f.title.style.horizontal_spacing==4 and c.style.vertical_spacing==4)
+      assert(c.actions.style.horizontal_spacing==4)
       assert(#c.actions.children==4 and c.actions.activate and not c.actions.run and not c.actions.apply)
       assert(c.source.read_only==false and c.source.style.rich_text_setting==defines.rich_text_setting.disabled)
       assert(not c.output and not c.help_panel and not c.recovery and not c.review_panel)

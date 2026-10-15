@@ -69,6 +69,12 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/runtime" --mode base \
             --fixture tests.runtime_contract
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/gui-workspace" --mode both \
+            --fixture tests.editor_workspace --data-fixture tests.candidate_data
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/gui-cold" --mode both \
+            --fixture tests.editor_cold --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/integration" --mode both \
             --fixture tests.integration_engine --data-fixture tests.candidate_data \
             --production-context --cold
@@ -81,6 +87,12 @@ jobs:
             ${{ runner.temp }}/tc-ci/reports/
             ${{ runner.temp }}/tc-ci/runtime/**/summary.json
             ${{ runner.temp }}/tc-ci/runtime/**/engine.log
+            ${{ runner.temp }}/tc-ci/gui-workspace/**/summary.json
+            ${{ runner.temp }}/tc-ci/gui-workspace/**/engine.log
+            ${{ runner.temp }}/tc-ci/gui-cold/**/summary.json
+            ${{ runner.temp }}/tc-ci/gui-cold/**/engine.log
+            ${{ runner.temp }}/tc-ci/gui-cold/**/*-engine.log
+            ${{ runner.temp }}/tc-ci/gui-cold/**/*-result.json
             ${{ runner.temp }}/tc-ci/integration/**/summary.json
             ${{ runner.temp }}/tc-ci/integration/**/engine.log
             ${{ runner.temp }}/tc-ci/integration/**/*-engine.log
