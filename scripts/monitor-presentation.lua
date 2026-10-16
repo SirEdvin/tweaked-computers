@@ -169,12 +169,14 @@ end
 local function cleanup(p,spend,remaining)
   while remaining>0 and #p.retired>0 do
     local r=p.retired[1]; local i=r.cleanup_cursor or 1
-    while i<=#r.cells and remaining>0 do
+    local count=r.cleanup_indices and #r.cleanup_indices or #r.cells
+    while i<=count and remaining>0 do
+      local index=r.cleanup_indices and r.cleanup_indices[i] or i
       spend(8)
-      if r.is_front or not r.reused or not r.reused[i] then backend.clear_cell(r.cells[i]) end
-      r.cells[i]=false; i=i+1; r.cleanup_cursor=i; remaining=remaining-1
+      if r.is_front or not r.reused or not r.reused[index] then backend.clear_cell(r.cells[index]) end
+      r.cells[index]=false; i=i+1; r.cleanup_cursor=i; remaining=remaining-1
     end
-    if i>#r.cells then
+    if i>count then
       spend(#p.retired+12)
       if r.is_front or not r.shared_panel then backend.destroy(r.panel) end
       if r.is_front or not r.shared_cursor then backend.destroy(r.cursor) end
@@ -238,7 +240,9 @@ local function seal(s,p,lane,spend,total)
   if not eligible or not lane.owner and not changed then return end
   local previous=lane.pending and lane.pending.slots or 0
   if p.pending_cells-previous+total>L.render_snapshot_cells then blocked(lane,'E_CAPACITY','pending snapshot backpressure'); return end
-  spend(#lane.members*84+8)
+  local work=#lane.members*84+8
+  for _,ref in ipairs(lane.members) do work=work+(s.groups[ref.name].model.damage_count or 0)*2 end
+  spend(work)
   local captures={}; local last={}; local epochs={}
   for _,ref in ipairs(lane.members) do
     local g=s.groups[ref.name]; local snapshot=model.capture(g.model,function() end); snapshot.sealed_tick=p.tick
@@ -255,7 +259,11 @@ local function admit(s,p,lane,spend)
   local old,oldframes=0,0
   for _,c in ipairs(q.captures) do if c.group.render then old=old+slots(c.group.render); oldframes=oldframes+1 end end
   if p.front_cells-old+q.slots>L.aggregate_cells or p.front_frames-oldframes+n>L.tiles then return end
-  spend(n*32+8)
+  local work=n*32+8
+  for _,c in ipairs(q.captures) do
+    work=work+backend.frame_cost(c,M.matches(c.group,c.group.render) and c.group.render or nil)
+  end
+  spend(work)
   local job={lane=lane,captures=q.captures,slots=q.slots,sequence=q.sequence,frames={},member=1,cell=1}
   for _,c in ipairs(q.captures) do job.frames[#job.frames+1]=backend.frame(c,M.matches(c.group,c.group.render) and c.group.render or nil) end
   p.staging_cells=p.staging_cells+q.slots; p.staging_frames=p.staging_frames+n
@@ -264,10 +272,12 @@ end
 local function prepare(job,spend,remaining)
   while job.member<=#job.frames and remaining>0 do
     local r=job.frames[job.member]; local c=job.captures[job.member]
-    while job.cell<=r.slots and remaining>0 do
-      spend(48); backend.cell(c,r,job.cell); job.cell=job.cell+1; remaining=remaining-1
+    local count=r.indices and #r.indices or r.slots
+    while job.cell<=count and remaining>0 do
+      local index=r.indices and r.indices[job.cell] or job.cell
+      spend(48); backend.cell(c,r,index); job.cell=job.cell+1; remaining=remaining-1
     end
-    if job.cell>r.slots then
+    if job.cell>count then
       spend(16); backend.cursor(c,r); job.member=job.member+1; job.cell=1
     end
   end
@@ -303,8 +313,14 @@ local function commit(s,p,job,tick,spend)
   if p.front_cells-oldcells+job.slots>L.aggregate_cells or p.front_frames-oldframes+#job.frames>L.tiles then return false end
   -- Prepay the complete bounded native inventory, validity reads and writes before
   -- any visibility or ownership change. No fallible admission inside the swap.
-  local maximum=4*job.slots+4*#job.frames
-  local work=maximum*3+#job.frames*16+#p.jobs+8
+  local cells,damage=0,0
+  for _,r in ipairs(job.frames) do
+    cells=cells+(r.indices and #r.indices or r.slots)
+    damage=damage+model.acknowledge_cost(r.context.group.model,r.snapshot)
+    if r.indices and (r.front~=r.context.group.render or r.front.hidden) then job.invalid=true; return false end
+  end
+  local maximum=4*cells+4*#job.frames
+  local work=maximum*3+damage+#job.frames*16+#p.jobs+8
   if work>L.render_commit_work then blocked(lane,'E_CAPACITY','publication work limit'); return false end
   spend(work)
   local operations={}; local values={}
@@ -315,13 +331,16 @@ local function commit(s,p,job,tick,spend)
   for j,r in ipairs(job.frames) do
     local old=job.captures[j].group.render
     if old then
-      for i,cell in ipairs(old.cells) do if cell and cell~=r.cells[i] then
+      for index=1,(r.indices and #r.indices or old.slots) do
+        local i=r.indices and r.indices[index] or index; local cell=old.cells[i]
+        if cell and cell~=r.cells[i] then
         if not add(cell.background,false) or not add(cell.glyph,false) then return false end
       end end
       if old.panel~=r.panel and not add(old.panel,false) then return false end
       if old.cursor~=r.cursor and not add(old.cursor,false) then return false end
     end
-    for i,cell in ipairs(r.cells) do
+    for index=1,(r.indices and #r.indices or r.slots) do
+      local i=r.indices and r.indices[index] or index; local cell=r.cells[i]
       if not cell.background.valid or cell.glyph and not cell.glyph.valid then job.invalid=true; return false end
       if not old or old.cells[i]~=cell or old.hidden then
         if not add(cell.background,true) or not add(cell.glyph,true) then return false end
@@ -336,12 +355,18 @@ local function commit(s,p,job,tick,spend)
   for i,r in ipairs(job.frames) do
     local g=job.captures[i].group; local old=g.render
     if old then
-      for index,cell in ipairs(r.cells) do if old.cells[index]==cell then old.cells[index]=false end end
+      for index=1,(r.indices and #r.indices or r.slots) do
+        local i=r.indices and r.indices[index] or index
+        if old.cells[i]==r.cells[i] then old.cells[i]=false end
+      end
+      old.cleanup_indices=r.indices -- Unchanged native cells transfer ownership without a retirement scan.
       if old.panel==r.panel then old.panel=nil end
       if old.cursor==r.cursor then old.cursor=nil end
       enqueue(p,old,'front')
     end
-    r.is_front=true; r.front=nil; r.reused=nil; r.hidden=nil; r.presented_revision=r.snapshot.revision; r.presented_tick=tick; r.presented_sequence=job.sequence
+    r.is_front=true; r.front=nil; r.reused=nil; r.hidden=nil; r.cleanup_indices=nil
+    r.presented_revision=r.snapshot.revision; r.presented_tick=tick; r.presented_sequence=job.sequence
+    model.acknowledge(g.model,r.snapshot)
     r.accounted='front'; g.render=r
     p.front_cells=p.front_cells+r.slots; p.front_frames=p.front_frames+1
   end

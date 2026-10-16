@@ -5,11 +5,11 @@
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot; removal/destruction of a device is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
-   the Mod Portal, select **0.1.5 ALPHA**, enable it, and restart when prompted.
+   the Mod Portal, select **0.1.6 ALPHA**, enable it, and restart when prompted.
    This version includes the direct device wiring, industrial artwork and tabbed
    editor redesign. Back up an existing 0.1.1 world before its automatic migration.
-3. For manual installation, download `tweaked-computers_0.1.5.zip` from the
-   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.5)
+3. For manual installation, download `tweaked-computers_0.1.6.zip` from the
+   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.6)
    and place it in your Factorio
    user-data `mods` directory without unpacking it. Remove conflicting duplicate
    versions, enable the mod, and restart. The ZIP's internal folder must match its
@@ -28,6 +28,11 @@ Version 0.1.5 adds automatic buffered monitors, all complete rectangles up to
 changes: absorbed names detach and changed character dimensions clear contents.
 Keep the pre-upgrade save and old mod ZIP for rollback; do not downgrade a new
 presentation record in place. Client validation is deferred to your own review.
+Version 0.1.6 adds [live Map budgets](api/limits.md#live-mod-settings), fivefold
+defaults and [dirty-cell chart animation](monitor-animation.md). Higher budgets
+can reduce UPS; the measured two-tick publication cadence is not a universal
+30-FPS guarantee. Replace the old chart with the complete new example to use
+its shared-phase, all-screen updates.
 
 ## Research and craft
 

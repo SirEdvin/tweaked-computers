@@ -69,6 +69,16 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/runtime" --mode base \
             --fixture tests.runtime_contract
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/runtime-budgets" --mode both \
+            --fixture tests.runtime_budget_engine --production-context --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/compiler-cache" --mode both \
+            --fixture tests.compiler_cache_contract
+          for layout in four-walls mixed; do
+            python tools/monitor_animation.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/animation-$layout" --mode both --layout "$layout"
+          done
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/gui-workspace" --mode both \
             --fixture tests.editor_workspace --data-fixture tests.candidate_data
           python tools/smoke.py --factorio "$engine" --archive "$archive" \

@@ -34,6 +34,7 @@ local function render_cell(g,r,i)
     and c.bg[1]==pbg[1] and c.bg[2]==pbg[2] and c.bg[3]==pbg[3]
     and c.background.valid and (value[1]==32 or c.glyph and c.glyph.valid)
   if matches then r.cells[i]=c; r.reused[i]=true; return end
+  r.reused[i]=nil
   local cw,ch,ox,oy=model.geometry(g); local x=(i-1)%m.width; local y=math.floor((i-1)/m.width)
   local background=fill(g,ox+x*cw,oy+y*ch,cw,ch,color(pbg),layers.background); local glyph
   if value[1]~=32 then
@@ -61,13 +62,23 @@ local function cursor(g,r)
   end
   r.cursor_revision=m.revision
 end
+local function delta(c,front)
+  return front and front.delta_version==1 and not front.hidden and not c.model.damage_full and c.model.damage
+end
 buffered.install{clear_cell=clear_cell,destroy=destroy,cell=render_cell,cursor=cursor,
+  frame_cost=function(c,front) return delta(c,front) and c.model.width*c.model.height*2 or 0 end,
   frame=function(c,front)
     local m=c.model
-    return {version=1,layer_version=3,context=c,snapshot=m,slots=m.width*m.height,
+    local r={version=1,layer_version=3,delta_version=1,context=c,snapshot=m,slots=m.width*m.height,
       cells={},reused={},width=m.width,height=m.height,scale=m.scale,front=front,
       shared_panel=front~=nil,panel=front and front.panel or fill(c,2/64,2/64,
         c.width_tiles-4/64,c.height_tiles-4/64,{0,0,0,1},layers.panel)}
+    if delta(c,front) then
+      -- Prepaid reference-root copy, not cell comparison/native reconstruction.
+      for i,cell in ipairs(front.cells) do r.cells[i]=cell; r.reused[i]=true end
+      r.indices=m.damage; r.cleanup_indices=r.indices
+    end
+    return r
   end}
 M.tick=buffered.tick
 M.bind=buffered.bind

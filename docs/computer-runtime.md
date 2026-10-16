@@ -147,9 +147,14 @@ round-robin cursor between runs. Timer maintenance has its own rotating cursor.
 Insufficient aggregate headroom defers untouched runs, not faults them. The
 ledger retains per-ID work/compile/allocation spending until a later real tick.
 Source replacement, stop, removal, repeated tick dispatch and cold load cannot
-renew it. Backwards clocks are refused. Guest admission uses at most 800000
-of the existing 1000000 host-work ceiling; 200000 is reserved maintenance,
-not an extra budget. Identity walks are prepaid before hooks can exhaust it.
+renew it. Backwards clocks are refused. Guest admission uses at most the configured
+host-work ceiling minus 200000 reserved maintenance units (4800000 of the default
+5000000); maintenance is not an extra budget. Compilation, execution, allocation
+and shared-host budgets are runtime-global [Map settings](player/api/limits.md#live-mod-settings).
+Changes preserve already-spent credits, and getLimits returns current values.
+If the per-computer budgets sum above the shared allowance, the scheduler reserves
+at most that allowance rather than permanently starving small fitting callbacks;
+actual over-budget work still faults through admission. Identity walks are prepaid before hooks can exhaust it.
 Safety cleanup must stay bounded independently of the offending guest.
 
 ## Focused checks and evidence boundaries

@@ -1,4 +1,23 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.6
+Date: 2026-10-16
+  Features:
+    - Add live Map settings for compilation, execution, allocation and shared host-work budgets.
+    - Increase their defaults fivefold while preserving already-spent tick credits.
+    - Include a whole-curve sine chart that updates every selected monitor together every two ticks.
+  Optimizations:
+    - Prepare and retire damaged cells while transferring unchanged native monitor objects.
+    - Cache bounded private exact-source compilation proofs with identical cold/warm admission charges.
+    - Reuse physical proofs only within a non-yielding callback and reviewed monitor methods.
+  Bugfixes:
+    - Avoid permanently deferring small callbacks when configured per-computer budgets exceed the shared allowance.
+    - Invalidate sparse monitor presentation when settings paste replaces a palette.
+  Info:
+    - ALPHA: back up saves. Graphical-client and multiplayer validation remains user-owned.
+    - Two-tick publication is 30 updates/second only at 60 UPS, not a universal client-FPS guarantee.
+    - Four full 6 by 6 walls remain CPU-heavy; dense grids and busy factories can reduce real-time smoothness.
+    - Renderer maintenance, preparation-cell, object and commit caps are unchanged.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.5
 Date: 2026-10-15
   Features:

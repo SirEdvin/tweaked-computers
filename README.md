@@ -23,7 +23,9 @@ See the [0.1.5 monitor buffering evidence](docs/monitor-buffer-verification.md),
 [0.1.4 interaction hotfix notes](docs/interaction-release.md),
 [integrated verification](docs/rd5-candidate.md) and
 [native-client playtest](docs/player/editor.md#integrated-redesign-playtest).
-The release source is [alpha-0.1.5](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.5);
+Version 0.1.6 adds [live Map budgets](docs/player/api/limits.md#live-mod-settings),
+fivefold default allowances and [dirty-cell animation](docs/player/monitor-animation.md).
+The release source is [alpha-0.1.6](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.6);
 [0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development
@@ -35,7 +37,7 @@ Build an installable archive outside the checkout:
 Use a fresh output directory for the packaged official-engine integration smoke:
 
     python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
-      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.5.zip \
+      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.6.zip \
       --output /absolute/path/to/new-smoke-directory \
       --fixture tests.integration_engine --production-context --cold
 

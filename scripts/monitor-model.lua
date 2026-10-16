@@ -31,8 +31,19 @@ function M.size(w,h,scale)
   return math.max(1,math.floor((64*w-4)/(6*scale))),math.max(1,math.floor((64*h-4)/(9*scale)))
 end
 local function blank(m) return {32,m.fg,m.bg} end
+local function full_damage(m)
+  m.damage={}; m.damage_count=0; m.damage_full=true
+  m.damage_generation=(m.damage_generation or 0)+1
+end
+M.invalidate=full_damage -- Trusted settings-paste/import paths also replace palettes.
+local function damaged(m,i)
+  -- Older saves have no damage baseline: conservatively rebuild once.
+  if not m.damage then full_damage(m) end
+  if not m.damage[i] then m.damage[i]=true; m.damage_count=m.damage_count+1 end
+end
 local function clear(m)
   local cells={}; for i=1,m.width*m.height do cells[i]=blank(m) end; m.cells=cells; m.cells_shared=nil
+  full_damage(m)
 end
 -- Cell records and palette triples are immutable. Only the flat root is copied
 -- on the first admitted in-place write after a snapshot, not on every write.
@@ -44,10 +55,30 @@ local function own(m)
   end
 end
 function M.capture(m,spend)
-  spend(80)
+  spend(80+(m.damage_count or 0)*2)
   local s={}; for _,k in ipairs({'x','y','blink','fg','bg','scale','revision','width','height'}) do s[k]=m[k] end
   s.palette={}; for i,p in ipairs(m.palette) do s.palette[i]=p end
+  s.damage={}; for i in pairs(m.damage or {}) do s.damage[#s.damage+1]=i end
+  s.damage_full=m.damage_full or not m.damage; s.damage_generation=m.damage_generation
   s.cells=m.cells; m.cells_shared=true; return s
+end
+-- The publisher prepays this bounded acknowledgement before changing visibility.
+-- Never consume later writes, a later clear/palette epoch, or coalesced damage.
+function M.acknowledge_cost(m,s)
+  if not s.damage or m.damage_generation~=s.damage_generation or not m.damage then return 0 end
+  if m.cells==s.cells then return 1 end
+  return #s.damage
+end
+function M.acknowledge(m,s)
+  if not s.damage or m.damage_generation~=s.damage_generation or not m.damage then return end
+  if m.cells==s.cells then
+    m.damage={}; m.damage_count=0; m.damage_full=nil; return
+  end
+
+  for _,i in ipairs(s.damage) do
+    if m.damage[i] and m.cells[i]==s.cells[i] then m.damage[i]=nil; m.damage_count=m.damage_count-1 end
+  end
+  if s.damage_full then m.damage_full=nil end
 end
 function M.new(w,h,inherit)
   local m={x=1,y=1,blink=false,fg=0,bg=15,scale=1,palette={},revision=1}
@@ -60,6 +91,7 @@ function M.new(w,h,inherit)
   m.width,m.height=M.size(w,h,m.scale)
   if inherit and inherit.width==m.width and inherit.height==m.height then
     m.cells={}; for i,c in ipairs(inherit.cells) do m.cells[i]={c[1],c[2],c[3]} end
+    full_damage(m)
   else clear(m) end
   return m
 end
@@ -103,27 +135,36 @@ local function write(m,spend,text,fg,bg)
   end
   local first,last=math.max(1,2-m.x),math.min(#text,m.width-m.x+1)
   local visible=m.y>=1 and m.y<=m.height and math.max(0,last-first+1) or 0
-  spend(#text+visible*4+1+(visible>0 and copy_cost(m) or 0))
+  spend(#text+visible*8+1+(visible>0 and copy_cost(m) or 0))
   if visible>0 then own(m) end
   if m.y>=1 and m.y<=m.height then
     for i=first,last do
       local f,b=m.fg,m.bg
       if fg then f=digit(fg:byte(i)); b=digit(bg:byte(i)) end
-      m.cells[(m.y-1)*m.width+m.x+i-1]={text:byte(i),f,b}
+      local index=(m.y-1)*m.width+m.x+i-1; local byte=text:byte(i); local old=m.cells[index]
+      if old[1]~=byte or old[2]~=f or old[3]~=b then
+        m.cells[index]={byte,f,b}; damaged(m,index)
+      end
     end
   end
   m.x=m.x+#text; m.revision=m.revision+1
 end
 method('write',1,function(m,s,t) write(m,s,t) end)
 method('blit',3,function(m,s,t,f,b) write(m,s,t,f,b) end)
-method('clear',0,function(m,s) s(m.width*m.height*3+1); clear(m); m.revision=m.revision+1 end)
+method('clear',0,function(m,s) s(m.width*m.height*3+5); clear(m); m.revision=m.revision+1 end)
 method('clearLine',0,function(m,s)
-  s(m.width*3+1+(m.y>=1 and m.y<=m.height and copy_cost(m) or 0))
+  s(m.width*7+1+(m.y>=1 and m.y<=m.height and copy_cost(m) or 0))
   if m.y>=1 and m.y<=m.height then own(m) end
-  if m.y>=1 and m.y<=m.height then for x=1,m.width do m.cells[(m.y-1)*m.width+x]=blank(m) end; m.revision=m.revision+1 end
+  if m.y>=1 and m.y<=m.height then
+    for x=1,m.width do
+      local i=(m.y-1)*m.width+x; local c=m.cells[i]
+      if c[1]~=32 or c[2]~=m.fg or c[3]~=m.bg then m.cells[i]=blank(m); damaged(m,i) end
+    end
+    m.revision=m.revision+1
+  end
 end)
 method('scroll',1,function(m,s,lines)
-  integer(lines); s(m.width*m.height*3+1)
+  integer(lines); s(m.width*m.height*3+5)
   local cells={}
   for y=1,m.height do
     local source=y+lines
@@ -133,6 +174,7 @@ method('scroll',1,function(m,s,lines)
     end
   end
   m.cells=cells; m.cells_shared=nil; m.revision=m.revision+1
+  full_damage(m)
 end)
 method('getPaletteColor',1,function(m,s,c) c=color(c); local p=m.palette[c+1]; return p[1],p[2],p[3] end)
 calls.setPaletteColor=function(m,s,...)
@@ -146,7 +188,9 @@ calls.setPaletteColor=function(m,s,...)
     if type(r)~='number' or type(g)~='number' or type(b)~='number' then errors.raise('E_ARGUMENT','three numeric channels required') end
     for _,v in ipairs({r,g,b}) do if v~=v or v<0 or v>1 then errors.raise('E_RANGE','finite palette channels 0..1 required') end end
   end
-  s(4); m.palette[c+1]={r,g,b}; m.revision=m.revision+1
+  s(8); local old=m.palette[c+1]
+  if old[1]~=r or old[2]~=g or old[3]~=b then full_damage(m) end
+  m.palette[c+1]={r,g,b}; m.revision=m.revision+1
 end
 for _,name in ipairs({'getTextColor','setTextColor','getBackgroundColor','setBackgroundColor','getPaletteColor','setPaletteColor','isColor'}) do
   calls[(name:gsub('Color','Colour'))]=calls[name]
@@ -155,7 +199,7 @@ M.calls=calls
 function M.scale(m,w,h,s,scale)
   if type(scale)~='number' then errors.raise('E_ARGUMENT','numeric scale required') end
   if not errors.integer(scale*2,1,10) then errors.raise('E_RANGE','half-step scale 0.5..5 required') end
-  local width,height=M.size(w,h,scale); s(width*height*3+1)
+  local width,height=M.size(w,h,scale); s(width*height*3+5)
   local oldw,oldh=m.width,m.height; m.scale=scale
   if width~=oldw or height~=oldh then m.width=width; m.height=height; clear(m) end
   m.revision=m.revision+1; return width~=oldw or height~=oldh,oldw,oldh
