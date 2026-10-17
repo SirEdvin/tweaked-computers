@@ -146,14 +146,19 @@ Invalid fronts remain accounted until retirement can accept them. Queried bounds
 include render_commit_objects=42352, render_commit_work=160000,
 render_object_limit=203872 and render_retained_cells=362336 logical cell slots
 (not host bytes). The 60,000 baseline reservation can boost to 160,000, with a
-baseline opportunity between boosts, inside the unchanged 200,000 maintenance /
-1,000,000 total tick ceiling. Exact progress and spent credits survive cold load.
+baseline opportunity between boosts, inside the unchanged 200,000 maintenance
+reservation within the configurable shared host ceiling (default 5,000,000).
+See [live mod settings](limits.md#live-mod-settings). Exact progress and spent credits survive cold load.
 The 256-tick stable-world render target is provisional, not a 60-UPS/FPS or
 graphical-latency guarantee. Continuous producers retain bounded newest-pending
 state while complete admitted frames still publish.
 
 Run [monitor-program](../examples.md#monitor-program) to draw READY and echo touch
-coordinates/resize. If text clips, query getSize, move cursor explicitly and avoid
+coordinates/resize. For bounded whole-curve animation, use
+[smooth-sine-chart](../examples.md#smooth-sine-chart); the
+[30 Hz design and verification boundaries](../monitor-animation.md) explain
+dirty-cell presentation, supported test layouts and why this is not a universal
+client-FPS guarantee. If text clips, query getSize, move cursor explicitly and avoid
 newlines. If grouping surprises you, inspect orientation, holes and 6×6 bounds.
 Power every tile; an unpowered member blanks the whole group without erasing data.
 For wrong touch coordinates check local rotation and actual cells rather than the

@@ -148,8 +148,9 @@ one simulation tick. This is not a write lock or an application-frame detector.
 See the [exact API and capacities](player/api/peripheral.md).
 
 The 60000 baseline render reservation may grow to 160000 on demand, with baseline
-service opportunities between boosts, inside the unchanged 200000 maintenance /
-1000000 host tick envelope. Staging and queued retirement each retain at most
+service opportunities between boosts, inside the unchanged 200000 maintenance
+reservation within the configurable shared host envelope (default 5000000).
+See [live mod settings](player/api/limits.md#live-mod-settings). Staging and queued retirement each retain at most
 10584 cells and 256 frame records. Work refusal retains paid progress. The
 256-tick stable-world target is checked headlessly, not a graphical/60-UPS promise.
 
@@ -159,6 +160,11 @@ admission, queued-resize coalescence and cold presentation persistence. Its play
 activation checks are explicitly table-backed mocks; headless runs do not create
 a native player or prove zoom/contrast/font/GUI input/multiplayer behavior.
 Those native-client checks remain deferred to the user for this alpha.
+
+For complete moving curves, use `examples/smooth-sine-chart.lua` and the
+[bounded 30 Hz animation guide](player/monitor-animation.md). Dirty-cell snapshots and
+sparse retirement avoid whole-grid sprite checks for ordinary small changes;
+initial images, palette/clear/scroll changes and legacy state retain full rebuilds.
 
 `examples/monitor-program.lua` is a native named-callback program, not an OS,
 REPL, filesystem or terminal-redirection compatibility layer. Its source is

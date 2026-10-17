@@ -30,17 +30,24 @@ function M.resolve(tile)
   if state and state.job then errors.raise('E_NETWORK_PENDING','monitor regrouping is not yet committed') end
   return state and state.groups[state.membership[tile.id]] or nil
 end
-function M.available(g,spend)
+function M.available(g,spend,proofs)
   spend(#g.members*16+1)
+  -- Guest callbacks cannot yield or mutate physical members. Reuse the positive
+  -- all-member proof only within this service guard; charge every call as before.
+  -- Topology, power, and generation are proved afresh in each later callback.
+  if proofs and proofs[g]==g.members then return true end
   for _,id in ipairs(g.members) do
     local r=registry.record(id)
-    if not r or not r.body.valid or not r.powered or not lifecycle.has_power(r)
+    if not r or not r.powered
       or r.force_index~=g.force_index or r.surface_index~=g.surface_index or r.direction~=g.direction
-      or r.body.direction~=g.direction or r.body.force.index~=g.force_index or r.body.surface.index~=g.surface_index
-      or r.body.position.x<g.left or r.body.position.x>=g.left+g.world_width
-      or r.body.position.y<g.top or r.body.position.y>=g.top+g.world_height
+      or not lifecycle.has_power(r)
       or not lifecycle.connector(r,'network','red') then return false end
+    -- connector just proved live body position/direction/scope equal to this
+    -- record. Re-reading them creates native proxy/position garbage per tile.
+    local at=r.position
+    if at.x<g.left or at.x>=g.left+g.world_width or at.y<g.top or at.y>=g.top+g.world_height then return false end
   end
+  if proofs then proofs[g]=g.members end
   return true
 end
 local function signature(tiles)
@@ -239,7 +246,7 @@ methods.setTextScale=function(c,g,wire,tick,spend,...)
   presentation.participate(g)
 end
 methods.getLimits=function(c,g,wire,tick,spend,...) return (data.copy(model.limits,spend)) end
-peripheral.register_type('monitor',{methods=methods,resolve=M.resolve,available=M.available,
+peripheral.register_type('monitor',{methods=methods,resolve=M.resolve,available=M.available,callback_stable=true,
   describe=function(g,wire,info)
     info.powered=M.available(g,function() end); info.footprint={width=g.world_width,height=g.world_height}
     info.position={x=g.left+g.world_width/2,y=g.top+g.world_height/2}; return info

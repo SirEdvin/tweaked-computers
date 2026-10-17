@@ -1,4 +1,40 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.7
+Date: 2026-10-17
+  Graphics:
+    - Adopt the selected Foundry family: cast-iron CRT consoles, cartridge racks, copper relay banks and analog service instruments.
+    - Add a shallow mechanical monitor skirt while preserving active cells, touch geometry, footprint and wire contacts.
+  Optimizations:
+    - Reuse unchanged monitor background and glyph components independently across admitted publications.
+    - Avoid full cell-root copies for identical row writes and clears.
+    - Reduce repeated native physical reads and replay cached discovery work with identical admission charges.
+  Changes:
+    - Replace star markers with connected 2 by 3 subpixel sine curves using the existing mosaic glyph API.
+    - Add exact-prefix, component-ownership, cancellation, cold-reload and sustained scheduler regressions.
+  Info:
+    - ALPHA: back up saves. Base and Space Age visual checks use software rendering, not representative GPU benchmarks.
+    - Interactive editor/touch delivery, multiplayer and busy-factory smoothness remain unverified.
+    - Runtime budgets, renderer limits and the public Lua API are unchanged from 0.1.6.
+---------------------------------------------------------------------------------------------------
+Version: 0.1.6
+Date: 2026-10-16
+  Features:
+    - Add live Map settings for compilation, execution, allocation and shared host-work budgets.
+    - Increase their defaults fivefold while preserving already-spent tick credits.
+    - Include a whole-curve sine chart that updates every selected monitor together every two ticks.
+  Optimizations:
+    - Prepare and retire damaged cells while transferring unchanged native monitor objects.
+    - Cache bounded private exact-source compilation proofs with identical cold/warm admission charges.
+    - Reuse physical proofs only within a non-yielding callback and reviewed monitor methods.
+  Bugfixes:
+    - Avoid permanently deferring small callbacks when configured per-computer budgets exceed the shared allowance.
+    - Invalidate sparse monitor presentation when settings paste replaces a palette.
+  Info:
+    - ALPHA: back up saves. Graphical-client and multiplayer validation remains user-owned.
+    - Two-tick publication is 30 updates/second only at 60 UPS, not a universal client-FPS guarantee.
+    - Four full 6 by 6 walls remain CPU-heavy; dense grids and busy factories can reduce real-time smoothness.
+    - Renderer maintenance, preparation-cell, object and commit caps are unchanged.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.5
 Date: 2026-10-15
   Features:

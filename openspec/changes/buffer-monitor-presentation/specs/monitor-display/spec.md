@@ -4,6 +4,20 @@ Baseline: `add-native-circuit-computers/specs/monitor-display` and the world-fee
 
 ## ADDED Requirements
 
+### Requirement: Bounded sparse animation presentation
+The presenter SHALL retain bounded dirty-cell metadata and MAY reuse unchanged native cells without preparing or retiring every grid cell. Damage acknowledgement SHALL NOT consume later writes, coalesced pending changes or a newer full-invalidation epoch. Full clear, scroll, palette, geometry and untracked legacy state SHALL retain a conservative full-frame path. Existing snapshot coherence, synchronous model visibility, admission, ownership, retirement and aggregate caps remain binding.
+
+#### Scenario: Complete bounded chart frames at two-tick cadence
+- **WHEN** the maintained smooth-sine-chart example updates all four selected screens every two actual simulation ticks within the documented scale-2 6×6 or mixed-layout test envelope and configured default guest budgets
+- **THEN** headless acceptance measures at least 360 complete publication intervals per layout and engine mode, each at most two simulation ticks apart after warmup
+- **AND** actual native fronts agree with one shared phase, including after ordinary cold reload and periodic rediscovery
+- **AND** paused fixture snapshot-writing boundaries are separated from uninterrupted cadence windows; neither cadence nor scheduler profiles claim graphical-client FPS.
+
+#### Scenario: A large old frame has accumulated later writes
+- **WHEN** more model writes occur after a large snapshot is sealed and before it publishes
+- **THEN** its prepaid acknowledgement consumes only matching cells from the same invalidation epoch and retains later changes for the next frame
+- **AND** the presenter does not increase native-object, preparation-cell, commit or maintenance caps to conceal the cost.
+
 ### Requirement: Complete rectangular displays up to six tiles per axis
 Compatible monitor tiles SHALL support every complete rectangular logical display with local width and height from one through six tiles. Narrow, nonsquare and square displays SHALL use the same grouping rules at every supported text scale and cardinal orientation. Irregular or oversized walls SHALL still partition deterministically into valid rectangles.
 

@@ -89,8 +89,11 @@ def main():
     ap.add_argument('--data-fixture', help='Optional packaged data-stage fixture module')
     ap.add_argument('--production-context', action='store_true', help='Run the fixed lifecycle fixture in the production mod storage/event context; avoid duplicate native entity owners')
     ap.add_argument('--cold', action='store_true', help='Fixture also exposes on_load/on_tick; exercise two cold server processes')
+    ap.add_argument('--cold-timeout', type=int, help='Explicit wall deadline per cold phase for sustained fixtures (1..1800 seconds)')
     ap.add_argument('--upgrade-fixture', action='store_true', help='After ordinary cold reload, change only test mod version and verify researched migration in another process')
     args = ap.parse_args()
+    if args.cold_timeout is not None and not 1 <= args.cold_timeout <= 1800:
+        ap.error('--cold-timeout must be 1..1800 seconds')
     args.output = args.output.resolve()
     if args.output.is_relative_to(ROOT) or args.output.exists():
         ap.error('use a fresh output directory outside git')
@@ -122,7 +125,7 @@ def main():
                 ap.error('--upgrade-fixture requires --cold')
             control += 'script.on_configuration_changed(test.on_configuration_changed)\n'
         if args.production_context:
-            if args.fixture not in ('tests.lifecycle_engine', 'tests.integration_engine', 'tests.redesign_engine', 'tests.monitor_feedback_engine', 'tests.rd1_upgrade_engine', 'tests.monitor_budget_engine', 'tests.monitor_presentation_engine', 'tests.monitor_plot_baseline_engine') or not args.cold:
+            if args.fixture not in ('tests.lifecycle_engine', 'tests.integration_engine', 'tests.redesign_engine', 'tests.monitor_feedback_engine', 'tests.rd1_upgrade_engine', 'tests.monitor_budget_engine', 'tests.monitor_presentation_engine', 'tests.monitor_plot_baseline_engine', 'tests.runtime_budget_engine', 'tests.monitor_animation_engine') or not args.cold:
                 ap.error('--production-context requires a fixed supported fixture and --cold')
             control = '-- Native lifecycle fixture runs once in production context.\n'
             (fixture / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value="+json.dumps(args.fixture)+",allowed_values={"+json.dumps(args.fixture)+"}}}\n")
@@ -150,13 +153,13 @@ def main():
             raise SystemExit(1)
         if args.cold:
             snapshot = write / 'saves/tc03-snapshot.zip'
-            phases = [cold_phase(args.factorio,cfg,mods,folder/'smoke.zip',folder,'cold-first','TC_COLD_SNAPSHOT_REQUESTED',snapshot)]
+            phases = [cold_phase(args.factorio,cfg,mods,folder/'smoke.zip',folder,'cold-first','TC_COLD_SNAPSHOT_REQUESTED',snapshot,timeout=args.cold_timeout or 90)]
             ordinary_save = write / 'saves/tc-cold-ordinary.zip'
             shutil.copy2(snapshot, ordinary_save)  # /quit saves over its input map.
             # This fixture additionally drives four complete rediscovery/resize
             # cycles through production timers. Extend wall time, not its tick
             # deadline or any guest/shared resource ceiling.
-            phase_timeout = 240 if args.fixture=='tests.monitor_presentation_engine' else 90
+            phase_timeout = args.cold_timeout or (240 if args.fixture=='tests.monitor_presentation_engine' else 90)
             phases.append(cold_phase(args.factorio,cfg,mods,ordinary_save,folder,'cold-second','TC_COLD_OK',timeout=phase_timeout))
             if args.upgrade_fixture and mode=='base':
                 # Only the copied fixture changes; the tested production ZIP is immutable.

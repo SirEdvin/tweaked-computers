@@ -95,17 +95,37 @@ local function check_name(name)
 end
 function M.services(computer,tick,guard)
   local run_id=computer.run_id; local handles=setmetatable({},{__mode='k'})
+  local availability={} -- One non-yielding callback only, never retained across ticks.
+  local inventories={}
+  local authorized=false
   local spend=guard.spend
   local function current()
     guard.check()
     if registry.record(computer.id)~=computer or computer.run_id~=run_id or computer.status~='running'
-      or not computer.powered or not lifecycle.connector(computer,'network','red') then
+      or not computer.powered or not authorized and not lifecycle.connector(computer,'network','red') then
       errors.raise('E_NOT_FOUND','computer run no longer authorized')
     end
+    authorized=true
+  end
+  local function inventory(wire)
+    network.wire(wire)
+    local proof=inventories[wire]
+    if proof then
+      if guard.replay_work then guard.replay_work(proof.charges)
+      else for _,cost in ipairs(proof.charges) do spend(cost) end end
+      return proof.inventory
+    end
+    -- Physical connectivity cannot change during this non-yielding guest
+    -- callback: no guest service rewires/moves/removes entities. Preserve all
+    -- original charges, and still resolve identity/generation on every use.
+    local charges={total=0}
+    local values=M.inventory(computer,wire,function(n) spend(n); charges[#charges+1]=n; charges.total=charges.total+n end)
+    inventories[wire]={inventory=values,charges=charges}
+    return values
   end
   local function lookup(name,wire)
     current(); check_name(name); network.wire(wire)
-    return target(M.inventory(computer,wire,spend),name)
+    return target(inventory(wire),name)
   end
   local function invoke(name,wire,generation,method,...)
     -- Reprove physical authority even for captured functions/getLimits.
@@ -116,11 +136,14 @@ function M.services(computer,tick,guard)
     end
     local fn=bindings[rec.kind].methods[method]
     if not fn then errors.raise('E_ARGUMENT','unknown peripheral method') end
+    -- Only the reviewed monitor provider promises not to alter physical state.
+    -- Unknown/test/other providers invalidate proofs even if they later throw.
+    if not bindings[rec.kind].callback_stable then inventories={}; availability={}; authorized=false end
     if method=='getLimits' and select('#',...)~=0 then errors.raise('E_ARGUMENT','getLimits expects no arguments') end
     -- Logical providers prove all current members themselves. Their cached
     -- aggregate powered flag can lag paid topology maintenance after restoration.
     local available=bindings[rec.kind].available
-    if method~='getLimits' and ((available and not available(rec,spend))
+    if method~='getLimits' and ((available and not available(rec,spend,availability))
       or (not available and (not rec.powered or not lifecycle.has_power(rec)))) then
       errors.raise('E_UNPOWERED','peripheral is unpowered')
     end
@@ -144,7 +167,7 @@ function M.services(computer,tick,guard)
       return fn(...)
     end
   end
-  method('getNames',1,function(wire) return sorted(M.inventory(computer,wire,spend),spend) end)
+  method('getNames',1,function(wire) return sorted(inventory(wire),spend) end)
   method('setMonitorSyncGroup',1,function(members)
     if not monitor_sync then errors.raise('E_UNSUPPORTED','monitor provider unavailable') end
     return monitor_sync.set(computer,tick,spend,members)
@@ -175,10 +198,10 @@ function M.services(computer,tick,guard)
   end
   method('find',2,function(type_name,wire)
     if type(type_name)~='string' or #type_name>limits.identifier_bytes then errors.raise('E_ARGUMENT','peripheral type required') end
-    local inventory=M.inventory(computer,wire,spend); local matches={}
-    for _,name in ipairs(sorted(inventory,spend)) do if inventory[name].type==type_name then matches[#matches+1]=name end end
+    local values=inventory(wire); local matches={}
+    for _,name in ipairs(sorted(values,spend)) do if values[name].type==type_name then matches[#matches+1]=name end end
     if #matches>limits.tuple_entries then errors.raise('E_LIMIT','find result exceeds tuple limit; use getNames and wrap') end
-    local result={}; for _,name in ipairs(matches) do result[#result+1]=facade(assert(target(inventory,name)),wire) end
+    local result={}; for _,name in ipairs(matches) do result[#result+1]=facade(assert(target(values,name)),wire) end
     return table.unpack(result,1,#result)
   end)
   for _,key in ipairs({'getName','getWire'}) do

@@ -22,7 +22,12 @@ local function fill(g,u,v,w,h,tint,layer)
     target={(a[1]+b[1])/2,(a[2]+b[2])/2},x_scale=(b[1]-a[1])*32,y_scale=(b[2]-a[2])*32,
     tint=tint,render_layer=layer,visible=false}
 end
-local function clear_cell(c) if c then destroy(c.background); destroy(c.glyph) end end
+local function clear_cell(c,staged)
+  if c then
+    if not staged or not c.shared_background then destroy(c.background) end
+    if not staged or not c.shared_glyph then destroy(c.glyph) end
+  end
+end
 M.retire=buffered.retire
 
 local function render_cell(g,r,i)
@@ -34,15 +39,23 @@ local function render_cell(g,r,i)
     and c.bg[1]==pbg[1] and c.bg[2]==pbg[2] and c.bg[3]==pbg[3]
     and c.background.valid and (value[1]==32 or c.glyph and c.glyph.valid)
   if matches then r.cells[i]=c; r.reused[i]=true; return end
+  r.reused[i]=nil
   local cw,ch,ox,oy=model.geometry(g); local x=(i-1)%m.width; local y=math.floor((i-1)/m.width)
-  local background=fill(g,ox+x*cw,oy+y*ch,cw,ch,color(pbg),layers.background); local glyph
-  if value[1]~=32 then
+  -- Borrow unchanged components, not just complete cells. A moving plot glyph
+  -- must not destroy/recreate its static background. Ownership transfers only
+  -- at the admitted barrier; cancelled staging destroys only its own objects.
+  local shared_background=c and c.background.valid and c.bg[1]==pbg[1] and c.bg[2]==pbg[2] and c.bg[3]==pbg[3]
+  local shared_glyph=c and c.glyph and c.glyph.valid and old[1]==value[1]
+    and c.fg[1]==pfg[1] and c.fg[2]==pfg[2] and c.fg[3]==pfg[3]
+  local background=shared_background and c.background or fill(g,ox+x*cw,oy+y*ch,cw,ch,color(pbg),layers.background)
+  local glyph=shared_glyph and c.glyph or nil
+  if value[1]~=32 and not glyph then
     local wx,wy=model.world(g,ox+(x+0.5)*cw,oy+(y+0.5)*ch)
     glyph=rendering.draw_sprite{surface=g.surface_index,sprite='tc-glyph-'..value[1],target={wx,wy},
       x_scale=m.scale/2,y_scale=m.scale/2,orientation=g.direction/16,tint=color(pfg),render_layer=layers.glyph,visible=false}
   end
-  r.cells[i]={background=background,glyph=glyph,value={value[1],value[2],value[3]},
-    fg={pfg[1],pfg[2],pfg[3]},bg={pbg[1],pbg[2],pbg[3]}}
+  r.cells[i]={background=background,glyph=glyph,value=value,fg=pfg,bg=pbg,
+    shared_background=not not shared_background,shared_glyph=not not shared_glyph}
 end
 local function cursor(g,r)
   local m=g.model
@@ -61,13 +74,23 @@ local function cursor(g,r)
   end
   r.cursor_revision=m.revision
 end
+local function delta(c,front)
+  return front and front.delta_version==1 and not front.hidden and not c.model.damage_full and c.model.damage
+end
 buffered.install{clear_cell=clear_cell,destroy=destroy,cell=render_cell,cursor=cursor,
+  frame_cost=function(c,front) return delta(c,front) and c.model.width*c.model.height*2 or 0 end,
   frame=function(c,front)
     local m=c.model
-    return {version=1,layer_version=3,context=c,snapshot=m,slots=m.width*m.height,
+    local r={version=1,layer_version=3,delta_version=1,context=c,snapshot=m,slots=m.width*m.height,
       cells={},reused={},width=m.width,height=m.height,scale=m.scale,front=front,
       shared_panel=front~=nil,panel=front and front.panel or fill(c,2/64,2/64,
         c.width_tiles-4/64,c.height_tiles-4/64,{0,0,0,1},layers.panel)}
+    if delta(c,front) then
+      -- Prepaid reference-root copy, not cell comparison/native reconstruction.
+      for i,cell in ipairs(front.cells) do r.cells[i]=cell; r.reused[i]=true end
+      r.indices=m.damage; r.cleanup_indices=r.indices
+    end
+    return r
   end}
 M.tick=buffered.tick
 M.bind=buffered.bind
