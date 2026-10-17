@@ -1,10 +1,10 @@
 {
   "name": "tweaked-computers",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "title": "Tweaked Computers (ALPHA)",
   "author": "Tweaked Computers contributors",
   "factorio_version": "2.0",
-  "description": "ALPHA: native named-callback circuit computers, source editor, monitors, KV databases, logic and typed factory configurators. Back up saves. Client and multiplayer validation is pending.",
+  "description": "ALPHA: native circuit computers, source editor, monitors, KV databases, logic and typed factory configurators. Foundry artwork and bounded monitor optimizations. Back up saves. Interactive UI and multiplayer validation remains pending.",
   "homepage": "https://siredvin.github.io/tweaked-computers/",
   "dependencies": ["base = 2.0.77", "? space-age = 2.0.77"]
 }

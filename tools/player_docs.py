@@ -22,7 +22,7 @@ EXAMPLES = {
     'kv-program': 'Connect one powered database NETWORK on red. Save/Run; inspect the delayed status/TTL in Console.',
     'monitor-program': 'Connect a powered monitor NETWORK on red. Run, then activate a character cell; use matching adjacent tiles to test resize.',
     'monitor-plot-program': 'Connect up to four powered logical monitors on red/green. Uses one shared sine sample and replaces one complete row per screen, retaining older rows as a rolling trace. Startup discovery, geometry inspection, selection and clearing are deliberately sliced across callbacks. Checks at most eight names per color; red wins duplicate names. Resize/detach events restart discovery; unavailable screens are retried periodically. This is not a full-grid repaint or an unlimited factory/network benchmark.',
-    'smooth-sine-chart': 'Connect up to four powered logical monitors on red/green. Samples one phase and updates all selected screens every two ticks, submitting only changed rows. Uses scale 2 when a footprint axis exceeds three tiles, otherwise scale 1, and bounds grids to 32 columns / 22 rows. Requires version 0.1.6 with its dirty-cell presenter and fivefold default runtime budgets; the unchanged 0.1.5 does not include this optimization. Do not run other content writers on the same screens with this row-cached example. See the [30 Hz design and verification boundaries](monitor-animation.md).',
+    'smooth-sine-chart': 'Connect up to four powered logical monitors on red/green. Draws a connected green line using 2×3 mosaic subpixels instead of text markers, with a gray axis. Samples one phase and updates all selected screens every two ticks, submitting only rows whose glyphs or colors changed. Uses scale 2 when a footprint axis exceeds three tiles, otherwise scale 1, and bounds grids to 32 columns / 22 rows. Ships with version 0.1.7 and its runtime/presenter optimizations; older published archives retain their original example. Paste the complete source, then Validate, Save and Run. Do not run other content writers on the same screens with this row-cached example. See the [subpixel design and verification boundaries](monitor-animation.md).',
     'configurator-program': 'Discovery NETWORK red; separate TARGETS green to one inserter. Sets A > 4, not A > 0. Supply an external A signal of at least 5 for motion.',
     'configurator-sections': 'Discovery NETWORK red; TARGETS green to one constant combinator. Adds a section, activates it and saves its actual index in computer state; it intentionally writes no signal filters.',
     'factory-controller': 'Follow the complete [factory wiring tutorial](factory.md). Keep one device per type reachable. Paste this whole document.',
@@ -317,6 +317,8 @@ def site_links(folder):
     parsed = {}
     for p in folder.rglob('*.html'):
         parser = Links(); parser.feed(p.read_text()); parsed[p.resolve()] = parser
+    if not parsed:
+        raise ValueError(f'no built HTML pages found: {folder}')
     checked = 0
     for p, parser in parsed.items():
         for href in parser.hrefs:

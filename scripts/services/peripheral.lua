@@ -97,26 +97,29 @@ function M.services(computer,tick,guard)
   local run_id=computer.run_id; local handles=setmetatable({},{__mode='k'})
   local availability={} -- One non-yielding callback only, never retained across ticks.
   local inventories={}
+  local authorized=false
   local spend=guard.spend
   local function current()
     guard.check()
     if registry.record(computer.id)~=computer or computer.run_id~=run_id or computer.status~='running'
-      or not computer.powered or not lifecycle.connector(computer,'network','red') then
+      or not computer.powered or not authorized and not lifecycle.connector(computer,'network','red') then
       errors.raise('E_NOT_FOUND','computer run no longer authorized')
     end
+    authorized=true
   end
   local function inventory(wire)
     network.wire(wire)
     local proof=inventories[wire]
     if proof then
-      for _,cost in ipairs(proof.charges) do spend(cost) end
+      if guard.replay_work then guard.replay_work(proof.charges)
+      else for _,cost in ipairs(proof.charges) do spend(cost) end end
       return proof.inventory
     end
     -- Physical connectivity cannot change during this non-yielding guest
     -- callback: no guest service rewires/moves/removes entities. Preserve all
     -- original charges, and still resolve identity/generation on every use.
-    local charges={}
-    local values=M.inventory(computer,wire,function(n) spend(n); charges[#charges+1]=n end)
+    local charges={total=0}
+    local values=M.inventory(computer,wire,function(n) spend(n); charges[#charges+1]=n; charges.total=charges.total+n end)
     inventories[wire]={inventory=values,charges=charges}
     return values
   end
@@ -135,7 +138,7 @@ function M.services(computer,tick,guard)
     if not fn then errors.raise('E_ARGUMENT','unknown peripheral method') end
     -- Only the reviewed monitor provider promises not to alter physical state.
     -- Unknown/test/other providers invalidate proofs even if they later throw.
-    if not bindings[rec.kind].callback_stable then inventories={}; availability={} end
+    if not bindings[rec.kind].callback_stable then inventories={}; availability={}; authorized=false end
     if method=='getLimits' and select('#',...)~=0 then errors.raise('E_ARGUMENT','getLimits expects no arguments') end
     -- Logical providers prove all current members themselves. Their cached
     -- aggregate powered flag can lag paid topology maintenance after restoration.

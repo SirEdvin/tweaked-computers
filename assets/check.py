@@ -77,10 +77,14 @@ def check(output):
                 silhouettes[kind]=tuple(p[3] for p in pixels)
             if kind=='monitor':
                 visible=[(i%w-w//2,i//w-h//2) for i,p in enumerate(pixels) if p[3]]
-                assert len(visible)==64*64
-                assert (min(x for x,y in visible),max(x for x,y in visible),min(y for x,y in visible),max(y for x,y in visible))==(-32,31,-32,31)
+                assert (min(x for x,y in visible),max(x for x,y in visible),min(y for x,y in visible),max(y for x,y in visible))==(-36,35,-36,35)
+                # Independently audit every alpha pixel, including the exact four
+                # chamfered corners. Artwork overhang must not grow unchecked.
+                expected={(x,y) for y in range(-36,36) for x in range(-36,36)
+                          if x+y>=-68 and x-y<=67 and x+y<=66 and y-x<=67}
+                assert set(visible)==expected
                 for y in range(-30,30):
-                    for x in range(-30,30): assert pixels[(h//2+y)*w+w//2+x]==(17,29,32,255)
+                    for x in range(-30,30): assert pixels[(h//2+y)*w+w//2+x]==(21,32,28,255)
             for state,path in view['states'].items():
                 sw,sh,status_pixels=png_read((ROOT/path).read_bytes())
                 for frame in range(sw//w):
@@ -156,8 +160,8 @@ def check(output):
              'glyph_slots':256,'ascii_slots':95,'mosaic_slots':32,'byte_exact_regeneration':True,
              'archive_sha256':digest(archive.read_bytes()),'archive':str(archive),
              'contacts_checked':contacts,'distinct_silhouettes':len(silhouettes),
-             'monitor_interior_pixels':60*60,'monitor_bezel_units':2,
-             'client_evidence':False,'static_checks':'source/output/decoded-alpha hashes, dimensions, transparent bounds, exact socket pixels, fixed monitor raster, compact statuses, distinct silhouettes, glyph masks, regeneration, ZIP notices/inventory'}
+             'monitor_interior_pixels':60*60,'monitor_bezel_units':2,'monitor_skirt_overhang_units':4,
+             'client_evidence':False,'static_checks':'source/output/decoded-alpha hashes, dimensions, transparent bounds, exact socket pixels, exact Foundry monitor skirt and unchanged interior, compact statuses, distinct silhouettes, glyph masks, regeneration, ZIP notices/inventory'}
     (output/'static-summary.json').write_text(json.dumps(summary,indent=2)+'\n')
     print(json.dumps(summary,sort_keys=True))
 

@@ -1,4 +1,21 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.7
+Date: 2026-10-17
+  Graphics:
+    - Adopt the selected Foundry family: cast-iron CRT consoles, cartridge racks, copper relay banks and analog service instruments.
+    - Add a shallow mechanical monitor skirt while preserving active cells, touch geometry, footprint and wire contacts.
+  Optimizations:
+    - Reuse unchanged monitor background and glyph components independently across admitted publications.
+    - Avoid full cell-root copies for identical row writes and clears.
+    - Reduce repeated native physical reads and replay cached discovery work with identical admission charges.
+  Changes:
+    - Replace star markers with connected 2 by 3 subpixel sine curves using the existing mosaic glyph API.
+    - Add exact-prefix, component-ownership, cancellation, cold-reload and sustained scheduler regressions.
+  Info:
+    - ALPHA: back up saves. Base and Space Age visual checks use software rendering, not representative GPU benchmarks.
+    - Interactive editor/touch delivery, multiplayer and busy-factory smoothness remain unverified.
+    - Runtime budgets, renderer limits and the public Lua API are unchanged from 0.1.6.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.6
 Date: 2026-10-16
   Features:

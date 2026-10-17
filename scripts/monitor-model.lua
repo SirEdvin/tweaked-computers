@@ -135,14 +135,15 @@ local function write(m,spend,text,fg,bg)
   end
   local first,last=math.max(1,2-m.x),math.min(#text,m.width-m.x+1)
   local visible=m.y>=1 and m.y<=m.height and math.max(0,last-first+1) or 0
-  spend(#text+visible*8+1+(visible>0 and copy_cost(m) or 0))
-  if visible>0 then own(m) end
+  spend(#text+visible*8+1)
   if m.y>=1 and m.y<=m.height then
     for i=first,last do
       local f,b=m.fg,m.bg
       if fg then f=digit(fg:byte(i)); b=digit(bg:byte(i)) end
       local index=(m.y-1)*m.width+m.x+i-1; local byte=text:byte(i); local old=m.cells[index]
       if old[1]~=byte or old[2]~=f or old[3]~=b then
+        if m.cells_shared then spend(copy_cost(m)) end -- Before the first cell mutation only.
+        own(m) -- Identical full-row blits must not allocate a grid-sized copy.
         m.cells[index]={byte,f,b}; damaged(m,index)
       end
     end
@@ -153,12 +154,14 @@ method('write',1,function(m,s,t) write(m,s,t) end)
 method('blit',3,function(m,s,t,f,b) write(m,s,t,f,b) end)
 method('clear',0,function(m,s) s(m.width*m.height*3+5); clear(m); m.revision=m.revision+1 end)
 method('clearLine',0,function(m,s)
-  s(m.width*7+1+(m.y>=1 and m.y<=m.height and copy_cost(m) or 0))
-  if m.y>=1 and m.y<=m.height then own(m) end
+  s(m.width*7+1)
   if m.y>=1 and m.y<=m.height then
     for x=1,m.width do
       local i=(m.y-1)*m.width+x; local c=m.cells[i]
-      if c[1]~=32 or c[2]~=m.fg or c[3]~=m.bg then m.cells[i]=blank(m); damaged(m,i) end
+      if c[1]~=32 or c[2]~=m.fg or c[3]~=m.bg then
+        if m.cells_shared then s(copy_cost(m)) end
+        own(m); m.cells[i]=blank(m); damaged(m,i)
+      end
     end
     m.revision=m.revision+1
   end

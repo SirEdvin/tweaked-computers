@@ -5,11 +5,11 @@
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot; removal/destruction of a device is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
-   the Mod Portal, select **0.1.6 ALPHA**, enable it, and restart when prompted.
+   the Mod Portal, select **0.1.7 ALPHA**, enable it, and restart when prompted.
    This version includes the direct device wiring, industrial artwork and tabbed
    editor redesign. Back up an existing 0.1.1 world before its automatic migration.
-3. For manual installation, download `tweaked-computers_0.1.6.zip` from the
-   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.6)
+3. For manual installation, download `tweaked-computers_0.1.7.zip` from the
+   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.7)
    and place it in your Factorio
    user-data `mods` directory without unpacking it. Remove conflicting duplicate
    versions, enable the mod, and restart. The ZIP's internal folder must match its
@@ -20,7 +20,8 @@
    names require their corresponding installed prototypes. This guide does not
    claim later Factorio engines or arbitrary mod combinations are verified.
 
-The alpha has not been graphically/client or multiplayer-join verified by agents.
+Artwork and live charts have isolated software-rendered base/Space Age checks;
+interactive editor/touch behavior and multiplayer joining remain unverified.
 Read the [alpha warning](index.md#alpha-warning). Keep backups before upgrades;
 unknown saved formats are retained for recovery, not automatically reset.
 Version 0.1.5 adds automatic buffered monitors, all complete rectangles up to
@@ -33,6 +34,9 @@ defaults and [dirty-cell chart animation](monitor-animation.md). Higher budgets
 can reduce UPS; the measured two-tick publication cadence is not a universal
 30-FPS guarantee. Replace the old chart with the complete new example to use
 its shared-phase, all-screen updates.
+Version 0.1.7 adds the selected Foundry family, connected-subpixel curves and
+monitor component reuse without increasing those budgets. It does not promise
+60 UPS or smooth GPU-backed animation in arbitrary factories.
 
 ## Research and craft
 
@@ -63,11 +67,11 @@ The world sprites and inventory icons use the same industrial forms:
 
 | Device | Look for |
 | --- | --- |
-| Computer | Low sloped console with dark inset screen, keyboard and cooling grille |
-| KV database | Ribbed cabinet with stacked storage cartridges; no keyboard or screen |
-| Monitor | Flat dark glass tile with a thin metal bezel and edge wire contacts |
-| Logic handler | One three-bay instrument: Input chevron, central processing/Network, double-chevron Output |
-| Configurator | One two-bay controller: service dial/Network beside the Factory targets terminal bank |
+| Computer | Heavy CRT console with a keyboard shelf and copper cooling housing |
+| KV database | Cast rack with stacked cartridge handles and end rails |
+| Monitor | Flat dark glass, cast bezel, corner fasteners and shallow exterior skirt |
+| Logic handler | Copper-wound relay bank around a central gauge; Input / Network / Output sockets |
+| Configurator | Large analog service gauge beside a recessed Factory targets control bank |
 
 The small Network diamond and Factory targets crosshair supplement the device
 shape and socket position. Their colors do not restrict which wire color you use.

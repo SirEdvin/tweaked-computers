@@ -31,16 +31,33 @@ local function wire(a,b,color)
   assert(lifecycle.connector(a,'network',color).connect_to(lifecycle.connector(b,'network',color)))
 end
 local function oracle(m,phase,r)
-  local w,h=m.width,m.height; local rows={}; local middle=2+math.floor((h-2)/2)
-  for y=1,h do rows[y]={}; for x=1,w do rows[y][x]=y==middle and 45 or 32 end end
-  local title=' SINE / LIVE'; for x=1,math.min(#title,w) do rows[1][x]=title:byte(x) end
-  for x=2,w do
-    local y=2+math.floor((1-math.sin(phase+(x-2)*2*math.pi/(w-2)))*(h-2)/2+0.5)
-    rows[y][x]=42
+  -- Independent pixel oracle: decode the terminal glyph/color pair instead of
+  -- repeating the guest's sparse cell-mask encoder or trusting its row cache.
+  local w,h=m.width,m.height; local pw,ph=w*2,(h-1)*3; local heights={}
+  for x=1,pw do
+    heights[x]=1+math.floor((1-math.sin(phase+(x-1)*2*math.pi/(pw-1)))*(ph-3)/2+0.5)
   end
+  local function curve(x,y)
+    local a,b=heights[x+1],heights[math.max(1,x)]
+    return y>=math.min(a,b) and y<=math.max(a,b)
+  end
+  local title=(' SINE / LIVE'..string.rep(' ',w)):sub(1,w)
   for y=1,h do for x=1,w do
-    local i=(y-1)*w+x; local c=m.cells[i]; local fg=y==1 and 0 or 5
-    assert(c[1]==rows[y][x] and c[2]==fg and c[3]==15,'mixed/incomplete chart')
+    local i=(y-1)*w+x; local c=m.cells[i]
+    if y==1 then
+      assert(c[1]==title:byte(x) and c[2]==0 and c[3]==15,'mixed/incomplete chart title')
+    else
+      assert(c[1]==32 or c[1]>=128 and c[1]<=159,'chart must use subpixel blocks, not dot/text markers')
+      local px,py=(x-1)*2,(y-2)*3; local has_curve=false
+      for dy=0,2 do for dx=0,1 do if curve(px+dx,py+dy) then has_curve=true end end end
+      for dy=0,2 do for dx=0,1 do
+        local bit=dy*2+dx
+        local ink=c[1]~=32 and bit<5 and math.floor((c[1]-128)/2^bit)%2==1
+        local actual=ink and c[2] or c[3]
+        local expected=curve(px+dx,py+dy) and 5 or not has_curve and py+dy==math.floor(ph/2) and 7 or 15
+        assert(actual==expected,'mixed/incomplete subpixel chart')
+      end end
+    end
     if r then
       local cell=r.cells[i]
       assert(cell.value[1]==c[1] and cell.value[2]==c[2] and cell.value[3]==c[3])

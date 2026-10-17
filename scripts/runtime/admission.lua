@@ -39,11 +39,11 @@ function M.reserve(ctx, kind, amount)
   ctx.ledger.total = ctx.ledger.total + amount
   return true
 end
--- Private compiler proof only. A fitting trace is one arithmetic reservation;
--- on refusal replay its exact accepted prefix, matching cold phase accounting.
-function M.replay_compile(ctx,charges)
+-- Private, already-admitted host traces only. A fitting trace is one reservation;
+-- refusal retains the exact accepted prefix, not all-or-nothing accounting.
+local function replay(ctx,kind,ceiling,charges)
   assert(ctx.tick==ctx.ledger.tick,'stale admission context')
-  local available=math.min(limits.compile_work-ctx.machine.compile,
+  local available=math.min(ceiling-ctx.machine[kind],
     limits.host_work_per_tick-limits.maintenance_work_per_tick-ctx.ledger.total)
   local accepted=charges.total
   if accepted>available then
@@ -53,7 +53,9 @@ function M.replay_compile(ctx,charges)
       accepted=accepted+cost
     end
   end
-  ctx.machine.compile=ctx.machine.compile+accepted; ctx.ledger.total=ctx.ledger.total+accepted
+  ctx.machine[kind]=ctx.machine[kind]+accepted; ctx.ledger.total=ctx.ledger.total+accepted
   return charges.total<=available
 end
+function M.replay_compile(ctx,charges) return replay(ctx,'compile',limits.compile_work,charges) end
+function M.replay_work(ctx,charges) return replay(ctx,'work',limits.callback_work,charges) end
 return M

@@ -98,9 +98,17 @@ jobs:
           export TMPDIR="$RUNNER_TEMP"
           archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
           engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
-          for fixture in monitor_snapshot_contract monitor_budget_contract; do
+          for fixture in monitor_snapshot_contract monitor_budget_contract monitor_optimization_contract; do
             python tools/smoke.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture"
+          done
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/monitor-components" --mode both \
+            --fixture tests.monitor_component_contract --cold
+          for workload in sparse full-blit; do
+            python tools/monitor_performance.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/performance-$workload" --mode both \
+              --ticks 1200 --max-gap 2 --workload "$workload"
           done
           for fixture in monitor_presentation_engine monitor_budget_engine monitor_plot_baseline_engine monitor_feedback_engine; do
             python tools/smoke.py --factorio "$engine" --archive "$archive" \

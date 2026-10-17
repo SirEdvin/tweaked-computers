@@ -4,3 +4,5 @@
 __pycache__/
 *.pyc
 /site/
+# Licensed Factorio archives, clients and game data stay local.
+/gameitself/

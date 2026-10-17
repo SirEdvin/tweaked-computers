@@ -179,8 +179,8 @@ local function audit(s)
  assert(staged==p.staging_cells and retired==p.retired_cells and pending==p.pending_cells and #p.jobs<=256)
  for _,job in ipairs(p.jobs) do if not job.cancelled and not job.complete then for _,r in ipairs(job.frames) do if r then
   for i,cell in ipairs(r.cells) do if cell and not r.reused[i] then
-   assert(cell.background.valid and not cell.background.visible)
-   if cell.glyph then assert(cell.glyph.valid and not cell.glyph.visible) end
+   assert(cell.background.valid and cell.background.visible==not not cell.shared_background)
+   if cell.glyph then assert(cell.glyph.valid and cell.glyph.visible==not not cell.shared_glyph) end
   end end
   if r.cursor and not r.shared_cursor then assert(not r.cursor.visible) end
  end end end end
