@@ -5,6 +5,8 @@ local count=0
 for _,kind in ipairs(defs.order) do
   local def=defs.devices[kind]; local entity=data.raw['electric-energy-interface'][def.name]
   local item=data.raw['item-with-tags'][def.name] or data.raw.item[def.name]
+  assert(item.stack_size==((kind=='computer' or kind=='kv') and 1 or 50),'public device stack size '..kind)
+  assert(item.type==((kind=='computer' or kind=='kv' or kind=='monitor') and 'item-with-tags' or 'item'))
   assert(entity.icon==art.devices[kind].icon and item.icon==entity.icon)
   for _,direction in ipairs({'north','east','south','west'}) do
     local images=art.devices[kind][direction]; local layers=entity.pictures[direction].layers

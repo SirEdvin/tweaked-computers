@@ -97,6 +97,10 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/integration" --mode both \
             --fixture tests.integration_engine --data-fixture tests.candidate_data \
             --production-context --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/lifecycle" --mode both \
+            --fixture tests.lifecycle_engine --data-fixture tests.candidate_data \
+            --production-context --cold
       - name: Check buffered presentation and released-save migration
         shell: bash
         run: |
