@@ -37,14 +37,15 @@ def main():
     end = '-- Isolated released-save upgrade driver.'
     assert control.count(start) == control.count(end) == 1
     tail = '\n' + start + control.split(start, 1)[1].split(end, 1)[0]
-    legacy_test = args.output / args.legacy.name
+    legacy_test = args.output / 'tweaked-computers_0.1.8.zip'
     with zipfile.ZipFile(args.legacy) as original, zipfile.ZipFile(legacy_test, 'w', zipfile.ZIP_DEFLATED) as patched:
+        legacy_prefix = next(n[:-len('info.json')] for n in original.namelist() if n.endswith('/info.json'))
         for entry in original.infolist():
             value = original.read(entry.filename)
             if entry.filename.endswith('/control.lua'):
                 value += tail.encode()
             patched.writestr(copy.copy(entry), value)
-        patched.writestr(prefix + 'tests/recipe_searcher_upgrade_engine.lua', fixture)
+        patched.writestr(legacy_prefix + 'tests/recipe_searcher_upgrade_engine.lua', fixture)
     with zipfile.ZipFile(args.legacy) as original, zipfile.ZipFile(legacy_test) as patched:
         for name in original.namelist():
             if not name.endswith('/control.lua'):

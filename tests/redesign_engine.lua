@@ -77,7 +77,7 @@ function M.run()
     local target=assert(s.create_entity{name='constant-combinator',position={28,row*12-4},force='player'})
     signal(target,'signal-D',17); wire(target,cfg.children.targets,'red')
   end
-  report('twenty-native-shells-cardinal-footprints-private-power-device-metadata-and-body-mark-cancel')
+  report('twenty-four-native-shells-cardinal-footprints-private-power-device-metadata-and-body-mark-cancel')
   report('direct-red-green-computer-monitor-logic-discovery')
   -- Refuse partial placement; only staged native objects are rolled back.
   local staged; local attempts=0; local before=#registry.get().order
@@ -127,7 +127,7 @@ function M.on_tick(event)
       local rec=registry.record(id); local def=defs.devices[rec.kind]; local p=lifecycle.power_entity(rec)
       assert(math.abs(p.energy-def.watts/60)<0.02,'private power draw mismatch '..rec.kind..' '..p.energy)
     end
-    log('TC_RD1_NATIVE_PRIVATE_DRAIN_OK all-five-wattages')
+    log('TC_RD1_NATIVE_PRIVATE_DRAIN_OK all-six-wattages')
   elseif elapsed>=3 and x.phase=='signals' then
     for _,row in ipairs(x.rows) do
       local l=registry.record(row.logic); local m=registry.record(row.monitor)

@@ -231,7 +231,9 @@ function M.run()
       assert(#s.reference_entries==#help.topics and #r.topics.items==#help.topics)
       local combined=''; for i=1,#help.topics-1 do combined=combined..help.topics[i].text end
       assert(combined==help.text..'\n','categorized reference dropped or duplicated text')
-      select(r.filters.category,5); assert(#s.reference_entries==5)
+      select(r.filters.category,5); assert(#s.reference_entries==6)
+      r.filters.search.text='RECIPE SEARCHER'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
+      assert(#s.reference_entries==1 and r.reference_text.text:find('findRecipes',1,true))
       r.filters.search.text='KV DATABASE'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(#s.reference_entries==1 and r.reference_text.text:find('hgetall',1,true))
       click(r.actions['select-reference']); assert(r.reference_text.selection and r.reference_text.focused)
@@ -371,7 +373,7 @@ function M.run()
     group('workspace-reference-starter-compiles-supported-api',function()
       local context=admission.context(admission.new(),'help-example',0)
       local plan,e=compiler.compile(help.template,context); assert(plan,e and e.message)
-      assert(#help.topics==12 and #help.categories==7)
+      assert(#help.topics==13 and #help.categories==7)
       if #original_game.players==0 then log('TC_WORKSPACE_CLIENT_SKIPPED no client-created player; all GUI checks are mocks') end
     end)
   end)
