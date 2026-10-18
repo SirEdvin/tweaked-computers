@@ -26,6 +26,7 @@ end
 function M.resolve(tile)
   local state=root()
   if state and state.version~=1 then errors.raise('E_UNSUPPORTED','unsupported retained monitor state; data preserved') end
+  if state and state.presentation and state.presentation.version~=1 then errors.raise('E_UNSUPPORTED','unsupported retained presentation; data preserved') end
   if state and state.job then errors.raise('E_NETWORK_PENDING','monitor regrouping is not yet committed') end
   return state and state.groups[state.membership[tile.id]] or nil
 end
@@ -46,47 +47,85 @@ local function signature(tiles)
   local s={}; for _,r in ipairs(tiles) do
     s[#s+1]=r.id..'/'..scope(r)..'/'..key(r.position.x,r.position.y)
   end
-  return table.concat(s,';')
+  return 'partition-v2/'..model.limits.width_tiles..'x'..model.limits.height_tiles..';'..table.concat(s,';')
 end
--- Largest complete anchored rectangle; fixed dimensions make this O(tiles*16).
-function M.partition(tiles)
-  local buckets={}; local ordered={}
-  for _,r in ipairs(tiles) do
-    local k=scope(r); buckets[k]=buckets[k] or {}; buckets[k][key(r.position.x,r.position.y)]=r
-    ordered[#ordered+1]=r
+local function before(a,b)
+  if a.position.y~=b.position.y then return a.position.y<b.position.y end
+  if a.position.x~=b.position.x then return a.position.x<b.position.x end
+  return a.id<b.id
+end
+local function partition_job(tiles)
+  return {input=tiles,buckets={},ordered={},used={},rectangles={},stage='index',cursor=1,sort_index=2}
+end
+-- A shifted insertion-sort item is rooted separately while ordering is deferred.
+local function partition_step(p,spend)
+  for _=1,1024 do
+    if p.stage=='index' then
+      spend(16)
+      local r=p.input[p.cursor]
+      if not r then p.stage='sort'
+      else
+        local k=scope(r); p.buckets[k]=p.buckets[k] or {}
+        p.buckets[k][key(r.position.x,r.position.y)]=r
+        p.ordered[#p.ordered+1]=r; p.cursor=p.cursor+1
+      end
+    elseif p.stage=='sort' then
+      if p.sort_index>#p.ordered then
+        spend(4); p.stage='rectangles'; p.cursor=1
+      elseif not p.item then
+        spend(4); p.item=p.ordered[p.sort_index]; p.sort_cursor=p.sort_index-1
+      else
+        local previous=p.ordered[p.sort_cursor]
+        spend(8+#p.item.id+(previous and #previous.id or 0))
+        if previous and before(p.item,previous) then
+          p.ordered[p.sort_cursor+1]=previous; p.sort_cursor=p.sort_cursor-1
+        else
+          p.ordered[p.sort_cursor+1]=p.item; p.sort_index=p.sort_index+1; p.item=nil
+        end
+      end
+    elseif p.stage=='rectangles' then
+      spend(8)
+      local r=p.ordered[p.cursor]
+      if not r then
+        p.input=nil; p.buckets=nil; p.ordered=nil; p.used=nil; p.stage='done'; return true
+      end
+      if not p.used[r.id] then
+        spend(model.limits.width_tiles*model.limits.height_tiles*8+8)
+        local bucket=p.buckets[scope(r)]; local x,y=r.position.x,r.position.y
+        local bw,bh,area=1,1,1; local maxwidth=model.limits.width_tiles
+        for h=1,model.limits.height_tiles do
+          local width=0
+          for w=1,maxwidth do
+            local t=bucket[key(x+w-1,y+h-1)]
+            if not t or p.used[t.id] then break end; width=w
+          end
+          maxwidth=math.min(maxwidth,width)
+          if maxwidth==0 then break end
+          if maxwidth*h>area or (maxwidth*h==area and (maxwidth>bw or (maxwidth==bw and h>bh))) then
+            bw,bh,area=maxwidth,h,maxwidth*h
+          end
+        end
+        spend(bw*bh*16+8)
+        local members={}; local bytes=0
+        for dy=0,bh-1 do for dx=0,bw-1 do
+          local t=bucket[key(x+dx,y+dy)]; members[#members+1]=t.id; bytes=math.max(bytes,#t.id)
+        end end
+        spend(#members*#members*bytes); table.sort(members)
+        for _,id in ipairs(members) do p.used[id]=true end
+        p.rectangles[#p.rectangles+1]={left=x-0.5,top=y-0.5,world_width=bw,world_height=bh,
+          width_tiles=(r.direction==4 or r.direction==12) and bh or bw,
+          height_tiles=(r.direction==4 or r.direction==12) and bw or bh,
+          direction=r.direction,force_index=r.force_index,surface_index=r.surface_index,members=members}
+      end
+      p.cursor=p.cursor+1
+    else assert(p.stage=='done'); return true end
   end
-  table.sort(ordered,function(a,b)
-    if a.position.y~=b.position.y then return a.position.y<b.position.y end
-    if a.position.x~=b.position.x then return a.position.x<b.position.x end
-    return a.id<b.id
-  end)
-  local rectangles={}; local used={}
-  for _,r in ipairs(ordered) do if not used[r.id] then
-    local bucket=buckets[scope(r)]; local x,y=r.position.x,r.position.y
-    local bw,bh,area=1,1,1; local maxwidth=model.limits.width_tiles
-    for h=1,model.limits.height_tiles do
-      local width=0
-      for w=1,maxwidth do
-        local t=bucket[key(x+w-1,y+h-1)]
-        if not t or used[t.id] then break end; width=w
-      end
-      maxwidth=math.min(maxwidth,width)
-      if maxwidth==0 then break end
-      if maxwidth*h>area or (maxwidth*h==area and (maxwidth>bw or (maxwidth==bw and h>bh))) then
-        bw,bh,area=maxwidth,h,maxwidth*h
-      end
-    end
-    local members={}
-    for dy=0,bh-1 do for dx=0,bw-1 do
-      local t=bucket[key(x+dx,y+dy)]; used[t.id]=true; members[#members+1]=t.id
-    end end
-    table.sort(members)
-    rectangles[#rectangles+1]={left=x-0.5,top=y-0.5,world_width=bw,world_height=bh,
-      width_tiles=(r.direction==4 or r.direction==12) and bh or bw,
-      height_tiles=(r.direction==4 or r.direction==12) and bw or bh,
-      direction=r.direction,force_index=r.force_index,surface_index=r.surface_index,members=members}
-  end end
-  return rectangles
+  return false
+end
+function M.partition(tiles)
+  local p=partition_job(tiles)
+  while not partition_step(p,function() end) do end
+  return p.rectangles
 end
 local function same_members(a,b)
   if #a~=#b then return false end
@@ -116,6 +155,7 @@ function M.reconcile(tick,spend)
   spend(#tiles*128+1)
   local sig=signature(tiles); local state=r.monitors
   if state and state.version~=1 then return end
+  if state and state.presentation and state.presentation.version~=1 then return end
   if not state then state={version=1,groups={},membership={},resizes={},touches={},signature='',order={}}; r.monitors=state end
   if state.job and state.job.signature~=sig then state.job=nil end
   if sig~=state.signature then
@@ -123,10 +163,14 @@ function M.reconcile(tick,spend)
     -- authoritative models and the plain staged job survive save/load.
     if not state.retired or #state.retired==0 then
       if not state.job then
-        spend(#tiles*192+1)
-        state.job={signature=sig,rectangles=M.partition(tiles),cursor=1,groups={},membership={},resizes={},order={}}
+        spend(16)
+        state.job={signature=sig,partition=partition_job(tiles),cursor=1,groups={},membership={},resizes={},order={}}
       end
       local job=state.job; local processed=0
+      if job.partition then
+        if not partition_step(job.partition,spend) then return end
+        job.rectangles=job.partition.rectangles; job.partition=nil
+      end
       while job.cursor<=#job.rectangles and processed<4 do
         local g=job.rectangles[job.cursor]; local survivor,predecessor
         for _,id in ipairs(g.members) do
@@ -162,6 +206,7 @@ function M.reconcile(tick,spend)
       if job.cursor>#job.rectangles then
         spend(model.limits.tiles*32+recipient_cost)
         local receivers=recipients()
+        presentation.regroup(state,job.groups)
         for id,g in pairs(state.groups) do
           if job.groups[id]~=g then presentation.retire(state,g.render) end
         end
@@ -178,13 +223,20 @@ end
 local methods={}
 for name,fn in pairs(model.calls) do
   local call=fn
-  methods[name]=function(c,g,wire,tick,spend,...) return call(g.model,spend,...) end
+  local mutation=name:sub(1,3)~='get' and name:sub(1,2)~='is'
+  methods[name]=function(c,g,wire,tick,spend,...)
+    if not mutation then return call(g.model,spend,...) end
+    call(g.model,spend,...); presentation.participate(g)
+  end
 end
 methods.setTextScale=function(c,g,wire,tick,spend,...)
   if select('#',...)~=1 then errors.raise('E_ARGUMENT','setTextScale expects one argument') end
   spend(recipient_cost)
+  local scale=g.model.scale
   local changed,w,h=model.scale(g.model,g.width_tiles,g.height_tiles,spend,...)
+  if g.model.scale~=scale then presentation.changed(g) end
   if changed then queue_resize(g,w,h,'scale',recipients()) end
+  presentation.participate(g)
 end
 methods.getLimits=function(c,g,wire,tick,spend,...) return (data.copy(model.limits,spend)) end
 peripheral.register_type('monitor',{methods=methods,resolve=M.resolve,available=M.available,
@@ -192,6 +244,17 @@ peripheral.register_type('monitor',{methods=methods,resolve=M.resolve,available=
     info.powered=M.available(g,function() end); info.footprint={width=g.world_width,height=g.world_height}
     info.position={x=g.left+g.world_width/2,y=g.top+g.world_height/2}; return info
   end})
+presentation.bind{lookup=peripheral.authority,available=M.available}
+peripheral.register_monitor_sync{set=presentation.select,get=presentation.status}
+peripheral.register_revocation('monitor-sync',function(c,name,wire,reason)
+  if reason=='unavailable' then return end -- Temporary incomplete proof is not detach.
+  local selection=c.monitor_sync
+  if selection then for _,ref in ipairs(selection.members) do
+    if ref.name==name and ref.wire==wire then
+      presentation.release(c,errors.new('E_UNREACHABLE','selected monitor path revoked')); return
+    end
+  end end
+end)
 -- One computer/subscription delivery regardless of paths, tiles or colors.
 function M.deliver(job,g,computer,tick,spend,player)
   local name=job.payload.name or 'monitor_resize'; local interested=false
@@ -287,6 +350,7 @@ function M.activate_for_player(event,player)
       and pos.x>=g.left and pos.x<g.left+g.world_width and pos.y>=g.top and pos.y<g.top+g.world_height then selected=g; break end
   end
   if not selected or not M.available(selected,function() end) then return false end
+  if not presentation.matches(selected,selected.render) or selected.render.hidden then return false end
   local reachable=false
   for _,id in ipairs(selected.members) do
     local tile=registry.record(id)

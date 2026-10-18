@@ -1,4 +1,20 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.5
+Date: 2026-10-15
+  Features:
+    - Automatically present coherent monitor snapshots without changing existing drawing programs.
+    - Support every complete monitor rectangle up to 6 by 6 tiles, all scales and cardinal orientations.
+    - Add peripheral.setMonitorSyncGroup and getMonitorSyncGroup for up to four logical displays.
+    - Include a bounded shared-phase sine-trace example and preserve the old four-row example as a baseline.
+  Changes:
+    - Stage replacements invisibly, publish complete groups together, and coalesce newer pending updates.
+    - Keep model reads synchronous, successful earlier writes intact, and drawing rights shared.
+    - Use demand-driven render headroom and incremental topology initialization under unchanged shared quotas.
+    - Reevaluate old walls on upgrade; geometry-changing merges clear content and detach absorbed names.
+  Info:
+    - ALPHA: back up saves before upgrading. Rollback requires the pre-upgrade save and matching old mod.
+    - Graphical and multiplayer-client validation is deferred to user review, not reported as passed.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.4
 Date: 2026-10-15
   Bugfixes:

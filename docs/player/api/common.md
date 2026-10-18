@@ -78,6 +78,17 @@ most one callback per computer per tick runs, with FIFO events and round-robin
 computer selection. A callback finishes or faults; it never suspends its Lua stack.
 Circuit propagation remains native, not immediate recursive notification.
 
+Monitor models change synchronously, but immutable presentation snapshots seal
+after callback dispatch. Hidden preparation retains the old complete visible
+image until whole-frame publication is admitted. The shared maintenance budget
+is still 200000 units/tick: rendering has a 60000-unit baseline reservation and
+can request up to 160000, with a baseline service opportunity between boosts.
+Reservations and spent credits persist across same-tick entry/load. Topology
+initialization is prepaid and resumable; these work units do not promise 60 UPS.
+Selected [monitor groups](peripheral.md#synchronized-monitor-presentation) wait
+for every member to participate; buffering cannot infer an application's
+multi-callback frame boundary.
+
 Queue overflow visibly faults the run and clears still-owned output. Outages
 retain durable state/registrations/timers but discard transient touch/signal history;
 restoration resyncs current inputs, not unseen history. Cold load does not replay

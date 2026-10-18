@@ -24,6 +24,13 @@ class PackageInventoryTests(unittest.TestCase):
                     name = next(name for name in names if name.endswith('/' + notice))
                     self.assertEqual(package.read(name), (build.ROOT / notice).read_bytes())
                 self.assertTrue((build.ROOT / 'assets/generate.py').is_file())
+                prefix = next(name[:-len('info.json')] for name in names if name.endswith('/info.json'))
+                for relative in (*build.CONTRACT_EXTENSIONS, 'examples/monitor-plot-program.lua',
+                                 'examples/monitor-plot-baseline.lua', 'examples/monitor-plot-baseline.json'):
+                    self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
+                planning = [name[len(prefix):] for name in names if '/openspec/' in name]
+                self.assertEqual({name for name in planning if name.startswith('openspec/changes/buffer-monitor-presentation/')},
+                                 set(build.CONTRACT_EXTENSIONS))
 
     def test_actual_gameplay_art_bytes_match_provenance(self):
         import hashlib

@@ -1,0 +1,6 @@
+{
+  "source_sha256": "b095e3789ede9bd639bedcaaf85849cda5f00cf2905bcdd2eddd68e879529798",
+  "source_bytes": 3195,
+  "origin": "Previously supplied external 0.1.4 four-row example; not part of the immutable released ZIP.",
+  "pacing": "Four rows every five ticks, round-robin logical screens."
+}

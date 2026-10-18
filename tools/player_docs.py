@@ -21,6 +21,7 @@ EXAMPLES = {
     'logic-controller': 'Follow [your first inserter controller](first-controller.md). Stock INPUT red, discovery NETWORK red, OUTPUT to the inserter.',
     'kv-program': 'Connect one powered database NETWORK on red. Save/Run; inspect the delayed status/TTL in Console.',
     'monitor-program': 'Connect a powered monitor NETWORK on red. Run, then activate a character cell; use matching adjacent tiles to test resize.',
+    'monitor-plot-program': 'Connect up to four powered logical monitors on red/green. Uses one shared sine sample and replaces one complete row per screen, retaining older rows as a rolling trace. Startup discovery, geometry inspection, selection and clearing are deliberately sliced across callbacks. Checks at most eight names per color; red wins duplicate names. Resize/detach events restart discovery; unavailable screens are retried periodically. This is not a full-grid repaint or an unlimited factory/network benchmark.',
     'configurator-program': 'Discovery NETWORK red; separate TARGETS green to one inserter. Sets A > 4, not A > 0. Supply an external A signal of at least 5 for motion.',
     'configurator-sections': 'Discovery NETWORK red; TARGETS green to one constant combinator. Adds a section, activates it and saves its actual index in computer state; it intentionally writes no signal filters.',
     'factory-controller': 'Follow the complete [factory wiring tutorial](factory.md). Keep one device per type reachable. Paste this whole document.',
@@ -269,7 +270,10 @@ def inventory():
             'configurator': {'behavior_classes': len(catalog['behaviors']),
                              'root_field_entries': sum(len(b['writable_fields']) for b in catalog['behaviors']),
                              'concepts': len(catalog['concepts']), 'enum_groups': len(catalog['enum_values'])},
-            'events': manifest['events'], 'contracts': contract_inventory, 'standard_helpers': helpers,
+            'events': manifest['events'], 'contracts': contract_inventory,
+            'contract_extensions': [{'path': path, 'sha256': hashlib.sha256((ROOT / path).read_bytes()).hexdigest()}
+                                    for path in manifest.get('contract_extensions', [])],
+            'standard_helpers': helpers,
             'colors': names['colors'], 'capability_pages': capability_pages,
             'inventory_kind': 'Static implementation-export/signature presence plus reviewed companion contracts; not runtime or graphical acceptance'}
 

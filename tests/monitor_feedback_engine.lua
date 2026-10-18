@@ -21,14 +21,15 @@ local function resolve(row) return assert(monitor.resolve(registry.record(row.id
 local function settle()
   for _=1,200 do
     monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
-    local s=registry.get().monitors; local ready=not s.job and (not s.retired or #s.retired==0)
+    local s=registry.get().monitors; local p=s.presentation
+    local ready=not s.job and (not p or #p.jobs==0 and #p.orphans==0 and #p.retired==0 and p.pending_cells==0)
     for _,g in pairs(s.groups) do ready=ready and g.render and g.render.presented_revision==g.model.revision end
     if ready then return end
   end
   error('monitor feedback fixture did not settle')
 end
 local function properties(g)
-  local r=g.render; assert(r.layer_version==2)
+  local r=g.render; assert(r.layer_version==3)
   assert(r.panel.type=='sprite' and r.panel.sprite=='tc-monitor-fill' and r.panel.render_layer=='higher-object-under')
   local cw,ch,ox,oy=model.geometry(g)
   for i,c in ipairs(r.cells) do
@@ -126,8 +127,10 @@ function M.run()
     -- Redraw changes only what the writer requested, not mark state/grouping.
     assert(marked.body.order_deconstruction('player'))
     model.calls.setCursorPos(g.model,nop,1,2); model.calls.write(g.model,nop,'LIVE')
-    model.calls.setPaletteColor(g.model,nop,2,0xAB3412); capture(row)
-    settle(); unchanged(row); properties(g)
+    model.calls.setPaletteColor(g.model,nop,2,0xAB3412)
+    model.capture(g.model,nop)
+    local expected=copy(g.model)
+    settle(); assert(equal(g.model,expected)); capture(row); unchanged(row); properties(g)
     assert(marked.body.to_be_deconstructed('player'))
     -- Power hides/restores presentation without changing committed content.
     local p=lifecycle.power_entity(marked); p.energy=0; marked.powered=false
@@ -143,7 +146,7 @@ function M.run()
   local legacy=resolve(f().rows[4]); local r=legacy.render
   r.panel.destroy(); r.panel=rendering.draw_rectangle{surface=s,left_top={47.5,-0.5},right_bottom={49.5,1.5},color={0,0,0},filled=true}
   for _,c in ipairs(r.cells) do if c.glyph then c.glyph.render_layer='light-effect' end end
-  r.layer_version=nil
+  r.layer_version=nil; r.version=nil
   local count=#rendering.get_all_objects(); local before=copy(legacy.model)
   local ok=pcall(renderer.tick,game.tick,function() error('fixture-zero-credit',0) end)
   assert(not ok and legacy.render==r and r.panel.valid and equal(before,legacy.model) and #rendering.get_all_objects()==count)
@@ -179,6 +182,8 @@ function M.on_tick(e)
   end
   scheduler.tick(e.tick)
   if x.phase=='restoring' and e.tick>x.resume_tick then
+    local p=registry.get().monitors.presentation
+    if #p.jobs>0 or #p.orphans>0 or #p.retired>0 or p.pending_cells>0 then return end
     local legacy=resolve(x.rows[4]); assert(legacy.model==x.rows[4].model and equal(legacy.model,x.rows[4].snapshot))
     assert(not x.legacy.panel.valid and not x.legacy.cursor.valid)
     for _,object in ipairs(x.legacy_handles) do assert(not object.valid) end
@@ -205,7 +210,8 @@ function M.on_tick(e)
     assert(e.tick-x.mining_tick<3600,'native robot removal deadline')
     if not x.robot_events then return end
     assert(x.robot_events==1 and not registry.record(x.robot_id))
-    if registry.get().monitors.job or #registry.get().monitors.retired>0 then return end
+    local state=registry.get().monitors; local p=state.presentation
+    if state.job or #p.retired>0 or #p.orphans>0 or #p.jobs>0 or p.pending_cells>0 then return end
     local inv=x.chest.get_inventory(defines.inventory.chest)
     if inv.get_item_count('tc-monitor')~=1 then return end
     assert(not x.old_render.panel.valid and not x.old_render.cursor.valid)

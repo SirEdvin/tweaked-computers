@@ -32,7 +32,7 @@ Close/Escape retains the draft. Reopen the same body to recover it.
 Conflict: Review opens Maintenance; read current source, then Rebase (retain draft) or
 Reload (discard your draft). The revision is checked again on either action.
 Eight bounded recovery drafts per player; no automatic dirty-draft eviction.
-Ctrl+Shift+E (rebindable) opens the selected computer, or recovery drafts.
+Ctrl+left-click (rebindable), empty cursor/no GUI, opens a computer or recovery.
 All essential actions are buttons, including while the text box has focus.
 
 LANGUAGE
@@ -70,6 +70,10 @@ wrap(name, wire) -> dot-call facade/nil
 call(name, wire, method, ...) -> results
 find(type_name, wire) -> zero or more facades (multiple returns)
 getName(facade) -> name; getWire(facade) -> wire
+setMonitorSyncGroup({{name=...,wire=...},...}) -> no values; {} clears
+getMonitorSyncGroup() -> copied members/status/presented_sequence/tick/diagnostic
+One selected group per run; at most four screens and 10584 summed actual cells.
+Every supplied path is checked; duplicate names prefer red. Writing stays shared.
 wire is explicitly "red" or "green", never "both" for discovery.
 Only same-color physical mod NETWORK ports relay discovery; vanilla poles,
 INPUT/OUTPUT/TARGETS ports and color changes are not discovery paths.
@@ -116,6 +120,12 @@ setPaletteColor(color,rgb) or (color,r,g,b); PaletteColour aliases are identical
 getTextScale(); setTextScale(0.5..5 in half steps); getLimits()
 One byte per cell; clip without wrapping; blit uses equal-length lowercase 0..f.
 Adjacent same-force/orientation powered tiles share a rectangular screen.
+Every complete shape up to 6x6 is supported, including 1x6 and 3x6.
+Methods update the model immediately. Fixed snapshots prepare invisibly after
+callbacks; the previous complete image remains until the replacement publishes.
+Selected groups wait for every member's successful mutation (including no-ops).
+They publish together, without flush or a timeout that splits a frame. Buffering
+does not infer completion of an application drawing over multiple callbacks.
 Resize clears changed dimensions. Stop leaves the image; outage hides, not erases.
 Ctrl+left-click (rebindable), empty cursor/no GUI: monitor_touch carries logical
 peripheral, x/y, player_index, sample_tick, wire and deduplicated sorted wires.
