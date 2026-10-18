@@ -118,6 +118,14 @@ function M.run()
       local plan=assert(compiler.compile('false',admission.context(admission.new(),'shell-boundary',0),'shell'))
       assert(not compiler.run(plan,'start',{}, {},admission.context(admission.new(),'mode',0)))
     end)
+    group('syntax-diagnostic-description-and-source-location',function()
+      for _,case in ipairs({{source='x =',column=4},{source='local x = )',column=11}}) do
+        local plan,problem=compiler.compile(case.source,admission.context(admission.new(),'shell-syntax',0),'shell')
+        assert(not plan and problem.code=='E_PROGRAM' and problem.line==1 and problem.column==case.column,
+          'syntax diagnostic lost original command position: '..tostring(problem and problem.column))
+        assert(#problem.message>20,'syntax diagnostic omitted the parser explanation: '..problem.message)
+      end
+    end)
     group('authentic-facade-captured-method-and-generation-revocation',function()
       execute('p=peripheral.wrap("'..db.id..'","red"); put=p.set; get=p.get; p.set("shell","17")')
       tick=tick+1; execute('assert(peripheral.getName(p)=="'..db.id..'"); assert(get==p.get and put==p.set); assert(get("shell")=="17"); put("shell","18")')

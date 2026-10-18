@@ -1,5 +1,6 @@
 local parse = require('vendor.phobos.parser')
 local tokenize = require('vendor.phobos.tokenize')
+local parser_errors = require('vendor.phobos.error_code_util')
 local limits = require('scripts.runtime.limits')
 local admission = require('scripts.runtime.admission')
 local parsing = require('scripts.runtime.parse_admission')
@@ -289,8 +290,11 @@ function M.compile(source, context, mode)
     else main,diagnostics=parse(source,'@computer') end
     if #diagnostics > 0 then
       local d = diagnostics[1]
-      local e = errors.new('E_PROGRAM',d.location_str or 'invalid Lua syntax')
-      e.line,e.column = d.start_position and d.start_position.line or 1,d.start_position and d.start_position.column or 1
+      local e = errors.new('E_PROGRAM',parser_errors.get_message(d))
+      -- Phobos's synthetic EOF token has no coordinates. Reuse the already
+      -- admitted original tokenizer's final position, not the expression prefix.
+      e.line = d.start_position and d.start_position.line or state.line
+      e.column = d.start_position and d.start_position.column or #source+1-state.line_offset
       error(e,0)
     end
     expression_source=expression==true
