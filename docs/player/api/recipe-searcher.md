@@ -11,9 +11,17 @@ execution or dedicated search GUI. Inspect it through the existing Peripherals t
 Peripheral type: `recipe_searcher`. Use dots, never colons:
 
 ```lua
-local searcher = peripheral.find("recipe_searcher", "red")
-local recipes = searcher.findRecipes("item", "iron-plate", "smelting")
-local limits = searcher.getLimits()
+return {
+    api_version = 1,
+    handlers = {
+        start = function(event)
+            local searcher = peripheral.find("recipe_searcher", "red")
+            assert(searcher, "Connect a powered Recipe Searcher on red")
+            local recipes = searcher.findRecipes("item", "iron-plate", "smelting")
+            local limits = searcher.getLimits()
+        end
+    }
+}
 ```
 
 - `findRecipes(product_type, product_name [, category])` returns exactly one
