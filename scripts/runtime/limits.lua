@@ -16,6 +16,8 @@ return {
   sync_group_refs = 8, sync_group_members = 4, sync_group_cells = 10584, sync_groups_per_run = 1,
   peripheral_call_bytes = 65536, peripheral_call_entries = 4096,
   console_entries = 64, console_bytes = 16384, fail_safe_latency_ticks = 1,
+  shell_source_bytes = 4096, shell_bindings = 64, shell_value_bytes = 16384,
+  shell_nodes = 1024, shell_pending_entries = 8, shell_pending_bytes = 16384, shell_sessions = 64,
   registry_entries = 4096, owned_children = 8,
   maintenance_work_per_tick = 200000, host_hooks = 16
 }

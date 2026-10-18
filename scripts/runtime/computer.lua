@@ -4,8 +4,11 @@ local admission = require('scripts.runtime.admission')
 local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
 local data = require('scripts.runtime.data')
+local principal = require('scripts.runtime.principal')
 local M = {}
 local providers = {}
+local shell_lifecycle
+function M.register_shell_lifecycle(fn) assert(not shell_lifecycle); shell_lifecycle=fn end
 local general={peripheral_attach=true,peripheral_detach=true,monitor_resize=true,monitor_touch=true,power_restored=true}
 local MAX=9007199254740991
 local function root() local r=registry.get(); if not registry.supported(r) then errors.raise('E_UNSUPPORTED','unsupported storage; data retained') end; return r end
@@ -35,7 +38,12 @@ function M.fault(rec,diagnostic,tick)
   rec.diagnostic=diagnostic
   M.log(rec,(diagnostic.code or 'E_PROGRAM')..': '..(diagnostic.message or 'program failed'):sub(1,512),tick)
 end
-function M.stop(id) root(); local rec=registry.computer(id); return M.retire(rec,'stopped','stop') end
+function M.stop(id)
+  root(); local rec=registry.computer(id)
+  local ok=M.retire(rec,'stopped','stop')
+  if shell_lifecycle then ok=shell_lifecycle(rec,'stop') and ok end
+  return ok
+end
 function M.reset_state(id)
   root()
   local rec=registry.computer(id)
@@ -68,6 +76,7 @@ function M.activate(id,tick,expected_revision)
   if not plan then rec.candidate_diagnostic=e; return nil,e end
   -- Validation is finished before the previous generation is retired.
   if not M.retire(rec,'stopped','activation') then return nil,rec.diagnostic end
+  if shell_lifecycle and not shell_lifecycle(rec,'activation') then return nil,errors.new('E_ENGINE','shell cleanup failed; session retained') end
   rec.run_generation=rec.run_generation+1
   rec.run_id=rec.id..'/run-'..string.format('%.0f',rec.run_generation)
   rec.active={source=plan.source,revision=rec.saved_revision,api_version=1,compiler_version=limits.compiler_version,storage_version=limits.storage_version,handlers=plan.handlers}
@@ -168,12 +177,12 @@ function M.register_services(name,fn)
   assert(count(providers)<limits.host_hooks,'host provider capacity')
   providers[name]=fn
 end
-function M.services(rec,tick,guard)
-  local run_id=rec.run_id
+function M.services(rec,tick,guard,execution)
+  execution=execution or principal.program(rec)
   local function spend(n) guard.spend(n) end
   local function current()
     guard.check()
-    if registry.record(rec.id)~=rec or rec.run_id~=run_id or rec.status~='running' or not rec.powered or not rec.body.valid then errors.raise('E_NOT_FOUND','run no longer active or powered') end
+    principal.check(rec,execution)
   end
   local api={}
   local function method(name,min,max,fn)
@@ -250,10 +259,15 @@ function M.services(rec,tick,guard)
   local map={computer=api,peripheral={}}
   local names={}; for name in pairs(providers) do names[#names+1]=name end; table.sort(names)
   for _,name in ipairs(names) do
-    local extras=providers[name](rec,tick,guard)
+    local extras=providers[name](rec,tick,guard,execution)
     for namespace,methods in pairs(extras or {}) do
       assert(namespace=='computer' or namespace=='peripheral','unknown service namespace')
       for key,fn in pairs(methods) do assert(not map[namespace][key] and type(fn)=='function','service collision'); map[namespace][key]=fn end
+    end
+  end
+  if execution.kind=='shell' then
+    for _,name in ipairs({'stop','on','off','after','every','cancelTimer'}) do
+      api[name]=function() current(); errors.raise('E_UNSUPPORTED','use a saved handler program or explicit UI lifecycle controls') end
     end
   end
   return map

@@ -29,7 +29,7 @@ class PackageInventoryTests(unittest.TestCase):
                                  'examples/monitor-plot-baseline.lua', 'examples/monitor-plot-baseline.json'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
-                self.assertEqual({name for name in planning if name.startswith('openspec/changes/buffer-monitor-presentation/')},
+                self.assertEqual({name for name in planning if not name.startswith(build.CONTRACT + '/')},
                                  set(build.CONTRACT_EXTENSIONS))
 
     def test_actual_gameplay_art_bytes_match_provenance(self):

@@ -13,6 +13,7 @@ nav:
       - Installation and wiring: getting-started.md
       - First inserter controller: first-controller.md
       - Editor and recovery: editor.md
+      - Live Console: console.md
       - Combined factory controller: factory.md
       - Runnable programs: examples.md
       - Monitor animation: monitor-animation.md

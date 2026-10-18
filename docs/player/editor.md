@@ -9,16 +9,17 @@ the old normal-open and Ctrl+Shift+E actions were removed in 0.1.4. Held items/w
 and cursor ghosts refuse opening. Native buttons inside the workspace still use
 normal clicks.
 
-The workspace uses native text entry and buttons. **Native client typing, paste,
-focus and appearance are still awaiting your playtest**; the implementation's
-headless GUI checks use table-backed mocks, not a graphical client.
+The workspace uses native text entry and buttons. The Console candidate includes
+an isolated native typing/paste smoke; **full native workflow, sizing and appearance
+acceptance remain independent review/playtest gates**. Headless GUI checks use
+table-backed mocks and are not graphical-client evidence.
 
 ## Five workspaces
 
 | Tab | What to do there |
 | --- | --- |
 | **Editor** | Write your document; Validate, Save, Run / Apply and Stop in one row. See draft/saved/active revisions and a compact conflict/validation message. |
-| **Console** | Read selectable, bounded output and full diagnostics. Disable **Follow new output** to hold a snapshot without scroll fighting. **Refresh** updates it once; enabling Follow resumes updates. |
+| **Console** | Read bounded output and diagnostics, or try a live single-line Lua command with Enter / Execute. [Shell values and effects](console.md) are shared per computer, independent of the saved program. Follow-off holds the output snapshot; Refresh updates it once. |
 | **Peripherals** | Choose **Red** or **Green**, then **Refresh peripherals**. Rows show actual API name, type, icon and power. Select a row for its channel/details. This is a timestamped snapshot, not a live presence guarantee. |
 | **Reference** | Search and filter the existing Lua v1 help by category and topic. **Select text**, then use native Copy. The starter can be inserted only into an empty draft. |
 | **Maintenance** | Review current/active source, resolve conflicts, review/copy/forget retained drafts, and deliberately reset a stopped computer's state. |
@@ -110,7 +111,8 @@ See [lifecycle](lifecycle.md).
 
 `computer.log(text)` writes plain text into a ring of **64 entries / 16,384 bytes**;
 older output is discarded even when Follow is off. Refresh/resume cannot retrieve
-those discarded entries. Console is not a REPL and has no invented Clear command.
+those discarded entries. The [live Console](console.md) evaluates bounded Lua
+lines; Reset Shell clears scratch values, not historical logs. There is no Clear command.
 
 Validation identifies the candidate/base revision. Runtime diagnostics identify the
 active revision, handler and original line/column when available. **Go to source

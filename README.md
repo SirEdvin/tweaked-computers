@@ -4,7 +4,9 @@ Native circuit computers for Factorio 2.0.77, with base alone or optional Space 
 The integrated alpha implements native guarded callbacks, a five-tab single-document editor,
 same-color peripheral discovery, merging world monitors, string/hash KV storage,
 logic I/O, typed factory configuration and data-bearing device lifecycle.
-No interpreter, OS, shell, gameplay filesystem or dynamic guest loader is shipped.
+The candidate also adds a [live single-line Console](docs/player/console.md) with
+save-backed scratch bindings, independent of the saved program. No interpreter,
+OS, gameplay filesystem or dynamic guest loader is shipped; there is no command history.
 
 - [Player guide and complete Lua reference](https://siredvin.github.io/tweaked-computers/).
 - [Guide source](docs/player/index.md) and [factory tutorial](docs/player/factory.md).
@@ -13,8 +15,9 @@ No interpreter, OS, shell, gameplay filesystem or dynamic guest loader is shippe
 
 This is a user-test alpha, not stable or fully client-verified. Back up saves.
 Foundry artwork and live monitor charts have isolated base/Space Age graphical
-checks with software rendering. Interactive editing/focus, wire selection/touch,
-audible playback and multiplayer joining remain user-owned checks. Full-world
+checks with software rendering. The Console has an isolated native-input smoke;
+full UI acceptance, wire selection/touch, audible playback and multiplayer joining
+remain independent review/user checks. Full-world
 performance limits are provisional; software rendering is not a GPU benchmark.
 Install from the [Factorio Mod Portal](https://mods.factorio.com/mod/tweaked-computers)
 and follow the guide above. Report problems with engine/mod versions, wiring,

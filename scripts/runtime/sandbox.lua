@@ -3,13 +3,20 @@ local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local M = {}
 
-function M.new(context, services)
-  local G = {}
+function M.new(context, services, shell)
+  local G = {shell_enabled=shell~=nil}
   local poison, line, column, depth = nil, 1, 1, 0
   local owned = setmetatable({}, {__mode='k'})
   local protected = setmetatable({}, {__mode='k'})
   local callable = setmetatable({}, {__mode='k'})
   local handle_arguments = setmetatable({}, {__mode='k'}) -- Host-only opt-in, not Data.
+  local bindings=setmetatable({},{__mode='k'})
+  local restore_binding
+  function G.bind_value(value,descriptor) bindings[value]=descriptor end
+  function G.binding(value) return bindings[value] end
+  function G.binding_resolver(fn) assert(not restore_binding); restore_binding=fn end
+  function G.restore_binding(descriptor,facade) return assert(restore_binding,'binding provider unavailable')(descriptor,facade) end
+  function G.is_plain(value) return owned[value] and not protected[value] and getmetatable(value)==nil end
   function G.accept_handle(fn,index)
     assert(type(fn)=='function' and index==1,'invalid trusted handle introspector')
     handle_arguments[fn]=index
@@ -34,6 +41,7 @@ function M.new(context, services)
     G.check()
     if not admission.reserve(context,'allocations',n) then fatal('callback allocation budget exhausted') end
   end
+  function G.host_work(work,allocations) G.spend(work); allocate(allocations) end
   function G.step(source_line,source_column) line=source_line or line; column=source_column or column; G.spend(1) end
   function G.enter(source_line,source_column,parameters)
     G.step(source_line,source_column); G.spend(parameters); allocate(parameters)
@@ -488,14 +496,32 @@ function M.new(context, services)
       assert(method_count<=limits.tuple_entries and type(method)=='string' and type(fn)=='function', 'invalid trusted service registration')
       entries[method]=G.service(fn)
     end
-    if name=='computer' then entries.stop=function(...)
+    if name=='computer' and not shell then entries.stop=function(...)
       if select('#',...)~=0 then fail('stop expects no arguments') end
       fatal('stopped')
     end end
     env[name]=G.namespace(entries,name)
   end
+  if shell then
+    env.print=function(...)
+      local n=select('#',...); local parts={}; local bytes=math.max(0,n-1)
+      G.spend(n+1); allocate(n)
+      for i=1,n do parts[i]=env.tostring(select(i,...)); bytes=bytes+#parts[i] end
+      if bytes>limits.console_bytes then errors.raise('E_LIMIT','print output too large') end
+      G.spend(bytes+1); allocate(bytes)
+      shell.output(table.concat(parts,'\t'))
+    end
+    function G.shell_root() return shell.root end
+    function G.format_results(result)
+      if result.n>0 then env.print(table.unpack(result,1,result.n)) end
+    end
+  end
   for name,v in pairs(env) do if type(v)=='function' then callable[v]=name end end
-  function G.global(name) G.spend(1); return env[name] end
+  function G.global(name)
+    G.spend(1)
+    if env[name]~=nil then return env[name] end
+    if shell then return G.get(shell.root,name) end
+  end
   end
   return G
 end

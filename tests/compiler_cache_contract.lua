@@ -44,6 +44,22 @@ function M.run()
   assert(ok,problem and problem.message)
   local safe=assert(compiler.compile(source,admission.context(admission.new(),'readback',0)))
   assert(safe.handlers.start and safe.generated~='error("caller executable trusted")' and safe.nodes>0)
-  log('TC_COMPILER_CACHE_OK comparisons='..count..' exact-credits caller-isolation bounded-eviction')
+  for _,text in ipairs({'false','x=5; local y=6','return {api_version=1,handlers={}}'}) do
+    for _,available in ipairs({0,1,100,1000,limits.compile_work}) do
+      assert(compiler.compile(text,admission.context(admission.new(),'shell-warm',0),'shell'))
+      local warm=context(available); local a,ae=compiler.compile(text,warm,'shell')
+      evict()
+      local cold=context(available); local b,be=compiler.compile(text,cold,'shell')
+      assert(not not a==not not b and (not ae or ae.code==be.code and ae.message==be.message))
+      assert(warm.machine.compile==cold.machine.compile and warm.ledger.total==cold.ledger.total,'shell fallback cache changed charges')
+      count=count+1
+    end
+  end
+  local text='return {api_version=1,handlers={}}'
+  local program=assert(compiler.compile(text,admission.context(admission.new(),'mode-program',0)))
+  local shell=assert(compiler.compile(text,admission.context(admission.new(),'mode-shell',0),'shell'))
+  assert(program.mode==nil and shell.mode=='shell' and program.generated~=shell.generated,'compiler modes shared an executable proof')
+  assert(not compiler.compile('x=5',admission.context(admission.new(),'program-only',0)))
+  log('TC_COMPILER_CACHE_OK comparisons='..count..' exact-credits caller-isolation bounded-eviction mode-separated-shell-fallback')
 end
 return M

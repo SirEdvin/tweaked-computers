@@ -4,6 +4,7 @@ local runtime=require('scripts.runtime.computer')
 local compiler=require('scripts.runtime.compiler')
 local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
+local shell=require('scripts.runtime.shell')
 local M={draft_slots=8}
 local function bucket(index)
   local root=registry.get()
@@ -54,6 +55,28 @@ function M.edit(player,token,source)
   local _,d,s=M.current(player,token)
   if type(source)~='string' or #source>limits.source_bytes then errors.raise('E_LIMIT','source exceeds '..limits.source_bytes..' bytes; previous draft retained') end
   d.source=source; s.validation=nil; s.reset=nil
+end
+function M.shell_edit(player,token,text)
+  local _,_,s=M.current(player,token)
+  if type(text)~='string' or #text>limits.shell_source_bytes or text:find('[\r\n]') then errors.raise('E_ARGUMENT','one bounded line required; draft retained') end
+  s.shell_draft=text
+end
+function M.shell_submit(player,token,tick)
+  local rec,_,s=M.current(player,token)
+  if s.tab~=2 then errors.raise('E_UNREACHABLE','active Console required') end
+  local id=shell.submit(rec,s.shell_draft or '',player.index,token,tick,s.shell_generation or false)
+  if id then s.shell_draft=''; s.shell_generation=rec.shell.id end
+  return id
+end
+function M.shell_reset(player,token,confirm)
+  local rec,_,s=M.current(player,token)
+  if s.tab~=2 then errors.raise('E_UNREACHABLE','active Console required') end
+  local current=shell.session(rec); local generation=current and current.id or false
+  if confirm==nil then s.shell_reset=generation; return end
+  if not confirm then s.shell_reset=nil; return end
+  if s.shell_reset==nil or s.shell_reset~=generation then errors.raise('E_BUSY','shell reset confirmation expired') end
+  if not shell.reset(rec,'reset') then errors.raise('E_ENGINE','shell cleanup failed; session retained') end
+  s.shell_reset=nil; s.shell_generation=false
 end
 function M.action(player,token,action,tick,arg)
   local rec,d,s,b=M.current(player,token)
