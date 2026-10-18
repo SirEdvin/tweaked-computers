@@ -115,7 +115,12 @@ work. Once execution begins, an error never retries its earlier effects.
 Packaged contract tests use real native compilation/services and explicit table
 GUI mocks. Separate-process cold checks exercise values, binding identity,
 pending order, spent credits and once-only effects beside a running controller.
-They do not establish connected multiplayer or native keyboard delivery.
-Native input, size/scale behavior and connected late joining are separate gates.
-The feature PR records their reviewed evidence; see the repository's
+Those headless tests alone do not establish connected multiplayer or native keys.
+Independent native-client acceptance exercised Console input/workflows in base and
+Space Age, including representative 800×480/1280×720 cases and base 75%/100% UI
+scales. Two real base clients verified late joining after effects, independent
+drafts/carets, conflicting submissions and a separate-process server restart
+without observed replay or desync. Space Age connected joining is not claimed.
+The clients used llvmpipe software rendering, not representative GPU performance.
+The feature PR records the reviewed evidence; see the repository's
 `docs/console-shell-validation.md` for the isolated client and late-join procedure.

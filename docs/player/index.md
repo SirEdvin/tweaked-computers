@@ -35,9 +35,10 @@ verified by this guide.
 
 The implementation has packaged headless native-runtime, factory-effect and
 cold-save checks. Foundry artwork and live charts have isolated software-rendered
-base/Space Age captures. The Console candidate has an isolated native-input smoke;
-full UI size/workflow acceptance, native wire selection/touch, audible playback
-and connected multiplayer joining remain independent review/user checks.
+base/Space Age captures. The Console has native input/size/workflow acceptance in
+both modes and actual base two-client late joining plus cold server resume.
+Space Age connected joining, native wire selection/touch and audible playback
+remain unverified; representative desktop cases do not cover every platform or IME.
 These captures are not GPU benchmarks.
 Resource ceilings are provisional safety limits, not a promise of real-time latency
 or simultaneous maximum-world performance. Report failures with the mod/engine
@@ -45,11 +46,11 @@ versions, wiring, source and error code; remove private literals before sharing.
 
 ## Source and developer documentation
 
-The [0.1.7 ALPHA source](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.7) includes
+The [0.1.8 ALPHA source](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.8) includes
 source, notices and examples; report problems in its
 [issue tracker](https://github.com/SirEdvin/tweaked-computers/issues).
 The separately generated
-[developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.7/openwiki)
+[developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.8/openwiki)
 explains implementation internals; this site, not that wiki, is the player and
 public Lua API reference. This link identifies the source-grounded developer
 wiki snapshot independently of the repository's default branch.

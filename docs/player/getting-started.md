@@ -5,11 +5,11 @@
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot; removal/destruction of a device is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
-   the Mod Portal, select **0.1.7 ALPHA**, enable it, and restart when prompted.
+   the Mod Portal, select **0.1.8 ALPHA**, enable it, and restart when prompted.
    This version includes the direct device wiring, industrial artwork and tabbed
    editor redesign. Back up an existing 0.1.1 world before its automatic migration.
-3. For manual installation, download `tweaked-computers_0.1.7.zip` from the
-   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.7)
+3. For manual installation, download `tweaked-computers_0.1.8.zip` from the
+   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.8)
    and place it in your Factorio
    user-data `mods` directory without unpacking it. Remove conflicting duplicate
    versions, enable the mod, and restart. The ZIP's internal folder must match its
@@ -21,14 +21,16 @@
    claim later Factorio engines or arbitrary mod combinations are verified.
 
 Artwork and live charts have isolated software-rendered base/Space Age checks;
-interactive editor/touch behavior and multiplayer joining remain unverified.
+the Console has native workflow checks in both modes and real base two-client
+late-join/cold-server checks. Space Age connected joining, native wire/touch and
+audible playback remain unverified.
 Read the [alpha warning](index.md#alpha-warning). Keep backups before upgrades;
 unknown saved formats are retained for recovery, not automatically reset.
 Version 0.1.5 adds automatic buffered monitors, all complete rectangles up to
 6×6 and optional synchronized groups. Existing walls may merge without tile
 changes: absorbed names detach and changed character dimensions clear contents.
 Keep the pre-upgrade save and old mod ZIP for rollback; do not downgrade a new
-presentation record in place. Client validation is deferred to your own review.
+presentation record in place. Broader client validation remains part of alpha review.
 Version 0.1.6 adds [live Map budgets](api/limits.md#live-mod-settings), fivefold
 defaults and [dirty-cell chart animation](monitor-animation.md). Higher budgets
 can reduce UPS; the measured two-tick publication cadence is not a universal
@@ -37,6 +39,11 @@ its shared-phase, all-screen updates.
 Version 0.1.7 adds the selected Foundry family, connected-subpixel curves and
 monitor component reuse without increasing those budgets. It does not promise
 60 UPS or smooth GPU-backed animation in arbitrary factories.
+Version 0.1.8 adds the [live Console](console.md): one-line Lua with real factory
+effects and shared save-backed scratch values. There is no command history and
+user functions cannot be retained. Run/Apply, Stop or confirmed Reset Shell clear
+scratch values; closing/reopening and save/load retain them. Keep a pre-upgrade
+save and matching ZIP rather than downgrading a save containing shell state.
 
 ## Research and craft
 

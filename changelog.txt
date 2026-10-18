@@ -1,4 +1,22 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.8
+Date: 2026-10-18
+  Features:
+    - Add a live single-line Console with native typing, paste, caret editing and Enter or Execute submission beside the saved program.
+    - Retain shared save-backed scalar/table graphs, aliases, cycles and checked peripheral bindings across commands, close/reopen and save/load.
+    - Add explicit confirmed Reset Shell without resetting saved source, application state or the running program. No command history is provided.
+  Changes:
+    - Share existing computer scheduling and work budgets between program and shell; recheck live peripheral authority on every call.
+    - Keep earlier factory effects on command failure while retaining the previously committed scratch graph. User functions cannot be retained.
+    - Run/Apply and explicit Stop reset shell values; power loss retains values but cancels pending commands and shell-owned outputs.
+  Bugfixes:
+    - Preserve shell syntax explanations and EOF positions, settle Console Follow after native layout, and show stale-reset errors in the active Console.
+  Info:
+    - ALPHA: back up saves. Factorio 2.0.77 base and optional Space Age; no OS, filesystem, unrestricted Lua or command history.
+    - Native Console workflows tested in both modes; real two-client late join and cold server resume tested in base only.
+    - Software-rendered client acceptance is not a GPU FPS, real-time latency or busy-factory performance guarantee.
+    - Retains 0.1.7 Foundry art, connected-subpixel charts, component reuse and live Map budgets; this release does not increase production safety ceilings.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.7
 Date: 2026-10-17
   Graphics:
