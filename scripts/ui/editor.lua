@@ -63,7 +63,9 @@ local function console(rec)
   local lines={'Rolling console: newest '..limits.console_entries..' entries / '..limits.console_bytes..' bytes; older output discarded.'}
   if rec.diagnostic then lines[#lines+1]='Active: '..diagnostic(rec.diagnostic) end
   for _,entry in ipairs(rec.logs) do lines[#lines+1]='['..entry.tick..'] '..entry.text end
-  return table.concat(lines,'\n')
+  -- Native text boxes show tabs as missing glyphs. Normalize only the display,
+  -- one byte for one byte, preserving stored logs, newlines and output quotas.
+  return (string.gsub(table.concat(lines,'\n'),'\t',' '))
 end
 local function refresh_console(c,s,rec,force)
   -- Follow off freezes this selectable snapshot: no reassignment can reset scroll.
