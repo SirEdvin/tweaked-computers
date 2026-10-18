@@ -29,7 +29,7 @@ class PackageInventoryTests(unittest.TestCase):
                                  'examples/monitor-plot-baseline.lua', 'examples/monitor-plot-baseline.json'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
-                self.assertEqual({name for name in planning if name.startswith('openspec/changes/buffer-monitor-presentation/')},
+                self.assertEqual({name for name in planning if not name.startswith(build.CONTRACT + '/')},
                                  set(build.CONTRACT_EXTENSIONS))
 
     def test_actual_gameplay_art_bytes_match_provenance(self):
@@ -62,6 +62,31 @@ class PackageInventoryTests(unittest.TestCase):
                          patch.object(Path, 'is_file', lambda p: p == fake or original(p)):
                         with self.assertRaisesRegex(ValueError, 'Mod Portal forbids executable'):
                             build.build(output)
+
+
+class ShellClientSceneTests(unittest.TestCase):
+    def test_fresh_save_roots_exist_before_engine_creation(self):
+        import shell_client
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            root = Path(output)
+            archive = build.build(root / 'package')
+            client = root / 'client'
+            (client / 'config').mkdir(parents=True)
+            (client / 'config/config.ini').write_text(
+                'read-data=__PATH__executable__/../../data\nwrite-data=__PATH__executable__/../..\n')
+            scene = root / 'scene'
+
+            def create(command, **kwargs):
+                for owner in ('server', 'client1', 'client2'):
+                    self.assertTrue((scene / owner / 'write/saves').is_dir())
+                # Explicit unit stub only; actual engine acceptance is separate.
+                Path(command[command.index('--create') + 1]).write_bytes(b'unit-test-only')
+                return SimpleNamespace(returncode=0, stdout='TC_SMOKE_OK')
+
+            with patch.object(shell_client.subprocess, 'check_output', return_value='Version: 2.0.77 (unit test full)'), \
+                 patch.object(shell_client.subprocess, 'run', side_effect=create):
+                shell_client.prepare(archive, root / 'engine/bin/x64/factorio', client, scene, 'base')
 
 
 class DocumentationSiteTests(unittest.TestCase):

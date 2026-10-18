@@ -74,6 +74,12 @@ jobs:
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/compiler-cache" --mode both \
             --fixture tests.compiler_cache_contract
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/shell-contract" --mode both \
+            --fixture tests.shell_contract
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/shell-cold" --mode both \
+            --fixture tests.shell_cold --production-context --cold
           for layout in four-walls mixed; do
             python tools/monitor_animation.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/animation-$layout" --mode both --layout "$layout"

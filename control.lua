@@ -21,6 +21,7 @@ script.on_event(defines.events.on_gui_opened,interaction.on_opened)
 script.on_event(defines.events.on_gui_closed,editor.on_closed)
 script.on_event(defines.events.on_gui_click,editor.on_click)
 script.on_event(defines.events.on_gui_text_changed,editor.on_text)
+script.on_event(defines.events.on_gui_confirmed,editor.on_confirmed)
 script.on_event(defines.events.on_gui_selected_tab_changed,editor.on_tab)
 script.on_event(defines.events.on_gui_selection_state_changed,editor.on_selection)
 script.on_event(defines.events.on_gui_checked_state_changed,editor.on_checked)
@@ -49,7 +50,7 @@ script.on_event(defines.events.on_tick,function(event) scheduler.tick(event.tick
 -- same lifecycle in a second mod would create duplicate physical helpers.
 if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixture'] then
   local name=settings.startup['tc-smoke-production-fixture'].value
-  assert(name=='tests.lifecycle_engine' or name=='tests.integration_engine' or name=='tests.redesign_engine' or name=='tests.monitor_feedback_engine' or name=='tests.rd1_upgrade_engine' or name=='tests.monitor_budget_engine' or name=='tests.monitor_presentation_engine' or name=='tests.monitor_plot_baseline_engine' or name=='tests.runtime_budget_engine' or name=='tests.monitor_animation_engine','unknown production-context fixture')
+  assert(name=='tests.shell_client_engine' or name=='tests.shell_cold' or name=='tests.lifecycle_engine' or name=='tests.integration_engine' or name=='tests.redesign_engine' or name=='tests.monitor_feedback_engine' or name=='tests.rd1_upgrade_engine' or name=='tests.monitor_budget_engine' or name=='tests.monitor_presentation_engine' or name=='tests.monitor_plot_baseline_engine' or name=='tests.runtime_budget_engine' or name=='tests.monitor_animation_engine','unknown production-context fixture')
   local test=require(name) -- control parsing only; never a guest source loader
   script.on_init(function()
     registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
@@ -61,6 +62,9 @@ if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixt
     registry.initialize(); lifecycle.upgrade_existing(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
     test.on_configuration_changed()
   end)
+  if test.on_player_joined then
+    script.on_event({defines.events.on_player_created,defines.events.on_player_joined_game},test.on_player_joined)
+  end
 end
 -- Isolated released-save upgrade driver. The companion is never shipped.
 if script.active_mods['tc-buffer-upgrade'] and settings.startup['tc-buffer-upgrade-run']

@@ -1,4 +1,4 @@
--- Plain native text: no rich text, guest evaluator, shell or file imports.
+-- Plain native help text; no rich text or file imports.
 local M={
   template=[[return {
   api_version = 1,
@@ -13,11 +13,18 @@ local M={
   }
 }]],
   text=[[TWEAKED COMPUTERS — Lua API v1
-One document. Native named callbacks; no OS, shell, VM or filesystem.
+One document. Native named callbacks; no OS, VM or filesystem.
 
 WORKFLOW
 Editor is the writing workspace. Focus hides tabs without replacing your source.
 Console holds bounded output; turn Follow off to pause its selectable snapshot.
+Console also accepts one live Lua line with Enter or Execute; no command history.
+Scratch globals/tables and peripheral bindings are shared per computer and saved.
+print(p.getSize()) inspects a retained p=peripheral.wrap(name,"red") binding.
+Calls affect the real factory. Failed commands keep previous scratch values but
+do not undo earlier API effects. No retained user functions, timers or subscriptions.
+Successful Run/Apply, explicit Stop or confirmed Reset Shell clear scratch values.
+Close/reopen, save/load, program faults and power loss keep committed values.
 Peripherals inspects the red or green channel, with explicit pending results.
 Reference filters this complete help by category/search; Select text uses native Copy.
 Insert starter only changes an empty draft. It never saves or runs it.
@@ -43,7 +50,8 @@ No require/load, game/storage/remote, _ENV/_G, metatables, coroutine, patterns,
 random, string-method syntax or colon calls. API calls use dots.
 Approved globals: assert, error, ipairs, pairs, next, pcall, select, tonumber,
 tostring, type, math, string, table, colors/colours, computer, peripheral.
-Use computer.log, not print. Fatal budget exhaustion cannot be caught by pcall.
+Saved programs use computer.log, not print. Console additionally has print(...).
+Fatal budget exhaustion cannot be caught by pcall.
 
 COMPUTER
 getID() -> string; getLabel() -> string/nil; setLabel(label/nil)

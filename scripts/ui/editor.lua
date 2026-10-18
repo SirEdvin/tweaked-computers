@@ -5,6 +5,7 @@ local limits=require('scripts.runtime.limits')
 local help=require('scripts.ui.help')
 local layout=require('scripts.ui.editor-layout')
 local scheduler=require('scripts.scheduler')
+local console_shell=require('scripts.runtime.shell')
 local M={frame_name='tc_program_editor'}
 local inspector -- Fixed parsing-time callback; never persisted or exposed to guests.
 function M.register_inspector(fn) assert(type(fn)=='function' and not inspector); inspector=fn end
@@ -68,13 +69,22 @@ local function refresh_console(c,s,rec,force)
   -- Follow off freezes this selectable snapshot: no reassignment can reset scroll.
   if force or s.follow~=false then
     local text=console(rec)
-    if c.output.text~=text then c.output.text=text; if s.follow~=false then c.output.scroll_to_bottom() end end
+    if c.output.text~=text then c.output.text=text end
+    -- Native text/layout updates can settle after this callback. Keep following
+    -- on later refreshes too, even when the log itself has not changed.
+    if s.follow~=false then c.output.scroll_to_bottom() end
   end
   c.follow.state=s.follow~=false
+  local state=type(rec.shell)=='table' and rec.shell or nil
+  s.shell_generation=state and type(state.id)=='string' and #state.id<=128 and state.id or false
+  c.shell_status.caption=state and type(state.status)=='string' and state.status:sub(1,256) or 'Live Lua: changes to peripherals are real. No command history.'
+  c.confirm_shell.visible=s.shell_reset~=nil
+  c.confirm_shell.identity.caption='Reset Shell values and pending commands? Program and peripheral data are retained.'
   c.note.caption=s.follow==false and tr('console-paused') or tr('console-bounded')
   local details={}
   if s.validation then details[#details+1]='Draft / saved validation: '..(s.validation.diagnostic and diagnostic(s.validation.diagnostic) or 'valid') end
   details[#details+1]=rec.diagnostic and ('Active run: '..diagnostic(rec.diagnostic)) or 'No active runtime diagnostic.'
+  if s.message then details[#details+1]=s.message end
   set_text(c.detail,table.concat(details,'\n'))
   enable(c.actions['show-location'],(s.validation and s.validation.diagnostic and s.validation.diagnostic.line~=nil)
     or (rec.diagnostic and rec.diagnostic.line~=nil) or false,'Select a diagnostic location explicitly. Active source must match the draft.')
@@ -167,7 +177,7 @@ function M.refresh(player,message)
   if not s or not f or not f.valid or f.tags.token~=s.token then return end
   -- Old saved GUI trees are not the new hierarchy. Retire only their session at
   -- admitted synchronized work; the accepted document stays intact. Never on_load.
-  if f.tags.ui_version~=2 then
+  if f.tags.ui_version~=2 or f.tags.shell_version~=1 then
     model.close(player.index,s.token); if player.opened==f then player.opened=nil end
     f.destroy(); player.print('Computer workspace updated; draft retained. Reopen the computer or recovery drafts.')
     return
@@ -200,7 +210,7 @@ function M.refresh(player,message)
   c.actions.activate.caption=rec.status=='running' and tr('apply') or tr('run')
   enable(c.actions.activate,not conflict and d.source==rec.saved_source,'Save this draft and resolve any conflict before Run / Apply.')
   enable(c.actions.save,not conflict,'Review the current saved revision and Rebase or Reload before saving.')
-  enable(c.actions.stop,rec.status~='stopped','Already stopped; source and data are retained.')
+  enable(c.actions.stop,rec.status~='stopped' or rec.shell~=nil,'Stop also clears the shell session; source and application state are retained.')
   c.message.template.visible=d.source=='' and not s.focus and not conflict
   local size=layout.measure(player.display_resolution,player.display_scale,s.focus)
   local source_height=size.source_height
@@ -213,7 +223,7 @@ end
 local function shell(player,s,title)
   local old=frame(player); if old then old.destroy() end
   local f=player.gui.screen.add{type='frame',name=M.frame_name,direction='vertical',style='tc_editor_frame',
-    tags={player=player.index,token=s.token,id=s.id or '',generation=s.generation or 0,ui_version=2}}
+    tags={player=player.index,token=s.token,id=s.id or '',generation=s.generation or 0,ui_version=2,shell_version=1}}
   local titlebar=flow(f,'title','horizontal')
   local heading=line(titlebar,'heading',title); heading.style.font='default-large-semibold'; heading.style.height=28; heading.drag_target=f
   local drag=titlebar.add{type='empty-widget',name='drag',style='draggable_space_header'}
@@ -273,6 +283,12 @@ function M.open(player,id)
   button(tools,'refresh-console',tr('refresh')); button(tools,'show-location',tr('show-location'))
   c.add{type='checkbox',name='follow',caption=tr('follow'),state=true}
   line(c,'note',''); box(c,'output','',200,true); box(c,'detail','',70,true)
+  line(c,'shell_status','Live Lua: changes to peripherals are real.')
+  local prompt=flow(c,'prompt','horizontal')
+  local input=plain(prompt.add{type='textfield',name='command',text=s.shell_draft or ''})
+  input.style.horizontally_stretchable=true
+  button(prompt,'execute',tr('execute')); button(prompt,'reset-shell',tr('reset-shell'))
+  confirm(c,'confirm_shell','shell',tr('confirm-shell'))
   c=content(f,'peripherals')
   local filter=flow(c,'filter','horizontal'); line(filter,'label',tr('channel'))
   filter.add{type='drop-down',name='wire',items={tr('red'),tr('green')},selected_index=1}
@@ -312,7 +328,7 @@ local function owned(event,closing)
   local player=game.get_player(event.player_index)
   if not player or not player.valid then return end
   local f=frame(player); local s=model.session(player.index); local e=event.element
-  if not f or not f.valid or not s or f.tags.ui_version~=2 or f.tags.token~=s.token or f.tags.player~=player.index
+  if not f or not f.valid or not s or f.tags.ui_version~=2 or f.tags.shell_version~=1 or f.tags.token~=s.token or f.tags.player~=player.index
     or f.tags.id~=(s.id or '') or f.tags.generation~=(s.generation or 0) then return end
   if not closing and player.opened~=f then return end
   if not e or not e.valid then return end
@@ -338,6 +354,11 @@ end
 local function selection(c,s) return s.recovery_names and s.recovery_names[c.recovery.selected_index] end
 function M.on_text(event)
   local player,f,s=owned(event); if not player or s.mode=='recovery' then return end
+  if event.element==content(f,'console').prompt.command then
+    local ok,problem=pcall(model.shell_edit,player,s.token,event.element.text)
+    if not ok then event.element.text=s.shell_draft or ''; content(f,'console').shell_status.caption=diagnostic(problem) end
+    return
+  end
   if event.element==content(f,'reference').filters.search then
     local text=event.element.text
     if #text>128 then event.element.text=s.search or ''; return end
@@ -350,6 +371,21 @@ function M.on_text(event)
     M.refresh(player,diagnostic(e)); return
   end
   s.message=nil; M.refresh(player)
+end
+local function submit_shell(player,f,s,tick)
+  local ok,result=pcall(model.shell_submit,player,s.token,tick)
+  local c=content(f,'console')
+  if ok then
+    s.message=nil
+    set_text(c.prompt.command,s.shell_draft or '')
+    refresh_console(c,s,(model.current(player,s.token)))
+  else c.shell_status.caption=diagnostic(result) end
+  c.prompt.command.focus()
+end
+function M.on_confirmed(event)
+  local player,f,s=owned(event)
+  if not player or s.mode=='recovery' or s.tab~=2 or event.element~=content(f,'console').prompt.command then return end
+  submit_shell(player,f,s,event.tick)
 end
 local function activate_tab(player,f,s,index,tick)
   s.tab=index; f.content.selected_tab_index=index
@@ -425,6 +461,11 @@ function M.on_click(event)
       return model.recovery_action(player.index,s.token,action,selection(c,s))
     end
     local rec,d=model.current(player,s.token)
+    local console=content(f,'console')
+    if element==console.prompt.execute then submit_shell(player,f,s,event.tick); return end
+    if element==console.prompt['reset-shell'] then model.shell_reset(player,s.token); return 'Confirm Reset Shell below.' end
+    if element==console.confirm_shell.buttons['confirm-shell'] then model.shell_reset(player,s.token,true); return 'Shell reset; program and data retained.' end
+    if element==console.confirm_shell.buttons['cancel-shell'] then model.shell_reset(player,s.token,false); return 'Shell reset canceled.' end
     if element==f.title.toggle_focus then
       if not s.focus then s.before_focus=s.tab; s.focus=true; s.tab=1; f.content.selected_tab_index=1
       else s.focus=false; activate_tab(player,f,s,s.before_focus or 1,event.tick) end
@@ -480,7 +521,7 @@ end
 function M.resize(player)
   local f=player and frame(player); local s=player and model.session(player.index)
   if not f or not f.valid or not s then return end
-  if f.tags.ui_version~=2 then M.refresh(player); return end
+  if f.tags.ui_version~=2 or f.tags.shell_version~=1 then M.refresh(player); return end
   local size=layout.measure(player.display_resolution,player.display_scale,s.focus)
   f.style.width=size.width; f.style.height=size.height
   f.title.style.width=size.width-24; f.title.toggle_focus.caption=s.focus and tr('exit-focus') or tr('focus')
@@ -509,7 +550,9 @@ function M.resize(player)
   c.status.visible=not s.focus; c.message.visible=not s.focus
 
   c.message.feedback.style.maximal_width=size.content_width-160
-  content(f,'console').output.style.height=math.max(40,size.content_height-164)
+  content(f,'console').output.style.height=math.max(40,size.content_height-272)
+  content(f,'console').prompt.style.width=size.content_width
+  content(f,'console').prompt.command.style.width=math.max(80,size.content_width-190)
   content(f,'peripherals').rows.style.height=math.max(40,size.content_height-180)
   content(f,'peripherals').rows.style.width=size.content_width
   content(f,'reference').reference_text.style.height=math.max(40,size.content_height-144)
@@ -527,4 +570,13 @@ function M.tick(tick,spend)
   end
 end
 scheduler.register_phase('render','program-editor',M.tick)
+console_shell.register_authority(function(rec,index,token)
+  local player=game.get_player(index)
+  local s=player and model.session(index); local f=player and frame(player)
+  if not player or not player.valid or not s or s.id~=rec.id or s.token~=token or s.tab~=2
+    or not f or not f.valid or f.visible==false or f.enabled==false or player.opened~=f or f.tags.token~=token or f.tags.player~=index
+    or f.tags.id~=rec.id or f.tags.generation~=rec.generation or f.tags.shell_version~=1
+    or f.content.selected_tab_index~=2 or f.content.console.visible==false or f.content.console.enabled==false then return false end
+  return pcall(model.current,player,token)
+end)
 return M

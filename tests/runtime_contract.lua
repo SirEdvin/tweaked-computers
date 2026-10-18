@@ -49,7 +49,7 @@ function M.run(report_total)
   run_case('cyclic-service-data',[[local t={}; t.self=t; computer.log(t)]],false,'E_ARGUMENT')
   run_case('ordinary-protection',[[local ok,e=pcall(function() error({code='E_ARGUMENT',message='catchable'}) end); assert(not ok and e.code=='E_ARGUMENT')]],true)
   run_case('safe-reference-description',[[assert(tostring({})=='table'); assert(tostring(function() end)=='guest function')]],true)
-  for _,body in ipairs({'game.tick=1','return _ENV','return __tc','require("x")','return ("x"):sub(1)','::label::','goto label','_G.x=1','new_global=1'}) do
+  for _,body in ipairs({'game.tick=1','return _ENV','return __tc','require("x")','return ("x"):sub(1)','::label::','goto label','_G.x=1','new_global=1','print(1)'}) do
     local ctx=admission.context(admission.new(),'bad-source',0)
     local plan,e=compiler.compile(source(body),ctx)
     assert(not plan and e.code=='E_PROGRAM',body..': '..(e and e.message or 'accepted forbidden source'))

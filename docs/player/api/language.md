@@ -34,6 +34,12 @@ Nonfinite values cannot cross state/API boundaries. Use dot calls everywhere.
 
 ## Approved globals and libraries
 
+The [live Console](../console.md) is a separate, bounded evaluation mode: it also
+accepts statements/expressions and nonreserved scratch-global assignments, and
+provides `print(...)`. Its save-backed values are not saved-program locals.
+The descriptor syntax, global-write prohibition and no-print rule below still
+apply to saved handler programs. Both modes use the same guards and tick ledger.
+
 Globals: `assert`, `error`, `ipairs`, `pairs`, `next`, `pcall`, `select`,
 `tonumber`, `tostring`, `type`; read-only `math`, `string`, `table`,
 `colors`/`colours`, `computer`, `peripheral`. No `print`: use `computer.log`.

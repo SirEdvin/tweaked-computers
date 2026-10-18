@@ -5,6 +5,7 @@ local compiler = require('scripts.runtime.compiler')
 local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
+local shell = require('scripts.runtime.shell')
 local M = {}
 local hooks={lifecycle={},sample={},notifications={},render={}}
 local refusal={} -- Host-only ephemeral maintenance deferral identity.
@@ -106,7 +107,7 @@ function M.advance_timers(rec,tick,spend)
     if timer.interval then timer.deadline=deadline else rec.timers[timer.id]=nil end
   end
 end
-function M.dispatch(rec,tick)
+local function dispatch_program(rec,tick)
   if rec.status~='running' or not rec.powered or #rec.queue==0 or rec.last_dispatch_tick==tick then return false end
   -- Physical sampling can defer under maintenance pressure. Never dispatch from
   -- an old positive power observation; standalone runtime fixtures have no tag.
@@ -145,6 +146,25 @@ function M.dispatch(rec,tick)
     else runtime.fault(rec,diagnostic,tick) end
   end
   return true
+end
+function M.dispatch(rec,tick)
+  if not rec.powered or rec.last_dispatch_tick==tick then return false end
+  if not rec.body.valid then return dispatch_program(rec,tick) end
+  if rec.physical_version and (rec.physical_error or rec.power_checked_tick~=tick) then return false end
+  local root=registry.get()
+  local maximum=math.min(limits.compile_work+limits.callback_work+limits.callback_allocations,
+    limits.host_work_per_tick-limits.maintenance_work_per_tick)
+  if root.ledger.tick==tick and root.ledger.total+maximum>limits.host_work_per_tick-limits.maintenance_work_per_tick then return false end
+  local pending=shell.waiting(rec)
+  local program=rec.status=='running' and #rec.queue>0
+  if pending and (not program or rec.next_work_class~='program') then
+    local dispatched=shell.dispatch(rec,tick)
+    if dispatched then rec.next_work_class='program' end
+    return dispatched
+  end
+  local dispatched=dispatch_program(rec,tick)
+  if dispatched then rec.next_work_class='shell' end
+  return dispatched
 end
 function M.tick(tick)
   local root=registry.get()

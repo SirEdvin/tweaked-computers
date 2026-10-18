@@ -82,6 +82,13 @@ remain unchanged.
 | `console_entries` | 64 |
 | `console_bytes` | 16384 |
 | `fail_safe_latency_ticks` | 1 |
+| `shell_source_bytes` | 4096 |
+| `shell_bindings` | 64 |
+| `shell_value_bytes` | 16384 |
+| `shell_nodes` | 1024 |
+| `shell_pending_entries` | 8 |
+| `shell_pending_bytes` | 16384 |
+| `shell_sessions` | 64 |
 | `registry_entries` | 4096 |
 | `owned_children` | 8 |
 | `maintenance_work_per_tick` | 200000 |

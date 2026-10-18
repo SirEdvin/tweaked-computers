@@ -43,7 +43,8 @@ Open the computer with Ctrl + left-click after clearing the cursor.
 Copy the document between the outer long
 brackets in [factory-controller.lua](../examples/factory-controller.lua), not the
 host wrapper `return [[...]]`, into the source text box. Validate, **Save**, then
-**Run**. This is one document: there are no filenames, imports or shell commands.
+**Run**. This saved program is one document: there are no filenames or imports.
+The separate live Console can experiment without replacing this controller.
 The source is also shipped in the installed ZIP; it does not execute through
 `require` inside the guest.
 

@@ -6,6 +6,7 @@ local network=require('scripts.network')
 local lifecycle=require('scripts.lifecycle')
 local errors=require('scripts.runtime.errors')
 local data=require('scripts.runtime.data')
+local principal=require('scripts.runtime.principal')
 local M={}; local backend; local authority
 local L=model.limits
 function M.install(b) assert(not backend); backend=b end
@@ -49,13 +50,23 @@ local function cancel(p,lane)
     lane.job=nil
   end
 end
-local function release(c,reason)
+local function release(c,reason,execution)
+  execution=execution or principal.program(c)
+  if type(execution.id)~='string' then return end
+  local owner=principal.selection(c,execution)
   local r=registry.get(); local s=r and r.monitors; local p=s and s.presentation
-  local selection=c.monitor_sync
-  if selection and p and p.version==1 then
-    local lane=p.lanes[selection.key]; if lane then cancel(p,lane); p.lanes[selection.key]=nil end
+  local selection=type(owner)=='table' and owner.monitor_sync
+  local matches=selection and selection.run_id==execution.id
+  local key=matches and selection.key or 'group/'..c.id..'/'..execution.id
+  if p and p.version==1 then
+    local lane=p.lanes[key]
+    if lane and lane.owner==c.id and lane.run_id==execution.id and (lane.owner_kind or 'program')==execution.kind then
+      cancel(p,lane); p.lanes[key]=nil
+    end
   end
-  c.monitor_sync=nil; c.monitor_sync_diagnostic=reason
+  if matches or not selection and type(owner)=='table' and principal.live(c,execution) then
+    owner.monitor_sync=nil; owner.monitor_sync_diagnostic=reason
+  end
 end
 M.release=release
 local function owner_of(p,id)
@@ -63,7 +74,9 @@ local function owner_of(p,id)
     for _,ref in ipairs(lane.members) do if ref.name==id then return lane end end
   end end
 end
-function M.select(c,tick,spend,input)
+function M.select(c,tick,spend,input,execution)
+  execution=execution or principal.program(c)
+  local owner=principal.selection(c,execution)
   if type(input)~='table' or getmetatable(input) then errors.raise('E_ARGUMENT','dense monitor references required') end
   local n=0
   for k in pairs(input) do
@@ -72,7 +85,7 @@ function M.select(c,tick,spend,input)
     if n>L.sync_group_refs then errors.raise('E_LIMIT','too many supplied references') end
   end
   for i=1,n do if input[i]==nil then errors.raise('E_ARGUMENT','sparse monitor references') end end
-  if n==0 then spend(L.tiles*8+128); release(c,nil); return end
+  if n==0 then spend(L.tiles*8+128); release(c,nil,execution); return end
   local s=registry.get().monitors
   if not s or s.version~=1 or s.job then errors.raise('E_NETWORK_PENDING','monitor topology pending') end
   if s.presentation and s.presentation.version~=1 then errors.raise('E_UNSUPPORTED','unknown presentation version retained') end
@@ -97,29 +110,30 @@ function M.select(c,tick,spend,input)
   local p=s.presentation
   for _,ref in ipairs(members) do
     local other=p and owner_of(p,ref.name)
-    if other and (other.owner~=c.id or other.run_id~=c.run_id) then errors.raise('E_BUSY','monitor already selected by another run') end
+    if other and (other.owner~=c.id or other.run_id~=execution.id or (other.owner_kind or 'program')~=execution.kind) then errors.raise('E_BUSY','monitor already selected by another execution owner') end
   end
-  local old=c.monitor_sync; local identical=old and old.run_id==c.run_id and #old.members==#members
+  local old=owner.monitor_sync; local identical=old and old.run_id==execution.id and #old.members==#members
   if identical then for i,ref in ipairs(members) do
     if old.members[i].name~=ref.name or old.members[i].wire~=ref.wire then identical=false; break end
   end end
   spend(L.tiles*8+128+#members*16)
   if identical then return end
-  p=state(s); release(c,nil)
+  p=state(s); release(c,nil,execution)
   if #members==0 then return end
-  local key='group/'..c.id..'/'..c.run_id
-  local lane={key=key,members=members,owner=c.id,run_id=c.run_id,participation={},sequence=0,presented_sequence=0,status='waiting'}
+  local key='group/'..c.id..'/'..execution.id
+  local lane={key=key,members=members,owner=c.id,owner_kind=execution.kind,run_id=execution.id,participation={},sequence=0,presented_sequence=0,status='waiting'}
   -- Selecting a display cancels its unpublished singleton epoch, not its front.
   for _,ref in ipairs(members) do
     local single=p.lanes[ref.name]; if single then cancel(p,single); p.lanes[ref.name]=nil end
   end
-  p.lanes[key]=lane; c.monitor_sync={key=key,run_id=c.run_id,members=members}
+  p.lanes[key]=lane; owner.monitor_sync={key=key,run_id=execution.id,members=members}
 end
-function M.status(c,spend)
+function M.status(c,spend,execution)
+  local owner=principal.selection(c,execution or principal.program(c))
   local s=registry.get().monitors; local p=s and s.presentation
-  local selected=c.monitor_sync
+  local selected=owner.monitor_sync
   local lane=selected and p and p.version==1 and p.lanes[selected.key]
-  local result={members={},status='none',presented_sequence=0,diagnostic=c.monitor_sync_diagnostic}
+  local result={members={},status='none',presented_sequence=0,diagnostic=owner.monitor_sync_diagnostic}
   if lane then
     result.status=lane.diagnostic and 'blocked' or (lane.job or lane.pending) and 'preparing' or 'waiting'
     result.presented_sequence=lane.presented_sequence; result.presented_tick=lane.presented_tick; result.diagnostic=lane.diagnostic
@@ -208,10 +222,12 @@ end
 local function blocked(lane,code,message) lane.status='blocked'; lane.diagnostic=errors.new(code,message) end
 local function qualify(s,lane,spend,proofs)
   if s.job then blocked(lane,'E_NETWORK_PENDING','monitor topology pending'); return false end
+  local owner=lane.owner and registry.record(lane.owner)
+  local execution=lane.owner and {kind=lane.owner_kind or 'program',id=lane.run_id}
   if lane.owner then
-    local c=registry.record(lane.owner)
-    if not c or c.run_id~=lane.run_id or c.status~='running' then
-      if c then release(c,errors.new('E_NOT_FOUND','selecting run retired')) else cancel(s.presentation,lane); s.presentation.lanes[lane.key]=nil end
+    local c=owner
+    if not c or not principal.live(c,execution) then
+      if c then release(c,errors.new('E_NOT_FOUND','selecting owner retired'),execution) else cancel(s.presentation,lane); s.presentation.lanes[lane.key]=nil end
       return false
     end
     if not c.powered or not lifecycle.has_power(c) then blocked(lane,'E_UNPOWERED','selecting computer unpowered'); return false end
@@ -220,11 +236,31 @@ local function qualify(s,lane,spend,proofs)
   for _,ref in ipairs(lane.members) do
     local g=s.groups[ref.name]
     if not g or ref.generation~=g.generation then
-      if lane.owner then release(registry.record(lane.owner),errors.new('E_UNREACHABLE','monitor identity removed')) end
+      if owner then release(owner,errors.new('E_UNREACHABLE','monitor identity removed'),execution) end
       return false
     end
     total=total+g.model.width*g.model.height
     if not authority.available(g,spend,proofs) then blocked(lane,'E_UNPOWERED','monitor unpowered'); return false end
+    -- Shells have no program subscriptions/topology sweep, and can remain live
+    -- while stopped. Revoke their idle selections too, not only ready jobs.
+    if owner and execution.kind=='shell' then
+      local ok,valid=pcall(network.validate_witness,owner,ref.wire,ref.path,spend)
+      if not ok then
+        if type(valid)~='table' or not valid.code then error(valid,0) end
+        blocked(lane,valid.code,valid.message); return false
+      end
+      if not valid then
+        local checked,target,path=pcall(authority.lookup,owner,ref.name,ref.wire,spend)
+        if not checked then
+          if type(target)~='table' or not target.code then error(target,0) end
+          blocked(lane,target.code,target.message); return false
+        end
+        if not target or target.generation~=ref.generation then
+          release(owner,errors.new('E_UNREACHABLE','selected shell path removed'),execution); return false
+        end
+        spend(#path+4); ref.path=path
+      end
+    end
   end
   if total>L.sync_group_cells then blocked(lane,'E_CAPACITY','selected grids exceed combined capacity'); return false end
   lane.diagnostic=nil; return true,total
@@ -293,16 +329,17 @@ local function commit(s,p,job,tick,spend,proofs)
   end
   if lane.owner then
     local c=registry.record(lane.owner)
+    local execution={kind=lane.owner_kind or 'program',id=lane.run_id}
     for _,ref in ipairs(lane.members) do
       local ok,valid=pcall(network.validate_witness,c,ref.wire,ref.path,spend)
       if not ok then return proof_failure(valid) end
       if not valid then
         local checked,g,path=pcall(authority.lookup,c,ref.name,ref.wire,spend)
         if not checked then return proof_failure(g) end
-        if not g then release(c,errors.new('E_UNREACHABLE','selected network path removed')); return false end
+        if not g then release(c,errors.new('E_UNREACHABLE','selected network path removed'),execution); return false end
         spend(#path+4); ref.path=path; return false -- Refresh one stale proof, then retry the whole barrier.
       end
-      if s.membership[ref.path[#ref.path]]~=ref.name then release(c,errors.new('E_UNREACHABLE','selected endpoint regrouped')); return false end
+      if s.membership[ref.path[#ref.path]]~=ref.name then release(c,errors.new('E_UNREACHABLE','selected endpoint regrouped'),execution); return false end
     end
   end
   local oldcells,oldframes=0,0
@@ -461,6 +498,9 @@ function M.tick(tick,spend)
   cleanup(p,spend,remaining)
   scheduler.request_render_work(registry.get(),tick,demand,spend)
 end
+principal.register_cleanup('monitor-sync',function(c,p,reason)
+  release(c,errors.new('E_NOT_FOUND','monitor selection released: '..reason),p)
+end)
 registry.register_cleanup('monitor-sync',function(c,run,reason)
   if c.kind=='computer' and c.monitor_sync and c.monitor_sync.run_id==run and reason~='power_loss' then
     release(c,errors.new('E_NOT_FOUND','monitor selection released: '..reason))

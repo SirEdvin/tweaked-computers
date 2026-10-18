@@ -290,6 +290,11 @@ def inventory():
             'requirements': re.findall(r'^### Requirement: (.+)$', specification.read_text(), re.M),
             'reviewed_player_pages': pageset,
         }
+    shell_root=ROOT / 'openspec/changes/add-interactive-console-shell/specs/console-shell'
+    for name in ('spec.md', 'lua-api.md'):
+        assert (shell_root / name).is_file(), 'missing Console contract'
+    assert 'console.md' in text('mkdocs.yml') and (DOCS / 'console.md').is_file()
+    assert 'no command history' in (DOCS / 'console.md').read_text().lower()
     for file in ['api/common.md', 'api/native-language.md']:
         assert (CHANGE / file).is_file()
     catalog = json.loads((CHANGE / 'specs/device-configurator/configuration-catalog.json').read_text())

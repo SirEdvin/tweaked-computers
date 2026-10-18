@@ -7,6 +7,7 @@ local defs=require('scripts.device-definitions')
 local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
 local data=require('scripts.runtime.data')
+local principal=require('scripts.runtime.principal')
 local M={}
 local types={kv='kv_database',monitor='monitor',logic='logic_handler',configurator='configurator'}
 local bindings={}; local revocations={}
@@ -69,21 +70,24 @@ local function target(inventory,name)
   return rec,item
 end
 M.resolve_inventory_item=target -- Host-only: logical displays are not registry tile IDs.
-function M.revoke(computer,name,wire,reason)
+function M.revoke(computer,name,wire,reason,execution)
   local root=registry.get()
+  local program_owner,shell_owner=principal.program(computer),principal.shell(computer)
   -- Exact current writer only. The cleanup walk is covered by callers' fixed
   -- safety/publication admission; it never executes player source.
   for _,id in ipairs(root.order) do
     local rec=registry.record(id); local owner=rec and rec.output_owner
+    local current_owner=execution and principal.matches(owner,computer,execution)
+      or not execution and (principal.matches(owner,computer,program_owner) or principal.matches(owner,computer,shell_owner))
     if rec and rec.kind=='logic' and rec.id==name and owner
-      and owner.computer_id==computer.id and owner.run_id==computer.run_id and owner.wire==wire then
+      and owner.computer_id==computer.id and owner.wire==wire and current_owner then
       lifecycle.clear_output(rec)
     end
   end
   local names={}; for key in pairs(revocations) do names[#names+1]=key end; table.sort(names)
   local failed=false
   for _,key in ipairs(names) do
-    local ok=pcall(revocations[key],computer,name,wire,reason)
+    local ok=pcall(revocations[key],computer,name,wire,reason,execution)
     if not ok then failed=true end
   end
   if failed then
@@ -93,15 +97,16 @@ end
 local function check_name(name)
   if type(name)~='string' or #name==0 or #name>limits.identifier_bytes then errors.raise('E_ARGUMENT','bounded peripheral name required') end
 end
-function M.services(computer,tick,guard)
-  local run_id=computer.run_id; local handles=setmetatable({},{__mode='k'})
+function M.services(computer,tick,guard,execution)
+  execution=execution or principal.program(computer)
+  local handles=setmetatable({},{__mode='k'})
   local availability={} -- One non-yielding callback only, never retained across ticks.
   local inventories={}
   local authorized=false
   local spend=guard.spend
   local function current()
     guard.check()
-    if registry.record(computer.id)~=computer or computer.run_id~=run_id or computer.status~='running'
+    if not principal.live(computer,execution)
       or not computer.powered or not authorized and not lifecycle.connector(computer,'network','red') then
       errors.raise('E_NOT_FOUND','computer run no longer authorized')
     end
@@ -128,10 +133,13 @@ function M.services(computer,tick,guard)
     return target(inventory(wire),name)
   end
   local function invoke(name,wire,generation,method,...)
+    if execution.kind=='shell' and (method=='subscribe' or method=='unsubscribe') then
+      errors.raise('E_UNSUPPORTED','subscriptions require a saved handler program')
+    end
     -- Reprove physical authority even for captured functions/getLimits.
     local rec=lookup(name,wire)
     if not rec or (generation and rec.generation~=generation) then
-      spend(limits.registry_entries*4+32); M.revoke(computer,name,wire,'wire_removed')
+      spend(limits.registry_entries*4+32); M.revoke(computer,name,wire,'wire_removed',execution)
       errors.raise('E_UNREACHABLE','peripheral binding is no longer reachable')
     end
     local fn=bindings[rec.kind].methods[method]
@@ -147,6 +155,7 @@ function M.services(computer,tick,guard)
       or (not available and (not rec.powered or not lifecycle.has_power(rec)))) then
       errors.raise('E_UNPOWERED','peripheral is unpowered')
     end
+    if bindings[rec.kind].with_principal then return fn(computer,rec,wire,tick,spend,execution,...) end
     return fn(computer,rec,wire,tick,spend,...)
   end
   local function facade(rec,wire)
@@ -154,8 +163,17 @@ function M.services(computer,tick,guard)
     for method in pairs(bindings[rec.kind].methods) do
       local key=method
       methods[key]=guard.service(function(...) return invoke(name,wire,generation,key,...) end)
+
     end
     local proxy=guard.namespace(methods,'peripheral method')
+    if guard.shell_enabled then
+      for key,fn in pairs(methods) do
+        guard.host_work(#name+#key+64,#name+#key+64)
+        guard.bind_value(fn,{name=name,wire=wire,generation=generation,kind=rec.kind,method=key,facade=proxy})
+      end
+      guard.host_work(#name+64,#name+64)
+      guard.bind_value(proxy,{name=name,wire=wire,generation=generation,kind=rec.kind})
+    end
     handles[proxy]={name=name,wire=wire,generation=generation}
     return proxy
   end
@@ -170,11 +188,11 @@ function M.services(computer,tick,guard)
   method('getNames',1,function(wire) return sorted(inventory(wire),spend) end)
   method('setMonitorSyncGroup',1,function(members)
     if not monitor_sync then errors.raise('E_UNSUPPORTED','monitor provider unavailable') end
-    return monitor_sync.set(computer,tick,spend,members)
+    return monitor_sync.set(computer,tick,spend,members,execution)
   end)
   method('getMonitorSyncGroup',0,function()
     if not monitor_sync then errors.raise('E_UNSUPPORTED','monitor provider unavailable') end
-    return monitor_sync.get(computer,spend)
+    return monitor_sync.get(computer,spend,execution)
   end)
   method('isPresent',2,function(name,wire) return lookup(name,wire)~=nil end)
   method('getType',2,function(name,wire) local rec=lookup(name,wire); return rec and types[rec.kind] or nil end)
@@ -212,6 +230,23 @@ function M.services(computer,tick,guard)
     end)
     guard.accept_handle(api[key],1)
   end
+  if guard.shell_enabled then guard.binding_resolver(function(d,parent)
+    if type(d)~='table' or type(d.name)~='string' or #d.name==0 or #d.name>limits.identifier_bytes
+      or not bindings[d.kind] or not errors.integer(d.generation,1,9007199254740991)
+      or (d.wire~='red' and d.wire~='green') then errors.raise('E_ARGUMENT','invalid retained peripheral identity') end
+    spend(#d.name+32)
+    if d.method then
+      if type(d.method)~='string' or not bindings[d.kind].methods[d.method] then errors.raise('E_ARGUMENT','invalid retained peripheral method') end
+      if parent then
+        local identity=handles[parent]
+        if not identity or identity.name~=d.name or identity.wire~=d.wire or identity.generation~=d.generation then errors.raise('E_ARGUMENT','captured method/facade identity mismatch') end
+        return guard.get(parent,d.method)
+      end
+      local fn=guard.service(function(...) return invoke(d.name,d.wire,d.generation,d.method,...) end)
+      guard.bind_value(fn,d); return fn
+    end
+    return facade({id=d.name,generation=d.generation,kind=d.kind},d.wire)
+  end) end
   return {peripheral=api}
 end
 -- Each transition is committed before guest notification. A bounded durable job
@@ -317,7 +352,7 @@ function M.check_outputs(tick,spend)
     local rec=registry.record(id); local owner=rec and rec.kind=='logic' and rec.output_owner
     if owner then
       local computer=type(owner)=='table' and root.computers[owner.computer_id]; local valid=false
-      if computer and computer.status=='running' and computer.run_id==owner.run_id and computer.powered then
+      if computer and principal.live(computer,{kind=owner.kind or 'program',id=owner.run_id}) and computer.powered then
         local safe,admitted,result=pcall(scheduler.try_maintenance,function()
           if owner.wire~='red' and owner.wire~='green' then return false end
           if owner.path and network.validate_witness(computer,owner.wire,owner.path,spend) then
@@ -339,6 +374,12 @@ function M.check_outputs(tick,spend)
   end
 end
 runtime.register_services('peripheral',M.services)
+principal.register_cleanup('logic-output',function(c,p)
+  for _,id in ipairs(registry.get().order) do
+    local rec=registry.record(id)
+    if rec and rec.kind=='logic' and principal.matches(rec.output_owner,c,p) then lifecycle.clear_output(rec) end
+  end
+end)
 registry.register_cleanup('network-owned-output',function(computer,run_id,reason)
   if computer.kind~='computer' then return end
   if reason~='power_loss' and reason~='authority_changed' then computer.network_views=nil end

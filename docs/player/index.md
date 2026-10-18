@@ -4,8 +4,10 @@ Build a programmable factory controller: read circuit signals, control an
 inserter, keep shared telemetry and draw a touchable status screen.
 
 Tweaked Computers runs bounded native Lua callbacks, not a computer OS. Each
-computer has one source document and explicit persistent state. There are no
-shell commands, files, imports, background threads or direct Factorio objects.
+computer has one source document and explicit persistent state. The separate
+[live Console](console.md) evaluates bounded Lua lines with shared saved scratch
+bindings. There are no OS commands, files, imports, background threads or direct
+Factorio objects, and no command history.
 
 ## Start here
 
@@ -33,9 +35,10 @@ verified by this guide.
 
 The implementation has packaged headless native-runtime, factory-effect and
 cold-save checks. Foundry artwork and live charts have isolated software-rendered
-base/Space Age captures. Graphical typing/paste/focus, native wire selection,
-touch delivery, audible speaker playback and multiplayer client joining remain
-user testing, not agent-verified features. These captures are not GPU benchmarks.
+base/Space Age captures. The Console candidate has an isolated native-input smoke;
+full UI size/workflow acceptance, native wire selection/touch, audible playback
+and connected multiplayer joining remain independent review/user checks.
+These captures are not GPU benchmarks.
 Resource ceilings are provisional safety limits, not a promise of real-time latency
 or simultaneous maximum-world performance. Report failures with the mod/engine
 versions, wiring, source and error code; remove private literals before sharing.

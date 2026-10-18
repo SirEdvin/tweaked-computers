@@ -129,7 +129,8 @@ local function publish_native(rec,bank)
   for i=cb.sections_count-1,1,-1 do cb.remove_section(i) end
   staged.active=true; cb.enabled=#bank>0
 end
-local function output(computer,rec,wire,tick,spend,signals)
+local principal=require('scripts.runtime.principal')
+local function output(computer,rec,wire,tick,spend,signals,execution)
   local bank=canonical(signals,spend)
   spend(limits.registry_entries+M.signal_slots*256+64)
   local count=0
@@ -147,7 +148,7 @@ local function output(computer,rec,wire,tick,spend,signals)
     end
     errors.raise('E_ENGINE',(restored and 'native output refused; old bank restored: ' or 'native output failed; output cleared and recovery retained: ')..tostring(e):sub(1,256))
   end
-  rec.output_bank=bank; rec.output_owner={computer_id=computer.id,run_id=computer.run_id,wire=wire,path=path}
+  rec.output_bank=bank; rec.output_owner=principal.owner(computer,execution or principal.program(computer),wire,path)
   rec.output_recovery=nil
 end
 local function remove_queued(c,id,spend)
@@ -184,8 +185,11 @@ local function subscribe(c,rec,wire,tick,spend,options,handler)
 end
 local methods={}
 local function method(name,n,fn)
-  methods[name]=function(c,rec,wire,tick,spend,...)
-    arity(select('#',...),n); return fn(c,rec,wire,tick,spend,...)
+  methods[name]=function(c,rec,wire,tick,spend,execution,...)
+    arity(select('#',...),n)
+    if name=='setOutput' then return output(c,rec,wire,tick,spend,...,execution) end
+    if name=='clearOutput' then return output(c,rec,wire,tick,spend,{},execution) end
+    return fn(c,rec,wire,tick,spend,...)
   end
 end
 method('readSignal',2,function(c,r,w,t,spend,input,s)
@@ -349,7 +353,9 @@ registry.register_cleanup('logic-subscriptions',function(rec,run,reason)
     lifecycle.clear_output(rec)
   end
 end)
-peripheral.register_type('logic',{methods=methods})
-peripheral.register_revocation('logic-subscriptions',M.revoke)
+peripheral.register_type('logic',{methods=methods,with_principal=true})
+peripheral.register_revocation('logic-subscriptions',function(c,name,wire,reason,execution)
+  if not execution or execution.kind=='program' then M.revoke(c,name,wire) end
+end)
 scheduler.register_phase('sample','logic-input',M.sample)
 return M

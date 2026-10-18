@@ -1,5 +1,6 @@
 local parse = require('vendor.phobos.parser')
 local tokenize = require('vendor.phobos.tokenize')
+local parser_errors = require('vendor.phobos.error_code_util')
 local limits = require('scripts.runtime.limits')
 local admission = require('scripts.runtime.admission')
 local parsing = require('scripts.runtime.parse_admission')
@@ -13,7 +14,7 @@ local cache,order={},{}
 local function plan_copy(p)
   local names={}; for k,v in pairs(p.handlers) do names[k]=v end
   return {compiler_version=p.compiler_version,api_version=p.api_version,source=p.source,
-    generated=p.generated,handlers=names,nodes=p.nodes}
+    generated=p.generated,handlers=names,nodes=p.nodes,mode=p.mode}
 end
 local globals = {}
 for _, name in ipairs({'assert','error','ipairs','pairs','next','pcall','select','tonumber','tostring','type',
@@ -44,7 +45,19 @@ local function global(node)
   return node.node_type == 'index' and node.src_ex_did_not_exist
 end
 
-local function emit(main)
+local forbidden={game=true,storage=true,script=true,remote=true,defines=true,settings=true,
+  require=true,load=true,loadfile=true,dofile=true,debug=true,os=true,io=true,coroutine=true}
+local function shell_name(name,node,write)
+  identifier(name,node)
+  if forbidden[name] or write and (globals[name] or name=='print') then reject(node,'unavailable shell global: '..name) end
+  return name
+end
+local function emit(main,mode,expression)
+  local function coordinates(node)
+    local l,c=position(node)
+    if expression and l==1 then c=math.max(1,c-7) end
+    return l..','..c
+  end
   local nodes, nesting, generated, temp = 0, 0, 0, 0
   local expr, body, statement, func
   local function visit(n)
@@ -92,7 +105,8 @@ local function emit(main)
     elseif k == 'index' then
       if global(n) then
         local name = identifier(n.suffix.value,n.suffix)
-        if not globals[name] then reject(n.suffix, 'unavailable global: '..name) end
+        if mode=='shell' then shell_name(name,n.suffix,false)
+        elseif not globals[name] then reject(n.suffix, 'unavailable global: '..name) end
         s = '__tc.global('..string.format('%q',name)..')'
       else s = '__tc.get('..expr(n.ex)..','..expr(n.suffix)..')' end
     elseif k == 'call' then
@@ -156,6 +170,11 @@ local function emit(main)
       local out,targets={'do', 'local '..prefix..'targets=__tc.assignment_targets('..count..');'},{}
       for i,lhs in ipairs(n.lhs) do
         if lhs.node_type == 'local_ref' or lhs.node_type == 'upval_ref' then targets[i] = identifier(lhs.name,lhs)
+        elseif mode=='shell' and global(lhs) then
+          local name=shell_name(lhs.suffix.value,lhs.suffix,true)
+          indexed=indexed+1
+          out[#out+1]=prefix..'targets['..i..']={__tc.shell_root(),'..string.format('%q',name)..'};'
+          targets[i]=prefix..'targets['..i..'][1]['..prefix..'targets['..i..'][2]]'
         elseif lhs.node_type == 'index' and not global(lhs) then
           indexed=indexed+1
           out[#out+1] = prefix..'targets['..i..']={'..expr(lhs.ex)..','..expr(lhs.suffix)..'};'
@@ -194,6 +213,12 @@ local function emit(main)
     else reject(n,'unsupported statement: '..tostring(k)) end
     return leave(text('__tc.step('..coordinates(n)..'); '..s))
   end
+  if mode=='shell' then
+    local output='return function() '..body(main)..' end'
+    parsing.enter(#output)
+    if #output>limits.generated_source_bytes then reject(nil,'generated source too large','E_LIMIT') end
+    return output,{},nodes
+  end
   local ret, stat = nil, main.body.first
   while stat do
     if stat.node_type ~= 'empty' then
@@ -231,10 +256,13 @@ local function emit(main)
   return output, names, nodes
 end
 
-function M.compile(source, context)
+function M.compile(source, context, mode)
+  if mode~=nil and mode~='shell' then return nil,errors.new('E_ARGUMENT','unknown compiler mode') end
   if type(source) ~= 'string' then return nil, errors.new('E_ARGUMENT','source must be a string') end
   if #source > limits.source_bytes then return nil, errors.new('E_LIMIT','source byte limit exceeded') end
-  local retained=cache[source]; local charges=not retained and {} or nil
+  local cache_key=(mode or 'program')..'\0'..source
+  local retained=cache[cache_key]; local charges=not retained and {} or nil
+  local expression_source=false
   parsing.begin(context,charges)
   local ok, plan = pcall(function()
     if retained then
@@ -254,34 +282,44 @@ function M.compile(source, context)
       if count > limits.source_tokens then reject(tok,'source token limit exceeded','E_LIMIT') end
       if tok.token_type == 'ident' then identifier(tok.value,tok) end
     end
-    local main, diagnostics = parse(source,'@computer')
+    local main, diagnostics, expression
+    if mode=='shell' then
+      main,diagnostics=parse('return '..source,'@computer')
+      expression=#diagnostics==0
+      if not expression then main,diagnostics=parse(source,'@computer') end
+    else main,diagnostics=parse(source,'@computer') end
     if #diagnostics > 0 then
       local d = diagnostics[1]
-      local e = errors.new('E_PROGRAM',d.location_str or 'invalid Lua syntax')
-      e.line,e.column = d.start_position and d.start_position.line or 1,d.start_position and d.start_position.column or 1
+      local e = errors.new('E_PROGRAM',parser_errors.get_message(d))
+      -- Phobos's synthetic EOF token has no coordinates. Reuse the already
+      -- admitted original tokenizer's final position, not the expression prefix.
+      e.line = d.start_position and d.start_position.line or state.line
+      e.column = d.start_position and d.start_position.column or #source+1-state.line_offset
       error(e,0)
     end
-    local generated,names,nodes = emit(main)
+    expression_source=expression==true
+    local generated,names,nodes = emit(main,mode,expression)
     -- Native load here is only syntax verification of bounded, emitted text; no candidate code runs.
     local factory, diagnostic = load(generated,'@computer','t',{})
     if not factory then errors.raise('E_PROGRAM','generated source: '..diagnostic) end
     return {compiler_version=limits.compiler_version, api_version=1, source=source,
-      generated=generated, handlers=names, nodes=nodes}
+      generated=generated, handlers=names, nodes=nodes,mode=mode}
   end)
   parsing.finish()
   if not ok then
     if type(plan) ~= 'table' then plan = errors.new('E_PROGRAM',tostring(plan)) end
+    if expression_source and plan.line==1 and type(plan.column)=='number' then plan.column=math.max(1,plan.column-7) end
     return nil,plan
   end
   if charges and not charges.overflow then
     if #order>=8 then cache[table.remove(order,1)]=nil end
-    cache[source]={plan=plan_copy(plan),charges=charges}; order[#order+1]=source
+    cache[cache_key]={plan=plan_copy(plan),charges=charges}; order[#order+1]=cache_key
   end
   return plan
 end
 
 function M.run(plan, name, event, services, context)
-  if type(plan) ~= 'table' or plan.compiler_version ~= limits.compiler_version or plan.api_version ~= 1 then
+  if type(plan) ~= 'table' or plan.mode~=nil or plan.compiler_version ~= limits.compiler_version or plan.api_version ~= 1 then
     return false,errors.new('E_PROGRAM','unsupported compiler/API version; source retained')
   end
   -- Revalidate or replay the private exact-source proof every dispatch, retaining

@@ -253,14 +253,16 @@ peripheral.register_type('monitor',{methods=methods,resolve=M.resolve,available=
   end})
 presentation.bind{lookup=peripheral.authority,available=M.available}
 peripheral.register_monitor_sync{set=presentation.select,get=presentation.status}
-peripheral.register_revocation('monitor-sync',function(c,name,wire,reason)
+local principal=require('scripts.runtime.principal')
+peripheral.register_revocation('monitor-sync',function(c,name,wire,reason,execution)
   if reason=='unavailable' then return end -- Temporary incomplete proof is not detach.
-  local selection=c.monitor_sync
-  if selection then for _,ref in ipairs(selection.members) do
-    if ref.name==name and ref.wire==wire then
-      presentation.release(c,errors.new('E_UNREACHABLE','selected monitor path revoked')); return
-    end
-  end end
+
+  for _,p in ipairs({principal.program(c),principal.shell(c)}) do
+    local owner=principal.selection(c,p); local selection=owner and owner.monitor_sync
+    if selection and (not execution or execution.kind==p.kind and execution.id==p.id) then for _,ref in ipairs(selection.members) do
+      if ref.name==name and ref.wire==wire then presentation.release(c,errors.new('E_UNREACHABLE','selected monitor path revoked'),p); break end
+    end end
+  end
 end)
 -- One computer/subscription delivery regardless of paths, tiles or colors.
 function M.deliver(job,g,computer,tick,spend,player)
