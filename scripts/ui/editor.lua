@@ -69,7 +69,10 @@ local function refresh_console(c,s,rec,force)
   -- Follow off freezes this selectable snapshot: no reassignment can reset scroll.
   if force or s.follow~=false then
     local text=console(rec)
-    if c.output.text~=text then c.output.text=text; if s.follow~=false then c.output.scroll_to_bottom() end end
+    if c.output.text~=text then c.output.text=text end
+    -- Native text/layout updates can settle after this callback. Keep following
+    -- on later refreshes too, even when the log itself has not changed.
+    if s.follow~=false then c.output.scroll_to_bottom() end
   end
   c.follow.state=s.follow~=false
   local state=type(rec.shell)=='table' and rec.shell or nil

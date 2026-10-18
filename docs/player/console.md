@@ -116,5 +116,6 @@ Packaged contract tests use real native compilation/services and explicit table
 GUI mocks. Separate-process cold checks exercise values, binding identity,
 pending order, spent credits and once-only effects beside a running controller.
 They do not establish connected multiplayer or native keyboard delivery.
-The implementation PR includes a real-client smoke; final size/scale/native-client
-and connected late-join acceptance are owned by the independent review task.
+Native input, size/scale behavior and connected late joining are separate gates.
+The feature PR records their reviewed evidence; see the repository's
+`docs/console-shell-validation.md` for the isolated client and late-join procedure.

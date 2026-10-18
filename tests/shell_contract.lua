@@ -92,6 +92,14 @@ function M.run()
       assert(c.prompt.command==input and input.text=='unfinished' and input.text_writes==count)
       c.follow.state=true; editor.on_checked{player_index=a.index,element=c.follow,tick=tick}
       assert(c.output.text~=frozen and source.text_writes==writes)
+      local scrolls=c.output.scrolls or 0
+      editor.resize(a); editor.refresh(a)
+      assert(c.output.scrolls>scrolls,'Follow did not settle scrolling after native layout changed')
+      c.follow.state=false; editor.on_checked{player_index=a.index,element=c.follow,tick=tick}
+      scrolls=c.output.scrolls
+      editor.resize(a); editor.refresh(a)
+      assert(c.output.scrolls==scrolls,'Follow-off moved the selectable snapshot')
+      c.follow.state=true; editor.on_checked{player_index=a.index,element=c.follow,tick=tick}
     end)
     group('aliases-cycles-scalar-keys-and-local-functions',function()
       execute('a = {}; b = a; a.self = a; a[false] = 7; local function twice(x) return x*2 end; answer=twice(4)')
