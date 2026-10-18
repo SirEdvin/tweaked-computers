@@ -84,6 +84,7 @@ local function refresh_console(c,s,rec,force)
   local details={}
   if s.validation then details[#details+1]='Draft / saved validation: '..(s.validation.diagnostic and diagnostic(s.validation.diagnostic) or 'valid') end
   details[#details+1]=rec.diagnostic and ('Active run: '..diagnostic(rec.diagnostic)) or 'No active runtime diagnostic.'
+  if s.message then details[#details+1]=s.message end
   set_text(c.detail,table.concat(details,'\n'))
   enable(c.actions['show-location'],(s.validation and s.validation.diagnostic and s.validation.diagnostic.line~=nil)
     or (rec.diagnostic and rec.diagnostic.line~=nil) or false,'Select a diagnostic location explicitly. Active source must match the draft.')
@@ -375,6 +376,7 @@ local function submit_shell(player,f,s,tick)
   local ok,result=pcall(model.shell_submit,player,s.token,tick)
   local c=content(f,'console')
   if ok then
+    s.message=nil
     set_text(c.prompt.command,s.shell_draft or '')
     refresh_console(c,s,(model.current(player,s.token)))
   else c.shell_status.caption=diagnostic(result) end

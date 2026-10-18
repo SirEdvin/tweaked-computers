@@ -248,6 +248,11 @@ function M.run()
       assert(not rec.shell and rec.run_id==run and rec.saved_source==saved and rec.status=='running')
       editor.resize(a); editor.refresh(a); assert(f.content.editor.source==source)
       tick=tick+1; execute('assert(x==nil)')
+      editor.refresh(b)
+      editor.on_click{player_index=b.index,element=other.content.console.prompt['reset-shell'],tick=tick}
+      assert(shell.reset(rec,'fixture'))
+      editor.on_click{player_index=b.index,element=other.content.console.confirm_shell.buttons['confirm-shell'],tick=tick}
+      assert(other.content.console.detail.text:find('E_BUSY',1,true),'stale Reset Shell feedback was hidden in another tab')
       assert(runtime.stop(rec.id) and rec.shell==nil)
     end)
     group('maximum-source-graph-and-binding-envelopes',function()
