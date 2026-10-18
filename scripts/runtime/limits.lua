@@ -1,11 +1,12 @@
--- Development ceilings, not a release latency promise. Keep shared costs versioned.
+-- Defaults, not a release latency promise. Runtime-global settings replace the
+-- work/compile/allocation and shared host ceilings without resetting ledgers.
 return {
   api_version = 1, compiler_version = 2, storage_version = 1,
   source_bytes = 16384, generated_source_bytes = 131072,
   source_nodes = 4096, source_tokens = 4096, source_nesting = 48,
   handler_names = 64, identifier_bytes = 64, tuple_entries = 128,
-  callback_work = 100000, callback_depth = 32, callback_allocations = 16384,
-  compile_work = 250000, host_work_per_tick = 1000000,
+  callback_work = 500000, callback_depth = 32, callback_allocations = 81920,
+  compile_work = 1250000, host_work_per_tick = 5000000,
   active_computers = 64, active_logic_handlers = 128,
   aggregate_subscriptions = 1024, aggregate_owned_outputs = 128,
   state_bytes = 65536, state_entries = 256, data_nodes = 4096, data_depth = 16,

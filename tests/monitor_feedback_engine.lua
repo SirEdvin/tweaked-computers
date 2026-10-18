@@ -17,6 +17,11 @@ local function equal(a,b)
   for k in pairs(b) do if a[k]==nil then return false end end; return true
 end
 local function report(s) f().contracts=f().contracts+1; log('TC_CONTRACT '..s) end
+local function terminal(m)
+  local result={}
+  for _,key in ipairs({'x','y','blink','fg','bg','scale','revision','width','height','cells','palette'}) do result[key]=copy(m[key]) end
+  return result
+end
 local function resolve(row) return assert(monitor.resolve(registry.record(row.ids[1]))) end
 local function settle()
   for _=1,200 do
@@ -129,8 +134,8 @@ function M.run()
     model.calls.setCursorPos(g.model,nop,1,2); model.calls.write(g.model,nop,'LIVE')
     model.calls.setPaletteColor(g.model,nop,2,0xAB3412)
     model.capture(g.model,nop)
-    local expected=copy(g.model)
-    settle(); assert(equal(g.model,expected)); capture(row); unchanged(row); properties(g)
+    local expected=terminal(g.model)
+    settle(); assert(equal(terminal(g.model),expected)); capture(row); unchanged(row); properties(g)
     assert(marked.body.to_be_deconstructed('player'))
     -- Power hides/restores presentation without changing committed content.
     local p=lifecycle.power_entity(marked); p.energy=0; marked.powered=false

@@ -25,6 +25,11 @@ function M.new(context, services)
     G.check()
     if not admission.reserve(context,'work',n or 1) then fatal() end
   end
+  -- Host-only proofs; never exposed as guest values or accepted from guest Data.
+  function G.replay_work(charges)
+    G.check()
+    if not admission.replay_work(context,charges) then fatal() end
+  end
   local function allocate(n)
     G.check()
     if not admission.reserve(context,'allocations',n) then fatal('callback allocation budget exhausted') end

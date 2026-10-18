@@ -64,5 +64,21 @@ class PackageInventoryTests(unittest.TestCase):
                             build.build(output)
 
 
+class DocumentationSiteTests(unittest.TestCase):
+    def test_missing_or_empty_site_is_not_a_passing_link_check(self):
+        import player_docs
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            for path in (Path(output), Path(output) / 'missing'):
+                with self.subTest(path=path), self.assertRaisesRegex(ValueError, 'no built HTML pages'):
+                    player_docs.site_links(path)
+
+    def test_real_page_and_anchor_are_checked(self):
+        import player_docs
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            folder = Path(output)
+            (folder / 'index.html').write_text('<h1 id="start">Start</h1><a href="#start">Go</a>')
+            self.assertEqual(player_docs.site_links(folder), {'html_pages': 1, 'internal_links_checked': 1})
+
+
 if __name__ == '__main__':
     unittest.main()

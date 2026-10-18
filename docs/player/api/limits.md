@@ -7,7 +7,38 @@ Tick-keyed counters persist through same-tick load/replacement. Maintenance is
 reserved inside host_work_per_tick, never added on top. These alpha limits are
 provisional safety ceilings, not simultaneous maximum-world guarantees.
 
-| Key | Value |
+## Live mod settings
+
+Open **Settings → Mod settings → Map** to change the four runtime-global
+budgets below while playing. They apply to every player and computer in the
+save, without restarting the map. The table lists defaults; computer.getLimits()
+returns the current effective values in a defensive copy.
+
+| Setting | Limit key | Default | Allowed range |
+| --- | --- | ---: | ---: |
+| Compilation work per computer per tick (`tc-compile-work`) | `compile_work` | 1250000 | 1–100000000 |
+| Execution work per computer per tick (`tc-callback-work`) | `callback_work` | 500000 | 1–100000000 |
+| Guest allocations per computer per tick (`tc-callback-allocations`) | `callback_allocations` | 81920 | 1–100000000 |
+| Shared host work per tick (`tc-host-work-per-tick`) | `host_work_per_tick` | 5000000 | 200001–1000000000 |
+
+Compilation, execution and allocation defaults are five times the original
+allowances. The shared host default is also five times larger so it can admit
+them. Its fixed 200000-unit maintenance reservation is unchanged.
+Prefer a shared ceiling at least as large as all three per-computer budgets
+combined plus maintenance. A smaller shared budget can defer callbacks or
+cause E_BUDGET when actual work exceeds its remaining allowance.
+
+Changes never reset spending: raising a budget adds only the difference;
+lowering it below already-spent credits refuses further charged operations
+until a later tick or another increase. Existing faulted programs still require
+Run to restart. Validate, Run validation and callback reconstruction share
+compilation credits. Higher budgets may reduce UPS; these are not speed or
+frame-rate controls. Source, state, depth, monitor and other structural caps
+remain unchanged.
+
+## Default common limits
+
+| Key | Default value |
 | --- | ---: |
 | `api_version` | 1 |
 | `compiler_version` | 2 |
@@ -20,11 +51,11 @@ provisional safety ceilings, not simultaneous maximum-world guarantees.
 | `handler_names` | 64 |
 | `identifier_bytes` | 64 |
 | `tuple_entries` | 128 |
-| `callback_work` | 100000 |
+| `callback_work` | 500000 |
 | `callback_depth` | 32 |
-| `callback_allocations` | 16384 |
-| `compile_work` | 250000 |
-| `host_work_per_tick` | 1000000 |
+| `callback_allocations` | 81920 |
+| `compile_work` | 1250000 |
+| `host_work_per_tick` | 5000000 |
 | `active_computers` | 64 |
 | `active_logic_handlers` | 128 |
 | `aggregate_subscriptions` | 1024 |

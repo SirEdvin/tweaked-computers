@@ -6,6 +6,15 @@ local parsing = require('scripts.runtime.parse_admission')
 local errors = require('scripts.runtime.errors')
 local sandbox = require('scripts.runtime.sandbox')
 local M = {}
+-- Host-only, bounded, exact-source validation cache. No caller-owned plan or
+-- executable closure is trusted. Replay every original charge, in order, so
+-- warm/cold peers retain identical admission and partial-refusal behavior.
+local cache,order={},{}
+local function plan_copy(p)
+  local names={}; for k,v in pairs(p.handlers) do names[k]=v end
+  return {compiler_version=p.compiler_version,api_version=p.api_version,source=p.source,
+    generated=p.generated,handlers=names,nodes=p.nodes}
+end
 local globals = {}
 for _, name in ipairs({'assert','error','ipairs','pairs','next','pcall','select','tonumber','tostring','type',
   'math','string','table','colors','colours','computer','peripheral'}) do globals[name] = true end
@@ -225,8 +234,15 @@ end
 function M.compile(source, context)
   if type(source) ~= 'string' then return nil, errors.new('E_ARGUMENT','source must be a string') end
   if #source > limits.source_bytes then return nil, errors.new('E_LIMIT','source byte limit exceeded') end
-  parsing.begin(context)
+  local retained=cache[source]; local charges=not retained and {} or nil
+  parsing.begin(context,charges)
   local ok, plan = pcall(function()
+    if retained then
+      if context and not admission.replay_compile(context,retained.charges) then
+        errors.raise('E_BUDGET','source compilation work exhausted')
+      end
+      return plan_copy(retained.plan)
+    end
     parsing.enter(#source * 2 + 1)
     -- The bounded pinned tokenizer also validates identifiers before AST parsing.
     local iter,state,index = tokenize(source,'@computer')
@@ -257,6 +273,10 @@ function M.compile(source, context)
     if type(plan) ~= 'table' then plan = errors.new('E_PROGRAM',tostring(plan)) end
     return nil,plan
   end
+  if charges and not charges.overflow then
+    if #order>=8 then cache[table.remove(order,1)]=nil end
+    cache[source]={plan=plan_copy(plan),charges=charges}; order[#order+1]=source
+  end
   return plan
 end
 
@@ -264,9 +284,8 @@ function M.run(plan, name, event, services, context)
   if type(plan) ~= 'table' or plan.compiler_version ~= limits.compiler_version or plan.api_version ~= 1 then
     return false,errors.new('E_PROGRAM','unsupported compiler/API version; source retained')
   end
-  -- Revalidate exact retained source every dispatch. This deliberately cache-free
-  -- foundation has identical cold/warm and partially-exhausted admission, and
-  -- never trusts generated text supplied by a saved/corrupt caller-owned plan.
+  -- Revalidate or replay the private exact-source proof every dispatch, retaining
+  -- identical cold/warm credits. Saved/caller-generated text is never executed.
   local executable,diagnostic = M.compile(plan.source,context)
   if not executable then return false,diagnostic end
   if not executable.handlers[name] then return false,errors.new('E_NOT_FOUND','handler not declared') end

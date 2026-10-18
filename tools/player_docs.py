@@ -22,6 +22,7 @@ EXAMPLES = {
     'kv-program': 'Connect one powered database NETWORK on red. Save/Run; inspect the delayed status/TTL in Console.',
     'monitor-program': 'Connect a powered monitor NETWORK on red. Run, then activate a character cell; use matching adjacent tiles to test resize.',
     'monitor-plot-program': 'Connect up to four powered logical monitors on red/green. Uses one shared sine sample and replaces one complete row per screen, retaining older rows as a rolling trace. Startup discovery, geometry inspection, selection and clearing are deliberately sliced across callbacks. Checks at most eight names per color; red wins duplicate names. Resize/detach events restart discovery; unavailable screens are retried periodically. This is not a full-grid repaint or an unlimited factory/network benchmark.',
+    'smooth-sine-chart': 'Connect up to four powered logical monitors on red/green. Draws a connected green line using 2×3 mosaic subpixels instead of text markers, with a gray axis. Samples one phase and updates all selected screens every two ticks, submitting only rows whose glyphs or colors changed. Uses scale 2 when a footprint axis exceeds three tiles, otherwise scale 1, and bounds grids to 32 columns / 22 rows. Ships with version 0.1.7 and its runtime/presenter optimizations; older published archives retain their original example. Paste the complete source, then Validate, Save and Run. Do not run other content writers on the same screens with this row-cached example. See the [subpixel design and verification boundaries](monitor-animation.md).',
     'configurator-program': 'Discovery NETWORK red; separate TARGETS green to one inserter. Sets A > 4, not A > 0. Supply an external A signal of at least 5 for motion.',
     'configurator-sections': 'Discovery NETWORK red; TARGETS green to one constant combinator. Adds a section, activates it and saves its actual index in computer state; it intentionally writes no signal filters.',
     'factory-controller': 'Follow the complete [factory wiring tutorial](factory.md). Keep one device per type reachable. Paste this whole document.',
@@ -41,6 +42,8 @@ def quote_lua(value):
 
 
 def guest_example(name):
+    if name == 'smooth-sine-chart':
+        return text('examples/' + name + '.lua').rstrip()
     match = re.search(r'return \[(=*)\[(.*)\]\1\]\s*$', text('examples/' + name + '.lua'), re.S)
     if not match:
         raise ValueError('missing source wrapper: ' + name)
@@ -190,7 +193,32 @@ def generated():
                   'Tick-keyed counters persist through same-tick load/replacement. Maintenance is',
                   'reserved inside host_work_per_tick, never added on top. These alpha limits are',
                   'provisional safety ceilings, not simultaneous maximum-world guarantees.', '',
-                  '| Key | Value |', '| --- | ---: |']
+                  '## Live mod settings', '',
+                  'Open **Settings → Mod settings → Map** to change the four runtime-global',
+                  'budgets below while playing. They apply to every player and computer in the',
+                  'save, without restarting the map. The table lists defaults; computer.getLimits()',
+                  'returns the current effective values in a defensive copy.', '',
+                  '| Setting | Limit key | Default | Allowed range |',
+                  '| --- | --- | ---: | ---: |',
+                  '| Compilation work per computer per tick (`tc-compile-work`) | `compile_work` | 1250000 | 1–100000000 |',
+                  '| Execution work per computer per tick (`tc-callback-work`) | `callback_work` | 500000 | 1–100000000 |',
+                  '| Guest allocations per computer per tick (`tc-callback-allocations`) | `callback_allocations` | 81920 | 1–100000000 |',
+                  '| Shared host work per tick (`tc-host-work-per-tick`) | `host_work_per_tick` | 5000000 | 200001–1000000000 |', '',
+                  'Compilation, execution and allocation defaults are five times the original',
+                  'allowances. The shared host default is also five times larger so it can admit',
+                  'them. Its fixed 200000-unit maintenance reservation is unchanged.',
+                  'Prefer a shared ceiling at least as large as all three per-computer budgets',
+                  'combined plus maintenance. A smaller shared budget can defer callbacks or',
+                  'cause E_BUDGET when actual work exceeds its remaining allowance.', '',
+                  'Changes never reset spending: raising a budget adds only the difference;',
+                  'lowering it below already-spent credits refuses further charged operations',
+                  'until a later tick or another increase. Existing faulted programs still require',
+                  'Run to restart. Validate, Run validation and callback reconstruction share',
+                  'compilation credits. Higher budgets may reduce UPS; these are not speed or',
+                  'frame-rate controls. Source, state, depth, monitor and other structural caps',
+                  'remain unchanged.', '',
+                  '## Default common limits', '',
+                  '| Key | Default value |', '| --- | ---: |']
     limit_page += ['| `' + k + '` | ' + v + ' |' for k, v in limits]
     limit_page += ['', 'Device-specific limits: [monitor](monitor.md#bounds-example-and-troubleshooting),',
                    '[KV](kv.md#atomicity-errors-and-capacities), [logic](logic.md#bounds-and-use),',
@@ -289,6 +317,8 @@ def site_links(folder):
     parsed = {}
     for p in folder.rglob('*.html'):
         parser = Links(); parser.feed(p.read_text()); parsed[p.resolve()] = parser
+    if not parsed:
+        raise ValueError(f'no built HTML pages found: {folder}')
     checked = 0
     for p, parser in parsed.items():
         for href in parser.hrefs:

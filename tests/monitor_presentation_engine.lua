@@ -179,8 +179,8 @@ local function audit(s)
  assert(staged==p.staging_cells and retired==p.retired_cells and pending==p.pending_cells and #p.jobs<=256)
  for _,job in ipairs(p.jobs) do if not job.cancelled and not job.complete then for _,r in ipairs(job.frames) do if r then
   for i,cell in ipairs(r.cells) do if cell and not r.reused[i] then
-   assert(cell.background.valid and not cell.background.visible)
-   if cell.glyph then assert(cell.glyph.valid and not cell.glyph.visible) end
+   assert(cell.background.valid and cell.background.visible==not not cell.shared_background)
+   if cell.glyph then assert(cell.glyph.valid and cell.glyph.visible==not not cell.shared_glyph) end
   end end
   if r.cursor and not r.shared_cursor then assert(not r.cursor.visible) end
  end end end end
@@ -224,7 +224,22 @@ function M.on_tick(event)
   log('TC_PRESENT_COMMIT_ONE_SHORT_OK')
  end
  local p=s.presentation; local lane=c.monitor_sync and p and p.lanes[c.monitor_sync.key]
+ if x.steps%120==0 then
+  local jobs={}
+  for _,job in ipairs(p and p.jobs or {}) do jobs[#jobs+1]={slots=job.slots,ready=job.ready,member=job.member,cell=job.cell} end
+  log('TC_PRESENT_PROGRESS '..serpent.line{phase=x.phase,published=x.published,sequence=lane and lane.presented_sequence,
+   jobs=jobs,maintenance=root.scheduler.maintenance_spent,reserved=root.scheduler.render_reserved_work})
+ end
  if lane then x.published=math.max(x.published,lane.presented_sequence) end
+ if not x.saved and not x.cold_armed and lane and lane.presented_sequence>0 then
+  -- Sparse updates now finish in one tick. Force an authentic multi-tick full
+  -- rebuild through guest palette setters (restoring the original color) so the
+  -- cold fixture still captures an admitted job with a newer pending snapshot.
+  for _,ref in ipairs(c.monitor_sync.members) do
+   guest(c,"local m=peripheral.wrap("..string.format('%q',ref.name)..",'red'); local r,g,b=m.getPaletteColor(1); m.setPaletteColor(1,0x010203); m.setPaletteColor(1,r,g,b)")
+  end
+  x.cold_armed=true
+ end
  if not x.saved and lane and lane.job and lane.job.member<=#lane.job.frames and lane.pending and lane.presented_sequence>0 then
   x.saved={presentation=p,jobs=p.jobs,job=lane.job,front=s.groups[x.ids[1]].render,spent=root.scheduler.maintenance_spent,
    tick=event.tick,boots=c.state.boots,n=c.state.n}

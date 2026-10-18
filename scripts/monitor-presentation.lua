@@ -169,12 +169,14 @@ end
 local function cleanup(p,spend,remaining)
   while remaining>0 and #p.retired>0 do
     local r=p.retired[1]; local i=r.cleanup_cursor or 1
-    while i<=#r.cells and remaining>0 do
+    local count=r.cleanup_indices and #r.cleanup_indices or #r.cells
+    while i<=count and remaining>0 do
+      local index=r.cleanup_indices and r.cleanup_indices[i] or i
       spend(8)
-      if r.is_front or not r.reused or not r.reused[i] then backend.clear_cell(r.cells[i]) end
-      r.cells[i]=false; i=i+1; r.cleanup_cursor=i; remaining=remaining-1
+      if r.is_front or not r.reused or not r.reused[index] then backend.clear_cell(r.cells[index],not r.is_front) end
+      r.cells[index]=false; i=i+1; r.cleanup_cursor=i; remaining=remaining-1
     end
-    if i>#r.cells then
+    if i>count then
       spend(#p.retired+12)
       if r.is_front or not r.shared_panel then backend.destroy(r.panel) end
       if r.is_front or not r.shared_cursor then backend.destroy(r.cursor) end
@@ -204,7 +206,7 @@ local function context(g,snapshot)
     world_height=g.world_height,width_tiles=g.width_tiles,height_tiles=g.height_tiles,surface_index=g.surface_index}
 end
 local function blocked(lane,code,message) lane.status='blocked'; lane.diagnostic=errors.new(code,message) end
-local function qualify(s,lane,spend)
+local function qualify(s,lane,spend,proofs)
   if s.job then blocked(lane,'E_NETWORK_PENDING','monitor topology pending'); return false end
   if lane.owner then
     local c=registry.record(lane.owner)
@@ -222,7 +224,7 @@ local function qualify(s,lane,spend)
       return false
     end
     total=total+g.model.width*g.model.height
-    if not authority.available(g,spend) then blocked(lane,'E_UNPOWERED','monitor unpowered'); return false end
+    if not authority.available(g,spend,proofs) then blocked(lane,'E_UNPOWERED','monitor unpowered'); return false end
   end
   if total>L.sync_group_cells then blocked(lane,'E_CAPACITY','selected grids exceed combined capacity'); return false end
   lane.diagnostic=nil; return true,total
@@ -238,7 +240,9 @@ local function seal(s,p,lane,spend,total)
   if not eligible or not lane.owner and not changed then return end
   local previous=lane.pending and lane.pending.slots or 0
   if p.pending_cells-previous+total>L.render_snapshot_cells then blocked(lane,'E_CAPACITY','pending snapshot backpressure'); return end
-  spend(#lane.members*84+8)
+  local work=#lane.members*84+8
+  for _,ref in ipairs(lane.members) do work=work+(s.groups[ref.name].model.damage_count or 0)*2 end
+  spend(work)
   local captures={}; local last={}; local epochs={}
   for _,ref in ipairs(lane.members) do
     local g=s.groups[ref.name]; local snapshot=model.capture(g.model,function() end); snapshot.sealed_tick=p.tick
@@ -255,7 +259,11 @@ local function admit(s,p,lane,spend)
   local old,oldframes=0,0
   for _,c in ipairs(q.captures) do if c.group.render then old=old+slots(c.group.render); oldframes=oldframes+1 end end
   if p.front_cells-old+q.slots>L.aggregate_cells or p.front_frames-oldframes+n>L.tiles then return end
-  spend(n*32+8)
+  local work=n*32+8
+  for _,c in ipairs(q.captures) do
+    work=work+backend.frame_cost(c,M.matches(c.group,c.group.render) and c.group.render or nil)
+  end
+  spend(work)
   local job={lane=lane,captures=q.captures,slots=q.slots,sequence=q.sequence,frames={},member=1,cell=1}
   for _,c in ipairs(q.captures) do job.frames[#job.frames+1]=backend.frame(c,M.matches(c.group,c.group.render) and c.group.render or nil) end
   p.staging_cells=p.staging_cells+q.slots; p.staging_frames=p.staging_frames+n
@@ -264,18 +272,20 @@ end
 local function prepare(job,spend,remaining)
   while job.member<=#job.frames and remaining>0 do
     local r=job.frames[job.member]; local c=job.captures[job.member]
-    while job.cell<=r.slots and remaining>0 do
-      spend(48); backend.cell(c,r,job.cell); job.cell=job.cell+1; remaining=remaining-1
+    local count=r.indices and #r.indices or r.slots
+    while job.cell<=count and remaining>0 do
+      local index=r.indices and r.indices[job.cell] or job.cell
+      spend(48); backend.cell(c,r,index); job.cell=job.cell+1; remaining=remaining-1
     end
-    if job.cell>r.slots then
+    if job.cell>count then
       spend(16); backend.cursor(c,r); job.member=job.member+1; job.cell=1
     end
   end
   job.ready=job.member>#job.frames; return remaining
 end
-local function commit(s,p,job,tick,spend)
+local function commit(s,p,job,tick,spend,proofs)
   local lane=job.lane
-  if not qualify(s,lane,spend) then return false end
+  if not qualify(s,lane,spend,proofs) then return false end
   local function proof_failure(problem)
     if type(problem)~='table' or not problem.code then error(problem,0) end -- Preserve private quota refusal.
     blocked(lane,problem.code,problem.message)
@@ -303,8 +313,14 @@ local function commit(s,p,job,tick,spend)
   if p.front_cells-oldcells+job.slots>L.aggregate_cells or p.front_frames-oldframes+#job.frames>L.tiles then return false end
   -- Prepay the complete bounded native inventory, validity reads and writes before
   -- any visibility or ownership change. No fallible admission inside the swap.
-  local maximum=4*job.slots+4*#job.frames
-  local work=maximum*3+#job.frames*16+#p.jobs+8
+  local cells,damage=0,0
+  for _,r in ipairs(job.frames) do
+    cells=cells+(r.indices and #r.indices or r.slots)
+    damage=damage+model.acknowledge_cost(r.context.group.model,r.snapshot)
+    if r.indices and (r.front~=r.context.group.render or r.front.hidden) then job.invalid=true; return false end
+  end
+  local maximum=4*cells+4*#job.frames
+  local work=maximum*3+damage+#job.frames*16+#p.jobs+8
   if work>L.render_commit_work then blocked(lane,'E_CAPACITY','publication work limit'); return false end
   spend(work)
   local operations={}; local values={}
@@ -315,17 +331,22 @@ local function commit(s,p,job,tick,spend)
   for j,r in ipairs(job.frames) do
     local old=job.captures[j].group.render
     if old then
-      for i,cell in ipairs(old.cells) do if cell and cell~=r.cells[i] then
-        if not add(cell.background,false) or not add(cell.glyph,false) then return false end
+      for index=1,(r.indices and #r.indices or old.slots) do
+        local i=r.indices and r.indices[index] or index; local cell=old.cells[i]
+        if cell and cell~=r.cells[i] then
+        local next_cell=r.cells[i]
+        if (not next_cell or cell.background~=next_cell.background) and not add(cell.background,false) then return false end
+        if (not next_cell or cell.glyph~=next_cell.glyph) and not add(cell.glyph,false) then return false end
       end end
       if old.panel~=r.panel and not add(old.panel,false) then return false end
       if old.cursor~=r.cursor and not add(old.cursor,false) then return false end
     end
-    for i,cell in ipairs(r.cells) do
+    for index=1,(r.indices and #r.indices or r.slots) do
+      local i=r.indices and r.indices[index] or index; local cell=r.cells[i]
       if not cell.background.valid or cell.glyph and not cell.glyph.valid then job.invalid=true; return false end
-      if not old or old.cells[i]~=cell or old.hidden then
-        if not add(cell.background,true) or not add(cell.glyph,true) then return false end
-      end
+      local previous=old and old.cells[i]
+      if (not previous or previous.background~=cell.background or old.hidden) and not add(cell.background,true) then return false end
+      if (not previous or previous.glyph~=cell.glyph or old.hidden) and not add(cell.glyph,true) then return false end
     end
     if r.panel and not r.panel.valid or r.cursor and not r.cursor.valid then job.invalid=true; return false end
     if not old or old.panel~=r.panel or old.hidden then if not add(r.panel,true) then return false end end
@@ -336,12 +357,23 @@ local function commit(s,p,job,tick,spend)
   for i,r in ipairs(job.frames) do
     local g=job.captures[i].group; local old=g.render
     if old then
-      for index,cell in ipairs(r.cells) do if old.cells[index]==cell then old.cells[index]=false end end
+      for index=1,(r.indices and #r.indices or r.slots) do
+        local i=r.indices and r.indices[index] or index
+        local previous,next_cell=old.cells[i],r.cells[i]
+        if previous==next_cell then old.cells[i]=false
+        elseif previous and next_cell then
+          if previous.background==next_cell.background then previous.background=nil end
+          if previous.glyph==next_cell.glyph then previous.glyph=nil end
+        end
+      end
+      old.cleanup_indices=r.indices -- Unchanged native cells transfer ownership without a retirement scan.
       if old.panel==r.panel then old.panel=nil end
       if old.cursor==r.cursor then old.cursor=nil end
       enqueue(p,old,'front')
     end
-    r.is_front=true; r.front=nil; r.reused=nil; r.hidden=nil; r.presented_revision=r.snapshot.revision; r.presented_tick=tick; r.presented_sequence=job.sequence
+    r.is_front=true; r.front=nil; r.reused=nil; r.hidden=nil; r.cleanup_indices=nil
+    r.presented_revision=r.snapshot.revision; r.presented_tick=tick; r.presented_sequence=job.sequence
+    model.acknowledge(g.model,r.snapshot)
     r.accounted='front'; g.render=r
     p.front_cells=p.front_cells+r.slots; p.front_frames=p.front_frames+1
   end
@@ -357,6 +389,9 @@ function M.tick(tick,spend)
   spend(L.tiles*16+16)
   local p=state(s)
   p.tick=tick
+  -- This non-yielding render pass cannot change physical members. Share only
+  -- positive all-member proofs inside it; never cache them by simulation tick.
+  local proofs={}
   -- Demand requests are host bookkeeping, not a second work ledger.
   local demand=0
   for _,job in ipairs(p.jobs) do if not job.cancelled and job.ready then demand=160000 end end
@@ -380,7 +415,7 @@ function M.tick(tick,spend)
       local snap=model.capture(g.model,function() end)
       front.version=1; front.layer_version=3; front.snapshot=snap; front.context=context(g,snap); front.is_front=true
     end
-    if front and (not M.matches(g,front) or not authority.available(g,spend)) then
+    if front and (not M.matches(g,front) or not authority.available(g,spend,proofs)) then
       if not front.hidden then scheduler.request_render_work(registry.get(),tick,160000,spend); visible(front,false,spend) end
       if not M.matches(g,front) then M.retire(s,front); g.render=nil end
     elseif front and front.hidden then scheduler.request_render_work(registry.get(),tick,160000,spend); visible(front,true,spend) end
@@ -395,7 +430,7 @@ function M.tick(tick,spend)
   for offset=0,#order-1 do
     local index=(start+offset-1)%#order+1; local lane=order[index]
     p.cursor=index%#order+1 -- A deferred lane cannot monopolize the next tick's prefix.
-    local ok,total=qualify(s,lane,spend)
+    local ok,total=qualify(s,lane,spend,proofs)
     if ok then
       local invalid=false
       if lane.job then for _,c in ipairs(lane.job.captures) do if not M.matches(c.group,{version=1,context=c,width=c.model.width,height=c.model.height,scale=c.model.scale}) or s.groups[c.group.id]~=c.group then invalid=true end end end
@@ -405,7 +440,7 @@ function M.tick(tick,spend)
         remaining=prepare(lane.job,spend,remaining)
         if lane.job.ready then
           local job=lane.job
-          scheduler.request_render_work(registry.get(),tick,160000,spend); commit(s,p,job,tick,spend)
+          scheduler.request_render_work(registry.get(),tick,160000,spend); commit(s,p,job,tick,spend,proofs)
           if job.invalid then
             for _,c in ipairs(job.captures) do if c.group.render then c.group.render.broken=true end end
             cancel(p,lane); lane.last=nil; lane.last_epoch=nil; lane.participation={}

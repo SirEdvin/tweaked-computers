@@ -26,15 +26,15 @@ These unchanged ceilings reject unsafe growth; they are provisional alpha tuning
 Successful work-unit accounting is not a CPU-time bound or measured maximum-world
 input/render latency. `computer.getLimits()` and each peripheral's `getLimits()`
 return defensive effective tables, including additional fields described in their
-API guide. The package manifest freezes the candidate's common numeric values,
+API guide. The package manifest freezes the candidate's common numeric defaults,
 not the unfinished client performance gate.
 
 | Area | Initial ceilings |
 | --- | --- |
 | Source | 16,384 bytes, 4,096 nodes/tokens, nesting 48; generated 131,072 bytes |
-| Native callback | work 100,000, depth 32, allocations 16,384 |
-| Compilation | work 250,000, active/saved source kept separately |
-| Shared actual tick | 1,000,000 total-envelope units; 200,000 reserved maintenance; no extra guest pool |
+| Native callback | default work 500,000, depth 32, default allocations 81,920; work/allocation budgets are live Map settings |
+| Compilation | default work 1,250,000, live Map setting; active/saved source kept separately |
+| Shared actual tick | default 5,000,000 total-envelope units, live Map setting; 200,000 reserved maintenance; no extra guest pool |
 | Active admission | 64 computers, 128 sampled logic handlers, 1,024 subscriptions, 128 owned banks |
 | State | 65,536 accounted bytes, 256 entries, 4,096 Data nodes, Data depth 16 |
 | Queue/timers | 128 queue entries / 65,536 accounted bytes; 64 timers and 64 subscriptions per computer |

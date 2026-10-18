@@ -15,6 +15,7 @@ nav:
       - Editor and recovery: editor.md
       - Combined factory controller: factory.md
       - Runnable programs: examples.md
+      - Monitor animation: monitor-animation.md
       - Moving and preserving data: lifecycle.md
       - Troubleshooting: troubleshooting.md
   - Lua API v1:

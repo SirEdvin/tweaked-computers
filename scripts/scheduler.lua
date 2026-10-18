@@ -119,7 +119,11 @@ function M.dispatch(rec,tick)
   if not rec.body.valid then runtime.fault(rec,errors.new('E_NOT_FOUND','computer body no longer exists'),tick); return false end
   -- Preserve enough aggregate headroom for one complete bounded callback. If a
   -- neighbor spent it, wait rather than faulting an untouched waiting run.
-  local maximum=limits.compile_work+limits.callback_work+limits.callback_allocations
+  -- Independently configurable ceilings can sum above the shared allowance.
+  -- Reserve no more than that allowance so small fitting callbacks still run;
+  -- admission remains authoritative and faults callbacks that actually exceed it.
+  local maximum=math.min(limits.compile_work+limits.callback_work+limits.callback_allocations,
+    limits.host_work_per_tick-limits.maintenance_work_per_tick)
   if root.ledger.tick==tick and root.ledger.total+maximum>limits.host_work_per_tick-limits.maintenance_work_per_tick then return false end
   local context_ok,ctx=pcall(runtime.context,rec,tick)
   if not context_ok then

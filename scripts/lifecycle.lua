@@ -66,8 +66,9 @@ end
 function M.has_power(rec)
   if not rec or not rec.body or not rec.body.valid then return false end
   local p=M.power_entity(rec)
-  return p and p.valid and p.force.index==rec.force_index and p.surface.index==rec.surface_index
-    and p.position.x==rec.body.position.x and p.position.y==rec.body.position.y
+  if not p or not p.valid or p.force.index~=rec.force_index or p.surface.index~=rec.surface_index then return false end
+  local at=rec.body.position; local power_at=p==rec.body and at or p.position
+  return power_at.x==at.x and power_at.y==at.y
     and registry.by_entity(p)==rec and p.energy>=defs.devices[rec.kind].watts/60
 end
 function M.normalize_power(rec)
@@ -107,7 +108,9 @@ function M.sample_power(rec,tick,spend)
   local powered=M.has_power(rec)
   if powered then
     for _,role in ipairs(def.roles) do
-      if not M.connector(rec,role,'red') or not M.connector(rec,role,'green') then powered=false end
+      -- The red proof checks the complete endpoint ownership/geometry. Nothing
+      -- can move it before the adjacent native green-connector existence read.
+      if not M.connector(rec,role,'red') or not M.endpoint(rec,role).get_wire_connector(defines.wire_connector_id.circuit_green,false) then powered=false end
     end
   end
   if rec.kind=='computer' then runtime.set_power(rec.id,powered,tick,spend)
@@ -180,20 +183,25 @@ end
 function M.connector(rec,role,color)
   if type(rec)=='string' then rec=registry.record(rec) end
   if not rec or rec.physical_version~=1 or rec.physical_error or not rec.body.valid then return nil end
-  if rec.body.direction~=rec.direction or rec.body.position.x~=rec.position.x or rec.body.position.y~=rec.position.y then return nil end
+  local body=rec.body; local direction=body.direction; local at=body.position
+  if direction~=rec.direction or at.x~=rec.position.x or at.y~=rec.position.y then return nil end
   if color~='red' and color~='green' then errors.raise('E_ARGUMENT','red or green connector required') end
   local port=M.endpoint(rec,role)
   if not port or not port.valid then return nil end
   local index
   for i,r in ipairs(defs.devices[rec.kind].roles) do if r==role then index=i; break end end
   if not index then return nil end
-  local expected=rec.layout_version==2 and role=='network' and rec.position or position(rec,index,rec.direction)
-  if port.position.x~=expected.x or port.position.y~=expected.y or port.direction~=rec.direction then return nil end
+  local expected=rec.position
+  if rec.layout_version~=2 or role~='network' then
+    local x,y=defs.offset(rec.kind,index,rec.direction); expected={x=at.x+x,y=at.y+y}
+  end
+  local port_at=port==body and at or port.position
+  if port_at.x~=expected.x or port_at.y~=expected.y or (port==body and direction or port.direction)~=rec.direction then return nil end
   local owner,bound_role=registry.by_entity(port)
   local expected_role=rec.layout_version==2 and role=='network' and 'body' or role
-  if owner~=rec or bound_role~=expected_role or rec.body.force.index~=rec.force_index
-    or rec.body.surface.index~=rec.surface_index or port.force.index~=rec.force_index
-    or port.surface.index~=rec.surface_index then return nil end
+  if owner~=rec or bound_role~=expected_role or body.force.index~=rec.force_index
+    or body.surface.index~=rec.surface_index then return nil end
+  if port~=body and (port.force.index~=rec.force_index or port.surface.index~=rec.surface_index) then return nil end
   return port.get_wire_connector(defines.wire_connector_id['circuit_'..color],false)
 end
 function M.rotate(rec,previous_direction)
@@ -472,7 +480,8 @@ function M.reconcile(tick,spend)
               return
             end
           end
-          if rec.body.direction~=rec.direction or rec.body.position.x~=rec.position.x or rec.body.position.y~=rec.position.y then
+          local at=rec.body.position
+          if rec.body.direction~=rec.direction or at.x~=rec.position.x or at.y~=rec.position.y then
             M.rotate(rec,rec.direction)
           end
           if not rec.physical_error then M.sample_power(rec,tick,spend) end
@@ -497,11 +506,10 @@ function M.power_losses(tick,spend)
     if rec and rec.physical_version==1 then
       local available=rec.body.valid and not rec.physical_error
       if available then
-        available=rec.body.force.index==rec.force_index and rec.body.surface.index==rec.surface_index
         for _,role in ipairs(defs.devices[rec.kind].roles) do
-          local port=M.endpoint(rec,role)
-          if not port or not port.valid or port.force.index~=rec.force_index or port.surface.index~=rec.surface_index
-            or not M.connector(rec,role,'red') then available=false end
+          -- This proof includes live body/port validity, force, surface,
+          -- position, direction and registry ownership; do not repeat it.
+          if not M.connector(rec,role,'red') then available=false end
         end
         if available then available=M.has_power(rec) end
       end

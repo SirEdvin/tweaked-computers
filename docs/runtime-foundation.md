@@ -38,10 +38,11 @@ ApiError. Source line probes identify the current original statement/operator;
 a complete precise traceback/source-map review remains task 2.2.
 
 Plan data may be retained, but never retain functions or a guard/environment.
-Source is revalidated on every run; caller-owned generated text is never trusted.
-This intentionally cache-free foundation pays identical compilation/reconstruction
-costs for fresh, retained and partially exhausted peers. An optimization must
-preserve that admission behavior; there is no cache-performance claim here.
+Source is revalidated or matched against a bounded private exact-source proof on
+every run; caller-owned generated text is never trusted. At most eight plans and
+32768 charge records per plan are cached, without ASTs or executable closures.
+Warm proofs pay identical compilation/reconstruction credits, including the exact
+accepted prefix on partial refusal. See [animation runtime costs](player/monitor-animation.md#runtime-costs).
 
 ## Shared budget and service boundary
 

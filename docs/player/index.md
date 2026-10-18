@@ -32,20 +32,21 @@ them. Newer engine versions and third-party prototype combinations are not claim
 verified by this guide.
 
 The implementation has packaged headless native-runtime, factory-effect and
-cold-save checks. Graphical typing/paste/focus, wire selection and artwork
-alignment, zoom/monitor readability and touch delivery, audible speaker playback
-and multiplayer client joining remain user testing, not agent-verified features.
+cold-save checks. Foundry artwork and live charts have isolated software-rendered
+base/Space Age captures. Graphical typing/paste/focus, native wire selection,
+touch delivery, audible speaker playback and multiplayer client joining remain
+user testing, not agent-verified features. These captures are not GPU benchmarks.
 Resource ceilings are provisional safety limits, not a promise of real-time latency
 or simultaneous maximum-world performance. Report failures with the mod/engine
 versions, wiring, source and error code; remove private literals before sharing.
 
 ## Source and developer documentation
 
-The [0.1.5 ALPHA source](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.5) includes
+The [0.1.7 ALPHA source](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.7) includes
 source, notices and examples; report problems in its
 [issue tracker](https://github.com/SirEdvin/tweaked-computers/issues).
 The separately generated
-[developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.5/openwiki)
+[developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.7/openwiki)
 explains implementation internals; this site, not that wiki, is the player and
 public Lua API reference. This link identifies the source-grounded developer
 wiki snapshot independently of the repository's default branch.

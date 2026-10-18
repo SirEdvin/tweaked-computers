@@ -26,7 +26,10 @@ end
 function M.reserve(ctx, kind, amount)
   assert(errors.integer(amount, 0, 1000000000), 'invalid work reservation')
   assert(ctx.tick == ctx.ledger.tick, 'stale admission context')
-  local ceiling = ({work = limits.callback_work, compile = limits.compile_work, allocations = limits.callback_allocations})[kind]
+  local ceiling
+  if kind=='work' then ceiling=limits.callback_work
+  elseif kind=='compile' then ceiling=limits.compile_work
+  elseif kind=='allocations' then ceiling=limits.callback_allocations end
   assert(ceiling, 'unknown admission kind')
   local aggregate_ceiling=limits.host_work_per_tick-limits.maintenance_work_per_tick
   if ctx.machine[kind] + amount > ceiling or ctx.ledger.total + amount > aggregate_ceiling then
@@ -36,4 +39,23 @@ function M.reserve(ctx, kind, amount)
   ctx.ledger.total = ctx.ledger.total + amount
   return true
 end
+-- Private, already-admitted host traces only. A fitting trace is one reservation;
+-- refusal retains the exact accepted prefix, not all-or-nothing accounting.
+local function replay(ctx,kind,ceiling,charges)
+  assert(ctx.tick==ctx.ledger.tick,'stale admission context')
+  local available=math.min(ceiling-ctx.machine[kind],
+    limits.host_work_per_tick-limits.maintenance_work_per_tick-ctx.ledger.total)
+  local accepted=charges.total
+  if accepted>available then
+    accepted=0
+    for _,cost in ipairs(charges) do
+      if accepted+cost>available then break end
+      accepted=accepted+cost
+    end
+  end
+  ctx.machine[kind]=ctx.machine[kind]+accepted; ctx.ledger.total=ctx.ledger.total+accepted
+  return charges.total<=available
+end
+function M.replay_compile(ctx,charges) return replay(ctx,'compile',limits.compile_work,charges) end
+function M.replay_work(ctx,charges) return replay(ctx,'work',limits.callback_work,charges) end
 return M

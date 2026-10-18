@@ -128,6 +128,7 @@ function M.apply_settings(rec,s)
       local m=g.model
       model.scale(m,g.width_tiles,g.height_tiles,function() end,settings.scale)
       m.fg=settings.fg; m.bg=settings.bg; m.blink=settings.blink; m.palette=settings.palette; m.revision=m.revision+1
+      model.invalidate(m)
     end
   elseif s.computer~=nil or s.monitor~=nil then fail('unexpected family settings') end
 end

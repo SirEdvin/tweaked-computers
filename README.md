@@ -11,9 +11,11 @@ No interpreter, OS, shell, gameplay filesystem or dynamic guest loader is shippe
 - [Public source](https://github.com/SirEdvin/tweaked-computers) and [issues](https://github.com/SirEdvin/tweaked-computers/issues).
 - [Documentation build and deployment](docs/documentation-maintenance.md).
 
-This is a user-test alpha, not stable or client-verified. Back up saves. Graphical
-editing/focus, wire selection, rendering/touch, audible playback and multiplayer
-joining remain user-owned checks. Full-world performance limits are provisional.
+This is a user-test alpha, not stable or fully client-verified. Back up saves.
+Foundry artwork and live monitor charts have isolated base/Space Age graphical
+checks with software rendering. Interactive editing/focus, wire selection/touch,
+audible playback and multiplayer joining remain user-owned checks. Full-world
+performance limits are provisional; software rendering is not a GPU benchmark.
 Install from the [Factorio Mod Portal](https://mods.factorio.com/mod/tweaked-computers)
 and follow the guide above. Report problems with engine/mod versions, wiring,
 source and diagnostics; remove private literals before sharing.
@@ -23,7 +25,13 @@ See the [0.1.5 monitor buffering evidence](docs/monitor-buffer-verification.md),
 [0.1.4 interaction hotfix notes](docs/interaction-release.md),
 [integrated verification](docs/rd5-candidate.md) and
 [native-client playtest](docs/player/editor.md#integrated-redesign-playtest).
-The release source is [alpha-0.1.5](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.5);
+Version 0.1.6 adds [live Map budgets](docs/player/api/limits.md#live-mod-settings),
+fivefold default allowances and [dirty-cell animation](docs/player/monitor-animation.md).
+Version 0.1.7 adopts the selected Foundry artwork, connected-subpixel chart and
+independent background/glyph reuse without raising budgets or changing the API.
+The [monitor performance investigation](docs/monitor-performance.md) records the
+earlier workload separately; current matched results accompany the release.
+The release source is [alpha-0.1.7](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.7);
 [0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development
@@ -35,7 +43,7 @@ Build an installable archive outside the checkout:
 Use a fresh output directory for the packaged official-engine integration smoke:
 
     python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
-      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.5.zip \
+      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.7.zip \
       --output /absolute/path/to/new-smoke-directory \
       --fixture tests.integration_engine --production-context --cold
 
@@ -45,7 +53,8 @@ The source/API contracts remain in openspec/changes/add-native-circuit-computers
 that change is deliberately unarchived pending review and user client testing.
 The shipped `buffer-monitor-presentation` API extension documents automatic
 snapshots, every 1..6-by-1..6 rectangle and optional selected-group publication.
-Graphical validation is explicitly deferred to the user's alpha review.
+Interactive graphical validation remains part of the user's alpha review;
+isolated artwork/chart captures do not establish input or multiplayer behavior.
 
 Project source is [MIT licensed](LICENSE). Pinned Phobos parser source retains
 [its license](vendor/phobos/LICENSE.txt), [notice](vendor/phobos/NOTICE.md) and

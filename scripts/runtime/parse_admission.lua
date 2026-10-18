@@ -2,12 +2,18 @@ local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local M = {}
-local context, depth
-function M.begin(ctx) assert(not context, 'parser is non-reentrant'); context, depth = ctx, 0 end
-function M.finish() context, depth = nil, nil end
+local context, depth, trace
+function M.begin(ctx,charges) assert(not context, 'parser is non-reentrant'); context, depth, trace = ctx, 0, charges end
+function M.finish() context, depth, trace = nil, nil, nil end
 function M.enter(cost)
-  if context and not admission.reserve(context, 'compile', cost or 1) then
+  cost=cost or 1
+  if context and not admission.reserve(context, 'compile', cost) then
     errors.raise('E_BUDGET', 'source compilation work exhausted')
+  end
+  if trace then
+    if #trace<32768 then
+      trace[#trace+1]=cost; trace.total=(trace.total or 0)+cost
+    else trace.overflow=true; trace=nil end
   end
 end
 function M.push()

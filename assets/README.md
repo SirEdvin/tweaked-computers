@@ -1,32 +1,37 @@
-# Industrial device artwork and independent glyphs (RD2)
+# Foundry device artwork and independent glyphs
 
-Original editable artwork is implemented. Native-client visual review remains
-user-owned and unperformed. Contact sheets are asset composites, not screenshots.
+Foundry is the selected default family. Its 147 generated PNGs match the reviewed
+Foundry preview byte-for-byte, including unchanged glyphs, shadows and status
+masks. The preview was recorded in the full base 2.0.77 client with software
+OpenGL; this is visual evidence, not GPU-performance or multiplayer acceptance.
+Contact sheets remain asset composites, not screenshots.
 
 ## Five functional silhouettes
 
-- Computer: low sloped operator console, inset dark screen, keyboard/control
-  strip and cooling grille. The screen is not a tall pale cube face.
-- KV database: ribbed storage cabinet, stacked cartridges and folded-metal
-  handles on the top/front, with an activity rail. No screen or keyboard.
-- Monitor: thin flat glass panel with a metal bezel and edge contacts. Its
-  original world/touch/cell geometry is unchanged.
-- Logic handler: one continuous three-bay signal instrument, common case rails,
-  Input chevron, central Network/processing bay and double-chevron Output.
-- Configurator: one two-bay service controller, a physical dial and a separate
-  Factory targets terminal bank/crosshair.
+- Computer: heavy CRT console with a separate keyboard shelf and copper cooling
+  housing.
+- KV database: cast storage rack with stacked cartridge handles and end rails.
+- Monitor: flat glass, pitted cast bezel, corner fasteners and a shallow exterior
+  skirt. Its original world/touch/cell geometry is unchanged.
+- Logic handler: copper-wound relay bank, central gauge housing and exposed cable
+  runs, retaining separate Input, Network and Output sockets.
+- Configurator: large analog service gauge beside a recessed control bank and
+  cooling grille, retaining Network and Factory targets sockets.
 
-All use graphite, fine-grained steel, brass contacts and restrained activity
-lights. Geometry rotates before projection; lighting and cast shadows use one
+All use warm cast iron, copper/brass, directional shading, pitting, clustered
+grime, worn bevels and restrained activity lights. Geometry rotates before
+projection; lighting and cast shadows use one
 world-space direction. Their original 1×1, 1×1, 1×1, 3×1 and 2×1 footprints,
 recipe costs, wire roles, service behavior and Lua API v1 are unchanged.
 
 ## Editable sources and provenance
 
-`industrial.py` is the editable authored geometry/material source. Its small
-named constructors use tile-unit coordinates and heights, with polygons, folded
-metal, fasteners, grilles, keys, cartridge handles, dial and role pictograms.
-Change these constructors rather than editing generated PNGs. `generate.py`
+`foundry.py` is the selected editable geometry/material source. It reuses
+`industrial.py`'s projection, native contact painting, shadows and status masks;
+the earlier RD2 body constructors remain historical helpers, not selectable
+runtime themes. Change the Foundry constructors rather than generated PNGs.
+No Relay/Field alternatives or preview packaging helpers ship as active designs.
+`generate.py`
 exports runtime images and metadata; it does not sample any upstream texture,
 model, screenshot, font or promotional render for the new family.
 
@@ -100,15 +105,18 @@ world sprites. Role symbols supplement position/color: Network diamond, Input
 chevron, Output double chevron, Factory targets crosshair. Wire red/green is
 independent of the role-marker palette; either wire color is allowed per role.
 
-## Monitor and glyph contract (unchanged)
+## Monitor and glyph contract
 
-The monitor is a ground-centered 64×64 logical-unit square with a 60×60 interior
-and exactly two units of bezel per edge. Raster bounds are half-open:
-`[-32,32)` for the panel, `[-30,30)` for the glass. Socket pixels at native
-±0.48 tile and all status pixels stay on that bezel. No raised lip, upright
-panel, new touch offset or cell pitch is introduced. Runtime grouping may cover
-internal seams; display-layer/removal-feedback implementation and the deferred
-native X check are documented in [RD4 verification](../docs/rd4-verification.md).
+The monitor retains a ground-centered 64×64 logical-unit tile/touch area, a 60×60
+interior and two units of inner bezel per edge. Half-open glass bounds remain
+`[-30,30)`; socket pixels at native ±0.48 tile and all status pixels remain on the
+original inner bezel. The selected Foundry artwork adds a four-unit mechanical
+skirt outside that original body: its exact chamfered alpha bounds are
+`[-36,36)` on both axes. This small visual overhang does not enlarge collision,
+selection, touch coordinates or cell pitch. Runtime grouping covers internal
+seams with the existing content layers. The static check audits every skirt alpha
+pixel independently, not just its bounding box. Historical display-layer/removal
+feedback work is documented in [RD4 verification](../docs/rd4-verification.md).
 
 `glyphs.txt` is the independently authored 5×7 ASCII stroke source. The unchanged
 96×144 atlas has 16×16 cells of 6×9 pixels. White opaque foreground is tintable;
@@ -127,7 +135,8 @@ made by glyph-mask tests.
 RD4 adds `glyphs/pixel.png`, an original opaque white 1×1 RGBA mask generated by
 `generate.py`, separately inventoried/hashed in the manifest. `tc-monitor-fill`
 uses it for tintable panel/background/cursor sprites with explicit layers below
-native feedback. The glyph atlas and all RD2 device image bytes are unchanged.
+native feedback. The glyph atlas, fill, shadows and status masks are unchanged;
+Foundry replaces the five icons and twenty directional body images.
 
 ## Reproduce and check
 
