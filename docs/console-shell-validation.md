@@ -1,9 +1,10 @@
 # Console shell verification and review handoff
 
-This is an implementation fixture guide, not a claim of completed independent
-native-client or connected multiplayer acceptance. See the OpenSpec checklist
-under `openspec/changes/add-interactive-console-shell/tasks.md`. SH2 owns final
-4.2, 5.2 and 5.3; history was explicitly removed by the user after the focused
+This is the implementation fixture guide. Independent SH2 acceptance is complete;
+see the receipt in `openspec/changes/add-interactive-console-shell/tasks.md` and
+[0.1.8 release notes](console-shell-release.md). Native workflows passed in both
+modes; connected late join/cold-server acceptance passed in base only. History
+was explicitly removed by the user after the focused
 arrow feasibility failure. Do not reintroduce a history gate or substitute buttons.
 
 ## Packaged contracts and cold persistence
