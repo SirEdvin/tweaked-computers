@@ -14,15 +14,15 @@ A logic handler SHALL occupy a rotatable 3×1 footprint with input, middle compu
 - **THEN** all three roles rotate consistently and remain visibly distinguishable without swapping their logical meanings or leaking signals between them.
 
 ### Requirement: Quality-aware input inspection
-The API SHALL read red, green or their signed-32-bit sum from the input role. Signal identities SHALL include type, name and quality. Missing signals SHALL read as zero, and collections SHALL be canonical, bounded defensive snapshots.
+The API SHALL require an explicit red or green input selector and SHALL NOT combine colors or supply a default. Missing, both and invalid selectors SHALL fail before subscription registration. Signal identities SHALL include type, name and quality, including installed recipe prototypes independently of same-named items. Missing signals SHALL read as zero, and collections SHALL be canonical, bounded defensive snapshots.
 
 #### Scenario: Same item at different qualities
 - **WHEN** normal and higher-quality item signals exist together
 - **THEN** they remain distinct in reads, filters, output and change notifications.
 
-#### Scenario: Red and green sums
-- **WHEN** a caller selects both input colors
-- **THEN** values are combined by complete signal identity using the documented signed-32-bit semantics without joining the two physical networks.
+#### Scenario: Red and green isolation
+- **WHEN** both physical input colors are connected and a caller selects red or green
+- **THEN** only that color's native signed-32-bit values are returned; selecting both or omitting the selector fails without registration or mutation.
 
 ### Requirement: Shared combinator-style output
 The handler SHALL hold one output signal set broadcast identically on red and green output wires. API writes SHALL replace or update that set as documented, validating all identities, counts and capacity before mutation. It MUST NOT offer independent output banks by color.
@@ -36,7 +36,7 @@ The handler SHALL hold one output signal set broadcast identically on red and gr
 - **THEN** the previous output and writer ownership remain unchanged.
 
 ### Requirement: Tick-sampled change subscriptions
-Programs SHALL subscribe named handlers to red, green or summed input snapshots, optionally filtered by signal identity. Within the supported envelope, powered handlers SHALL be sampled once per simulation tick and only changed samples or explicitly requested initial/resync samples SHALL produce events.
+Programs SHALL subscribe named handlers to explicitly selected red or green input snapshots, optionally filtered by signal identity. Within the supported envelope, powered handlers SHALL be sampled once per simulation tick and only changed samples or explicitly requested initial/resync samples SHALL produce events.
 
 #### Scenario: Unchanged input
 - **WHEN** consecutive selected input snapshots and connectivity are identical
@@ -74,6 +74,10 @@ Save/load SHALL retain valid output values, ownership and subscriptions without 
 #### Scenario: Reload after one completed output write
 - **WHEN** the save is loaded in a new process
 - **THEN** the retained valid output remains the same and no duplicate write event or `start` invocation is required to preserve it.
+
+#### Scenario: Reload with a legacy combined subscription
+- **WHEN** a retained signal subscription has both, missing or invalid input selection
+- **THEN** the run faults before queued callbacks dispatch, clears its still-owned outputs and discards pending callbacks without silently choosing a wire; the user must update source and restart.
 
 ### Requirement: Input and network power policy
 An unpowered handler SHALL not execute peripheral services or emit owned output. Subscription resumption SHALL rebaseline current inputs and mark resynchronization, without replaying an unbounded backlog of unobserved changes.
