@@ -48,6 +48,9 @@ def prepare(archive, engine, client, output, mode, config_template=None):
         folder.mkdir()
         write = folder / 'write'
         write.mkdir()
+        # /server-save resolves its name through this directory; a fresh
+        # headless write-data tree has not necessarily had an autosave yet.
+        (write / 'saves').mkdir()
         data = engine.resolve().parents[2] / 'data' if name == 'server' else client / 'data'
         text = template.replace('read-data=__PATH__executable__/../../data', 'read-data=' + str(data))
         text = text.replace('write-data=__PATH__executable__/../..', 'write-data=' + str(write))
