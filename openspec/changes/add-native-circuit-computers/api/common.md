@@ -16,7 +16,7 @@ This document is normative for the companion `specs/*/lua-api.md` contracts. It 
 ```text
 -- Documentation types, not executable declarations.
 Wire = "red" | "green"                  -- mandatory discovery/target channel
-InputSelection = "red" | "green" | "both"
+InputSelection = "red" | "green" -- explicit, no default or combined selector
 ComputerId, PeripheralName, DeviceId, SubscriptionId, TimerId = string
 Tick = integer                           -- nonnegative, <= 9007199254740991
 Int32 = integer                          -- -2147483648 .. 2147483647

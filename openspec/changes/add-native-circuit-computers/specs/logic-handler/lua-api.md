@@ -6,7 +6,7 @@ Normative companion to [spec.md](spec.md). Obtain as `peripheral.find("logic_han
 
 | Signature | Returns | Meaning |
 | --- | --- | --- |
-| `io.readSignal(input, signal)` | Int32 | `input` is red/green/both; absent signal gives 0 |
+| `io.readSignal(input, signal)` | Int32 | `input` explicitly selects red or green; absent signal gives 0 |
 | `io.readSignals(input)` | `Signal[]` | Selected native input snapshot, sorted, with zero totals omitted |
 | `io.getInputStatus()` | table | `{red_connected=boolean, green_connected=boolean}` for actual input connectors |
 | `io.getOutput()` | `Signal[]` | This handler's configured contribution only, not external signals on its output network |
@@ -24,9 +24,11 @@ independently of its products or research status. Same-named item and recipe
 signals do not merge. This applies to reads, output banks and subscription filters.
 Native snapshot pre-admission includes the installed recipe prototype registry.
 Other signal categories remain unsupported. Existing work/maintenance caps remain binding;
-two-color sampling can refuse when the complete envelope does not fit.
+independent per-color sampling can refuse when the complete envelope does not fit.
+This supported-type estimate is not a universal bound: native enumeration may
+materialize unsupported categories before rejecting them.
 
-`both` sums the red and green input values by full identity and wraps to signed 32-bit using `((sum + 2147483648) % 4294967296) - 2147483648`. This does not physically connect colors or change discovery rules. Negative counts are legal. Output arrays must have unique normalized identities; duplicates are rejected before mutation, rather than silently added. Zero-valued entries are removed in the canonical stored bank. An empty bank emits no contribution.
+Input selectors are mandatory red or green. Missing, `both` and invalid values fail before registration; no default, compatibility alias or color combination exists. Each read retains native signed32 semantics on the selected circuit. Negative counts are legal. Output arrays must have unique normalized identities; duplicates are rejected before mutation, rather than silently added. Zero-valued entries are removed in the canonical stored bank. An empty bank emits no contribution.
 
 Output is one set mirrored to both output connectors. Other devices can contribute different totals on those networks; getOutput does not report those totals. Externally wiring input and output together can deliberately create feedback, but there is no internal feedthrough between input, middle and output.
 
@@ -35,7 +37,7 @@ Output is one set mirrored to both output connectors. Other devices can contribu
 ```text
 -- Documentation options.
 SignalSubscriptionOptions = {
-  input = "red" | "green" | "both", -- required
+  input = "red" | "green", -- required, never defaulted or combined
   signals = { SignalId, ... } | nil, -- nil means all; nonnil must be nonempty/unique
   initial = boolean | nil           -- default false
 }
@@ -71,6 +73,11 @@ Only selected colors are present in connectivity maps. Initial events use false 
 Factorio reports circuit values from its native circuit-update state, documented as previous-tick signals. `sample_tick` identifies observation time; it does not assert that a newly written output can be read by another device immediately. `event.tick` identifies callback dispatch. No within-tick transient detection or recursively triggered signal callback is promised. When powered and within the supported envelope, sampling is once per actual simulation tick, not once per arbitrary number of scheduler dispatches.
 
 ## Output ownership and failure
+
+Persisted legacy subscriptions with `both`, missing or invalid input fault the run
+before queued callback dispatch, clear its still-owned output and discard pending
+callbacks. Update source to select red or green and restart; never translate wires
+or replay effects on load. Valid single-color load retains exact identities.
 
 Every successful setOutput/clearOutput records the writing computer's identity, active run generation and bound network color. The bank is a single ownership unit. A subsequent successful write replaces that ownership; a failed write does not. Stop, fault, computer/handler power loss, removal, force/surface change or loss of the owner's selected path clears its still-owned output through host cleanup.
 
@@ -113,4 +120,4 @@ return {
 
 The filter above selects one full identity, so its current snapshot has at most one entry. A second computer can receive these circuit signals through its own logic handler; there is no direct computer-message API.
 
-Required cases: each input color/both; disconnected versus zero input; int32 boundaries/wrap; different qualities and same-name different types; duplicate output refusal; native propagation latency; subscription initial/filter/removal/resync; every-tick changed and unchanged samples; full queues; multiple writers; stale binding and cold ownership; all rotations and externally wired feedback.
+Required cases: red and green separately with both physical wires connected; missing/both/invalid selector refusal; disconnected versus zero input; native int32 boundaries/wrap; different qualities and same-name different types; duplicate output refusal; native propagation latency; subscription initial/filter/removal/resync; every-tick changed and unchanged samples; full queues; multiple writers; stale binding, legacy fault without queued replay and valid cold ownership; all rotations and externally wired feedback.

@@ -38,7 +38,9 @@ source to change thresholds deterministically, not a fabricated signal API.
 
 Obtain a facade with `peripheral.find("logic_handler", "red")` or
 `peripheral.wrap(name, wire)`. Discovery `wire` is red/green, independent of the
-INPUT selector red/green/both. Extra arguments and colon calls are errors.
+explicit INPUT selector red or green. Missing, `both` and other selectors are
+errors, as are extra arguments and colon calls. Output uses the facade's explicitly
+selected discovery wire for authority; its shared physical bank is not split by color.
 
 | Method | Result |
 | --- | --- |
@@ -55,9 +57,9 @@ INPUT selector red/green/both. Extra arguments and colon calls are errors.
 Signal: `{signal={type="item"|"fluid"|"virtual"|"recipe",name=prototype,quality="normal"},count=integer}`.
 Quality may be omitted on input and defaults to normal. Returned identities always
 include type/name/quality. Prototype and quality must exist; ordinary wildcards are
-refused. Counts are -2147483648 through 2147483647 without coercion. Both-input
-aggregation uses `((red+green+2147483648)%4294967296)-2147483648` per complete
-identity. Normal/uncommon copies of an item never merge. Lists sort by type/name/
+refused. Counts are -2147483648 through 2147483647 without coercion. Reads observe
+one selected circuit, retaining native signed32 sums without combining colors.
+Normal/uncommon copies of an item never merge. Lists sort by type/name/
 quality. Duplicate normalized identities (including duplicate zeros) are rejected
 before mutation; zero output entries are omitted. Failed validation/admission keeps
 both old bank and old writer. Output uses a private manual native section, staged
@@ -70,7 +72,7 @@ output banks and subscription filters all accept recipes.
 
 ## Named sampled subscriptions
 
-Options: `{input="red"|"green"|"both", signals={SignalId,...}?, initial=boolean?}`.
+Options: `{input="red"|"green", signals={SignalId,...}?, initial=boolean?}`.
 Unknown fields, empty/duplicate filters and undeclared handler names are refused.
 Omitted signals means all; initial defaults false. Filters match complete identities.
 A subscription binds computer/run, handler generation and discovery color. Losing
@@ -97,12 +99,15 @@ outages remove obsolete queued samples but retain their last admitted baseline a
 registration. Restoration delivers current resync, not every unobserved transition;
 previous may refer to a discarded callback's sample. Handler outputs stay empty
 until a new successful write. Cold reload preserves valid bank/owner/subscriptions
-and exact run identity without startup or write replay. Source/state errors cannot
+and exact run identity without startup or write replay. Legacy subscriptions with
+`both`, missing or invalid selectors fault before queued callbacks dispatch, clear
+owned output and discard pending effects. Update source to explicitly select red
+or green and restart; no automatic wire substitution occurs. Source/state errors cannot
 suppress cleanup. New placement/clones start with empty bank/no owner.
 
 ## Bounds and failures
 
-Initial development ceilings: 64 signal slots per input/combined snapshot/output,
+Initial development ceilings: 64 signal slots per selected input snapshot/output,
 64 filter identities, 64 subscriptions per computer, 128 sampled handlers, 1024
 aggregate subscriptions and 128 owned banks. Sampling interval is 1; fail-safe
 latency is 1 tick under the safety envelope. Notification latency reports the shared
@@ -116,7 +121,9 @@ snapshot. Single-signal reads use bounded native lookups. The provisional copy-w
 weights are not a measured CPU-time bound. Heavy modded prototype universes may
 refuse admission instead of doing unpaid native work.
 The supported-type estimate includes installed recipes. Other native signal
-categories remain unsupported and are refused, not silently filtered out.
+categories remain unsupported and are refused, not silently filtered out. Native
+enumeration can materialize them before rejection; this inherited estimate does
+not provide a universal all-category bound.
 
 Argument/domain/capacity/unpowered/path failures are ordinary catchable ApiErrors.
 Queue overflow visibly faults the computer and clears its exact owned outputs.

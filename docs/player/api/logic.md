@@ -5,7 +5,7 @@ NETWORK to handler NETWORK for discovery, factory readout to INPUT, controlled
 machines to OUTPUT. No internal role feedthrough exists. External feedback is
 possible only if you wire it deliberately. Obtain
 `local io = peripheral.find("logic_handler", "red")`.
-Discovery red is independent of INPUT selection red/green/both.
+Discovery red is independent of the explicit INPUT selection red or green.
 
 ## Complete methods
 
@@ -21,8 +21,9 @@ Discovery red is independent of INPUT selection red/green/both.
 | `io.unsubscribe(subscription_id)` | Boolean; remove own binding's registration and queued samples; false when absent |
 | `io.getLimits()` | Defensive shared + device ceilings |
 
-Strict dot calls; extra arguments/unknown options fail. `input` is exactly red,
-green or both. A SignalId is `{type="item"/"fluid"/"virtual"/"recipe", name=prototype,
+Strict dot calls; extra arguments/unknown options fail. `input` is exactly red
+or green; missing, `both` and other selectors are refused before registration.
+A SignalId is `{type="item"/"fluid"/"virtual"/"recipe", name=prototype,
 quality=quality_name?}`; a Signal is `{signal=SignalId,count=Int32}`. Type/name and
 quality must exist. Quality defaults normal and is explicit on readback. No
 wildcards or count coercion. Complete identities sort by type/name/quality.
@@ -34,9 +35,8 @@ reads, output banks and subscription filters. For example,
 `io.readSignal("red", {type="recipe", name="iron-plate"})` reads the recipe signal,
 not the iron-plate item signal.
 
-Both-input sums wrap signed32 per identity using
-`((red+green+2147483648)%4294967296)-2147483648`, without physically connecting
-colors. Negative counts are legal. Duplicate normalized output identities,
+Each read observes only its selected physical circuit; colors are never combined.
+Native circuit sums retain signed32 semantics. Negative counts are legal. Duplicate normalized output identities,
 including duplicate zeros, are refused before mutation; zero entries are omitted.
 Failed validation/admission preserves bank **and** writer.
 
@@ -66,7 +66,7 @@ connectivity. Within-tick transients are not observed.
 | --- | --- |
 | subscription_id | string |
 | peripheral, wire | string name and selected discovery Wire |
-| input | red / green / both |
+| input | red / green |
 | sample_tick | Tick of observation, not callback dispatch |
 | initial, resync | booleans |
 | previous, current | canonical Signal arrays |
@@ -85,7 +85,11 @@ Stop, fault, power loss, removal, authority change or loss of the owner's select
 path clears **only** that run's still-owned bank. A stopping old writer cannot
 clear a later writer's bank. Source failure cannot suppress cleanup. On restoration
 output remains empty until another successful write. Cold load retains a valid
-bank/owner/subscriptions without replaying start or republishing writes. New
+bank/owner/subscriptions without replaying start or republishing writes. Persisted
+legacy subscriptions with `both`, missing or invalid input fault the run before
+queued callbacks dispatch, clear its owned output and discard pending callbacks;
+update the saved source to select red or green explicitly and restart. No wire is
+silently substituted. New
 placement/clones start zero/unowned.
 
 State/KV/display and applied factory configuration are not rolled back by output
@@ -95,7 +99,7 @@ recovery and clears output; never assume a callback-wide factory transaction.
 
 ## Bounds and use
 
-Initial caps: 64 signal slots per input/combined snapshot/output; 64 filter signals;
+Initial caps: 64 signal slots per selected input snapshot/output; 64 filter signals;
 64 subscriptions per computer shared with general registrations; 128 sampled
 handlers; 1,024 aggregate subscriptions; 128 owned banks. Sample interval 1 tick,
 fail-safe target 1 tick, notification/topology ceiling 60 ticks is provisional.
@@ -104,9 +108,10 @@ can refuse instead of doing unbounded work. Queue overflow or sampling/notificat
 maintenance refusal visibly faults affected runs, not silently loses history.
 The supported-type precharge includes the installed recipe registry. Other native
 signal categories remain unsupported and are refused, not silently filtered out.
-Two-color subscriptions can exceed shared sampling headroom in Space Age even
-when a single-color subscription or ordinary `readSignals("both")` callback fits.
-Sampling refusal faults the run visibly; it does not silently miss updates.
+Independent subscriptions on multiple colors/devices still share the unchanged
+maintenance budget; admission refusal faults the run visibly, never silently
+misses updates. The supported-type estimate is not a universal all-category bound:
+native enumeration may materialize unsupported categories before rejecting them.
 
 Use [logic-controller](../examples.md#logic-controller) and the
 [first inserter tutorial](../first-controller.md). If reads stay zero, check chest

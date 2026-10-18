@@ -58,6 +58,8 @@ local function snapshot()
   local sub=c.subscriptions[c.state.subscription]; local root=registry.get()
   return {state=c.state,run=c.run_id,active=c.active,queue=c.queue,subscriptions=c.subscriptions,
     filter=sub.details.signals,baseline=sub.details.previous,bank=io.output_bank,owner=io.output_owner,
+    legacy=x.legacy and registry.computer(x.legacy).subscriptions,
+    legacy_queue=x.legacy and registry.computer(x.legacy).queue,
     ledger=root.ledger,total=root.ledger.total,tick=root.ledger.tick,machine=root.ledger.machines[c.id],
     work=root.ledger.machines[c.id].work,events=c.state.events,shell=c.shell,values=c.shell and c.shell.values}
 end
@@ -73,6 +75,7 @@ function M.run()
     return assert(lifecycle.build(assert(surface.create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})))
   end
   local c=build('computer',0,0); local io=build('logic',4,0)
+  local legacy=build('computer',0,3)
   assert(lifecycle.connector(c,'network','red').connect_to(lifecycle.connector(io,'network','red')))
   local red=assert(surface.create_entity{name='constant-combinator',position={0,-3},force='player'})
   local green=assert(surface.create_entity{name='constant-combinator',position={4,-3},force='player'})
@@ -81,6 +84,9 @@ function M.run()
   local entries={{signal=recipe(),count=-5},{signal={type='recipe',name='copper-plate'},count=1},{signal={type='fluid',name='water'},count=3}}
   if script.active_mods.quality then entries[#entries+1]={signal=recipe('uncommon'),count=4} end
   put(green,entries)
+  local overflow=assert(surface.create_entity{name='constant-combinator',position={0,-5},force='player'})
+  put(overflow,{{signal={type='recipe',name='copper-plate'},count=1}})
+  assert(overflow.get_wire_connector(defines.wire_connector_id.circuit_red,true).connect_to(lifecycle.connector(io,'input','red')))
   for color,entity in pairs({red=red,green=green}) do
     assert(entity.get_wire_connector(defines.wire_connector_id['circuit_'..color],true).connect_to(lifecycle.connector(io,'input',color)))
   end
@@ -91,7 +97,7 @@ function M.run()
   assert(surface.create_entity{name='substation',position={3,6},force='player'})
   local supply=assert(surface.create_entity{name='electric-energy-interface',position={7,6},force='player'})
   supply.power_production=100000000; supply.power_usage=0
-  storage.tc_recipe_signals={c=c.id,io=io.id,red=red,green=green,output=output,phase='power',start=game.tick}
+  storage.tc_recipe_signals={c=c.id,io=io.id,legacy=legacy.id,red=red,green=green,output=output,phase='power',start=game.tick}
 end
 function M.on_load()
   loaded=true
@@ -109,6 +115,11 @@ function M.on_tick(event)
     x.phase='resume'; x.resumed=event.tick
   else loaded=false end
   with_player(function() scheduler.tick(event.tick) end)
+  if x.legacy_armed then
+    local legacy=registry.computer(x.legacy)
+    assert(legacy.status=='faulted' and legacy.diagnostic.code=='E_ARGUMENT')
+    assert(not legacy.state.events and #legacy.queue==0,'legacy queued callback replayed')
+  end
   assert(c.status~='faulted',c.diagnostic and c.diagnostic.message)
   assert(event.tick-x.start<240,'recipe scenario deadline '..x.phase)
   if x.phase=='power' and event.tick-x.start>=5 then
@@ -123,19 +134,31 @@ function M.on_tick(event)
     log('TC_RECIPE_NATIVE_INPUT '..serpent.line(io.children.input.get_signals(defines.wire_connector_id.circuit_red)))
     probe(c,[[assert(p.readSignal('red',{type='recipe',name='iron-plate'})==12)
       assert(p.readSignal('green',{type='recipe',name='iron-plate'})==-5)
-      assert(p.readSignal('both',{type='recipe',name='iron-plate'})==7)
-      assert(p.readSignal('both',{type='item',name='iron-plate'})==99)
-      assert(p.readSignal('both',{type='recipe',name='copper-plate'})==-2147483648)
-      assert(p.readSignal('both',{type='recipe',name='steel-plate'})==0)
-      local all=p.readSignals('both'); local kinds={}; local last=''
+      assert(p.readSignal('red',{type='item',name='iron-plate'})==99)
+      assert(p.readSignal('green',{type='item',name='iron-plate'})==0)
+      assert(p.readSignal('red',{type='recipe',name='copper-plate'})==-2147483648)
+      assert(p.readSignal('green',{type='recipe',name='copper-plate'})==1)
+      assert(p.readSignal('red',{type='recipe',name='steel-plate'})==0)
+      local kinds={}
+      for _,wire in ipairs({'red','green'}) do
+      local all=p.readSignals(wire); local last=''
       for _,s in ipairs(all) do
         local key=s.signal.type..'/'..s.signal.name..'/'..s.signal.quality
         assert(key>last); last=key; kinds[s.signal.type]=true
-        if s.signal.type=='recipe' and s.signal.name=='iron-plate' and s.signal.quality=='normal' then assert(s.count==7) end
-        if s.signal.type=='recipe' and s.signal.name=='copper-plate' then assert(s.count==-2147483648) end
+        if s.signal.type=='recipe' and s.signal.name=='iron-plate' and s.signal.quality=='normal' then assert(s.count==(wire=='red' and 12 or -5)) end
+        if s.signal.type=='recipe' and s.signal.name=='copper-plate' then assert(s.count==(wire=='red' and -2147483648 or 1)) end
+      end
+      all[1].count=123; assert(p.readSignals(wire)[1].count~=123)
       end
       assert(kinds.item and kinds.fluid and kinds.virtual and kinds.recipe)
-      all[1].count=123; assert(p.readSignals('both')[1].count~=123)
+      for _,bad in ipairs({'both','blue',false}) do
+        local ok,e=pcall(p.readSignals,bad); assert(not ok and e.code=='E_ARGUMENT')
+        ok,e=pcall(p.readSignal,bad,{type='recipe',name='iron-plate'}); assert(not ok and e.code=='E_ARGUMENT')
+        ok,e=pcall(p.subscribe,{input=bad},'changed'); assert(not ok and e.code=='E_ARGUMENT')
+      end
+      local ok,e=pcall(p.readSignals); assert(not ok and e.code=='E_ARGUMENT')
+      ok,e=pcall(p.readSignal,nil,{type='recipe',name='iron-plate'}); assert(not ok and e.code=='E_ARGUMENT')
+      ok,e=pcall(p.subscribe,{},'changed'); assert(not ok and e.code=='E_ARGUMENT')
       local out=p.getOutput(); assert(#out==2 and out[1].signal.type=='item' and out[2].signal.type=='recipe')
       out[2].count=999; assert(p.getOutput()[2].count==7)
       local ok,err=pcall(p.setOutput,{{signal={type='recipe',name='tc-missing-recipe'},count=1}})
@@ -153,8 +176,9 @@ function M.on_tick(event)
       ok,err=pcall(p.setOutput,many); assert(not ok and err.code=='E_ARGUMENT' and p.getOutput()[2].count==7)
       ok,err=pcall(p.readSignal,'red',{type='entity',name='inserter'}); assert(not ok and err.code=='E_ARGUMENT')]])
     if script.active_mods.quality then
-      probe(c,[[assert(p.readSignal('both',{type='recipe',name='iron-plate',quality='uncommon'})==4)
-        local count=0; for _,s in ipairs(p.readSignals('both')) do if s.signal.type=='recipe' then count=count+1 end end
+      probe(c,[[assert(p.readSignal('green',{type='recipe',name='iron-plate',quality='uncommon'})==4)
+        assert(p.readSignal('red',{type='recipe',name='iron-plate',quality='uncommon'})==0)
+        local count=0; for _,s in ipairs(p.readSignals('green')) do if s.signal.type=='recipe' then count=count+1 end end
         assert(count==3)]])
     end
     for _,color in ipairs({'red','green'}) do
@@ -189,6 +213,14 @@ function M.on_tick(event)
     for _,entry in ipairs(c.logs) do if entry.text:find('output: recipe\tiron-plate\tnormal\t12',1,true) then found=true end end
     assert(found,'reported Console loop did not print the real recipe signal')
     with_player(function() editor.on_click{player_index=player.index,element=gui.title.close,tick=event.tick} end)
+    -- Emulate a persisted pre-contract registration, including pending effects.
+    -- The frozen phase prevents further scheduler ticks before the cold save.
+    local legacy=registry.computer(x.legacy)
+    legacy.status='running'; legacy.run_id=legacy.id..'/legacy'; legacy.active=c.active
+    runtime.subscribe(legacy,'signal_changed','changed',{peripheral=io.id,generation=io.generation,
+      wire='red',input='both',previous={},connected={},initial=true},function() end)
+    assert(runtime.enqueue(legacy,'changed',{name='signal_changed',input='both'},event.tick))
+    x.legacy_armed=true
     x.phase='frozen'; x.snapshot=snapshot()
     log('TC_CONTRACT recipe-native-mixed-read-write-filter-quality-refusal-and-admission')
     game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
@@ -202,7 +234,27 @@ function M.on_tick(event)
     local e=c.state.last
     assert(e.changes[1].signal.type=='recipe' and e.changes[1].previous==20 and e.changes[1].current==0)
     assert(c.status=='running' and c.state.boots==1)
-    x.phase='done'; log('TC_COLD_OK recipe-bank-filter-identity-once-only-and-disappearance')
+    probe(c,[[assert(p.unsubscribe(computer.getState('subscription')))
+      computer.setState('subscription',p.subscribe({input='green',signals={{type='recipe',name='iron-plate'}},initial=true},'changed'))]])
+    x.phase='green-initial'; x.since=event.tick
+  elseif x.phase=='green-initial' and c.state.last.input=='green' then
+    assert(c.state.last.initial and c.state.last.current[1].count==-5)
+    assert(c.state.last.connected.green and c.state.last.connected.red==nil)
+    put(x.green,{{signal=recipe(),count=-2147483648}})
+    x.phase='green-change'
+  elseif x.phase=='green-change' and c.state.last.current[1].count==-2147483648 then
+    assert(c.state.last.changes[1].previous==-5 and c.state.last.changes[1].current==-2147483648)
+    put(x.green,{}); x.phase='green-disappear'
+  elseif x.phase=='green-disappear' and #c.state.last.current==0 then
+    assert(c.state.last.changes[1].previous==-2147483648 and c.state.last.changes[1].current==0)
+    probe(c,[[assert(p.unsubscribe(computer.getState('subscription')))]])
+    put(x.green,{{signal={type='entity',name='inserter'},count=1}})
+    x.phase='unsupported'; x.since=event.tick
+  elseif x.phase=='unsupported' and event.tick-x.since>=3 then
+    local bank,owner=io.output_bank,io.output_owner
+    probe(c,[[local ok,e=pcall(p.readSignals,'green'); assert(not ok and e.code=='E_ARGUMENT')]])
+    assert(io.output_bank==bank and io.output_owner==owner)
+    x.phase='done'; log('TC_COLD_OK recipe-red-green-isolation-legacy-fault-no-replay-and-disappearance')
   end
 end
 return M
