@@ -18,7 +18,7 @@ def check(output):
     manifest = json.loads((ROOT / 'manifest.json').read_text())
     records = manifest['outputs']
     paths = [r['path'] for r in records]
-    assert len(paths) == len(set(paths)) == 147
+    assert len(paths) == len(set(paths)) == 176
     for record in manifest['inputs']:
         assert digest((ROOT.parent / record['path']).read_bytes()) == record['sha256']
         if record['path'].endswith('.png'):
@@ -92,8 +92,8 @@ def check(output):
                     assert 1<=len(lit)<=9
                     if kind=='monitor':
                         assert all(-32<=x<=31 and -32<=y<=31 and not (-30<=x<30 and -30<=y<30) for x,y in lit), (direction,state)
-    assert contacts==64
-    assert len(set(silhouettes.values()))==5, 'family must not reuse the same silhouette'
+    assert contacts==72
+    assert len(set(silhouettes.values()))==6, 'family must not reuse the same silhouette'
     # Check the byte mapping independently of the renderer's source branches.
     w, h, pixels = png_read((ROOT / 'glyphs/atlas.png').read_bytes())
     assert (w,h) == (96,144)

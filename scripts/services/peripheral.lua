@@ -9,7 +9,7 @@ local errors=require('scripts.runtime.errors')
 local data=require('scripts.runtime.data')
 local principal=require('scripts.runtime.principal')
 local M={}
-local types={kv='kv_database',monitor='monitor',logic='logic_handler',configurator='configurator'}
+local types={kv='kv_database',monitor='monitor',logic='logic_handler',configurator='configurator',recipe_searcher='recipe_searcher'}
 local bindings={}; local revocations={}
 local monitor_sync
 function M.register_monitor_sync(binding)

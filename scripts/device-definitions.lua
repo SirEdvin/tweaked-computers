@@ -1,6 +1,6 @@
 -- Shared host-only physical tuning. Directions use Factorio 2.0's 16 positions.
 local M = {}
-M.order={'computer','kv','monitor','logic','configurator'}
+M.order={'computer','kv','monitor','logic','configurator','recipe_searcher'}
 M.devices={
   computer={name='tc-computer',width=1,watts=60000,roles={'network'},icon='arithmetic-combinator',
     ingredients={{'iron-plate',10},{'copper-plate',5},{'electronic-circuit',10},{'advanced-circuit',2}}},
@@ -11,10 +11,13 @@ M.devices={
   logic={name='tc-logic',width=3,watts=15000,roles={'input','network','output'},icon='decider-combinator',
     ingredients={{'iron-plate',6},{'electronic-circuit',8}}},
   configurator={name='tc-configurator',width=2,watts=30000,roles={'network','targets'},icon='constant-combinator',
-    ingredients={{'iron-plate',8},{'electronic-circuit',8},{'advanced-circuit',2}}}
+    ingredients={{'iron-plate',8},{'electronic-circuit',8},{'advanced-circuit',2}}},
+  recipe_searcher={name='tc-recipe-searcher',width=1,watts=30000,roles={'network'},icon='lab',
+    technology='tc-recipe-searcher',ingredients={{'steel-plate',10},{'advanced-circuit',5},{'processing-unit',2}}}
 }
 M.by_name={}
 for kind,def in pairs(M.devices) do
+  def.technology=def.technology or 'tc-circuit-computers'
   -- Keep the alpha EEI names loadable. Items keep their names; new placements
   -- use a different native prototype, never a same-name type substitution.
   def.entity_name=def.name..'-shell'; def.power_name=def.name..'-power'

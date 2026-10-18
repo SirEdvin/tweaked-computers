@@ -49,10 +49,19 @@ save and matching ZIP rather than downgrading a save containing shell state.
 
 Research **Native circuit computers** (`tc-circuit-computers`) after
 `circuit-network` and `advanced-circuit`. It costs 100 automation + logistic
-science-pack pairs at 30 seconds each and unlocks all five recipes. Existing
+science-pack pairs at 30 seconds each and unlocks the original five recipes. Existing
 researched forces receive missing unlocks on a mod configuration change.
 All recipes make one item in 2 seconds and use base materials even with Space Age.
 These are initial balance values.
+
+The candidate also adds separately researched **Recipe Searcher**
+(`tc-recipe-searcher`), not included in the published 0.1.8 archive. Its exact direct
+prerequisites are `tc-circuit-computers` and `utility-science-pack`. It costs 200
+units of one automation, one logistic and one utility pack each, at 60 seconds per
+unit (no chemical or production packs in this technology). One device crafts in
+2 seconds from 10 steel plates, 5 advanced circuits and 2 processing units. Its
+1×1 body consumes 30 kW with a 1 kJ buffer. Circuit Computers alone never unlocks
+it, including when installing into an already-researched factory.
 
 | Device / recipe ID | Iron plate | Copper plate | Electronic circuit | Advanced circuit | Demand | Buffer |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -79,6 +88,7 @@ The world sprites and inventory icons use the same industrial forms:
 | Monitor | Flat dark glass, cast bezel, corner fasteners and shallow exterior skirt |
 | Logic handler | Copper-wound relay bank around a central gauge; Input / Network / Output sockets |
 | Configurator | Large analog service gauge beside a recessed Factory targets control bank |
+| Recipe Searcher | Open archive bed under a raised optical scanner bridge and copper rails |
 
 The small Network diamond and Factory targets crosshair supplement the device
 shape and socket position. Their colors do not restrict which wire color you use.
@@ -103,7 +113,7 @@ counterclockwise. Rotation keeps existing native role wires.
 
 | Device footprint, north-facing | Connection layout |
 | --- | --- |
-| Computer, KV, monitor: 1×1 | Network directly on device |
+| Computer, KV, monitor, Recipe Searcher: 1×1 | Network directly on device |
 | Logic: 3×1 | Input / Network on device / Output |
 | Configurator: 2×1 | Network on device / Factory targets |
 

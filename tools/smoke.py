@@ -125,7 +125,7 @@ def main():
                 ap.error('--upgrade-fixture requires --cold')
             control += 'script.on_configuration_changed(test.on_configuration_changed)\n'
         if args.production_context:
-            if args.fixture not in ('tests.shell_cold', 'tests.lifecycle_engine', 'tests.integration_engine', 'tests.redesign_engine', 'tests.monitor_feedback_engine', 'tests.rd1_upgrade_engine', 'tests.monitor_budget_engine', 'tests.monitor_presentation_engine', 'tests.monitor_plot_baseline_engine', 'tests.runtime_budget_engine', 'tests.monitor_animation_engine') or not args.cold:
+            if args.fixture not in ('tests.recipe_searcher_engine', 'tests.shell_cold', 'tests.lifecycle_engine', 'tests.integration_engine', 'tests.redesign_engine', 'tests.monitor_feedback_engine', 'tests.rd1_upgrade_engine', 'tests.monitor_budget_engine', 'tests.monitor_presentation_engine', 'tests.monitor_plot_baseline_engine', 'tests.runtime_budget_engine', 'tests.monitor_animation_engine') or not args.cold:
                 ap.error('--production-context requires a fixed supported fixture and --cold')
             control = '-- Native lifecycle fixture runs once in production context.\n'
             (fixture / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value="+json.dumps(args.fixture)+",allowed_values={"+json.dumps(args.fixture)+"}}}\n")
@@ -161,7 +161,7 @@ def main():
             # deadline or any guest/shared resource ceiling.
             phase_timeout = args.cold_timeout or (240 if args.fixture=='tests.monitor_presentation_engine' else 90)
             phases.append(cold_phase(args.factorio,cfg,mods,ordinary_save,folder,'cold-second','TC_COLD_OK',timeout=phase_timeout))
-            if args.upgrade_fixture and mode=='base':
+            if args.upgrade_fixture and (mode=='base' or args.fixture=='tests.recipe_searcher_engine'):
                 # Only the copied fixture changes; the tested production ZIP is immutable.
                 fixture_info = json.loads((fixture / 'info.json').read_text())
                 fixture_info['version'] = '0.0.2'

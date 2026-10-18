@@ -107,7 +107,14 @@ for _,role in ipairs(defs.role_order) do
     hidden=true,hidden_in_factoriopedia=true,place_result=p.name,stack_size=1,auto_recycle=false}}
 end
 local effects={}
-for _,kind in ipairs(defs.order) do effects[#effects+1]={type='unlock-recipe',recipe=defs.devices[kind].name} end
+for _,kind in ipairs(defs.order) do
+  local def=defs.devices[kind]
+  effects[def.technology]=effects[def.technology] or {}
+  local owned=effects[def.technology]; owned[#owned+1]={type='unlock-recipe',recipe=def.name}
+end
 data:extend{{type='technology',name='tc-circuit-computers',icon='__base__/graphics/technology/circuit-network.png',icon_size=256,
-  prerequisites={'circuit-network','advanced-circuit'},effects=effects,
-  unit={count=100,ingredients={{'automation-science-pack',1},{'logistic-science-pack',1}},time=30},order='a-d-e'}}
+  prerequisites={'circuit-network','advanced-circuit'},effects=effects['tc-circuit-computers'],
+  unit={count=100,ingredients={{'automation-science-pack',1},{'logistic-science-pack',1}},time=30},order='a-d-e'},
+  {type='technology',name='tc-recipe-searcher',icon=art.devices.recipe_searcher.icon,icon_size=64,
+    prerequisites={'tc-circuit-computers','utility-science-pack'},effects=effects['tc-recipe-searcher'],
+    unit={count=200,ingredients={{'automation-science-pack',1},{'logistic-science-pack',1},{'utility-science-pack',1}},time=60},order='a-d-f'}}

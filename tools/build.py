@@ -12,6 +12,8 @@ TOP = ('info.json', 'data.lua', 'control.lua', 'settings.lua', 'README.md', 'LIC
 DIRS = ('scripts', 'prototypes', 'locale', 'vendor', 'assets', 'docs', 'examples', 'tests')
 CONTRACT = 'openspec/changes/add-native-circuit-computers'
 CONTRACT_EXTENSIONS = (
+    'openspec/changes/add-recipe-searcher/specs/recipe-searcher/spec.md',
+    'openspec/changes/add-recipe-searcher/specs/recipe-searcher/lua-api.md',
     'openspec/changes/add-interactive-console-shell/specs/console-shell/spec.md',
     'openspec/changes/add-interactive-console-shell/specs/console-shell/lua-api.md',
     'openspec/changes/buffer-monitor-presentation/specs/monitor-display/spec.md',

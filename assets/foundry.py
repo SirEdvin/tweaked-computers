@@ -173,7 +173,24 @@ def configurator(p):
     p.bolts(-.87,-.35,.86,.35,.105)
 
 
-DESIGNS={'computer':computer,'kv':cabinet,'monitor':monitor,'logic':logic,'configurator':configurator}
+def recipe_searcher(p):
+    # Open archive bed and raised optical bridge, not another closed cabinet.
+    p.box(-.44,-.42,.44,.42,.08,'dark')
+    p.box(-.37,-.30,.37,.34,.13)
+    p.panel(-.29,-.23,.28,.26,.135,'key','brass')
+    for z in (-.16,-.08,0,.08,.16):
+        p.line([(-.22,z,.14),(.18,z,.14)],'side')
+    for x in (-.42,.32):
+        p.box(x,-.39,x+.10,.34,.37,'brass')
+    p.box(-.35,-.36,.35,-.20,.39)
+    p.panel(-.26,-.31,.26,-.25,.397,'glass','dark')
+    p.line([(-.24,-.28,.40),(.23,-.28,.40)],'amber',2)
+    p.cable([(.36,-.28,.25),(.40,.12,.18),(.27,.28,.14)])
+    p.bolts(-.38,-.37,.37,.36,.09)
+
+
+DESIGNS={'computer':computer,'kv':cabinet,'monitor':monitor,'logic':logic,'configurator':configurator,
+         'recipe_searcher':recipe_searcher}
 
 
 def body(kind,direction,size,layout):

@@ -129,7 +129,7 @@ local function refresh_reference(c,s)
   enable(c.actions['select-reference'],topic~=nil,'Select the reference text, then use your native Copy control.')
   enable(c.actions.template,topic and topic.example==true or false,'Insert is available for the starter example and an empty draft only.')
 end
-local icons={monitor='item/tc-monitor',kv_database='item/tc-kv',logic_handler='item/tc-logic',configurator='item/tc-configurator'}
+local icons={monitor='item/tc-monitor',kv_database='item/tc-kv',logic_handler='item/tc-logic',configurator='item/tc-configurator',recipe_searcher='item/tc-recipe-searcher'}
 local function peripheral_details(c,s)
   local inventory=s.inventory; local selected=s.peripheral; local found
   if inventory and inventory.items then

@@ -115,9 +115,11 @@ function M.run()
   local a=registry.record(f().computer); local l=registry.record(f().logic)
   assert(lifecycle.connector(a,'network','red').connect_to(lifecycle.connector(db,'network','red')))
   assert(lifecycle.connector(db,'network','red').connect_to(lifecycle.connector(l,'network','red')))
+  local searcher=registry.record(f().recipe_searcher)
+  assert(lifecycle.connector(l,'network','green').connect_to(lifecycle.connector(searcher,'network','green')))
   local target=assert(surf.create_entity{name='constant-combinator',position={l.position.x+3,9},force='player'})
   assert(lifecycle.connector(l,'output','green').connect_to(target.get_wire_connector(defines.wire_connector_id.circuit_green,true)))
-  local mapping=bp.create_blueprint{surface=surf,force='player',area={{2,8},{24,16}}}
+  local mapping=bp.create_blueprint{surface=surf,force='player',area={{2,8},{28,16}}}
   assert(blueprints.prepare(bp,mapping)); assert(bp.blueprint_description:find(blueprints.disclosure,1,true))
   local entities=bp.get_blueprint_entities(); local ports=0
   for _,e in ipairs(entities) do if defs.port_role(e.name) then ports=ports+1 end
@@ -197,6 +199,8 @@ function M.on_tick(event)
       elseif ghost.valid and not defs.port_role(ghost.ghost_name) then assert(select(2,ghost.revive{raise_revive=true})) end
     end
     local bc=registry.record(x.revived.computer); local bd=registry.record(x.revived.kv); local bl=registry.record(x.revived.logic)
+    local bs=assert(registry.record(x.revived.recipe_searcher))
+    assert(lifecycle.connector(bs,'network','green').connection_count==1,'blueprint lost Recipe Searcher wire')
     assert(bc and bd and bl)
     local red=lifecycle.connector(bc,'network','red')
 

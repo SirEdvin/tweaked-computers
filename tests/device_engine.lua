@@ -119,9 +119,9 @@ function M.run()
       end
     end
   end
-  group('native_all_five_footprints_cardinal_owned_connectors')
+  group('native_all_six_footprints_cardinal_owned_connectors')
   -- Real rotation retains exact native children (not rebuilding them or wires).
-  for _,kind in ipairs({'logic','configurator'}) do
+  for _,kind in ipairs({'logic','configurator','recipe_searcher'}) do
     local rec=body(surface,kind,{x=16,y=100+(kind=='logic' and 0 or 12)},0)
     local child=rec.children.network; local unit=child.unit_number
     local external=assert(surface.create_entity{name='constant-combinator',position={x=16,y=rec.body.position.y-3},force='player'})
@@ -178,7 +178,13 @@ function M.run()
     for _,ingredient in ipairs(recipe.ingredients) do assert(prototypes.item[ingredient.name]) end
   end
   tech.researched=true
-  for _,kind in ipairs(defs.order) do assert(game.forces.player.recipes[defs.devices[kind].name].enabled) end
+  for _,kind in ipairs(defs.order) do
+    local def=defs.devices[kind]
+    assert(game.forces.player.recipes[def.name].enabled==(def.technology==tech.name))
+  end
+  lifecycle.unlocks(); assert(not game.forces.player.recipes['tc-recipe-searcher'].enabled)
+  game.forces.player.technologies['tc-recipe-searcher'].researched=true
+  lifecycle.unlocks(); assert(game.forces.player.recipes['tc-recipe-searcher'].enabled)
   local fresh=game.create_force('tc04-fresh'); assert(not fresh.technologies['tc-circuit-computers'].researched)
   for _,kind in ipairs(defs.order) do assert(not fresh.recipes[defs.devices[kind].name].enabled) end
   group('native_research_unlocks_base_materials_fresh_force')

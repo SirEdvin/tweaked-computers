@@ -234,8 +234,8 @@ def body(kind,direction,size,layout):
 
 def status(kind,direction,size,state,frame=0):
     p=Drawing(size,direction)
-    h={'computer':.08,'kv':.355,'monitor':0,'logic':.14,'configurator':.16}[kind]
-    x,z=(.28,.48) if kind=='monitor' else ({'computer':-.34,'kv':.34,'logic':.40,'configurator':-.13}[kind],.30)
+    h={'computer':.08,'kv':.355,'monitor':0,'logic':.14,'configurator':.16,'recipe_searcher':.13}[kind]
+    x,z=(.28,.48) if kind=='monitor' else ({'computer':-.34,'kv':.34,'logic':.40,'configurator':-.13,'recipe_searcher':-.27}[kind],.30)
     cx,cy=p.point(x,z,h)
     if kind=='monitor':
         # Bezel width is two units: compact line symbols along the edge.
@@ -257,7 +257,7 @@ def status(kind,direction,size,state,frame=0):
 def shadow(kind,direction,size,width):
     p=Drawing(size,direction)
     if kind=='monitor': height=.025
-    else: height={'computer':.23,'kv':.35,'logic':.19,'configurator':.20}[kind]
+    else: height={'computer':.23,'kv':.35,'logic':.19,'configurator':.20,'recipe_searcher':.39}[kind]
     # Fixed world-space light, silhouette follows the footprint and body height.
     a,b=width/2-.04,.43
     points=[rotate(x,z,direction) for x,z in ((-a+.07,-b),(a-.07,-b),(a,-b+.07),

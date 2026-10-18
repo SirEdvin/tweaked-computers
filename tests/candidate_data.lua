@@ -20,7 +20,7 @@ for _,kind in ipairs(defs.order) do
     end
   end
 end
-assert(count==160)
+assert(count==192)
 local styles=data.raw['gui-style'].default
 local inputs=data.raw['custom-input']
 local interact=assert(inputs['tc-interact'])
@@ -48,4 +48,4 @@ for name,style in pairs(data.raw['gui-style'].default) do
   if type(name)=='string' and name:sub(1,3)=='tc_' and type(style)=='table' then check_style(style) end
 end
 for byte=0,255 do assert(data.raw.sprite['tc-glyph-'..byte].filename==art.glyphs[byte].filename) end
-log('TC_CANDIDATE_DATA_OK 160 status frames; 256 independent glyphs; 5 actual body/item families; declared fonts')
+log('TC_CANDIDATE_DATA_OK 192 status frames; 256 independent glyphs; 6 actual body/item families; declared fonts')

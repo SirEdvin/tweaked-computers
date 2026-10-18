@@ -16,7 +16,9 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def prepare(archive, engine, client, output, mode, config_template=None):
+def prepare(archive, engine, client, output, mode, config_template=None, fixture_module='tests.shell_client_engine'):
+    if fixture_module not in ('tests.shell_client_engine', 'tests.recipe_searcher_client_engine'):
+        raise ValueError('fixed native client fixture required')
     output = output.resolve()
     if output.exists() or output.is_relative_to(ROOT):
         raise ValueError('use a fresh output directory outside the checkout')
@@ -26,7 +28,7 @@ def prepare(archive, engine, client, output, mode, config_template=None):
         raise ValueError('matching complete 2.0.77 headless and graphical engines required')
     with zipfile.ZipFile(archive) as package:
         info = json.loads(package.read(next(n for n in package.namelist() if n.endswith('/info.json'))))
-        assert any(n.endswith('/tests/shell_client_engine.lua') for n in package.namelist())
+        assert any(n.endswith('/' + fixture_module.replace('.', '/') + '.lua') for n in package.namelist())
     template = (config_template or client / 'config/config.ini').read_text()
     output.mkdir(parents=True)
     mods = output / 'mods'
@@ -38,7 +40,8 @@ def prepare(archive, engine, client, output, mode, config_template=None):
     fixture.mkdir()
     (fixture / 'info.json').write_text(json.dumps(dict(name='tc-smoke', version='0.0.1', title='Isolated Console client fixture', author='test fixture', factorio_version='2.0', dependencies=['base', info['name']])))
     (fixture / 'control.lua').write_text('-- Fixture lives in the production mod event/storage context.\n')
-    (fixture / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value='tests.shell_client_engine',allowed_values={'tests.shell_client_engine'}}}\n")
+    value=json.dumps(fixture_module)
+    (fixture / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value="+value+",allowed_values={"+value+"}}}\n")
     enabled = [dict(name=n, enabled=True) for n in ('base', info['name'], 'tc-smoke')]
     enabled += [dict(name=n, enabled=mode == 'space-age') for n in ('space-age', 'quality', 'elevated-rails')]
     (mods / 'mod-list.json').write_text(json.dumps(dict(mods=enabled)))
@@ -94,8 +97,9 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--mode', required=True, choices=('base', 'space-age'))
     parser.add_argument('--config-template', type=Path, help='engine-generated matching-version template if distribution has none')
+    parser.add_argument('--fixture', default='tests.shell_client_engine', choices=('tests.shell_client_engine', 'tests.recipe_searcher_client_engine'))
     args = parser.parse_args()
-    print(json.dumps(prepare(args.archive.resolve(), args.factorio.resolve(), args.client.resolve(), args.output, args.mode, args.config_template), indent=2))
+    print(json.dumps(prepare(args.archive.resolve(), args.factorio.resolve(), args.client.resolve(), args.output, args.mode, args.config_template, args.fixture), indent=2))
 
 
 if __name__ == '__main__':

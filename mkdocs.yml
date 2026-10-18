@@ -28,6 +28,7 @@ nav:
       - KV database: api/kv.md
       - Logic handler: api/logic.md
       - Configurator: api/configurator.md
+      - Recipe Searcher: api/recipe-searcher.md
       - Supported settings: api/settings.md
       - Nested schemas and enums: api/schemas.md
       - Effective limits: api/limits.md

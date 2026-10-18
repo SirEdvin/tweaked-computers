@@ -96,5 +96,6 @@ remain unchanged.
 
 Device-specific limits: [monitor](monitor.md#bounds-example-and-troubleshooting),
 [KV](kv.md#atomicity-errors-and-capacities), [logic](logic.md#bounds-and-use),
-[configurator](configurator.md#bounds-programs-and-troubleshooting).
+[configurator](configurator.md#bounds-programs-and-troubleshooting),
+[Recipe Searcher](recipe-searcher.md#complete-results-not-a-prefix).
 See [shared rules](common.md) for Data accounting and refusal behavior.

@@ -8,6 +8,12 @@ Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. No interpreter,
 OS, gameplay filesystem or dynamic guest loader is shipped; there is no command history.
 
+The unreleased candidate additionally includes the separately researched
+[Recipe Searcher](docs/player/api/recipe-searcher.md): a powered 1×1 read-only
+item/fluid recipe catalogue peripheral, with complete sorted metadata and an
+explicit 50-result ceiling after category filtering. It is not in the published
+0.1.8 archive. See [candidate verification](docs/recipe-searcher-validation.md).
+
 - [Player guide and complete Lua reference](https://siredvin.github.io/tweaked-computers/).
 - [Guide source](docs/player/index.md) and [factory tutorial](docs/player/factory.md).
 - [Public source](https://github.com/SirEdvin/tweaked-computers) and [issues](https://github.com/SirEdvin/tweaked-computers/issues).
