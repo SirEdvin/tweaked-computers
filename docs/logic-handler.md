@@ -52,7 +52,7 @@ INPUT selector red/green/both. Extra arguments and colon calls are errors.
 | `unsubscribe(id)` | Boolean; removes this binding's registration and queued samples |
 | `getLimits()` | Defensive shared caps plus logic-specific limits |
 
-Signal: `{signal={type="item"|"fluid"|"virtual",name=prototype,quality="normal"},count=integer}`.
+Signal: `{signal={type="item"|"fluid"|"virtual"|"recipe",name=prototype,quality="normal"},count=integer}`.
 Quality may be omitted on input and defaults to normal. Returned identities always
 include type/name/quality. Prototype and quality must exist; ordinary wildcards are
 refused. Counts are -2147483648 through 2147483647 without coercion. Both-input
@@ -63,6 +63,10 @@ before mutation; zero output entries are omitted. Failed validation/admission ke
 both old bank and old writer. Output uses a private manual native section, staged
 inactive, verified then enabled. Unexpected engine failure restores the prior bank;
 failed restoration retains `output_recovery` for host diagnosis and clears output.
+
+Recipe identities use installed recipe prototype names, including mod-added and
+disabled recipes; they are separate from same-named item identities. Reads,
+output banks and subscription filters all accept recipes.
 
 ## Named sampled subscriptions
 
@@ -111,6 +115,8 @@ quality universe before materializing native tuples, then refuse an oversized
 snapshot. Single-signal reads use bounded native lookups. The provisional copy-work
 weights are not a measured CPU-time bound. Heavy modded prototype universes may
 refuse admission instead of doing unpaid native work.
+The supported-type estimate includes installed recipes. Other native signal
+categories remain unsupported and are refused, not silently filtered out.
 
 Argument/domain/capacity/unpowered/path failures are ordinary catchable ApiErrors.
 Queue overflow visibly faults the computer and clears its exact owned outputs.

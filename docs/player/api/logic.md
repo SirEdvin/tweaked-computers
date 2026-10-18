@@ -22,10 +22,17 @@ Discovery red is independent of INPUT selection red/green/both.
 | `io.getLimits()` | Defensive shared + device ceilings |
 
 Strict dot calls; extra arguments/unknown options fail. `input` is exactly red,
-green or both. A SignalId is `{type="item"/"fluid"/"virtual", name=prototype,
+green or both. A SignalId is `{type="item"/"fluid"/"virtual"/"recipe", name=prototype,
 quality=quality_name?}`; a Signal is `{signal=SignalId,count=Int32}`. Type/name and
 quality must exist. Quality defaults normal and is explicit on readback. No
 wildcards or count coercion. Complete identities sort by type/name/quality.
+
+Recipe names are exact installed recipe prototype names, including recipes added
+by other mods; they need not match the recipe's output item. An item and recipe
+with the same name remain distinct. Recipe signals work in single/all-signal
+reads, output banks and subscription filters. For example,
+`io.readSignal("red", {type="recipe", name="iron-plate"})` reads the recipe signal,
+not the iron-plate item signal.
 
 Both-input sums wrap signed32 per identity using
 `((red+green+2147483648)%4294967296)-2147483648`, without physically connecting
@@ -95,6 +102,11 @@ fail-safe target 1 tick, notification/topology ceiling 60 ticks is provisional.
 The native prototype×quality read envelope is pre-admitted; large modded universes
 can refuse instead of doing unbounded work. Queue overflow or sampling/notification
 maintenance refusal visibly faults affected runs, not silently loses history.
+The supported-type precharge includes the installed recipe registry. Other native
+signal categories remain unsupported and are refused, not silently filtered out.
+Two-color subscriptions can exceed shared sampling headroom in Space Age even
+when a single-color subscription or ordinary `readSignals("both")` callback fits.
+Sampling refusal faults the run visibly; it does not silently miss updates.
 
 Use [logic-controller](../examples.md#logic-controller) and the
 [first inserter tutorial](../first-controller.md). If reads stay zero, check chest

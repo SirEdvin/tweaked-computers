@@ -22,7 +22,7 @@ Tick = integer                           -- nonnegative, <= 9007199254740991
 Int32 = integer                          -- -2147483648 .. 2147483647
 
 SignalId = {
-  type = "item" | "fluid" | "virtual",   -- explicit on guest input/output
+  type = "item" | "fluid" | "virtual" | "recipe", -- explicit on guest input/output
   name = string,                         -- exact registered prototype name
   quality = string                       -- optional input, defaults to "normal"
 }

@@ -16,7 +16,7 @@ local function fields(value,allowed)
 end
 local function signal(s,spend)
   fields(s,{type=true,name=true,quality=true})
-  if s.type~='item' and s.type~='fluid' and s.type~='virtual' then errors.raise('E_ARGUMENT','explicit signal type required') end
+  if s.type~='item' and s.type~='fluid' and s.type~='virtual' and s.type~='recipe' then errors.raise('E_ARGUMENT','explicit supported signal type required: item, fluid, virtual or recipe') end
   local q=s.quality
   if q==nil then q='normal' end
   if type(s.name)~='string' or #s.name==0 or #s.name>limits.identifier_bytes or type(q)~='string' or #q>limits.identifier_bytes then errors.raise('E_ARGUMENT','bounded prototype names required') end
@@ -71,10 +71,9 @@ local function native_read(rec,input,spend)
   selection(input); local values={}; local size=0; local connected=status(rec)
   for _,wire in ipairs({'red','green'}) do
     if input=='both' or input==wire then
-      -- No count query exists in 2.0.77. The immutable prototype universe is
-      -- an upper bound on native signal tuples, including every quality. Admit
-      -- that opaque materialization before get_signals, then bound our snapshot.
-      local universe=(#prototypes.item+#prototypes.fluid+#prototypes.virtual_signal)*#prototypes.quality
+      -- No count query exists in 2.0.77. Pre-admit the supported prototype/quality
+      -- envelope, including recipes, then enforce the bounded native snapshot.
+      local universe=(#prototypes.item+#prototypes.fluid+#prototypes.virtual_signal+#prototypes.recipe)*#prototypes.quality
       if not errors.integer(universe,1,1000000) then errors.raise('E_LIMIT','native signal prototype universe exceeds supported query envelope') end
       spend(universe*8+M.signal_slots*16+16)
       local c=lifecycle.connector(rec,'input',wire)

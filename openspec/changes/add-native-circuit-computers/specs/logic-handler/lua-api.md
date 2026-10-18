@@ -18,6 +18,14 @@ Normative companion to [spec.md](spec.md). Obtain as `peripheral.find("logic_han
 
 Signal identity is the full type/name/quality tuple. Ordinary reads/writes reject wildcard pseudo-signals. Missing quality is normalized to `normal`; returned identities always include all three fields. Counts must be exact signed 32-bit integers. No string/float coercion is accepted.
 
+Supported ordinary types are `item`, `fluid`, `virtual` and `recipe`. A recipe
+name identifies an installed recipe prototype, including mod-added recipes,
+independently of its products or research status. Same-named item and recipe
+signals do not merge. This applies to reads, output banks and subscription filters.
+Native snapshot pre-admission includes the installed recipe prototype registry.
+Other signal categories remain unsupported. Existing work/maintenance caps remain binding;
+two-color sampling can refuse when the complete envelope does not fit.
+
 `both` sums the red and green input values by full identity and wraps to signed 32-bit using `((sum + 2147483648) % 4294967296) - 2147483648`. This does not physically connect colors or change discovery rules. Negative counts are legal. Output arrays must have unique normalized identities; duplicates are rejected before mutation, rather than silently added. Zero-valued entries are removed in the canonical stored bank. An empty bank emits no contribution.
 
 Output is one set mirrored to both output connectors. Other devices can contribute different totals on those networks; getOutput does not report those totals. Externally wiring input and output together can deliberately create feedback, but there is no internal feedthrough between input, middle and output.
