@@ -57,6 +57,15 @@ budgets are unchanged and can still refuse queries or independent subscriptions.
 
 ## Research and craft
 
+In the unreleased Service Rack artwork candidate, look for a green folded desk
+for the computer, offset cartridges for the database, bracketed flat glass for
+the monitor, a long ceramic-terminal rail for logic, an open caliper with a dial
+for configuration, and a low scanner sled for Recipe Searcher. Item icons match
+these bodies. Native circuit computers research shows the desk; Recipe Searcher
+research shows the scanner. This is an artwork-only change: footprints, wire
+targets, costs and unlocks below are unchanged. Published 0.1.9 keeps its original
+artwork; do not mistake this source candidate for a new release.
+
 Research **Native circuit computers** (`tc-circuit-computers`) after
 `circuit-network` and `advanced-circuit`. It costs 100 automation + logistic
 science-pack pairs at 30 seconds each and unlocks the original five recipes. Existing

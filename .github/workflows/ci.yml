@@ -32,6 +32,12 @@ jobs:
           python-version: '3.12'
       - name: Install locked documentation dependencies
         run: python -m pip install --require-hashes -r requirements-docs.txt
+      - name: Verify selected artwork regeneration and physical contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -r assets/requirements.txt
+          python assets/check.py --output "$RUNNER_TEMP/tc-art"
       - name: Check package, generated contracts and player documentation
         shell: bash
         run: |

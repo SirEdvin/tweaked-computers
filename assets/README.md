@@ -1,181 +1,145 @@
-# Foundry device artwork and independent glyphs
+# Service Rack device artwork and independent glyphs
 
-Foundry is the selected default family. Its 147 generated PNGs match the reviewed
-Foundry preview byte-for-byte, including unchanged glyphs, shadows and status
-masks. The preview was recorded in the full base 2.0.77 client with software
-OpenGL; this is visual evidence, not GPU-performance or multiplayer acceptance.
-Contact sheets remain asset composites, not screenshots.
+Service Rack (AR2 candidate B) is the user-selected six-device family. All 176
+pre-existing generated PNGs match the selected preview byte-for-byte, including
+all status masks, glyphs and flat-monitor shadows. Two new 256×256 technology
+icons depict its computer and Recipe Searcher. Research costs, prerequisites,
+unlocks, recipes and runtime behavior are unchanged.
 
-## Five functional silhouettes
+## Identify the six devices
 
-- Computer: heavy CRT console with a separate keyboard shelf and copper cooling
-  housing.
-- KV database: cast storage rack with stacked cartridge handles and end rails.
-- Monitor: flat glass, pitted cast bezel, corner fasteners and a shallow exterior
-  skirt. Its original world/touch/cell geometry is unchanged.
-- Logic handler: copper-wound relay bank, central gauge housing and exposed cable
-  runs, retaining separate Input, Network and Output sockets.
-- Configurator: large analog service gauge beside a recessed control bank and
-  cooling grille, retaining Network and Factory targets sockets.
+- Computer: folded-steel L desk, recessed display, separate keyboard apron and
+  asymmetric cooling hump.
+- KV database: three offset cartridges with pale handles and a cooling spine.
+- Monitor: flat dark glass with green inset rails and pale corner brackets.
+- Logic handler: long rail instrument, central processing hood and four exposed
+  ceramic terminal banks; separate Input, Network and Output sockets.
+- Configurator: open service caliper/yoke with a round reference dial and narrow
+  tongue; separate Network and Factory targets sockets.
+- Recipe Searcher: low paper-bed scanner sled with broad overhead scan carriage.
 
-All use warm cast iron, copper/brass, directional shading, pitting, clustered
-grime, worn bevels and restrained activity lights. Geometry rotates before
-projection; lighting and cast shadows use one
-world-space direction. Their original 1×1, 1×1, 1×1, 3×1 and 2×1 footprints,
-recipe costs, wire roles, service behavior and Lua API v1 are unchanged.
+The green folded steel, dark iron, ceramic and copper details share fixed
+world-space lighting, deterministic surface grain and geometry-cast shadows.
+Shapes rotate before projection. Footprints remain 1×1, 1×1, 1×1, 3×1, 2×1 and
+1×1 respectively. Selection/collision, power, sockets, touch and every API stay
+unchanged. There is no runtime theme selector.
 
-## Editable sources and provenance
+## Editable sources, selection and notices
 
-`foundry.py` is the selected editable geometry/material source. It reuses
-`industrial.py`'s projection, native contact painting, shadows and status masks;
-the earlier RD2 body constructors remain historical helpers, not selectable
-runtime themes. Change the Foundry constructors rather than generated PNGs.
-No Relay/Field alternatives or preview packaging helpers ship as active designs.
-`generate.py`
-exports runtime images and metadata; it does not sample any upstream texture,
-model, screenshot, font or promotional render for the new family.
+Edit `service_rack.py`, not generated PNGs. It contains only selected B meshes
+and the common depth rasterizer, extracted from AR2 source checkpoint
+`9cbd4ae73c1c62763724735ea93428a3e2d5f5f5`. It reuses `industrial.py`'s contacts
+and status masks and `foundry.py`'s unchanged monitor foundation/shadow. Earlier
+body constructors remain historical helpers, not active alternatives.
 
-`socket-layout.json` is an exact-engine export of
-`scripts/device-definitions.lua`'s `offset`, `contact`, directional transform and
-role colors. `export_layout.py` runs `layout-data.lua` in isolated Factorio 2.0.77
-and retains 17 significant digits. This matters: rounding `-0.5 - 0.07` through
-Lua's default tostring loses exact metadata equality. The exporter does not
-contain another socket layout. Regeneration rejects a stale definition hash;
-`tests/art_data.lua` compares every exported coordinate/color against the actual
-Lua functions and installed native prototypes.
+Selected preview SHA256:
+`75f43f0ddadd4ec6c0a880a2169c2bca5e225341b311859299cc5a7411182cb3`.
+The technology icons were not in that preview: both are new transparent 256px
+south-body derivatives, tightly fitted with one-eighth padding. Item icons keep
+the exact selected 64px bytes. `sprites.lua` exports `art.technologies` for the
+two actual technology prototypes; no research ownership or effects are changed.
 
-Every new PNG is original project MIT artwork. `manifest.json` format 2 records
-source hashes, per-output dependencies, PNG/decoded-RGBA/alpha hashes, dimensions,
-pivots, transforms, palette, encoder/tool versions and required notices. The
-historical approved Greg Flavored import remains unchanged in `upstream/`, pinned
-to `BirbIrl/ComputerCraft-Greg-Flavored` revision
-`ac6cafc3993c902e2ca95d85b501d3c7e172570c`. Its 23 models, seven textures and two
-animation metadata files remain hash-verified for source continuity, but none is
-sampled by RD2. Retain its original `Greg-Flavored-MIT.txt` and credits README;
-retain `Tweaked-Computers-MIT.txt` for original work. No permission/provenance gate
-was reopened and no CC artwork/font is imported.
+All new geometry and pixels are original project MIT work. Reference study
+techniques (not pixels or meshes) included Nixie's recessed frame/feet/vent
+hierarchy. Exact inspected upstream versions, licenses, notices and hashes are
+retained externally in
+`/home/siredvin/artifacts/tweaked-computers/ar2-three-families-2026-10-19/reference-provenance.json`
+and the sibling `ar1-reference-research-2026-10-19` bundle. Free download is not
+permission to reuse art; restricted and unclear reference art was not copied.
+The production generator needs none of those downloaded references.
 
-The downloadable gameplay mod excludes Python tools as required by the Mod
-Portal. Editable Python sources, requirements and full history are delivered in
-the source repository, not executed by Factorio. PNGs, Lua metadata, geometry
-export, manifest and notices ship in the gameplay ZIP. A manifest input can thus
-refer to a source-repository file intentionally absent from that ZIP.
+Historical approved Greg Flavored inputs remain byte-identical under
+`upstream/`: repository `BirbIrl/ComputerCraft-Greg-Flavored`, revision
+`ac6cafc3993c902e2ca95d85b501d3c7e172570c`, 23 models, seven textures and two
+animation metadata files. They are hash-verified for source continuity but not
+sampled. Retain `notices/Greg-Flavored-MIT.txt`, its credits README and
+`notices/Tweaked-Computers-MIT.txt`. No external font or CC artwork is imported.
 
-## Immutable physical integration contract
+`manifest.json` records source hashes, exact source dependencies per output,
+PNG/RGBA/alpha hashes, dimensions, pivots, projection, materials, encoder and
+Pillow/NumPy versions, required notices and selected-preview identity. It is
+regenerated from actual production sources, not copied from the preview's old
+manifest. Python tooling remains source-repository-only; the Portal gameplay ZIP
+contains images, Lua metadata, manifests, socket layout and notices, not Python
+executables. Source dependencies in the manifest may intentionally refer to
+repository files excluded from the gameplay ZIP.
+
+## Physical integration contract
+
+`socket-layout.json` is the exact-engine export of production
+`scripts/device-definitions.lua` coordinates, transforms and role colors.
+`export_layout.py` uses Factorio 2.0.77 and retains 17 significant digits.
+Regeneration refuses a changed definition hash; `tests/art_data.lua` compares
+all coordinates with the real native prototypes.
 
 `require('assets.sprites')` returns immutable descriptions; consumers copy them.
 All image paths start `__tweaked-computers__/assets/`.
 
-| Device | Local footprint | Frame / pivot (high-resolution pixels) |
+| Device | Local footprint | Frame / ground pivot (high-resolution pixels) |
 | --- | --- | --- |
-| `computer`, `kv`, `monitor` | 1×1 | 160×160 / (80,80) |
-| `logic` | 3×1 | 320×320 / (160,160) |
-| `configurator` | 2×1 | 320×320 / (160,160) |
+| computer, kv, monitor, recipe_searcher | 1×1 | 160×160 / (80,80) |
+| logic | 3×1 | 320×320 / (160,160) |
+| configurator | 2×1 | 320×320 / (160,160) |
 
-Each `art.devices[kind][direction]` has `body`, `shadow`, `states` and the exported
-`roles` metadata. Cardinal names are `north`, `east`, `south`, `west`; choose the
-matching view instead of rotating the already projected image. North/south wide
-axes become tall east/west. All body/shadow/status sprites keep scale 0.5 and
-shift `{0,0}`. World projection is `(64*x - 48*height, 64*z - 128*height)` in tile
-units. Native studs are painted at their actual ground coordinates, without
-adding the elevated-body projection. They mount on the instrument's near face.
+Each device/direction exports body, shadow, states and roles. Choose north,
+east, south or west rather than rotating projected pixels. All sprites keep
+scale 0.5 and shift `{0,0}`. Projection is `(64*x - 48*h, 64*y - 128*h)` in tile
+units. Contact overlays use their actual ground coordinates, not the elevated
+body projection. Network diamond, Input chevron, Output double chevron and
+Factory targets crosshair supplement socket position and color; either wire
+color is permitted per role.
 
-Filenames: `sprites/{kind}-{direction}-{layer}.png`.
+Status sheets remain byte-identical: grey stopped dash, amber unpowered slash,
+green powered beacon, red fault cross and four-frame amber/steel activity.
+Each frame has one to nine opaque pixels, never whole-body flashing. Native
+deconstruction feedback is not replaced. Only a powered running computer
+blinks; other state selection remains in unchanged `scripts/device-art.lua`.
 
-| Layer | Meaning |
-| --- | --- |
-| body | Complete immutable original device shell and controls |
-| shadow | Separate black cast ground shadow, alpha 85, `draw_as_shadow=true` |
-| off | Small grey stopped dash |
-| unpowered | Amber slash; monitor uses two separated bezel dots |
-| powered | Green activity beacon |
-| fault | Tiny red fault cross; monitor uses three separated bezel dots |
-| blinking | Four frames, alternating amber/steel beacon, no whole-body flashing |
+## Monitor and glyph invariants
 
-Status is deliberately compact (one to nine opaque high-resolution pixels per
-frame). A fault beacon is not a native deconstruction marker. The existing bounded
-`scripts/device-art.lua` selects states; it and the scheduler are unchanged. Only
-a powered running computer uses blinking; powered stopped computers use off;
-other powered peripherals use powered. Blinking metadata is an Animation;
-`prototypes/devices.lua` slices its four frames into named SpritePrototypes.
+The monitor keeps the exact full alpha mask and every active-interior RGBA
+pixel. Logical/touch tile is 64×64, interior 60×60 (`[-30,30)`), inner bezel two
+units and mechanical skirt four units beyond the original tile. The skirt's
+exact chamfered alpha bounds remain `[-36,36)` on both axes. This visual overhang
+does not enlarge collision, selection, touch or cell pitch. Native contacts at
+±0.48 tile and compact status marks stay on the inner bezel. Live content
+layers may cover inner decoration and merged seams; bezel changes are not a
+new display-geometry feature.
 
-Icons are `icons/{kind}.png`, tightly fitted 64×64 body views with transparent
-padding, not borrowed item screenshots. The same shapes appear in inventory and
-world sprites. Role symbols supplement position/color: Network diamond, Input
-chevron, Output double chevron, Factory targets crosshair. Wire red/green is
-independent of the role-marker palette; either wire color is allowed per role.
+`glyphs.txt` is independently authored 5×7 ASCII; unchanged atlas is 96×144 with
+16×16 cells of 6×9 pixels. ASCII 32..126, five-bit mosaics 128..159 and outlined
+replacement glyphs retain the original mapping. Byte 32 and 128 are blank.
+White opaque masks are tinted by the runtime palette. The unchanged opaque
+1×1 `glyphs/pixel.png` supports layered fill/background/cursor sprites. No
+external font, screenshots or promotional renders enter generated art.
 
-## Monitor and glyph contract
+## Reproduce and verify
 
-The monitor retains a ground-centered 64×64 logical-unit tile/touch area, a 60×60
-interior and two units of inner bezel per edge. Half-open glass bounds remain
-`[-30,30)`; socket pixels at native ±0.48 tile and all status pixels remain on the
-original inner bezel. The selected Foundry artwork adds a four-unit mechanical
-skirt outside that original body: its exact chamfered alpha bounds are
-`[-36,36)` on both axes. This small visual overhang does not enlarge collision,
-selection, touch coordinates or cell pitch. Runtime grouping covers internal
-seams with the existing content layers. The static check audits every skirt alpha
-pixel independently, not just its bounding box. Historical display-layer/removal
-feedback work is documented in [RD4 verification](../docs/rd4-verification.md).
-
-`glyphs.txt` is the independently authored 5×7 ASCII stroke source. The unchanged
-96×144 atlas has 16×16 cells of 6×9 pixels. White opaque foreground is tintable;
-background is transparent. ASCII bytes 32..126 have individual glyphs. Mosaic
-128..159 uses five row-major 3×3 bits with the bottom-right subcell blank. Other
-bytes use the outlined replacement box. Bytes 32 and 128 are blank. No rich text
-or external font is interpreted.
-
-`art.glyphs[byte]` (0..255) retains its `x=(byte%16)*6`,
-`y=floor(byte/16)*9`, width 6, height 9 and scale 1. Default gameplay zoom is 32
-screen pixels/tile while the API uses 64 logical units; existing runtime glyph
-scale 0.5 and cell-centered world transforms are unchanged. Do not double-apply
-that scale. Native world readability/touch is still a client check, not a claim
-made by glyph-mask tests.
-
-RD4 adds `glyphs/pixel.png`, an original opaque white 1×1 RGBA mask generated by
-`generate.py`, separately inventoried/hashed in the manifest. `tc-monitor-fill`
-uses it for tintable panel/background/cursor sprites with explicit layers below
-native feedback. The glyph atlas, fill, shadows and status masks are unchanged;
-Foundry replaces the five icons and twenty directional body images.
-
-## Reproduce and check
-
-Use Python 3 and the Pillow version in `requirements.txt` (verified with 12.3.0).
-The custom PNG encoder remains RGBA8, filter 0, zlib level 9 without ancillary
-chunks. No network or system font is used for normal regeneration/contact sheets.
+Use Python 3 with the exact offline dependencies in `requirements.txt`:
+Pillow 12.1.1 and NumPy 2.4.2, matching the selected preview. Mesh sprites use
+3× barycentric depth rasterization and Lanczos downsampling. Selected bodies,
+icons and mesh shadows use Pillow PNG compression level 9; unchanged status,
+glyph and monitor-shadow outputs retain RGBA8 filter-0 zlib-level-9 encoding.
 
     python3 -m pip install -r assets/requirements.txt
-    # Only when production socket definitions change; fresh external directory:
-    python3 assets/export_layout.py --factorio /path/to/factorio/bin/x64/factorio \
-      --output /outside/git/fresh-layout-export
     python3 assets/generate.py
     python3 assets/check.py --output /outside/git/fresh-art-check
-    python3 assets/contact_sheet.py --output /outside/git/fresh-contact-sheets
-    python3 tools/build.py --output /outside/git/rd2-artifact
+    python3 tools/test_build.py
+    python3 tools/build.py --output /outside/git/package
     python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
-      --archive /outside/git/rd2-artifact/tweaked-computers_0.1.1.zip \
-      --output /outside/git/fresh-art-engine --fixture tests.art_engine \
-      --data-fixture tests.art_data
+      --archive /outside/git/package/tweaked-computers_0.1.9.zip \
+      --output /outside/git/fresh-art-engine --mode both \
+      --fixture tests.art_engine --data-fixture tests.art_data
 
-`check.py` verifies all 147 PNGs (including the exact opaque fill), every source/output/decoded hash, all 64 contact
-pixels, five distinct north-view alpha silhouettes, fixed monitor geometry,
-compact status masks, all 256 glyph slots, exact offline regeneration and an
-isolated source/asset/notice ZIP inventory. `tools/test_build.py` separately checks
-the actual gameplay ZIP bytes and executable exclusion. Data tests compare all
-native contacts and 160 installed status frames; runtime tests draw/destroy all
-461 sprites and exercise status selection/cleanup on 20 actual native shells.
+Only re-export socket layout when production definitions change. Static checks
+verify 178 outputs, all source/output/decoded hashes, transparent margins,
+72 exact socket pixels, six distinct silhouettes, full monitor alpha/interior,
+192 compact status frames, all 256 glyphs, both research images, byte-exact
+regeneration and package notices/inventory. Contact sheets are generated asset
+composites with explicitly labelled vanilla footprint outlines, not native
+screenshots. Actual graphical acceptance and software-rendering limitations are
+recorded in [AR3 integration](../docs/artwork-service-rack.md). Historical
+[RD2](../docs/rd2-verification.md) and AR2 evidence remains immutable.
 
-The five contact sheets cover all directions, ordinary 32 pixels/tile, enlarged
-128 pixels/tile, wired contact overlays/auxiliary selection bounds, all 160 status
-samples and icons at 32/64/128 pixels. Adjacent vanilla scale context uses the
-pinned arithmetic combinator's 1×2 footprint and 144×124, scale-0.5 frame bounds;
-it is explicitly an outline, not fake vanilla rendering. The headless engine has
-no artwork PNGs. Optional `--vanilla-illustration /path/to/image.png` adds an
-external review illustration, explicitly not scale-calibrated. Its source/hash
-and Wube artwork notice are recorded in the sheet index. Do not ship it as MIT
-mod artwork.
-
-See [RD2 verification and native checklist](../docs/rd2-verification.md). Headless
-success does not prove GPU loading, visual wire alignment, ordinary-zoom quality,
-hover or native monitor X visibility. Do not publish this development-version ZIP
-as a replacement for alpha 0.1.1; the release milestone owns versioning/publication.
+This artwork handoff does not publish, tag, bump a version or replace any
+immutable release; final integration/publication is a separate milestone.

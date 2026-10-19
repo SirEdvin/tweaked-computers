@@ -2,7 +2,7 @@
   "authored_inputs": [
     {
       "path": "assets/generate.py",
-      "sha256": "2d926c5541a18116e3e7f51e61d9bed4c6ec39b4fa937cab0bd39f033d4f0661"
+      "sha256": "23f4e9f6bfc7a3cc1e91686008a2ce06b1c53e2075c13ee2295ccbb9a84af15e"
     },
     {
       "path": "assets/glyphs.txt",
@@ -26,7 +26,11 @@
     },
     {
       "path": "assets/requirements.txt",
-      "sha256": "b8f1c4039ae48723351d89aef3d1ed1e455d06a09f9d2245cec8b98872348f5d"
+      "sha256": "49a4d590b9123dba1e4338e45dbd16f8878a62f6510b2f9a4c42918fa62441e8"
+    },
+    {
+      "path": "assets/service_rack.py",
+      "sha256": "18a2b3a22eca14a33be2a6f58018d070ecf75f2c4f9f405e83ac0fa380343e10"
     },
     {
       "path": "assets/socket-layout.json",
@@ -1360,7 +1364,7 @@
   "generated_metadata": [
     {
       "path": "assets/sprites.lua",
-      "sha256": "1eab8f8278eadb6f147217b50dbbb2a696989830a9ab1b2cd573f44016deaba1"
+      "sha256": "2cd3b234071d33db0e11f4333503b2686431450af39115b703292df54871acaf"
     }
   ],
   "glyphs": {
@@ -1687,7 +1691,7 @@
   ],
   "outputs": [
     {
-      "alpha_sha256": "b850718c643e5aa1f63455782c21be349b8c6f492e10d9ccae20d80c0c2b4abb",
+      "alpha_sha256": "732d49f096d95b96e8e6ac5276c05e1f8d286d1ecb3cfbc6b7042671192840f3",
       "device": "computer",
       "direction": "north",
       "frame_height": 160,
@@ -1700,6 +1704,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -1713,9 +1718,9 @@
         80,
         80
       ],
-      "rgba_sha256": "2689b1e45348f3fe09f892b4b49aef9c2513f4c0607a106df81fac313742d53c",
+      "rgba_sha256": "23492e4f958257cf4ae70a630b84843903351ba6bb08d6602c4029a0232e8499",
       "scale": 0.5,
-      "sha256": "bcb47a7667f1b3d6b9b6f03611483e8b672ea8514fd24f0f673d647280222f17",
+      "sha256": "bae597af406951c2e4e4988b8560d2df9fcfc2fc3ae2f31defc09825ee539dc0",
       "shift": [
         0,
         0
@@ -1723,7 +1728,7 @@
       "width": 160
     },
     {
-      "alpha_sha256": "2b8a0bb2b5623c808a3ffe2ac883b82455c3639197ec41159e0fa5f8073a65a0",
+      "alpha_sha256": "997d39be0f8e52bcf4a340931f7942e4cb5003b9a77c11998bcea8a834d2cfff",
       "device": "computer",
       "direction": "north",
       "draw_as_shadow": true,
@@ -1737,6 +1742,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -1750,9 +1756,9 @@
         80,
         80
       ],
-      "rgba_sha256": "3719078d7f44fbe57a2246e11500ebf50362b18642879abe2da1b02ae035f5e8",
+      "rgba_sha256": "46c0a8db5c048fc8df5bff89599e0672d7251b0cbb5c04e2a3bc6e0dae4801bc",
       "scale": 0.5,
-      "sha256": "a12f17e22a9d17db78f4f6ad51172adc43e8d5abe5dbb94beb28a6dc687aeff8",
+      "sha256": "772c658e95511ffd3e317dbff09a0378e413cf87a5fdd78ddbc08d6cf397a59c",
       "shift": [
         0,
         0
@@ -1774,6 +1780,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -1812,6 +1819,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -1850,6 +1858,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -1888,6 +1897,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -1926,6 +1936,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -1950,7 +1961,7 @@
       "width": 640
     },
     {
-      "alpha_sha256": "c607fdc0400dd73341a433761aa892adda8cfe80660dda7ae1a71e52b764f491",
+      "alpha_sha256": "1f91c05fe075643621527cb980e0f3027f8218bf449d569f334288bb6c9ab97e",
       "device": "computer",
       "direction": "east",
       "frame_height": 160,
@@ -1963,6 +1974,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -1976,9 +1988,9 @@
         80,
         80
       ],
-      "rgba_sha256": "d290c51b74906f733952a1e51ef243e3b17941036e864e5d038bee4fe92cc0f6",
+      "rgba_sha256": "d1dde6416fddd6855423d6e6bd2331ee13cf0309b93dbc672498d14bba557773",
       "scale": 0.5,
-      "sha256": "c4ac01b85469a70b48197c04c7b4edb04fe884c856a5a64ba973def1b2362b9f",
+      "sha256": "f5321ab868e33d8745e2708903d78f1bfe03ce814eef6220f258a7123397303a",
       "shift": [
         0,
         0
@@ -1986,7 +1998,7 @@
       "width": 160
     },
     {
-      "alpha_sha256": "43004457cc86a9acaea326e82a31ade20f42aa2c0aa0cedece92d100611b0acc",
+      "alpha_sha256": "fed7b2df77cbc5256689ec219fddb959a62eb5e8ada7c4692d88b43d3c7d89e9",
       "device": "computer",
       "direction": "east",
       "draw_as_shadow": true,
@@ -2000,6 +2012,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2013,9 +2026,9 @@
         80,
         80
       ],
-      "rgba_sha256": "c2de782bea42b6160c30628cb8ff8a92a7814cf755a34b6413a94c6cfd3d77c9",
+      "rgba_sha256": "3ebf12990facbcdcbac7193abbe851cdb1acbe4c4ae7159040b987e0e1b6e824",
       "scale": 0.5,
-      "sha256": "b78794b4af475716bbf0c41fccee1e047a96074a78ce6454646b8be6a90b6a0f",
+      "sha256": "ee1407dd22931e477f78fa510795b3e7733dffaf0414496044ebe4d87d86cbda",
       "shift": [
         0,
         0
@@ -2037,6 +2050,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2075,6 +2089,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2113,6 +2128,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2151,6 +2167,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2189,6 +2206,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2213,7 +2231,7 @@
       "width": 640
     },
     {
-      "alpha_sha256": "78ef17f85d27cb7cfc834966ef750bd0d2f89ea3084fa3b740bb15a4614fb176",
+      "alpha_sha256": "4fb7badcf23643bd426212a405a124a5c7bd0a00b9617f0cf24de1041bfe421f",
       "device": "computer",
       "direction": "south",
       "frame_height": 160,
@@ -2226,6 +2244,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2239,9 +2258,9 @@
         80,
         80
       ],
-      "rgba_sha256": "4d9af33b2b9a2110ba932293c171aa480822f883344e4dabc70a8673368457d1",
+      "rgba_sha256": "07d6493ceb248760abe12196fbdd868c9e2aaaa73364a58a24836dd2fdbdef1a",
       "scale": 0.5,
-      "sha256": "e330391c47c043c228db6e3947bcb90d667f8c2349810d8dd040ba8a80ddff93",
+      "sha256": "42ee41cdd711482573b0a54bb5e157b3386435ef4c1b88a95cbaaad7c92c4832",
       "shift": [
         0,
         0
@@ -2249,7 +2268,7 @@
       "width": 160
     },
     {
-      "alpha_sha256": "2b8a0bb2b5623c808a3ffe2ac883b82455c3639197ec41159e0fa5f8073a65a0",
+      "alpha_sha256": "39e58cf6ea8e1d489546a9cc7c3d0e83a468f384e3a9c869da57c9aefcdabaf3",
       "device": "computer",
       "direction": "south",
       "draw_as_shadow": true,
@@ -2263,6 +2282,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2276,9 +2296,9 @@
         80,
         80
       ],
-      "rgba_sha256": "3719078d7f44fbe57a2246e11500ebf50362b18642879abe2da1b02ae035f5e8",
+      "rgba_sha256": "6da8305de25e9fcdbf07c84435c5af47dc951bc289d3a34e1cf7ba94b3d0c8b8",
       "scale": 0.5,
-      "sha256": "a12f17e22a9d17db78f4f6ad51172adc43e8d5abe5dbb94beb28a6dc687aeff8",
+      "sha256": "d976b9ae0dd6b4805897f72ba68f057fb252ed02fac22ac4bc24427ea2760819",
       "shift": [
         0,
         0
@@ -2300,6 +2320,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2338,6 +2359,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2376,6 +2398,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2414,6 +2437,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2452,6 +2476,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2476,7 +2501,7 @@
       "width": 640
     },
     {
-      "alpha_sha256": "093e373077ccd40eb1cf9823ece04c41a6a974a553d9fcac0e8e7a58b6939d32",
+      "alpha_sha256": "903a8f66744db86736acaba8d549c48edd2a801f8e96e04173c0680bfa52c7db",
       "device": "computer",
       "direction": "west",
       "frame_height": 160,
@@ -2489,6 +2514,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2502,9 +2528,9 @@
         80,
         80
       ],
-      "rgba_sha256": "a231710f5774b0e2600683a6af99a112740e095782db59189aec7fa8a240de11",
+      "rgba_sha256": "835ea460dd16f8bc5121aec9a9bb8f7a1fd97b833be114fe7a432059be00e6fa",
       "scale": 0.5,
-      "sha256": "4d94a53192ef460138181c322d2edb77844216588fab4bcb32fe6e61d81550c1",
+      "sha256": "dbfcac6e11b378d6fe70f599b3fcded6a5ec71110bf2c505f4eb505984d39e9b",
       "shift": [
         0,
         0
@@ -2512,7 +2538,7 @@
       "width": 160
     },
     {
-      "alpha_sha256": "43004457cc86a9acaea326e82a31ade20f42aa2c0aa0cedece92d100611b0acc",
+      "alpha_sha256": "8ad383b3229f902980d95d37b83dc65cca68389801b708cd1e371640f81ff0f7",
       "device": "computer",
       "direction": "west",
       "draw_as_shadow": true,
@@ -2526,6 +2552,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2539,9 +2566,9 @@
         80,
         80
       ],
-      "rgba_sha256": "c2de782bea42b6160c30628cb8ff8a92a7814cf755a34b6413a94c6cfd3d77c9",
+      "rgba_sha256": "791486e33c135db149eeade2058bf65cd94390d8dff39d13c9489c220bbb126d",
       "scale": 0.5,
-      "sha256": "b78794b4af475716bbf0c41fccee1e047a96074a78ce6454646b8be6a90b6a0f",
+      "sha256": "62157db0e9428c6246d500dc07299d53de5a54baaa5acce1862e67d20b03351e",
       "shift": [
         0,
         0
@@ -2563,6 +2590,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2601,6 +2629,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2639,6 +2668,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2677,6 +2707,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2715,6 +2746,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2739,7 +2771,7 @@
       "width": 640
     },
     {
-      "alpha_sha256": "165be1c245054fda102fcfb3116b86935bb3970bc7ef33c280a28bbb0abe62bc",
+      "alpha_sha256": "797bc8ec526d5dda7098f497422db710cf78a959c73f74ee51ad19adbe8c9b5f",
       "device": "computer",
       "height": 64,
       "icon_size": 64,
@@ -2750,6 +2782,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2759,12 +2792,12 @@
         "assets/notices/Tweaked-Computers-MIT.txt"
       ],
       "path": "assets/icons/computer.png",
-      "rgba_sha256": "37a945f41586b028716ab4782189b1207f01378bc65c3f33a988716f057192a3",
-      "sha256": "335bdb8435dc96293ea44ce0d81e371b2b2ce0401b2f9b54e0116f437c6f12a9",
+      "rgba_sha256": "78eb7386bf3a380af72c66d81cc57942f4b50701c724c3405a82fdb1da297953",
+      "sha256": "16a6e472c2fd91b3219f1353527e1e991709940dc0cf839fd29108d06a1233d5",
       "width": 64
     },
     {
-      "alpha_sha256": "0f35a100f6b58e1ac439ca5ef169dcdfe9c92ad9f93ee40534a524b4be61d61a",
+      "alpha_sha256": "5b87a0316799c353e35030ae973af078ce5f3957eb3db18832d5d197d3d9e48e",
       "device": "configurator",
       "direction": "north",
       "frame_height": 320,
@@ -2777,6 +2810,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2790,9 +2824,9 @@
         160,
         160
       ],
-      "rgba_sha256": "ceff671ca6ac29526445f804bba418c5faec98cef5fddfeb81146fc07cb6b137",
+      "rgba_sha256": "890b8dc77ce2dd98a72c0c131b871ccf405e66984fd69b49c7e2b64d7921a974",
       "scale": 0.5,
-      "sha256": "5dea92cff7e4aaa542239f6c517a635e583b9da00eb45aba86636d26af8ae36c",
+      "sha256": "fdc05a2330ab9656f5c3d7a96691d84c2f0bf8576f7ff18e1547dcf48f319148",
       "shift": [
         0,
         0
@@ -2800,7 +2834,7 @@
       "width": 320
     },
     {
-      "alpha_sha256": "4e2939cbd8e9e1e7d4ba70e15e40c89e7c21c634cc6381f3cefd4514cf82db8c",
+      "alpha_sha256": "a6ca2b647f5a74833c92c0172be1be90bb9d2d6a70d0c4f907f943023c93e4a4",
       "device": "configurator",
       "direction": "north",
       "draw_as_shadow": true,
@@ -2814,6 +2848,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2827,9 +2862,9 @@
         160,
         160
       ],
-      "rgba_sha256": "98d27f0af31a4a106a332c2e08ab8915f69ef63e0b586ab03ad3767ed7dd29d7",
+      "rgba_sha256": "5940f781d75971ee5814dec7bccc86f7084497f1bcfd6e96b8b6e23e7c7fd9cd",
       "scale": 0.5,
-      "sha256": "4bc904043c4ab790fb8d6d8c86695e3b15106e007b0d852276fe4208b8d5bd02",
+      "sha256": "6a4d26fc14a40029f40e3c52009947243370676e766747b0c3cabcd1683ec592",
       "shift": [
         0,
         0
@@ -2851,6 +2886,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2889,6 +2925,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2927,6 +2964,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -2965,6 +3003,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3003,6 +3042,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3027,7 +3067,7 @@
       "width": 1280
     },
     {
-      "alpha_sha256": "778f95ac2a7ad569b15b277108e6860f4e34e1b63f91f24c80d1f8f6b7ef3c75",
+      "alpha_sha256": "d746b45b6cd1df00f2223ae4dfead737a44e035a8680aa79c0afc91563e73269",
       "device": "configurator",
       "direction": "east",
       "frame_height": 320,
@@ -3040,6 +3080,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3053,9 +3094,9 @@
         160,
         160
       ],
-      "rgba_sha256": "533401efbfa2d811e0c72364b41a8688478f651f1b8f56cccf6da29e58e581f8",
+      "rgba_sha256": "10cc47356cd95de8271243baa76208df389d8a3134e41cdf2521ae393c8e10a0",
       "scale": 0.5,
-      "sha256": "24cb8e0bdc31d95599f0170a032c5d7e41b69cac77828b1104aa99ff1f69091b",
+      "sha256": "97e2df8b12fa727c5548a668d9f7c4453ba01fb54b8054551c6672c0100facde",
       "shift": [
         0,
         0
@@ -3063,7 +3104,7 @@
       "width": 320
     },
     {
-      "alpha_sha256": "8002c4a4b31d8b34f7e0ce17c602661130b943d5a1af4ea6fc6a8425ccdb22a8",
+      "alpha_sha256": "d38c38ea57c2790db0e8c2fd2fc6fdf7cfd442ed80b30dacad96fac6b0806968",
       "device": "configurator",
       "direction": "east",
       "draw_as_shadow": true,
@@ -3077,6 +3118,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3090,9 +3132,9 @@
         160,
         160
       ],
-      "rgba_sha256": "a6fe005e4a4022aedb17f6511a90b599e279e98bd6bfaf53d4e6468a4aae019a",
+      "rgba_sha256": "c7fd6ffd75da21c2bf71f80a7aab0f30061c7febf9c61cd58afcb0c081feb791",
       "scale": 0.5,
-      "sha256": "2b65241e154ad8b800de14a93234855ce43d9f060d715d084b881c88fdebda1d",
+      "sha256": "ba405832fc5905fa5a9bfbe6e0366af8f6cdffff8d0ce2ebd815bfe079836012",
       "shift": [
         0,
         0
@@ -3114,6 +3156,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3152,6 +3195,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3190,6 +3234,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3228,6 +3273,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3266,6 +3312,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3290,7 +3337,7 @@
       "width": 1280
     },
     {
-      "alpha_sha256": "6b9c3305b1e304d5460f29210ac93ea2a86eecd7c1238c5b34edcf2690808dc5",
+      "alpha_sha256": "cb1c43595189b89a20c21dbfd2e29c65f586ec45bbf3b396b1906e66716dce80",
       "device": "configurator",
       "direction": "south",
       "frame_height": 320,
@@ -3303,6 +3350,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3316,9 +3364,9 @@
         160,
         160
       ],
-      "rgba_sha256": "25c192b73559265cc7b8244d4989d9d0e39868dd835c0360654e4f70d021a6b3",
+      "rgba_sha256": "886df4d8e241b647511fe6878a200e920e31c124cea4df6b036d829fcab194e6",
       "scale": 0.5,
-      "sha256": "9d10e6580ff3861cdda961f5d24bbe9eba19562040f42cbfdc1da29a65dab46d",
+      "sha256": "88741f56c25de127d818482a37389e18b01644a852f9a12520e2be91d54ae17f",
       "shift": [
         0,
         0
@@ -3326,7 +3374,7 @@
       "width": 320
     },
     {
-      "alpha_sha256": "4e2939cbd8e9e1e7d4ba70e15e40c89e7c21c634cc6381f3cefd4514cf82db8c",
+      "alpha_sha256": "fe825f492de9871dee9d0be5739c8211c04e2aa410e64b565f0f177bf189c0f0",
       "device": "configurator",
       "direction": "south",
       "draw_as_shadow": true,
@@ -3340,6 +3388,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3353,9 +3402,9 @@
         160,
         160
       ],
-      "rgba_sha256": "98d27f0af31a4a106a332c2e08ab8915f69ef63e0b586ab03ad3767ed7dd29d7",
+      "rgba_sha256": "33d1aee6d8ee62c9d9afd5df14cf9d4eb9fb8c2fe7cf0ebb0e378198b7fdadd3",
       "scale": 0.5,
-      "sha256": "4bc904043c4ab790fb8d6d8c86695e3b15106e007b0d852276fe4208b8d5bd02",
+      "sha256": "09deba6e8ea5ccc43bf5c97beca3ede7d9a5e3deeef63c0ae07e811c9a3fcc3d",
       "shift": [
         0,
         0
@@ -3377,6 +3426,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3415,6 +3465,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3453,6 +3504,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3491,6 +3543,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3529,6 +3582,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3553,7 +3607,7 @@
       "width": 1280
     },
     {
-      "alpha_sha256": "6c35f950bd6257db41a46d0b70d7b903e7d7f56373df20382b74d9d14580733e",
+      "alpha_sha256": "744628087aa269ff26b00d7b0278b46925573ec76dedc1e70d1a3c2e42632f1e",
       "device": "configurator",
       "direction": "west",
       "frame_height": 320,
@@ -3566,6 +3620,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3579,9 +3634,9 @@
         160,
         160
       ],
-      "rgba_sha256": "31cf860ebe8b005cba481fec5ab04957f0e22192ed85403575430f1f6368a013",
+      "rgba_sha256": "31d107e78089968e314c381c3a56326c4aceda41e78a80b62b006eac82b6fc16",
       "scale": 0.5,
-      "sha256": "3d2da5bbacee2e2329f48fa83cb5457fbaeee28072326994d8591b34f47b7b3f",
+      "sha256": "51f47ddff4d0e5104324369e3bf41aff8444fc81c520ed0d427fd3381fd00661",
       "shift": [
         0,
         0
@@ -3589,7 +3644,7 @@
       "width": 320
     },
     {
-      "alpha_sha256": "8002c4a4b31d8b34f7e0ce17c602661130b943d5a1af4ea6fc6a8425ccdb22a8",
+      "alpha_sha256": "714b6e06f17ac2d05cc9698ff145d32b004bf0b8f2f34d72889e78e3a7d6e549",
       "device": "configurator",
       "direction": "west",
       "draw_as_shadow": true,
@@ -3603,6 +3658,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3616,9 +3672,9 @@
         160,
         160
       ],
-      "rgba_sha256": "a6fe005e4a4022aedb17f6511a90b599e279e98bd6bfaf53d4e6468a4aae019a",
+      "rgba_sha256": "d478d5dfa1727963018b6cd345b490b6601a045f8de474a6b9463909aa978c11",
       "scale": 0.5,
-      "sha256": "2b65241e154ad8b800de14a93234855ce43d9f060d715d084b881c88fdebda1d",
+      "sha256": "e776c2211773fc5f715e6be6aa486802a2845da2cc50dd67524843a47d93ec78",
       "shift": [
         0,
         0
@@ -3640,6 +3696,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3678,6 +3735,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3716,6 +3774,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3754,6 +3813,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3792,6 +3852,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3816,7 +3877,7 @@
       "width": 1280
     },
     {
-      "alpha_sha256": "27d68f89a09231693559f8d1fc77ae512965ce541f65dd7f3bfa86fcfa28b25c",
+      "alpha_sha256": "489c2d5feeadc33841937d73da080eed156e7cdfbf78e6e5cb397d01a29fe570",
       "device": "configurator",
       "height": 64,
       "icon_size": 64,
@@ -3827,6 +3888,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3836,12 +3898,12 @@
         "assets/notices/Tweaked-Computers-MIT.txt"
       ],
       "path": "assets/icons/configurator.png",
-      "rgba_sha256": "4e636e577f32f1b640ad751dd46f12b4ba17d8bbb5db6a0d4dbf145db023d574",
-      "sha256": "e5d9734dca873ad33dfad000a32b1ba456724cf8dc787e4c5295e7a2b438fde2",
+      "rgba_sha256": "a09352f2fb710ef3012da707474a302f1189c070050018cb6148584ee17e4b3c",
+      "sha256": "8f6ec4698b5c24e2d3a06348494e3e81a3162e8a4ee40c27f55fd07c71aa96c7",
       "width": 64
     },
     {
-      "alpha_sha256": "6015b18ac2585fcd2e058e272704e7d9ae2ba3091e58b42ec255a0f57992940b",
+      "alpha_sha256": "37484e3b5fa02ec64d4bc662ab8c512ad91150bb65fba77f6c0e45f1265b4d58",
       "device": "kv",
       "direction": "north",
       "frame_height": 160,
@@ -3854,6 +3916,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3867,9 +3930,9 @@
         80,
         80
       ],
-      "rgba_sha256": "4dd4e5a75f8e7c60c6c41576ac7fb799fd1b10accd1f6a4b39b8bd9e3f628c05",
+      "rgba_sha256": "ba9a08b51b4b1bc6dc785b320b2195ef9a2c2010bb0eda87274e9feea490d305",
       "scale": 0.5,
-      "sha256": "0cdb20b298dd452e778fa6a3c81d25506ac2837cf56f3b5430ee0590b8d96b53",
+      "sha256": "63f0e411cf2035a3e2d7c3d8747b3e76c6bac1121705af76aa1c08be54b65367",
       "shift": [
         0,
         0
@@ -3877,7 +3940,7 @@
       "width": 160
     },
     {
-      "alpha_sha256": "ad33fbcd6d77c4aaadc479d16b1c48a6b5fb8929abb65662e533a8d9df59fa60",
+      "alpha_sha256": "beae001f4d87c2d8e39fdeb1b3f7893fe15a02b0bfe26dc28966818db9dba005",
       "device": "kv",
       "direction": "north",
       "draw_as_shadow": true,
@@ -3891,6 +3954,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3904,9 +3968,9 @@
         80,
         80
       ],
-      "rgba_sha256": "8cc434cbbf817f0a6b9c8f5a662aff8f50ba74ab6f4646dd651b0d5506f07d61",
+      "rgba_sha256": "c63d3305955b2aecb91ee4c0a6de2126109253f7277047d4072bda37e5ef1dbf",
       "scale": 0.5,
-      "sha256": "1534c159d440971499fc3890aff5555119b5594b0804baed9921e41d12beeed8",
+      "sha256": "efa86ee290520976b625b00b464aaa7b87ff5ef836d60e8ef393a60878e69deb",
       "shift": [
         0,
         0
@@ -3928,6 +3992,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -3966,6 +4031,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4004,6 +4070,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4042,6 +4109,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4080,6 +4148,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4104,7 +4173,7 @@
       "width": 640
     },
     {
-      "alpha_sha256": "209ccfbc65acc26d5be0f8a5a6d43ce0068dd9b2d9e7be845147f88b8c30b061",
+      "alpha_sha256": "a9bb32564ff6cec387bc03ef75b45cb367b72796b4ee46bd38180bba90340ea5",
       "device": "kv",
       "direction": "east",
       "frame_height": 160,
@@ -4117,6 +4186,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4130,9 +4200,9 @@
         80,
         80
       ],
-      "rgba_sha256": "cda8b2199c2f19bd31873ec2948361c9ac27e651f645d7938606a03dee849fcb",
+      "rgba_sha256": "7ed670128389383606af790923a94338fbf4933e490500487497b4042b0b26a1",
       "scale": 0.5,
-      "sha256": "ce611c242fc964188993498407b5bc44991007a1f9a093d2a60891343702c78c",
+      "sha256": "9a93f0e085cf2460717d3d4e67ed182497b9989971bf033b9fb05ee6ae0a03bc",
       "shift": [
         0,
         0
@@ -4140,7 +4210,7 @@
       "width": 160
     },
     {
-      "alpha_sha256": "41437a6bbbb6757637a6c79f7824a6fdbff4fb68b4e18936a4415094c1d9984d",
+      "alpha_sha256": "c06f9a36a7d8f35f093656f10a348ae93be56ae53f9f9cdb91b5197b60bcbc9f",
       "device": "kv",
       "direction": "east",
       "draw_as_shadow": true,
@@ -4154,6 +4224,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4167,9 +4238,9 @@
         80,
         80
       ],
-      "rgba_sha256": "0fad2ffe752e7c9329b9290b04acc757f88d7db72ed804e869aabd9f3a73878e",
+      "rgba_sha256": "099b6d88e349e0f26edf36f82dc638bb805a4907aa7f5cd9f95b9b00bcb32fbc",
       "scale": 0.5,
-      "sha256": "da3e16bc44b64e4bd5cc33d4caab70a5e7a335b318aa017b8d92a07c74387d09",
+      "sha256": "d1277b07738b5552e47e320ac047e7b3807f19ab1a89438a85770bf6aea192fd",
       "shift": [
         0,
         0
@@ -4191,6 +4262,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4229,6 +4301,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4267,6 +4340,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4305,6 +4379,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4343,6 +4418,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4367,7 +4443,7 @@
       "width": 640
     },
     {
-      "alpha_sha256": "a607c29ae7427d801f3bf72fc95d8d3b7ea9cc992937a401a51d736633a35b7f",
+      "alpha_sha256": "5fad0e3ea1362eb91a5e4136bbaff3051eccc1b4bc62bce6cf09b8f338d70668",
       "device": "kv",
       "direction": "south",
       "frame_height": 160,
@@ -4380,6 +4456,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4393,9 +4470,9 @@
         80,
         80
       ],
-      "rgba_sha256": "e5d5948455bde3f5b634957fa2fe7b3b6b1ab5b38da8b4917b2b1bf24b4ad5fb",
+      "rgba_sha256": "74ee8fe3fcac2c1c2b5d8e4cdde71d70d6afb5f3ca22278f40c3d25526b3d008",
       "scale": 0.5,
-      "sha256": "e26636670d6c48016f3c5e62fc5e628893906af59c78c278d1d8b701ed296d0d",
+      "sha256": "52e068faa0eebf58f764f10cafa7ba76e56786e70a0ed417a1ae0266675e994f",
       "shift": [
         0,
         0
@@ -4403,7 +4480,7 @@
       "width": 160
     },
     {
-      "alpha_sha256": "ad33fbcd6d77c4aaadc479d16b1c48a6b5fb8929abb65662e533a8d9df59fa60",
+      "alpha_sha256": "1576290d25153e9298a04a7a765a971290b0452f8c882135884e5cc6da8b6650",
       "device": "kv",
       "direction": "south",
       "draw_as_shadow": true,
@@ -4417,6 +4494,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4430,9 +4508,9 @@
         80,
         80
       ],
-      "rgba_sha256": "8cc434cbbf817f0a6b9c8f5a662aff8f50ba74ab6f4646dd651b0d5506f07d61",
+      "rgba_sha256": "b6888bd7596f0ad7aa74167e22fb1fba98df8491cb5a94d2e7e762d687eff4bf",
       "scale": 0.5,
-      "sha256": "1534c159d440971499fc3890aff5555119b5594b0804baed9921e41d12beeed8",
+      "sha256": "50f329037c18db295f827351e1e3e6c5bfa11fe0794dcb26037c658edc151495",
       "shift": [
         0,
         0
@@ -4454,6 +4532,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4492,6 +4571,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4530,6 +4610,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4568,6 +4649,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4606,6 +4688,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4630,7 +4713,7 @@
       "width": 640
     },
     {
-      "alpha_sha256": "79b8e71c26b62c53497fcdae739dee7f31d76a6ff2107362b88f846fe9e75d29",
+      "alpha_sha256": "2b695582f61185d4c30ba8d19afc1802d23f977724034d68cae8900a19f0785e",
       "device": "kv",
       "direction": "west",
       "frame_height": 160,
@@ -4643,6 +4726,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4656,9 +4740,9 @@
         80,
         80
       ],
-      "rgba_sha256": "41eb5de4b3e9a9ac916b2bde7e5f9b9696fb2b89344aa3809849b63635b9c808",
+      "rgba_sha256": "cdd8d194db4086283449a6808735e577404c003ee9c87df2d03c01faa1a0c849",
       "scale": 0.5,
-      "sha256": "59b7c27fef41c672af9f8dcb9db8777c67433e1208f487cf4c78dc190c2afefb",
+      "sha256": "20e0403ff92aa2da1efc5d7887a0e1253a3c53b73fe68050ff3806ee316e2acc",
       "shift": [
         0,
         0
@@ -4666,7 +4750,7 @@
       "width": 160
     },
     {
-      "alpha_sha256": "41437a6bbbb6757637a6c79f7824a6fdbff4fb68b4e18936a4415094c1d9984d",
+      "alpha_sha256": "aa5f4848fce5a34f77a6343b1ad3ca3423e03ffdc77435587bfd6c33589d621e",
       "device": "kv",
       "direction": "west",
       "draw_as_shadow": true,
@@ -4680,6 +4764,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4693,9 +4778,9 @@
         80,
         80
       ],
-      "rgba_sha256": "0fad2ffe752e7c9329b9290b04acc757f88d7db72ed804e869aabd9f3a73878e",
+      "rgba_sha256": "c872c7a2daf1e4c42b7f11d47eb916272fdc6e5cbcb0bce8aac61c4344a5dcff",
       "scale": 0.5,
-      "sha256": "da3e16bc44b64e4bd5cc33d4caab70a5e7a335b318aa017b8d92a07c74387d09",
+      "sha256": "5799da9990056a8173a8be581c353ce5ffb995eae72389d688bf4377101d1696",
       "shift": [
         0,
         0
@@ -4717,6 +4802,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4755,6 +4841,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4793,6 +4880,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4831,6 +4919,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4869,6 +4958,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4893,7 +4983,7 @@
       "width": 640
     },
     {
-      "alpha_sha256": "e1ebec5f5ba777a3163e74944120f10a07274a0175e231a76b8dd246038eaa6b",
+      "alpha_sha256": "18feef36ca495f5a3ef75913212a1a2f3bf25bdbc3a41b27ee1312073bd03d14",
       "device": "kv",
       "height": 64,
       "icon_size": 64,
@@ -4904,6 +4994,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4913,12 +5004,12 @@
         "assets/notices/Tweaked-Computers-MIT.txt"
       ],
       "path": "assets/icons/kv.png",
-      "rgba_sha256": "35f772f47c454f11e86c76a6cf4cb23ffeb15492b180ab5cf60d141af7a3aa1f",
-      "sha256": "42d389c3df53a2b9c0ec372fd225c9a254c203bad28ed4b196d633226c5e68f0",
+      "rgba_sha256": "2f6f2089e814f2caf1c050fb6bf38cd0736bf59d10d11882e36a33a00ff0e44c",
+      "sha256": "2c44138ab464106443754ed806b2ab58877e2c6e76a4b1486c7624bae77f2e2a",
       "width": 64
     },
     {
-      "alpha_sha256": "4f7801d179ef05a67dee1d7075d621a5b92775a5949aeaf6a1c84f55b4727a9c",
+      "alpha_sha256": "c0d7c52aba8aa3c595dff8cab301f5dedfd01c137eb52a327432f43193cada6a",
       "device": "logic",
       "direction": "north",
       "frame_height": 320,
@@ -4931,6 +5022,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4944,9 +5036,9 @@
         160,
         160
       ],
-      "rgba_sha256": "0c8b6439c915cb09f29ab9ef6164bdd625a8ba691e26d28ab568ad044371666a",
+      "rgba_sha256": "c0199b78689b0e49cbf232b70f8848fe9357502bc5ded0f08af17a1a10303aa6",
       "scale": 0.5,
-      "sha256": "cc6fc09804c843f89c71e936d5ea4894752d872d02bdc0985d85e285c3499ee3",
+      "sha256": "448063cb5e7212297c8021fd5b5051599d2d9b6c3a51883a7dc0e1592d80e373",
       "shift": [
         0,
         0
@@ -4954,7 +5046,7 @@
       "width": 320
     },
     {
-      "alpha_sha256": "96518ed51f8f5c686d7f0098391ac0d7019d3227d5855aab9551678d58ad5e11",
+      "alpha_sha256": "2ec553c38a8b5c959d97262618eb34b295361c8c289b8b5f2e4cb5625f0a44d3",
       "device": "logic",
       "direction": "north",
       "draw_as_shadow": true,
@@ -4968,6 +5060,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -4981,9 +5074,9 @@
         160,
         160
       ],
-      "rgba_sha256": "abc04242c2ead869e83a13905a255fc9ccd049a8c5242946feccf7ebf39485b1",
+      "rgba_sha256": "ed81c6957ca0e87f16024132f7a5dfa76361adbeff74579694a1ee77864de7ce",
       "scale": 0.5,
-      "sha256": "1cf6495a55b6da3c72c53c5473339a05ee7e0e7d48e6fbd67dbb0549609aaade",
+      "sha256": "bf2d074d84ee45474ee2cf937e92dbaf5d93128b3e2d5c678a3c8c6c7993f0b4",
       "shift": [
         0,
         0
@@ -5005,6 +5098,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5043,6 +5137,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5081,6 +5176,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5119,6 +5215,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5157,6 +5254,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5181,7 +5279,7 @@
       "width": 1280
     },
     {
-      "alpha_sha256": "e53834508a9f360e568edf2c76253a647e9e30bea66775c40ce76e7662bdd29b",
+      "alpha_sha256": "d90ad290fe1e63bb9d6201d40f63b9e178e34bc1032ed260258d5cf1db5c99d3",
       "device": "logic",
       "direction": "east",
       "frame_height": 320,
@@ -5194,6 +5292,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5207,9 +5306,9 @@
         160,
         160
       ],
-      "rgba_sha256": "069fe71a704dd19935e2533b84dad8058e59f7870e04df98c2dc9fb7e5129acf",
+      "rgba_sha256": "300a0511812769105a5ad84432983db59cded7a31eb0d4292ac0591c630173cf",
       "scale": 0.5,
-      "sha256": "9a427b1d520c30382644d4f4f5d1859d62a1666c84551832cb2ea0f0af375103",
+      "sha256": "b23acb5a3f19c76ca607022bd4c9dbfe73b22fb6e250b0d198e532a53431a01f",
       "shift": [
         0,
         0
@@ -5217,7 +5316,7 @@
       "width": 320
     },
     {
-      "alpha_sha256": "59faa17900fe4ba5c3e0d570f32fa62d2e5b6cb219acfd02f2d5c723a7e0e78f",
+      "alpha_sha256": "1d3f9bcbf888535db21baae61d0fef4289aa78041d05c7a8edbaf5dac24dbb64",
       "device": "logic",
       "direction": "east",
       "draw_as_shadow": true,
@@ -5231,6 +5330,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5244,9 +5344,9 @@
         160,
         160
       ],
-      "rgba_sha256": "49fe35784dac8912bbaa949c4607e4e9547ce9ebd8e60a45f1bea44b17350e08",
+      "rgba_sha256": "a47dc807e6e9379f27c48f79211739556a2b2fa0af3c59011d20cf60aed0b8aa",
       "scale": 0.5,
-      "sha256": "e1a2d5d080782dbbd2d18ac2031d7415ef9bd8c8b60cf48de1619f400fad04b0",
+      "sha256": "08d16fc8a6269ac4f2ee5137221ee6368744f5046f346261a3fb855b3c410270",
       "shift": [
         0,
         0
@@ -5268,6 +5368,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5306,6 +5407,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5344,6 +5446,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5382,6 +5485,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5420,6 +5524,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5444,7 +5549,7 @@
       "width": 1280
     },
     {
-      "alpha_sha256": "7ddfa709c6b4748dc399dcee9e0070107e923335808a041cad30afd745ac9ccd",
+      "alpha_sha256": "cb7beee06e4a4cd270b6bb8212f7a50a19ab38e97a557cef4753641f7ec93309",
       "device": "logic",
       "direction": "south",
       "frame_height": 320,
@@ -5457,6 +5562,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5470,9 +5576,9 @@
         160,
         160
       ],
-      "rgba_sha256": "302511e911f6825b14ea01f3d6f8679c41a8f38818b77cc5705279dcf989b5cb",
+      "rgba_sha256": "5d581e89e453c3fb970353938c63e9a4cbd9fad5c07abf0b1f9cbe8a08dcc0a4",
       "scale": 0.5,
-      "sha256": "666fae3cc9b69abb198f40caa0eae301c9d1db5b5f9bc66b087e39d5d5067370",
+      "sha256": "8f42e23d5eea4296605865e5378b88a5daad24fac0caffbc9cca804a433d4e03",
       "shift": [
         0,
         0
@@ -5480,7 +5586,7 @@
       "width": 320
     },
     {
-      "alpha_sha256": "96518ed51f8f5c686d7f0098391ac0d7019d3227d5855aab9551678d58ad5e11",
+      "alpha_sha256": "08cc9bbacd8440b0dc73f69caddd96323a981614376d0107685028cd6721de48",
       "device": "logic",
       "direction": "south",
       "draw_as_shadow": true,
@@ -5494,6 +5600,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5507,9 +5614,9 @@
         160,
         160
       ],
-      "rgba_sha256": "abc04242c2ead869e83a13905a255fc9ccd049a8c5242946feccf7ebf39485b1",
+      "rgba_sha256": "e80e6e2eab2e68c11440c71df97a2ce18b867a86aaafb96277f46c39430e75a8",
       "scale": 0.5,
-      "sha256": "1cf6495a55b6da3c72c53c5473339a05ee7e0e7d48e6fbd67dbb0549609aaade",
+      "sha256": "b71e031207f864715e5b85b557d34bcce4f3bcf85f4c89a5692732eade90cdc1",
       "shift": [
         0,
         0
@@ -5531,6 +5638,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5569,6 +5677,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5607,6 +5716,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5645,6 +5755,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5683,6 +5794,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5707,7 +5819,7 @@
       "width": 1280
     },
     {
-      "alpha_sha256": "eaeaf9ed3426b01613638f39b6abab51f47ffb65c77b71b2c06799611a95a965",
+      "alpha_sha256": "c9d206da7ac5851d3f2ee3dc51f10ec4e1549dea7ea2d04e38e380722797eb71",
       "device": "logic",
       "direction": "west",
       "frame_height": 320,
@@ -5720,6 +5832,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5733,9 +5846,9 @@
         160,
         160
       ],
-      "rgba_sha256": "8ce6cd2d1688cfbde9adecf727fdde55799726d8d1f1cc49db2d776fa3054ca1",
+      "rgba_sha256": "cb55165c1e88f1986fcfbf45053ba895a76ce80666ea3d574ff886a72d4f4441",
       "scale": 0.5,
-      "sha256": "f2fd8133fcf8b5cd2ba1fc4bce81e6d30615adfe75a1ea89b7f5f5eaf82fdcac",
+      "sha256": "7575fd5d8c93f485b2dd146177489943ec5f09e170b492fc093bc3dceb8d5abe",
       "shift": [
         0,
         0
@@ -5743,7 +5856,7 @@
       "width": 320
     },
     {
-      "alpha_sha256": "59faa17900fe4ba5c3e0d570f32fa62d2e5b6cb219acfd02f2d5c723a7e0e78f",
+      "alpha_sha256": "d386a09d5861c96a6145fc3b1561a2410475c2229c68b156dafed3a5b751d024",
       "device": "logic",
       "direction": "west",
       "draw_as_shadow": true,
@@ -5757,6 +5870,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5770,9 +5884,9 @@
         160,
         160
       ],
-      "rgba_sha256": "49fe35784dac8912bbaa949c4607e4e9547ce9ebd8e60a45f1bea44b17350e08",
+      "rgba_sha256": "6876ca06ca0b3870f038349da4bd6a195164ff04c72ce0b7bd693609454b1014",
       "scale": 0.5,
-      "sha256": "e1a2d5d080782dbbd2d18ac2031d7415ef9bd8c8b60cf48de1619f400fad04b0",
+      "sha256": "969b6a5854882f57ab1ae5247dc5af8b2986327b1893cb7834d6155d59f3c78d",
       "shift": [
         0,
         0
@@ -5794,6 +5908,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5832,6 +5947,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5870,6 +5986,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5908,6 +6025,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5946,6 +6064,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5970,7 +6089,7 @@
       "width": 1280
     },
     {
-      "alpha_sha256": "64a3678854c14acb8a2f563a768ff9f68c8a214ba2d2c5ca81f4f4985e58bff8",
+      "alpha_sha256": "1b746d73ccf9e163e6c0be6e02f0f52a3d673357b206aa3190ca0d0499fd2049",
       "device": "logic",
       "height": 64,
       "icon_size": 64,
@@ -5981,6 +6100,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -5990,8 +6110,8 @@
         "assets/notices/Tweaked-Computers-MIT.txt"
       ],
       "path": "assets/icons/logic.png",
-      "rgba_sha256": "8d2ed68f2fd7719b7fe4fcd96544b57413bec5dc6ed40ceb97c65076cac804c0",
-      "sha256": "18f62df961acff228374af3057a82088c09551691989fe5c4772e75248f1f27b",
+      "rgba_sha256": "4965ebea3cc2915a39843e3cbc5a2b4e4057efeef2cfd5778587a5ce5424a4d2",
+      "sha256": "2a40163bd2e9655bd1b5043f9f358786c72ed2cd61ad9ae160672ebe4cc32fdb",
       "width": 64
     },
     {
@@ -6008,6 +6128,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6021,9 +6142,9 @@
         80,
         80
       ],
-      "rgba_sha256": "67be3b39683c4b636035e7359dcc5b44a53085a6d1878ba8a3512154e6212184",
+      "rgba_sha256": "264d4a3543dee1fa8d9d8a00bc06a700b588262de225d106fa822ce7b87ba0e7",
       "scale": 0.5,
-      "sha256": "756e1a8f6d68821f4f4b0de91564cfc9b21e1986ac24e10bd1d8760ee2916df6",
+      "sha256": "6b16062571eaeb033e3820f29d628b829370edbd5cbb29692fbdb90d6b3e5ae3",
       "shift": [
         0,
         0
@@ -6045,6 +6166,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6082,6 +6204,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6120,6 +6243,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6158,6 +6282,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6196,6 +6321,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6234,6 +6360,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6271,6 +6398,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6284,9 +6412,9 @@
         80,
         80
       ],
-      "rgba_sha256": "bd924cb6543e63271459682bc38c95340773eb3d3b18af9348a43b607b330631",
+      "rgba_sha256": "b1983c9b6360b5a61a5d4c977c809f5afb0c9bb39161069899c0af95bdfa0885",
       "scale": 0.5,
-      "sha256": "26c803c714b96d2acc34125ebd8fdf5a26ee4c7662e2ea11fba73fa1385f0266",
+      "sha256": "e151183161a3527ab7e5a018f08c70f090fa83eb7bae924ba425732f8945c181",
       "shift": [
         0,
         0
@@ -6308,6 +6436,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6345,6 +6474,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6383,6 +6513,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6421,6 +6552,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6459,6 +6591,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6497,6 +6630,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6534,6 +6668,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6547,9 +6682,9 @@
         80,
         80
       ],
-      "rgba_sha256": "c0fcb18d26c0cec07c138958b60c899b7b16a58df365376c31f1ac26edb61d92",
+      "rgba_sha256": "5e58b57e453b887906725431671ee54d34e8a33b74f077066a62741b8b6a3f7d",
       "scale": 0.5,
-      "sha256": "88f97157e4e4223eefd13462686e265c5ef3050688dc958a28d8d68b0a6cd6aa",
+      "sha256": "5fdf8cbe2e21c31f6bb1a279d4d5b48099403dcba94f54cac0940793464c37de",
       "shift": [
         0,
         0
@@ -6571,6 +6706,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6608,6 +6744,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6646,6 +6783,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6684,6 +6822,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6722,6 +6861,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6760,6 +6900,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6797,6 +6938,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6810,9 +6952,9 @@
         80,
         80
       ],
-      "rgba_sha256": "4f6575e79537ff4d014ea0cbc566d4d647243d8bf6ee4c6445ee7e0666a1d48a",
+      "rgba_sha256": "484ef0ae6f47e44670949d7a144530fe92b85591d0738225988f6da26c81c794",
       "scale": 0.5,
-      "sha256": "1c2df436ff714ec0f7f0779c0c4eaefa3bf9ab733f3a663a6beb20dc91f0cd9e",
+      "sha256": "b401b92c8b09881e7c75da73c7301243ded405ded242f58a3bc2c83449fae582",
       "shift": [
         0,
         0
@@ -6834,6 +6976,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6871,6 +7014,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6909,6 +7053,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6947,6 +7092,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -6985,6 +7131,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7023,6 +7170,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7058,6 +7206,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7067,12 +7216,12 @@
         "assets/notices/Tweaked-Computers-MIT.txt"
       ],
       "path": "assets/icons/monitor.png",
-      "rgba_sha256": "9842ad6452609ab369952fb0e1647f88d366c66b29ed38daa41d86b695be6bf5",
-      "sha256": "7218cd57f9f4751524293093e0db2746b0b2196897faf6c53313ec46bcbe8db5",
+      "rgba_sha256": "0ce0e6d1d9ebcf9adc4b8894a0e2b52ff4925f2462715003a82c193b728ba3ea",
+      "sha256": "f0a56f4685571214566b4328ab82535eae4ee8d8ba1afc0018d33a83eaff9467",
       "width": 64
     },
     {
-      "alpha_sha256": "e952be4b0d1903144d1c63c430ae39bf3e3e4ddc2298b74753ba20c786bbf4ab",
+      "alpha_sha256": "fe3c70967b369ea1a986b14704fd09572e9221d231793f9b8068ada075b44a37",
       "device": "recipe_searcher",
       "direction": "north",
       "frame_height": 160,
@@ -7085,6 +7234,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7098,9 +7248,9 @@
         80,
         80
       ],
-      "rgba_sha256": "2ec762c05e8030326c44e6c91622dc4becb2e929a771a6376ea9333cd0624e57",
+      "rgba_sha256": "f292968a31044763c8bc8d33ca7593517cb62c3a731888d42ff902aef5d0c894",
       "scale": 0.5,
-      "sha256": "861e5814794171c7a4399c833a4c26721f1920c6f69f9886293bdb80be6ccbb7",
+      "sha256": "1c74b76e0e85df3d59ffdb047ca7c6c7465e52b76f2ae8c55354e33ce13b648d",
       "shift": [
         0,
         0
@@ -7108,7 +7258,7 @@
       "width": 160
     },
     {
-      "alpha_sha256": "1797f87bc877ef544745294104b8180ffed38761bbaca7c50030f35d669f5df8",
+      "alpha_sha256": "90c4086872421241bbc06889d3565cc19906ff99975407d1e91fd494a95b5201",
       "device": "recipe_searcher",
       "direction": "north",
       "draw_as_shadow": true,
@@ -7122,6 +7272,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7135,9 +7286,9 @@
         80,
         80
       ],
-      "rgba_sha256": "9ae80a6d275d892772a88552f03905ce1927bc24a8d2ee3971809b481884efb3",
+      "rgba_sha256": "57752bcda5c6596f05296846c70ad12fea798e35ddcb00fe0f21102b07e417fa",
       "scale": 0.5,
-      "sha256": "7fa46fe9282934d704f11f11d8f0f337ba0680102933426683d24320fbed5612",
+      "sha256": "7ab8bb26789a4e20624cfc7d324ad60202c915e724ed6f968f84b4571c0807a9",
       "shift": [
         0,
         0
@@ -7159,6 +7310,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7197,6 +7349,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7235,6 +7388,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7273,6 +7427,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7311,6 +7466,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7335,7 +7491,7 @@
       "width": 640
     },
     {
-      "alpha_sha256": "91bb1b7451d31006ce327475f52c469ac981c53288792064285affaf1b26b5eb",
+      "alpha_sha256": "4cf74a73d109c55fe2ed42228deca1a27e7d9c01bfaca2dca0367ce02d83419a",
       "device": "recipe_searcher",
       "direction": "east",
       "frame_height": 160,
@@ -7348,6 +7504,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7361,9 +7518,9 @@
         80,
         80
       ],
-      "rgba_sha256": "b1568243fbf6f45408143acd5831d73ed510a18f85ac993124ccbbab763c67d0",
+      "rgba_sha256": "03c32c4928db5b26d3bad557a3c2f3179df7ee047419fad75e220edaa457412d",
       "scale": 0.5,
-      "sha256": "3a7023a7ef9c57cdd079f1017280b749405c4d08aa1ab6d209ae1ea721590864",
+      "sha256": "f82b2bcf684e9ff69a4f6f4c9c43a20912d82768033f166bcdd0fb02b3efd8d8",
       "shift": [
         0,
         0
@@ -7371,7 +7528,7 @@
       "width": 160
     },
     {
-      "alpha_sha256": "07e37c03495f8ebcbeccc1d21fec92782d8caa6b7b74999009a1fd4b1cd9903e",
+      "alpha_sha256": "8610d7a597bd21a9eb1070af34e048359032c422fb95ffa3c3ced261fb54a325",
       "device": "recipe_searcher",
       "direction": "east",
       "draw_as_shadow": true,
@@ -7385,6 +7542,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7398,9 +7556,9 @@
         80,
         80
       ],
-      "rgba_sha256": "49b0a344a460e8e6144e0ef88ee8fa80fb81769b90ddbc45b89ab42497682b4e",
+      "rgba_sha256": "8335f6e177874cffac60d8849dea9857c952e2cde87517708c04ce24900d4d33",
       "scale": 0.5,
-      "sha256": "8b33af02cd79f92011cfc0bdeffd2889d7cd3e8f34eb81de9d62cb904af1a948",
+      "sha256": "7429e111571d1b635cbdaa279074d4a6378154d377314c9d8562249044b542d7",
       "shift": [
         0,
         0
@@ -7422,6 +7580,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7460,6 +7619,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7498,6 +7658,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7536,6 +7697,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7574,6 +7736,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7598,7 +7761,7 @@
       "width": 640
     },
     {
-      "alpha_sha256": "626738879f64c71bb5bdda72d884f39e6d68173f0cfcae1e31f14318b6eb56b1",
+      "alpha_sha256": "239eaefe7ab8be64995db4b2fa2cf911a1dff591c532adcc5a3072fce3c4c6ff",
       "device": "recipe_searcher",
       "direction": "south",
       "frame_height": 160,
@@ -7611,6 +7774,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7624,9 +7788,9 @@
         80,
         80
       ],
-      "rgba_sha256": "c8063b758623ca0d87073331720a2d1925c2d7166ecf420c14cc850748eac01d",
+      "rgba_sha256": "f969ccf23229a5187697461e3d35aad8be4e890018bc4ddd165b095d6d7fda86",
       "scale": 0.5,
-      "sha256": "c6d7fef43963968a922406897d428f444db009019e12371e3ecf19c46df21500",
+      "sha256": "db33d8533d85c427b719b84bea4a739a8c08a8ec3c81bf18b30130e9e0c4684c",
       "shift": [
         0,
         0
@@ -7634,7 +7798,7 @@
       "width": 160
     },
     {
-      "alpha_sha256": "1797f87bc877ef544745294104b8180ffed38761bbaca7c50030f35d669f5df8",
+      "alpha_sha256": "89390c40b2073fe954d8479e7461a12691304e80f718348cffe376330fa7dc38",
       "device": "recipe_searcher",
       "direction": "south",
       "draw_as_shadow": true,
@@ -7648,6 +7812,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7661,9 +7826,9 @@
         80,
         80
       ],
-      "rgba_sha256": "9ae80a6d275d892772a88552f03905ce1927bc24a8d2ee3971809b481884efb3",
+      "rgba_sha256": "34f77238147a6d9eb61ea744121c4e4830b840832a552406da7b55b016cb91e3",
       "scale": 0.5,
-      "sha256": "7fa46fe9282934d704f11f11d8f0f337ba0680102933426683d24320fbed5612",
+      "sha256": "d35d41cbd7a5bd00af2062bc1b107c62f5c100c3bf46edb52deb843ec052ae2c",
       "shift": [
         0,
         0
@@ -7685,6 +7850,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7723,6 +7889,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7761,6 +7928,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7799,6 +7967,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7837,6 +8006,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7861,7 +8031,7 @@
       "width": 640
     },
     {
-      "alpha_sha256": "c30caa3fc0df656aa68283fd591a0d59dc4f45f1cfbffc2c61a2e706c4afeaa5",
+      "alpha_sha256": "f8d9e8fc0fde0a87ec38a4c7aa05fc2c9a87c4e1c293ad25dff5f2b3ec0fc113",
       "device": "recipe_searcher",
       "direction": "west",
       "frame_height": 160,
@@ -7874,6 +8044,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7887,9 +8058,9 @@
         80,
         80
       ],
-      "rgba_sha256": "43db9cb840f96416eb8a70bc73f97ff8f6f93296a76c3238c009b8d1f9f07547",
+      "rgba_sha256": "446eecad7e1f73053189e21bf0c27cddacf085ba7b2bcdde813de4f57c7922cc",
       "scale": 0.5,
-      "sha256": "4824e8286afab12468bd8a2d7ebc0c33d7c20c59fcc10b109ecacb383c6a63fd",
+      "sha256": "777326a8d45e0e1af98ad0e86067222603543d0872aeea7aa950e6735ec90393",
       "shift": [
         0,
         0
@@ -7897,7 +8068,7 @@
       "width": 160
     },
     {
-      "alpha_sha256": "07e37c03495f8ebcbeccc1d21fec92782d8caa6b7b74999009a1fd4b1cd9903e",
+      "alpha_sha256": "70785c6f9d23d8d67f8610d0f00e52f7514e1501a7ce5780599555e103d88dd6",
       "device": "recipe_searcher",
       "direction": "west",
       "draw_as_shadow": true,
@@ -7911,6 +8082,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7924,9 +8096,9 @@
         80,
         80
       ],
-      "rgba_sha256": "49b0a344a460e8e6144e0ef88ee8fa80fb81769b90ddbc45b89ab42497682b4e",
+      "rgba_sha256": "bbecf7f410ec60e0a9d326ffc8467bb95d9fe67bd176d2a852dbf6249d38d545",
       "scale": 0.5,
-      "sha256": "8b33af02cd79f92011cfc0bdeffd2889d7cd3e8f34eb81de9d62cb904af1a948",
+      "sha256": "e7aa4001d87cf5755b7c147f633c68595e78b9722b2ae1a64cb9165666ee0211",
       "shift": [
         0,
         0
@@ -7948,6 +8120,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -7986,6 +8159,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -8024,6 +8198,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -8062,6 +8237,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -8100,6 +8276,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -8124,7 +8301,7 @@
       "width": 640
     },
     {
-      "alpha_sha256": "63e7728fa65a2f57ca3fff030ab4e7736042f7c7f88c93304d81e57e883b2b84",
+      "alpha_sha256": "8621e5e371dec1a30b0e43740f5f23857f7a1276f8262dbad8e47bb78f2f8690",
       "device": "recipe_searcher",
       "height": 64,
       "icon_size": 64,
@@ -8135,6 +8312,7 @@
         "assets/industrial.py",
         "assets/layout-data.lua",
         "assets/requirements.txt",
+        "assets/service_rack.py",
         "assets/socket-layout.json",
         "scripts/device-definitions.lua"
       ],
@@ -8144,9 +8322,61 @@
         "assets/notices/Tweaked-Computers-MIT.txt"
       ],
       "path": "assets/icons/recipe_searcher.png",
-      "rgba_sha256": "9eb1acfb541fb654cbef7b9d72b650bc47dbc41bbf0569a5202f6eca7a4ac11c",
-      "sha256": "e0c5ef3f08c417489933fd977e26517dd3d2077b3575d764e20c6fe8c4b4a2b8",
+      "rgba_sha256": "5e310f30840ef56d40a25db3325c55e0efa0a026d6f690a7cae605fa6a20d6b7",
+      "sha256": "936d9829c92f51dd6c6bfc52273cf898a8688ac40915786c7f8a8cea2c28ffd1",
       "width": 64
+    },
+    {
+      "alpha_sha256": "4772f869dedcb0f58676ae7aa2576c4b784392d57a17c4d0dc892fb75559d065",
+      "device": "computer",
+      "height": 256,
+      "icon_size": 256,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "technology",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/icons/tc-circuit-computers-technology.png",
+      "rgba_sha256": "6fcc98e3e0a68d844bef0b186bbcc45d7f828ce222b42932b3b6b7303f96290a",
+      "sha256": "9b9b10dc3b275cd08505ada518f482cbab932caab0a0e4d54bee84b0618df3aa",
+      "width": 256
+    },
+    {
+      "alpha_sha256": "937bd6b2c20b75d3cbcf6d0c8c2948a1a438d63f353331cf2395baf615fb0a3a",
+      "device": "recipe_searcher",
+      "height": 256,
+      "icon_size": 256,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "technology",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/icons/tc-recipe-searcher-technology.png",
+      "rgba_sha256": "c86a5ac028f4adcadaf81689cb18c2ab92a7f073f52fa76932e01429ea5e0498",
+      "sha256": "3ae0395a38591e902fd2f4a8ab86d5625b16433bec3a3b8955f24e9675e6160f",
+      "width": 256
     },
     {
       "alpha_sha256": "044028dbbdef02dd41d5f89b54bc7fca8d7428d4fd00ce13ea64bd03cebbdcfd",
@@ -8189,28 +8419,106 @@
     }
   ],
   "palette": {
-    "amber": "#dbb669",
-    "brass": "#aa7442",
-    "dark": "#292b28",
-    "edge": "#a39677",
-    "glass": "#15201c",
-    "ink": "#171a18",
-    "key": "#9a8e71",
-    "side": "#4e4336",
-    "steel": "#716454"
+    "black": [
+      29,
+      34,
+      32
+    ],
+    "blue": [
+      77,
+      100,
+      110
+    ],
+    "brass": [
+      170,
+      141,
+      81
+    ],
+    "cast": [
+      95,
+      91,
+      76
+    ],
+    "ceramic": [
+      181,
+      174,
+      145
+    ],
+    "copper": [
+      155,
+      102,
+      59
+    ],
+    "edge": [
+      147,
+      139,
+      111
+    ],
+    "glass": [
+      25,
+      57,
+      49
+    ],
+    "green": [
+      91,
+      112,
+      91
+    ],
+    "iron": [
+      65,
+      71,
+      69
+    ],
+    "paper": [
+      161,
+      154,
+      125
+    ],
+    "phosphor": [
+      120,
+      167,
+      122
+    ],
+    "rubber": [
+      33,
+      35,
+      31
+    ],
+    "rust": [
+      104,
+      68,
+      47
+    ]
   },
-  "permission_basis": "Original Foundry device geometry/materials and independent glyphs are project MIT. Approved historical Greg Flavored originals/notices retained unchanged; not sampled by new art.",
+  "permission_basis": "Original Service Rack meshes/materials, retained monitor foundation, contacts/statuses and independent glyphs are project MIT. Approved historical Greg Flavored originals/notices retained unchanged; no external pixels or models sampled.",
   "repository": "https://github.com/BirbIrl/ComputerCraft-Greg-Flavored",
   "revision": "ac6cafc3993c902e2ca95d85b501d3c7e172570c",
-  "status": "foundry-selected",
+  "selection": {
+    "candidate": "B-service-rack",
+    "preview_sha256": "75f43f0ddadd4ec6c0a880a2169c2bca5e225341b311859299cc5a7411182cb3",
+    "source_commit": "9cbd4ae73c1c62763724735ea93428a3e2d5f5f5",
+    "technology_icons": "New 256px derivatives of selected computer and scanner; not part of AR2 preview"
+  },
+  "status": "service-rack-selected",
+  "technologies": {
+    "tc-circuit-computers": {
+      "icon": "icons/tc-circuit-computers-technology.png",
+      "icon_size": 256
+    },
+    "tc-recipe-searcher": {
+      "icon": "icons/tc-recipe-searcher-technology.png",
+      "icon_size": 256
+    }
+  },
   "transform": {
     "contacts": "socket-layout.json exported from production defs.contact/offset in Factorio 2.0.77; projected at ground coordinates",
-    "encoder": "RGBA8 filter 0, zlib level 9, no ancillary chunks",
+    "encoder": "RGBA8 Pillow compress_level=9 for selected bodies/icons/mesh shadows; filter 0 zlib 9 for unchanged glyph/status/monitor shadow",
     "monitor": "unchanged 64x64 tile/touch area and 60x60 interior; two-unit inner bezel plus four-unit exterior mechanical skirt; 72x72 chamfered artwork; unchanged ground pivot",
-    "pillow_version": "12.3.0",
+    "numpy_version": "2.4.2",
+    "pillow_version": "12.1.1",
     "projection": "64*x - 48*height, 64*z - 128*height; tile units; geometry rotated clockwise before projection; fixed world light",
-    "sampling": "Pillow integer polygon rasterization; deterministic directional shading, pitting and worn edges; no antialiasing; nearest-neighbour icon fitting",
-    "shadow": "footprint cast toward world southeast proportional to body height, alpha 85",
+    "sampling": "3x depth-buffered barycentric rasterization, world-fixed normals/light and deterministic grain; Lanczos downsample; nearest-neighbour icon fitting; exact retained monitor foundation",
+    "shadow": "geometry projected toward world southeast; alpha 86 before Gaussian blur and Lanczos; monitor retained alpha 85",
     "status": "grey dash stopped; amber slash unpowered; green powered; red fault cross; amber/steel four-frame activity",
     "zlib_version": "1.3.2"
   }
