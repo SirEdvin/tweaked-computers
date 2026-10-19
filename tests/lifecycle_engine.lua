@@ -26,8 +26,67 @@ local function mine(rec)
   lifecycle.on_removed{entity=rec.body,buffer=inv,tick=game.tick}; rec.body.destroy(); return inv
 end
 local function replace(inv,x,y)
-  local body=assert(game.surfaces[1].create_entity{name=defs.devices[defs.by_name[inv[1].name]].entity_name,position={x,y},force='player'})
+  local body=assert(game.surfaces[1].create_entity{name=defs.devices[defs.by_name[inv[1].name]].entity_name,position={x,y},force='player',quality=inv[1].quality})
   lifecycle.on_built{entity=body,consumed_items=inv}; return assert(registry.by_entity(body))
+end
+local function monitor_stacks()
+  local inv=game.create_inventory(8)
+  assert(prototypes.item['tc-monitor'].stack_size==50 and prototypes.item['tc-monitor'].type=='item-with-tags')
+  for _,kind in ipairs(defs.order) do
+    assert(prototypes.item[defs.devices[kind].name].stack_size==((kind=='computer' or kind=='kv') and 1 or 50))
+  end
+  assert(inv.insert{name='tc-monitor',count=50}==50 and inv[1].count==50 and not inv[2].valid_for_read)
+  assert(inv.insert{name='tc-monitor',count=1}==1 and inv[1].count==50 and inv[2].count==1)
+  inv.clear()
+  inv[1].set_stack{name='tc-monitor',count=3}; inv[1].tags={fixture='A'}; inv[1].label='retained label'
+  assert(inv.insert(inv[1])==3 and inv[1].count==6,'identical tagged monitors failed native merge')
+  inv[2].set_stack(inv[1]); inv[2].count=2; inv[2].tags={fixture='B'}
+  inv[3].set_stack(inv[1]); inv[3].count=2; inv[3].label='different label'
+  local target=game.create_inventory(1); target[1].set_stack(inv[1])
+  assert(target.insert(inv[2])==0 and target.insert(inv[3])==0,'unlike tags/labels silently merged')
+  if script.active_mods.quality then
+    inv[4].set_stack{name='tc-monitor',count=2,quality='uncommon'}
+    inv[4].tags=inv[1].tags; inv[4].label=inv[1].label
+    assert(target.insert(inv[4])==0 and inv[4].quality.name=='uncommon','unlike qualities silently merged')
+  end
+  target.destroy(); inv.destroy()
+  group('monitor-native-50-plus-one-tag-label-quality-compatibility')
+  -- Real stacks/entities, but explicitly simulated consumption: handlers do
+  -- not own the engine's item decrement. Native robot mining is checked below.
+  local source=game.create_inventory(1); source[1].set_stack{name='tc-monitor',count=50}
+  local rec=replace(source,32,-12); source[1].count=source[1].count-1
+  assert(source[1].count==49 and rec.body.valid)
+  local mined=mine(rec)
+  assert(mined[1].count==1 and source[1].count+mined[1].count==50 and mined[1].tags.tc_monitor)
+  local settings=mined[1].tags.tc_monitor; settings.scale=2; settings.fg=3; settings.bg=4; settings.blink=true
+  settings.palette[1]={0.1,0.2,0.3}
+  -- Count writes cannot manufacture extra data-bearing items; construct this
+  -- separate three-item settings fixture before assigning its native tags.
+  mined[1].clear(); mined[1].set_stack{name='tc-monitor',count=3}
+  mined[1].tags={tc_monitor=settings}; mined[1].label='settings retained'
+  local restored=replace(mined,32,-12); mined[1].count=2
+  assert(restored.monitor_settings.scale==2 and restored.monitor_settings.fg==3 and restored.monitor_settings.bg==4)
+  assert(restored.monitor_settings.blink and restored.monitor_settings.palette[1][2]==0.2)
+  assert(mined[1].count==2 and mined[1].label=='settings retained',serpent.line{count=mined[1].count,label=mined[1].label})
+  assert(lifecycle.remove(restored.id,'fixture',true))
+  -- Malformed data refunds one into real cargo, preserving the larger source.
+  local surface=game.surfaces[1]
+  for _,field in ipairs({'stack','consumed_items'}) do
+    local robot=assert(surface.create_entity{name='construction-robot',position={36,-12},force='player'})
+    local body=assert(surface.create_entity{name=defs.devices.monitor.entity_name,position={32,-12},force='player'})
+    mined[1].clear(); mined[1].set_stack{name='tc-monitor',count=3,quality=script.active_mods.quality and 'uncommon' or 'normal'}
+    mined[1].tags={tc_monitor={version=99}}; mined[1].label='settings retained'
+    local event={entity=body,robot=robot}
+    event[field]=field=='stack' and mined[1] or mined
+    lifecycle.on_built(event)
+    local cargo=robot.get_inventory(defines.inventory.robot_cargo)
+    assert(not body.valid and cargo[1].name=='tc-monitor' and cargo[1].count==1)
+    assert(mined[1].count==3 and cargo[1].tags.tc_monitor.version==99 and cargo[1].label==mined[1].label)
+    assert(cargo[1].quality.name==mined[1].quality.name)
+    robot.destroy()
+  end
+  source.destroy(); mined.destroy()
+  group('monitor-multi-item-placement-mining-and-single-item-refund-both-event-shapes')
 end
 local source="return {api_version=1,handlers={start=function(e) computer.setState('boots',(computer.getState('boots') or 0)+1); computer.after(600,'wake') end,wake=function(e) computer.setState('wakes',1) end}}"
 local saved='-- saved but not applied\n'..source
@@ -46,10 +105,20 @@ script.on_event(defines.events.on_pre_surface_deleted,lifecycle.on_surface_remov
 script.on_event(defines.events.on_forces_merging,lifecycle.on_forces_merging)
 script.on_event(defines.events.on_robot_mined_entity,function(event)
   local rec=registry.by_entity(event.entity)
-  if rec then lifecycle.on_removed(event); if rec.id==f().robot_id then f().robot_mined=true; log('TC_NATIVE_COMPUTER_ROBOT_MINED') end end
+  if rec then
+    lifecycle.on_removed(event)
+    if rec.id==f().robot_id then f().robot_mined=true; log('TC_NATIVE_COMPUTER_ROBOT_MINED') end
+    if rec.id==f().robot_monitor then f().monitor_mined=true; log('TC_NATIVE_MONITOR_ROBOT_MINED') end
+  end
+end)
+script.on_event(defines.events.on_robot_built_entity,function(event)
+  lifecycle.on_built(event)
+  local rec=registry.by_entity(event.entity)
+  if rec and rec.kind=='monitor' then f().robot_built_monitor=rec.id end
 end)
 function M.run()
   registry.initialize(); storage.tc12={groups=0,phase='start'}
+  monitor_stacks()
   local c=build('computer',0,0); runtime.save(c.id,source,0); assert(runtime.activate(c.id,game.tick))
   assert(scheduler.dispatch(c,game.tick)); assert(c.state.boots==1 and next(c.timers))
   runtime.save(c.id,saved,c.saved_revision); c.label='private literal label'
@@ -139,6 +208,10 @@ function M.run()
 end
 local function cold_check()
   local x=f(); local r=registry.record(x.robot_id); local saved=x.snapshot; local root=registry.get()
+  local items=x.monitor_inventory
+  assert(items[1].name=='tc-monitor' and items[1].count==49 and not next(items[1].tags))
+  assert(items[2].count==1 and items[2].tags.tc_monitor.scale==2 and items[2].tags.tc_monitor.palette[1][2]==0.2)
+  assert(registry.record(x.robot_built_monitor).body.valid)
   assert(r==x.alias and r.state==x.state_alias and r.active==x.active_alias)
   assert(r.saved_source==saved.saved_source and r.active.source==x.expected_active and r.state_bytes==65536 and r.body.unit_number==saved.unit)
   assert(root.ledger.tick==saved.tick and root.ledger.total==saved.total and root.scheduler.maintenance_spent==saved.maintenance)
@@ -157,6 +230,13 @@ function M.on_tick(event)
   if x.phase=='frozen' then
     if not loaded then return end
     cold_check(); loaded=false
+    local material=x.monitor_inventory[2]
+    local body=assert(game.surfaces[1].create_entity{name=defs.devices.monitor.entity_name,position={4,16},force='player',quality=material.quality})
+    lifecycle.on_built{entity=body,stack=material}
+    local restored=assert(registry.by_entity(body)); material.clear()
+    assert(restored.monitor_settings.scale==2 and restored.monitor_settings.palette[1][2]==0.2)
+    assert(x.monitor_inventory[1].count==49 and x.monitor_inventory.get_item_count('tc-monitor')==49)
+    log('TC_NATIVE_MINED_MONITOR_COLD_REPLACEMENT_OK settings-retained fresh-count=49')
     if x.upgraded then log('TC_UPGRADE_OK lifecycle-data-source-state-deadline-monitor-drafts')
     else log('TC_COLD_OK lifecycle-data-source-state-deadline-monitor-drafts') end
     x.phase='done'; return
@@ -254,11 +334,35 @@ function M.on_tick(event)
     x.pole=assert(surf.create_entity{name='substation',position={8,23},force='player'})
     x.generator=assert(surf.create_entity{name='electric-energy-interface',position={12,23},force='player'})
     x.generator.power_production=100000000; x.generator.power_usage=0
+    local tile=build('monitor',4,16)
+    local settings=snapshots.monitor_snapshot(tile); settings.scale=2; settings.palette[1]={0.1,0.2,0.3}
+    snapshots.restore_monitor(tile,settings); x.robot_monitor=tile.id
+    local cargo=x.chest.get_inventory(defines.inventory.chest)
+    assert(cargo.insert{name='tc-monitor',count=50}==50)
+    assert(surf.create_entity{name='entity-ghost',inner_name=defs.devices.monitor.entity_name,position={2,16},force='player'})
     assert(r.body.order_deconstruction('player')); x.phase='mining'
   elseif x.phase=='mining' then
-    if not x.robot_mined then return end
+    -- Finish the fresh-stack construction first, so the robot cannot choose
+    -- the subsequently mined tagged item as its construction material.
+    if x.robot_built_monitor and not x.monitor_ordered then
+      assert(registry.record(x.robot_monitor).body.order_deconstruction('player')); x.monitor_ordered=true
+    end
+    if not x.robot_mined or not x.monitor_mined or not x.robot_built_monitor then return end
     local inventory=x.chest.get_inventory(defines.inventory.chest); local stack=inventory.find_item_stack('tc-computer')
     if not stack then return end
+    if inventory.get_item_count('tc-monitor')~=50 then return end
+    local tagged,plain
+    for i=1,#inventory do
+      local item=inventory[i]
+      if item.valid_for_read and item.name=='tc-monitor' then
+        if item.tags.tc_monitor then tagged=item else plain=item end
+      end
+    end
+    assert(tagged and plain and tagged.count==1 and plain.count==49,'native robot counts/tags coalesced')
+    assert(tagged.tags.tc_monitor.scale==2 and tagged.tags.tc_monitor.palette[1][2]==0.2)
+    x.monitor_inventory=game.create_inventory(2)
+    assert(x.monitor_inventory[1].transfer_stack(plain) and x.monitor_inventory[2].transfer_stack(tagged))
+    log('TC_NATIVE_MONITOR_ROBOT_COUNTS_OK fresh=49 built=1 mined-tagged=1')
     assert(inventory.get_item_count('tc-computer')==1 and stack.tags.tc_computer.state.k1 and #stack.tags.tc_computer.saved_source==limits.source_bytes)
     local r=replace({[1]=stack},4,12)
     assert(r.state_bytes==65536 and r.status=='stopped' and r.active.source==x.expected_active and next(r.timers)==nil)

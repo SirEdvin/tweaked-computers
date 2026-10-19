@@ -50,6 +50,14 @@ Text scale SHALL support half-step values from 0.5 through 5. A change in physic
 ### Requirement: Character-cell touch events
 A valid world interaction with a powered display SHALL map to a 1-based character cell and emit `monitor_touch` to registered authorized computers. Border/outside clicks, GUI-hover input and unauthorized interaction MUST NOT create touch events.
 
+The shared Ctrl-click input SHALL pass through native game actions and SHALL NOT
+block reuse of held modifiers. Lua context rejection MUST NOT prevent native
+inventory transfers or subsequent Ctrl shortcuts before Ctrl is released.
+
+#### Scenario: Native Ctrl behavior remains available
+- **WHEN** a player Ctrl-clicks vanilla containers or inventory slots, repeats the gesture while holding Ctrl, or uses another Ctrl shortcut before releasing it
+- **THEN** the native actions remain available without opening a mod workspace or creating a monitor touch.
+
 #### Scenario: Touch on a merged display
 - **WHEN** a player activates a cell on a non-anchor tile
 - **THEN** the event identifies the logical display, the correct combined-screen coordinates, player and channel

@@ -12,11 +12,11 @@ the next call; a callback is **not** a transaction.
 | Type | Meaning |
 | --- | --- |
 | Wire | Exactly `"red"` or `"green"`; mandatory for discovery/target paths |
-| InputSelection | `"red"`, `"green"` or `"both"`; logic INPUT only |
+| InputSelection | Explicit `"red"` or `"green"`; logic INPUT only, no default or combined selector |
 | ID / name | Opaque case-sensitive string; never a coordinate, native object or label |
 | Tick | Nonnegative exact integer, at most 9007199254740991 |
 | Int32 | Exact integer -2147483648 through 2147483647 |
-| SignalId | `{type="item"/"fluid"/"virtual", name=prototype, quality=quality_name?}` |
+| SignalId | `{type="item"/"fluid"/"virtual"/"recipe", name=prototype, quality=quality_name?}` |
 | Signal | `{signal=SignalId, count=Int32}` |
 | Data | Finite boolean/number/string, dense 1-based Data array, or string-keyed Data map |
 

@@ -112,9 +112,10 @@ state only. See [RD4 evidence and the short client check](rd4-verification.md).
 
 With an empty cursor and no open GUI, Ctrl + left click a world character cell.
 The shared control is rebindable under Controls → Interact with computer / monitor / recovery drafts.
-It consumes the corresponding game action, not an extra linked building/mining
-action. The actual clicked member must be within native player reach and belong
-to the player's force/surface. Bezel, letterboxing, outside, GUI-hover/focus and
+It passes native game actions through and does not block reuse of held Ctrl;
+there is no extra linked building/mining action. The actual clicked member must
+be within native player reach and belong to the player's force/surface.
+Bezel, letterboxing, outside, GUI-hover/focus and
 unpowered interactions are ignored. Each player activation is separate.
 
 Register `computer.on('monitor_touch','touched')` or

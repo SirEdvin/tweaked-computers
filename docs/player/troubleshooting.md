@@ -36,8 +36,9 @@ bound to red never transfers itself to green. Replacements need fresh names.
 ## Logic handler
 
 For zero input check chest read mode, INPUT color, exact type/name/quality and
-getInputStatus: disconnected and connected-zero are different. `both` sums with
-signed32 wrap, not physical color bridging. Filters are exact identities.
+getInputStatus: disconnected and connected-zero are different. Explicitly select
+red or green; `both` and omitted selectors are errors. Filters are exact identities.
+Legacy combined subscriptions fault safely on resume: update source and restart.
 
 For unexpected output check native downstream condition, supply/destination,
 in-flight settling, electricity, owner path and diagnostics. Stop/fault/disconnect

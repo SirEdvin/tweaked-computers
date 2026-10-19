@@ -5,6 +5,8 @@ local count=0
 for _,kind in ipairs(defs.order) do
   local def=defs.devices[kind]; local entity=data.raw['electric-energy-interface'][def.name]
   local item=data.raw['item-with-tags'][def.name] or data.raw.item[def.name]
+  assert(item.stack_size==((kind=='computer' or kind=='kv') and 1 or 50),'public device stack size '..kind)
+  assert(item.type==((kind=='computer' or kind=='kv' or kind=='monitor') and 'item-with-tags' or 'item'))
   assert(entity.icon==art.devices[kind].icon and item.icon==entity.icon)
   for _,direction in ipairs({'north','east','south','west'}) do
     local images=art.devices[kind][direction]; local layers=entity.pictures[direction].layers
@@ -26,7 +28,9 @@ local inputs=data.raw['custom-input']
 local interact=assert(inputs['tc-interact'])
 assert(interact.key_sequence=='CONTROL + mouse-button-1' and not interact.alternative_key_sequence)
 assert(not interact.linked_game_control or interact.linked_game_control=='')
-assert(interact.action=='lua' and interact.consuming=='game-only' and interact.block_modifiers)
+assert(interact.action=='lua')
+assert(interact.consuming=='none','world interaction must pass native Ctrl-click actions through')
+assert(interact.block_modifiers==false,'world interaction must leave held Ctrl usable for subsequent shortcuts')
 assert(not inputs['tc-open-editor'] and not inputs['tc-open-selected-computer'] and not inputs['tc-monitor-activate'])
 for name in pairs(inputs) do
   if name:sub(1,3)=='tc-' then assert(name=='tc-interact','unexpected mod input '..name) end
