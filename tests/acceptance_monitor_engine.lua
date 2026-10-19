@@ -22,6 +22,7 @@ local function configure(p)
   p.game_view_settings.show_entity_info=true
   p.game_view_settings.show_minimap=false; p.game_view_settings.show_side_menu=false
   p.game_view_settings.show_research_info=false
+  p.game_view_settings.show_entity_tooltip=false
   p.game_view_settings.show_quickbar=false; p.game_view_settings.show_shortcut_bar=false
 end
 local source=[[return {api_version=1,handlers={
@@ -35,20 +36,40 @@ touch=function(e)
   computer.setState('touches',(computer.getState('touches') or 0)+1)
 end,
 draw=function(e)
+  if computer.getState('draw_refs') then return end
   if (computer.getState('frame') or 0)>=6 and e.name~='test_paint' then return end
   local refs={}
   for _,name in ipairs(peripheral.getNames('red')) do refs[#refs+1]={name=name,wire='red'} end
   if #refs>1 then peripheral.setMonitorSyncGroup(refs) end
   local n=(computer.getState('frame') or 0)+1; computer.setState('frame',n)
-  for _,ref in ipairs(refs) do
-    local m=peripheral.wrap(ref.name,ref.wire)
-    local desired=MAXIMUM and 0.5 or (n>2 and n%2==1 and 1.5 or 1)
+  computer.setState('draw_refs',refs)
+  computer.setState('draw_scale',MAXIMUM and 0.5 or (n>2 and n%2==1 and 1.5 or 1))
+  -- Scale changes reset the whole round; repaint its last participant first.
+  computer.setState('resize_cursor',1); computer.setState('paint_cursor',#refs)
+  computer.after(1,'resize')
+end,
+resize=function(e)
+  local refs=computer.getState('draw_refs'); local i=computer.getState('resize_cursor')
+  local ref=refs[i]
+  if ref then
+    local m=peripheral.wrap(ref.name,ref.wire); local desired=computer.getState('draw_scale')
     if m.getTextScale()~=desired then m.setTextScale(desired) end
-    local w,h=m.getSize(); local ink=n%2==1 and 'A' or 'B'
-    m.setPaletteColor(colors.blue,n%2==1 and 0.05 or 0.8,0.1,n%2==1 and 0.8 or 0.05)
-    m.setBackgroundColor(colors.blue); m.setTextColor(colors.white); m.clear()
-    for y=1,h do m.setCursorPos(1,y); m.write(string.rep(ink,w)) end
-    m.setCursorPos(math.max(1,w-1),h); m.setCursorBlink(true)
+    computer.setState('resize_cursor',i+1); computer.after(1,'resize')
+  else computer.after(1,'paint') end
+end,
+paint=function(e)
+  local refs=computer.getState('draw_refs'); local i=computer.getState('paint_cursor')
+  local ref=refs[i]; local n=computer.getState('frame')
+  local m=peripheral.wrap(ref.name,ref.wire)
+  local w,h=m.getSize(); local ink=n%2==1 and 'A' or 'B'
+  m.setPaletteColor(colors.blue,n%2==1 and 0.05 or 0.8,0.1,n%2==1 and 0.8 or 0.05)
+  m.setBackgroundColor(colors.blue); m.setTextColor(colors.white); m.clear()
+  for y=1,h do m.setCursorPos(1,y); m.write(string.rep(ink,w)) end
+  m.setCursorPos(math.max(1,w-1),h); m.setCursorBlink(true)
+  if i>1 then computer.setState('paint_cursor',i-1); computer.after(1,'paint')
+  else
+    computer.deleteState('draw_refs'); computer.deleteState('draw_scale')
+    computer.deleteState('resize_cursor'); computer.deleteState('paint_cursor')
   end
 end}}]]
 function M.run()
@@ -126,15 +147,24 @@ function M.on_tick(event)
         end
       end
     end
-    if x.steps==500 then
+    local quiescent=true
+    for _,id in ipairs(x.computers) do local c=registry.computer(id)
+      if (c.state.frame or 0)<5 or c.state.draw_refs then quiescent=false end
+    end
+    local function public_image(m)
+      return helpers.table_to_json{width=m.width,height=m.height,scale=m.scale,x=m.x,y=m.y,
+        blink=m.blink,fg=m.fg,bg=m.bg,palette=m.palette,cells=m.cells}
+    end
+    if not x.power_cut and x.steps>=500 and quiescent then
+      x.power_cut=x.steps
       x.outage_models={}
-      for i,wall in ipairs(x.walls) do x.outage_models[i]=monitor.resolve(registry.record(wall[1])).model.cells end
+      for i,wall in ipairs(x.walls) do x.outage_models[i]=public_image(monitor.resolve(registry.record(wall[1])).model) end
       x.supply.power_production=0; x.supply.energy=0
-      log('TC_ACCEPTANCE_NATIVE_POWER_CUT')
-    elseif x.steps==540 then
-      for i,wall in ipairs(x.walls) do assert(monitor.resolve(registry.record(wall[1])).model.cells==x.outage_models[i],'power erased model') end
+      log('TC_ACCEPTANCE_NATIVE_POWER_CUT step='..x.steps)
+    elseif x.power_cut and x.steps==x.power_cut+40 then
+      for i,wall in ipairs(x.walls) do assert(public_image(monitor.resolve(registry.record(wall[1])).model)==x.outage_models[i],'power changed public image') end
       x.supply.power_production=1000000000
-      log('TC_ACCEPTANCE_NATIVE_POWER_RESTORED')
+      log('TC_ACCEPTANCE_NATIVE_POWER_RESTORED step='..x.steps)
     end
     if x.steps==180 or x.steps==300 or x.steps==420 or x.steps==520 or x.steps==580 then
       game.take_screenshot{surface=game.surfaces[1],position={15,5},resolution={1280,720},zoom=0.8,show_gui=false,force_render=true,path='dense-'..x.steps..'.png'}
@@ -142,7 +172,11 @@ function M.on_tick(event)
       log('TC_ACCEPTANCE_MONITOR_CAPTURE step='..x.steps)
     end
     if x.steps==config.ticks then
-      for i=1,5 do assert(x.observed[i],'no dense publication wall '..i) end
+      for i=1,5 do
+        assert(x.observed[i],'no dense publication wall '..i)
+        local r=monitor.resolve(registry.record(x.walls[i][1])).render
+        assert(r and r.snapshot.cells[1][1]==66,'final dense B frame missing wall '..i)
+      end
       log('TC_ACCEPTANCE_MONITORS_DONE steps='..x.steps..' walls=5')
     end
     if event.tick%15==0 then
