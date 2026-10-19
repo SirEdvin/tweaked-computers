@@ -19,7 +19,8 @@ performance default, redesign sampling, or raise any other default.
   an already captured spender. Retained spent-credit validation uses the supported
   hard maximum rather than the current setting, so a decrease does not invalidate
   a legitimate old ledger. An exhausted scheduler-entry identity walk defers
-  without throwing or resetting counters.
+  without throwing or resetting counters, but still runs the existing fail-closed
+  sampler refusal path so a signal-observation tick cannot silently disappear.
 - `scripts/runtime/admission.lua`: guest reservation and cached charge replay
   account for the greater of current maintenance reservation and maintenance
   actually spent that tick. Program and shell scheduling use the same headroom.
@@ -63,7 +64,9 @@ engine-shaped payload. This verifies refresh integration, not native settings-GU
 event delivery. It covers captured spend callbacks, increases/decreases, minimum
 and maximum requests, host clamping, shared spending in both directions, warm
 charge replay, zero guest headroom, unchanged render bounds and defensive guest
-readback. Its explicit-clock boundary checks are not production latency samples.
+readback. Its scheduler-entry sampling-refusal registration is table-backed;
+`tests.logic_engine` separately checks native subscription/output cleanup. Its
+explicit-clock boundary checks are not production latency samples.
 
 The fixture saves genuinely spent guest credits and 300000 maintenance units
 with the setting lowered to 250000. Separate server processes verify the saved

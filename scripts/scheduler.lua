@@ -195,7 +195,12 @@ function M.tick(tick)
   if root.scheduler.last_tick==tick then return end -- No same-tick replay/credit refresh.
   -- Pay both bounded identity walks before hooks can exhaust maintenance. This
   -- also covers inactive records and refusals later in the timer walk.
-  if not M.try_maintenance(function() spend(limits.registry_entries*2+1) end) then return end
+  if not M.try_maintenance(function() spend(limits.registry_entries*2+1) end) then
+    -- A live decrease can leave even the entry walk inadmissible. Samplers
+    -- must still run their existing fail-closed refusal path, never miss a tick.
+    phase('sample',tick,spend)
+    return
+  end
   root.scheduler.last_tick=tick
   phase('lifecycle',tick,spend)
   phase('sample',tick,spend)
