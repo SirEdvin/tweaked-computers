@@ -5,11 +5,12 @@ local scheduler=require('scripts.scheduler')
 local compiler=require('scripts.runtime.compiler')
 local admission=require('scripts.runtime.admission')
 local limits=require('scripts.runtime.limits')
+local budgets=require('scripts.runtime.budget-settings')
 local M={}
 local loaded=false
-local names={compile='tc-compile-work',work='tc-callback-work',allocations='tc-callback-allocations',host='tc-host-work-per-tick'}
-local defaults={compile=1250000,work=500000,allocations=81920,host=5000000}
-local keys={compile='compile_work',work='callback_work',allocations='callback_allocations',host='host_work_per_tick'}
+local names={compile='tc-compile-work',work='tc-callback-work',allocations='tc-callback-allocations',host='tc-host-work-per-tick',maintenance='tc-maintenance-work-per-tick'}
+local defaults={compile=1250000,work=500000,allocations=81920,host=5000000,maintenance=200000}
+local keys={compile='compile_work',work='callback_work',allocations='callback_allocations',host='host_work_per_tick',maintenance='maintenance_work_per_tick'}
 local serial=0
 local function change(kind,value)
   settings.global[names[kind]]={value=value}
@@ -18,7 +19,8 @@ local function change(kind,value)
   -- Direct assignment is not a player-generated settings GUI event.
   local handler=assert(script.get_event_handler(defines.events.on_runtime_mod_setting_changed))
   handler{setting=names[kind],setting_type='runtime-global',tick=game.tick}
-  assert(limits[keys[kind]]==value,'live setting not applied: '..kind)
+  local effective=kind=='maintenance' and math.min(value,limits.host_work_per_tick-1) or value
+  assert(limits[keys[kind]]==effective,'live setting not applied: '..kind)
 end
 local function source(body)
   return 'return {api_version=1,handlers={start=function(event) '..body..' end}}'
@@ -54,7 +56,89 @@ local function frozen()
     assert(limits[keys[kind]]==f.values[kind],'reload lost '..kind..' setting')
   end
   assert(limits.host_work_per_tick==f.values.host)
+  assert(limits.maintenance_work_per_tick==f.values.maintenance)
+  assert(root.ledger.maintenance==root.scheduler and root.scheduler==f.scheduler)
+  assert(root.scheduler.maintenance_spent==f.maintenance and root.scheduler.maintenance_tick==f.tick)
+  assert(root.scheduler.render_reserved_work==f.reserved and root.marker==f.marker)
   return ctx
+end
+local function maintenance_contracts(report)
+  local definitions=budgets.definitions
+  local definition=definitions[#definitions]
+  assert(definition.name==names.maintenance and definition.minimum_value==200000
+    and definition.maximum_value==100000000 and definition.default_value==200000)
+  local root=fresh(); local t=game.tick
+  local spend=scheduler.maintenance(root,t,true)
+  spend(25000)
+  change('maintenance',300000)
+  spend(275000)
+  assert(not scheduler.try_maintenance(function() spend(1) end))
+  change('maintenance',200000)
+  assert(not scheduler.try_maintenance(function() spend(1) end))
+  assert(root.scheduler.maintenance_spent==300000)
+  -- Retained validation must accept an old spent total above the new ceiling.
+  assert(not scheduler.try_maintenance(function() scheduler.maintenance(root,t,true)(1) end))
+  change('maintenance',300001); spend(1)
+  assert(root.scheduler.maintenance_spent==300001)
+  local rec=computer('computer.setState("untouched",true)')
+  change('host',200001)
+  assert(admission.guest_ceiling(root.ledger,t)==0)
+  local total=root.ledger.total; local queued=rec.queue[1]
+  assert(not scheduler.dispatch(rec,t) and rec.queue[1]==queued and rec.status=='running')
+  assert(root.ledger.total==total and rec.last_dispatch_tick==nil)
+  report('maintenance-live-increase-decrease-and-captured-spend-preserve-credits')
+
+  change('host',600001); change('maintenance',300000)
+  root=fresh(); local ctx=admission.context(root.ledger,'split',t)
+  spend=scheduler.maintenance(root,t,true); spend(300000)
+  assert(admission.reserve(ctx,'work',300001))
+  change('maintenance',200000)
+  assert(not admission.reserve(ctx,'work',1),'decrease refunded spent maintenance to guests')
+  assert(not admission.replay_work(ctx,{1,total=1}) and ctx.machine.work==300001)
+  change('host',600002)
+  assert(admission.replay_work(ctx,{1,total=1}) and ctx.machine.work==300002)
+  assert(root.scheduler.maintenance_spent+root.ledger.total==600002)
+  report('maintenance-decrease-retains-shared-spent-headroom-and-cache-replay')
+
+  root=fresh(); ctx=admission.context(root.ledger,'guest-first',t)
+  change('host',700000)
+  assert(admission.reserve(ctx,'work',480000))
+  spend=scheduler.maintenance(root,t,true); spend(100000)
+  change('maintenance',400000)
+  spend(120000)
+  assert(not scheduler.try_maintenance(function() spend(1) end),'increase reused spent guest headroom')
+  assert(root.scheduler.maintenance_spent+root.ledger.total==700000)
+  change('host',600000)
+  assert(not scheduler.try_maintenance(function() spend(1) end))
+  assert(not admission.reserve(ctx,'work',1) and root.ledger.total==480000)
+  scheduler.tick(t)
+  assert(root.scheduler.last_tick==-1 and root.scheduler.maintenance_spent==220000,
+    'exhausted scheduler entry crashed or reset retained spending')
+  report('maintenance-increase-and-host-decrease-respect-combined-spent-work')
+
+  change('maintenance',100000000); change('host',200001)
+  assert(limits.host_work_per_tick==200001 and limits.maintenance_work_per_tick==200000)
+  root=fresh(); ctx=admission.context(root.ledger,'minimum',t)
+  assert(admission.reserve(ctx,'work',1) and not admission.reserve(ctx,'work',1))
+  spend=scheduler.maintenance(root,t,true); spend(200000)
+  assert(not scheduler.try_maintenance(function() spend(1) end))
+  change('host',100000001)
+  assert(limits.maintenance_work_per_tick==100000000)
+  restored_defaults()
+  report('maintenance-request-clamped-to-host-without-changing-host-setting')
+
+  root=fresh(); change('maintenance',400000)
+  spend=scheduler.maintenance(root,t)
+  scheduler.request_render_work(root,t,160000,function() end)
+  assert(root.scheduler.render_reserved_work==60000); spend(340000)
+  spend=scheduler.maintenance(root,t+1)
+  assert(root.scheduler.render_reserved_work==160000); spend(240000)
+  spend=scheduler.maintenance(root,t+2)
+  assert(root.scheduler.render_reserved_work==60000); spend(340000)
+  local ok=pcall(scheduler.request_render_work,root,t+2,160001,function() end)
+  assert(not ok,'larger maintenance widened whole-render admission')
+  restored_defaults()
+  report('maintenance-setting-preserves-render-reservations-and-baseline-service')
 end
 function M.run()
   local total=0
@@ -118,13 +202,22 @@ function M.run()
   assert(ok,diagnostic and diagnostic.message)
   restored_defaults()
   report('guest-limits-reflect-live-settings-and-remain-defensive')
+  maintenance_contracts(report)
+  change('maintenance',400000)
+  rec=select(1,run('local t=computer.getLimits(); assert(t.maintenance_work_per_tick==400000); t.maintenance_work_per_tick=1; assert(computer.getLimits().maintenance_work_per_tick==400000)'))
+  restored_defaults()
+  report('guest-maintenance-limit-live-readback-is-defensive')
   -- Freeze genuinely spent credits and non-default map settings for a cold load.
   root=fresh(); local retained=admission.context(root.ledger,'retained',game.tick)
   assert(admission.reserve(retained,'compile',321) and admission.reserve(retained,'work',123) and admission.reserve(retained,'allocations',45))
-  local values={compile=1500000,work=600000,allocations=90000,host=6000000}
+  local values={compile=1500000,work=600000,allocations=90000,host=6000000,maintenance=300000}
   for kind,value in pairs(values) do change(kind,value) end
+  scheduler.maintenance(root,game.tick,true)(300000)
+  change('maintenance',250000); values.maintenance=250000
+  root.marker={retained=true}
   storage.tc_budget_fixture={phase='armed',id='retained',tick=game.tick,total=root.ledger.total,
-    spent={compile=321,work=123,allocations=45},values=values}
+    spent={compile=321,work=123,allocations=45},values=values,scheduler=root.scheduler,
+    maintenance=300000,reserved=root.scheduler.render_reserved_work,marker=root.marker}
   log('TC_CONTRACT_TOTAL '..total)
 end
 function M.on_load()
@@ -143,7 +236,40 @@ function M.on_tick(event)
     assert(not admission.reserve(ctx,'work',1) and ctx.ledger.total==total)
     change('work',124)
     assert(admission.reserve(ctx,'work',1) and ctx.machine.work==124 and ctx.ledger.total==total+1)
+    assert(not scheduler.try_maintenance(function() scheduler.maintenance(registry.get(),f.tick,true)(1) end))
+    change('maintenance',300001)
+    scheduler.maintenance(registry.get(),f.tick,true)(1)
+    assert(registry.get().scheduler.maintenance_spent==300001)
+    restored_defaults()
+    assert(not scheduler.try_maintenance(function() scheduler.maintenance(registry.get(),f.tick,true)(1) end))
+    -- Actual next production tick, not an explicit-clock latency claim.
+    assert(event.tick>f.tick)
+    scheduler.tick(event.tick)
+    assert(registry.get().scheduler.last_tick==event.tick and registry.get().marker==f.marker)
+    assert(registry.get().scheduler.maintenance_spent<=limits.maintenance_work_per_tick)
+    log('TC_MAINTENANCE_COLD_SPENT_AND_NEXT_TICK_OK')
+    local rec=computer('computer.setState("started",true)')
+    f.computer=rec.id; f.active=rec.active; f.state=rec.state; f.phase='live'
+  elseif f.phase=='live' then
+    local root=registry.get(); local rec=registry.computer(f.computer)
+    assert(rec.active==f.active and rec.state==f.state)
+    change('maintenance',400000)
+    scheduler.tick(event.tick)
+    assert(rec.state.started and rec.status=='running' and rec.active==f.active and rec.state==f.state)
+    scheduler.maintenance(root,event.tick,true)(300000-root.scheduler.maintenance_spent)
+    local spent=root.scheduler.maintenance_spent; local total=root.ledger.total
+    change('maintenance',250000)
+    scheduler.tick(event.tick)
+    assert(root.scheduler.maintenance_spent==spent and root.ledger.total==total)
+    assert(rec.state.started and rec.status=='running' and rec.active==f.active and rec.state==f.state)
+    f.phase='live-next'
+  elseif f.phase=='live-next' then
+    scheduler.tick(event.tick)
+    local root=registry.get(); local rec=registry.computer(f.computer)
+    assert(root.scheduler.last_tick==event.tick and root.scheduler.maintenance_spent<=250000)
+    assert(rec.status=='running' and rec.state.started and rec.active==f.active and rec.state==f.state)
     restored_defaults(); f.phase='done'
+    log('TC_MAINTENANCE_LIVE_PRODUCTION_TICKS_OK')
     log('TC_COLD_OK')
   end
 end

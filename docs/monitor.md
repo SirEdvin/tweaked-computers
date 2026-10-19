@@ -149,8 +149,9 @@ one simulation tick. This is not a write lock or an application-frame detector.
 See the [exact API and capacities](player/api/peripheral.md).
 
 The 60000 baseline render reservation may grow to 160000 on demand, with baseline
-service opportunities between boosts, inside the unchanged 200000 maintenance
-reservation within the configurable shared host envelope (default 5000000).
+service opportunities between boosts, inside the configurable maintenance
+reservation (default/minimum 200000) within the shared host envelope (default 5000000).
+The separate 160000 whole-commit ceiling is unchanged by maintenance settings.
 See [live mod settings](player/api/limits.md#live-mod-settings). Staging and queued retirement each retain at most
 10584 cells and 256 frame records. Work refusal retains paid progress. The
 256-tick stable-world target is checked headlessly, not a graphical/60-UPS promise.

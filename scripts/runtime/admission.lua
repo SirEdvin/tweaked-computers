@@ -23,6 +23,14 @@ function M.context(ledger, id, tick)
   end
   return {ledger = ledger, machine = machine, tick = tick}
 end
+-- The scheduler attaches its authoritative plain ledger during synchronized
+-- maintenance. Retain that alias across reload, not a second spent counter.
+-- A live decrease cannot give guests maintenance credits already spent this tick.
+function M.guest_ceiling(ledger,tick)
+  local s=ledger.maintenance
+  local spent=s and s.maintenance_tick==tick and s.maintenance_spent or 0
+  return math.max(0,limits.host_work_per_tick-math.max(limits.maintenance_work_per_tick,spent))
+end
 function M.reserve(ctx, kind, amount)
   assert(errors.integer(amount, 0, 1000000000), 'invalid work reservation')
   assert(ctx.tick == ctx.ledger.tick, 'stale admission context')
@@ -31,7 +39,7 @@ function M.reserve(ctx, kind, amount)
   elseif kind=='compile' then ceiling=limits.compile_work
   elseif kind=='allocations' then ceiling=limits.callback_allocations end
   assert(ceiling, 'unknown admission kind')
-  local aggregate_ceiling=limits.host_work_per_tick-limits.maintenance_work_per_tick
+  local aggregate_ceiling=M.guest_ceiling(ctx.ledger,ctx.tick)
   if ctx.machine[kind] + amount > ceiling or ctx.ledger.total + amount > aggregate_ceiling then
     return false
   end
@@ -44,7 +52,7 @@ end
 local function replay(ctx,kind,ceiling,charges)
   assert(ctx.tick==ctx.ledger.tick,'stale admission context')
   local available=math.min(ceiling-ctx.machine[kind],
-    limits.host_work_per_tick-limits.maintenance_work_per_tick-ctx.ledger.total)
+    M.guest_ceiling(ctx.ledger,ctx.tick)-ctx.ledger.total)
   local accepted=charges.total
   if accepted>available then
     accepted=0
