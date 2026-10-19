@@ -30,7 +30,10 @@ start=function(e)
   computer.on('monitor_touch','touch')
   computer.every(120,'draw'); computer.after(1,'draw')
 end,
-touch=function(e) computer.setState('touch',{player=e.player_index,x=e.x,y=e.y,name=e.peripheral}) end,
+touch=function(e)
+  computer.setState('touch',{player=e.player_index,x=e.x,y=e.y,name=e.peripheral})
+  computer.setState('touches',(computer.getState('touches') or 0)+1)
+end,
 draw=function(e)
   if (computer.getState('frame') or 0)>=6 and e.name~='test_paint' then return end
   local refs={}

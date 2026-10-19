@@ -17,6 +17,7 @@ local function computer() return registry.computer(fixture().c) end
 local function report(player)
   local x=fixture(); local c=computer(); local root=registry.get()
   local frame=player.gui.screen[editor.frame_name]
+  local pane=frame and frame.content; local code=pane and pane.editor
   local session,book=documents.session(player.index)
   local draft=session and session.id and book.documents[session.id]
   local display=monitor.resolve(registry.record(x.tiles[1]))
@@ -38,29 +39,47 @@ local function report(player)
     local ok,tags=pcall(function() return stack.tags end)
     inventory[#inventory+1]={slot=i,name=stack.name,count=stack.count,tags=ok and tags or nil}
   end end end
-  local gallery={}
+  local gallery={}; local owned={}; local names={}
+  for kind,def in pairs(defs.devices) do
+    for _,name in ipairs({def.entity_name,def.power_name,def.name}) do names[name]=true end
+    for _,role in ipairs(def.roles) do if role~='network' then names[defs.pad_name(kind,role)]=true end end
+  end
+  for _,role in ipairs(defs.role_order) do names['tc-port-'..role]=true end
   for _,id in ipairs(setup().gallery or {}) do local r=registry.record(id)
     if r then
       local connections={}; for _,role in ipairs(defs.devices[r.kind].roles) do
         local connector=lifecycle.connector(r,role,'red'); connections[role]=connector and #connector.real_connections or 0
       end
       gallery[#gallery+1]={id=id,kind=r.kind,direction=r.body.direction,operable=r.body.operable,position=r.body.position,connections=connections}
+      owned[r.body.unit_number]=true
+      for _,child in pairs(r.children) do if child.valid then owned[child.unit_number]=true end end
     end
   end
   local db=registry.record(x.db)
+  local gallery_native=0; local gallery_orphans=0; local gallery_ghosts=0
+  if setup().gallery then
+    local filter={}; for name in pairs(names) do filter[#filter+1]=name end
+    for _,entity in pairs(game.surfaces[1].find_entities_filtered{area={{34,-5},{66,27}},name=filter}) do
+      gallery_native=gallery_native+1; if not owned[entity.unit_number] then gallery_orphans=gallery_orphans+1 end
+    end
+    for _,ghost in pairs(game.surfaces[1].find_entities_filtered{area={{34,-5},{66,27}},type='entity-ghost'}) do
+      if names[ghost.ghost_name] then gallery_ghosts=gallery_ghosts+1 end
+    end
+  end
   return {tick=game.tick,computer=c.id,status=c.status,diagnostic=c.diagnostic,state=c.state,
     saved=c.saved_source,saved_revision=c.saved_revision,active=c.active and c.active.source,
     active_revision=c.active and c.active.revision,run=c.run_id,logs=c.logs,
     ledger={tick=root.ledger.tick,total=root.ledger.total,maintenance=root.scheduler.maintenance_spent},
     stock=x.stock.get_item_count('iron-plate'),transferred=x.destination.get_item_count('iron-plate'),
     configuration={enabled=cb.circuit_enable_disable,condition=cb.circuit_condition,position=x.inserter.position},
-    kv=db and db.database,db_id=x.db,inventory=inventory,gallery=gallery,monitor=display and {id=display.id,width=display.model.width,height=display.model.height,
+    kv=db and db.database,db_id=x.db,inventory=inventory,gallery=gallery,gallery_native=gallery_native,gallery_orphans=gallery_orphans,gallery_ghosts=gallery_ghosts,monitor=display and {id=display.id,width=display.model.width,height=display.model.height,
       model=display.model,sequence=display.presentation and display.presentation.sequence},
     player=player.index,peers=peers,resolution=player.display_resolution,scale=player.display_scale,
-    opened=frame and player.opened==frame or false,tab=frame and frame.content.selected_tab_index,
-    source=frame and frame.content.editor.source.text,draft=draft and draft.source,
+    opened=frame and player.opened==frame or false,tab=pane and pane.selected_tab_index,
+    source=code and code.source.text,source_index=code and code.source.index,draft=draft and draft.source,
+    position=player.position,zoom=player.zoom,cursor=player.cursor_stack.valid_for_read and player.cursor_stack.name,
     frame_location=frame and frame.location,controls=controls,
-    feedback=frame and frame.content.editor.message.feedback.caption,
+    feedback=code and code.message.feedback.caption,
     message=session and session.message,validation=session and session.validation,
     joins=setup().joins,rotation_events=setup().rotation_events}
 end
@@ -111,7 +130,7 @@ script.on_event(defines.events.on_gui_click,function(event)
     p.opened=nil
     p.game_view_settings.show_quickbar=false; p.game_view_settings.show_shortcut_bar=false
     if not setup().gallery then
-      setup().gallery={}; local surface=game.surfaces[1]
+      setup().gallery={}; setup().gallery_specs={}; local surface=game.surfaces[1]
       surface.request_to_generate_chunks({49,10},2); surface.force_generate_chunk_requests()
       for _,obstacle in pairs(surface.find_entities_filtered{area={{34,-5},{66,27}},type={'tree','simple-entity','cliff'}}) do obstacle.destroy() end
       local tiles={}; for y=-5,26 do for xx=34,65 do tiles[#tiles+1]={name='refined-concrete',position={xx,y}} end end
@@ -120,6 +139,7 @@ script.on_event(defines.events.on_gui_click,function(event)
         for col,d in ipairs({0,4,8,12}) do
           local body=assert(surface.create_entity{name=defs.devices[kind].entity_name,position={40+(col-1)*6,(row-1)*5},direction=d,force='player'})
           local r=assert(lifecycle.build(body)); setup().gallery[#setup().gallery+1]=r.id
+          setup().gallery_specs[#setup().gallery_specs+1]={kind=kind,position=body.position}
           rendering.draw_text{text=kind..' '..d,surface=surface,target={body.position.x,body.position.y-1.5},color={1,1,1},alignment='center',scale=.7}
         end
       end
@@ -127,6 +147,7 @@ script.on_event(defines.events.on_gui_click,function(event)
       supply.power_production=100000000; supply.power_usage=0
       for _,pos in ipairs({{36,6},{50,6},{64,6},{36,20},{50,20},{64,20}}) do surface.create_entity{name='substation',position=pos,force='player'} end
     end
+    for i,kind in ipairs({'computer','kv','monitor','logic','configurator'}) do p.set_quick_bar_slot(i,defs.devices[kind].name) end
     p.teleport({49,10}); p.zoom=.95
   elseif e.name=='kvmax' then
     p.opened=nil; local db=assert(registry.record(x.db)); db.database=kv.import{version=1,entries={}}
@@ -183,6 +204,14 @@ function M.on_tick(event)
     local body=game.surfaces[1].find_entity(defs.devices.kv.entity_name,setup().kv_position)
     local rec=body and registry.by_entity(body)
     if rec then fixture().db=rec.id end
+  end
+  for i,id in ipairs(setup().gallery or {}) do
+    if not registry.record(id) then
+      local spec=setup().gallery_specs[i]
+      local body=game.surfaces[1].find_entity(defs.devices[spec.kind].entity_name,spec.position)
+      local rec=body and registry.by_entity(body)
+      if rec then setup().gallery[i]=rec.id end
+    end
   end
   if event.tick%15==0 then publish() end
 end
