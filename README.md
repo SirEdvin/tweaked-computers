@@ -8,11 +8,14 @@ Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. No interpreter,
 OS, gameplay filesystem or dynamic guest loader is shipped; there is no command history.
 
-The unreleased candidate additionally includes the separately researched
+Version 0.1.9 adds the separately researched
 [Recipe Searcher](docs/player/api/recipe-searcher.md): a powered 1×1 read-only
 item/fluid recipe catalogue peripheral, with complete sorted metadata and an
-explicit 50-result ceiling after category filtering. It is not in the published
-0.1.8 archive. See [candidate verification](docs/recipe-searcher-validation.md).
+explicit 50-result ceiling after category filtering. It also adds recipe circuit
+signals, monitor stacks of 50, readable Console tabs and native Ctrl-click
+preservation. Logic calls now require explicit red or green, not the old both
+selector. See [0.1.9 release notes](docs/release-0.1.9.md) and the original
+[feature verification](docs/recipe-searcher-validation.md).
 
 - [Player guide and complete Lua reference](https://siredvin.github.io/tweaked-computers/).
 - [Guide source](docs/player/index.md) and [factory tutorial](docs/player/factory.md).
@@ -23,8 +26,10 @@ This is a user-test alpha, not stable or universally client-verified. Back up sa
 Foundry artwork and live monitor charts have isolated base/Space Age graphical
 checks with software rendering. Console input/workflows have native-client checks
 in both modes and actual base two-client late-join/cold-server acceptance.
-Space Age connected joining, native wire selection/touch and audible playback
-remain unverified. Full-world
+Recipe Searcher appearance and Ctrl-click transfers/modifier reuse/monitor touch
+have native checks in both modes; recipe queries also have actual base two-client
+late-join/cold-server checks. Space Age connected joining, exhaustive native wire
+selection and audible playback remain unverified. Full-world
 performance limits are provisional; software rendering is not a GPU benchmark.
 Install from the [Factorio Mod Portal](https://mods.factorio.com/mod/tweaked-computers)
 and follow the guide above. Report problems with engine/mod versions, wiring,
@@ -44,7 +49,7 @@ earlier workload separately; current matched results accompany the release.
 Version 0.1.8 retains those monitor/live-budget features and adds bounded Console
 commands with live effects, shared save-backed values and confirmed reset, but no
 retained user functions or command history. See the [release notes](docs/console-shell-release.md).
-The release source is [alpha-0.1.8](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.8);
+The release source is [alpha-0.1.9](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.9);
 [0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development
@@ -56,7 +61,7 @@ Build an installable archive outside the checkout:
 Use a fresh output directory for the packaged official-engine integration smoke:
 
     python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
-      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.8.zip \
+      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.9.zip \
       --output /absolute/path/to/new-smoke-directory \
       --fixture tests.integration_engine --production-context --cold
 

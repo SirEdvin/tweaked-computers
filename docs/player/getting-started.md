@@ -5,11 +5,11 @@
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot; removal/destruction of a device is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
-   the Mod Portal, select **0.1.8 ALPHA**, enable it, and restart when prompted.
+   the Mod Portal, select **0.1.9 ALPHA**, enable it, and restart when prompted.
    This version includes the direct device wiring, industrial artwork and tabbed
    editor redesign. Back up an existing 0.1.1 world before its automatic migration.
-3. For manual installation, download `tweaked-computers_0.1.8.zip` from the
-   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.8)
+3. For manual installation, download `tweaked-computers_0.1.9.zip` from the
+   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.9)
    and place it in your Factorio
    user-data `mods` directory without unpacking it. Remove conflicting duplicate
    versions, enable the mod, and restart. The ZIP's internal folder must match its
@@ -22,8 +22,10 @@
 
 Artwork and live charts have isolated software-rendered base/Space Age checks;
 the Console has native workflow checks in both modes and real base two-client
-late-join/cold-server checks. Space Age connected joining, native wire/touch and
-audible playback remain unverified.
+late-join/cold-server checks. Recipe Searcher appearance and Ctrl-click transfer,
+held-modifier and monitor-touch checks cover both native clients; connected recipe
+query checks cover base. Space Age connected joining, exhaustive native wire
+selection and audible playback remain unverified.
 Read the [alpha warning](index.md#alpha-warning). Keep backups before upgrades;
 unknown saved formats are retained for recovery, not automatically reset.
 Version 0.1.5 adds automatic buffered monitors, all complete rectangles up to
@@ -45,6 +47,14 @@ user functions cannot be retained. Run/Apply, Stop or confirmed Reset Shell clea
 scratch values; closing/reopening and save/load retain them. Keep a pre-upgrade
 save and matching ZIP rather than downgrading a save containing shell state.
 
+Version 0.1.9 adds Recipe Searcher, recipe circuit signals, monitor stacks of 50,
+readable Console tabs and preserved native Ctrl-click behavior. Logic input and
+discovery/binding require explicit `"red"` or `"green"`; update old `"both"`
+subscriptions before running them. Invalid retained subscriptions fault before
+callbacks and release their owned output without replay or silent translation.
+The output is still one shared bank mirrored onto both colors. Shared work/Data
+budgets are unchanged and can still refuse queries or independent subscriptions.
+
 ## Research and craft
 
 Research **Native circuit computers** (`tc-circuit-computers`) after
@@ -54,14 +64,19 @@ researched forces receive missing unlocks on a mod configuration change.
 All recipes make one item in 2 seconds and use base materials even with Space Age.
 These are initial balance values.
 
-The candidate also adds separately researched **Recipe Searcher**
-(`tc-recipe-searcher`), not included in the published 0.1.8 archive. Its exact direct
+Version 0.1.9 includes separately researched **Recipe Searcher**
+(`tc-recipe-searcher`). Its exact direct
 prerequisites are `tc-circuit-computers` and `utility-science-pack`. It costs 200
 units of one automation, one logistic and one utility pack each, at 60 seconds per
 unit (no chemical or production packs in this technology). One device crafts in
 2 seconds from 10 steel plates, 5 advanced circuits and 2 processing units. Its
 1×1 body consumes 30 kW with a 1 kJ buffer. Circuit Computers alone never unlocks
 it, including when installing into an already-researched factory.
+
+Fresh monitor items stack to 50. Native tags, labels and quality must match to
+stack data-bearing items; unlike settings do not silently merge. Computer and KV
+items remain stacks of one. Mining retains monitor settings/palette, not a
+portable copy of the previous logical screen buffer.
 
 | Device / recipe ID | Iron plate | Copper plate | Electronic circuit | Advanced circuit | Demand | Buffer |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |

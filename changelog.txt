@@ -1,4 +1,22 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.9
+Date: 2026-10-19
+  Features:
+    - Add the separately researched 1x1 Recipe Searcher: exact item/fluid product queries, crafting-category filtering and complete sorted recipe metadata with live force-enabled state.
+    - Enforce a fixed 50-result ceiling after category filtering; 51 matches raises explicit E_LIMIT, never a truncated result. Existing Data/work limits still apply.
+    - Support recipe circuit signals alongside item, fluid and virtual signals in logic handlers.
+  Changes:
+    - Increase monitor item stacks to 50 while preserving item-with-tags, native tag/label/quality compatibility and computer/KV stacks of one.
+    - Require explicit red or green logic input/discovery selectors. The old both selector is unsupported; retained invalid subscriptions fault before callbacks without replay or silent translation.
+    - Keep one shared logic output bank mirrored onto both colors; independent subscriptions still share unchanged work budgets.
+  Bugfixes:
+    - Display Console tabs as spaces without changing stored log bytes or print semantics.
+    - Preserve native Ctrl-click transfers and subsequent shortcuts while Ctrl stays held, without removing guarded computer, monitor-touch or recovery actions.
+  Info:
+    - ALPHA: back up saves and matching ZIPs. Factorio 2.0.77 base and optional Space Age; no command history or retained user functions.
+    - Software-rendered native checks are appearance/input evidence, not GPU FPS or busy-factory performance guarantees. Connected late-join/cold-server checks cover base only.
+    - Production work/rendering budgets remain unchanged. Restore a pre-upgrade backup instead of downgrading a save containing the new device.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.8
 Date: 2026-10-18
   Features:
