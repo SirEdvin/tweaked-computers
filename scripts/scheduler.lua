@@ -5,6 +5,7 @@ local compiler = require('scripts.runtime.compiler')
 local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
+local budgets = require('scripts.runtime.budget-settings')
 local shell = require('scripts.runtime.shell')
 local M = {}
 local hooks={lifecycle={},sample={},notifications={},render={}}
@@ -15,7 +16,7 @@ local function render_state_valid(s,tick)
   if type(s)~='table' then return false end
   if not errors.integer(s.last_tick,-1,tick) then return false end
   if s.maintenance_tick~=nil and (not errors.integer(s.maintenance_tick,0,tick)
-    or not errors.integer(s.maintenance_spent,0,limits.maintenance_work_per_tick)) then return false end
+    or not errors.integer(s.maintenance_spent,0,budgets.maintenance_max)) then return false end
   if s.render_demand_work~=nil or s.render_demand_tick~=nil then
     if not errors.integer(s.render_demand_work,0,max_render_reservation)
       or not errors.integer(s.render_demand_tick,0,tick) then return false end
@@ -60,10 +61,17 @@ function M.maintenance(root,tick,for_render)
   elseif s.render_reserved_work==nil then
     s.render_reserved_work=render_reservation -- Legacy same-tick ledger, no credit reset.
   end
-  local ceiling=limits.maintenance_work_per_tick-(for_render and 0 or s.render_reserved_work)
+  -- Old saves have no alias. Attach only on synchronized admission, never load.
+  assert(root.ledger.maintenance==nil or root.ledger.maintenance==s,'invalid maintenance ledger alias')
+  root.ledger.maintenance=s
   return function(n)
     assert(s.maintenance_tick==tick,'stale maintenance admission')
     assert(errors.integer(n,0,1000000000),'invalid maintenance cost')
+    -- Read live ceilings even for an already captured spend callback. A setting
+    -- increase cannot reclaim guest credits already spent under the old split.
+    local guest_spent=root.ledger.tick==tick and root.ledger.total or 0
+    local ceiling=math.min(limits.maintenance_work_per_tick-(for_render and 0 or s.render_reserved_work),
+      limits.host_work_per_tick-guest_spent)
     if s.maintenance_spent+n>ceiling then error(refusal,0) end
     s.maintenance_spent=s.maintenance_spent+n
   end
@@ -124,8 +132,9 @@ local function dispatch_program(rec,tick)
   -- Reserve no more than that allowance so small fitting callbacks still run;
   -- admission remains authoritative and faults callbacks that actually exceed it.
   local maximum=math.min(limits.compile_work+limits.callback_work+limits.callback_allocations,
-    limits.host_work_per_tick-limits.maintenance_work_per_tick)
-  if root.ledger.tick==tick and root.ledger.total+maximum>limits.host_work_per_tick-limits.maintenance_work_per_tick then return false end
+    admission.guest_ceiling(root.ledger,tick))
+  if maximum==0 then return false end
+  if root.ledger.tick==tick and root.ledger.total+maximum>admission.guest_ceiling(root.ledger,tick) then return false end
   local context_ok,ctx=pcall(runtime.context,rec,tick)
   if not context_ok then
     if type(ctx)=='table' and ctx.code=='E_BUSY' then return false end
@@ -153,8 +162,9 @@ function M.dispatch(rec,tick)
   if rec.physical_version and (rec.physical_error or rec.power_checked_tick~=tick) then return false end
   local root=registry.get()
   local maximum=math.min(limits.compile_work+limits.callback_work+limits.callback_allocations,
-    limits.host_work_per_tick-limits.maintenance_work_per_tick)
-  if root.ledger.tick==tick and root.ledger.total+maximum>limits.host_work_per_tick-limits.maintenance_work_per_tick then return false end
+    admission.guest_ceiling(root.ledger,tick))
+  if maximum==0 then return false end
+  if root.ledger.tick==tick and root.ledger.total+maximum>admission.guest_ceiling(root.ledger,tick) then return false end
   local pending=shell.waiting(rec)
   local program=rec.status=='running' and #rec.queue>0
   if pending and (not program or rec.next_work_class~='program') then
@@ -172,7 +182,8 @@ function M.tick(tick)
   local ledger=root.ledger
   if type(ledger)~='table' or ledger.version~=1 or not errors.integer(ledger.total,0,1000000000)
     or not errors.integer(ledger.tick,-1,9007199254740991) or tick<ledger.tick
-    or not render_state_valid(root.scheduler,tick) then
+    or not render_state_valid(root.scheduler,tick)
+    or ledger.maintenance~=nil and ledger.maintenance~=root.scheduler then
     -- Validate the shared retained clock/header before timers or callbacks can
     -- mutate anything. Do not repair/reset an unknown ledger on reload.
     for _,rec in pairs(root.computers) do
@@ -184,7 +195,12 @@ function M.tick(tick)
   if root.scheduler.last_tick==tick then return end -- No same-tick replay/credit refresh.
   -- Pay both bounded identity walks before hooks can exhaust maintenance. This
   -- also covers inactive records and refusals later in the timer walk.
-  spend(limits.registry_entries*2+1)
+  if not M.try_maintenance(function() spend(limits.registry_entries*2+1) end) then
+    -- A live decrease can leave even the entry walk inadmissible. Samplers
+    -- must still run their existing fail-closed refusal path, never miss a tick.
+    phase('sample',tick,spend)
+    return
+  end
   root.scheduler.last_tick=tick
   phase('lifecycle',tick,spend)
   phase('sample',tick,spend)
