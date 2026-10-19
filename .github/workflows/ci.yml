@@ -165,8 +165,11 @@ jobs:
           path: |
             ${{ runner.temp }}/tc-ci/reports/
             ${{ runner.temp }}/tc-ci/**/summary.json
+            ${{ runner.temp }}/tc-ci/**/engine.log
             ${{ runner.temp }}/tc-ci/**/*-engine.log
             ${{ runner.temp }}/tc-ci/**/*-result.json
+            ${{ runner.temp }}/tc-ci/**/command.json
+            ${{ runner.temp }}/tc-ci/**/*-command.json
             ${{ runner.temp }}/tc-ci/runtime/**/summary.json
             ${{ runner.temp }}/tc-ci/runtime/**/engine.log
             ${{ runner.temp }}/tc-ci/gui-workspace/**/summary.json
