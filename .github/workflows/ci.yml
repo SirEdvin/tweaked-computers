@@ -172,6 +172,8 @@ jobs:
         with:
           name: mod-validation-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            ${{ runner.temp }}/tc-art/regeneration-differences.json
+            ${{ runner.temp }}/tc-art/regenerated/
             ${{ runner.temp }}/tc-ci/reports/
             ${{ runner.temp }}/tc-ci/**/summary.json
             ${{ runner.temp }}/tc-ci/**/engine.log

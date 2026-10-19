@@ -131,9 +131,15 @@ def check(output):
             assert cell == replacement
     fresh = output / 'regenerated'
     subprocess.run([sys.executable, str(ROOT/'generate.py'), '--output', str(fresh)], check=True)
+    differences=[]
     for record in records:
         relative = Path(record['path']).relative_to('assets')
-        assert (ROOT/relative).read_bytes() == (fresh/relative).read_bytes()
+        original,regenerated=(ROOT/relative).read_bytes(),(fresh/relative).read_bytes()
+        if original!=regenerated:
+            differences.append({'path':str(relative),'expected_sha256':digest(original),
+                'actual_sha256':digest(regenerated),'decoded_equal':png_read(original)==png_read(regenerated)})
+    (output/'regeneration-differences.json').write_text(json.dumps(differences,indent=2)+'\n')
+    assert not differences, differences
     for name in ('manifest.json','sprites.lua'):
         assert (ROOT/name).read_bytes() == (fresh/name).read_bytes()
     expected = {Path(r['path']).relative_to('assets') for r in records}
