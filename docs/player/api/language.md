@@ -1,6 +1,32 @@
 # Bounded native Lua language
 
-A whole computer program is one literal descriptor:
+A saved computer program uses exactly one of two forms. Plain named functions
+are the simpler form; API version 1 is implicit:
+
+```lua
+local function increment(value)
+  return value + 1
+end
+
+function start(event)
+  local total = sample()
+  computer.log("Initial sample count: " .. tostring(total))
+  computer.every(60, "sample")
+end
+
+function sample(event)
+  local total = increment(computer.getState("samples") or 0)
+  computer.setState("samples", total)
+  return total
+end
+```
+
+Here `sample()` runs immediately, then `"sample"` receives recurring timer
+callbacks. `increment` is private and cannot be registered as a callback.
+Validate/Save do not execute the source; Run activates it. Activation queues the
+optional exported `start` once. Other names do not subscribe to events implicitly.
+
+The existing literal descriptor remains supported, with no source conversion:
 
 ```lua
 return {
@@ -18,12 +44,52 @@ return {
 }
 ```
 
-`start` is optional. Handler names are unique, bounded identifiers and all
-registrations refer to declared names, never function values. Only comments/empty
-statements may surround the sole literal descriptor return. No dynamic descriptor
-keys, extra descriptor keys, module-level effects or helper initialization are
-allowed. A fresh environment is constructed for each callback: locals and closures
-do not secretly survive; use explicit computer state.
+In both forms `start` is optional. Registrations take declared public names as
+strings, never function values or private helper names. An explicitly empty legacy
+handler table is valid; a declaration document must export at least one function.
+Only comments/empty statements may surround the legacy descriptor return; dynamic
+descriptor keys and extra descriptor keys remain forbidden. Legacy handlers do
+not gain implicit references to their sibling handlers.
+
+## Declaration scope and calls
+
+Declaration documents permit only simple `function name(...) ... end` exports,
+optional `local function helper(...) ... end`, comments and semicolons at top
+level. Do not mix a descriptor with declarations. Top-level calls, variable
+initializers, assignments, loops, conditionals, `do` blocks, dotted declarations
+and colon methods are rejected before activation. Declarations do not execute
+their bodies during compilation or reconstruction.
+
+Public and private top-level names must be distinct `[A-Za-z_][A-Za-z_0-9]*`
+identifiers, at most 64 bytes. Approved API/library/global names, `print`, excluded
+global names (including raw/metatable helpers), `_ENV`, `_G` and the `__tc` prefix
+are reserved. At most 64 functions are exported. Private helpers do not use export
+slots, but still consume source, compiler, generated-text and native syntax limits.
+
+Exports can refer to each other regardless of declaration order. Private helpers
+follow normal lexical scope and self-recursion: declare them before use; they are
+not hoisted. Parameters/body locals shadow exports normally and may be reassigned.
+Unshadowed public bindings cannot be reassigned or redefined inside another body;
+other global writes and unknown global reads remain forbidden.
+
+`sample(...)` is an ordinary synchronous call inside the current saved program.
+It shares the caller's run, authority and remaining credits, without queuing work
+or creating an event. Missing arguments are nil; supplied tables retain their
+ordinary aliases. False values, nil holes, zero results and multiple-return
+adjustment follow bounded Lua semantics. An exported value can be passed,
+returned, captured by a local closure, placed in a temporary table or called via
+`pcall`. Direct/mutual recursion remains bounded; `pcall` cannot swallow fatal
+budget or stop control. A direct `start(...)` call runs its written effects but
+does not activate a new generation or reset credits.
+
+Queued callbacks instead receive their normal copied event in a fresh environment.
+Functions, locals and captured values never survive between callbacks; use explicit
+computer state. Function values cannot enter durable Data, including via
+`computer.setState`. No player code executes on load; the exact active source is
+reconstructed at synchronized dispatch. Later saved-but-unapplied edits do not
+replace it, and reload does not replay startup. The live Console never inherits
+these function bindings. Downgrading after adopting new syntax requires a backup
+or explicit conversion/reapplication under a compatible runtime.
 
 Inside handlers: local declarations/assignment, literals/tables, `if/elseif/else`,
 `do`, `return`, `break`, numeric/generic `for`, `while`, `repeat`, local helpers and
@@ -37,7 +103,7 @@ Nonfinite values cannot cross state/API boundaries. Use dot calls everywhere.
 The [live Console](../console.md) is a separate, bounded evaluation mode: it also
 accepts statements/expressions and nonreserved scratch-global assignments, and
 provides `print(...)`. Its save-backed values are not saved-program locals.
-The descriptor syntax, global-write prohibition and no-print rule below still
+The saved-program forms, global-write prohibition and no-print rule below still
 apply to saved handler programs. Both modes use the same guards and tick ledger.
 
 Globals: `assert`, `error`, `ipairs`, `pairs`, `next`, `pcall`, `select`,

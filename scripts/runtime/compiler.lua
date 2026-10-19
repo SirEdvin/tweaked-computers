@@ -47,6 +47,10 @@ end
 
 local forbidden={game=true,storage=true,script=true,remote=true,defines=true,settings=true,
   require=true,load=true,loadfile=true,dofile=true,debug=true,os=true,io=true,coroutine=true}
+-- Declaration names cannot disguise either an approved API or an excluded
+-- facility. Keep this separate from the Console's existing binding policy.
+local declaration_reserved={print=true,rendering=true,loadstring=true,package=true,
+  rawget=true,rawset=true,rawequal=true,rawlen=true,getmetatable=true,setmetatable=true,collectgarbage=true}
 local function shell_name(name,node,write)
   identifier(name,node)
   if forbidden[name] or write and (globals[name] or name=='print') then reject(node,'unavailable shell global: '..name) end
@@ -59,6 +63,7 @@ local function emit(main,mode,expression)
     return l..','..c
   end
   local nodes, nesting, generated, temp = 0, 0, 0, 0
+  local exports
   local expr, body, statement, func
   local function visit(n)
     parsing.enter(1)
@@ -106,8 +111,10 @@ local function emit(main,mode,expression)
       if global(n) then
         local name = identifier(n.suffix.value,n.suffix)
         if mode=='shell' then shell_name(name,n.suffix,false)
-        elseif not globals[name] then reject(n.suffix, 'unavailable global: '..name) end
-        s = '__tc.global('..string.format('%q',name)..')'
+        elseif not globals[name] and not (exports and exports[name]) then reject(n.suffix, 'unavailable global: '..name) end
+        if exports and exports[name] then
+          s = '__tc.get(__tc_functions,'..string.format('%q',name)..')'
+        else s = '__tc.global('..string.format('%q',name)..')' end
       else s = '__tc.get('..expr(n.ex)..','..expr(n.suffix)..')' end
     elseif k == 'call' then
       if n.is_selfcall then reject(n, 'colon calls are not supported') end
@@ -219,6 +226,57 @@ local function emit(main,mode,expression)
     if #output>limits.generated_source_bytes then reject(nil,'generated source too large','E_LIMIT') end
     return output,{},nodes
   end
+  local first=main.body.first
+  while first and first.node_type=='empty' do parsing.enter(1); first=first.next end
+  if not first or first.node_type~='retstat' then
+    -- Discover the complete public inventory without executing any candidate
+    -- code. Only parser-global reads of these names gain forward resolution;
+    -- local/upvalue references keep the parser's lexical declaration order.
+    local names,seen,count,key_work={}, {},0,0
+    local stat=main.body.first
+    while stat do
+      parsing.enter(1)
+      local kind=stat.node_type
+      if kind~='empty' then
+        local node
+        if kind=='funcstat' and global(stat.name) and not stat.func_def.is_method then node=stat.name.suffix
+        elseif kind=='localfunc' then node=stat.name
+        else reject(stat,'declaration document permits only simple function declarations') end
+        local name=identifier(node.value or node.name,node)
+        parsing.enter(#name+1)
+        if globals[name] or forbidden[name] or declaration_reserved[name] then reject(node,'reserved declaration name: '..name) end
+        if seen[name] then reject(node,'duplicate declaration name: '..name) end
+        seen[name]=true
+        if kind=='funcstat' then
+          count=count+1; names[name]=true
+          key_work=key_work+#name+1
+          if count>limits.handler_names then reject(node,'handler count exceeded','E_LIMIT') end
+        end
+      end
+      stat=stat.next
+    end
+    if count==0 then reject(first,'exported function required') end
+    exports=names
+    -- Descriptor admission in run prepays the static bindings; new prepays
+    -- the complete bounded private table. Neither table nor its write path is
+    -- available to guest code. Each exported value is a registered closure.
+    local out={text('__tc.spend('..key_work..'); local __tc_functions=__tc.new('..count..',function() return {} end);')}
+    stat=main.body.first
+    while stat do
+      parsing.enter(1)
+      if stat.node_type=='funcstat' then
+        visit(stat)
+        local name=stat.name.suffix.value
+        out[#out+1]=leave(text('__tc_functions['..string.format('%q',name)..']=__tc.closure('..func(stat.func_def)..');'))
+      else out[#out+1]=statement(stat) end
+      stat=stat.next
+    end
+    out[#out+1]=text('return __tc_functions')
+    local output=table.concat(out,'\n')
+    parsing.enter(#output)
+    if #output>limits.generated_source_bytes then reject(first,'generated source too large','E_LIMIT') end
+    return output,names,nodes
+  end
   local ret, stat = nil, main.body.first
   while stat do
     if stat.node_type ~= 'empty' then
@@ -301,7 +359,11 @@ function M.compile(source, context, mode)
     local generated,names,nodes = emit(main,mode,expression)
     -- Native load here is only syntax verification of bounded, emitted text; no candidate code runs.
     local factory, diagnostic = load(generated,'@computer','t',{})
-    if not factory then errors.raise('E_PROGRAM','generated source: '..diagnostic) end
+    if not factory then
+      -- Native syntax/resource refusal belongs to the source document, not a
+      -- generated-wrapper line. Runtime body probes retain precise positions.
+      reject(main.body.first,'generated source: '..diagnostic:gsub('computer:%d+: ',''))
+    end
     return {compiler_version=limits.compiler_version, api_version=1, source=source,
       generated=generated, handlers=names, nodes=nodes,mode=mode}
   end)
