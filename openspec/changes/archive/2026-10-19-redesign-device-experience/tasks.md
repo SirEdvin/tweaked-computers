@@ -1,5 +1,11 @@
 # Tasks
 
+SC4 archival amendment (2026-10-19): SC2 automated native/connected evidence now
+supersedes the historical client deferrals below; `docs/sc4-final-acceptance.md`
+records the integrated applicability audit and limitations. This is not user
+manual/aesthetic approval, adoption of later art alternatives or new release
+authorization. Canonical contracts preserve the accepted interaction/design.
+
 Approval amendment (2026-10-15): the user approved implementation and requested
 0.1.2 ALPHA publication after integration. The former planning hold is superseded.
 RD5 owns the integrated candidate only; RD6 `t_f930ba9e` owns actual publication.

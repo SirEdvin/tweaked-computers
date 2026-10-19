@@ -21,17 +21,18 @@
   "events": ["start", "timer", "peripheral_attach", "peripheral_detach", "monitor_resize", "monitor_touch", "power_restored", "signal_changed"],
   "capabilities": {
     "computer-runtime": {"guide": "docs/computer-runtime.md", "contract": "specs/computer-runtime/lua-api.md", "checks": ["tests/computer_contract.lua", "tests/runtime_contract.lua", "tests/integration_engine.lua"]},
-    "program-editor": {"guide": "docs/program-editor.md", "contract": "specs/program-editor/lua-api.md", "checks": ["tests/editor_contract.lua", "tests/integration_engine.lua"], "client_status": "deferred; GUI delivery is table-backed"},
+    "program-editor": {"guide": "docs/program-editor.md", "contract": "specs/program-editor/lua-api.md", "checks": ["tests/editor_contract.lua", "tests/integration_engine.lua"], "client_status": "SC2 automated native entry/focus/layout and connected conflict acceptance; see docs/sc2-native-acceptance.md"},
     "peripheral-network": {"guide": "docs/peripheral-network.md", "contract": "specs/peripheral-network/lua-api.md", "checks": ["tests/network_engine.lua", "tests/integration_engine.lua"]},
-    "monitor-display": {"guide": "docs/monitor.md", "contract": "specs/monitor-display/lua-api.md", "checks": ["tests/monitor_engine.lua", "tests/integration_engine.lua"], "client_status": "deferred; headless world objects and mock touch only"},
+    "monitor-display": {"guide": "docs/monitor.md", "contract": "specs/monitor-display/lua-api.md", "checks": ["tests/monitor_engine.lua", "tests/integration_engine.lua"], "client_status": "SC2 automated native rendering/touch and connected acceptance; finite llvmpipe observations, not hardware FPS"},
     "kv-database": {"guide": "docs/kv-database.md", "contract": "specs/kv-database/lua-api.md", "checks": ["tests/kv_engine.lua", "tests/integration_engine.lua"]},
     "logic-handler": {"guide": "docs/logic-handler.md", "contract": "specs/logic-handler/lua-api.md", "checks": ["tests/logic_engine.lua", "tests/integration_engine.lua"]},
     "device-configurator": {"guide": "docs/configurator.md", "contract": "specs/device-configurator/lua-api.md", "checks": ["tests/configurator_engine.lua", "tests/configurator_full_engine.lua", "tests/integration_engine.lua"], "field_ledger": "docs/configuration-coverage.json"},
     "device-lifecycle": {"guide": "docs/device-lifecycle.md", "contract": "specs/device-lifecycle/lua-api.md", "checks": ["tests/lifecycle_engine.lua", "tests/candidate_data.lua", "tests/integration_engine.lua"]}
   },
-  "contract_root": "openspec/changes/add-native-circuit-computers",
-  "contract_extensions": ["openspec/changes/buffer-monitor-presentation/specs/monitor-display/lua-api.md", "openspec/changes/buffer-monitor-presentation/specs/monitor-display/spec.md", "openspec/changes/buffer-monitor-presentation/specs/peripheral-network/spec.md", "openspec/changes/add-interactive-console-shell/specs/console-shell/spec.md", "openspec/changes/add-interactive-console-shell/specs/console-shell/lua-api.md", "openspec/changes/add-recipe-searcher/specs/recipe-searcher/spec.md", "openspec/changes/add-recipe-searcher/specs/recipe-searcher/lua-api.md"],
+  "contract_root": "openspec",
+  "contract_extensions": ["openspec/specs/monitor-display/buffering-api.md", "openspec/specs/console-shell/spec.md", "openspec/specs/console-shell/lua-api.md", "openspec/specs/recipe-searcher/spec.md", "openspec/specs/recipe-searcher/lua-api.md", "openspec/specs/device-visual-identity/spec.md", "openspec/api/device-experience.md"],
   "workflow_only_capabilities": ["program-editor", "device-lifecycle"],
   "deliberate_exclusions": ["VM/interpreter", "OS/filesystem", "guest dynamic load/require", "arbitrary Factorio objects/properties", "direct computer messaging", "cross-color discovery", "original CC font"],
-  "deferred_acceptance": ["native typed/pasted text and focus", "client port and sprite alignment", "normal-zoom and maximum graphical latency", "real player touch", "multiplayer client joining"]
+  "acceptance_report": "docs/sc4-final-acceptance.md",
+  "acceptance_limits": ["finite automated native and connected matrix, not user manual/aesthetic approval", "representative combined factory, not simultaneous independent-cap saturation", "llvmpipe appearance and observed latency, not hardware FPS or universal real-time guarantees"]
 }

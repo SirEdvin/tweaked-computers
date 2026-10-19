@@ -2,8 +2,8 @@
 
 Target: Factorio 2.0.77. Native named callbacks only: no interpreter, OS,
 filesystem, coroutine suspension or host-object API. The normative contracts
-are `openspec/changes/add-native-circuit-computers/api/{common,native-language}.md`
-and `specs/computer-runtime/lua-api.md` in the source repository.
+are `openspec/api/{common,native-language}.md`
+and `openspec/specs/computer-runtime/lua-api.md` in the source repository.
 
 ## Player contract
 

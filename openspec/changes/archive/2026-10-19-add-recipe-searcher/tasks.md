@@ -1,6 +1,6 @@
 # Tasks
 
-Implementation was authorized by Kanban task `t_35655795`. Checked rows have their required evidence in [the verification guide](../../../docs/recipe-searcher-validation.md) and the durable task verification receipt. Follow [the capability](specs/recipe-searcher/spec.md), [Lua API contract](specs/recipe-searcher/lua-api.md) and [design](design.md); preserve the unrelated interactive-console proposal. Merge, archival and release publication remain separately authorized workflows.
+Implementation was authorized by Kanban task `t_35655795`. Checked rows have their required evidence in [the verification guide](../../../../docs/recipe-searcher-validation.md) and the durable task verification receipt. Follow [the capability](specs/recipe-searcher/spec.md), [Lua API contract](specs/recipe-searcher/lua-api.md) and [design](design.md); preserve the unrelated interactive-console proposal. Merge, archival and release publication remain separately authorized workflows.
 
 ## 1. Research-gated physical device
 

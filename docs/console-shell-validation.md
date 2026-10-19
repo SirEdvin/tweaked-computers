@@ -1,7 +1,7 @@
 # Console shell verification and review handoff
 
 This is the implementation fixture guide. Independent SH2 acceptance is complete;
-see the receipt in `openspec/changes/add-interactive-console-shell/tasks.md` and
+see the receipt in `openspec/changes/archive/2026-10-19-add-interactive-console-shell/tasks.md` and
 [0.1.8 release notes](console-shell-release.md). Native workflows passed in both
 modes; connected late join/cold-server acceptance passed in base only. History
 was explicitly removed by the user after the focused

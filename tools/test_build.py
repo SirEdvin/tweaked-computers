@@ -14,11 +14,12 @@ class PackageInventoryTests(unittest.TestCase):
         # Pin the intended public contract explicitly: iterating only the build
         # allowlist cannot detect an accidental removal from that allowlist.
         contracts = {
-            'openspec/changes/buffer-monitor-presentation/specs/monitor-display/spec.md',
-            'openspec/changes/buffer-monitor-presentation/specs/monitor-display/lua-api.md',
-            'openspec/changes/buffer-monitor-presentation/specs/peripheral-network/spec.md',
+            'openspec/specs/monitor-display/spec.md',
+            'openspec/specs/monitor-display/lua-api.md',
+            'openspec/specs/monitor-display/buffering-api.md',
+            'openspec/specs/peripheral-network/spec.md',
         }
-        self.assertTrue(contracts.issubset(build.CONTRACT_EXTENSIONS))
+        self.assertTrue(contracts.issubset(build.CONTRACT_FILES))
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
             first = build.build(Path(output) / 'first')
             second = build.build(Path(output) / 'second')
@@ -46,13 +47,13 @@ class PackageInventoryTests(unittest.TestCase):
                     self.assertEqual(package.read(name), (build.ROOT / notice).read_bytes())
                 self.assertTrue((build.ROOT / 'assets/generate.py').is_file())
                 prefix = next(name[:-len('info.json')] for name in names if name.endswith('/info.json'))
-                for relative in (*build.CONTRACT_EXTENSIONS, 'examples/monitor-plot-program.lua',
+                for relative in (*build.CONTRACT_FILES, 'examples/monitor-plot-program.lua',
                                  'examples/monitor-plot-baseline.lua', 'examples/monitor-plot-baseline.json'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
-                self.assertEqual({name for name in planning if not name.startswith(build.CONTRACT + '/')},
-                                 set(build.CONTRACT_EXTENSIONS))
-                self.assertEqual(len(build.CONTRACT_EXTENSIONS), 7)
+                self.assertEqual(set(planning), set(build.CONTRACT_FILES))
+                self.assertEqual(len(build.CONTRACT_FILES), 28)
+                self.assertFalse(any(name.startswith('openspec/changes/') for name in planning))
                 for relative in ('scripts/services/recipe-searcher.lua', 'examples/recipe-searcher-program.lua',
                                  'docs/player/api/recipe-searcher.md', 'assets/icons/recipe_searcher.png'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
@@ -88,6 +89,72 @@ class PackageInventoryTests(unittest.TestCase):
                          patch.object(Path, 'is_file', lambda p: p == fake or original(p)):
                         with self.assertRaisesRegex(ValueError, 'Mod Portal forbids executable'):
                             build.build(output)
+
+
+class CanonicalContractTests(unittest.TestCase):
+    def test_explicit_inventory_covers_canonical_files_only(self):
+        expected = {p.relative_to(build.ROOT).as_posix()
+                    for folder in ('api', 'specs')
+                    for p in (build.ROOT / 'openspec' / folder).rglob('*')
+                    if p.is_file() and p.suffix in ('.md', '.json')}
+        self.assertEqual(set(build.CONTRACT_FILES), expected)
+        self.assertEqual(len(build.CONTRACT_FILES), len(expected))
+
+    def test_archived_requirements_and_scenarios_survive_promotion(self):
+        import re
+        archives = build.ROOT / 'openspec/changes/archive'
+        changes = ('add-native-circuit-computers', 'redesign-device-experience',
+                   'buffer-monitor-presentation', 'add-interactive-console-shell',
+                   'add-recipe-searcher')
+        for change in changes:
+            folder = archives / ('2026-10-19-' + change)
+            self.assertTrue((folder / '.openspec.yaml').is_file(), change)
+            for delta in sorted((folder / 'specs').glob('*/spec.md')):
+                canonical = (build.ROOT / 'openspec/specs' / delta.parent.name / 'spec.md').read_text()
+                for name, body in re.findall(
+                        r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|^## |\Z)',
+                        delta.read_text(), re.M | re.S):
+                    with self.subTest(change=change, capability=delta.parent.name, requirement=name):
+                        found = re.search(r'^### Requirement: ' + re.escape(name) +
+                                          r'\n(.*?)(?=^### Requirement:|\Z)', canonical, re.M | re.S)
+                        self.assertIsNotNone(found)
+                        assert found is not None
+                        for scenario, text in re.findall(
+                                r'^#### Scenario: ([^\n]+)\n(.*?)(?=^#### Scenario:|\Z)',
+                                body, re.M | re.S):
+                            self.assertIn('#### Scenario: ' + scenario + '\n' + text.strip(), found[1])
+
+    def test_baseline_purposes_preserved_and_no_delta_headers(self):
+        import re
+        baseline = build.ROOT / 'openspec/changes/archive/2026-10-19-add-native-circuit-computers/specs'
+        for source in baseline.glob('*/spec.md'):
+            target = (build.ROOT / 'openspec/specs' / source.parent.name / 'spec.md').read_text()
+            def purpose(s):
+                found = re.search(r'^## Purpose\n(.*?)(?=^## )', s, re.M | re.S)
+                assert found is not None
+                return found[1]
+            self.assertEqual(purpose(source.read_text()), purpose(target))
+        for source in (build.ROOT / 'openspec/specs').glob('*/spec.md'):
+            text = source.read_text()
+            self.assertTrue(text.startswith('# ' + source.parent.name + ' Specification\n'))
+            self.assertEqual(text.count('## Requirements\n'), 1)
+            self.assertNotRegex(text, r'(?m)^## (ADDED|MODIFIED|REMOVED|RENAMED) Requirements')
+
+    def test_packaged_contract_links_resolve_inside_inventory(self):
+        import re
+        from urllib.parse import unquote, urlsplit
+        files = set(build.CONTRACT_FILES)
+        for name in files:
+            if not name.endswith('.md'):
+                continue
+            source = build.ROOT / name
+            for href in re.findall(r'\[[^\]]*\]\(([^)]+)\)', source.read_text()):
+                url = urlsplit(href)
+                if url.scheme or url.netloc or not url.path:
+                    continue
+                target = (source.parent / unquote(url.path)).resolve()
+                self.assertTrue(target.is_file(), (name, href))
+                self.assertIn(target.relative_to(build.ROOT).as_posix(), files, (name, href))
 
 
 class ShellClientSceneTests(unittest.TestCase):

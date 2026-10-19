@@ -172,7 +172,7 @@ It configures TARGETS green inserters, samples INPUT red, stores expiring shared
 telemetry and redraws/toggles a merged monitor. examples/shared-telemetry.lua runs
 on a second computer: shared red database, separate physical green database.
 Complete signature/type/error/event references are in docs/ and packaged source API
-contracts under openspec/changes/add-native-circuit-computers/api and specs.
+contracts under openspec/api and openspec/specs.
 
 FAILURES AND PERSISTENCE
 Ordinary errors are plain {code,message,field?,peripheral?,device?} and catchable.

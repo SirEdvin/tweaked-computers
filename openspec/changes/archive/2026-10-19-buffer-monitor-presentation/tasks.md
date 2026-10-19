@@ -1,5 +1,11 @@
 # Tasks
 
+SC4 archival amendment (2026-10-19): the completed SC1, SC2 and user-scoped SC3
+receipts are consolidated in `docs/sc4-final-acceptance.md`. Earlier statements
+that their downstream rows remain unchecked describe historical checkpoints.
+Canonical monitor/network contracts are promoted; all failures and evidence
+boundaries below remain preserved. No user manual approval or release is implied.
+
 Implementation started on `feat/buffer-monitor-presentation`; checkboxes record only fully verified work. Use the existing Factorio 2.0.77 package/smoke workflow, scratch output directories and base/Space Age matrix. References: [design](design.md), [monitor requirements](specs/monitor-display/spec.md), [network requirements](specs/peripheral-network/spec.md), [Lua contract](specs/monitor-display/lua-api.md). Native feasibility evidence: `docs/monitor-buffer-verification.md`.
 
 SC1 reconciliation (2026-10-19): rows 3.1, 4.1–4.3 and 5.3 are bound to the
