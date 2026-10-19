@@ -220,7 +220,7 @@ def generate(output):
         'selection':{'candidate':'B-service-rack','preview_sha256':'75f43f0ddadd4ec6c0a880a2169c2bca5e225341b311859299cc5a7411182cb3','source_commit':'9cbd4ae73c1c62763724735ea93428a3e2d5f5f5','technology_icons':'New 256px derivatives of selected computer and scanner; not part of AR2 preview'},
         'inputs':inputs,'authored_inputs':[{'path':p,'sha256':digest((ROOT.parent/p).read_bytes())} for p in authored],
         'notices':[{'path':'assets/notices/'+p.name,'sha256':digest(p.read_bytes())} for p in sorted((ROOT/'notices').iterdir())],
-        'transform':{'sampling':'3x depth-buffered barycentric rasterization, world-fixed normals/light and deterministic grain; Lanczos downsample; nearest-neighbour icon fitting; exact retained monitor foundation',
+        'transform':{'sampling':'3x depth-buffered barycentric rasterization, fixed forward math.fma three-vector reductions, world-fixed normals/light and deterministic grain; Lanczos downsample; nearest-neighbour icon fitting; exact retained monitor foundation',
             'projection':'64*x - 48*height, 64*z - 128*height; tile units; geometry rotated clockwise before projection; fixed world light',
             'monitor':'unchanged 64x64 tile/touch area and 60x60 interior; two-unit inner bezel plus four-unit exterior mechanical skirt; 72x72 chamfered artwork; unchanged ground pivot',
             'contacts':'socket-layout.json exported from production defs.contact/offset in Factorio 2.0.77; projected at ground coordinates',

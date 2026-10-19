@@ -43,6 +43,15 @@ The production manifest is regenerated from the actual adopted source, pinned
 Pillow/NumPy dependencies and every output's PNG/RGBA/alpha bytes. It does not
 reuse the preview's intentionally stale production manifest.
 
+The first hosted regeneration exposed CPU-dispatched BLAS differences in a few
+low-order RGB/depth decisions. The adopted generator fixes three-component
+reductions to explicit forward `math.fma` operations (Python 3.13+, CI 3.14),
+reproducing the selected pixels without accepting a tolerance or baking pixel
+corrections. Failed hosted receipts are preserved. Reproduction requires exact
+PNG, source and output hashes; only the factual host zlib-version field may
+differ in a cross-host manifest comparison, recorded separately rather than
+mislabelled as byte-identical environment metadata.
+
 Footprints, ground pivots, all cardinal native socket positions, selection,
 power/status logic and data/lifecycle behavior are unchanged. Every monitor
 alpha pixel and the full 60×60 active interior are preserved, with unchanged

@@ -2,7 +2,7 @@
   "authored_inputs": [
     {
       "path": "assets/generate.py",
-      "sha256": "23f4e9f6bfc7a3cc1e91686008a2ce06b1c53e2075c13ee2295ccbb9a84af15e"
+      "sha256": "91dde5368eb91b67519b8ebca4a82941eb6a31e691d462f717eeae20d15874e1"
     },
     {
       "path": "assets/glyphs.txt",
@@ -30,7 +30,7 @@
     },
     {
       "path": "assets/service_rack.py",
-      "sha256": "18a2b3a22eca14a33be2a6f58018d070ecf75f2c4f9f405e83ac0fa380343e10"
+      "sha256": "cdbdf5352c5f822457e30c0b978b9d263bdafd073a790079cc92fd797caa3bb6"
     },
     {
       "path": "assets/socket-layout.json",
@@ -8517,7 +8517,7 @@
     "numpy_version": "2.4.2",
     "pillow_version": "12.1.1",
     "projection": "64*x - 48*height, 64*z - 128*height; tile units; geometry rotated clockwise before projection; fixed world light",
-    "sampling": "3x depth-buffered barycentric rasterization, world-fixed normals/light and deterministic grain; Lanczos downsample; nearest-neighbour icon fitting; exact retained monitor foundation",
+    "sampling": "3x depth-buffered barycentric rasterization, fixed forward math.fma three-vector reductions, world-fixed normals/light and deterministic grain; Lanczos downsample; nearest-neighbour icon fitting; exact retained monitor foundation",
     "shadow": "geometry projected toward world southeast; alpha 86 before Gaussian blur and Lanczos; monitor retained alpha 85",
     "status": "grey dash stopped; amber slash unpowered; green powered; red fault cross; amber/steel four-frame activity",
     "zlib_version": "1.3.2"

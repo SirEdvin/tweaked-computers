@@ -115,10 +115,12 @@ external font, screenshots or promotional renders enter generated art.
 
 ## Reproduce and verify
 
-Use Python 3 with the exact offline dependencies in `requirements.txt`:
+Use Python 3.13+ (CI uses 3.14) with the exact offline dependencies in `requirements.txt`:
 Pillow 12.1.1 and NumPy 2.4.2, matching the selected preview. Mesh sprites use
-3× barycentric depth rasterization and Lanczos downsampling. Selected bodies,
-icons and mesh shadows use Pillow PNG compression level 9; unchanged status,
+3× barycentric depth rasterization and Lanczos downsampling. Normals/projection
+use explicit forward `math.fma` reductions rather than
+CPU-dispatched BLAS, preserving the approved bytes across runner architectures.
+Selected bodies, icons and mesh shadows use Pillow PNG compression level 9; unchanged status,
 glyph and monitor-shadow outputs retain RGBA8 filter-0 zlib-level-9 encoding.
 
     python3 -m pip install -r assets/requirements.txt

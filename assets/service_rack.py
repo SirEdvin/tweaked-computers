@@ -9,6 +9,9 @@ from PIL import Image, ImageDraw, ImageFilter
 import foundry
 import industrial
 
+if not hasattr(math, 'fma'):
+    raise RuntimeError('Service Rack offline regeneration requires Python 3.13+ (math.fma)')
+
 MATERIALS = {
     'cast': (95, 91, 76), 'edge': (147, 139, 111),
     'iron': (65, 71, 69), 'black': (29, 34, 32),
@@ -20,6 +23,19 @@ MATERIALS = {
 }
 PALETTE = MATERIALS
 status = industrial.status
+
+
+def dot(a, b):
+    # Fixed forward fused accumulation reproduces the selected preview's
+    # three-component BLAS result without CPU-dispatched reduction variants.
+    # Python 3.13+ math.fma has one correctly rounded result on every host.
+    value = float(a[0]) * float(b[0])
+    value = math.fma(float(a[1]), float(b[1]), value)
+    return math.fma(float(a[2]), float(b[2]), value)
+
+
+def magnitude(value):
+    return math.sqrt(dot(value, value))
 
 
 class Mesh:
@@ -50,9 +66,9 @@ class Mesh:
 
     def tube(self, a,b,r,material='iron',sides=12):
         a,b = np.array(a),np.array(b)
-        axis=b-a; axis=axis/np.linalg.norm(axis)
+        axis=b-a; axis=axis/magnitude(axis)
         seed=np.array([0.,0.,1.]) if abs(axis[2])<.9 else np.array([1.,0.,0.])
-        u=np.cross(axis,seed); u/=np.linalg.norm(u); v=np.cross(axis,u)
+        u=np.cross(axis,seed); u/=magnitude(u); v=np.cross(axis,u)
         ring=[r*(u*math.cos(i*math.tau/sides)+v*math.sin(i*math.tau/sides)) for i in range(sides)]
         for i,p in enumerate(ring):
             q=ring[(i+1)%sides]
@@ -150,26 +166,26 @@ def render(mesh, direction, size, supersample=3):
     rgba=np.zeros((n,n,4),dtype=np.uint8)
     depth=np.full((n,n),-np.inf)
     shadows=Image.new('L',(n,n)); sd=ImageDraw.Draw(shadows)
-    light=np.array([-.55,-.85,1.7]); light/=np.linalg.norm(light)
-    view=np.array([.75,2.,1.]); view/=np.linalg.norm(view)
+    light=np.array([-.55,-.85,1.7]); light/=magnitude(light)
+    view=np.array([.75,2.,1.]); view/=magnitude(view)
     def rotate(v):
         x,y,h=v
         for _ in range(direction): x,y=-y,x
         return np.array([x,y,h])
     def project(v):
         x,y,h=v
-        return np.array([(size/2+64*x-48*h)*s,(size/2+64*y-128*h)*s,np.dot(v,view)])
+        return np.array([(size/2+64*x-48*h)*s,(size/2+64*y-128*h)*s,dot(v,view)])
     for fi,face in enumerate(mesh.faces):
         world=[rotate(p) for p in face['vertices']]
         shadow=[((size/2+64*(v[0]+v[2]*.65))*s,(size/2+64*(v[1]+v[2]*.45))*s) for v in world]
         sd.polygon(shadow,fill=86)
-        normal=np.cross(world[1]-world[0],world[2]-world[0]); norm=np.linalg.norm(normal)
+        normal=np.cross(world[1]-world[0],world[2]-world[0]); norm=magnitude(normal)
         if norm<1e-9: continue
         normal/=norm
-        if np.dot(normal,view)<0: normal=-normal
-        brightness=.49+.63*max(0,np.dot(normal,light))
+        if dot(normal,view)<0: normal=-normal
+        brightness=.49+.63*max(0,dot(normal,light))
         color=np.array(MATERIALS[face['material']],dtype=float)
-        spec=max(0,np.dot(normal,(light+view)/np.linalg.norm(light+view)))**28
+        spec=max(0,dot(normal,(light+view)/magnitude(light+view)))**28
         metallic=face['material'] in ('copper','brass','iron','edge')
         color=color*brightness+spec*(32 if metallic else 8)
         vertices=[project(v) for v in world]
