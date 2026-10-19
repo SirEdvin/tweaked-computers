@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs/player'
 CHANGE = ROOT / 'openspec/changes/add-native-circuit-computers'
 EXAMPLES = {
+    'function-program': 'Power a computer; no peripheral or wire is required. In an empty Editor draft, choose Insert starter (or paste this whole document), Validate, Save, then Run. Insertion and validation do not save or execute anything. The first dispatch calls `sample()` immediately and logs its returned count in Console; the `samples` value in explicit computer state increases once, then once more at the first 60-tick timer deadline. Private `increment` is declared before use and is not exported. `sample` is forward-visible and registration uses its string name, not its function value. Each callback has fresh locals/functions; reapplying keeps the explicit count, while ordinary reload does not replay `start`. These functions are not callable from the live Console. The legacy descriptor examples below remain supported.',
     'recipe-searcher-program': 'Research Recipe Searcher separately, power it and connect its Network directly to a computer on red. Paste the whole document, Validate, Save and Run. Searches item/fluid products and refines E_LIMIT by exact category; a single category may still exceed 50 or other budgets.',
     'peripheral-program': 'Wire a computer NETWORK to any device NETWORK on red. Inspect each color in Peripherals; read program output in Console.',
     'logic-controller': 'Follow [your first inserter controller](first-controller.md). Stock INPUT red, discovery NETWORK red, OUTPUT to the inserter.',
@@ -43,6 +44,12 @@ def quote_lua(value):
 
 
 def guest_example(name):
+    if name == 'function-program':
+        source = text('examples/' + name + '.lua')
+        template = re.search(r'template=\[\[(.*?)\]\],', text('scripts/ui/help.lua'), re.S)
+        if not template or template[1] != source:
+            raise ValueError('function-program source differs from the inserted starter')
+        return source.rstrip()
     if name == 'smooth-sine-chart':
         return text('examples/' + name + '.lua').rstrip()
     match = re.search(r'return \[(=*)\[(.*)\]\1\]\s*$', text('examples/' + name + '.lua'), re.S)
