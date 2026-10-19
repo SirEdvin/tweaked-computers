@@ -27,6 +27,7 @@ script.on_event(defines.events.on_gui_selected_tab_changed,editor.on_tab)
 script.on_event(defines.events.on_gui_selection_state_changed,editor.on_selection)
 script.on_event(defines.events.on_gui_checked_state_changed,editor.on_checked)
 script.on_event('tc-interact',interaction.on_input)
+script.on_event({'tc-rotate','tc-reverse-rotate'},interaction.on_rotate)
 script.on_event({defines.events.on_player_left_game,defines.events.on_player_died,
   defines.events.on_player_changed_force,defines.events.on_player_changed_surface},editor.on_player_unavailable)
 script.on_event({defines.events.on_player_display_resolution_changed,
@@ -52,8 +53,9 @@ script.on_event(defines.events.on_tick,function(event) scheduler.tick(event.tick
 if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixture'] then
   local name=settings.startup['tc-smoke-production-fixture'].value
   local monitor_state_fixture={['tests.monitor_state_waiting']=true,['tests.monitor_state_preparing']=true,
-    ['tests.monitor_state_ready']=true,['tests.monitor_state_retiring']=true}
-  assert(monitor_state_fixture[name] or name=='tests.logic_recipe_engine' or name=='tests.recipe_searcher_client_engine' or name=='tests.recipe_searcher_engine' or name=='tests.shell_client_engine' or name=='tests.shell_cold' or name=='tests.lifecycle_engine' or name=='tests.integration_engine' or name=='tests.redesign_engine' or name=='tests.monitor_feedback_engine' or name=='tests.rd1_upgrade_engine' or name=='tests.monitor_budget_engine' or name=='tests.monitor_presentation_engine' or name=='tests.monitor_plot_baseline_engine' or name=='tests.runtime_budget_engine' or name=='tests.monitor_animation_engine','unknown production-context fixture')
+    ['tests.monitor_state_ready']=true,['tests.monitor_state_retiring']=true,
+    ['tests.acceptance_monitor_engine']=true}
+  assert(monitor_state_fixture[name] or name=='tests.acceptance_client_engine' or name=='tests.logic_recipe_engine' or name=='tests.recipe_searcher_client_engine' or name=='tests.recipe_searcher_engine' or name=='tests.shell_client_engine' or name=='tests.shell_cold' or name=='tests.lifecycle_engine' or name=='tests.integration_engine' or name=='tests.redesign_engine' or name=='tests.monitor_feedback_engine' or name=='tests.rd1_upgrade_engine' or name=='tests.monitor_budget_engine' or name=='tests.monitor_presentation_engine' or name=='tests.monitor_plot_baseline_engine' or name=='tests.runtime_budget_engine' or name=='tests.monitor_animation_engine','unknown production-context fixture')
   local test=require(name) -- control parsing only; never a guest source loader
   script.on_init(function()
     registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()

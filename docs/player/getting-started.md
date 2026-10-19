@@ -126,6 +126,15 @@ Those auxiliary sockets cannot be mined or operated independently. North-facing
 roles run left to right; east rotates clockwise, south reverses and west rotates
 counterclockwise. Rotation keeps existing native role wires.
 
+With an empty cursor and no open GUI, hover the main body and use your game's
+Rotate / Reverse rotate controls (normally R / Shift+R). These follow the game's
+bindings; they do not open a workspace. Square bodies turn a quarter-turn;
+rectangular combinator bodies use the engine's half-turn behavior. Choose a
+perpendicular orientation while placing the item. A held wire, item, ghost or
+an auxiliary socket is not an empty-cursor body rotation. The engine may briefly
+show “Not operable” after the forwarded rotation: the body has still turned,
+but its native combinator configuration remains deliberately unavailable.
+
 | Device footprint, north-facing | Connection layout |
 | --- | --- |
 | Computer, KV, monitor, Recipe Searcher: 1×1 | Network directly on device |
