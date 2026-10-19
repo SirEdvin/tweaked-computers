@@ -80,6 +80,12 @@ jobs:
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/shell-cold" --mode both \
             --fixture tests.shell_cold --production-context --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/recipe-signals" --mode both \
+            --fixture tests.logic_recipe_engine --production-context --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/logic" --mode both \
+            --fixture tests.logic_engine --cold
           for layout in four-walls mixed; do
             python tools/monitor_animation.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/animation-$layout" --mode both --layout "$layout"

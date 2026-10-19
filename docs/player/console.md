@@ -38,6 +38,7 @@ wrap returns nil. Earlier successful writes are not replayed on loading.
 - Expressions display their results. `false` and one `nil` are values; a call
   returning no results displays no fabricated nil. `print(false, nil, 3)` emits
   one tab-separated entry and returns no values. `print()` emits an empty entry.
+  The Console displays tabs as single spaces; stored log text retains its tabs.
 - Assignment retains nonreserved globals; assigning nil deletes a binding.
   Locals last only for one submission. For example, `x=5; local y=6`, then
   `print(x,y)`, prints 5 and nil.

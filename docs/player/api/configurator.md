@@ -77,9 +77,9 @@ metadata, cannot repeat or overlap set. Unknown/read-only fields, malformed Data
 invalid prototype/quality/enum or broken variants fail before mutation.
 
 Signal type/name are explicit; quality defaults normal and readback includes it.
-Configurator SignalID additionally supports installed entity, recipe, space-location,
+Configurator SignalID additionally supports installed entity, space-location,
 asteroid-chunk and quality signal types where the native schema permits them;
-logic-handler ordinary SignalId remains item/fluid/virtual only.
+logic-handler ordinary SignalId supports item/fluid/virtual/recipe.
 Quality/location object unions become registered name strings, never native
 objects. Conditions are flat `{first_signal=..., comparator=..., constant=...}`
 or second_signal instead of constant; no legacy `condition={...}` wrapper.

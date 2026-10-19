@@ -93,7 +93,7 @@ Incomplete discovery reports pending/limit, never a successful empty prefix.
 LOGIC HANDLER
 find("logic_handler", wire) -> facade; NETWORK discovery is not INPUT selection.
 readSignal(input, SignalId) -> signed32; readSignals(input) -> sorted copied signals
-input is red/green/both; identities include type/name/quality (normal by default).
+input explicitly selects red or green, never both; identities include type/name/quality (normal by default).
 getInputStatus() -> red_connected/green_connected; getOutput() -> own contribution
 setOutput(signals), clearOutput() -> no values; one bank mirrored to both OUTPUT wires.
 subscribe({input=..., signals={SignalId,...}?, initial=boolean?}, handler_name) -> ID
