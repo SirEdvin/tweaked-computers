@@ -11,10 +11,41 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
+PROFILES = {'representative': {'computers': 4, 'subscriptions': 1, 'maximum': False},
+            'maximum': {'computers': 64, 'subscriptions': 16, 'maximum': True}}
+
+
+def fixture_source(profile):
+    source = (ROOT / 'tests/envelope_engine.lua').read_text()
+    marker = 'local profile = {computers=4,subscriptions=1,maximum=false} -- ENVELOPE_PROFILE'
+    assert source.count(marker) == 1
+    values = PROFILES[profile]
+    replacement = ('local profile = {computers=%d,subscriptions=%d,maximum=%s}' %
+                   (values['computers'], values['subscriptions'], str(values['maximum']).lower()))
+    return source.replace(marker, replacement).encode()
 
 
 def digest(data):
     return hashlib.sha256(data).hexdigest()
+
+
+def combined_replacements(package, prefix, native=False):
+    replacements = {'tests/monitor_animation_engine.lua': b"return require('tests.envelope_combined')\n",
+                    'tests/acceptance_monitor_engine.lua': b"return require('tests.envelope_combined')\n",
+                    'tests/envelope_config.lua': ('return {native=%s}\n' % str(native).lower()).encode()}
+    for name in ('envelope_combined', 'envelope_observer'):
+        replacements['tests/' + name + '.lua'] = (ROOT / 'tests' / (name + '.lua')).read_bytes()
+    source = "local envelope_observer=require('tests.envelope_observer')\n" + package.read(prefix + 'scripts/monitor-presentation.lua').decode()
+    probes = {
+        'spend(48); backend.cell(c,r,index);': 'spend(48); backend.cell(c,r,index); envelope_observer.prepare();',
+        'r.cells[index]=false; i=i+1;': 'envelope_observer.cleanup(); r.cells[index]=false; i=i+1;',
+        'for i,o in ipairs(operations) do o.visible=values[i] end': 'envelope_observer.commit(#operations,work); for i,o in ipairs(operations) do o.visible=values[i] end',
+    }
+    for old, new in probes.items():
+        assert source.count(old) == 1, old
+        source = source.replace(old, new)
+    replacements['scripts/monitor-presentation.lua'] = source.encode()
+    return replacements
 
 
 def summarize(text):
@@ -27,9 +58,20 @@ def summarize(text):
         ordered = sorted(samples)
         profiles[phase] = {'samples': len(samples), 'mean_ms': statistics.fmean(samples),
                            'p95_ms': ordered[int((len(ordered) - 1) * .95)], 'max_ms': max(samples)}
-    return {'gates': gates, 'scheduler_profiles': profiles,
+    combined = [json.loads(m[1]) for m in re.finditer(r'TC_COMBINED_SIMULTANEOUS (\{[^\n]+\})', text)]
+    return {'gates': gates, 'scheduler_profiles': profiles, 'simultaneous': combined,
             'completed': text.count('TC_COLD_OK envelope-diagnostic-complete') == 1,
             'cold_unchanged': text.count('TC_ENVELOPE_COLD_UNCHANGED') == 1}
+
+
+def case_complete(case, campaign, profile):
+    expected = {'combined-active-subscriptions', 'continuous-final-256'}
+    expected.add('simultaneous-service' if campaign == 'combined' else
+                 'maximum-grid-256' if profile == 'maximum' else 'initial-grid-256')
+    names = [g['name'] for g in case['gates']]
+    return (case['completed'] and case['cold_unchanged'] and len(names) == len(expected)
+            and set(names) == expected
+            and (campaign != 'combined' or len(case['simultaneous']) == 1))
 
 
 def main():
@@ -38,6 +80,9 @@ def main():
     parser.add_argument('--archive', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--mode', choices=('base', 'space-age', 'both'), default='both')
+    parser.add_argument('--profile', choices=tuple(PROFILES), default='representative',
+                        help='small mixed factory by default; maximum is an optional diagnostic, not a release gate')
+    parser.add_argument('--campaign', choices=('combined', 'phased'), default='combined')
     args = parser.parse_args()
     folder = args.output.resolve()
     if folder.exists() or folder.is_relative_to(ROOT):
@@ -46,10 +91,14 @@ def main():
     target = folder / args.archive.name
     replacements = {
         'tests/monitor_animation_engine.lua': b"return require('tests.envelope_engine')\n",
-        'tests/envelope_engine.lua': (ROOT / 'tests/envelope_engine.lua').read_bytes(),
+        'tests/envelope_engine.lua': fixture_source(args.profile),
     }
     with zipfile.ZipFile(args.archive) as src, zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED) as dst:
         prefix = next(n[:-len('info.json')] for n in src.namelist() if n.endswith('/info.json'))
+        if args.campaign == 'combined':
+            if args.profile != 'representative':
+                parser.error('combined campaign uses the approved representative profile; use --campaign phased for optional maximum')
+            replacements = combined_replacements(src, prefix)
         payload = {n.removeprefix(prefix): digest(src.read(n)) for n in src.namelist()}
         for entry in src.infolist():
             if entry.filename.removeprefix(prefix) not in replacements:
@@ -67,10 +116,12 @@ def main():
                '--archive', str(target), '--output', str(folder / 'engine'), '--mode', args.mode,
                '--fixture', 'tests.monitor_animation_engine', '--production-context', '--cold',
                '--cold-timeout', '180']
-    provenance = {'archive_sha256': digest(args.archive.read_bytes()),
+    provenance = {'profile': args.profile, 'campaign': args.campaign, 'workload': PROFILES[args.profile],
+                  'archive_sha256': digest(args.archive.read_bytes()),
                   'test_archive_sha256': digest(target.read_bytes()),
                   'test_only_replacements': {name: digest(data) for name, data in replacements.items()},
-                  'all_other_payloads_unchanged': unchanged, 'command': command}
+                  'all_other_payloads_unchanged': unchanged, 'command': command,
+                  'observer': 'Three test-only forwarding counters in presenter: prepared/cleaned cells and actual admitted visibility operations; common CPU overhead is included.' if args.campaign == 'combined' else None}
     (folder / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
     with (folder / 'driver.log').open('w') as log:
         result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, check=False)
@@ -80,12 +131,12 @@ def main():
         logs = [folder / 'engine' / mode / f'{phase}-engine.log' for phase in ('cold-first', 'cold-second')]
         text = '\n'.join(path.read_text() for path in logs if path.exists())
         cases.append({'mode': mode, **summarize(text)})
-    complete = result.returncode == 0 and all(c['completed'] and c['cold_unchanged'] and len(c['gates']) == 3 for c in cases)
+    complete = result.returncode == 0 and all(case_complete(c, args.campaign, args.profile) for c in cases)
     summary = {**provenance, 'driver_exit': result.returncode, 'diagnostic_completed': complete,
                'envelope_passed': complete and all(g['passed'] for c in cases for g in c['gates']),
                'cases': cases,
-               'limits': ['Host model writers are renderer diagnostics, not compiled guest throughput.',
-                          'No graphical input/visible latency, full network/target/KV/source maxima or frozen envelope.']}
+               'limits': ['Test counters are common forwarding instrumentation, not an opaque engine CPU bound.',
+                          'Headless publication is not native-client visible latency or a frozen simultaneous-capacity promise.']}
     (folder / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
     print(json.dumps(summary))
     raise SystemExit(0 if summary['envelope_passed'] else 1)
