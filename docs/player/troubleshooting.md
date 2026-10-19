@@ -59,6 +59,19 @@ Touch requires empty cursor, no GUI, native reach and an actual character cell;
 bezel/letterbox clicks are ignored. Coordinates rotate with the display. Real
 client legibility, focus and touch input are not headless-verified guarantees.
 
+For a synchronized selection, inspect `peripheral.getMonitorSyncGroup()`:
+`waiting` needs a successful mutator on every member, including deliberately
+unchanged screens; `preparing` is not a visible-frame acknowledgement. An owner
+or member outage blocks the whole cohort without clearing accepted content.
+Restore power rather than rebuilding the selection. Pending topology proof is
+temporary; retry later. A definitive lost selected-color path, Stop, fault,
+Apply/Run or removed identity releases the entire cohort. Remaining monitors
+then present their accepted shared models independently; no green fallback or
+same-coordinate retargeting occurs. Re-enumerate exact identities before selecting
+again. During scale/rotation regrouping, touches against an obsolete visible grid
+are ignored until a matching image publishes. Native object/layer tests do not
+establish visual legibility or client input delivery for every layout.
+
 ## KV database
 
 Use type before choosing get/hgetall; WRONGTYPE is not missing. Values must be

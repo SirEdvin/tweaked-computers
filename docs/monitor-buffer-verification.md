@@ -1,5 +1,65 @@
 # Monitor buffering: 0.1.5 alpha verification
 
+## SC1 acceptance reconciliation (2026-10-19)
+
+The historical sections below describe their original candidates. SC1 starts at
+accepted main `4fe09733d5a30fa5bbf4ad08af71ae9fa60bc941` (0.1.9), without a
+version bump or a change to production budgets, renderer or service behavior.
+The remaining gaps were regression coverage and evidence/checklist reconciliation,
+not absent buffering. The only control change admits four opt-in test modules;
+normal control registrations and all production service/renderer bytes are unchanged.
+
+The durable receipt is
+`/home/siredvin/artifacts/tweaked-computers/t_da5b8be7/receipt.json`.
+It binds every assigned row to the exact source commit, deterministic candidate
+archive, production-payload digest, commands, per-mode summaries and raw logs.
+The external receipt avoids a self-referential archive hash in packaged docs.
+The release-0.1.9 receipt at `t_a91d1885/verification-report.json` and its matrix
+ledger are reused only after archive/payload comparison, not as fresh candidate
+passes. Historical failures remain separate from final passes.
+
+| Assigned row | Evidence and boundary |
+| --- | --- |
+| 3.1 | Existing compiled four-member/mixed-shape presentation suite plus `monitor_state_*`: strict arity/dot calls, malformed records/keys/holes/cycles/functions, exact return counts, host-only metatable refusal (guest syntax cannot construct metatables), eight refs/red preference/canonical order, current authority, actual summed-cell overflow, unpowered and foreign-surface refusal, idempotence, conflicting writers and one-unit-short admission. Refusals compare the entire retained monitor graph, table identities/aliases and native visibility. Existing player method tables/help are retained. |
+| 4.1 | `monitor_state_ready` cancels an actually ready hidden cohort on cable loss (green remains connected), Stop, fault, Apply, owner removal, same-coordinate member replacement, foreign force and rotation. Old jobs never publish; accepted shared writes/fronts survive nongeometry release and automatic presentation resumes. Real partial topology preserves ownership while compiled selection refuses E_NETWORK_PENDING. The existing presentation suite covers owner/member outage/restoration, shared writers, no-op participation and explicit clear. |
+| 4.2 | The ready fixture fills retirement to exactly 10,584 cells before removing all monitor tiles world-wide. Actual scheduler ticks drain every retained generation and all tracked native monitor objects within the unchanged 256-tick target. Per-tick inventory/cell/frame/object/maintenance caps remain asserted. Feedback tests inspect actual native strata and mark/cancel/robot cleanup in all four directions, and reject table-backed Ctrl-click while a real scale change leaves the visible/current grids mismatched; touch resumes at the matching published cell. These are native-object and mocked player-ingress assertions, not screenshots or native mouse delivery. |
+| 4.3 | Four separate ordinary cold fixtures retain waiting mixed-size selection, hidden preparation, fully ready credit-refused commit and active retirement. Load and old-tick replay compare the entire production registry graph, exact aliases/cursors/counters and native visibility; unknown future presentation versions retain that populated graph inertly. Existing presentation cold coverage additionally retains coalesced pending vectors. The released-0.1.4 upgrade fixture saves actual unchanged 3×6/6×6 four-tile partitions, a complete unaffected image and a genuinely credit-deferred partial legacy sweep. Configuration change merges walls with surviving anchor/settings, absorbed-name detaches and content clearing/resize; complete unaffected output is adopted while partial output rebuilds. A further ordinary process verifies no repeated regroup/start or fake unaffected resize. |
+| 5.3 | Existing explicit contract allowlist already ships the three buffered-monitor companions and exact example bytes, excluding planning documents. A new independent inventory assertion catches removal from that allowlist and compares deterministic ZIPs. Existing art/vendor hash validation stays unchanged. CI adds all four cold phases under existing always-retained summary/engine-log/result patterns. Strict docs and player link checks accompany the packaged matrix. |
+
+Reproduce with fresh directories outside git:
+
+```sh
+python tools/test_build.py
+python tools/planning_examples.py --check
+python tools/configuration_catalog.py --check
+python -m mkdocs build --strict --site-dir "$WORK/site"
+python tools/player_docs.py --check --site "$WORK/site" --report "$WORK/player-docs.json"
+python tools/build.py --output "$WORK/package" > "$WORK/build.json"
+archive="$(jq -er .path "$WORK/build.json")"
+engine=/home/siredvin/tools/factorio/bin/x64/factorio
+for phase in waiting preparing ready retiring; do
+  python tools/smoke.py --factorio "$engine" --archive "$archive" \
+    --output "$WORK/state-$phase" --fixture "tests.monitor_state_$phase" \
+    --production-context --cold --mode both
+done
+python tools/smoke.py --factorio "$engine" --archive "$archive" \
+  --output "$WORK/feedback" --fixture tests.monitor_feedback_engine \
+  --production-context --cold --mode both
+python tools/monitor_upgrade.py --factorio "$engine" --archive "$archive" \
+  --legacy "$LEGACY_0_1_4_ZIP" --output "$WORK/upgrade"
+```
+
+Use the locked documentation environment. The upgrade runner verifies the immutable
+legacy SHA-256 before adding its opt-in fixture only to a private copy. Test credit
+pressure deliberately consumes the remaining real ledger; it is not useful CPU
+work or a performance measurement. Fixtures freeze after requesting a save and
+resume only in the next process; every server must acknowledge console `/quit`,
+exit zero and avoid forced cleanup. No client captures were produced by SC1.
+Native appearance/peer acceptance belongs to SC2; full admitted-world latency/CPU
+stress belongs to SC3. Neither is closed by these lifecycle checks. Keep backups
+and roll back with the pre-upgrade save and matching mod ZIP, never by downgrading
+an already-upgraded presentation graph in place.
+
 ## Scope and status
 
 The 0.1.5 implementation provides automatic immutable snapshots, hidden native

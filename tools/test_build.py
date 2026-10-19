@@ -10,6 +10,27 @@ import build
 
 
 class PackageInventoryTests(unittest.TestCase):
+    def test_buffered_monitor_inventory_and_determinism(self):
+        # Pin the intended public contract explicitly: iterating only the build
+        # allowlist cannot detect an accidental removal from that allowlist.
+        contracts = {
+            'openspec/changes/buffer-monitor-presentation/specs/monitor-display/spec.md',
+            'openspec/changes/buffer-monitor-presentation/specs/monitor-display/lua-api.md',
+            'openspec/changes/buffer-monitor-presentation/specs/peripheral-network/spec.md',
+        }
+        self.assertTrue(contracts.issubset(build.CONTRACT_EXTENSIONS))
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            first = build.build(Path(output) / 'first')
+            second = build.build(Path(output) / 'second')
+            self.assertEqual(first.read_bytes(), second.read_bytes())
+            with zipfile.ZipFile(first) as package:
+                prefix = next(n[:-len('info.json')] for n in package.namelist() if n.endswith('/info.json'))
+                for relative in (*contracts, 'examples/monitor-plot-program.lua',
+                                 'tests/monitor_state_engine.lua',
+                                 *(f'tests/monitor_state_{phase}.lua' for phase in
+                                   ('waiting', 'preparing', 'ready', 'retiring'))):
+                    self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
+
     def test_portal_payload_keeps_notices_not_python_tools(self):
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
             archive = build.build(output)
