@@ -7,6 +7,11 @@ largest complete anchored rectangle, equal area prefers world width then height.
 Power **every** member. Connect computer NETWORK red/green to any member NETWORK.
 Shared display content is not a wire bridge between unwired members or colors.
 
+In 0.1.9, monitor items stack to 50 while remaining item-with-tags. Native tags,
+labels and quality must match; unlike state is not silently merged. Mining and
+replacement retain the existing settings/palette contract, not a portable screen
+buffer. Computer and KV items still stack to one.
+
 Obtain `local m = peripheral.find("monitor", "red")`, or wrap an exact name/color.
 All methods are dot calls. No extra arguments, implicit coercion or combined color
 masks. Every operation uses current authority; see [shared errors](common.md#errors).
@@ -162,7 +167,9 @@ client-FPS guarantee. If text clips, query getSize, move cursor explicitly and a
 newlines. If grouping surprises you, inspect orientation, holes and 6×6 bounds.
 Power every tile; an unpowered member blanks the whole group without erasing data.
 For wrong touch coordinates check local rotation and actual cells rather than the
-bezel. Native client readability/input remains player-owned alpha testing.
+bezel. Representative native Ctrl-click and monitor-touch cases are verified in
+base and Space Age; exhaustive layouts/platforms and busy-factory input latency
+remain alpha testing, not a universal client guarantee.
 
 Back up before upgrading from 0.1.4. Unchanged saved walls are reevaluated under
 the six-tile policy: absorbed names detach, surviving anchors retain settings,

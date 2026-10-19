@@ -68,7 +68,8 @@ configurator, monitor, explicit application-state writes and printed output rema
 Ordinary shell errors do not fault the saved program.
 
 Synchronous [computer](api/computer.md), [monitor](api/monitor.md),
-[KV](api/kv.md), [logic](api/logic.md) and [configurator](api/configurator.md)
+[KV](api/kv.md), [logic](api/logic.md), [configurator](api/configurator.md) and
+[Recipe Searcher](api/recipe-searcher.md)
 operations keep their signatures and live checks. `computer.getState/setState`
 explicitly address the real application state, not scratch globals.
 Handler-based `on/off/after/every/cancelTimer/stop` and logic

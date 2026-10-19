@@ -38,8 +38,11 @@ The implementation has packaged headless native-runtime, factory-effect and
 cold-save checks. Foundry artwork and live charts have isolated software-rendered
 base/Space Age captures. The Console has native input/size/workflow acceptance in
 both modes and actual base two-client late joining plus cold server resume.
-Space Age connected joining, native wire selection/touch and audible playback
-remain unverified; representative desktop cases do not cover every platform or IME.
+Recipe Searcher appearance and Ctrl-click transfers/held-modifier reuse/monitor
+touch have native checks in both modes; recipe queries also have base two-client
+late-join/cold-server checks. Space Age connected joining, exhaustive native wire
+selection and audible playback remain unverified; representative desktop cases
+do not cover every platform or IME.
 These captures are not GPU benchmarks.
 Resource ceilings are provisional safety limits, not a promise of real-time latency
 or simultaneous maximum-world performance. Report failures with the mod/engine
@@ -47,11 +50,11 @@ versions, wiring, source and error code; remove private literals before sharing.
 
 ## Source and developer documentation
 
-The [0.1.8 ALPHA source](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.8) includes
+The [0.1.9 ALPHA source](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.9) includes
 source, notices and examples; report problems in its
 [issue tracker](https://github.com/SirEdvin/tweaked-computers/issues).
 The separately generated
-[developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.8/openwiki)
+[developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.9/openwiki)
 explains implementation internals; this site, not that wiki, is the player and
 public Lua API reference. This link identifies the source-grounded developer
 wiki snapshot independently of the repository's default branch.
