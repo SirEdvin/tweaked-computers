@@ -140,8 +140,16 @@ def check(output):
                 'actual_sha256':digest(regenerated),'decoded_equal':png_read(original)==png_read(regenerated)})
     (output/'regeneration-differences.json').write_text(json.dumps(differences,indent=2)+'\n')
     assert not differences, differences
-    for name in ('manifest.json','sprites.lua'):
-        assert (ROOT/name).read_bytes() == (fresh/name).read_bytes()
+    assert (ROOT/'sprites.lua').read_bytes()==(fresh/'sprites.lua').read_bytes()
+    regenerated_manifest=json.loads((fresh/'manifest.json').read_text())
+    # Compression-library build identity is factual host provenance, not an
+    # authored input. Different builds may produce the same exact PNG bytes;
+    # retain that observation, but never waive any image/source/output hash.
+    environment={'original_zlib_version':manifest['transform']['zlib_version'],
+                 'regenerated_zlib_version':regenerated_manifest['transform']['zlib_version']}
+    (output/'regeneration-environment.json').write_text(json.dumps(environment,indent=2)+'\n')
+    regenerated_manifest['transform']['zlib_version']=manifest['transform']['zlib_version']
+    assert manifest==regenerated_manifest, 'regenerated manifest differs beyond observed host zlib version'
     expected = {Path(r['path']).relative_to('assets') for r in records}
     actual = {p.relative_to(ROOT) for folder in ('sprites','icons','glyphs') for p in (ROOT/folder).glob('*.png')}
     assert actual == expected
