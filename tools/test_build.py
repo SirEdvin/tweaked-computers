@@ -10,6 +10,33 @@ import build
 
 
 class PackageInventoryTests(unittest.TestCase):
+    def test_function_program_matches_packaged_starter_and_documentation(self):
+        import re
+        import player_docs
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            archive = build.build(output)
+            with zipfile.ZipFile(archive) as package:
+                prefix = next(n[:-len('info.json')] for n in package.namelist() if n.endswith('/info.json'))
+                source = package.read(prefix + 'examples/function-program.lua')
+                self.assertEqual(source, (build.ROOT / 'examples/function-program.lua').read_bytes())
+                help_source = package.read(prefix + 'scripts/ui/help.lua')
+                template = re.search(rb'template=\[\[(.*?)\]\],', help_source, re.S)
+                assert template is not None, 'missing packaged starter'
+                self.assertEqual(template[1], source)
+                docs = package.read(prefix + 'docs/player/examples.md')
+                example = re.search(rb'## function-program\n.*?```lua\n(.*?)\n```', docs, re.S)
+                assert example is not None, 'missing documented function program'
+                self.assertEqual(example[1] + b'\n', source)
+                self.assertEqual(player_docs.guest_example('function-program').encode() + b'\n', source)
+
+    def test_documentation_rejects_starter_example_drift(self):
+        import player_docs
+        original = player_docs.text
+        with patch.object(player_docs, 'text', lambda path: original(path) + '\n'
+                          if path == 'examples/function-program.lua' else original(path)):
+            with self.assertRaisesRegex(ValueError, 'differs from the inserted starter'):
+                player_docs.guest_example('function-program')
+
     def test_portal_payload_keeps_notices_not_python_tools(self):
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
             archive = build.build(output)
