@@ -33,6 +33,10 @@ function M.retire(rec,status,reason)
 end
 function M.fault(rec,diagnostic,tick)
   M.retire(rec,'faulted','fault')
+  -- Host diagnostics have scalar fields and may be shared by sampler deliveries.
+  -- Own the retained table before attaching this computer's authoritative identity.
+  local owned={}; for key,value in pairs(diagnostic) do owned[key]=value end
+  diagnostic=owned
   diagnostic.source_revision=rec.active and rec.active.revision or nil
   diagnostic.run_id=rec.run_id
   rec.diagnostic=diagnostic
