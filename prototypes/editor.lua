@@ -16,6 +16,8 @@ styles.tc_editor_tab={type='tab_style',parent='tab',font='default-semibold',
   height=32,top_padding=6,bottom_padding=6,increase_height_when_selected=false,
   minimal_width=88,horizontal_align='center'}
 data:extend{
+  -- Context guards run after delivery: never swallow native transfers or latch
+  -- Ctrl until release, even when the world interaction is ignored by Lua.
   {type='custom-input',name='tc-interact',key_sequence='CONTROL + mouse-button-1',
-    action='lua',consuming='game-only',block_modifiers=true,include_selected_prototype=false}
+    action='lua',consuming='none',block_modifiers=false,include_selected_prototype=false}
 }

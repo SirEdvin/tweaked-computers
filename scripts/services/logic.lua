@@ -16,7 +16,7 @@ local function fields(value,allowed)
 end
 local function signal(s,spend)
   fields(s,{type=true,name=true,quality=true})
-  if s.type~='item' and s.type~='fluid' and s.type~='virtual' then errors.raise('E_ARGUMENT','explicit signal type required') end
+  if s.type~='item' and s.type~='fluid' and s.type~='virtual' and s.type~='recipe' then errors.raise('E_ARGUMENT','explicit supported signal type required: item, fluid, virtual or recipe') end
   local q=s.quality
   if q==nil then q='normal' end
   if type(s.name)~='string' or #s.name==0 or #s.name>limits.identifier_bytes or type(q)~='string' or #q>limits.identifier_bytes then errors.raise('E_ARGUMENT','bounded prototype names required') end
@@ -27,7 +27,7 @@ local function signal(s,spend)
 end
 local function key(s) return s.type..'\0'..s.name..'\0'..s.quality end
 local function selection(input)
-  if input~='red' and input~='green' and input~='both' then errors.raise('E_ARGUMENT','red, green or both input required') end
+  if input~='red' and input~='green' then errors.raise('E_ARGUMENT','explicit red or green input required') end
   return input
 end
 local function array(t,max,spend)
@@ -70,11 +70,10 @@ end
 local function native_read(rec,input,spend)
   selection(input); local values={}; local size=0; local connected=status(rec)
   for _,wire in ipairs({'red','green'}) do
-    if input=='both' or input==wire then
-      -- No count query exists in 2.0.77. The immutable prototype universe is
-      -- an upper bound on native signal tuples, including every quality. Admit
-      -- that opaque materialization before get_signals, then bound our snapshot.
-      local universe=(#prototypes.item+#prototypes.fluid+#prototypes.virtual_signal)*#prototypes.quality
+    if input==wire then
+      -- No count query exists in 2.0.77. Pre-admit the supported prototype/quality
+      -- envelope, including recipes, then enforce the bounded native snapshot.
+      local universe=(#prototypes.item+#prototypes.fluid+#prototypes.virtual_signal+#prototypes.recipe)*#prototypes.quality
       if not errors.integer(universe,1,1000000) then errors.raise('E_LIMIT','native signal prototype universe exceeds supported query envelope') end
       spend(universe*8+M.signal_slots*16+16)
       local c=lifecycle.connector(rec,'input',wire)
@@ -82,7 +81,7 @@ local function native_read(rec,input,spend)
       if #native>M.signal_slots then errors.raise('E_LIMIT','native input signal inventory exceeds signal_slots') end
       for _,entry in ipairs(native) do
         local s=signal({type=entry.signal.type or 'item',name=entry.signal.name,quality=entry.signal.quality},spend); local k=key(s); local old=values[k]
-        if not old then size=size+1; if size>M.signal_slots then errors.raise('E_LIMIT','combined input inventory exceeds signal_slots') end end
+        if not old then size=size+1; if size>M.signal_slots then errors.raise('E_LIMIT','selected input inventory exceeds signal_slots') end end
         local sum=(old and old.count or 0)+entry.count
         values[k]={signal=s,count=((sum+2147483648)%4294967296)-2147483648}
       end
@@ -93,8 +92,7 @@ local function native_read(rec,input,spend)
 end
 local function project(sample,connected,input,filter,spend)
   local result,c={},{}
-  if input=='both' or input=='red' then c.red=connected.red end
-  if input=='both' or input=='green' then c.green=connected.green end
+  c[input]=connected[input]
   local allowed
   if filter then allowed={}; for _,s in ipairs(filter) do spend(#key(s)+1); allowed[key(s)]=true end end
   for _,entry in ipairs(sample) do spend(#key(entry.signal)+4); if not allowed or allowed[key(entry.signal)] then result[#result+1]=entry end end
@@ -195,10 +193,6 @@ end
 method('readSignal',2,function(c,r,w,t,spend,input,s)
   selection(input); s=signal(s,spend); status(r); spend(32)
   local red,green=defines.wire_connector_id.circuit_red,defines.wire_connector_id.circuit_green
-  if input=='both' then
-    local a=r.children.input.get_signal(s,red); local b=r.children.input.get_signal(s,green)
-    return ((a+b+2147483648)%4294967296)-2147483648
-  end
   return r.children.input.get_signal(s,input=='red' and red or green)
 end)
 method('readSignals',1,function(c,r,w,t,spend,input) return (data.copy((native_read(r,input,spend)),spend)) end)
@@ -256,10 +250,16 @@ function M.sample(tick,spend)
     if c and c.status=='running' then
       for _,sub in pairs(c.subscriptions) do
         if sub.event_name=='signal_changed' then
+          local d=sub.details
+          if d.input~='red' and d.input~='green' then
+            -- Validate retained registrations before any queued callback dispatch.
+            -- Never translate legacy combined input or replay its pending effects.
+            runtime.fault(c,errors.new('E_ARGUMENT','retained logic subscription requires explicit red or green input; update source and restart'),tick)
+            break
+          end
+          local needs=devices[d.peripheral] or {}; devices[d.peripheral]=needs
           subscriptions[#subscriptions+1]={computer=c,sub=sub}
-          local d=sub.details; local needs=devices[d.peripheral] or {}; devices[d.peripheral]=needs
           needs[d.input]=true
-          if d.input=='both' then needs.red=true; needs.green=true end
         end
       end
     end
@@ -283,17 +283,7 @@ function M.sample(tick,spend)
           local needs=devices[name]; local connected=status(rec); local red,green
           if needs.red then red=native_read(rec,'red',spend) end
           if needs.green then green=native_read(rec,'green',spend) end
-          local combined
-          if needs.both then
-            combined={}; local map={}
-            spend(M.signal_slots*256+16)
-            for _,e in ipairs(red) do map[key(e.signal)]={signal=e.signal,count=e.count} end
-            for _,e in ipairs(green) do local k=key(e.signal); local old=map[k]; local n=(old and old.count or 0)+e.count; map[k]={signal=e.signal,count=((n+2147483648)%4294967296)-2147483648} end
-            local n=0; for _,e in pairs(map) do n=n+1; if e.count~=0 then combined[#combined+1]=e end end
-            if n>M.signal_slots then errors.raise('E_LIMIT','combined input inventory exceeds signal_slots') end
-            sort(combined,spend)
-          end
-          local sample={red=red,green=green,both=combined,connected=connected,tick=tick}
+          local sample={red=red,green=green,connected=connected,tick=tick}
           rec.logic_sample=sample; return sample
         end)
         if not admitted then errors.raise('E_BUSY','logic sampling envelope exhausted; run stopped rather than losing observations') end
