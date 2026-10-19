@@ -33,16 +33,17 @@ user-deferred; these checked implementation tasks do not mark graphical acceptan
 
 Parents: none. Owns `program-editor`; consumes unchanged backend APIs.
 
-- [ ] 3.1 Replace the one-column form with native Editor, Console, Peripherals, Reference and Maintenance tabs, compact draggable title/close and screen-clamped scale-aware sizing; verify GUI construction/event routing and layout at 1280×720 and 1920×1080 with 100%/150% GUI scales, recording any minimum-size limitation honestly.
+- [x] 3.1 Replace the one-column form with native Editor, Console, Peripherals, Reference and Maintenance tabs, compact draggable title/close and screen-clamped scale-aware sizing; verify GUI construction/event routing and layout at 1280×720 and 1920×1080 with 100%/150% GUI scales, recording any minimum-size limitation honestly. SC2 (2026-10-19): all four actual native layouts/readbacks inspected, five tabs and essential controls reachable, native title dragging/clamping and source identity/draft retention pass. The 1280×720/150% code region is shorter; lower resolutions/larger scales remain uncertified. See docs/sc2-native-acceptance.md and its durable per-row receipt.
 - [x] 3.2 Implement the dominant code region, reversible focus mode and single compact Validate/Save/Run-or-Apply/Stop row; verify exact dirty-draft retention across tab/focus/status changes, separate save/activation, source widget identity, conflicts, no automatic tab/focus theft and strict event ownership.
 - [x] 3.3 Complete supporting tabs with bounded Console follow, real red/green peripheral status, categorized/searchable reference and every maintenance/recovery action in `api/compatibility.md`; verify action coverage, stale-session rejection, confirmation safety and standalone recovery without an accessible computer.
 - [x] 3.4 Update in-game help and player editor documentation to match the real controls, plus developer UI documentation; verify examples use supported APIs and provide a concise user native typing/paste/scale checklist. Mock layout tests must not be labelled graphical-client acceptance.
 
 RD3 implementation/model/headless verification is complete; see `rd3-notes.md`.
-3.1 remains unchecked only for user-owned native graphical construction/layout review:
-all five tabs, routes and four resolution/scale geometries are implemented and
-mock-tested, not graphical-client accepted. Native typing/focus/paste/appearance
-checks remain explicitly deferred, not a blocker on the authorized implementation.
+Its historical native graphical deferral is superseded for 3.1 by SC2's automated
+native-client campaign, not by user manual approval. All five tabs and the four
+requested resolution/scale geometries now have inspected native captures plus
+actual typing/focus/paste/drag coverage. Historical RD2/RD4/RD5 notes below retain
+their original evidence boundaries; current SC2 results live in the linked note.
 
 ## 4. RD4 — Native monitor removal feedback and layering
 

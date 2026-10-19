@@ -1,5 +1,18 @@
 # Monitor buffering: 0.1.5 alpha verification
 
+## SC2 native-client and connected-peer acceptance (2026-10-19)
+
+SC2 now closes the formerly deferred native visibility-swap row 1.3 and native
+dense/plot/interaction/peer row 6.3. The full per-row matrix, inspected actual
+windows/videos, exact source/archive/payload correspondence and external receipt
+are in [SC2 native acceptance](sc2-native-acceptance.md). This is automated Linux
+2.0.77 build 84539 / llvmpipe appearance and actual localhost peer evidence,
+not user manual approval, hardware FPS or stable-release certification.
+Historical deferral statements below retain their original scope; they are not
+the current status of these two SC2 rows. The 256-tick/full-envelope/CPU gate
+remains SC3 row 6.2, unchecked and unchanged. No version bump, merge, publication
+or archival is performed by this acceptance campaign.
+
 ## SC1 acceptance reconciliation (2026-10-19)
 
 The historical sections below describe their original candidates. SC1 starts at
