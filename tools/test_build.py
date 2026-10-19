@@ -58,7 +58,10 @@ class PackageInventoryTests(unittest.TestCase):
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
                 self.assertEqual({name for name in planning if not name.startswith(build.CONTRACT + '/')},
                                  set(build.CONTRACT_EXTENSIONS))
-                self.assertEqual(len(build.CONTRACT_EXTENSIONS), 7)
+                self.assertEqual(len(build.CONTRACT_EXTENSIONS), 9)
+                for relative in ('openspec/changes/add-function-program-syntax/specs/program-source/spec.md',
+                                 'openspec/changes/add-function-program-syntax/specs/program-source/lua-api.md'):
+                    self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 for relative in ('scripts/services/recipe-searcher.lua', 'examples/recipe-searcher-program.lua',
                                  'docs/player/api/recipe-searcher.md', 'assets/icons/recipe_searcher.png'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
