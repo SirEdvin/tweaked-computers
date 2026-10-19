@@ -14,8 +14,9 @@ local function build(kind,x,y,d)
   local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},direction=d or 0,force='player'})
   return assert(lifecycle.build(body))
 end
-local function wire(a,b)
-  assert(lifecycle.connector(a,'network','red').connect_to(lifecycle.connector(b,'network','red')))
+local function wire(a,b,color)
+  color=color or 'red'
+  assert(lifecycle.connector(a,'network',color).connect_to(lifecycle.connector(b,'network',color)))
 end
 local function configure(p)
   p.set_controller{type=defines.controllers.god}; p.teleport({15,5}); p.zoom=0.8
@@ -32,7 +33,7 @@ start=function(e)
   computer.every(120,'draw'); computer.after(1,'draw')
 end,
 touch=function(e)
-  computer.setState('touch',{player=e.player_index,x=e.x,y=e.y,name=e.peripheral})
+  computer.setState('touch',{player=e.player_index,x=e.x,y=e.y,name=e.peripheral,wire=e.wire,wires=e.wires})
   computer.setState('touches',(computer.getState('touches') or 0)+1)
 end,
 draw=function(e)
@@ -95,6 +96,10 @@ function M.run()
     rendering.draw_text{text=shape[1]..'x'..shape[2],surface=surface,target={xx+shape[1]/2,-1},color={1,1,1},alignment='center'}
   end
   local large=build('computer',-3,12); x.computers[2]=large.id; local wall={}; x.walls[5]=wall
+  if config.dual_wire then
+    local first=registry.record(x.walls[1][1]); local last=registry.record(x.walls[1][6])
+    wire(c,last); wire(c,first,'green'); wire(c,last,'green'); wire(first,last,'green')
+  end
   for yy=12,17 do for xx=0,5 do wall[#wall+1]=build('monitor',xx,yy).id end end
   wire(large,registry.record(wall[1]))
   rendering.draw_text{text='6x6 scale 0.5 / 10584 cells',surface=surface,target={3,11},color={1,1,1},alignment='center'}
