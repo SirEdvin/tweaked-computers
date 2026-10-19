@@ -47,5 +47,5 @@ for _,kind in ipairs(defs.order) do
     end
   end
 end
-assert(contacts==64 and statuses==160)
+assert(contacts==72 and statuses==192)
 log('TC_RD2_ART_DATA_OK contacts='..contacts..' status_frames='..statuses)

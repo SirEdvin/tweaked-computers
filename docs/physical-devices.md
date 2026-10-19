@@ -7,7 +7,7 @@ interpreter, OS or gameplay filesystem is introduced.
 ## Placement and wiring
 
 The visible device is now the native red/green Network endpoint, not an invisible
-NETWORK tile layered over a separate body. Computer, KV and monitor occupy 1×1;
+NETWORK tile layered over a separate body. Computer, KV, monitor and Recipe Searcher occupy 1×1;
 logic occupies 3×1 and configurator 2×1. A hidden, nonselectable electric carrier
 supplies each shell at the unchanged wattage. It has no collision, item, mining
 result, blueprint entry, independent deconstruction or native GUI.
@@ -72,10 +72,20 @@ These figures are initial tuning, not a measured gameplay optimum.
 
 `tc-circuit-computers` requires `circuit-network` and the pinned engine's
 `advanced-circuit` technology. It costs 100 automation + logistic science pairs,
-30 seconds each, and unlocks all five recipes. A configuration change reapplies
+30 seconds each, and unlocks the original five recipes. A configuration change reapplies
 unlocks for already-researched forces. Ordinary reload performs no such mutation.
 Recipes explicitly disable automatic recycling and remain base-material recipes
 with Space Age enabled. Future balance changes need review before release.
+
+The unreleased Recipe Searcher is independently owned by `tc-recipe-searcher`
+technology. Its exact prerequisites are `tc-circuit-computers` and
+`utility-science-pack`; research is 200 red/green/utility sets at 60 seconds each.
+One item takes 2 seconds, 10 steel plates, 5 advanced circuits and 2 processing
+units. It draws 30 kW, has one Network endpoint and no product inventory/fluid box.
+Both prototype effects and additive configuration reconciliation consult the same
+per-device `technology` metadata; Circuit Computers alone cannot grant it on upgrade.
+See the [player API](player/api/recipe-searcher.md) and
+[separate candidate evidence](recipe-searcher-validation.md).
 
 The energy source consumes at secondary-input priority, produces nothing,
 exports no energy and can refill at twice demand. A complete device has active

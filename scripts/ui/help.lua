@@ -85,7 +85,8 @@ Every supplied path is checked; duplicate names prefer red. Writing stays shared
 wire is explicitly "red" or "green", never "both" for discovery.
 Only same-color physical mod NETWORK ports relay discovery; vanilla poles,
 INPUT/OUTPUT/TARGETS ports and color changes are not discovery paths.
-Types: monitor, kv_database, logic_handler, configurator. Each has getLimits().
+Types: monitor, kv_database, logic_handler, configurator, recipe_searcher.
+Each has getLimits().
 Store name/wire in state, not ephemeral facades. Calls recheck live authority.
 Use Peripherals / Refresh for current names/types/power on the selected color.
 Incomplete discovery reports pending/limit, never a successful empty prefix.
@@ -139,6 +140,19 @@ Ctrl+left-click (rebindable), empty cursor/no GUI: monitor_touch carries logical
 peripheral, x/y, player_index, sample_tick, wire and deduplicated sorted wires.
 monitor_resize includes old_width/height, width/height and tiles/scale reason.
 
+RECIPE SEARCHER
+find("recipe_searcher", wire) -> facade. Separate Recipe Searcher research.
+findRecipes("item"/"fluid", exact_product_name, exact_category?) -> one complete array.
+Includes locked, hidden, recycling, modded and surface-restricted direct producers.
+Primary and additional categories match. Filter before the fixed 50-result limit;
+51 raises E_LIMIT, never truncation/pagination. Results sort by recipe name.
+Records include ingredients/products, ranges/probabilities, energy in seconds,
+categories, visibility, surface bounds and current force enabled state (not feasibility).
+getLimits() includes recipe_search_results=50 plus unchanged common budgets.
+No inventory, physical product input, crafting execution or recipe browser GUI.
+Reachable unpowered devices allow limits/discovery/relay, not findRecipes.
+Paste examples/recipe-searcher-program.lua's document, Validate, Save and Run.
+
 CONFIGURATOR
 getDevices(target_wire) -> complete device array; getDevice(ID,target_wire) -> data/nil
 getCapabilities(ID,target_wire) -> typed settings/observations/sections
@@ -176,6 +190,7 @@ local sections={
   COMPUTER={'State, events and timers','Computer'}, PERIPHERALS={'Discovery and identity','Peripherals'},
   ['LOGIC HANDLER']={'Logic handler','Peripherals'}, ['KV DATABASE']={'KV database','Peripherals'},
   MONITOR={'Monitor','Peripherals'}, CONFIGURATOR={'Configurator','Peripherals'},
+  ['RECIPE SEARCHER']={'Recipe Searcher','Peripherals'},
   ['COMBINED EXAMPLE']={'Factory examples','Examples'},
   ['FAILURES AND PERSISTENCE']={'Failures and persistence','Safety'}
 }

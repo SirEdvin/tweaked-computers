@@ -440,9 +440,9 @@ function M.on_rotated(event)
 end
 function M.unlocks()
   for _,force in pairs(game.forces) do
-    local technology=force.technologies['tc-circuit-computers']
-    if technology and technology.researched then
-      for _,kind in ipairs(defs.order) do force.recipes[defs.devices[kind].name].enabled=true end
+    for _,kind in ipairs(defs.order) do
+      local def=defs.devices[kind]; local technology=force.technologies[def.technology]
+      if technology and technology.researched then force.recipes[def.name].enabled=true end
     end
   end
 end

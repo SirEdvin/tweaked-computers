@@ -126,6 +126,21 @@ function M.run()
       assert(opened and model.session(a.index).mode=='recovery','control-click empty ground opens recovery')
       editor.on_closed{player_index=a.index,element=opened}; a.opened=nil
     end)
+    group('workspace-vanilla-control-click-leaves-world-and-open-inventory-alone',function()
+      for i,name in ipairs({'steel-chest','stone-furnace'}) do
+        local body=assert(surface.create_entity{name=name,position={24+i*3,120},force='player'})
+        a.selected=body; a.opened=nil
+        for _=1,3 do
+          interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick}
+          assert(not a.opened and not model.session(a.index) and not a.gui.screen[editor.frame_name])
+        end
+        a.opened=body
+        interaction.on_input{player_index=a.index,input_name='tc-interact',in_gui=true,tick=tick}
+        assert(a.opened==body and not model.session(a.index))
+        a.opened=nil; body.destroy()
+      end
+      a.selected=nil
+    end)
     group('workspace-five-native-tabs-compact-actions-draggable-source',function()
       assert(editor.open(a,rec.id)); f=a.gui.screen[editor.frame_name]; c=f.content.editor; source_widget=c.source
       assert(f.content.type=='tabbed-pane' and #f.content.tabs==5 and f.content.selected_tab_index==1)
@@ -231,7 +246,9 @@ function M.run()
       assert(#s.reference_entries==#help.topics and #r.topics.items==#help.topics)
       local combined=''; for i=1,#help.topics-1 do combined=combined..help.topics[i].text end
       assert(combined==help.text..'\n','categorized reference dropped or duplicated text')
-      select(r.filters.category,5); assert(#s.reference_entries==5)
+      select(r.filters.category,5); assert(#s.reference_entries==6)
+      r.filters.search.text='RECIPE SEARCHER'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
+      assert(#s.reference_entries==1 and r.reference_text.text:find('findRecipes',1,true))
       r.filters.search.text='KV DATABASE'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(#s.reference_entries==1 and r.reference_text.text:find('hgetall',1,true))
       click(r.actions['select-reference']); assert(r.reference_text.selection and r.reference_text.focused)
@@ -371,7 +388,7 @@ function M.run()
     group('workspace-reference-starter-compiles-supported-api',function()
       local context=admission.context(admission.new(),'help-example',0)
       local plan,e=compiler.compile(help.template,context); assert(plan,e and e.message)
-      assert(#help.topics==12 and #help.categories==7)
+      assert(#help.topics==13 and #help.categories==7)
       if #original_game.players==0 then log('TC_WORKSPACE_CLIENT_SKIPPED no client-created player; all GUI checks are mocks') end
     end)
   end)

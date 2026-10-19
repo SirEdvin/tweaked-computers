@@ -47,8 +47,8 @@ function M.run()
     assert(registry.remove(rec.id,'art fixture done') and not old.valid)
     for _,entity in ipairs(parts) do if entity.valid then entity.destroy() end end
   end
-  assert(cases==160 and #registry.get().order==0)
-  log('TC_RD2_STATUS_SELECTION_OK cases='..cases..' twenty-native-shells-and-cleanup')
+  assert(cases==192 and #registry.get().order==0)
+  log('TC_RD2_STATUS_SELECTION_OK cases='..cases..' twenty-four-native-shells-and-cleanup')
   -- assets.run emitted its own single-group total; do not invent a second total.
 end
 return M

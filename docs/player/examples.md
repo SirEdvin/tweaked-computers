@@ -7,6 +7,42 @@ factory managers; keep the described topology. Runtime effects were exercised by
 the implementation harness; documentation checks compile these blocks without
 claiming graphical keyboard/focus/touch delivery.
 
+## recipe-searcher-program
+
+Research Recipe Searcher separately, power it and connect its Network directly to a computer on red. Paste the whole document, Validate, Save and Run. Searches item/fluid products and refines E_LIMIT by exact category; a single category may still exceed 50 or other budgets.
+
+```lua
+return {
+    api_version = 1,
+    handlers = {
+        start = function(event)
+            local searcher = peripheral.find("recipe_searcher", "red")
+            assert(searcher, "Connect a Recipe Searcher with a red Network wire")
+
+            local limits = searcher.getLimits()
+            assert(limits.recipe_search_results == 50)
+
+            local ok, recipes = pcall(searcher.findRecipes, "item", "iron-plate")
+            if not ok then
+                if type(recipes) ~= "table" or recipes.code ~= "E_LIMIT" then
+                    error(recipes)
+                end
+                recipes = searcher.findRecipes("item", "iron-plate", "smelting")
+            end
+            for _, recipe in ipairs(recipes) do
+                computer.log(recipe.name .. " / " .. recipe.category
+                    .. " / seconds=" .. tostring(recipe.energy)
+                    .. " / enabled=" .. tostring(recipe.enabled))
+            end
+
+            local fluids = searcher.findRecipes("fluid", "petroleum-gas", "chemistry")
+            computer.setState("recipe_count", #recipes)
+            computer.setState("fluid_recipe_count", #fluids)
+        end
+    }
+}
+```
+
 ## peripheral-program
 
 Wire a computer NETWORK to any device NETWORK on red. Inspect each color in Peripherals; read program output in Console.

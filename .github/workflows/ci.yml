@@ -103,6 +103,23 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/integration" --mode both \
             --fixture tests.integration_engine --data-fixture tests.candidate_data \
             --production-context --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/lifecycle" --mode both \
+            --fixture tests.lifecycle_engine --data-fixture tests.candidate_data \
+            --production-context --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/recipe-searcher" --mode both \
+            --fixture tests.recipe_searcher_engine --data-fixture tests.recipe_searcher_data \
+            --production-context --cold --upgrade-fixture
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/device-art" --mode both \
+            --fixture tests.art_engine --data-fixture tests.art_data
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 120 \
+            https://github.com/SirEdvin/tweaked-computers/releases/download/alpha-0.1.8/tweaked-computers_0.1.8.zip \
+            --output "$RUNNER_TEMP/tc-ci/legacy_0.1.8.zip"
+          python tools/recipe_searcher_upgrade.py --factorio "$engine" --archive "$archive" \
+            --legacy "$RUNNER_TEMP/tc-ci/legacy_0.1.8.zip" --output "$RUNNER_TEMP/tc-ci/recipe-install"
+
       - name: Check buffered presentation and released-save migration
         shell: bash
         run: |

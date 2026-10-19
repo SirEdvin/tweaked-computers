@@ -42,7 +42,8 @@ All calls use dots; arity and wire types are checked, with no implicit wire or
 | `peripheral.getName(facade)` | Already-bound opaque name |
 | `peripheral.getWire(facade)` | Already-bound `red` or `green` |
 
-Types are `kv_database`, `monitor`, `logic_handler`, `configurator`. An unknown
+Types are `kv_database`, `monitor`, `logic_handler`, `configurator`, and
+`recipe_searcher` (see [recipe API](player/api/recipe-searcher.md)). An unknown
 string type has zero matches, not a fabricated facade. `find` is multiple returns,
 not an array; `{peripheral.find("monitor", "red")}` collects them. More than 128
 matches produces `E_LIMIT` before creating a partial tuple; enumerate names and

@@ -1,6 +1,6 @@
 # Editable factory controller
 
-This example exercises all device types using native named callbacks. It requires
+This controller combines the original device types using native named callbacks. It requires
 Factorio 2.0.77, base alone or Space Age. Back up your save before installing the
 alpha candidate. Client typing, focus, zoom and multiplayer checks are still yours;
 headless tests use explicit player/GUI doubles, not a real graphical player.
@@ -38,6 +38,14 @@ For a larger factory, inspect names and bind deliberately with `wrap(name, wire)
 The shared monitor does not create an unwired bridge between its members.
 
 ## Enter the source
+
+The optional Recipe Searcher is a separate late-game research, with exactly
+Circuit Computers and utility science as direct prerequisites: 200 red/green/utility
+pack sets at 60 seconds each. Craft it from 10 steel plates, 5 advanced circuits
+and 2 processing units in 2 seconds, supply 30 kW and wire its body to the red
+Network. It needs no product inventory or fluid input. Run the separate
+[recipe-searcher-program.lua](../examples/recipe-searcher-program.lua) document
+to inspect item/fluid recipes without replacing any machine configuration.
 
 Open the computer with Ctrl + left-click after clearing the cursor.
 Copy the document between the outer long

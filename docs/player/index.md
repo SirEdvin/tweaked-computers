@@ -19,7 +19,8 @@ Factorio objects, and no command history.
 5. Look up [Lua types, errors and limits](api/common.md), then choose a complete
    reference: [computer](api/computer.md), [peripheral discovery](api/peripheral.md),
    [monitor](api/monitor.md), [database](api/kv.md), [logic](api/logic.md),
-   [configurator](api/configurator.md) and [supported settings](api/settings.md).
+   [configurator](api/configurator.md), [Recipe Searcher](api/recipe-searcher.md)
+   and [supported settings](api/settings.md).
 
 [Runnable programs](examples.md) are ready to copy as whole documents. The
 [moving and recovery guide](lifecycle.md) explains what mining, destruction,

@@ -51,7 +51,7 @@ for _,kind in ipairs(defs.order) do
     energy_usage=def.watts..'W',energy_production='0W'},
     {type=(kind=='computer' or kind=='kv' or kind=='monitor') and 'item-with-tags' or 'item',name=def.name,
       icon=icon,icon_size=64,subgroup='circuit-network',order='z[tc]-'..kind,
-      place_result=def.entity_name,stack_size=(kind=='computer' or kind=='kv' or kind=='monitor') and 1 or 50},
+      place_result=def.entity_name,stack_size=(kind=='computer' or kind=='kv') and 1 or 50},
     {type='recipe',name=def.name,enabled=false,energy_required=2,
       ingredients=(function() local out={}; for _,v in ipairs(def.ingredients) do out[#out+1]={type='item',name=v[1],amount=v[2]} end; return out end)(),
       results={{type='item',name=def.name,amount=1}},auto_recycle=false}}
@@ -107,7 +107,14 @@ for _,role in ipairs(defs.role_order) do
     hidden=true,hidden_in_factoriopedia=true,place_result=p.name,stack_size=1,auto_recycle=false}}
 end
 local effects={}
-for _,kind in ipairs(defs.order) do effects[#effects+1]={type='unlock-recipe',recipe=defs.devices[kind].name} end
+for _,kind in ipairs(defs.order) do
+  local def=defs.devices[kind]
+  effects[def.technology]=effects[def.technology] or {}
+  local owned=effects[def.technology]; owned[#owned+1]={type='unlock-recipe',recipe=def.name}
+end
 data:extend{{type='technology',name='tc-circuit-computers',icon='__base__/graphics/technology/circuit-network.png',icon_size=256,
-  prerequisites={'circuit-network','advanced-circuit'},effects=effects,
-  unit={count=100,ingredients={{'automation-science-pack',1},{'logistic-science-pack',1}},time=30},order='a-d-e'}}
+  prerequisites={'circuit-network','advanced-circuit'},effects=effects['tc-circuit-computers'],
+  unit={count=100,ingredients={{'automation-science-pack',1},{'logistic-science-pack',1}},time=30},order='a-d-e'},
+  {type='technology',name='tc-recipe-searcher',icon=art.devices.recipe_searcher.icon,icon_size=64,
+    prerequisites={'tc-circuit-computers','utility-science-pack'},effects=effects['tc-recipe-searcher'],
+    unit={count=200,ingredients={{'automation-science-pack',1},{'logistic-science-pack',1},{'utility-science-pack',1}},time=60},order='a-d-f'}}

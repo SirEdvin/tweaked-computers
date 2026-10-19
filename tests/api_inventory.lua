@@ -11,6 +11,7 @@ return [[return {api_version=1,handlers={start=function(event)
     assert(type(peripheral[method])=='function')
   end
   local expected={
+    recipe_searcher={'findRecipes','getLimits'},
     kv_database={'get','set','del','exists','type','hget','hset','hdel','hexists','hgetall','hlen','expire','ttl','persist','getLimits'},
     logic_handler={'readSignal','readSignals','getInputStatus','getOutput','setOutput','clearOutput','subscribe','unsubscribe','getLimits'},
     configurator={'getDevices','getDevice','getCapabilities','getConfiguration','setConfiguration','getLimits','getSections','addSection','setSection','removeSection'},

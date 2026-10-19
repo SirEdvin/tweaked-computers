@@ -31,6 +31,11 @@ class PackageInventoryTests(unittest.TestCase):
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
                 self.assertEqual({name for name in planning if not name.startswith(build.CONTRACT + '/')},
                                  set(build.CONTRACT_EXTENSIONS))
+                self.assertEqual(len(build.CONTRACT_EXTENSIONS), 7)
+                for relative in ('scripts/services/recipe-searcher.lua', 'examples/recipe-searcher-program.lua',
+                                 'docs/player/api/recipe-searcher.md', 'assets/icons/recipe_searcher.png'):
+                    self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
+                self.assertFalse(any(name.endswith(('/proposal.md', '/design.md', '/tasks.md')) for name in planning))
 
     def test_actual_gameplay_art_bytes_match_provenance(self):
         import hashlib

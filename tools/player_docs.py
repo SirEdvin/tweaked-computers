@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs/player'
 CHANGE = ROOT / 'openspec/changes/add-native-circuit-computers'
 EXAMPLES = {
+    'recipe-searcher-program': 'Research Recipe Searcher separately, power it and connect its Network directly to a computer on red. Paste the whole document, Validate, Save and Run. Searches item/fluid products and refines E_LIMIT by exact category; a single category may still exceed 50 or other budgets.',
     'peripheral-program': 'Wire a computer NETWORK to any device NETWORK on red. Inspect each color in Peripherals; read program output in Console.',
     'logic-controller': 'Follow [your first inserter controller](first-controller.md). Stock INPUT red, discovery NETWORK red, OUTPUT to the inserter.',
     'kv-program': 'Connect one powered database NETWORK on red. Save/Run; inspect the delayed status/TTL in Console.',
@@ -222,7 +223,8 @@ def generated():
     limit_page += ['| `' + k + '` | ' + v + ' |' for k, v in limits]
     limit_page += ['', 'Device-specific limits: [monitor](monitor.md#bounds-example-and-troubleshooting),',
                    '[KV](kv.md#atomicity-errors-and-capacities), [logic](logic.md#bounds-and-use),',
-                   '[configurator](configurator.md#bounds-programs-and-troubleshooting).',
+                   '[configurator](configurator.md#bounds-programs-and-troubleshooting),',
+                   '[Recipe Searcher](recipe-searcher.md#complete-results-not-a-prefix).',
                    'See [shared rules](common.md) for Data accounting and refusal behavior.', '']
     return {'api/settings.md': '\n'.join(out), 'api/schemas.md': '\n'.join(schemas),
             'examples.md': '\n'.join(examples), 'api/limits.md': '\n'.join(limit_page)}
@@ -244,10 +246,12 @@ def inventory():
     monitor |= {n.replace('Color', 'Colour') for n in re.findall(r"'([A-Za-z]+)'", alias_section)}
     actual = {'computer': computer, 'peripheral': peripheral, 'kv_database': kv,
               'logic_handler': methods(text('scripts/services/logic.lua')),
-              'configurator': methods(text('scripts/services/configurator.lua')), 'monitor': monitor}
+              'configurator': methods(text('scripts/services/configurator.lua')), 'monitor': monitor,
+              'recipe_searcher': set(re.findall(r'function methods\.([A-Za-z]+)\(', text('scripts/services/recipe-searcher.lua')))}
     expected = {'computer': names['computer'], 'peripheral': names['peripheral'], **maps}
     pages = {'computer': 'api/computer.md', 'peripheral': 'api/peripheral.md', 'kv_database': 'api/kv.md',
-             'logic_handler': 'api/logic.md', 'configurator': 'api/configurator.md', 'monitor': 'api/monitor.md'}
+             'logic_handler': 'api/logic.md', 'configurator': 'api/configurator.md', 'monitor': 'api/monitor.md',
+             'recipe_searcher': 'api/recipe-searcher.md'}
     for namespace, exports in actual.items():
         if exports != set(expected[namespace]):
             raise ValueError(f'export inventory drift {namespace}: {exports ^ set(expected[namespace])}')

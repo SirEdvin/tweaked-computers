@@ -14,11 +14,11 @@
     },
     {
       "path": "assets/foundry.py",
-      "sha256": "a7131c39617ae877d2a5b13e2d06f139564731ea41a27b6ddc3bddba3b1ae421"
+      "sha256": "0c14860b50af165e13020df0e4a007bcdb6f4dc33617aeb62979edc8ab165b95"
     },
     {
       "path": "assets/industrial.py",
-      "sha256": "9c7faad14ea89c21e68dc943d2acc4e59fbf41d7ee24f63b2d6fdd0075adc5d1"
+      "sha256": "845492581cf2bda20986e2eaf14c7fa5cde6809d1fc80ccd27f49a64c8fc3df8"
     },
     {
       "path": "assets/layout-data.lua",
@@ -30,11 +30,11 @@
     },
     {
       "path": "assets/socket-layout.json",
-      "sha256": "89e694fb76b04965520b555b972953a795489aba61a444181d1386932d8bfcdf"
+      "sha256": "eb7f534bef9fa06ea62137b76d03d323eb544647740d9c5fb3e0249c5cc6d163"
     },
     {
       "path": "scripts/device-definitions.lua",
-      "sha256": "6b27553261817c6e81c6b8f401120aa4ed0a853c2b5e49d3672047442cfbd525"
+      "sha256": "f69158936fde8661e2e87b53c7221890bdbe1496c861b75c50384d5b574347f3"
     }
   ],
   "deferred": [
@@ -1177,13 +1177,190 @@
         1
       ],
       "icon": "icons/monitor.png"
+    },
+    "recipe_searcher": {
+      "directions": {
+        "east": {
+          "body": "sprites/recipe_searcher-east-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  0.1,
+                  0.07
+                ],
+                "red": [
+                  0.1,
+                  -0.07
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/recipe_searcher-east-shadow.png",
+          "states": {
+            "blinking": "sprites/recipe_searcher-east-blinking.png",
+            "fault": "sprites/recipe_searcher-east-fault.png",
+            "off": "sprites/recipe_searcher-east-off.png",
+            "powered": "sprites/recipe_searcher-east-powered.png",
+            "unpowered": "sprites/recipe_searcher-east-unpowered.png"
+          }
+        },
+        "north": {
+          "body": "sprites/recipe_searcher-north-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  0.07,
+                  -0.1
+                ],
+                "red": [
+                  -0.07,
+                  -0.1
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/recipe_searcher-north-shadow.png",
+          "states": {
+            "blinking": "sprites/recipe_searcher-north-blinking.png",
+            "fault": "sprites/recipe_searcher-north-fault.png",
+            "off": "sprites/recipe_searcher-north-off.png",
+            "powered": "sprites/recipe_searcher-north-powered.png",
+            "unpowered": "sprites/recipe_searcher-north-unpowered.png"
+          }
+        },
+        "south": {
+          "body": "sprites/recipe_searcher-south-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  -0.07,
+                  0.1
+                ],
+                "red": [
+                  0.07,
+                  0.1
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/recipe_searcher-south-shadow.png",
+          "states": {
+            "blinking": "sprites/recipe_searcher-south-blinking.png",
+            "fault": "sprites/recipe_searcher-south-fault.png",
+            "off": "sprites/recipe_searcher-south-off.png",
+            "powered": "sprites/recipe_searcher-south-powered.png",
+            "unpowered": "sprites/recipe_searcher-south-unpowered.png"
+          }
+        },
+        "west": {
+          "body": "sprites/recipe_searcher-west-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  -0.1,
+                  -0.07
+                ],
+                "red": [
+                  -0.1,
+                  0.07
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/recipe_searcher-west-shadow.png",
+          "states": {
+            "blinking": "sprites/recipe_searcher-west-blinking.png",
+            "fault": "sprites/recipe_searcher-west-fault.png",
+            "off": "sprites/recipe_searcher-west-off.png",
+            "powered": "sprites/recipe_searcher-west-powered.png",
+            "unpowered": "sprites/recipe_searcher-west-unpowered.png"
+          }
+        }
+      },
+      "footprint": [
+        1,
+        1
+      ],
+      "icon": "icons/recipe_searcher.png"
     }
   },
   "format_version": 2,
   "generated_metadata": [
     {
       "path": "assets/sprites.lua",
-      "sha256": "bd760356c7a405c534773a93916f60a5453cec1240d373823d3e256f27efad51"
+      "sha256": "1eab8f8278eadb6f147217b50dbbb2a696989830a9ab1b2cd573f44016deaba1"
     }
   ],
   "glyphs": {
@@ -6892,6 +7069,1083 @@
       "path": "assets/icons/monitor.png",
       "rgba_sha256": "9842ad6452609ab369952fb0e1647f88d366c66b29ed38daa41d86b695be6bf5",
       "sha256": "7218cd57f9f4751524293093e0db2746b0b2196897faf6c53313ec46bcbe8db5",
+      "width": 64
+    },
+    {
+      "alpha_sha256": "e952be4b0d1903144d1c63c430ae39bf3e3e4ddc2298b74753ba20c786bbf4ab",
+      "device": "recipe_searcher",
+      "direction": "north",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-north-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "2ec762c05e8030326c44e6c91622dc4becb2e929a771a6376ea9333cd0624e57",
+      "scale": 0.5,
+      "sha256": "861e5814794171c7a4399c833a4c26721f1920c6f69f9886293bdb80be6ccbb7",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1797f87bc877ef544745294104b8180ffed38761bbaca7c50030f35d669f5df8",
+      "device": "recipe_searcher",
+      "direction": "north",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-north-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "9ae80a6d275d892772a88552f03905ce1927bc24a8d2ee3971809b481884efb3",
+      "scale": 0.5,
+      "sha256": "7fa46fe9282934d704f11f11d8f0f337ba0680102933426683d24320fbed5612",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "d62b81386adec0c0e6ec206aa22c7e18ee35313d7485d327834c72e42051fba5",
+      "device": "recipe_searcher",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-north-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "148742f1490aa7d2fa99b1f5209ab9a44e599a9a005fcaf2c40b878e81e0ded9",
+      "scale": 0.5,
+      "sha256": "a7667af19efede3b3766468f55b18cbb0e220b2921e40251cf6f6c525dda0d4d",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "a386fb7eb84de1c594b2ccfc3647552a783f169ca19c3e651c2d0da1a2cbd492",
+      "device": "recipe_searcher",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-north-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "a8c0fb3a39c33f62b481101254c6b5af8d662b5778009d284f4584f3741a18f0",
+      "scale": 0.5,
+      "sha256": "a43d85717e5bd267768cd253b700f3c56f789a1fc10e9de4a5cadf2bed2cdf21",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "4cc51ab667c608eae2627efac68ad14e37beb1a6991a0f9ad062feeb92a3fc7c",
+      "device": "recipe_searcher",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-north-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "7b0c3ee03ad7a5a6d136e279ab67d9598b0982622742a67b2d1f99af43dccc24",
+      "scale": 0.5,
+      "sha256": "b5a0fc7f5a0b05aae538cc4f8d99566e6a27a9eba283748a39fd0796be21409e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1890ac86528667f46639958ea324e6b4d3b64896fad37571c9bdb4c55d0bb622",
+      "device": "recipe_searcher",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-north-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "7984a447c6df8a790a4e7af5b6a4a36621338eabc400e0a8f4b431197b1bcddb",
+      "scale": 0.5,
+      "sha256": "039636a379f99e37db12a4ec425e8db901e6237fc183e1dab05b0640f259b8a4",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "571a3c87832b359b9d6d1120f75ecf90bd7b8c3d67a8b54243a91a997c030cc9",
+      "device": "recipe_searcher",
+      "direction": "north",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-north-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "0bf81fab88def0177907b082733a80ee55c869afd5ecae175f9f6895d01fd82a",
+      "scale": 0.5,
+      "sha256": "d75811d3934b87a748e33973bdc25410daa6d2649965991e409660eec8fa7ce6",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "91bb1b7451d31006ce327475f52c469ac981c53288792064285affaf1b26b5eb",
+      "device": "recipe_searcher",
+      "direction": "east",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-east-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "b1568243fbf6f45408143acd5831d73ed510a18f85ac993124ccbbab763c67d0",
+      "scale": 0.5,
+      "sha256": "3a7023a7ef9c57cdd079f1017280b749405c4d08aa1ab6d209ae1ea721590864",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "07e37c03495f8ebcbeccc1d21fec92782d8caa6b7b74999009a1fd4b1cd9903e",
+      "device": "recipe_searcher",
+      "direction": "east",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-east-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "49b0a344a460e8e6144e0ef88ee8fa80fb81769b90ddbc45b89ab42497682b4e",
+      "scale": 0.5,
+      "sha256": "8b33af02cd79f92011cfc0bdeffd2889d7cd3e8f34eb81de9d62cb904af1a948",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "861a55983c60285381c163da9ea9b71407ee78a2e48429cc9ef08521c66d980e",
+      "device": "recipe_searcher",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-east-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "8c1306ca00af2b944ea177af56bcd53f0391cb4b03588d9e0f4d0fee1dbb0479",
+      "scale": 0.5,
+      "sha256": "310a2f813eb6fd2745c1a58f90a251a570cc3511920630734f7105f0c70636b3",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c586f32b845e94f446cd1a596e236e0391f5ab86fc07eb6ae4a3e3c4777e1eb7",
+      "device": "recipe_searcher",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-east-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "86b8f8fed02853605ab2dfc49b589f7bea530bd2553f6b10dda11eb856701af5",
+      "scale": 0.5,
+      "sha256": "ff530c72b29e87c44c7ee3d8e3e33adcc5fe2781fa2bab127c5608abe377ede6",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "34bf8e4fee70bfcfc9483b99d3a8baf6b6cfe4bfc4a7f8517b822851c4b34863",
+      "device": "recipe_searcher",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-east-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "cd36b6fa5dbf06cfd431e74c652a34b718a7aa3ae8f3d9aee315bc78d50f9f45",
+      "scale": 0.5,
+      "sha256": "34336ac83ebfcce7ce5882f3e81dc384a8ee75fc59c99dc6e3c19d3815a7ff4a",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c2f74de9dbc1cc96389b6f5f4d4b4a8c7340486a4f9dc8471667c90b0c603709",
+      "device": "recipe_searcher",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-east-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "ad9f5fe7ab540db3e35784e2dfe5f841d7c5ebea8eb021eb7cf1391604d6a5ba",
+      "scale": 0.5,
+      "sha256": "d6148bd26f43462a90c4f69112e89a56773796bdf4dca907233ca5139fbd586f",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "e1f118c4c20fc3a15897fa5df6fc0ad5ed3bdf73955642200a9b14fc31e9b235",
+      "device": "recipe_searcher",
+      "direction": "east",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-east-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "18dcaf67d913f5c705b5171662a86b47dd966c649388b9d16caa5fe6c3cf87f7",
+      "scale": 0.5,
+      "sha256": "3a517a585215cfaeb2baf637c0d35aea022affc27c9a9ace244562a1dfda9d96",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "626738879f64c71bb5bdda72d884f39e6d68173f0cfcae1e31f14318b6eb56b1",
+      "device": "recipe_searcher",
+      "direction": "south",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-south-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "c8063b758623ca0d87073331720a2d1925c2d7166ecf420c14cc850748eac01d",
+      "scale": 0.5,
+      "sha256": "c6d7fef43963968a922406897d428f444db009019e12371e3ecf19c46df21500",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1797f87bc877ef544745294104b8180ffed38761bbaca7c50030f35d669f5df8",
+      "device": "recipe_searcher",
+      "direction": "south",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-south-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "9ae80a6d275d892772a88552f03905ce1927bc24a8d2ee3971809b481884efb3",
+      "scale": 0.5,
+      "sha256": "7fa46fe9282934d704f11f11d8f0f337ba0680102933426683d24320fbed5612",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "0edddad2c778052c87e1f6cafe6850010e47ca963025afc2dbfd22e32eac1883",
+      "device": "recipe_searcher",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-south-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "86777b1e3de1490864b0650c3daebab876043c26dd146101577744797d202641",
+      "scale": 0.5,
+      "sha256": "5ee79671853ffbe8fda6e54df884861f999f9491c9cf475e41ff52035e3a863c",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "6f47510dd0a4462f7140c8124545b12224e23135f850bd3f99ae8668e55a9a8c",
+      "device": "recipe_searcher",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-south-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "664377ea51680057d86bc75e732d89de68c16bfda8c9d100e49537ae4b4bd0f9",
+      "scale": 0.5,
+      "sha256": "378fbd12503d00286808760c3c52d27bcb40178ff89b471bff37ac3e83f5267b",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "7c40b1cb347e0b9aa7e6a22efbdc6b39fc94bd2a0111f55a7a4b993cd04e66bd",
+      "device": "recipe_searcher",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-south-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "05df3b628e62326fe4488231f58669edf9db4bb874995c6ccb419d96cbd70364",
+      "scale": 0.5,
+      "sha256": "3f5bdb81e3b60f94437f91b429a70ed8251c8cc0744d42c6b75daecb7acf8e50",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "443c6a4fec6d2a600715779abd0484aa3285cd5581cb730f4a24fed938d7d5f1",
+      "device": "recipe_searcher",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-south-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "fabc3dd3a610fd17a06630a32d50105605ea37528c337b8c8a9c640e6fda87c1",
+      "scale": 0.5,
+      "sha256": "86354b889d665c98f316306b0373ceec650093c92907c391e42c7b81d07bf568",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "545aa5233a6cf1c10a198c73e2bef5ffbdd946581d93fd79782f570a43d73444",
+      "device": "recipe_searcher",
+      "direction": "south",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-south-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "1df4cbaf0bcbfee8edb3d07dc0735ded57077947b89d32ca04a2f2241ce8b9c4",
+      "scale": 0.5,
+      "sha256": "ba3ca6c396e4c68db585723073ad190b1ccea0e640c76b645cd141864bb391ca",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "c30caa3fc0df656aa68283fd591a0d59dc4f45f1cfbffc2c61a2e706c4afeaa5",
+      "device": "recipe_searcher",
+      "direction": "west",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-west-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "43db9cb840f96416eb8a70bc73f97ff8f6f93296a76c3238c009b8d1f9f07547",
+      "scale": 0.5,
+      "sha256": "4824e8286afab12468bd8a2d7ebc0c33d7c20c59fcc10b109ecacb383c6a63fd",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "07e37c03495f8ebcbeccc1d21fec92782d8caa6b7b74999009a1fd4b1cd9903e",
+      "device": "recipe_searcher",
+      "direction": "west",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-west-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "49b0a344a460e8e6144e0ef88ee8fa80fb81769b90ddbc45b89ab42497682b4e",
+      "scale": 0.5,
+      "sha256": "8b33af02cd79f92011cfc0bdeffd2889d7cd3e8f34eb81de9d62cb904af1a948",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "d67ad2ea1775b2aedd2f756173d661393abc82910b2d7c18f999185d872df82f",
+      "device": "recipe_searcher",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-west-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "05f8e81bff1e3178055bcfe600fd85f0da47430047bb8c758fe5e4fdfa803ac7",
+      "scale": 0.5,
+      "sha256": "e92761db57e470991587257126edd1d934869207309cc9296485cce3fbd47705",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "028369c29e53e555c2aa20c54b95b46178fd27c0c48efccceb377220f1eb7992",
+      "device": "recipe_searcher",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-west-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "019c37316f39839456cf035d5655026007356b6cd3822d2d35011b330597768a",
+      "scale": 0.5,
+      "sha256": "86989b0df7eccc152399d6467de8f50fd57fecc53323ee0d917bec40837704da",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "a137a413b31aa608544335c5e156293c4e94c17f28a9a6a680de32a1962cc05f",
+      "device": "recipe_searcher",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-west-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "1a0f0b3cc53677ed1fb42dbe386c32b287bde4e96a3f0a4b61938aee777b8dab",
+      "scale": 0.5,
+      "sha256": "37e213c1932b612a52c10698bd2b76c18fe1ceed3828b8b8d7bbc112f0080bb0",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "7ea88b9bb0c1441e7cc293dfa4fe553c68d31eea79a6eaed8bf631f25017da78",
+      "device": "recipe_searcher",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-west-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "db34ae6ffacdb1f6dc5eeb7083a6e474b7191e74763cee40994ac870e85e41d9",
+      "scale": 0.5,
+      "sha256": "7c20899292269dc66564eeb713cc9fbf3222657e66284d4c518e7794a22b4d78",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "345dae39d0ba418dcc173b2b9f550f5576cb6e1f1e61026fa13af7d5ea377c48",
+      "device": "recipe_searcher",
+      "direction": "west",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/recipe_searcher-west-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "8ad4d87ce94245be0ce243b401f3c72355f666db9f7dc636244056d57a573b8c",
+      "scale": 0.5,
+      "sha256": "615e0372a87bcda2bc5686f9138e5d627264589ba6fb7022c4c5ca830169305f",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "63e7728fa65a2f57ca3fff030ab4e7736042f7c7f88c93304d81e57e883b2b84",
+      "device": "recipe_searcher",
+      "height": 64,
+      "icon_size": 64,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "icon",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/icons/recipe_searcher.png",
+      "rgba_sha256": "9eb1acfb541fb654cbef7b9d72b650bc47dbc41bbf0569a5202f6eca7a4ac11c",
+      "sha256": "e0c5ef3f08c417489933fd977e26517dd3d2077b3575d764e20c6fe8c4b4a2b8",
       "width": 64
     },
     {
