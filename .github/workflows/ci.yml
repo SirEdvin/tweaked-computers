@@ -94,6 +94,9 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/gui-workspace" --mode both \
             --fixture tests.editor_workspace --data-fixture tests.candidate_data
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/rotation-guards" --mode both \
+            --fixture tests.rotation_engine --data-fixture tests.candidate_data
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/gui-cold" --mode both \
             --fixture tests.editor_cold --cold
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
@@ -147,6 +150,11 @@ jobs:
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/monitor_buffer_engine" --mode both \
             --fixture tests.monitor_buffer_engine --cold
+          for phase in waiting preparing ready retiring; do
+            python tools/smoke.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/monitor-state-$phase" --mode both \
+              --fixture "tests.monitor_state_$phase" --production-context --cold
+          done
           curl --fail --location --retry 3 --connect-timeout 20 --max-time 120 \
             https://github.com/SirEdvin/tweaked-computers/releases/download/alpha-0.1.4/tweaked-computers_0.1.4.zip \
             --output "$RUNNER_TEMP/tc-ci/legacy_0.1.4.zip"
@@ -160,8 +168,11 @@ jobs:
           path: |
             ${{ runner.temp }}/tc-ci/reports/
             ${{ runner.temp }}/tc-ci/**/summary.json
+            ${{ runner.temp }}/tc-ci/**/engine.log
             ${{ runner.temp }}/tc-ci/**/*-engine.log
             ${{ runner.temp }}/tc-ci/**/*-result.json
+            ${{ runner.temp }}/tc-ci/**/command.json
+            ${{ runner.temp }}/tc-ci/**/*-command.json
             ${{ runner.temp }}/tc-ci/runtime/**/summary.json
             ${{ runner.temp }}/tc-ci/runtime/**/engine.log
             ${{ runner.temp }}/tc-ci/gui-workspace/**/summary.json

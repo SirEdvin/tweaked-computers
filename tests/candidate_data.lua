@@ -33,7 +33,12 @@ assert(interact.consuming=='none','world interaction must pass native Ctrl-click
 assert(interact.block_modifiers==false,'world interaction must leave held Ctrl usable for subsequent shortcuts')
 assert(not inputs['tc-open-editor'] and not inputs['tc-open-selected-computer'] and not inputs['tc-monitor-activate'])
 for name in pairs(inputs) do
-  if name:sub(1,3)=='tc-' then assert(name=='tc-interact','unexpected mod input '..name) end
+  if name:sub(1,3)=='tc-' then assert(name=='tc-interact' or name=='tc-rotate' or name=='tc-reverse-rotate','unexpected mod input '..name) end
+end
+for name,control in pairs({['tc-rotate']='rotate',['tc-reverse-rotate']='reverse-rotate'}) do
+  local input=assert(inputs[name])
+  assert(input.key_sequence=='' and input.linked_game_control==control)
+  assert(input.action=='lua' and input.consuming=='none' and input.block_modifiers==false)
 end
 for name,kind in pairs({tc_editor_text='textbox_style',tc_editor_button='button_style',tc_editor_frame='frame_style',
   tc_editor_tabs='tabbed_pane_style',tc_editor_tab='tab_style',draggable_space_header='empty_widget_style'}) do
