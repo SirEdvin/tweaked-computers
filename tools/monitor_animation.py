@@ -20,6 +20,7 @@ def main():
     ap.add_argument('--output', type=Path, required=True)
     ap.add_argument('--mode', choices=('base', 'space-age', 'both'), default='both')
     ap.add_argument('--layout', choices=('four-walls', 'mixed'), default='four-walls')
+    ap.add_argument('--with-modem', action='store_true', help='Compete with maximum-payload eight-handler radio traffic and live logic on the same ledgers')
     args = ap.parse_args()
     folder = args.output.resolve()
     if folder.is_relative_to(ROOT) or folder.exists():
@@ -40,11 +41,12 @@ def main():
               'test_archive_sha256': hashlib.sha256(target.read_bytes()).hexdigest(),
               'guest_sha256': hashlib.sha256(source.encode()).hexdigest(),
               'layout': args.layout,
+              'modem_competition': args.with_modem,
               'test_only_additions': ['tests/monitor_animation_source.lua', 'tests/monitor_animation_layout.lua']}
     (folder / 'provenance.json').write_text(json.dumps(record, indent=2) + '\n')
     command = [sys.executable, str(ROOT / 'tools/smoke.py'), '--factorio', str(args.factorio),
                '--archive', str(target), '--output', str(folder / 'engine'), '--mode', args.mode,
-               '--fixture', 'tests.monitor_animation_engine', '--production-context', '--cold',
+               '--fixture', 'tests.modem_competition_engine' if args.with_modem else 'tests.monitor_animation_engine', '--production-context', '--cold',
                # The fixed-tick cadence plus outage/recovery contract can take
                # over 90 wall seconds on hosted CPUs. This is not a latency
                # gate: retain its 2200-tick deadline, cadence and paid limits.

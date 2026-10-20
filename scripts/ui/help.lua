@@ -75,7 +75,7 @@ log(text) -> bounded plain output
 stop() -> does not return; ends this callback/run and cannot be caught by pcall
 on(event_name, handler_name) -> subscription ID; off(ID) -> boolean
 General events: peripheral_attach, peripheral_detach, monitor_resize,
-monitor_touch, power_restored. Events include name/tick/sequence/computer_id/run_id.
+monitor_touch, power_restored, modem_message. Events include name/tick/sequence/computer_id/run_id.
 after(delay_ticks, handler_name, payload?) -> timer ID
 every(interval_ticks, handler_name, payload?) -> timer ID
 cancelTimer(ID) -> boolean, including already queued timer notifications.
@@ -97,13 +97,36 @@ getMonitorSyncGroup() -> copied members/status/presented_sequence/tick/diagnosti
 One selected group per run; at most four screens and 10584 summed actual cells.
 Every supplied path is checked; duplicate names prefer red. Writing stays shared.
 wire is explicitly "red" or "green", never "both" for discovery.
-Only same-color physical mod NETWORK ports relay discovery; vanilla poles,
+Only same-color physical mod NETWORK ports and supported native radar sockets relay discovery; vanilla poles,
 INPUT/OUTPUT/TARGETS ports and color changes are not discovery paths.
-Types: monitor, kv_database, logic_handler, configurator, recipe_searcher.
+Types: monitor, kv_database, logic_handler, configurator, recipe_searcher, modem.
 Each has getLimits().
 Store name/wire in state, not ephemeral facades. Calls recheck live authority.
 Use Peripherals / Refresh for current names/types/power on the selected color.
 Incomplete discovery reports pending/limit, never a successful empty prefix.
+
+RADAR MODEM
+Native radar: unchanged scanning, circuits, power, GUI and mining; no adapter item.
+find("modem", wire); numeric channels are not red/green discovery colors.
+open(channel), close(channel), closeAll(), transmit(channel, replyChannel, payload)
+return no values. isOpen(channel) and isWireless() return booleans; getLimits()
+works without power. Other calls require an active, electrically supplied radar.
+Channels 0..65535; 128 shared open channels per physical radar, across all callers.
+closeAll affects other computers too. Stop does not close the shared channels.
+computer.on("modem_message", "received") registers a saved named handler.
+Event: peripheral (receiver), wire/wires, channel, replyChannel, message, distance?,
+sent_tick; nil payload is an absent message, false is preserved. Same-radar echo
+is excluded. Both-color paths deduplicate; two receiving radars remain distinct.
+Whole-send proof/copies/fanout are admitted before publication; overflow faults
+the recipient, not a retryable partial sender error. No ACK/retry/offline mailbox.
+Payloads: bounded Data plus explicit third-argument nil. Check getLimits for
+finite payload/candidate/delivery/rate caps; Console and programs share credits.
+Same-force/same-surface unlimited-distance radio. Space Age advanced endpoints
+at BOTH ends allow cross-surface traffic, including travelling platforms.
+Advanced: 5x5, 1.5x native art, 1MW; six-pack research excludes military/planet packs.
+Hidden native radar links and received names never grant remote device authority.
+No rednet, callRemote, remote inventory or pullEvent. Channels/queues survive cold
+load without replay; replacement/clone and force/surface changes clear channels.
 
 LOGIC HANDLER
 find("logic_handler", wire) -> facade; NETWORK discovery is not INPUT selection.
@@ -205,6 +228,7 @@ local sections={
   ['LOGIC HANDLER']={'Logic handler','Peripherals'}, ['KV DATABASE']={'KV database','Peripherals'},
   MONITOR={'Monitor','Peripherals'}, CONFIGURATOR={'Configurator','Peripherals'},
   ['RECIPE SEARCHER']={'Recipe Searcher','Peripherals'},
+  ['RADAR MODEM']={'Radar modem','Peripherals'},
   ['COMBINED EXAMPLE']={'Factory examples','Examples'},
   ['FAILURES AND PERSISTENCE']={'Failures and persistence','Safety'}
 }

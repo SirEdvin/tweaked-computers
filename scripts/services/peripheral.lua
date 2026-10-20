@@ -9,7 +9,7 @@ local errors=require('scripts.runtime.errors')
 local data=require('scripts.runtime.data')
 local principal=require('scripts.runtime.principal')
 local M={}
-local types={kv='kv_database',monitor='monitor',logic='logic_handler',configurator='configurator',recipe_searcher='recipe_searcher'}
+local types={kv='kv_database',monitor='monitor',logic='logic_handler',configurator='configurator',recipe_searcher='recipe_searcher',radar='modem'}
 local bindings={}; local revocations={}
 local monitor_sync
 function M.register_monitor_sync(binding)
@@ -201,10 +201,12 @@ function M.services(computer,tick,guard,execution)
     local rec=lookup(name,wire); if not rec then return nil end
     local b=rec.body; local def=defs.devices[rec.kind]
     local horizontal=rec.direction==0 or rec.direction==8
+    local width=rec.native_carrier=='radar' and (rec.modem_tier=='surface' and 3 or 5) or nil
     local info={name=rec.id,type=types[rec.kind],label=rec.label,powered=rec.powered,
       position={x=b.position.x,y=b.position.y},surface={index=b.surface.index,name=b.surface.name},
-      quality=b.quality.name,direction=directions[rec.direction],
-      footprint={width=horizontal and def.width or 1,height=horizontal and 1 or def.width},wire=wire}
+      quality=b.quality.name,direction=directions[width and b.direction or rec.direction],
+      footprint={width=width or (horizontal and def.width or 1),height=width or (horizontal and 1 or def.width)},wire=wire}
+    if width then info.modem_tier=rec.modem_tier; info.powered=lifecycle.has_power(rec) end
     if bindings[rec.kind].describe then info=bindings[rec.kind].describe(rec,wire,info) end
     return (data.copy(info,spend))
   end)

@@ -78,9 +78,11 @@ class PackageInventoryTests(unittest.TestCase):
                                  'examples/monitor-plot-baseline.lua', 'examples/monitor-plot-baseline.json'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
-                self.assertEqual(set(planning), set(build.CONTRACT_FILES))
+                self.assertEqual(set(planning), set(build.CONTRACT_FILES) | set(build.FEATURE_CONTRACT_FILES))
                 self.assertEqual(len(build.CONTRACT_FILES), 30)
-                self.assertFalse(any(name.startswith('openspec/changes/') for name in planning))
+                self.assertEqual({name for name in planning if name.startswith('openspec/changes/')}, set(build.FEATURE_CONTRACT_FILES))
+                for relative in build.FEATURE_CONTRACT_FILES:
+                    self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 for relative in ('openspec/specs/program-source/spec.md',
                                  'openspec/specs/program-source/lua-api.md'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())

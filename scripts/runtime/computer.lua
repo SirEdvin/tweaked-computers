@@ -9,7 +9,7 @@ local M = {}
 local providers = {}
 local shell_lifecycle
 function M.register_shell_lifecycle(fn) assert(not shell_lifecycle); shell_lifecycle=fn end
-local general={peripheral_attach=true,peripheral_detach=true,monitor_resize=true,monitor_touch=true,power_restored=true}
+local general={peripheral_attach=true,peripheral_detach=true,monitor_resize=true,monitor_touch=true,power_restored=true,modem_message=true}
 local MAX=9007199254740991
 local function root() local r=registry.get(); if not registry.supported(r) then errors.raise('E_UNSUPPORTED','unsupported storage; data retained') end; return r end
 local function arity(n,min,max) if n<min or n>(max or min) then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end end
@@ -116,7 +116,7 @@ function M.unsubscribe(rec,id,spend)
   if spend then spend(#id+1) end
   local exists=rec.subscriptions[id]~=nil; rec.subscriptions[id]=nil; return exists
 end
-function M.enqueue(rec,name,payload,tick,spend,metadata)
+function M.prepare_event(rec,name,payload,tick,spend,metadata)
   if rec.status~='running' then return false,'inactive' end
   handler(rec,name)
   if not rec.powered and payload.name~='timer' and payload.name~='start' then return false,'unpowered' end
@@ -126,14 +126,25 @@ function M.enqueue(rec,name,payload,tick,spend,metadata)
   -- Host overrides all authoritative envelope fields, never trusts injected ones.
   event.tick=tick; event.computer_id=rec.id; event.run_id=rec.run_id
   local bytes=stats.bytes+128+#rec.id+#rec.run_id
+  return {handler=name,event=event,bytes=bytes,timer_id=metadata and metadata.timer_id}
+end
+-- Immediate trusted publication of an owned, prepaid prepare_event result.
+function M.publish_event(rec,item,tick)
+  if rec.status~='running' or item.event.run_id~=rec.run_id then return false,'inactive' end
+  local bytes=item.bytes
   if #rec.queue>=limits.event_queue_entries or rec.queue_bytes+bytes>limits.event_queue_bytes then
     M.fault(rec,errors.new('E_CAPACITY','event queue overflow; run stopped and owned outputs cleared'),tick)
     return false,'overflow'
   end
-  event.sequence=registry.sequence()
-  rec.queue[#rec.queue+1]={handler=name,event=event,bytes=bytes,timer_id=metadata and metadata.timer_id}
+  item.event.sequence=registry.sequence()
+  rec.queue[#rec.queue+1]=item
   rec.queue_bytes=rec.queue_bytes+bytes
   return true
+end
+function M.enqueue(rec,name,payload,tick,spend,metadata)
+  local item,reason=M.prepare_event(rec,name,payload,tick,spend,metadata)
+  if not item then return false,reason end
+  return M.publish_event(rec,item,tick)
 end
 function M.emit(id,event_name,payload,tick,spend)
   local rec=registry.computer(id)

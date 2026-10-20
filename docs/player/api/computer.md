@@ -61,6 +61,7 @@ private helper names or nested local names.
 | monitor_resize | peripheral, wire, wires, old_width, old_height, width, height, reason |
 | monitor_touch | peripheral, wire, wires, x, y, player_index, sample_tick |
 | power_restored | outage_start_tick, restored_tick |
+| modem_message | peripheral, wire, wires, channel, replyChannel, message?, distance?, sent_tick; [modem semantics](modem.md#messages-and-named-handlers) |
 
 `power_restored` occurs once after a real outage for retained subscriptions, not
 cold load. No power-loss/stop/fault guest callback is required for safety. `start`,

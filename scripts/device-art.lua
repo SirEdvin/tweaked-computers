@@ -14,7 +14,7 @@ function M.tick(tick,spend)
   for _=1,math.min(n,128) do
     spend(16)
     local rec=registry.record(root.order[index])
-    if rec and rec.physical_version==1 and rec.body.valid then
+    if rec and not rec.native_carrier and rec.physical_version==1 and rec.body.valid then
       local state='powered'
       if rec.physical_error or rec.status=='faulted' or rec.mining_guard=='unsupported-database' then state='fault'
       elseif not rec.powered then state='unpowered'
