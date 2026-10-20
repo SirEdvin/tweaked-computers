@@ -44,6 +44,25 @@ function M.run()
   local function report(name) total=total+1; log('TC_CONTRACT '..name) end
   -- All foundation and new grouped checks share one counted inventory.
   local root=fresh()
+  local first=computer(source(''))
+  local second=computer(source(''))
+  runtime.save(second.id,source('computer.log("revision two")'),second.saved_revision)
+  assert(runtime.activate(second.id,1))
+  local shared={code='E_BUSY',message='shared host failure',field='input',line=3,column=7,
+    source_revision=99,run_id='caller-owned'}
+  runtime.fault(first,shared,2); runtime.fault(second,shared,2)
+  assert(first.diagnostic~=shared and second.diagnostic~=shared and first.diagnostic~=second.diagnostic)
+  for _,c in ipairs({first,second}) do
+    assert(c.diagnostic.run_id==c.run_id and c.diagnostic.source_revision==c.active.revision)
+    assert(c.diagnostic.code=='E_BUSY' and c.diagnostic.message=='shared host failure')
+    assert(c.diagnostic.field=='input' and c.diagnostic.line==3 and c.diagnostic.column==7)
+  end
+  assert(first.active.revision~=second.active.revision and first.run_id~=second.run_id)
+  assert(shared.source_revision==99 and shared.run_id=='caller-owned')
+  shared.message='caller changed'; second.diagnostic.line=9
+  assert(first.diagnostic.message=='shared host failure' and first.diagnostic.line==3)
+  report('shared-fault-diagnostic-caller-and-computer-identity-isolation')
+  root=fresh()
   local rec=computer(source([[
     local t={nested={false,'',3}}; computer.setState('value',t); t.nested[3]=99
     local r=computer.getState('value'); assert(r.nested[1]==false and r.nested[2]==''); r.nested[3]=88

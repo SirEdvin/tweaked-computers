@@ -34,7 +34,7 @@ not the unfinished client performance gate.
 | Source | 16,384 bytes, 4,096 nodes/tokens, nesting 48; generated 131,072 bytes |
 | Native callback | default work 500,000, depth 32, default allocations 81,920; work/allocation budgets are live Map settings |
 | Compilation | default work 1,250,000, live Map setting; active/saved source kept separately |
-| Shared actual tick | default 5,000,000 total-envelope units, live Map setting; 200,000 reserved maintenance; no extra guest pool |
+| Shared actual tick | default 5,000,000 total-envelope units; default 200,000 reserved maintenance; both live Map settings, no extra guest pool |
 | Active admission | 64 computers, 128 sampled logic handlers, 1,024 subscriptions, 128 owned banks |
 | State | 65,536 accounted bytes, 256 entries, 4,096 Data nodes, Data depth 16 |
 | Queue/timers | 128 queue entries / 65,536 accounted bytes; 64 timers and 64 subscriptions per computer |
