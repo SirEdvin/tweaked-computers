@@ -173,6 +173,28 @@ function M.initialize_existing()
   end
 end
 local function noop() end
+-- Detached live browser snapshot. Unlike mining snapshots this excludes expiry
+-- at the exact deadline, never imports/repairs state, and requires paid reads.
+function M.inspect(rec,tick,spend)
+  clock(tick)
+  local d=db(rec); M.audit(d,spend)
+  spend(d.bytes+#d.order*80+d.fields*48+128)
+  local entries={}
+  for _,k in ipairs(d.order) do
+    local e=live(d,k,tick)
+    if e then
+      local item={key=k,type=e.type}
+      if e.type=='string' then item.value=e.value
+      else
+        item.fields={}
+        for _,f in ipairs(sorted(e.fields,spend)) do item.fields[#item.fields+1]={field=f,value=e.fields[f]} end
+      end
+      entries[#entries+1]=item
+    end
+  end
+  table.sort(entries,function(a,b) spend(#a.key+#b.key+1); return a.key<b.key end)
+  return {tick=tick,entries=entries}
+end
 -- Snapshot representation has separately reserved metadata, with dense records
 -- rather than dynamic key serialization. Even empty/NUL keys are plain values.
 function M.snapshot(rec,tick,spend)

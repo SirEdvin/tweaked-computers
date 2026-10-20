@@ -107,6 +107,9 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/editor-contract" --mode both \
             --fixture tests.editor_contract
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/peripheral-inspectors" --mode both \
+            --fixture tests.peripheral_inspector_engine --production-context --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/gui-workspace" --mode both \
             --fixture tests.editor_workspace --data-fixture tests.candidate_data
           python tools/smoke.py --factorio "$engine" --archive "$archive" \

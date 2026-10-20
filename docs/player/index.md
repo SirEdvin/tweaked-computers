@@ -20,6 +20,7 @@ no production safety ceiling is raised by this release.
 1. [Install the alpha and craft the devices](getting-started.md).
 2. [Control your first inserter](first-controller.md) with a computer and logic handler.
 3. [Use the editor safely](editor.md): Save is not Run, and Stop is not Reset State.
+   [Inspect peripherals directly](inspectors.md) to copy names and read local state.
 4. [Build the combined factory controller](factory.md), adding configuration,
    expiring database telemetry and a merged touchable monitor.
 5. Look up [Lua types, errors and limits](api/common.md), then choose a complete

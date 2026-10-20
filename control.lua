@@ -10,6 +10,7 @@ local lifecycle = require('scripts.lifecycle')
 local peripheral = require('scripts.services.peripheral')
 local editor = require('scripts.ui.editor')
 local interaction = require('scripts.ui.interaction')
+local inspector = require('scripts.ui.peripheral-inspector')
 local logic = require('scripts.services.logic')
 local kv = require('scripts.services.kv')
 local monitor = require('scripts.services.monitor')
@@ -19,8 +20,8 @@ local blueprints = require('scripts.blueprints')
 local device_art = require('scripts.device-art')
 editor.register_inspector(require('scripts.ui.network-inspector'))
 script.on_event(defines.events.on_gui_opened,interaction.on_opened)
-script.on_event(defines.events.on_gui_closed,editor.on_closed)
-script.on_event(defines.events.on_gui_click,editor.on_click)
+script.on_event(defines.events.on_gui_closed,function(event) editor.on_closed(event); inspector.on_closed(event) end)
+script.on_event(defines.events.on_gui_click,function(event) editor.on_click(event); inspector.on_click(event) end)
 script.on_event(defines.events.on_gui_text_changed,editor.on_text)
 script.on_event(defines.events.on_gui_confirmed,editor.on_confirmed)
 script.on_event(defines.events.on_gui_selected_tab_changed,editor.on_tab)
@@ -29,9 +30,11 @@ script.on_event(defines.events.on_gui_checked_state_changed,editor.on_checked)
 script.on_event('tc-interact',interaction.on_input)
 script.on_event({'tc-rotate','tc-reverse-rotate'},interaction.on_rotate)
 script.on_event({defines.events.on_player_left_game,defines.events.on_player_died,
-  defines.events.on_player_changed_force,defines.events.on_player_changed_surface},editor.on_player_unavailable)
+  defines.events.on_player_changed_force,defines.events.on_player_changed_surface},function(event)
+    editor.on_player_unavailable(event); inspector.on_player_unavailable(event)
+  end)
 script.on_event({defines.events.on_player_display_resolution_changed,
-  defines.events.on_player_display_scale_changed},editor.on_size)
+  defines.events.on_player_display_scale_changed},function(event) editor.on_size(event); inspector.on_size(event) end)
 script.on_init(function() registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing() end)
 script.on_configuration_changed(function() registry.initialize(); lifecycle.upgrade_existing(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing() end)
 script.on_event(defines.events.on_player_setup_blueprint,blueprints.on_setup)
@@ -54,7 +57,8 @@ if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixt
   local name=settings.startup['tc-smoke-production-fixture'].value
   local monitor_state_fixture={['tests.monitor_state_waiting']=true,['tests.monitor_state_preparing']=true,
     ['tests.monitor_state_ready']=true,['tests.monitor_state_retiring']=true,
-    ['tests.acceptance_monitor_engine']=true}
+    ['tests.acceptance_monitor_engine']=true,['tests.peripheral_inspector_engine']=true,
+    ['tests.peripheral_inspector_client_engine']=true,['tests.peripheral_inspector_upgrade_engine']=true}
   assert(monitor_state_fixture[name] or name=='tests.acceptance_client_engine' or name=='tests.logic_recipe_engine' or name=='tests.recipe_searcher_client_engine' or name=='tests.recipe_searcher_engine' or name=='tests.shell_client_engine' or name=='tests.shell_cold' or name=='tests.lifecycle_engine' or name=='tests.integration_engine' or name=='tests.redesign_engine' or name=='tests.monitor_feedback_engine' or name=='tests.rd1_upgrade_engine' or name=='tests.monitor_budget_engine' or name=='tests.monitor_presentation_engine' or name=='tests.monitor_plot_baseline_engine' or name=='tests.runtime_budget_engine' or name=='tests.monitor_animation_engine','unknown production-context fixture')
   local test=require(name) -- control parsing only; never a guest source loader
   script.on_init(function()

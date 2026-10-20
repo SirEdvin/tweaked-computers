@@ -27,6 +27,8 @@ def main():
     ap.add_argument('--archive', type=Path, required=True)
     ap.add_argument('--output', type=Path, required=True)
     ap.add_argument('--mode', choices=['base', 'space-age', 'both'], default='both')
+    ap.add_argument('--baseline', default=BASELINE, help='Pinned source commit for the populated old save')
+    ap.add_argument('--fixture', choices=[FIXTURE, 'tests.peripheral_inspector_upgrade_engine'], default=FIXTURE)
     args = ap.parse_args()
     args.output = args.output.resolve()
     if args.output.exists() or args.output.is_relative_to(ROOT):
@@ -37,19 +39,20 @@ def main():
     (args.output / 'engine-version.txt').write_text(version)
     old = args.output / 'alpha-source'
     old.mkdir()
-    content = subprocess.check_output(['git', 'archive', BASELINE], cwd=ROOT)
+    content = subprocess.check_output(['git', 'archive', args.baseline], cwd=ROOT)
     with tarfile.open(fileobj=io.BytesIO(content)) as archive:
         archive.extractall(old, filter='data')
     control = old / 'control.lua'
     original = control.read_text()
     needle = "name=='tests.integration_engine'"
     assert original.count(needle) == 1
-    control.write_text(original.replace(needle, needle + " or name=='" + FIXTURE + "'"))
-    shutil.copy2(ROOT / 'tests/rd1_upgrade_engine.lua', old / 'tests/rd1_upgrade_engine.lua')
+    control.write_text(original.replace(needle, needle + " or name=='" + args.fixture + "'"))
+    fixture_path = args.fixture.replace('.', '/') + '.lua'
+    shutil.copy2(ROOT / fixture_path, old / fixture_path)
     result = subprocess.run(['python3', str(old / 'tools/build.py'), '--output', str(args.output / 'alpha-artifact')],
                             capture_output=True, text=True, check=True)
     baseline = json.loads(result.stdout)
-    summary = {'engine': '2.0.77', 'baseline_commit': BASELINE, 'instrumented_alpha': baseline,
+    summary = {'engine': '2.0.77', 'baseline_commit': args.baseline, 'fixture': args.fixture, 'instrumented_alpha': baseline,
                'candidate_sha256': hashlib.sha256(args.archive.read_bytes()).hexdigest(), 'cases': []}
     for mode in (['base', 'space-age'] if args.mode == 'both' else [args.mode]):
         folder = args.output / mode
@@ -64,7 +67,7 @@ def main():
                 'author': 'test fixture', 'factorio_version': '2.0', 'dependencies': ['base', 'tweaked-computers']}
         (testmod / 'info.json').write_text(json.dumps(info))
         (testmod / 'control.lua').write_text('-- Fixture runs only in production storage.\n')
-        (testmod / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value='" + FIXTURE + "',allowed_values={'" + FIXTURE + "'}}}\n")
+        (testmod / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value='" + args.fixture + "',allowed_values={'" + args.fixture + "'}}}\n")
         enabled = [{'name': n, 'enabled': True} for n in ('base', 'tweaked-computers', 'tc-smoke')]
         enabled += [{'name': n, 'enabled': mode == 'space-age'} for n in ('space-age', 'quality', 'elevated-rails')]
         (mods / 'mod-list.json').write_text(json.dumps({'mods': enabled}))
