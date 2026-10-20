@@ -248,6 +248,127 @@ function M.run()
     assert(not candidate and diagnostic.line and diagnostic.column)
   end
   report('malformed-and-unsupported-source-descriptors')
+  root=fresh()
+  local plain=[[
+local function increment(n) return n+1 end
+function start(e)
+  if e.name=='start' then
+    computer.setState('boots',increment(computer.getState('boots') or 0))
+    assert(sample()==1)
+    local payload={false,'',3}
+    computer.setState('timer',computer.after(2,'sample',payload)); payload[3]=99
+    computer.on('power_restored','again')
+    computer.log('plain-start')
+  else
+    e.changed=true
+    computer.setState('direct',increment(computer.getState('direct') or 0))
+    return false,nil,e
+  end
+end
+function sample(e)
+  local n=increment(computer.getState('samples') or 0)
+  computer.setState('samples',n)
+  if e==nil then computer.setState('immediate',true) else
+    assert(e.name=='timer' and e.timer_id==computer.getState('timer'))
+    assert(e.payload[1]==false and e.payload[2]=='' and e.payload[3]==3)
+    assert(e.computer_id==computer.getID())
+    computer.setState('envelope',e)
+    e.payload[3]=88
+  end
+  computer.log('plain-sample-'..tostring(n))
+  return n
+end
+function again(e)
+  assert(e.name=='power_restored' and e.payload.value==3)
+  local arg={name='ordinary'}
+  local a,b,c=start(arg)
+  assert(a==false and b==nil and c==arg and arg.changed)
+  computer.setState('supplied',e)
+end
+function monitor_touch(e) error('unregistered event-like export ran') end
+function registrations(e)
+  local function nested() end
+  for _,bad in ipairs({sample,increment,nested,'increment','nested','unknown'}) do
+    local ok,problem=pcall(computer.after,1,bad)
+    assert(not ok and problem.code=='E_ARGUMENT')
+    ok,problem=pcall(computer.every,1,bad)
+    assert(not ok and problem.code=='E_ARGUMENT')
+    ok,problem=pcall(computer.on,'monitor_touch',bad)
+    assert(not ok and problem.code=='E_ARGUMENT')
+  end
+  computer.setState('registrations_checked',true)
+end
+]]
+  rec=registry.register('computer',body())
+  assert(runtime.save(rec.id,plain,0)==1 and rec.active==nil and next(rec.state)==nil)
+  plan,e=runtime.validate(rec.id,0); assert(plan,e and e.message)
+  assert(plan.handlers.start and plan.handlers.sample and plan.handlers.again and plan.handlers.registrations
+    and plan.handlers.monitor_touch and not plan.handlers.increment)
+  assert(rec.active==nil and next(rec.state)==nil and #rec.logs==0,'Validate executed source')
+  local validated=root.ledger.total
+  local run=assert(runtime.activate(rec.id,0,1))
+  assert(root.ledger.total>validated and rec.run_generation==1 and #rec.queue==1 and next(rec.state)==nil)
+  local keys={source=true,revision=true,api_version=true,compiler_version=true,storage_version=true,handlers=true}
+  local fields=0; for k in pairs(rec.active) do assert(keys[k],'active shape expanded'); fields=fields+1 end
+  assert(fields==6 and rec.active.source==plain and rec.active.revision==1
+    and rec.active.api_version==1 and rec.active.compiler_version==2 and rec.active.storage_version==1)
+  assert(not rec.active.handlers.increment and rec.active.handlers.sample==true)
+  scheduler.tick(0)
+  assert(rec.status=='running',rec.diagnostic and rec.diagnostic.message)
+  assert(rec.state.boots==1 and rec.state.samples==1 and rec.state.immediate and #rec.logs==2)
+  assert(rec.logs[1].text=='plain-sample-1' and rec.logs[2].text=='plain-start')
+  local active,timers,subscriptions=rec.active,rec.timers,rec.subscriptions
+  local timer=assert(rec.timers[rec.state.timer]); assert(timer.handler=='sample' and timer.payload[3]==3)
+  local spent=root.ledger.total; scheduler.tick(0); assert(root.ledger.total==spent)
+  report('plain-save-validate-apply-immediate-call-and-closed-active-shape')
+  local payload={payload={value=3},computer_id='forged',run_id='forged',sequence=-1,tick=-1}
+  assert(runtime.emit(rec.id,'monitor_touch',{},1) and #rec.queue==0,'exports auto-subscribed')
+  assert(runtime.emit(rec.id,'power_restored',payload,1))
+  local queued=rec.queue[1].event
+  assert(queued~=payload and queued.payload~=payload.payload and queued.computer_id==rec.id
+    and queued.run_id==run and queued.tick==1 and queued.sequence>0)
+  payload.payload.value=99
+  scheduler.tick(1)
+  assert(rec.status=='running',rec.diagnostic and rec.diagnostic.message)
+  assert(rec.state.direct==1 and rec.state.boots==1 and rec.run_id==run and rec.run_generation==1
+    and rec.active==active and rec.timers==timers and rec.subscriptions==subscriptions)
+  assert(rec.state.supplied.payload.value==3 and rec.state.supplied.run_id==run)
+  assert(root.ledger.machines[rec.id].work>0 and root.ledger.machines[rec.id].compile>0)
+  report('plain-direct-start-keeps-run-authority-and-copied-event-envelope')
+  scheduler.tick(2)
+  assert(rec.status=='running',rec.diagnostic and rec.diagnostic.message)
+  assert(rec.state.samples==2 and rec.state.envelope.payload[3]==3 and rec.state.envelope.run_id==run
+    and rec.state.envelope.scheduled_tick==2 and rec.state.envelope.tick==2 and rec.state.envelope.missed==0)
+  assert(rec.timers[rec.state.timer]==nil and rec.logs[#rec.logs].text=='plain-sample-2')
+  assert(runtime.enqueue(rec,'registrations',{name='fixture'},3))
+  scheduler.tick(3)
+  assert(rec.status=='running' and rec.state.registrations_checked,rec.diagnostic and rec.diagnostic.message)
+  assert(next(rec.timers)==nil)
+  local sub_count=0; for _,sub in pairs(rec.subscriptions) do sub_count=sub_count+1; assert(sub.handler=='again') end
+  assert(sub_count==1)
+  report('plain-once-timer-and-string-only-private-function-registration-refusal')
+  local state,logs,queue=rec.state,rec.logs,rec.queue
+  for i,text in ipairs({'function start() sample() end; return {api_version=1,handlers={}}',
+    'function start() end; computer.log("top-level")','function start() sample=1 end'}) do
+    local tick=3+i
+    runtime.save(rec.id,text,rec.saved_revision)
+    local before=root.ledger.total
+    local replacement,problem=runtime.activate(rec.id,tick)
+    assert(not replacement and problem.code=='E_PROGRAM')
+    assert(rec.run_id==run and rec.active==active and rec.state==state and rec.logs==logs
+      and rec.queue==queue and rec.timers==timers and rec.subscriptions==subscriptions and rec.status=='running')
+    local same=runtime.context(rec,tick); local charged=same.ledger.total
+    assert(charged>0 and same.machine.compile>0)
+    assert(runtime.context(rec,tick).ledger.total==charged,'failed candidate refreshed credits')
+  end
+  report('plain-failed-candidate-keeps-active-resources-and-spent-credits')
+  runtime.save(rec.id,'local function start() error("private start executed") end\nfunction sample(e) computer.setState("unexpected",true) end',rec.saved_revision)
+  local before=runtime.context(rec,7).ledger.total
+  assert(runtime.activate(rec.id,7)~=run and root.ledger.total>before)
+  assert(not rec.active.handlers.start and rec.active.handlers.sample and #rec.queue==0)
+  scheduler.tick(7)
+  assert(rec.status=='running' and rec.state.unexpected==nil and rec.state.boots==1 and rec.state.samples==2)
+  report('plain-optional-start-does-not-choose-arbitrary-export')
   log('TC_CONTRACT_TOTAL '..total)
   return total
 end

@@ -39,6 +39,8 @@ CONTRACT_FILES = (
     'openspec/specs/program-editor/lua-api.md',
     'openspec/specs/recipe-searcher/spec.md',
     'openspec/specs/recipe-searcher/lua-api.md',
+    'openspec/changes/add-function-program-syntax/specs/program-source/spec.md',
+    'openspec/changes/add-function-program-syntax/specs/program-source/lua-api.md',
 )
 
 def build(destination):

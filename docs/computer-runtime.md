@@ -4,16 +4,29 @@ Target: Factorio 2.0.77. Native named callbacks only: no interpreter, OS,
 filesystem, coroutine suspension or host-object API. The normative contracts
 are `openspec/api/{common,native-language}.md`
 and `openspec/specs/computer-runtime/lua-api.md` in the source repository.
+The additive `openspec/changes/add-function-program-syntax/specs/program-source/{spec,lua-api}.md`
+contract supersedes the earlier descriptor-only source restriction.
 
 ## Player contract
 
-One saved source document returns `{api_version=1, handlers={...}}`. `start`
-is optional. Handlers finish or fault; each receives a fresh environment and
-copied event. Local helper functions/variables never survive a callback.
+One saved source document either declares exported `function name(...) ... end`
+functions (API 1 implicit) or returns the legacy `{api_version=1, handlers={...}}`
+descriptor. Do not mix forms or run module-level effects/initializers. Optional
+top-level `local function` helpers have ordinary lexical scope and are not exports.
+Public bindings are immutable; genuine locals/parameters may shadow them.
+
+`start` is optional. Handlers finish or fault; each dispatch receives a fresh
+environment and copied event. Local helper functions/variables never survive a
+callback. Declaration exports can call each other synchronously, including
+forward references, using ordinary arguments/results and the same guard, budget,
+authority and run. Direct calls neither enqueue work nor synthesize events;
+calling `start(...)` directly does not activate a new run. Explicit state is the
+only application continuity. Saved-program exports never enter Console bindings.
 
 Save changes the committed source revision, not the active run. Validate does
 not run candidate source. Run/Apply validates the saved revision before retiring
-the old generation, then queues start once. Stop cancels that generation's
+the old generation, then queues start once if exported. No other name auto-runs
+or auto-subscribes. Stop cancels that generation's
 registrations/timers/events. State, source and logs remain. Reset State requires
 a stopped/faulted computer. Failed candidate validation leaves the old run intact.
 
@@ -45,6 +58,7 @@ General events: peripheral_attach, peripheral_detach, monitor_resize,
 monitor_touch, power_restored. Logic events are registered through their owning
 peripheral, not computer.on. Register handler names, never functions. Each event
 has name, dispatch tick, global FIFO sequence, computer_id and run_id.
+Private helpers and nested functions cannot be registered by name or value.
 
 Timer durations are positive safe integer ticks. Equal deadlines use creation
 order. Recurring overdue work coalesces, including already queued notifications:
@@ -131,6 +145,11 @@ and declared handler names, not executable functions/generated text. Compiler
 ABI is 2; incompatible headers fault with source/state retained. Reconstruction
 revalidates retained source under identical warm/cold costs. No on_load handler
 runs, mutates queues, changes credits or recreates start registrations.
+Both forms retain API 1/compiler 2/storage 1 and reconstruct only the exact active
+source, even when newer source has been saved but not applied. Supported legacy
+descriptor records require no rewrite or restart. There is no migration or
+execution bridge for downgrades: an older descriptor-only compiler cannot execute
+new declaration source. Back up saves or explicitly convert/apply before rollback.
 
 ### Scheduler: scripts.scheduler
 
@@ -171,12 +190,17 @@ The maximum accepted table-width computation and maximum nil-containing tuple
 are isolated compiler semantics/cost checks, not factory latency benchmarks.
 
 Use the existing archive harness with `--fixture tests.computer_cold --cold`.
-The fixture initializes source, runs start once on a real tick, keeps saved
+The fixture initializes legacy and declaration sources, runs start once on a real tick, keeps saved
 source different from active source, admits an event and retains timers/credits,
 then freezes until the queued save is readable. A second engine process verifies
 unchanged on_load state before synchronized source reconstruction, consumes the
 queued event and fires the one-shot exactly once. Servers bind localhost, disable
 LAN/public visibility and shut down through acknowledged console quit.
+Declaration checks also compare complete active/state/log/queue/timer and shared
+ledger/scheduler snapshots, alias identity, two queued events in FIFO order and
+one immediate plus one timed call. The legacy-only reload branch also accepts
+authentic snapshots produced by the baseline 0.1.9 archive; an external harness
+must actually produce that baseline save before claiming upgrade evidence.
 
 Headless contracts use actual numbered vanilla fixture bodies, not the later
 powered composite prototypes. Power transitions are host-hook contract evidence;

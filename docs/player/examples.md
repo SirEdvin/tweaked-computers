@@ -7,6 +7,28 @@ factory managers; keep the described topology. Runtime effects were exercised by
 the implementation harness; documentation checks compile these blocks without
 claiming graphical keyboard/focus/touch delivery.
 
+## function-program
+
+Power a computer; no peripheral or wire is required. In an empty Editor draft, choose Insert starter (or paste this whole document), Validate, Save, then Run. Insertion and validation do not save or execute anything. The first dispatch calls `sample()` immediately and logs its returned count in Console; the `samples` value in explicit computer state increases once, then once more at the first 60-tick timer deadline. Private `increment` is declared before use and is not exported. `sample` is forward-visible and registration uses its string name, not its function value. Each callback has fresh locals/functions; reapplying keeps the explicit count, while ordinary reload does not replay `start`. These functions are not callable from the live Console. The legacy descriptor examples below remain supported.
+
+```lua
+local function increment(value)
+  return value + 1
+end
+
+function start(event)
+  local total = sample()
+  computer.log("Initial sample count: " .. tostring(total))
+  computer.every(60, "sample")
+end
+
+function sample(event)
+  local total = increment(computer.getState("samples") or 0)
+  computer.setState("samples", total)
+  return total
+end
+```
+
 ## recipe-searcher-program
 
 Research Recipe Searcher separately, power it and connect its Network directly to a computer on red. Paste the whole document, Validate, Save and Run. Searches item/fluid products and refines E_LIMIT by exact category; a single category may still exceed 50 or other budgets.

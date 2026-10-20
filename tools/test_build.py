@@ -32,6 +32,33 @@ class PackageInventoryTests(unittest.TestCase):
                                    ('waiting', 'preparing', 'ready', 'retiring'))):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
 
+    def test_function_program_matches_packaged_starter_and_documentation(self):
+        import re
+        import player_docs
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            archive = build.build(output)
+            with zipfile.ZipFile(archive) as package:
+                prefix = next(n[:-len('info.json')] for n in package.namelist() if n.endswith('/info.json'))
+                source = package.read(prefix + 'examples/function-program.lua')
+                self.assertEqual(source, (build.ROOT / 'examples/function-program.lua').read_bytes())
+                help_source = package.read(prefix + 'scripts/ui/help.lua')
+                template = re.search(rb'template=\[\[(.*?)\]\],', help_source, re.S)
+                assert template is not None, 'missing packaged starter'
+                self.assertEqual(template[1], source)
+                docs = package.read(prefix + 'docs/player/examples.md')
+                example = re.search(rb'## function-program\n.*?```lua\n(.*?)\n```', docs, re.S)
+                assert example is not None, 'missing documented function program'
+                self.assertEqual(example[1] + b'\n', source)
+                self.assertEqual(player_docs.guest_example('function-program').encode() + b'\n', source)
+
+    def test_documentation_rejects_starter_example_drift(self):
+        import player_docs
+        original = player_docs.text
+        with patch.object(player_docs, 'text', lambda path: original(path) + '\n'
+                          if path == 'examples/function-program.lua' else original(path)):
+            with self.assertRaisesRegex(ValueError, 'differs from the inserted starter'):
+                player_docs.guest_example('function-program')
+
     def test_portal_payload_keeps_notices_not_python_tools(self):
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
             archive = build.build(output)
@@ -52,8 +79,14 @@ class PackageInventoryTests(unittest.TestCase):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
                 self.assertEqual(set(planning), set(build.CONTRACT_FILES))
-                self.assertEqual(len(build.CONTRACT_FILES), 28)
-                self.assertFalse(any(name.startswith('openspec/changes/') for name in planning))
+                self.assertEqual(len(build.CONTRACT_FILES), 30)
+                self.assertEqual({name for name in planning if name.startswith('openspec/changes/')}, {
+                    'openspec/changes/add-function-program-syntax/specs/program-source/spec.md',
+                    'openspec/changes/add-function-program-syntax/specs/program-source/lua-api.md',
+                })
+                for relative in ('openspec/changes/add-function-program-syntax/specs/program-source/spec.md',
+                                 'openspec/changes/add-function-program-syntax/specs/program-source/lua-api.md'):
+                    self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 for relative in ('scripts/services/recipe-searcher.lua', 'examples/recipe-searcher-program.lua',
                                  'docs/player/api/recipe-searcher.md', 'assets/icons/recipe_searcher.png'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
@@ -102,11 +135,15 @@ class PackageInventoryTests(unittest.TestCase):
 
 
 class CanonicalContractTests(unittest.TestCase):
-    def test_explicit_inventory_covers_canonical_files_only(self):
+    def test_explicit_inventory_covers_canonical_and_active_function_contracts(self):
         expected = {p.relative_to(build.ROOT).as_posix()
                     for folder in ('api', 'specs')
                     for p in (build.ROOT / 'openspec' / folder).rglob('*')
                     if p.is_file() and p.suffix in ('.md', '.json')}
+        expected.update({
+            'openspec/changes/add-function-program-syntax/specs/program-source/spec.md',
+            'openspec/changes/add-function-program-syntax/specs/program-source/lua-api.md',
+        })
         self.assertEqual(set(build.CONTRACT_FILES), expected)
         self.assertEqual(len(build.CONTRACT_FILES), len(expected))
 

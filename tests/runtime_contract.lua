@@ -149,6 +149,201 @@ function M.run(report_total)
     assert(not success and diagnostic.code=='E_ARGUMENT' and writes==0)
     report('actual-engine-LuaObject-return-refused')
   end
+  -- Saved declaration documents go through the actual program frontend/run,
+  -- never the shell emitter or a hand-lowered equivalent.
+  local function document(text, name, services, context)
+    context=context or admission.context(admission.new(),'declarations',0)
+    local candidate,err=compiler.compile(text,context)
+    assert(candidate,err and err.message)
+    assert(candidate.api_version==1 and candidate.compiler_version==2 and candidate.mode==nil)
+    local accepted,diagnostic,control=compiler.run(candidate,name or 'start',{},services or {},context)
+    return accepted,diagnostic,candidate,control,context
+  end
+  success,diagnostic= document([[
+local function increment(value) return value+1 end
+function start(event)
+  assert(event~=nil)
+  local f=sample
+  local t={f,sample}
+  assert(type(f)=='function' and tostring(f)=='guest function' and t[1]==t[2])
+  assert(f(4)==5 and t[2](6)==7)
+  local ok,a,b,c=pcall(tuple,false,nil,3)
+  assert(ok and a==false and b==nil and c==3)
+  assert(select('#',tuple(false,nil,3))==3)
+  assert(select('#',empty())==0 and select('#',oneNil())==1)
+  assert(select('#',pcall(empty))==1)
+  local g=returned(); assert(g==sample and g(9)==10)
+  local captured=capture(sample); assert(captured(10)==11)
+  local caught,err=pcall(fail); assert(not caught and err==false)
+  local owned={value=false}; alias(owned); assert(owned.value==true)
+  assert(missing()==nil and missing(false)==false)
+  assert(even(6) and not odd(6))
+  local sample=false; sample=true; assert(sample)
+  assert(shadow(false)==true)
+  do local sample; function sample() return 12 end; assert(sample()==12) end
+  assert(f(4)==5)
+end
+function sample(value) return increment(value) end
+function tuple(...) return ... end
+function empty() end
+function oneNil() return nil end
+function returned() return sample end
+function capture(f) return function(v) return f(v) end end
+function alias(t) t.value=true end
+function missing(value) return value end
+function even(n) if n==0 then return true end; return odd(n-1) end
+function odd(n) if n==0 then return false end; return even(n-1) end
+function shadow(sample) sample=not sample; return sample end
+function fail() error(false) end
+]])
+  assert(success,diagnostic and diagnostic.message)
+  report('declaration-calls-values-scope-and-tuples')
+  local candidate
+  success,diagnostic,candidate=document('local function private() return 7 end; function sample() assert(private()==7) end','sample')
+  assert(success,diagnostic and diagnostic.message)
+  assert(candidate.handlers.sample and not candidate.handlers.start and not candidate.handlers.private)
+  success,diagnostic=compiler.run(candidate,'private',{}, {},admission.context(admission.new(),'private',0))
+  assert(not success and diagnostic.code=='E_NOT_FOUND')
+  report('declaration-optional-start-and-private-inventory')
+  success,diagnostic=document([[
+local function recurse(n) if n==0 then return later() end; return recurse(n-1) end
+function start() assert(recurse(3)==42) end
+function later() return 42 end
+]])
+  assert(success,diagnostic and diagnostic.message)
+  report('declaration-private-self-and-public-forward-reference')
+  writes=0
+  success,diagnostic,candidate=document([[
+local function private() return false end
+local function start() return "private start" end
+function sample()
+  assert(start()=="private start" and private()==false)
+  computer.log("fresh")
+  private=function() return true end
+end
+]],'sample',{computer={log=function() writes=writes+1 end}})
+  assert(success,diagnostic and diagnostic.message)
+  assert(not candidate.handlers.start)
+  success,diagnostic=compiler.run(candidate,'sample',{}, {computer={log=function() writes=writes+1 end}},
+    admission.context(admission.new(),'fresh-declaration-dispatch',1))
+  assert(success,diagnostic and diagnostic.message); assert(writes==2)
+  report('declaration-fresh-private-bindings-and-private-start')
+  local function refused(text,code,message)
+    local rejected,err=compiler.compile(text,admission.context(admission.new(),'declaration-refusal',0))
+    assert(not rejected,text..': accepted forbidden document')
+    assert(err.code==(code or 'E_PROGRAM'),err.message)
+    assert(err.line and err.column,err.message)
+    if message then assert(err.message:find(message,1,true),err.message) end
+  end
+  for _,text in ipairs({
+    'function sample() end; function sample() end',
+    'local function sample() end; function sample() end',
+    'function sample() end; local function sample() end',
+    'local function x() end; local function x() end; function start() end',
+    'function start() end; return {api_version=1,handlers={}}',
+    'return {api_version=1,handlers={}}; function start() end',
+    'function start() end; start()',
+    'local count=0; function start() end',
+    'local p=peripheral.wrap("x"); function start() end',
+    'computer.setState("x",1); function start() end',
+    'x=1; function start() end',
+    'do function start() end end',
+    'if true then function start() end end',
+    'while false do end; function start() end',
+    'function object.method() end', 'function object:method() end',
+    'sample=function() end',
+    'function start() sample=1 end; function sample() end',
+    'function start() function sample() end end; function sample() end',
+    'function start() new_global=1 end',
+    'function start() return helper() end; local function helper() end',
+    '', '-- comment only', 'local function helper() end'
+  }) do refused(text) end
+  report('declaration-closed-shape-and-immutable-exports')
+  local reserved={'_ENV','_G','__tc_private','assert','error','ipairs','pairs','next','pcall','select',
+    'tonumber','tostring','type','math','string','table','colors','colours','computer','peripheral','print',
+    'game','storage','script','remote','defines','settings','rendering','require','load','loadstring',
+    'loadfile','dofile','debug','os','io','coroutine','package','rawget','rawset','rawequal','rawlen',
+    'getmetatable','setmetatable','collectgarbage'}
+  for _,name in ipairs(reserved) do
+    refused('function '..name..'() end')
+    refused('local function '..name..'() end; function start() end')
+  end
+  refused('function '..string.rep('x',limits.identifier_bytes+1)..'() end')
+  report('declaration-reserved-public-and-private-identifiers')
+  local declarations={}
+  for i=1,limits.handler_names do declarations[i]='function f'..i..'() end' end
+  local maximum=table.concat(declarations,'\n')
+  success,diagnostic,candidate=document(maximum,'f'..limits.handler_names)
+  assert(success,diagnostic and diagnostic.message)
+  local export_count=0; for _ in pairs(candidate.handlers) do export_count=export_count+1 end
+  assert(export_count==limits.handler_names)
+  refused(maximum..'\nfunction overflow() end','E_LIMIT','handler count')
+  report('declaration-maximum-export-inventory')
+  declarations={}
+  for i=1,limits.handler_names do
+    local name='f'..string.rep('x',limits.identifier_bytes-4)..string.format('%03d',i)
+    declarations[i]='function '..name..'() assert(type('..name..')=="function") end'
+  end
+  success,diagnostic=document(table.concat(declarations,'\n'),'f'..string.rep('x',limits.identifier_bytes-4)..'064')
+  assert(success,diagnostic and diagnostic.message)
+  report('declaration-maximum-identifier-and-binding-work')
+  declarations={}
+  for i=1,limits.handler_names+1 do declarations[i]='local function h'..i..'() end' end
+  success,diagnostic=document(table.concat(declarations,'\n')..'\nfunction start() h1(); h'..#declarations..'() end')
+  assert(success,diagnostic and diagnostic.message)
+  -- Native lexical limits still apply; no new unbounded private registry.
+  for i=#declarations+1,210 do declarations[i]='local function h'..i..'() end' end
+  refused(table.concat(declarations,'\n')..'\nfunction start() end','E_PROGRAM','generated source')
+  report('declaration-private-helper-envelope')
+  writes=0
+  success,diagnostic=document([[
+local function helper() end
+function start()
+  assert(not pcall(computer.setState,"public",sample))
+  assert(not pcall(computer.setState,"private",helper))
+  computer.log("still usable")
+end
+function sample() end
+]],nil,{computer={setState=function() writes=writes+100 end,log=function() writes=writes+1 end}})
+  assert(success,diagnostic and diagnostic.message); assert(writes==1)
+  report('declaration-functions-are-not-durable-data')
+  local fault_source='local function helper()\n  error("helper failure")\nend\nfunction start() helper() end'
+  success,diagnostic=document(fault_source)
+  assert(not success and diagnostic.code=='E_PROGRAM' and diagnostic.message=='helper failure')
+  assert(diagnostic.line==2 and diagnostic.column==3)
+  report('declaration-original-helper-diagnostic')
+  local shared=admission.new()
+  local bad_context=admission.context(shared,'declaration-malicious',12)
+  writes=0
+  success,diagnostic=document('function start() pcall(a); computer.log("unsafe") end; function a() return b() end; function b() return a() end',nil,
+    {computer={log=function() writes=writes+1 end}},bad_context)
+  assert(not success and diagnostic.code=='E_BUDGET' and writes==0)
+  local spent=bad_context.machine.work
+  local neighbor=admission.context(shared,'declaration-neighbor',12)
+  success,diagnostic=document('function start() computer.log("healthy") end',nil,
+    {computer={log=function() writes=writes+1 end}},neighbor)
+  assert(success,diagnostic and diagnostic.message); assert(writes==1)
+  assert(admission.context(shared,'declaration-malicious',12).machine.work==spent)
+  report('declaration-fatal-protected-recursion-and-healthy-neighbor')
+  success,diagnostic=document('function start() pcall(start) end')
+  assert(not success and diagnostic.code=='E_BUDGET')
+  report('declaration-direct-recursion-is-bounded')
+  local exhausted=admission.context(admission.new(),'declaration-shared-exhaustion',13)
+  candidate=assert(compiler.compile('function start() pcall(spin); computer.log("unsafe") end; function spin() while true do end end',exhausted))
+  -- Leave a controlled shared
+  -- execution envelope, smaller than the per-machine work ceiling.
+  exhausted.ledger.total=limits.host_work_per_tick-limits.maintenance_work_per_tick-100000
+  writes=0
+  success,diagnostic=compiler.run(candidate,'start',{}, {computer={log=function() writes=writes+1 end}},exhausted)
+  assert(not success and diagnostic.code=='E_BUDGET' and writes==0)
+  assert(exhausted.machine.work>0 and exhausted.machine.work<limits.callback_work)
+  report('declaration-pcall-cannot-renew-shared-budget')
+  writes=0
+  local control
+  success,diagnostic,candidate,control=document('function start() pcall(stop); computer.log("unsafe") end; function stop() computer.stop() end',nil,
+    {computer={log=function() writes=writes+1 end}})
+  assert(not success and diagnostic.code=='E_STOP' and control=='stop' and writes==0)
+  report('declaration-uncatchable-stop')
   if report_total~=false then
     if log then log('TC_CONTRACT_TOTAL '..tests) else print('TC_CONTRACT_TOTAL '..tests) end
   end

@@ -1,9 +1,19 @@
 # Computer callbacks and state
 
-Use the [native descriptor](language.md). All calls use `computer.method(...)`
-with exact arity except the documented optional arguments. `start` executes once
-per explicit successful Run/Apply, not after ordinary load. Every callback gets
-fresh locals/environment and a copied event. Use state for continuity.
+Use either [plain function declarations or the legacy native descriptor](language.md).
+All API calls use `computer.method(...)` with exact arity except the documented
+optional arguments. If exported, `start` is queued once per explicit successful
+Run/Apply, not after ordinary load. Without it, activation runs no arbitrary export.
+Every dispatched callback gets fresh locals/functions/environment and a copied
+event. Use state for continuity; closures and captured locals are not saved.
+
+In declaration-form programs, `sample(...)` calls another export synchronously
+with exactly your arguments and ordinary Lua results. It shares the current run,
+authority and budgets; it does not queue a callback or invent an event argument.
+Calling `start(...)` this way is not Run/Apply: only its written body runs.
+Exports are immutable within the program (normal local shadowing is allowed).
+Private `local function` helpers are not registerable handlers. These bindings
+belong to this program, never to the [live Console](../console.md).
 
 ## Complete method reference
 
@@ -40,6 +50,9 @@ other computers' state/lifecycle, wall clock or arbitrary Factorio objects.
 Register declared handler names, never functions. Each `on` call is independent:
 two registrations intentionally yield two deliveries. IDs belong to this
 computer/run; another run's subscription/timer ID is invalid, not an alias.
+Declarations alone do not subscribe to an event, even if named `monitor_touch`.
+Timers and subscriptions accept exported names as strings, not function values,
+private helper names or nested local names.
 
 | Registerable event | Additional fields beyond BaseEvent |
 | --- | --- |
@@ -72,7 +85,7 @@ recurring notifications also coalesce rather than burst after an outage. Event
 ## Run lifecycle and errors
 
 Save commits source, not execution. Successful Apply cancels old work/output,
-creates a new generation and queues start; explicit state remains. Failed
+creates a new generation and queues `start` only if exported; explicit state remains. Failed
 candidate validation preserves the old active run. Stop/fault cancels current work
 but preserves recoverable source/state/logs. Reset State is a separate stopped,
 confirmed editor action. [Editor workflow](../editor.md) and [lifecycle](../lifecycle.md)
@@ -83,6 +96,12 @@ signals cannot be swallowed or forged. Earlier successful effects remain, except
 mandatory cleanup of this run's still-owned logic output. Outages pause callbacks,
 discard transient event history, retain timers/registrations/state and request
 input resync. Load does not replay startup, timers already consumed, or effects.
+The exact active source stays separate from newer saved-but-unapplied source;
+later callbacks reconstruct the active revision, not the latest editor save.
+Legacy descriptor saves remain supported without rewriting or restarting them.
+API 1, compiler representation 2 and storage 1 are unchanged. Downgrades after
+saving declaration-form source are not supported by descriptor-only compilers:
+keep a backup or convert and explicitly apply a legacy descriptor before downgrading.
 
 For a complete timer/state program see [language example](language.md); for robust
 error inspection see [database example](kv.md). Do not busy-loop on network/busy
