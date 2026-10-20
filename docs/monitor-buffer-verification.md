@@ -2,6 +2,12 @@
 
 ## SC2 native-client and connected-peer acceptance (2026-10-19)
 
+Later [SC3 representative-envelope acceptance](sc3-supported-envelope.md) and
+[SC4 consolidation](sc4-final-acceptance.md) supersede the SC2-era unchecked
+row 6.2 status quoted below for their explicitly supported representative scope.
+They do not turn the historical failed maximum-world gates into passes or
+certify simultaneous independent-cap saturation.
+
 SC2 now closes the formerly deferred native visibility-swap row 1.3 and native
 dense/plot/interaction/peer row 6.3. The full per-row matrix, inspected actual
 windows/videos, exact source/archive/payload correspondence and external receipt

@@ -30,7 +30,7 @@
     "device-lifecycle": {"guide": "docs/device-lifecycle.md", "contract": "specs/device-lifecycle/lua-api.md", "checks": ["tests/lifecycle_engine.lua", "tests/candidate_data.lua", "tests/integration_engine.lua"]}
   },
   "contract_root": "openspec",
-  "contract_extensions": ["openspec/specs/monitor-display/buffering-api.md", "openspec/specs/console-shell/spec.md", "openspec/specs/console-shell/lua-api.md", "openspec/specs/recipe-searcher/spec.md", "openspec/specs/recipe-searcher/lua-api.md", "openspec/specs/device-visual-identity/spec.md", "openspec/api/device-experience.md"],
+  "contract_extensions": ["openspec/specs/monitor-display/buffering-api.md", "openspec/specs/console-shell/spec.md", "openspec/specs/console-shell/lua-api.md", "openspec/specs/recipe-searcher/spec.md", "openspec/specs/recipe-searcher/lua-api.md", "openspec/specs/device-visual-identity/spec.md", "openspec/api/device-experience.md", "openspec/specs/program-source/spec.md", "openspec/specs/program-source/lua-api.md"],
   "workflow_only_capabilities": ["program-editor", "device-lifecycle"],
   "deliberate_exclusions": ["VM/interpreter", "OS/filesystem", "guest dynamic load/require", "arbitrary Factorio objects/properties", "direct computer messaging", "cross-color discovery", "original CC font"],
   "acceptance_report": "docs/sc4-final-acceptance.md",

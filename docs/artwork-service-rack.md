@@ -1,5 +1,11 @@
 # Selected Service Rack artwork integration
 
+Release context: 0.1.10 ALPHA adopts this reviewed family and both technology
+icons after the feature stacks were merged into main. See the current
+[player artwork guide](player/artwork.md) and [release notes](release-0.1.10.md).
+The original AR3 handoff and its authorization/evidence boundaries below are
+historical; no historical 0.1.9 artifact is replaced.
+
 The user selected AR2 candidate **B — Service Rack**, explicitly including
 research icons. This integration extracts only B's deterministic meshes into
 `assets/service_rack.py` and the existing `assets/generate.py` pipeline. No

@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.10
+Date: 2026-10-20
+  Features:
+    - Author saved programs as exported function declarations with private local helpers and ordinary guarded direct calls; legacy descriptors remain supported and Console bindings stay separate.
+    - Add a live world-maintenance Map setting with retained same-tick spending and cold-save accounting; the default remains 200000 within unchanged shared host work.
+  Graphics:
+    - Adopt the selected Service Rack family for all six devices, with matching item icons and two new 256px research icons. Footprints, sockets, monitor interiors and gameplay are unchanged.
+  Bugfixes:
+    - Retain independent per-computer fault diagnostics when a shared native sampling failure fans out.
+    - Preserve guarded empty-cursor rotation and buffered-monitor lifecycle/authority behavior with consolidated regression coverage.
+  Info:
+    - ALPHA: back up saves and matching ZIPs. Factorio 2.0.77 base and optional Space Age; API 1, compiler 2 and storage 1 remain unchanged.
+    - Publish the measured maintenance report without adopting its provisional 300000 recommendation or raising production safety ceilings.
+    - Consolidate canonical source/API contracts and preserve historical failed benchmarks and representative-envelope limits. Software rendering is not hardware FPS or full multiplayer certification.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.9
 Date: 2026-10-19
   Features:
