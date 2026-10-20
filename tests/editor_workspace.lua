@@ -173,7 +173,7 @@ function M.run()
       local exports=0; for _ in pairs(rec.active.handlers) do exports=exports+1 end; assert(exports==2)
       rec.power_checked_tick=tick -- Explicit fixture dispatch, not an actual on_tick power sample.
       assert(scheduler.dispatch(rec,tick) and rec.status=='running',rec.diagnostic and rec.diagnostic.message)
-      assert(rec.state.samples==1 and #rec.logs==1 and rec.logs[1].text=='Initial sample count: 1')
+      assert(rec.state.samples==1 and #rec.logs==1 and rec.logs[1].text=='Initial sample count:\t1')
       assert(rec.saved_source==help.template and rec.active.source==help.template and c.source.text==help.template)
       assert(bag.documents[rec.id].source==help.template and not scheduler.dispatch(rec,tick))
     end)

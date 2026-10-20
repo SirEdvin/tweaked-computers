@@ -4,7 +4,7 @@ end
 
 function start(event)
   local total = sample()
-  computer.log("Initial sample count: " .. tostring(total))
+  print("Initial sample count:", total)
   computer.every(60, "sample")
 end
 

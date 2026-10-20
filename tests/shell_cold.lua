@@ -30,6 +30,7 @@ local function snapshot()
   local f=storage.tc_shell_fixture; local rec=registry.record(f.id); local r=registry.get()
   return {shell=clone(rec.shell),state=clone(rec.state),run=rec.run_id,queue=clone(rec.queue),
     unknown_shell=clone(registry.record(f.unknown).shell),
+    collision=f.collision and clone(registry.record(f.collision).shell),
     ledger=clone(r.ledger),last_dispatch=rec.last_dispatch_tick,next_sequence=r.next_sequence,
     log_bytes=rec.log_bytes,logs=clone(rec.logs),scheduler=clone(r.scheduler)}
 end
@@ -81,6 +82,11 @@ function M.run()
   runtime.save(peer.id,source,0); assert(runtime.activate(peer.id,game.tick))
   runtime.save(unknown.id,source,0); assert(runtime.activate(unknown.id,game.tick))
   storage.tc_shell_fixture={phase='power',id=rec.id,db=db.id,peer=peer.id,unknown=unknown.id,start=game.tick}
+  local collision=build('computer',0,13)
+  runtime.save(collision.id,source,0); assert(runtime.activate(collision.id,game.tick))
+  collision.shell={version=1,id=collision.id..'/old-shell',pending={},pending_bytes=0,
+    values={version=1,root=1,nodes={{kind='table',entries={{key='rawset',value=false}}}}}}
+  storage.tc_shell_fixture.collision=collision.id
 end
 function M.on_load()
   loaded=true
@@ -103,7 +109,7 @@ function M.on_tick(event)
     if not rec.powered or not rec.state.samples then return end
     assert(not rec.shell,'old-save shell initialized before action')
     open(rec)
-    submit('a={}; b=a; a.self=a; p=peripheral.wrap("'..f.db..'","red"); get=p.get; p.set("once","one"); computer.setState("effects",(computer.getState("effects") or 0)+1)')
+    submit('a={}; b=a; rawset(a,"self",a); rawset(a,"value",false); print(_VERSION,false,nil,3); p=peripheral.wrap("'..f.db..'","red"); get=p.get; p.set("once","one"); computer.setState("effects",(computer.getState("effects") or 0)+1)')
     f.phase='assigned'
     return
   elseif f.phase=='assigned' then
@@ -112,7 +118,7 @@ function M.on_tick(event)
     if shell.waiting(rec) then return end
     assert(not rec.shell.diagnostic,rec.shell.diagnostic and rec.shell.diagnostic.message)
     assert(rec.state.effects==1 and rec.status=='running')
-    submit('assert(a==b and a.self==a and get==p.get and get("once")=="one"); b.value=9; computer.setState("pending",(computer.getState("pending") or 0)+1)')
+    submit('assert(rawequal(a,b) and rawequal(rawget(a,"self"),a) and rawget(a,"value")==false and get==p.get and get("once")=="one"); rawset(b,"value",9); computer.setState("pending",(computer.getState("pending") or 0)+1)')
     submit('assert(a.value==9); print(false,nil,3)')
     local ctx=runtime.context(rec,event.tick)
     assert(admission.reserve(ctx,'work',limits.callback_work-ctx.machine.work))
@@ -138,6 +144,18 @@ function M.on_tick(event)
     tick(event)
     if shell.waiting(rec) then return end
     assert(not rec.shell.diagnostic and rec.state.effects==1 and rec.state.pending==1)
+    local printed=0
+    for _,entry in ipairs(rec.logs) do if entry.text:find('output: Lua 5.2\tfalse\tnil\t3',1,true) then printed=printed+1 end end
+    assert(printed==1,'completed shell print replayed or lost')
+    local collision=registry.record(f.collision); local old=collision.shell.values
+    local ok,d=shell.evaluate(collision,'computer.setState("unsafe",true)',event.tick,0)
+    assert(not ok and d.code=='E_UNSUPPORTED' and d.message:find('rawset',1,true))
+    assert(collision.shell.values==old and old.nodes[1].entries[1].value==false and collision.status=='running' and not collision.state.unsafe)
+    for _,name in ipairs({'rawset','xpcall','unpack'}) do
+      local graph=rec.shell.values
+      ok,d=shell.evaluate(rec,'saved='..name,event.tick,0)
+      assert(not ok and d.code=='E_UNSUPPORTED' and rec.shell.values==graph)
+    end
     f.phase='done'; log('TC_COLD_OK shell-aliases-bindings-captured-methods-pending-once-only-real-ticks')
   end
 end

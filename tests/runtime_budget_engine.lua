@@ -209,6 +209,23 @@ function M.run()
   assert(ok,diagnostic and diagnostic.message)
   restored_defaults()
   report('guest-limits-reflect-live-settings-and-remain-defensive')
+  for _,body in ipairs({
+    'xpcall(function() while true do end end,function(e) computer.setState("unsafe",true) end)',
+    'xpcall(function() error("x") end,function(e) while true do end end)',
+    'pcall(function() xpcall(function() error("x") end,function(e) error("again") end) end)',
+    'xpcall(function() error("x") end,function(e) while true do local t={} end end)',
+    'xpcall(function() error("x") end,function(e) computer.stop() end)'
+  }) do
+    fresh()
+    local bad=computer(body..'; computer.setState("unsafe",true)')
+    local healthy=computer('local t=rawset({},"ready",false); assert(rawget(t,"ready")==false); computer.setState("healthy",true)')
+    assert(scheduler.dispatch(bad,game.tick))
+    assert(bad.status~='running' and bad.state.unsafe==nil)
+    assert(scheduler.dispatch(healthy,game.tick) and healthy.status=='running' and healthy.state.healthy)
+    local spent=runtime.context(bad,game.tick).machine.work
+    assert(not scheduler.dispatch(bad,game.tick) and runtime.context(bad,game.tick).machine.work==spent)
+  end
+  report('expanded-globals-production-fatal-isolation-and-healthy-neighbors')
   maintenance_contracts(report)
   change('maintenance',400000)
   rec=select(1,run('local t=computer.getLimits(); assert(t.maintenance_work_per_tick==400000); t.maintenance_work_per_tick=1; assert(computer.getLimits().maintenance_work_per_tick==400000)'))

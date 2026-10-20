@@ -2,6 +2,7 @@ local compiler = require('scripts.runtime.compiler')
 local admission = require('scripts.runtime.admission')
 local limits = require('scripts.runtime.limits')
 local examples = require('examples.planning-programs')
+local sandbox = require('scripts.runtime.sandbox')
 local M = {}
 local function source(body)
   return 'return {api_version=1, handlers={start=function(event) '..body..' end}}'
@@ -49,7 +50,7 @@ function M.run(report_total)
   run_case('cyclic-service-data',[[local t={}; t.self=t; computer.log(t)]],false,'E_ARGUMENT')
   run_case('ordinary-protection',[[local ok,e=pcall(function() error({code='E_ARGUMENT',message='catchable'}) end); assert(not ok and e.code=='E_ARGUMENT')]],true)
   run_case('safe-reference-description',[[assert(tostring({})=='table'); assert(tostring(function() end)=='guest function')]],true)
-  for _,body in ipairs({'game.tick=1','return _ENV','return __tc','require("x")','return ("x"):sub(1)','::label::','goto label','_G.x=1','new_global=1','print(1)'}) do
+  for _,body in ipairs({'game.tick=1','return _ENV','return __tc','require("x")','return ("x"):sub(1)','::label::','goto label','_G.x=1','new_global=1'}) do
     local ctx=admission.context(admission.new(),'bad-source',0)
     local plan,e=compiler.compile(source(body),ctx)
     assert(not plan and e.code=='E_PROGRAM',body..': '..(e and e.message or 'accepted forbidden source'))
@@ -77,12 +78,12 @@ function M.run(report_total)
   plan,e=compiler.compile(source(''),zero); assert(not plan and e.code=='E_BUDGET')
   report('compile-refusal')
   -- Parse/compile every actual planning program without claiming peripheral execution.
-  assert(#examples==9,'planning program inventory changed; review the fixture count')
+  assert(#examples==10,'planning program inventory changed; review the fixture count')
   for _,example in ipairs(examples) do
     local candidate,diagnostic=compiler.compile(example.source,admission.context(admission.new(),example.name,0))
     assert(candidate,example.name..': '..(diagnostic and diagnostic.message or 'refused'))
   end
-  report('all-nine-planning-programs-compile')
+  report('all-ten-planning-programs-compile')
   run_case('semicolons-and-fresh-closures',[[; local function outer(x) return function() return x end end; local f=outer(false); assert(f()==false);]],true)
   local p,c=compiled('pcall(computer.stop); computer.log("unsafe")')
   local writes=0
@@ -263,7 +264,7 @@ end
     'tonumber','tostring','type','math','string','table','colors','colours','computer','peripheral','print',
     'game','storage','script','remote','defines','settings','rendering','require','load','loadstring',
     'loadfile','dofile','debug','os','io','coroutine','package','rawget','rawset','rawequal','rawlen',
-    'getmetatable','setmetatable','collectgarbage'}
+    'getmetatable','setmetatable','collectgarbage','xpcall','unpack','_VERSION'}
   for _,name in ipairs(reserved) do
     refused('function '..name..'() end')
     refused('local function '..name..'() end; function start() end')
@@ -344,6 +345,176 @@ function sample() end
     {computer={log=function() writes=writes+1 end}})
   assert(not success and diagnostic.code=='E_STOP' and control=='stop' and writes==0)
   report('declaration-uncatchable-stop')
+  local added={'print','rawget','rawset','rawlen','rawequal','xpcall','unpack','_VERSION'}
+  local shared_body=[[
+    assert(_VERSION=='Lua 5.2' and unpack==table.unpack)
+    assert(tostring(unpack)=='table function' and tostring(table.unpack)==tostring(unpack))
+    local t={}; local alias=t
+    assert(rawequal(rawset(t,'value',false),t) and rawget(alias,'value')==false)
+    rawset(t,'self',t); assert(rawequal(rawget(t,'self'),t))
+    rawset(t,'value',nil); assert(select('#',rawget(t,'value'))==1 and rawget(t,'value')==nil)
+    assert(select('#',rawget(t,nil))==1 and rawget(t,0/0)==nil)
+    local f=function() end; rawset(t,f,computer); assert(rawequal(rawget(t,f),computer))
+    assert(rawequal(nil,nil) and not rawequal(nil,false) and not rawequal({},{}))
+    assert(rawequal(computer,computer) and rawequal(print,print) and rawequal('abc','a'..'bc'))
+    assert(rawlen('a\000b')==3 and rawlen({})==0 and rawlen({1,false,3})==3)
+    local tuple=table.pack(false,nil,3,nil)
+    local a,b,c,d=unpack(tuple,1,4); assert(a==false and b==nil and c==3 and d==nil)
+    assert(select('#',unpack(tuple,1,4))==4 and select('#',unpack(tuple,2,1))==0)
+    assert(not pcall(unpack,tuple,0) and not pcall(unpack,tuple,1,100000))
+    for _,fn in ipairs({rawget,rawset,rawlen}) do
+      for _,target in ipairs({math,computer,peripheral}) do
+        local ok,e=pcall(fn,target,'x',true); assert(not ok and e.code=='E_ARGUMENT')
+      end
+    end
+    assert(not pcall(rawget,t) and not pcall(rawset,t,'x') and not pcall(rawlen) and not pcall(rawequal,nil))
+    assert(not pcall(rawset,t,nil,1) and not pcall(rawset,t,0/0,1))
+    local function tuple_fn(...) return ... end
+    local results=table.pack(xpcall(tuple_fn,function() error('unexpected handler') end,false,nil,3,nil))
+    assert(results.n==5 and results[1] and results[2]==false and results[3]==nil and results[4]==3 and results[5]==nil)
+    assert(select('#',xpcall(function() end,tuple_fn))==1)
+    local problem={value=false}
+    local ok,e=xpcall(function() error(problem) end,function(p) assert(rawequal(p,problem)); return false,7 end)
+    assert(ok==false and e==false)
+    ok,e=xpcall(function() error(computer) end,function(p) assert(rawequal(p,computer)); return p end)
+    assert(not ok and rawequal(e,computer))
+    ok,e=xpcall(function() error(tuple_fn) end,function(p) assert(rawequal(p,tuple_fn)); return p end)
+    assert(not ok and rawequal(e,tuple_fn))
+    results=table.pack(xpcall(function() error(nil) end,function(p) assert(p==nil) end))
+    assert(results.n==2 and results[1]==false and results[2]==nil)
+    local attempts=0
+    ok,e=xpcall(function() error('first') end,function(p)
+      attempts=attempts+1; if attempts==1 then error('second') end
+      assert(p=='second'); return 'handled'
+    end)
+    assert(not ok and e=='handled' and attempts==2)
+    assert(not pcall(xpcall,false,tuple_fn) and not pcall(xpcall,tuple_fn,nil))
+    assert(select('#',print('value',false,nil,3,nil))==0)
+    assert(select('#',print())==0)
+    print({},function() end,computer,unpack)
+  ]]
+  for _,text in ipairs({source(shared_body),'function start() '..shared_body..' end'}) do
+    local output={}
+    success,diagnostic=document(text,'start',{computer={log=function(s) output[#output+1]=s end}})
+    assert(success,diagnostic and diagnostic.message)
+    assert(#output==3 and output[1]=='value\tfalse\tnil\t3\tnil' and output[2]==''
+      and output[3]=='table\tguest function\tAPI handle\ttable function')
+  end
+  report('expanded-globals-both-saved-forms-tuples-identity-and-print')
+  local accepted_example=0
+  for _,example in ipairs(examples) do
+    if example.name=='specs/computer-runtime/lua-api.md:3' then
+      local output={}
+      success,diagnostic=document(example.source,nil,{computer={log=function(s) output[#output+1]=s end}})
+      assert(success,diagnostic and diagnostic.message)
+      assert(#output==2 and output[1]=='Lua 5.2\tfalse\tnil\t3' and output[2]=='handled: sample failure')
+      accepted_example=accepted_example+1
+    end
+  end
+  assert(accepted_example==1)
+  report('main-runtime-companion-acceptance-program-executed-exact-output')
+  -- Native reference executes in the exact same engine, separately from the
+  -- compiled guest assertion above. In particular handler errors re-enter.
+  local attempts=0
+  local native=table.pack(xpcall(function(...) return ... end,function() end,false,nil,3,nil))
+  assert(native.n==5 and native[1] and native[2]==false and native[3]==nil and native[4]==3 and native[5]==nil)
+  local native_ok,native_error=xpcall(function() error('first',0) end,function(e)
+    attempts=attempts+1; if attempts==1 then error('second',0) end; return e
+  end)
+  assert(not native_ok and native_error=='second' and attempts==2)
+  assert(rawget({},nil)==nil and rawget({},0/0)==nil and rawlen({1,false,3})==3)
+  report('exact-engine-benign-raw-and-xpcall-reference')
+  local host_problem={code='E_ARGUMENT',message='private record'}
+  success,diagnostic=document([[function start()
+    local ok,e=xpcall(computer.failure,function(p) p.message='changed'; return p end)
+    assert(not ok and e.code=='E_ARGUMENT' and e.message=='changed')
+  end]],nil,{computer={failure=function() error(host_problem,0) end}})
+  assert(success and host_problem.message=='private record',diagnostic and diagnostic.message)
+  report('xpcall-host-diagnostic-defensive-copy')
+  if game then
+    success,diagnostic=document([[function start()
+      local ok,e=xpcall(computer.foreign,function(p)
+        assert(type(p)=='table' and p.code=='E_ARGUMENT'); return 'safe'
+      end)
+      assert(not ok and e=='safe')
+    end]],nil,{computer={foreign=function() error(game.surfaces[1],0) end}})
+    assert(success,diagnostic and diagnostic.message)
+    report('xpcall-foreign-engine-error-refused-before-guest-handler')
+  end
+  for _,name in ipairs(added) do
+    refused('function '..name..'() end')
+    refused('local function '..name..'() end; function start() end')
+    refused('function start() end; print("top-level")')
+    success,diagnostic=document('function start('..name..') local '..name..'=false; assert('..name..'==false) end')
+    assert(success,diagnostic and diagnostic.message)
+    success,diagnostic=document('return {api_version=1,handlers={'..name..'=function() assert(type(print)=="function") end}}',name)
+    assert(success,diagnostic and diagnostic.message)
+  end
+  report('expanded-reservation-lexical-shadowing-and-legacy-handler-keys')
+  for _,body in ipairs({
+    [[xpcall(function() while true do end end,function(e) computer.log('unsafe') end); computer.log('unsafe')]],
+    [[xpcall(function() error('x') end,function(e) while true do end end); computer.log('unsafe')]],
+    [[pcall(function() xpcall(function() error('x') end,function(e) error('again') end) end); computer.log('unsafe')]],
+    [[xpcall(function() error('x') end,function(e) local function f() return f() end; return f() end); computer.log('unsafe')]],
+    [[xpcall(function() error('x') end,function(e) while true do local t={} end end); computer.log('unsafe')]],
+    [[pcall(function() xpcall(function() xpcall(function() while true do end end,function() computer.log('unsafe') end) end,function() computer.log('unsafe') end) end)]]
+  }) do
+    assert(run_case('xpcall-fatal-'..tostring(tests),body,false,'E_BUDGET')==0)
+  end
+  for _,body in ipairs({
+    [[xpcall(computer.stop,function(e) computer.log('unsafe') end); computer.log('unsafe')]],
+    [[xpcall(function() error('x') end,function() computer.stop() end); computer.log('unsafe')]]
+  }) do assert(run_case('xpcall-stop-'..tostring(tests),body,false,'E_STOP')==0) end
+  local wide={}; for i=1,limits.tuple_entries do wide[i]='nil' end
+  run_case('xpcall-status-inclusive-tuple-overflow','xpcall(function() return '..table.concat(wide,',')..' end,function() end)',false,'E_BUDGET')
+  wide[#wide]=nil
+  run_case('xpcall-exact-status-inclusive-tuple','local t=table.pack(xpcall(function() return '..table.concat(wide,',')..' end,function() end)); assert(t.n=='..limits.tuple_entries..')',true)
+  local constants={}; for i=1,limits.table_entries do constants[i]='false' end
+  run_case('rawset-full-table-replacement-deletion-atomic-growth',[[
+    local t={]]..table.concat(constants,',')..[[}; local alias=t
+    rawset(t,1,true); assert(rawget(alias,1)==true)
+    local ok,e=pcall(rawset,t,'extra',false); assert(not ok and e.code=='E_LIMIT' and rawget(alias,'extra')==nil)
+    rawset(t,1,nil); rawset(t,'extra',false); assert(rawget(alias,1)==nil and rawget(alias,'extra')==false)
+  ]],true)
+  -- Exact host-controlled admission witnesses observe aliases even when fatal
+  -- poison correctly prevents the compiled guest from doing its own readback.
+  for _,kind in ipairs({'work','allocations'}) do
+    local function setup()
+      local context=admission.context(admission.new(),'raw-boundary',0)
+      local guard=sandbox.new(context,{}); guard.initialize()
+      local t=guard.new(1,function() return {key=false} end)
+      return context,guard,t,guard.global('rawset')
+    end
+    local context,guard,t,fn=setup(); local before=context.machine[kind]
+    assert(fn(t,'key',true)==t); local cost=context.machine[kind]-before
+    context,guard,t,fn=setup()
+    context.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost
+    assert(pcall(fn,t,'key',true) and t.key==true)
+    context,guard,t,fn=setup()
+    context.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost+1
+    assert(not pcall(fn,t,'key',true) and t.key==false)
+    assert(guard.diagnostic({}).code=='E_BUDGET')
+    assert(not pcall(fn,{},'key',true))
+  end
+  report('rawset-exact-work-allocation-and-one-unit-short-no-mutation')
+  run_case('raw-maximum-string-comparison-and-length',[[
+    local s=string.rep('x',16384); assert(rawequal(s,s) and rawlen(s)==16384)
+    assert(not pcall(function() return rawget({},s..'x') end))
+    local t={[1]=1,[3]=3}; assert(rawlen(t)==#t)
+  ]],true)
+  for _,name in ipairs({'rawget','rawset','rawlen'}) do
+    local context=admission.context(admission.new(),'foreign-raw',0)
+    local guard=sandbox.new(context,{}); guard.initialize()
+    local fn=guard.global(name)
+    local ok,e=pcall(fn,{},'key',true)
+    assert(not ok and e.code=='E_ARGUMENT')
+  end
+  report('raw-host-table-ownership-refused')
+  local print_args={}; for i=1,limits.tuple_entries do print_args[i]='""' end
+  assert(run_case('print-maximum-tuple','print('..table.concat(print_args,',')..')',true)==1)
+  print_args[#print_args+1]='""'
+  refused(source('print('..table.concat(print_args,',')..')'),'E_LIMIT')
+  report('print-overwide-tuple-refused-before-execution')
   if report_total~=false then
     if log then log('TC_CONTRACT_TOTAL '..tests) else print('TC_CONTRACT_TOTAL '..tests) end
   end

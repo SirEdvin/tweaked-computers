@@ -341,6 +341,63 @@ function M.new(context, services, shell)
     if result.n>limits.tuple_entries then fatal('protected return width exceeded') end
     return table.unpack(result,1,result.n)
   end
+  env.xpcall=function(fn,handler,...)
+    G.spend(1)
+    if not callable[fn] or not callable[handler] then fail('approved function and message handler required') end
+    local n=select('#',...); G.spend(n+1); allocate(n+2)
+    local args=table.pack(...)
+    local caller_depth=depth
+    local result=table.pack(xpcall(function() return G.call(fn,table.unpack(args,1,args.n)) end,function(problem)
+      -- Native message handling may re-enter after an ordinary handler error.
+      -- Keep each bridge frame charged until native protection has returned;
+      -- G.call unwinds its own depth before propagating that error.
+      if poison then return nil end
+      G.spend(1)
+      if depth>=limits.callback_depth then fatal('callback call depth exhausted') end
+      depth=depth+1
+      if type(problem)=='table' and not owned[problem] and not protected[problem] then problem=G.snapshot(problem) end
+      G.scalar(problem) -- Reject foreign objects/oversized scalars before guest message code.
+      return (G.call(handler,problem))
+    end))
+    depth=caller_depth
+    G.check()
+    if result.n>limits.tuple_entries then fatal('protected return width exceeded') end
+    G.spend(result.n); allocate(result.n)
+    for i=1,result.n do G.scalar(result[i]) end
+    return table.unpack(result,1,result.n)
+  end
+  local function required(n,...)
+    if select('#',...)<n then fail('missing required argument') end
+  end
+  env.rawget=function(...)
+    required(2,...)
+    local t,k=...
+    plain(t); G.spend(1)
+    if k==nil or type(k)=='number' and k~=k then return nil end
+    key(k)
+    return rawget(t,k)
+  end
+  env.rawset=function(...)
+    required(3,...)
+    local t,k,v=...
+    plain(t); G.scalar(v)
+    local targets=G.assignment_targets(1); targets[1]={t,k}
+    local values=G.assignment_values(1,v)
+    G.assignment_check(1,targets,values)
+    rawset(t,k,v)
+    return t
+  end
+  env.rawlen=function(...)
+    required(1,...)
+    return G.length((...))
+  end
+  env.rawequal=function(...)
+    required(2,...)
+    local a,b=...
+    G.scalar(a); G.scalar(b)
+    return rawequal(a,b)
+  end
+  env._VERSION='Lua 5.2'
   env.select=function(index,...)
     local n=select('#',...); G.spend(n+1); integer(n,0,limits.tuple_entries)
     if index=='#' then return n end
@@ -513,6 +570,7 @@ function M.new(context, services, shell)
   env.math=G.namespace(mathlib,'math function')
   env.string=G.namespace(str,'string function')
   env.table=G.namespace(tab,'table function')
+  env.unpack=tab.unpack
   local colors={}
   local color_names={'white','orange','magenta','lightBlue','yellow','lime','pink','gray','lightGray','cyan','purple','blue','brown','green','red','black'}
   for i,name in ipairs(color_names) do colors[name]=2^(i-1) end
@@ -532,21 +590,27 @@ function M.new(context, services, shell)
     end end
     env[name]=G.namespace(entries,name)
   end
-  if shell then
-    env.print=function(...)
-      local n=select('#',...); local parts={}; local bytes=math.max(0,n-1)
-      G.spend(n+1); allocate(n)
-      for i=1,n do parts[i]=env.tostring(select(i,...)); bytes=bytes+#parts[i] end
+  env.print=function(...)
+    local n=select('#',...); local parts={}; local bytes=math.max(0,n-1)
+    G.spend(n+1); allocate(n)
+    for i=1,n do
+      parts[i]=env.tostring(select(i,...)); bytes=bytes+#parts[i]
       if bytes>limits.console_bytes then errors.raise('E_LIMIT','print output too large') end
-      G.spend(bytes+1); allocate(bytes)
-      shell.output(table.concat(parts,'\t'))
     end
+    if bytes>limits.console_bytes then errors.raise('E_LIMIT','print output too large') end
+    G.spend(bytes+1); allocate(bytes)
+    local text=table.concat(parts,'\t')
+    if shell then shell.output(text) else G.get(env.computer,'log')(text) end
+  end
+  if shell then
     function G.shell_root() return shell.root end
     function G.format_results(result)
       if result.n>0 then env.print(table.unpack(result,1,result.n)) end
     end
   end
   for name,v in pairs(env) do if type(v)=='function' then callable[v]=name end end
+  callable[tab.unpack]='table function' -- One identity/description for both aliases.
+  function G.reserved_global(name) return env[name]~=nil end
   function G.global(name)
     G.spend(1)
     if env[name]~=nil then return env[name] end

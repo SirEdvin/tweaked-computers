@@ -18,6 +18,7 @@ local function plan_copy(p)
 end
 local globals = {}
 for _, name in ipairs({'assert','error','ipairs','pairs','next','pcall','select','tonumber','tostring','type',
+  'print','rawget','rawset','rawlen','rawequal','xpcall','unpack','_VERSION',
   'math','string','table','colors','colours','computer','peripheral'}) do globals[name] = true end
 
 local function position(node)

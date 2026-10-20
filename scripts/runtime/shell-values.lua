@@ -139,6 +139,9 @@ function M.decode(graph,guard)
         if not scalar(k) or seen[k] then fail('invalid or duplicate shell graph key') end
         seen[k]=true; charge(k)
         if i==1 and (type(k)~='string' or #k>limits.identifier_bytes or not k:match('^[a-zA-Z_][a-zA-Z_0-9]*$')) then fail('invalid shell global name') end
+        if i==1 and guard.reserved_global(k) then
+          fail('reserved shell global: '..k..'; data retained. Confirm Reset Shell to discard scratch values','E_UNSUPPORTED')
+        end
         values[i][k]=value(entry.value)
       end
     end
