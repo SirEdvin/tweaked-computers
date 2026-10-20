@@ -12,14 +12,18 @@
     "colours": "same immutable namespace as colors"
   },
   "peripheral_methods": {
+    "speaker": ["getInstruments", "getLimits", "getNotes", "getSounds", "playNote", "playSound"],
+    "modem": ["open", "isOpen", "close", "closeAll", "transmit", "isWireless", "getLimits"],
     "recipe_searcher": ["findRecipes", "getLimits"],
     "kv_database": ["get", "set", "del", "exists", "type", "hget", "hset", "hdel", "hexists", "hgetall", "hlen", "expire", "ttl", "persist", "getLimits"],
     "logic_handler": ["readSignal", "readSignals", "getInputStatus", "getOutput", "setOutput", "clearOutput", "subscribe", "unsubscribe", "getLimits"],
     "configurator": ["getDevices", "getDevice", "getCapabilities", "getConfiguration", "setConfiguration", "getLimits", "getSections", "addSection", "setSection", "removeSection"],
     "monitor": ["write", "blit", "clear", "clearLine", "scroll", "getSize", "getCursorPos", "setCursorPos", "getCursorBlink", "setCursorBlink", "getTextColor", "getTextColour", "setTextColor", "setTextColour", "getBackgroundColor", "getBackgroundColour", "setBackgroundColor", "setBackgroundColour", "isColor", "isColour", "setPaletteColor", "setPaletteColour", "getPaletteColor", "getPaletteColour", "getTextScale", "setTextScale", "getLimits"]
   },
-  "events": ["start", "timer", "peripheral_attach", "peripheral_detach", "monitor_resize", "monitor_touch", "power_restored", "signal_changed"],
+  "events": ["start", "timer", "peripheral_attach", "peripheral_detach", "monitor_resize", "monitor_touch", "power_restored", "signal_changed", "modem_message"],
   "capabilities": {
+    "speaker-peripheral": {"guide": "docs/player/api/speaker.md", "contract": "changes/add-speaker-peripheral/specs/speaker-peripheral/lua-api.md", "checks": ["tests/speaker_engine.lua", "tests/speaker_data.lua"]},
+    "radar-modem": {"guide": "docs/player/api/modem.md", "contract": "changes/add-radar-modems/specs/radar-modem/lua-api.md", "checks": ["tests/radar_engine.lua", "tests/modem_engine.lua", "tests/radar_data.lua", "tests/radar_client_engine.lua"]},
     "computer-runtime": {"guide": "docs/computer-runtime.md", "contract": "specs/computer-runtime/lua-api.md", "checks": ["tests/computer_contract.lua", "tests/runtime_contract.lua", "tests/integration_engine.lua"]},
     "program-editor": {"guide": "docs/program-editor.md", "contract": "specs/program-editor/lua-api.md", "checks": ["tests/editor_contract.lua", "tests/integration_engine.lua"], "client_status": "SC2 automated native entry/focus/layout and connected conflict acceptance; see docs/sc2-native-acceptance.md"},
     "peripheral-network": {"guide": "docs/peripheral-network.md", "contract": "specs/peripheral-network/lua-api.md", "checks": ["tests/network_engine.lua", "tests/integration_engine.lua"]},

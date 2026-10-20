@@ -33,6 +33,10 @@ requires an array. Values are validated and defensively copied. Mutating a retur
 snapshot never edits stored state. Persist peripheral names/colors, not wrappers.
 IDs survive ordinary load but are not reused for replacement/cloned entities.
 
+The [modem](modem.md) accepts explicit top-level nil only as the required third
+argument of `transmit`. Its event then omits `message`. This does not add nil to
+persistent Data, arrays, maps, state or ordinary peripheral argument contracts.
+
 `BaseEvent` fields are `name:string`, `tick:Tick` (dispatch time),
 `sequence:integer` (global FIFO sequence), `computer_id:string`, `run_id:string`.
 Events and payloads are copied. Observation/deadline times are separate fields.

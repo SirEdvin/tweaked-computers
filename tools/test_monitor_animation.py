@@ -17,15 +17,19 @@ class AnimationInvocationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
             root = Path(directory)
             archive = build.build(root / 'package')
-            for layout in ('four-walls', 'mixed'):
-                with self.subTest(layout=layout):
-                    output = root / layout
+            for layout, competition in ((layout, competition) for layout in ('four-walls', 'mixed') for competition in ('none', 'modem', 'speaker')):
+                with self.subTest(layout=layout, competition=competition):
+                    with_modem = competition == 'modem'
+                    with_speaker = competition == 'speaker'
+                    output = root / f'{layout}-{competition}'
 
                     def simulate(command, **kwargs):
                         # Deliberately mocked subprocess: only command/inventory
                         # plumbing is under test. Real engine gates stay in CI.
                         self.assertEqual(command[command.index('--cold-timeout') + 1], '240')
-                        self.assertEqual(command[command.index('--fixture') + 1], 'tests.monitor_animation_engine')
+                        fixture = {'none': 'tests.monitor_animation_engine', 'modem': 'tests.modem_competition_engine',
+                                   'speaker': 'tests.speaker_competition_engine'}[competition]
+                        self.assertEqual(command[command.index('--fixture') + 1], fixture)
                         self.assertEqual(command[command.index('--mode') + 1], 'both')
                         self.assertIn('--cold', command)
                         self.assertIn('--production-context', command)
@@ -39,12 +43,18 @@ class AnimationInvocationTests(unittest.TestCase):
 
                     argv = ['monitor_animation.py', '--factorio', str(root / 'unused-engine'),
                             '--archive', str(archive), '--output', str(output), '--mode', 'both', '--layout', layout]
+                    if with_modem:
+                        argv.append('--with-modem')
+                    if with_speaker:
+                        argv.append('--with-speaker')
                     with patch('sys.argv', argv), patch.object(monitor_animation.subprocess, 'run', side_effect=simulate):
                         with self.assertRaises(SystemExit) as stopped:
                             monitor_animation.main()
                     self.assertEqual(stopped.exception.code, 0)
                     record = json.loads((output / 'summary.json').read_text())
                     self.assertEqual(record['layout'], layout)
+                    self.assertEqual(record['modem_competition'], with_modem)
+                    self.assertEqual(record['speaker_competition'], with_speaker)
                     self.assertEqual(len(record['cadence_samples']), 2)
                     with zipfile.ZipFile(archive) as original, zipfile.ZipFile(output / archive.name) as tested:
                         prefix = next(n[:-len('info.json')] for n in original.namelist() if n.endswith('/info.json'))

@@ -87,6 +87,7 @@ def main():
     ap.add_argument('--mode', choices=['base', 'space-age', 'both'], default='both')
     ap.add_argument('--fixture', default='tests.runtime_contract', help='Packaged Lua module exposing run()')
     ap.add_argument('--data-fixture', help='Optional packaged data-stage fixture module')
+    ap.add_argument('--final-data-fixture', help='Optional packaged final-fixes fixture after catalogue capture')
     ap.add_argument('--production-context', action='store_true', help='Run the fixed lifecycle fixture in the production mod storage/event context; avoid duplicate native entity owners')
     ap.add_argument('--cold', action='store_true', help='Fixture also exposes on_load/on_tick; exercise two cold server processes')
     ap.add_argument('--cold-timeout', type=int, help='Explicit wall deadline per cold phase for sustained fixtures (1..1800 seconds)')
@@ -125,13 +126,15 @@ def main():
                 ap.error('--upgrade-fixture requires --cold')
             control += 'script.on_configuration_changed(test.on_configuration_changed)\n'
         if args.production_context:
-            if args.fixture not in ('tests.monitor_state_waiting', 'tests.monitor_state_preparing', 'tests.monitor_state_ready', 'tests.monitor_state_retiring', 'tests.logic_recipe_engine', 'tests.recipe_searcher_engine', 'tests.shell_cold', 'tests.lifecycle_engine', 'tests.integration_engine', 'tests.redesign_engine', 'tests.monitor_feedback_engine', 'tests.rd1_upgrade_engine', 'tests.monitor_budget_engine', 'tests.monitor_presentation_engine', 'tests.monitor_plot_baseline_engine', 'tests.runtime_budget_engine', 'tests.monitor_animation_engine') or not args.cold:
+            if args.fixture not in ('tests.speaker_competition_engine', 'tests.speaker_engine', 'tests.speaker_client_engine', 'tests.modem_competition_engine', 'tests.radar_engine', 'tests.modem_engine', 'tests.monitor_state_waiting', 'tests.monitor_state_preparing', 'tests.monitor_state_ready', 'tests.monitor_state_retiring', 'tests.logic_recipe_engine', 'tests.recipe_searcher_engine', 'tests.shell_cold', 'tests.lifecycle_engine', 'tests.integration_engine', 'tests.redesign_engine', 'tests.monitor_feedback_engine', 'tests.rd1_upgrade_engine', 'tests.monitor_budget_engine', 'tests.monitor_presentation_engine', 'tests.monitor_plot_baseline_engine', 'tests.runtime_budget_engine', 'tests.monitor_animation_engine') or not args.cold:
                 ap.error('--production-context requires a fixed supported fixture and --cold')
             control = '-- Native lifecycle fixture runs once in production context.\n'
             (fixture / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value="+json.dumps(args.fixture)+",allowed_values={"+json.dumps(args.fixture)+"}}}\n")
         (fixture / 'control.lua').write_text(control)
         if args.data_fixture:
             (fixture / 'data.lua').write_text('require('+json.dumps('__'+info['name']+'__.'+args.data_fixture)+')\n')
+        if args.final_data_fixture:
+            (fixture / 'data-final-fixes.lua').write_text('require('+json.dumps('__'+info['name']+'__.'+args.final_data_fixture)+')\n')
         enabled = [{'name':'base','enabled':True},{'name':info['name'],'enabled':True},{'name':'tc-smoke','enabled':True}]
         enabled += [{'name':name,'enabled':mode=='space-age'} for name in ('space-age','quality','elevated-rails')]
         (mods / 'mod-list.json').write_text(json.dumps({'mods':enabled}))
@@ -161,7 +164,7 @@ def main():
             # deadline or any guest/shared resource ceiling.
             phase_timeout = args.cold_timeout or (240 if args.fixture=='tests.monitor_presentation_engine' else 90)
             phases.append(cold_phase(args.factorio,cfg,mods,ordinary_save,folder,'cold-second','TC_COLD_OK',timeout=phase_timeout))
-            if args.upgrade_fixture and (mode=='base' or args.fixture=='tests.recipe_searcher_engine'):
+            if args.upgrade_fixture and (mode=='base' or args.fixture in ('tests.speaker_engine', 'tests.recipe_searcher_engine', 'tests.radar_engine')):
                 # Only the copied fixture changes; the tested production ZIP is immutable.
                 fixture_info = json.loads((fixture / 'info.json').read_text())
                 fixture_info['version'] = '0.0.2'

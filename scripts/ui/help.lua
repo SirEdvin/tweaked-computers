@@ -75,7 +75,7 @@ log(text) -> bounded plain output
 stop() -> does not return; ends this callback/run and cannot be caught by pcall
 on(event_name, handler_name) -> subscription ID; off(ID) -> boolean
 General events: peripheral_attach, peripheral_detach, monitor_resize,
-monitor_touch, power_restored. Events include name/tick/sequence/computer_id/run_id.
+monitor_touch, power_restored, modem_message. Events include name/tick/sequence/computer_id/run_id.
 after(delay_ticks, handler_name, payload?) -> timer ID
 every(interval_ticks, handler_name, payload?) -> timer ID
 cancelTimer(ID) -> boolean, including already queued timer notifications.
@@ -97,13 +97,63 @@ getMonitorSyncGroup() -> copied members/status/presented_sequence/tick/diagnosti
 One selected group per run; at most four screens and 10584 summed actual cells.
 Every supplied path is checked; duplicate names prefer red. Writing stays shared.
 wire is explicitly "red" or "green", never "both" for discovery.
-Only same-color physical mod NETWORK ports relay discovery; vanilla poles,
+Only same-color physical mod NETWORK ports and supported native radar/speaker sockets relay discovery; vanilla poles,
 INPUT/OUTPUT/TARGETS ports and color changes are not discovery paths.
-Types: monitor, kv_database, logic_handler, configurator, recipe_searcher.
+Types: monitor, kv_database, logic_handler, configurator, recipe_searcher, modem, speaker.
 Each has getLimits().
 Store name/wire in state, not ephemeral facades. Calls recheck live authority.
 Use Peripherals / Refresh for current names/types/power on the selected color.
 Incomplete discovery reports pending/limit, never a successful empty prefix.
+
+SPEAKER
+find("speaker", wire): existing vanilla programmable-speaker, native sockets and GUI.
+No adapter, helpers or research; native circuits/settings/wires/mining and Configurator
+remain intact. Connected old speakers enter bounded adoption; pending means retry later.
+getInstruments() -> complete copied exact-name array, sorted bytewise.
+getNotes(instrument) -> complete {pitch=integer,name=string} array in native note order.
+playNote(instrument, volume?, pitch?) -> one boolean. Volume 0..1 defaults 1;
+pitch defaults 0 and is a zero-based Factorio sample index, not MIDI/CC pitch.
+The first pinned piano sample is F3 at pitch 0. Discover each instrument's range.
+playSound(path, volume?) -> one boolean; exact native-valid SoundPath, <=256 bytes.
+getSounds(prefix?, after?) -> {sounds={...},next?}, <=50 unique valid sorted paths.
+Strings default empty; prefix is literal, after an exclusive lexical key. Only a
+later match produces next, equal to the last returned path. One page per callback.
+Discovery captures documented sound families at data-final-fixes; later additions
+may remain directly playable without being indexed. Missing/oversized data errors.
+getLimits() -> copied common/speaker limits, including without native electrical power.
+Other methods need energy and no script-disable/freeze/deconstruction. A false circuit
+trigger alone does not prevent API playback. Every call proves live wire authority.
+True means engine submission, not audible acknowledgement; false means shared quota.
+Per tick: 8 notes + 1 effect per speaker, 16 combined per computer, 64 worldwide.
+Colors/programs/Console share credits, including volume 0. Apply/reconnect/same-tick
+reload never renew credits. Invalid arguments spend no audio quota; native failures do.
+Audio is positional on the current surface, eligible for nearby charted listeners
+on any force under native attenuation/mixer rules, regardless of native global mode.
+No playAudio, stop, streams, queue or completion event. Submitted samples cannot be
+cancelled. See docs/player/api/speaker.md and the speaker-alarm/melody/catalogue programs.
+
+RADAR MODEM
+Native radar: unchanged scanning, circuits, power, GUI and mining; no adapter item.
+find("modem", wire); numeric channels are not red/green discovery colors.
+open(channel), close(channel), closeAll(), transmit(channel, replyChannel, payload)
+return no values. isOpen(channel) and isWireless() return booleans; getLimits()
+works without power. Other calls require an active, electrically supplied radar.
+Channels 0..65535; 128 shared open channels per physical radar, across all callers.
+closeAll affects other computers too. Stop does not close the shared channels.
+computer.on("modem_message", "received") registers a saved named handler.
+Event: peripheral (receiver), wire/wires, channel, replyChannel, message, distance?,
+sent_tick; nil payload is an absent message, false is preserved. Same-radar echo
+is excluded. Both-color paths deduplicate; two receiving radars remain distinct.
+Whole-send proof/copies/fanout are admitted before publication; overflow faults
+the recipient, not a retryable partial sender error. No ACK/retry/offline mailbox.
+Payloads: bounded Data plus explicit third-argument nil. Check getLimits for
+finite payload/candidate/delivery/rate caps; Console and programs share credits.
+Same-force/same-surface unlimited-distance radio. Space Age advanced endpoints
+at BOTH ends allow cross-surface traffic, including travelling platforms.
+Advanced: 5x5, 1.5x native art, 1MW; six-pack research excludes military/planet packs.
+Hidden native radar links and received names never grant remote device authority.
+No rednet, callRemote, remote inventory or pullEvent. Channels/queues survive cold
+load without replay; replacement/clone and force/surface changes clear channels.
 
 LOGIC HANDLER
 find("logic_handler", wire) -> facade; NETWORK discovery is not INPUT selection.
@@ -205,6 +255,8 @@ local sections={
   ['LOGIC HANDLER']={'Logic handler','Peripherals'}, ['KV DATABASE']={'KV database','Peripherals'},
   MONITOR={'Monitor','Peripherals'}, CONFIGURATOR={'Configurator','Peripherals'},
   ['RECIPE SEARCHER']={'Recipe Searcher','Peripherals'},
+  ['RADAR MODEM']={'Radar modem','Peripherals'},
+  SPEAKER={'Programmable speaker','Peripherals'},
   ['COMBINED EXAMPLE']={'Factory examples','Examples'},
   ['FAILURES AND PERSISTENCE']={'Failures and persistence','Safety'}
 }

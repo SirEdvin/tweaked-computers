@@ -11,6 +11,8 @@ return [[return {api_version=1,handlers={start=function(event)
     assert(type(peripheral[method])=='function')
   end
   local expected={
+    speaker={'getInstruments','getLimits','getNotes','getSounds','playNote','playSound'},
+    modem={'open','isOpen','close','closeAll','transmit','isWireless','getLimits'},
     recipe_searcher={'findRecipes','getLimits'},
     kv_database={'get','set','del','exists','type','hget','hset','hdel','hexists','hgetall','hlen','expire','ttl','persist','getLimits'},
     logic_handler={'readSignal','readSignals','getInputStatus','getOutput','setOutput','clearOutput','subscribe','unsubscribe','getLimits'},
@@ -21,10 +23,15 @@ return [[return {api_version=1,handlers={start=function(event)
       'getPaletteColor','getPaletteColour','getTextScale','setTextScale','getLimits'}
   }
   for kind,list in pairs(expected) do
-    local device=peripheral.find(kind,'red'); assert(device)
-    local methods=peripheral.getMethods(peripheral.getName(device),'red')
-    table.sort(list); assert(#list==#methods)
-    for i,name in ipairs(list) do assert(name==methods[i] and type(device[name])=='function') end
+    local device=peripheral.find(kind,'red')
+    -- Legacy factory scenes have no radar; the native modem fixture separately
+    -- requires and exercises this same closed seven-method inventory.
+    if kind~='modem' and kind~='speaker' or device then
+      assert(device)
+      local methods=peripheral.getMethods(peripheral.getName(device),'red')
+      table.sort(list); assert(#list==#methods)
+      for i,name in ipairs(list) do assert(name==methods[i] and type(device[name])=='function') end
+    end
   end
   assert(colours==colors and colors.grey==colors.gray and colors.lightGrey==colors.lightGray)
   computer.setState('api_inventory',true)

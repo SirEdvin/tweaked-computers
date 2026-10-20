@@ -52,7 +52,7 @@ computer.on(event_name, handler_name) -> SubscriptionId
 computer.off(subscription_id) -> boolean
 ```
 
-Supported general events: `peripheral_attach`, `peripheral_detach`, `monitor_resize`, `monitor_touch`, `power_restored`. Payloads are documented by their owning capability; all include BaseEvent. Calling `on` twice creates two independent registrations intentionally. `off` is idempotent and returns false for an already removed ID; an ID belonging to another computer/run is invalid. Registrations are durable names/data, never saved functions. Registrations established by `start` survive ordinary save/load; reconstruction must not register them again.
+Supported general events: `peripheral_attach`, `peripheral_detach`, `monitor_resize`, `monitor_touch`, `power_restored`, `modem_message`. Payloads are documented by their owning capability; all include BaseEvent. Calling `on` twice creates two independent registrations intentionally. `off` is idempotent and returns false for an already removed ID; an ID belonging to another computer/run is invalid. Registrations are durable names/data, never saved functions. Registrations established by `start` survive ordinary save/load; reconstruction must not register them again.
 
 Logic input subscriptions are created by the logic-handler API, not by `computer.on("signal_changed", ...)`. Timers likewise address a named handler directly. `start`, `signal_changed` and `timer` are not registerable general-event names. There is no guest `on_tick`; recurring timers express periodic work under limits. There is no guest stop/fault cleanup callback on which safety depends.
 

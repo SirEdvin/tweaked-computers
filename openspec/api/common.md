@@ -41,6 +41,8 @@ BaseEvent = {
 
 `Data` means a finite boolean/number/string, dense 1-based array of Data, or string-keyed map of Data. Arrays and maps cannot mix key kinds; cycles, metatables, functions, threads and LuaObjects are prohibited. No explicit nil element exists inside Data. Limits bound total bytes, nodes, nesting, key lengths and entries, not just one dimension. Persistent state stores nonnil Data; use the separate deletion method to remove a key. An empty table is an empty map unless a specific schema calls for an array.
 
+The radar-modem transport additionally accepts explicit top-level nil as the required third `transmit` argument; the resulting event omits `message`. This is a transport-only exception, not an expansion of persistent Data or nested collection values.
+
 Identifiers are opaque case-sensitive strings. They are stable across an ordinary save/load but are not reused for a newly placed/cloned entity. Numeric native IDs never become floating-point identity keys in guest code. Prototype names are exact identifiers, not localized labels. `normal` is the only assumed quality; other names must exist in the active prototype registry. Ordinary signal collections reject wildcard pseudo-signals; configurator condition/combinator schemas explicitly permit supported wildcards in their legal positions.
 
 Collections returned by the API are defensive plain snapshots. Sorting is by complete `(type, name, quality)` for signals, opaque name for peripherals/devices, bytewise field name for hash snapshot construction, and native index for section arrays. No ordering relies on table addresses, CPU time, native hash order or player-local state.

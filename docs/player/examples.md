@@ -7,6 +7,139 @@ factory managers; keep the described topology. Runtime effects were exercised by
 the implementation harness; documentation checks compile these blocks without
 claiming graphical keyboard/focus/touch delivery.
 
+## speaker-alarm
+
+Connect a powered vanilla programmable-speaker to a computer Network on red. Plays one positional effect every 120 ticks. False admission waits for the next timer, never a same-tick retry. Stop prevents future calls, not cancellation of an already submitted sample.
+
+```lua
+function start(event)
+  computer.setState("accepted", false)
+  computer.every(120, "alarm")
+end
+
+function alarm(event)
+  local speaker = peripheral.find("speaker", "red")
+  assert(speaker, "Connect a powered vanilla programmable speaker on red")
+  local accepted = speaker.playSound("utility/wire_connect_pole", 0.5)
+  computer.setState("accepted", accepted)
+  if not accepted then computer.log("Speaker busy; the next timer will retry") end
+end
+```
+
+## speaker-melody
+
+Connect a powered vanilla programmable-speaker on red. Discovers zero-based piano indices and requests one note every 30 ticks; advances only after admission. This is simulation scheduling, not sample-accurate sequencing. Disconnect/power errors fault the program; reconnect and Run again.
+
+```lua
+function start(event)
+  local speaker = peripheral.find("speaker", "red")
+  assert(speaker, "Connect a powered vanilla programmable speaker on red")
+  local notes = speaker.getNotes("piano")
+  assert(#notes >= 3)
+  computer.setState("speaker", peripheral.getName(speaker))
+  computer.setState("pitches", {notes[1].pitch, notes[2].pitch, notes[3].pitch, notes[2].pitch})
+  computer.setState("step", 1)
+  computer.every(30, "note")
+end
+
+function note(event)
+  local speaker = peripheral.wrap(computer.getState("speaker"), "red")
+  assert(speaker, "Speaker disconnected; reconnect and Run again")
+  local step = computer.getState("step")
+  local pitches = computer.getState("pitches")
+  if speaker.playNote("piano", 0.35, pitches[step]) then
+    computer.setState("step", step % #pitches + 1)
+  end
+end
+```
+
+## speaker-catalogue
+
+Connect a powered vanilla programmable-speaker on red. Fetches at most one page per callback and stores the last page and cumulative count as plain state. Completes without a busy loop. The bounded Console history is not a complete catalogue export; inspect last_page while paging or reuse the continuation pattern with your own storage.
+
+```lua
+function start(event)
+  computer.setState("after", "")
+  computer.setState("count", 0)
+  computer.setState("complete", false)
+  computer.after(1, "page")
+end
+
+function page(event)
+  local speaker = peripheral.find("speaker", "red")
+  assert(speaker, "Connect a powered vanilla programmable speaker on red")
+  local result = speaker.getSounds("", computer.getState("after"))
+  computer.setState("last_page", result.sounds)
+  computer.setState("count", computer.getState("count") + #result.sounds)
+  computer.log("Sound paths discovered: " .. tostring(computer.getState("count")))
+  if result.next then
+    computer.setState("after", result.next)
+    computer.after(1, "page")
+  else
+    computer.setState("complete", true)
+  end
+end
+```
+
+## modem-sender
+
+Wire one powered computer to one native radar on red. Run modem-receiver on a different computer/radar on the same force and surface first. Sends on numeric channel 200 every 60 ticks and receives explicit replies on 201; these numbers are not wire colors.
+
+```lua
+function start(event)
+  computer.setState("starts", (computer.getState("starts") or 0) + 1)
+  local modem = peripheral.find("modem", "red")
+  assert(modem, "Connect a powered radar on red")
+  modem.open(201)
+  computer.on("modem_message", "reply")
+  computer.every(60, "send")
+end
+
+function send(event)
+  local modem = peripheral.find("modem", "red")
+  assert(modem)
+  local sequence = (computer.getState("sent") or 0) + 1
+  modem.transmit(200, 201, {sequence = sequence, text = "Hello, distant factory"})
+  computer.setState("sent", sequence)
+end
+
+function reply(event)
+  if event.channel == 201 then
+    assert(event.sequence > (computer.getState("last_sequence") or 0))
+    computer.setState("last_sequence", event.sequence)
+    computer.setState("last_reply", event.message)
+    computer.log("Reply received on channel 201")
+  end
+end
+```
+
+## modem-receiver
+
+Wire a second powered computer to its own radar on red, without connecting the two discovery graphs. Start this receiver before modem-sender. Shares channel 200 on the physical radar, registers a named handler and replies explicitly; no ACK/retry guarantee or remote peripheral authority.
+
+```lua
+function start(event)
+  computer.setState("starts", (computer.getState("starts") or 0) + 1)
+  local modem = peripheral.find("modem", "red")
+  assert(modem, "Connect a powered radar on red")
+  modem.open(200)
+  computer.on("modem_message", "receive")
+end
+
+function receive(event)
+  if event.channel ~= 200 then return end
+  assert(event.sequence > (computer.getState("last_sequence") or 0))
+  computer.setState("last_sequence", event.sequence)
+  computer.setState("last_message", event.message)
+  computer.setState("received", (computer.getState("received") or 0) + 1)
+  computer.log("Message received on channel 200")
+  local modem = peripheral.wrap(event.peripheral, event.wire)
+  if modem then
+    modem.transmit(event.replyChannel, 200, {received = event.message})
+  end
+end
+```
+
 ## function-program
 
 Power a computer; no peripheral or wire is required. In an empty Editor draft, choose Insert starter (or paste this whole document), Validate, Save, then Run. Insertion and validation do not save or execute anything. The first dispatch calls `sample()` immediately and logs its returned count in Console; the `samples` value in explicit computer state increases once, then once more at the first 60-tick timer deadline. Private `increment` is declared before use and is not exported. `sample` is forward-visible and registration uses its string name, not its function value. Each callback has fresh locals/functions; reapplying keeps the explicit count, while ordinary reload does not replay `start`. These functions are not callable from the live Console. The legacy descriptor examples below remain supported.

@@ -17,6 +17,11 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs/player'
 CONTRACT = ROOT / 'openspec'
 EXAMPLES = {
+    'speaker-alarm': 'Connect a powered vanilla programmable-speaker to a computer Network on red. Plays one positional effect every 120 ticks. False admission waits for the next timer, never a same-tick retry. Stop prevents future calls, not cancellation of an already submitted sample.',
+    'speaker-melody': 'Connect a powered vanilla programmable-speaker on red. Discovers zero-based piano indices and requests one note every 30 ticks; advances only after admission. This is simulation scheduling, not sample-accurate sequencing. Disconnect/power errors fault the program; reconnect and Run again.',
+    'speaker-catalogue': 'Connect a powered vanilla programmable-speaker on red. Fetches at most one page per callback and stores the last page and cumulative count as plain state. Completes without a busy loop. The bounded Console history is not a complete catalogue export; inspect last_page while paging or reuse the continuation pattern with your own storage.',
+    'modem-sender': 'Wire one powered computer to one native radar on red. Run modem-receiver on a different computer/radar on the same force and surface first. Sends on numeric channel 200 every 60 ticks and receives explicit replies on 201; these numbers are not wire colors.',
+    'modem-receiver': 'Wire a second powered computer to its own radar on red, without connecting the two discovery graphs. Start this receiver before modem-sender. Shares channel 200 on the physical radar, registers a named handler and replies explicitly; no ACK/retry guarantee or remote peripheral authority.',
     'function-program': 'Power a computer; no peripheral or wire is required. In an empty Editor draft, choose Insert starter (or paste this whole document), Validate, Save, then Run. Insertion and validation do not save or execute anything. The first dispatch calls `sample()` immediately and logs its returned count in Console; the `samples` value in explicit computer state increases once, then once more at the first 60-tick timer deadline. Private `increment` is declared before use and is not exported. `sample` is forward-visible and registration uses its string name, not its function value. Each callback has fresh locals/functions; reapplying keeps the explicit count, while ordinary reload does not replay `start`. These functions are not callable from the live Console. The legacy descriptor examples below remain supported.',
     'recipe-searcher-program': 'Research Recipe Searcher separately, power it and connect its Network directly to a computer on red. Paste the whole document, Validate, Save and Run. Searches item/fluid products and refines E_LIMIT by exact category; a single category may still exceed 50 or other budgets.',
     'peripheral-program': 'Wire a computer NETWORK to any device NETWORK on red. Inspect each color in Peripherals; read program output in Console.',
@@ -281,11 +286,13 @@ def inventory():
     actual = {'computer': computer, 'peripheral': peripheral, 'kv_database': kv,
               'logic_handler': methods(text('scripts/services/logic.lua')),
               'configurator': methods(text('scripts/services/configurator.lua')), 'monitor': monitor,
-              'recipe_searcher': set(re.findall(r'function methods\.([A-Za-z]+)\(', text('scripts/services/recipe-searcher.lua')))}
+              'recipe_searcher': set(re.findall(r'function methods\.([A-Za-z]+)\(', text('scripts/services/recipe-searcher.lua'))),
+              'speaker': set(re.findall(r'function M\.methods\.([A-Za-z]+)\(', text('scripts/services/speaker.lua'))),
+              'modem': set(re.findall(r'function M\.methods\.([A-Za-z]+)\(', text('scripts/services/modem.lua')))}
     expected = {'computer': names['computer'], 'peripheral': names['peripheral'], **maps}
     pages = {'computer': 'api/computer.md', 'peripheral': 'api/peripheral.md', 'kv_database': 'api/kv.md',
              'logic_handler': 'api/logic.md', 'configurator': 'api/configurator.md', 'monitor': 'api/monitor.md',
-             'recipe_searcher': 'api/recipe-searcher.md'}
+             'recipe_searcher': 'api/recipe-searcher.md', 'modem': 'api/modem.md', 'speaker': 'api/speaker.md'}
     for namespace, exports in actual.items():
         if exports != set(expected[namespace]):
             raise ValueError(f'export inventory drift {namespace}: {exports ^ set(expected[namespace])}')
@@ -309,7 +316,8 @@ def inventory():
     for name in names['colors'] + manifest['events']:
         if name not in all_docs:
             raise ValueError('undocumented color/event: ' + name)
-    capability_pages = {'computer-runtime': ['api/computer.md', 'api/language.md', 'api/common.md'],
+    capability_pages = {'speaker-peripheral': ['api/speaker.md'], 'radar-modem': ['api/modem.md', 'radar-native-assets.md'],
+                        'computer-runtime': ['api/computer.md', 'api/language.md', 'api/common.md'],
                         'program-editor': ['editor.md'], 'device-lifecycle': ['lifecycle.md'],
                         'peripheral-network': ['api/peripheral.md'], 'monitor-display': ['api/monitor.md'],
                         'kv-database': ['api/kv.md'], 'logic-handler': ['api/logic.md'],
