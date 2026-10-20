@@ -1,10 +1,10 @@
 {
   "name": "tweaked-computers",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "title": "Tweaked Computers (ALPHA)",
   "author": "Tweaked Computers contributors",
   "factorio_version": "2.0",
-  "description": "ALPHA: native circuit computers with a live save-backed Console, Recipe Searcher, monitors, KV databases, recipe-aware logic and typed factory configurators. Back up saves. Factorio 2.0.77; not a stable release or GPU performance guarantee.",
+  "description": "ALPHA: bounded native function programs, a live save-backed Console, Recipe Searcher, monitors, KV databases, circuit logic and typed factory configurators with Service Rack artwork. Back up saves. Factorio 2.0.77; not a stable release or GPU performance guarantee.",
   "homepage": "https://siredvin.github.io/tweaked-computers/",
   "dependencies": ["base = 2.0.77", "? space-age = 2.0.77"]
 }

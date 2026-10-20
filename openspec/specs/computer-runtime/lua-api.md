@@ -4,7 +4,7 @@ Normative companion to [spec.md](spec.md); shared types, errors and scheduling: 
 
 ## Source document
 
-A computer contains one source document, not files. Its only module-level executable construct is a literal returned descriptor:
+A computer contains one source document, not files. It accepts declaration-form programs or the legacy literal returned descriptor below. The [program-source companion](../program-source/lua-api.md) defines the declaration-only top level, private helpers, export scope and ordinary guarded direct calls; API 1 is implicit for that form.
 
 This section describes saved-program mode. The independent [Console](../console-shell/lua-api.md) accepts bounded statements and expressions without a descriptor, but cannot borrow handlers, register background work or change this source shape. Its retained scratch graph and symbolic bindings do not make callback locals, closures or ordinary Data durable.
 
@@ -24,7 +24,7 @@ return {
 }
 ```
 
-`handlers` maps unique names to function declarations. `start` is optional; it receives `{name="start", ...BaseEvent}` once on explicit Run/Apply. No function/table initialization at module scope may touch the factory, inspect the clock, register events or mutate state. Local helper functions are permitted inside handlers within the documented bounded subset. Every dispatch constructs a fresh ephemeral descriptor environment: locals/globals/closures are not a hidden second persistence mechanism. Handler names are case-sensitive strings and must exist when registered.
+In the legacy form, `handlers` maps unique names to function declarations; declaration-form exports populate the same named inventory. `start` is optional; it receives `{name="start", ...BaseEvent}` once on explicit Run/Apply. No module-level initialization may touch the factory, inspect the clock, register events or mutate state. Local helpers follow the selected form's lexical rules. Every dispatch constructs fresh ephemeral functions and locals: closures are not hidden persistence. Handler names are case-sensitive strings and must exist when registered; direct calls do not create another run or synthesize an event.
 
 Save commits source only; Run/Apply validates and activates a saved revision. Replacing a run cancels its timers/subscriptions/pending events and clears its still-owned logic outputs, then creates a new run generation and queues `start`. Explicit state survives unless the user chooses Reset State. A compile/validation failure before activation does not retire the old run. An error in the newly started handler faults that new run; it does not secretly restart the old revision.
 

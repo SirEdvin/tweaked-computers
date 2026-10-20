@@ -11,6 +11,12 @@ Factorio objects, and no command history.
 
 ## Start here
 
+**0.1.10 ALPHA** combines [plain function programs](api/language.md),
+the [live maintenance setting](api/limits.md#maintenance-and-shared-headroom)
+and the selected [Service Rack artwork](artwork.md), including research icons.
+Legacy descriptors remain supported. The maintenance default stays 200000;
+no production safety ceiling is raised by this release.
+
 1. [Install the alpha and craft the devices](getting-started.md).
 2. [Control your first inserter](first-controller.md) with a computer and logic handler.
 3. [Use the editor safely](editor.md): Save is not Run, and Stop is not Reset State.
@@ -35,7 +41,7 @@ them. Newer engine versions and third-party prototype combinations are not claim
 verified by this guide.
 
 The implementation has packaged headless native-runtime, factory-effect and
-cold-save checks. Foundry artwork and live charts have isolated software-rendered
+cold-save checks. Service Rack artwork and live charts have isolated software-rendered
 base/Space Age captures. The Console has native input/size/workflow acceptance in
 both modes and actual base two-client late joining plus cold server resume.
 Recipe Searcher appearance and Ctrl-click transfers/held-modifier reuse/monitor
@@ -43,6 +49,9 @@ touch have native checks in both modes; recipe queries also have base two-client
 late-join/cold-server checks. Space Age connected joining, exhaustive native wire
 selection and audible playback remain unverified; representative desktop cases
 do not cover every platform or IME.
+The declaration starter also has real native editor input checks in both modes.
+Historical connected-peer receipts retain their original source/scope; this
+release does not claim a new exhaustive combined multiplayer campaign.
 These captures are not GPU benchmarks.
 Resource ceilings are provisional safety limits, not a promise of real-time latency
 or simultaneous maximum-world performance. Report failures with the mod/engine
@@ -50,14 +59,15 @@ versions, wiring, source and error code; remove private literals before sharing.
 
 ## Source and developer documentation
 
-The [0.1.9 ALPHA source](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.9) includes
+The [0.1.10 ALPHA source](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.10) includes
 source, notices and examples; report problems in its
 [issue tracker](https://github.com/SirEdvin/tweaked-computers/issues).
 The separately generated
-[developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.9/openwiki)
+[developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.10/openwiki)
 explains implementation internals; this site, not that wiki, is the player and
 public Lua API reference. This link identifies the source-grounded developer
-wiki snapshot independently of the repository's default branch.
+wiki snapshot independently of the repository's default branch. Generated wiki
+pages can lag source changes; source/tests and this guide remain authoritative.
 
 Project source, the original industrial device family and the independently
 authored character atlas are MIT licensed. Approved historical Greg Flavored
@@ -65,8 +75,8 @@ inputs and their complete MIT notices remain in the source/package; the new
 family does not sample them. No original CC:Tweaked font or complete
 CraftOS/Computer Core/Redis compatibility is implied.
 
-The unreleased source candidate adopts the selected Service Rack six-device
-family, with matching item and research icons. See the
+Version 0.1.10 adopts the selected Service Rack six-device family, with matching
+item and research icons. See the [artwork guide](artwork.md) and
 [identification guide](getting-started.md#research-and-craft). Published 0.1.9
-remains immutable; selection of this direction does not imply a new release or
-hardware-performance acceptance.
+remains immutable; the new artwork does not change device geometry or certify
+hardware performance.

@@ -1,6 +1,6 @@
 # Tasks
 
-Planning only: all boxes remain unchecked until a separately requested apply workflow. The governing source contract is `specs/program-source/spec.md`, with exact call/scope behavior and the representative example in `specs/program-source/lua-api.md`. Preserve existing production limits and legacy descriptor coverage throughout.
+Completed implementation and verification tasks from the accepted function-program integration. Canonical contracts are now `openspec/specs/program-source/{spec,lua-api}.md`; the original planning artifacts below remain historical. Checked gates cover their stated runtime/cache/cold/editor scope, not universal native-client, multiplayer or performance acceptance. Existing production limits and legacy descriptor coverage are preserved.
 
 ## 1. Declaration frontend and ordinary native calls
 

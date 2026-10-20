@@ -5,11 +5,11 @@
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot; removal/destruction of a device is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
-   the Mod Portal, select **0.1.9 ALPHA**, enable it, and restart when prompted.
-   This version includes the direct device wiring, industrial artwork and tabbed
-   editor redesign. Back up an existing 0.1.1 world before its automatic migration.
-3. For manual installation, download `tweaked-computers_0.1.9.zip` from the
-   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.9)
+   the Mod Portal, select **0.1.10 ALPHA**, enable it, and restart when prompted.
+   This version includes function programs, the live maintenance setting and
+   Service Rack artwork/research icons, retaining the direct wiring and editor.
+3. For manual installation, download `tweaked-computers_0.1.10.zip` from the
+   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.10)
    and place it in your Factorio
    user-data `mods` directory without unpacking it. Remove conflicting duplicate
    versions, enable the mod, and restart. The ZIP's internal folder must match its
@@ -55,16 +55,27 @@ callbacks and release their owned output without replay or silent translation.
 The output is still one shared bank mirrored onto both colors. Shared work/Data
 budgets are unchanged and can still refuse queries or independent subscriptions.
 
+Version 0.1.10 adds [plain exported function programs](api/language.md), while
+keeping legacy descriptors and the separate Console. Validate and Save do not
+execute a new program; Run/Apply explicitly activates it. The new
+[world-maintenance Map setting](api/limits.md#maintenance-and-shared-headroom)
+defaults to 200000, inside the unchanged shared host budget. Raising it is not
+a speed control or a guarantee that a busy factory will keep 60 UPS. Per-computer
+fault diagnostics no longer overwrite each other's run/revision identity.
+Keep the pre-upgrade save and matching 0.1.9 ZIP; do not downgrade a save after
+adopting declaration-form source. This release does not add a new connected
+multiplayer or hardware-performance certification.
+
 ## Research and craft
 
-In the unreleased Service Rack artwork candidate, look for a green folded desk
+In 0.1.10's [Service Rack family](artwork.md), look for a green folded desk
 for the computer, offset cartridges for the database, bracketed flat glass for
 the monitor, a long ceramic-terminal rail for logic, an open caliper with a dial
 for configuration, and a low scanner sled for Recipe Searcher. Item icons match
 these bodies. Native circuit computers research shows the desk; Recipe Searcher
 research shows the scanner. This is an artwork-only change: footprints, wire
-targets, costs and unlocks below are unchanged. Published 0.1.9 keeps its original
-artwork; do not mistake this source candidate for a new release.
+targets, costs and unlocks below are unchanged. Historical 0.1.9 archives keep
+their original artwork and remain immutable.
 
 Research **Native circuit computers** (`tc-circuit-computers`) after
 `circuit-network` and `advanced-circuit`. It costs 100 automation + logistic
@@ -107,12 +118,12 @@ The world sprites and inventory icons use the same industrial forms:
 
 | Device | Look for |
 | --- | --- |
-| Computer | Heavy CRT console with a keyboard shelf and copper cooling housing |
-| KV database | Cast rack with stacked cartridge handles and end rails |
-| Monitor | Flat dark glass, cast bezel, corner fasteners and shallow exterior skirt |
-| Logic handler | Copper-wound relay bank around a central gauge; Input / Network / Output sockets |
-| Configurator | Large analog service gauge beside a recessed Factory targets control bank |
-| Recipe Searcher | Open archive bed under a raised optical scanner bridge and copper rails |
+| Computer | Green folded-steel desk with inset controls and a low display |
+| KV database | Offset cartridge stack with exposed service handles |
+| Monitor | Flat bracketed dark glass with unchanged bezel contacts |
+| Logic handler | Long ceramic-terminal rail with Input / Network / Output sockets |
+| Configurator | Open caliper and dial with a separate Factory targets socket |
+| Recipe Searcher | Low scanner sled with a copper optical bridge |
 
 The small Network diamond and Factory targets crosshair supplement the device
 shape and socket position. Their colors do not restrict which wire color you use.

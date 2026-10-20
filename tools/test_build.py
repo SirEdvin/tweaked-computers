@@ -80,12 +80,9 @@ class PackageInventoryTests(unittest.TestCase):
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
                 self.assertEqual(set(planning), set(build.CONTRACT_FILES))
                 self.assertEqual(len(build.CONTRACT_FILES), 30)
-                self.assertEqual({name for name in planning if name.startswith('openspec/changes/')}, {
-                    'openspec/changes/add-function-program-syntax/specs/program-source/spec.md',
-                    'openspec/changes/add-function-program-syntax/specs/program-source/lua-api.md',
-                })
-                for relative in ('openspec/changes/add-function-program-syntax/specs/program-source/spec.md',
-                                 'openspec/changes/add-function-program-syntax/specs/program-source/lua-api.md'):
+                self.assertFalse(any(name.startswith('openspec/changes/') for name in planning))
+                for relative in ('openspec/specs/program-source/spec.md',
+                                 'openspec/specs/program-source/lua-api.md'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 for relative in ('scripts/services/recipe-searcher.lua', 'examples/recipe-searcher-program.lua',
                                  'docs/player/api/recipe-searcher.md', 'assets/icons/recipe_searcher.png'):
@@ -135,26 +132,22 @@ class PackageInventoryTests(unittest.TestCase):
 
 
 class CanonicalContractTests(unittest.TestCase):
-    def test_explicit_inventory_covers_canonical_and_active_function_contracts(self):
+    def test_explicit_inventory_covers_canonical_files_only(self):
         expected = {p.relative_to(build.ROOT).as_posix()
                     for folder in ('api', 'specs')
                     for p in (build.ROOT / 'openspec' / folder).rglob('*')
                     if p.is_file() and p.suffix in ('.md', '.json')}
-        expected.update({
-            'openspec/changes/add-function-program-syntax/specs/program-source/spec.md',
-            'openspec/changes/add-function-program-syntax/specs/program-source/lua-api.md',
-        })
         self.assertEqual(set(build.CONTRACT_FILES), expected)
         self.assertEqual(len(build.CONTRACT_FILES), len(expected))
 
     def test_archived_requirements_and_scenarios_survive_promotion(self):
         import re
         archives = build.ROOT / 'openspec/changes/archive'
-        changes = ('add-native-circuit-computers', 'redesign-device-experience',
-                   'buffer-monitor-presentation', 'add-interactive-console-shell',
-                   'add-recipe-searcher')
+        changes = ('2026-10-19-add-native-circuit-computers', '2026-10-19-redesign-device-experience',
+                   '2026-10-19-buffer-monitor-presentation', '2026-10-19-add-interactive-console-shell',
+                   '2026-10-19-add-recipe-searcher', '2026-10-20-add-function-program-syntax')
         for change in changes:
-            folder = archives / ('2026-10-19-' + change)
+            folder = archives / change
             self.assertTrue((folder / '.openspec.yaml').is_file(), change)
             for delta in sorted((folder / 'specs').glob('*/spec.md')):
                 canonical = (build.ROOT / 'openspec/specs' / delta.parent.name / 'spec.md').read_text()
