@@ -43,6 +43,16 @@ CONTRACT_FILES = (
     'openspec/specs/program-source/lua-api.md',
 )
 
+# Active feature contracts ship without prematurely archiving/synchronizing the
+# change. The campaign archival owner later promotes these exact companions.
+FEATURE_CONTRACT_FILES = (
+    'openspec/changes/add-radar-modems/specs/radar-modem/spec.md',
+    'openspec/changes/add-radar-modems/specs/radar-modem/lua-api.md',
+    'openspec/changes/add-radar-modems/specs/peripheral-network/spec.md',
+    'openspec/changes/add-radar-modems/specs/device-lifecycle/spec.md',
+    'openspec/changes/add-radar-modems/specs/device-visual-identity/spec.md',
+)
+
 def build(destination):
     info = json.loads((ROOT / 'info.json').read_text())
     prefix = f"{info['name']}_{info['version']}"
@@ -83,6 +93,7 @@ def build(destination):
     # Ship authoritative source/API contracts too; their relative links remain
     # valid. Exclude orchestration reports, research caches and agent context.
     files += [ROOT / name for name in CONTRACT_FILES]
+    files += [ROOT / name for name in FEATURE_CONTRACT_FILES]
     for p in files:
         if p.suffix.lower() in ('.exe', '.bat', '.ps1', '.sh', '.py'):
             raise ValueError(f'Mod Portal forbids executable payloads: {p}')

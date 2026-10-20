@@ -3,6 +3,7 @@ local registry=require('scripts.registry')
 local lifecycle=require('scripts.lifecycle')
 local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
+local radar=require('scripts.radar')
 local M={}
 function M.wire(wire)
   if wire~='red' and wire~='green' then errors.raise('E_ARGUMENT','explicit red or green wire required') end
@@ -15,7 +16,8 @@ end
 function M.discovery_vertex(connector,origin,wire)
   if not connector or not connector.valid or connector.is_ghost or not M.same_scope(connector.owner,origin) then return nil end
   local rec,role=registry.by_entity(connector.owner)
-  if not rec or (role~='network' and not (role=='body' and rec.layout_version==2))
+  if not rec then radar.pending(connector.owner) end
+  if not rec or (role~='network' and not (role=='body' and (rec.layout_version==2 or rec.native_carrier=='radar')))
     or lifecycle.connector(rec,'network',wire)~=connector then return nil end
   return rec
 end
@@ -49,7 +51,7 @@ function M.discover(origin,wire,spend)
     local connections=M.real_edges(connector,spend,limits.network_edges-edges)
     edges=edges+#connections
     for _,connection in ipairs(connections) do
-      local next_rec=M.discovery_vertex(connection.target,origin,wire)
+      local next_rec=connection.origin~=defines.wire_origin.radars and M.discovery_vertex(connection.target,origin,wire)
       if next_rec and not seen[next_rec.id] then
         if #queue>=limits.network_nodes then errors.raise('E_LIMIT','physical node inventory exceeds network limit') end
         seen[next_rec.id]=true; parents[next_rec.id]=rec.id; queue[#queue+1]=next_rec.id
@@ -81,7 +83,7 @@ function M.validate_witness(origin,wire,path,spend)
     if previous then
       local found=false
       local connections=M.real_edges(previous,spend,limits.network_edges-edges); edges=edges+#connections
-      for _,connection in ipairs(connections) do if connection.target==connector then found=true; break end end
+      for _,connection in ipairs(connections) do if connection.origin~=defines.wire_origin.radars and connection.target==connector then found=true; break end end
       if not found then return false end
     end
     previous=connector

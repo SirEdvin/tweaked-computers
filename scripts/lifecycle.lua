@@ -6,6 +6,7 @@ local scheduler=require('scripts.scheduler')
 local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
 local wires=require('scripts.physical-wires')
+local radar=require('scripts.radar')
 local M={}
 -- Fixed host-only item adapters. The computer lifecycle milestone can install
 -- its own adapter without importing services into this ownership module.
@@ -56,6 +57,7 @@ local function create_port(body,role,pos,direction,token)
   return port
 end
 function M.endpoint(rec,role)
+  if rec.native_carrier=='radar' and role=='network' then return rec.body end
   if rec.layout_version==2 and role=='network' then return rec.body end
   return rec.children[role]
 end
@@ -65,6 +67,7 @@ function M.power_entity(rec)
 end
 function M.has_power(rec)
   if not rec or not rec.body or not rec.body.valid then return false end
+  if rec.native_carrier=='radar' then return radar.available(rec) end
   local p=M.power_entity(rec)
   if not p or not p.valid or p.force.index~=rec.force_index or p.surface.index~=rec.surface_index then return false end
   local at=rec.body.position; local power_at=p==rec.body and at or p.position
@@ -72,6 +75,7 @@ function M.has_power(rec)
     and registry.by_entity(p)==rec and p.energy>=defs.devices[rec.kind].watts/60
 end
 function M.normalize_power(rec)
+  if rec.native_carrier then return end
   local watts=defs.devices[rec.kind].watts; local p=M.power_entity(rec)
   p.power_usage=watts/60; p.power_production=0; p.electric_buffer_size=watts/30
 end
@@ -104,6 +108,7 @@ end
 -- Downstream logic owns generation-specific writer cleanup. Physical outages of
 -- the peripheral itself always clear its bank; never clear unrelated devices here.
 function M.sample_power(rec,tick,spend)
+  if rec.native_carrier=='radar' then spend(4); rec.powered=radar.available(rec); rec.power_checked_tick=tick; return end
   local def=defs.devices[rec.kind]
   local powered=M.has_power(rec)
   if powered then
@@ -122,6 +127,7 @@ function M.sample_power(rec,tick,spend)
   rec.power_checked_tick=tick
 end
 function M.build(body,token)
+  if radar.supports(body) then return radar.build(body) end
   if not body or not body.valid or not defs.by_name[body.name] then return nil end
   local existing=registry.by_entity(body)
   if existing then return existing end -- duplicate raised build is idempotent
@@ -183,6 +189,10 @@ end
 function M.connector(rec,role,color)
   if type(rec)=='string' then rec=registry.record(rec) end
   if not rec or rec.physical_version~=1 or rec.physical_error or not rec.body.valid then return nil end
+  if rec.native_carrier=='radar' then
+    if color~='red' and color~='green' then errors.raise('E_ARGUMENT','red or green connector required') end
+    return radar.connector(rec,role,color)
+  end
   local body=rec.body; local direction=body.direction; local at=body.position
   if direction~=rec.direction or at.x~=rec.position.x or at.y~=rec.position.y then return nil end
   if color~='red' and color~='green' then errors.raise('E_ARGUMENT','red or green connector required') end
@@ -205,6 +215,7 @@ function M.connector(rec,role,color)
   return port.get_wire_connector(defines.wire_connector_id['circuit_'..color],false)
 end
 function M.rotate(rec,previous_direction)
+  if rec and rec.native_carrier then return true end
   if not rec or rec.physical_version~=1 or not rec.body.valid then return false end
   local direction=rec.body.direction
   if not defs.cardinal(direction) then rec.body.direction=previous_direction; return false end
@@ -272,6 +283,7 @@ end
 -- A legacy body remains authoritative until every replacement and native wire
 -- has been staged successfully. Never call runtime activation or snapshot import.
 function M.upgrade(rec)
+  if rec.native_carrier then return true end
   if rec.layout_version==2 then return true end
   local old=rec.body; local children=rec.children; local staged={}; local body
   local ok,e=pcall(function()
@@ -344,7 +356,7 @@ function M.upgrade_existing()
   local root=registry.get(); if not registry.supported(root) then return end
   for _,id in ipairs(root.order) do
     local rec=registry.record(id)
-    if rec and rec.physical_version==1 and rec.layout_version~=2 then
+    if rec and not rec.native_carrier and rec.physical_version==1 and rec.layout_version~=2 then
       local ok,e=M.upgrade(rec)
       if not ok then log('TC physical upgrade '..rec.id..': '..e.message) end
     end
@@ -352,6 +364,11 @@ function M.upgrade_existing()
 end
 function M.on_built(event)
   local body=event.entity
+  if radar.supports(body) then
+    local rec,e=radar.build(body)
+    if not rec then log('TC radar integration refused: '..(type(e)=='table' and e.message or tostring(e))) end
+    return
+  end
   if blueprint_adapter and blueprint_adapter.on_ghost(event) then return end
   if not body or not body.valid or not defs.by_name[body.name] then return end
   if registry.by_entity(body) then return end -- duplicate build must not replay item data
@@ -409,6 +426,7 @@ end
 function M.on_cloned(event)
   local body=event.destination
   if not body or not body.valid then return end
+  if radar.supports(body) then radar.build(body); return end
   if defs.by_name[body.name] then
     local source,role=registry.by_entity(event.source)
     local rec=M.build(body)
@@ -440,6 +458,8 @@ function M.on_rotated(event)
 end
 function M.unlocks()
   for _,force in pairs(game.forces) do
+    local advanced=force.technologies['tc-interplanetary-radar']
+    if advanced and advanced.researched and force.recipes['tc-interplanetary-radar'] then force.recipes['tc-interplanetary-radar'].enabled=true end
     for _,kind in ipairs(defs.order) do
       local def=defs.devices[kind]; local technology=force.technologies[def.technology]
       if technology and technology.researched then force.recipes[def.name].enabled=true end
@@ -456,7 +476,9 @@ function M.reconcile(tick,spend)
     local removed=false
     local ok=scheduler.try_maintenance(function()
       spend(16)
-      if rec and rec.physical_version==1 then
+      if rec and rec.native_carrier=='radar' then
+        removed=radar.reconcile(rec,spend)
+      elseif rec and rec.physical_version==1 then
         if not rec.body.valid then
           spend(limits.registry_entries*6)
           removed=M.remove(id,'body_lost',false)
@@ -503,7 +525,9 @@ function M.power_losses(tick,spend)
   spend(#root.order*16)
   for _,id in ipairs(root.order) do
     local rec=registry.record(id)
-    if rec and rec.physical_version==1 then
+    if rec and rec.native_carrier=='radar' then
+      rec.powered=radar.available(rec); rec.power_checked_tick=tick
+    elseif rec and rec.physical_version==1 then
       local available=rec.body.valid and not rec.physical_error
       if available then
         for _,role in ipairs(defs.devices[rec.kind].roles) do
