@@ -9,6 +9,8 @@ local M = {}
 local loaded=false
 local origin_source=[[return {api_version=1,handlers={
   start=function(e)
+    local data={}; rawset(data,'ready',false); computer.setState('raw_data',data)
+    print(_VERSION,false,nil,3)
     computer.setState('boots',(computer.getState('boots') or 0)+1)
     computer.setState('once',0); computer.setState('restores',0)
     local payload={false,'',3}
@@ -27,6 +29,8 @@ local origin_source=[[return {api_version=1,handlers={
 local declaration_source=[[
 local function increment(n) return n+1 end
 function start(e)
+  local data={}; rawset(data,'ready',false); computer.setState('raw_data',data)
+  print(_VERSION,false,nil,3)
   computer.setState('boots',increment(computer.getState('boots') or 0))
   computer.setState('once',0); computer.setState('order','')
   assert(sample()==1)
@@ -78,6 +82,7 @@ end
 local function complete_snapshot()
   local f=storage.tc03_fixture; local r=registry.get()
   return {legacy=retained(registry.computer(f.id)),declaration=retained(registry.computer(f.declaration)),
+    collision=f.collision and retained(registry.computer(f.collision)),
     ledger=clone(r.ledger),scheduler=clone(r.scheduler),sequence=r.next_sequence}
 end
 local function baseline_snapshot(rec)
@@ -143,6 +148,9 @@ function M.run()
   runtime.save(plain.id,declaration_source,0)
   assert(runtime.activate(plain.id,game.tick))
   storage.tc03_fixture={phase='armed',id=rec.id,declaration=plain.id}
+  local collision=registry.register('computer',assert(game.surfaces[1].create_entity{name='constant-combinator',position={8,4},force='player'}))
+  runtime.save(collision.id,'function start() computer.setState("kept",true) end',0)
+  assert(runtime.activate(collision.id,game.tick)); storage.tc03_fixture.collision=collision.id
   scalar_graph(registry.get(),{})
 end
 function M.on_load()
@@ -200,6 +208,14 @@ function M.on_tick(event)
       runtime.emit(plain.id,'power_restored',{tag='b'},event.tick)
       fixture.active_alias=plain.active; fixture.state_alias=plain.state
       fixture.timers_alias=plain.timers; fixture.queue_alias=plain.queue
+      if fixture.collision then
+        local old=registry.computer(fixture.collision)
+        assert(old.state.kept)
+        fixture.collision_source='function xpcall() end\nfunction start() computer.setState("unsafe",true) end'
+        old.active.source=fixture.collision_source
+        runtime.save(old.id,fixture.collision_source,old.saved_revision)
+        assert(runtime.enqueue(old,'start',{name='fixture'},event.tick))
+      end
       fixture.expected=complete_snapshot()
     end
     fixture.phase='frozen'; fixture.snapshot=snapshot(rec); fixture.freeze_tick=event.tick
@@ -215,6 +231,9 @@ function M.on_tick(event)
     assert(rec.state.boots==1,'startup replayed')
     if event.tick>=fixture.freeze_tick+10 then
       assert(rec.state.once==1 and rec.state.restores==1 and rec.state.periods>=3)
+      assert(rec.state.raw_data.ready==false)
+      local printed=0; for _,entry in ipairs(rec.logs) do if entry.text=='Lua 5.2\tfalse\tnil\t3' then printed=printed+1 end end
+      assert(printed==1,'saved print replayed or lost')
       local once=0; for _,entry in ipairs(rec.logs) do if entry.text=='one-shot' then once=once+1 end end
       assert(once==1,'one-shot replayed')
       assert(rec.run_id==fixture.snapshot.run_id and rec.active.source==origin_source and rec.run_generation==1)
@@ -232,7 +251,15 @@ function M.on_tick(event)
           if entry.text=='declaration-one-shot' then timed=timed+1 end
         end
         assert(immediate==1 and timed==1,'declaration effect replayed')
+        printed=0; for _,entry in ipairs(plain.logs) do if entry.text=='Lua 5.2\tfalse\tnil\t3' then printed=printed+1 end end
+        assert(printed==1 and plain.state.raw_data.ready==false)
         log('TC_COLD_DECLARATION_OK immediate=1 timer=1 boots=1 order=ab exact-active-source')
+        if fixture.collision then
+          local old=registry.computer(fixture.collision)
+          assert(old.status=='faulted' and old.diagnostic.code=='E_PROGRAM' and old.state.kept and not old.state.unsafe)
+          assert(old.active.source==fixture.collision_source and old.saved_source==fixture.collision_source)
+          log('TC_COLD_RESERVED_SOURCE_RETAINED no-load-fault synchronized-reconstruction-only')
+        end
       end
       scalar_graph(registry.get(),{})
       fixture.phase='done'

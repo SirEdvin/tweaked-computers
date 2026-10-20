@@ -48,7 +48,7 @@ end
 
 function start(event)
   local total = sample()
-  computer.log("Initial sample count: " .. tostring(total))
+  print("Initial sample count:", total)
   computer.every(60, "sample")
 end
 
@@ -62,6 +62,8 @@ end
 Acceptance: Validate and Save have no sampling effects; activation samples once immediately, then the first timer deadline samples once more. `sample()` has no event argument; timer delivery supplies TimerEvent. `increment` is private, `sample` is forward-referenced, and ordinary reload does not rerun `start`. Reapplying explicitly starts another generation while retaining the explicit sample count under existing state rules.
 
 ## Diagnostics, limits and compatibility
+
+The [expanded base-global inventory](../computer-runtime/lua-api.md#expanded-lua-base-globals) is shared by both saved forms and Console. Print is callable inside callbacks only; top-level print remains an invalid source effect. Newly available xpcall/unpack/_VERSION (and the other approved globals) are reserved public/private top-level declaration names. Genuine lexical locals/parameters may shadow them; legacy descriptor handler keys are not global declarations and keep their existing names. A failed colliding candidate preserves the old run. A pre-update colliding active source faults on its next synchronized reconstruction, preserving exact source/application state without load-time mutation; rename and explicitly Save/Run. Noncolliding sources retain versions and pending work without startup replay.
 
 - Invalid source shape, duplicate/reserved names, forbidden global writes and mixed formats produce `E_PROGRAM` with original source line/column before replacement of the previous run. An excessive declared inventory/source envelope produces the existing `E_LIMIT`; insufficient compilation/reconstruction credits produce the existing `E_BUDGET`.
 - Unknown names in function bodies remain compile-time unavailable-name errors; this syntax does not make arbitrary unresolved globals readable.

@@ -6,7 +6,7 @@ end
 
 function start(event)
   local total = sample()
-  computer.log("Initial sample count: " .. tostring(total))
+  print("Initial sample count:", total)
   computer.every(60, "sample")
 end
 
@@ -62,10 +62,27 @@ Console cannot call saved-program functions. The starter samples once immediatel
 logs the returned count, then samples every 60 simulation ticks; no device required.
 No require/load, game/storage/remote, _ENV/_G, metatables, coroutine, patterns,
 random, string-method syntax or colon calls. API calls use dots.
-Approved globals: assert, error, ipairs, pairs, next, pcall, select, tonumber,
-tostring, type, math, string, table, colors/colours, computer, peripheral.
-Saved programs use computer.log, not print. Console additionally has print(...).
-Fatal budget exhaustion cannot be caught by pcall.
+Approved globals: assert, error, ipairs, pairs, next, pcall, xpcall, select,
+tonumber, tostring, type, print, rawget, rawset, rawlen, rawequal, unpack,
+_VERSION, math, string, table, colors/colours, computer, peripheral.
+print(...) writes one tab-separated Console entry, including false/nil; no results.
+print() writes an empty entry. No chat output. computer.log(text) is unchanged.
+rawget(t,key), rawset(t,key,value) require guest-owned plain tables, not API handles.
+rawset returns t; nil deletes. rawget with explicit nil/NaN returns nil.
+rawlen measures string bytes or native table borders, not map cardinality.
+rawequal(a,b) compares approved identities/values without inspecting API handles.
+unpack == table.unpack; same index/tuple limits (i=1..1025, j=0..1024).
+_VERSION is "Lua 5.2", not unrestricted Lua support. Data/retention is unchanged.
+xpcall(fn,handler,...) returns true,results or false,first handler result (nil included).
+Guest errors preserve identity; host error records are copied. Handler failures
+use bounded native error-handler re-entry. Earlier successful effects stay committed.
+Fatal work/allocation/depth/tuple exhaustion and stop bypass pcall AND xpcall;
+private control values never reach a guest handler. Console cannot stop a program.
+New global names are reserved for public/private top-level declarations, not
+body locals/parameters or legacy descriptor handler keys. Old colliding active
+source faults on synchronized reconstruction, retaining source/state; rename and
+explicitly Save/Run. A colliding Console root reports E_UNSUPPORTED before effects;
+its graph is retained until confirmed Reset Shell discards it. Nested keys are fine.
 
 COMPUTER
 getID() -> string; getLabel() -> string/nil; setLabel(label/nil)

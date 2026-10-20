@@ -111,6 +111,51 @@ return {
 
 An uncaught error faults this run, retaining source/state/logs and prior successful calls. Execution-budget failure and `computer.stop()` always leave guest execution; user protection cannot resume effects afterward. The next explicit Run starts a new run generation. Recovery is never an automatic VM fallback, reset or source rerun.
 
+## Expanded Lua base globals
+
+The same guarded globals are available in declaration/descriptor callbacks and Console. `_VERSION` is the fixed string `Lua 5.2`, a language-family label rather than unrestricted standard-library compatibility. No new namespace members, host facilities, Data domains or persistence schema are introduced; API 1/compiler 2/storage 1 remain unchanged.
+
+| Signature | Result and contract |
+| --- | --- |
+| `print(...)` | No values; one Console entry, safe tostring arguments joined by tabs, no added newline. Zero arguments append an empty entry. |
+| `rawget(t, key)` | One identical stored value, including nil; explicit nil/NaN lookup returns nil. Guest-owned plain table only. |
+| `rawset(t, key, value)` | Identical t; nil deletes. Existing indexed-write ownership/key/value/growth/work/allocation admission precedes mutation. |
+| `rawlen(value)` | Byte-string length or guest-owned table's native border, not map cardinality. |
+| `rawequal(a, b)` | One native raw-equality boolean for approved guest values; identity is not copied. Bounded string validation/comparison is paid first. |
+| `unpack(t, i?, j?)` | Identical bounded table.unpack function; defaults 1/#t, i=1..1025, j=0..1024, at most 128 results with nil holes. |
+| `xpcall(fn, handler, ...)` | true,exact results on success; false,first handler result on ordinary failure (one nil for no result). |
+
+Raw helpers require every positional argument, including explicit nil where supported. Additional arguments follow native handling and still pay call tuple bounds. `rawset` refuses nil/NaN keys, preserves false/aliases/reference keys/transient self-reference, and permits replacement/deletion at full capacity when otherwise admitted. Any refused write leaves all aliases unchanged. `rawget`/`rawset`/`rawlen` refuse protected namespaces, facades and foreign tables. `rawequal` may compare authentic facades/functions without exposing their contents. Ordinary Data still refuses cycles/functions/reference keys; Console retains only its existing supported graph and symbolic peripheral identities.
+
+Print uses stable descriptions (table, guest function, API handle or approved callable label), never host addresses or recursive inspection. Both unpack aliases have description `table function`. Saved output goes through guarded computer.log; Console retains `Shell #<command> output: ` attribution and expression-result formatting, with no entry for zero-result expressions. Complete formatting/allocation and retention work precede append/eviction; tuple/string/console/retention limits remain unchanged. Refusal produces no partial entry. Earlier successful output survives later faults. Displayed tabs become single spaces, without changing raw bytes, selection or Follow-off behavior. No chat/stdout/logfile/monitor destination is added; computer.log keeps its one-string/no-results signature.
+
+Both xpcall operands must be approved functions. Forward exactly the supplied trailing arguments, retaining nil holes and aliases. Status counts toward tuple width. On ordinary failure pass exactly one safe error to the handler: guest references retain identity; host-origin records become defensive snapshots. Native message-handler re-entry is bounded by existing work/depth limits; exact error-in-handler wording is not promised. Fatal work/allocation/depth/tuple exhaustion and saved-program stop bypass nested pcall/xpcall and never reach guest message code as private control values. A fatal function suppresses the handler; a fatal handler suppresses later handlers/effects. Console still cannot stop the program. Earlier state/printing/peripheral effects are not rolled back.
+
+New names are reserved top-level public/private declarations and immutable Console globals. Ordinary lexical locals/parameters and legacy descriptor handler keys retain their rules. Old active-name collisions fault on synchronized reconstruction, retaining exact source/state; loading does not execute or rewrite source. Rename and explicitly Save/Run. Old Console root collisions report named E_UNSUPPORTED before effects and retain their graph until explicit confirmed Reset Shell; nested fields are ordinary data.
+
+Acceptance program (Validate/Save must emit nothing; activation emits the two raw entries once; ordinary reload must not replay them):
+
+```lua
+function start(event)
+  local values = table.pack(false, nil, 3)
+  assert(unpack == table.unpack)
+  print(_VERSION, unpack(values, 1, values.n))
+  local t = {}
+  assert(rawequal(rawset(t, "ready", false), t))
+  assert(rawget(t, "ready") == false)
+  assert(rawlen("hello") == 5)
+  local ok, message = xpcall(function()
+    error("sample failure")
+  end, function(problem)
+    return "handled: " .. tostring(problem)
+  end)
+  assert(ok == false)
+  print(message)
+end
+```
+
+Expected raw entries: `Lua 5.2\tfalse\tnil\t3` and `handled: sample failure`.
+
 ## Required contract checks
 
 - Ordinary false/empty values versus missing state; copy isolation and invalid nested data refusal.

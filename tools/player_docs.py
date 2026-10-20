@@ -296,6 +296,10 @@ def inventory():
     all_docs = '\n'.join(p.read_text() for p in DOCS.rglob('*.md'))
     sandbox_source = text('scripts/runtime/sandbox.lua')
     helpers = {'globals': sorted(set(re.findall(r'env\.([a-z]+)=function', sandbox_source)))}
+    # Explicit aliases/constants belong to the public inventory too, even though
+    # they do not introduce a second function definition.
+    assert 'env.unpack=tab.unpack' in sandbox_source and "env._VERSION='Lua 5.2'" in sandbox_source
+    helpers['globals'] = sorted(set(helpers['globals']) | {'unpack', '_VERSION'})
     math_list = re.search(r"for _,name in ipairs\(\{('abs'.*?)\}\) do", sandbox_source)
     assert math_list, 'Math registration shape changed'
     helpers['math'] = re.findall(r"'([a-z0-9]+)'", math_list[1]) + ['pi']

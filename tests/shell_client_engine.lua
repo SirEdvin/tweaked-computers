@@ -46,13 +46,16 @@ function M.on_tick(event)
   local f=storage.tc_shell_client; local c=registry.record(f.computer); local tile=registry.record(f.monitor_tile)
   local display=tile and monitor.resolve(tile)
   local snapshot={tick=event.tick,computer=c.id,program=c.status,run=c.run_id,state=c.state,
+    saved_source=c.saved_source,saved_revision=c.saved_revision,active=c.active,
     shell=c.shell,logs=c.logs,monitor=display and display.id,monitor_model=display and display.model,
     db=f.db,logic=f.logic,configurator=f.configurator,players={}}
   for _,p in pairs(game.connected_players) do
     local frame=p.gui.screen[editor.frame_name]
     local input=frame and frame.content and frame.content.console and frame.content.console.prompt.command
+    local console=frame and frame.content and frame.content.console
     snapshot.players[#snapshot.players+1]={index=p.index,opened=frame and p.opened==frame or false,
-      command=input and input.text,tab=frame and frame.content and frame.content.selected_tab_index}
+      command=input and input.text,tab=frame and frame.content and frame.content.selected_tab_index,
+      follow=console and console.follow.state,output=console and console.output.text}
   end
   helpers.write_file('shell-client-state.json',helpers.table_to_json(snapshot),false)
   if c.shell and c.shell.status~=f.last_status then

@@ -2,7 +2,7 @@
 
 This is the authorized native-only model. It is not Lua interpreted in Lua, bytecode execution, a continuation VM, or a promise to support every Lua feature. Source is parsed, validated and instrumented, then executed as native Factorio Lua text. Passing an ordinary `load`/`pcall` is not sufficient safety evidence.
 
-This document defines saved-handler mode. The [Console contract](../specs/console-shell/lua-api.md) separately permits bounded statement/expression submissions, shell-global assignment and shell-local `print`. Host access, generated/private names, dynamic loading, coroutines and all other safety restrictions remain forbidden in both modes. Console values persist only through its validated plain graph and private symbolic peripheral bindings, never user functions or command replay. No shell-only syntax is accepted by saved-program validation.
+This document defines saved-handler mode. The [Console contract](../specs/console-shell/lua-api.md) separately permits bounded statement/expression submissions and shell-global assignment. Both modes share bounded `print` and the base globals below. Host access, generated/private names, dynamic loading, coroutines and all other safety restrictions remain forbidden in both modes. Console values persist only through its validated plain graph and private symbolic peripheral bindings, never user functions or command replay. No shell-only syntax is accepted by saved-program validation.
 
 ## Accepted document shape
 
@@ -16,7 +16,7 @@ Support Lua 5.2 arithmetic, comparisons, boolean short circuit and concatenation
 
 - `_ENV`, `_G`, host globals, global assignments and access to generated/private names.
 - `load`, `loadstring`, `dofile`, `loadfile`, `require`, package facilities, bytecode dumps, debug facilities, coroutines, I/O, sockets, operating-system and wall-clock services.
-- Metatable creation/inspection and raw host bypasses (`setmetatable`, `getmetatable`, `rawget`, `rawset`, `rawequal`), userdata/thread manipulation and host object reflection.
+- Metatable creation/inspection (`setmetatable`, `getmetatable`), raw host bypasses, GC control, userdata/thread manipulation and host object reflection. Guarded raw helpers below are not host bypasses.
 - `goto`/labels, Lua 5.3+ syntax, colon-call syntax and indexing a string value as a route to the host string metatable. Use approved `string.sub(s, ...)`-style functions instead of string-method syntax.
 - Lua patterns (`string.match`, `gmatch`, `gsub`, non-plain `find`), `string.dump`, unapproved C helpers, uncontrolled random APIs and user-supplied environment tables.
 - Writing protected API/library tables or smuggling functions/cycles/metatables into state, event payloads, database values or configuration snapshots.
@@ -25,7 +25,7 @@ These exclusions are deliberate v1 compatibility limits, not unfinished features
 
 ## Approved standard surface
 
-Exact v1 globals: `assert`, `error`, `ipairs`, `pairs`, `next`, `pcall`, `select`, `tonumber`, `tostring`, `type`, and the read-only namespaces below. No implicit `print` or `os` namespace; use `computer.log` and `computer.getTick`.
+Exact v1 globals: `assert`, `error`, `ipairs`, `pairs`, `next`, `pcall`, `xpcall`, `select`, `tonumber`, `tostring`, `type`, `print`, `rawget`, `rawset`, `rawlen`, `rawequal`, `unpack`, `_VERSION`, and the read-only namespaces below. `_VERSION` is the fixed family string `Lua 5.2`, not unrestricted compatibility. No `os` namespace; use `computer.getTick`.
 
 - `math`: `abs`, `ceil`, `floor`, `min`, `max`, `sqrt`, `fmod`, `modf`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`, `deg`, `rad`, `exp`, `log`, `pi`. Finite-domain validation and bounded varargs apply. No `random`, `randomseed`, `huge` or arbitrary host-library fallback.
 - `string`: `byte`, `char`, `len`, `sub`, `lower`, `upper`, `reverse`, `rep`, `format`, and `find` only when its explicit `plain` argument is true. Input/output bounds and byte-work admission apply before opaque operations; format width/precision/output amplification are validated.
@@ -35,6 +35,8 @@ Exact v1 globals: `assert`, `error`, `ipairs`, `pairs`, `next`, `pcall`, `select
 Safe `tostring` exposes primitive values and stable descriptive names for approved callable/wrapper identities, never native table/function addresses. `tonumber` accepts bounded strings and documented Lua 5.2 base conversion, returning nil for invalid input; it does not silently coerce API argument types. `pairs`/`ipairs`/`next` iterate only guest-owned plain tables or defensive snapshots, never private service state. All return arity follows the approved Lua 5.2 contract.
 
 ## Enforced boundaries
+
+The [runtime base-global contract](../specs/computer-runtime/lua-api.md#expanded-lua-base-globals) specifies required arguments, safe printing, raw ownership/identity and native protected error transformation. `unpack` is the identical bounded `table.unpack` wrapper, with one stable callable description. No namespace members or persistence domains are expanded. Newly reserved declaration/Console root collisions retain source/state/graphs and require explicit recovery, not automatic migration.
 
 Instrumentation must account for function entry/exit, loop iterations, statement/operator work where input-dependent, indexed reads/writes, table creation/growth, argument/return movement, concatenation and helper calls. A host string metatable or captured method must not bypass the approved wrapper. Source token/node/nesting limits and compilation-work limits are enforced before native activation; generated text has its own limit.
 

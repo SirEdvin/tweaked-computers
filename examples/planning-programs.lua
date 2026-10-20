@@ -141,6 +141,22 @@ return {
     end
   }
 }]=]},
+  {name=[=[specs/computer-runtime/lua-api.md:3]=],sha256=[=[0df13a8effb19503f4d63234dd22ca32e099272dfbaa5ddece6e99c8d7b5968b]=],source=[=[function start(event)
+  local values = table.pack(false, nil, 3)
+  assert(unpack == table.unpack)
+  print(_VERSION, unpack(values, 1, values.n))
+  local t = {}
+  assert(rawequal(rawset(t, "ready", false), t))
+  assert(rawget(t, "ready") == false)
+  assert(rawlen("hello") == 5)
+  local ok, message = xpcall(function()
+    error("sample failure")
+  end, function(problem)
+    return "handled: " .. tostring(problem)
+  end)
+  assert(ok == false)
+  print(message)
+end]=]},
   {name=[=[specs/device-configurator/lua-api.md:1]=],sha256=[=[f93d4dccf94db93dbf2d5496a830b23b0da53de9eb3a117019028491cbee8fd2]=],source=[=[return {
   api_version = 1,
   handlers = {

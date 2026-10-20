@@ -65,6 +65,20 @@ Refresh or re-enable Follow to see its new output. Command status stays visible.
 
 ## Effects and ownership
 
+Console shares the [base globals](api/language.md#printing-raw-helpers-and-error-transformation)
+with saved programs: rawget/rawset/rawlen/rawequal/xpcall, identical unpack and
+table.unpack, and `_VERSION == "Lua 5.2"`. Raw helpers never inspect/mutate API
+handles. They preserve transient identity but do not make built-ins or closures
+persistable. `a={}; b=a; rawset(a,"self",a)` retains its supported aliases/cycle.
+Fatal protected execution still cannot resume effects or fault the saved program.
+
+All added names are immutable globals; lexical locals/parameters may shadow them.
+If an older scratch root used a newly reserved name (such as `rawset` or `_VERSION`),
+evaluation reports named `E_UNSUPPORTED` before command effects. The old graph is
+retained, never silently shadowed or deleted. Nested table fields are unaffected.
+Use the existing two-step Reset Shell only when ready to discard that scratch
+environment. It does not alter saved source, application state, program or old logs.
+
 A command stages its scratch values and publishes the complete new graph only
 when execution and retention validation succeed. A failing command keeps the
 previous graph. This is **not a transaction across peripherals**: earlier KV,

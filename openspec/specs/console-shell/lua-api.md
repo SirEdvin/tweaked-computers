@@ -21,11 +21,13 @@ Shell-global names read the shared scratch environment; an undefined nonreserved
 - The native displayed snapshot replaces each tab with one space to avoid missing glyphs; raw retained log bytes, print tuple semantics, newlines and byte limits remain unchanged.
 - Tables, guest functions, and API handles use stable descriptive text, not host memory addresses; this is not a new recursive table pretty-printer.
 - Rejects oversized output before appending a partial entry. Uses the existing console retention limits; older entries may be evicted normally.
-- Does not call Factorio chat and is shell-local; saved programs continue to use `computer.log`.
+- Does not call Factorio chat. Saved programs share this formatter through guarded `computer.log`; shell attribution remains unchanged.
 
 The Console distinguishes command echo, printed/expression output, shell diagnostics, and existing program output. A command sequence and submitting player identify each echo. Diagnostics identify the shell line/column and command, never incorrectly select a line in the saved editor source. Output produced before a later error remains visible. Follow-off preserves the existing snapshot until the player refreshes or enables Follow; a separate concise command status can report completion without forcing a scroll.
 
 ## Retained values
+
+The [expanded base globals](../computer-runtime/lua-api.md#expanded-lua-base-globals) also apply here: guarded rawget/rawset/rawlen/rawequal/xpcall, identical unpack/table.unpack and fixed _VERSION. They grant no program handler/stop authority and no new retained function kinds. A retained root with a newly reserved name (for example rawset or _VERSION) fails before guest effects with named E_UNSUPPORTED and explicit Reset Shell guidance. The old graph/aliases/source/application state/program remain intact; nested keys do not collide. Confirmed Reset Shell discards scratch values through the existing lifecycle, not automatic migration. Failed protected execution cannot publish a staged graph or fault the saved program; earlier successful output/effects remain.
 
 Supported across commands and save/load:
 
