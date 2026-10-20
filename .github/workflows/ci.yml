@@ -74,6 +74,12 @@ jobs:
           set -euo pipefail
           archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
           engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/speaker-admission" --mode both --fixture tests.speaker_admission
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/speaker" --mode both --fixture tests.speaker_engine \
+            --data-fixture tests.speaker_data --final-data-fixture tests.speaker_data_final \
+            --production-context --cold --upgrade-fixture
           for fixture in radar_engine modem_engine; do
             upgrade=()
             if [[ "$fixture" == radar_engine ]]; then upgrade+=(--upgrade-fixture); fi
@@ -117,6 +123,9 @@ jobs:
           python tools/monitor_animation.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/modem-competition" --mode both \
             --layout four-walls --with-modem
+          python tools/monitor_animation.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/speaker-competition" --mode both \
+            --layout four-walls --with-speaker
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/editor-contract" --mode both \
             --fixture tests.editor_contract
@@ -157,6 +166,8 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/legacy_0.1.10.zip"
           python tools/radar_upgrade.py --factorio "$engine" --archive "$archive" \
             --legacy "$RUNNER_TEMP/tc-ci/legacy_0.1.10.zip" --output "$RUNNER_TEMP/tc-ci/radar-install"
+          python tools/radar_upgrade.py --carrier speaker --factorio "$engine" --archive "$archive" \
+            --legacy "$RUNNER_TEMP/tc-ci/legacy_0.1.10.zip" --output "$RUNNER_TEMP/tc-ci/speaker-install"
 
       - name: Check buffered presentation and released-save migration
         shell: bash

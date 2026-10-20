@@ -2,12 +2,15 @@
 
 The computer sees powered or unpowered peripherals through uninterrupted red or
 green wires directly between the devices’ **Network** connections on its force/surface. Computers
-relay discovery but are not programmable peripherals. Supported native radar sockets
+relay discovery but are not programmable peripherals. Supported native radar and vanilla programmable-speaker sockets
 also relay local same-color wires. Vanilla poles/machines,
 ghosts and INPUT/OUTPUT/TARGETS ports do not relay it. There is no cross-color path,
 wireless discovery or coordinate addressing. [Radar modems](modem.md) exchange
 bounded data without granting remote peripheral authority; native radar hidden
 links are excluded from discovery and saved path witnesses.
+The [speaker reference](speaker.md) covers native power, six synchronous methods,
+bounded connected-frontier adoption and local audio. Native speaker GUI, circuit
+settings and Configurator access remain available after registration.
 Unknown external wires are left intact; normal continuity on one connector remains.
 
 ## Complete methods

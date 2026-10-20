@@ -10,6 +10,35 @@ import build
 
 
 class PackageInventoryTests(unittest.TestCase):
+    def test_speaker_contract_samples_and_fixtures_are_packaged_without_audio_assets(self):
+        # Independent expected paths: dropping an allowlist entry must fail even
+        # if the rest of the build remains internally self-consistent.
+        contracts = {
+            'openspec/changes/add-speaker-peripheral/specs/speaker-peripheral/spec.md',
+            'openspec/changes/add-speaker-peripheral/specs/speaker-peripheral/lua-api.md',
+            'openspec/changes/add-speaker-peripheral/specs/peripheral-network/spec.md',
+        }
+        self.assertTrue(contracts.issubset(build.FEATURE_CONTRACT_FILES))
+        required = contracts | {
+            'data-final-fixes.lua', 'prototypes/speaker-audio.lua',
+            'scripts/speaker.lua', 'scripts/speaker-audio.lua',
+            'scripts/speaker-limits.lua', 'scripts/services/speaker.lua',
+            'docs/player/api/speaker.md',
+            *(f'examples/speaker-{name}.lua' for name in ('alarm', 'melody', 'catalogue')),
+            *(f'tests/speaker_{name}.lua' for name in (
+                'engine', 'native_cases', 'admission', 'catalogue_contract', 'data', 'data_final',
+                'client_engine', 'competition_engine', 'upgrade_engine')),
+        }
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            archive = build.build(output)
+            with zipfile.ZipFile(archive) as package:
+                prefix = next(n[:-len('info.json')] for n in package.namelist() if n.endswith('/info.json'))
+                for relative in required:
+                    self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
+                self.assertFalse(any(Path(name).suffix.lower() in
+                                     ('.ogg', '.wav', '.mp3', '.flac', '.mp4')
+                                     or '/gameitself/' in name for name in package.namelist()))
+
     def test_buffered_monitor_inventory_and_determinism(self):
         # Pin the intended public contract explicitly: iterating only the build
         # allowlist cannot detect an accidental removal from that allowlist.

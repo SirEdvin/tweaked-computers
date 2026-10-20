@@ -26,7 +26,7 @@ no production safety ceiling is raised by this release.
    reference: [computer](api/computer.md), [peripheral discovery](api/peripheral.md),
    [monitor](api/monitor.md), [database](api/kv.md), [logic](api/logic.md),
    [configurator](api/configurator.md), [Recipe Searcher](api/recipe-searcher.md),
-   [radar modem](api/modem.md)
+   [radar modem](api/modem.md), [programmable speaker](api/speaker.md)
    and [supported settings](api/settings.md).
 
 [Runnable programs](examples.md) are ready to copy as whole documents. The
@@ -37,6 +37,9 @@ The active development candidate adds locally wired native radar modems and,
 with Space Age, a separately named interplanetary tier. The [modem guide](api/modem.md)
 includes complete paired sender/receiver programs and exact bounds. This candidate
 functionality is not present in the immutable published 0.1.10 package.
+The same development candidate adds [vanilla speaker attachment](api/speaker.md)
+for bounded positional notes, sound effects and paginated sound discovery, with
+native GUI/circuit configuration preserved. See its maintained alarm/melody/catalogue programs.
 
 ## Alpha warning
 

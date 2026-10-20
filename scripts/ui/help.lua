@@ -97,13 +97,40 @@ getMonitorSyncGroup() -> copied members/status/presented_sequence/tick/diagnosti
 One selected group per run; at most four screens and 10584 summed actual cells.
 Every supplied path is checked; duplicate names prefer red. Writing stays shared.
 wire is explicitly "red" or "green", never "both" for discovery.
-Only same-color physical mod NETWORK ports and supported native radar sockets relay discovery; vanilla poles,
+Only same-color physical mod NETWORK ports and supported native radar/speaker sockets relay discovery; vanilla poles,
 INPUT/OUTPUT/TARGETS ports and color changes are not discovery paths.
-Types: monitor, kv_database, logic_handler, configurator, recipe_searcher, modem.
+Types: monitor, kv_database, logic_handler, configurator, recipe_searcher, modem, speaker.
 Each has getLimits().
 Store name/wire in state, not ephemeral facades. Calls recheck live authority.
 Use Peripherals / Refresh for current names/types/power on the selected color.
 Incomplete discovery reports pending/limit, never a successful empty prefix.
+
+SPEAKER
+find("speaker", wire): existing vanilla programmable-speaker, native sockets and GUI.
+No adapter, helpers or research; native circuits/settings/wires/mining and Configurator
+remain intact. Connected old speakers enter bounded adoption; pending means retry later.
+getInstruments() -> complete copied exact-name array, sorted bytewise.
+getNotes(instrument) -> complete {pitch=integer,name=string} array in native note order.
+playNote(instrument, volume?, pitch?) -> one boolean. Volume 0..1 defaults 1;
+pitch defaults 0 and is a zero-based Factorio sample index, not MIDI/CC pitch.
+The first pinned piano sample is F3 at pitch 0. Discover each instrument's range.
+playSound(path, volume?) -> one boolean; exact native-valid SoundPath, <=256 bytes.
+getSounds(prefix?, after?) -> {sounds={...},next?}, <=50 unique valid sorted paths.
+Strings default empty; prefix is literal, after an exclusive lexical key. Only a
+later match produces next, equal to the last returned path. One page per callback.
+Discovery captures documented sound families at data-final-fixes; later additions
+may remain directly playable without being indexed. Missing/oversized data errors.
+getLimits() -> copied common/speaker limits, including without native electrical power.
+Other methods need energy and no script-disable/freeze/deconstruction. A false circuit
+trigger alone does not prevent API playback. Every call proves live wire authority.
+True means engine submission, not audible acknowledgement; false means shared quota.
+Per tick: 8 notes + 1 effect per speaker, 16 combined per computer, 64 worldwide.
+Colors/programs/Console share credits, including volume 0. Apply/reconnect/same-tick
+reload never renew credits. Invalid arguments spend no audio quota; native failures do.
+Audio is positional on the current surface, eligible for nearby charted listeners
+on any force under native attenuation/mixer rules, regardless of native global mode.
+No playAudio, stop, streams, queue or completion event. Submitted samples cannot be
+cancelled. See docs/player/api/speaker.md and the speaker-alarm/melody/catalogue programs.
 
 RADAR MODEM
 Native radar: unchanged scanning, circuits, power, GUI and mining; no adapter item.
@@ -229,6 +256,7 @@ local sections={
   MONITOR={'Monitor','Peripherals'}, CONFIGURATOR={'Configurator','Peripherals'},
   ['RECIPE SEARCHER']={'Recipe Searcher','Peripherals'},
   ['RADAR MODEM']={'Radar modem','Peripherals'},
+  SPEAKER={'Programmable speaker','Peripherals'},
   ['COMBINED EXAMPLE']={'Factory examples','Examples'},
   ['FAILURES AND PERSISTENCE']={'Failures and persistence','Safety'}
 }

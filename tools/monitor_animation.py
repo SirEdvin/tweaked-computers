@@ -21,7 +21,10 @@ def main():
     ap.add_argument('--mode', choices=('base', 'space-age', 'both'), default='both')
     ap.add_argument('--layout', choices=('four-walls', 'mixed'), default='four-walls')
     ap.add_argument('--with-modem', action='store_true', help='Compete with maximum-payload eight-handler radio traffic and live logic on the same ledgers')
+    ap.add_argument('--with-speaker', action='store_true', help='Compete with 64 note submissions, full catalogue pages and live logic on production ledgers')
     args = ap.parse_args()
+    if args.with_modem and args.with_speaker:
+        ap.error('choose one focused contention fixture')
     folder = args.output.resolve()
     if folder.is_relative_to(ROOT) or folder.exists():
         ap.error('use a fresh output directory outside git')
@@ -42,11 +45,12 @@ def main():
               'guest_sha256': hashlib.sha256(source.encode()).hexdigest(),
               'layout': args.layout,
               'modem_competition': args.with_modem,
+              'speaker_competition': args.with_speaker,
               'test_only_additions': ['tests/monitor_animation_source.lua', 'tests/monitor_animation_layout.lua']}
     (folder / 'provenance.json').write_text(json.dumps(record, indent=2) + '\n')
     command = [sys.executable, str(ROOT / 'tools/smoke.py'), '--factorio', str(args.factorio),
                '--archive', str(target), '--output', str(folder / 'engine'), '--mode', args.mode,
-               '--fixture', 'tests.modem_competition_engine' if args.with_modem else 'tests.monitor_animation_engine', '--production-context', '--cold',
+               '--fixture', 'tests.speaker_competition_engine' if args.with_speaker else 'tests.modem_competition_engine' if args.with_modem else 'tests.monitor_animation_engine', '--production-context', '--cold',
                # The fixed-tick cadence plus outage/recovery contract can take
                # over 90 wall seconds on hosted CPUs. This is not a latency
                # gate: retain its 2200-tick deadline, cadence and paid limits.

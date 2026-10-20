@@ -3,6 +3,7 @@ local registry=require('scripts.registry')
 local scheduler=require('scripts.scheduler')
 local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
+local speaker=require('scripts.speaker')
 local M={}
 function M.supports(body)
   return body and body.valid and body.type=='radar'
@@ -81,7 +82,7 @@ function M.adopt(tick,spend)
   local ok=scheduler.try_maintenance(function()
     spend(16)
     if not rec or not rec.physical_version or not rec.body.valid then return end
-    local endpoint=rec.native_carrier=='radar' and rec.body or rec.layout_version==2 and rec.body or rec.children.network
+    local endpoint=rec.native_carrier and rec.body or rec.layout_version==2 and rec.body or rec.children.network
     if not endpoint or not endpoint.valid then return end
     local edges={}; local count=0
     for _,color in ipairs({'red','green'}) do
@@ -92,7 +93,7 @@ function M.adopt(tick,spend)
         spend(size*16+4)
         for _,edge in ipairs(connector.real_connections) do
           local b=edge.target.owner
-          if edge.origin~=defines.wire_origin.radars and not edge.target.is_ghost and M.supports(b)
+          if edge.origin~=defines.wire_origin.radars and not edge.target.is_ghost and (M.supports(b) or speaker.supports(b))
             and b.force==endpoint.force and b.surface==endpoint.surface then edges[#edges+1]=b end
         end
       end
@@ -101,7 +102,8 @@ function M.adopt(tick,spend)
     -- Precharge the entire bounded registration batch before its first mutation.
     spend(#edges*32)
     for _,b in ipairs(edges) do
-      local adopted,e=M.build(b)
+      local adopted,e
+      if speaker.supports(b) then adopted,e=speaker.build(b) else adopted,e=M.build(b) end
       if not adopted then error(e,0) end
     end
     rec.radar_adoption_diagnostic=nil

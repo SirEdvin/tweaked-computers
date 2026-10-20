@@ -12,6 +12,7 @@ function M.new(context, services, shell)
   local handle_arguments = setmetatable({}, {__mode='k'}) -- Host-only opt-in, not Data.
   local bindings=setmetatable({},{__mode='k'})
   local restore_binding
+  local call_frames,service_frames={},{}
   function G.bind_value(value,descriptor) bindings[value]=descriptor end
   function G.binding(value) return bindings[value] end
   function G.binding_resolver(fn) assert(not restore_binding); restore_binding=fn end
@@ -121,13 +122,19 @@ function M.new(context, services, shell)
     if depth>=limits.callback_depth then fatal('callback call depth exhausted') end
     local caller_line,caller_column=line,column
     depth=depth+1
+    local frame={fn=fn}; call_frames[#call_frames+1]=frame
     local result=table.pack(pcall(fn,...))
+    call_frames[#call_frames]=nil
     depth=depth-1
     G.check()
     if not result[1] then error(result[2],0) end
     if result.n-1>limits.tuple_entries then fatal('return width exceeded') end
-    G.spend(result.n); allocate(result.n)
-    for i=2,result.n do G.scalar(result[i]) end
+    if frame.boolean_result then
+      if result.n~=2 or type(result[2])~='boolean' then fatal('trusted boolean return contract violated') end
+    else
+      G.spend(result.n); allocate(result.n)
+      for i=2,result.n do G.scalar(result[i]) end
+    end
     line,column=caller_line,caller_column
     return table.unpack(result,2,result.n)
   end
@@ -259,8 +266,22 @@ function M.new(context, services, shell)
     for _,v in pairs(entries) do if type(v)=='function' then callable[v]=label or 'API function' end end
     return proxy
   end
+  -- Host-only; only the closed speaker effect dispatch requests this. Reserve
+  -- its scalar snapshot and immediate guarded call's return before dispatch.
+  function G.prepare_boolean_result()
+    local service=service_frames[#service_frames]
+    assert(service,'boolean admission requires a trusted service')
+    if service.boolean_result then return end
+    G.spend(1)
+    local frame=call_frames[#call_frames]
+    if frame and frame.fn==service.wrapper then
+      G.spend(3); allocate(2); frame.boolean_result=true
+    end
+    service.boolean_result=true
+  end
   function G.service(fn)
-    return function(...)
+    local wrapper
+    wrapper=function(...)
       G.spend(1) -- Must precede trusted service's authority/admission/effect boundary.
       local n=select('#',...); integer(n,0,limits.tuple_entries)
       local args=table.pack(...)
@@ -269,14 +290,23 @@ function M.new(context, services, shell)
           args[i]=G.snapshot(args[i])
         end
       end
-      local result=table.pack(fn(table.unpack(args,1,n)))
+      local frame={wrapper=wrapper}; service_frames[#service_frames+1]=frame
+      local called=table.pack(pcall(fn,table.unpack(args,1,n)))
+      service_frames[#service_frames]=nil
+      if not called[1] then error(called[2],0) end
+      local result={n=called.n-1}; for i=2,called.n do result[i-1]=called[i] end
       if result.n>limits.tuple_entries then fatal('service result width exceeded') end
-      for i=1,result.n do
-        if not (type(result[i])=='table' and protected[result[i]]) then result[i]=G.snapshot(result[i]) end
+      if frame.boolean_result then
+        if result.n~=1 or type(result[1])~='boolean' then fatal('trusted boolean service contract violated') end
+      else
+        for i=1,result.n do
+          if not (type(result[i])=='table' and protected[result[i]]) then result[i]=G.snapshot(result[i]) end
+        end
       end
       G.check()
       return table.unpack(result,1,result.n)
     end
+    return wrapper
   end
 
   function G.initialize()

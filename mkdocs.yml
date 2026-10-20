@@ -32,6 +32,7 @@ nav:
       - Configurator: api/configurator.md
       - Recipe Searcher: api/recipe-searcher.md
       - Radar modem: api/modem.md
+      - Programmable speaker: api/speaker.md
       - Supported settings: api/settings.md
       - Nested schemas and enums: api/schemas.md
       - Effective limits: api/limits.md

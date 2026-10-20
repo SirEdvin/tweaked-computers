@@ -7,6 +7,7 @@ local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
 local wires=require('scripts.physical-wires')
 local radar=require('scripts.radar')
+local speaker=require('scripts.speaker')
 local M={}
 -- Fixed host-only item adapters. The computer lifecycle milestone can install
 -- its own adapter without importing services into this ownership module.
@@ -57,7 +58,7 @@ local function create_port(body,role,pos,direction,token)
   return port
 end
 function M.endpoint(rec,role)
-  if rec.native_carrier=='radar' and role=='network' then return rec.body end
+  if (rec.native_carrier=='radar' or rec.native_carrier=='speaker') and role=='network' then return rec.body end
   if rec.layout_version==2 and role=='network' then return rec.body end
   return rec.children[role]
 end
@@ -68,6 +69,7 @@ end
 function M.has_power(rec)
   if not rec or not rec.body or not rec.body.valid then return false end
   if rec.native_carrier=='radar' then return radar.available(rec) end
+  if rec.native_carrier=='speaker' then return speaker.available(rec) end
   local p=M.power_entity(rec)
   if not p or not p.valid or p.force.index~=rec.force_index or p.surface.index~=rec.surface_index then return false end
   local at=rec.body.position; local power_at=p==rec.body and at or p.position
@@ -108,6 +110,7 @@ end
 -- Downstream logic owns generation-specific writer cleanup. Physical outages of
 -- the peripheral itself always clear its bank; never clear unrelated devices here.
 function M.sample_power(rec,tick,spend)
+  if rec.native_carrier=='speaker' then spend(4); rec.powered=speaker.available(rec); rec.power_checked_tick=tick; return end
   if rec.native_carrier=='radar' then spend(4); rec.powered=radar.available(rec); rec.power_checked_tick=tick; return end
   local def=defs.devices[rec.kind]
   local powered=M.has_power(rec)
@@ -127,6 +130,7 @@ function M.sample_power(rec,tick,spend)
   rec.power_checked_tick=tick
 end
 function M.build(body,token)
+  if speaker.supports(body) then return speaker.build(body) end
   if radar.supports(body) then return radar.build(body) end
   if not body or not body.valid or not defs.by_name[body.name] then return nil end
   local existing=registry.by_entity(body)
@@ -192,6 +196,10 @@ function M.connector(rec,role,color)
   if rec.native_carrier=='radar' then
     if color~='red' and color~='green' then errors.raise('E_ARGUMENT','red or green connector required') end
     return radar.connector(rec,role,color)
+  end
+  if rec.native_carrier=='speaker' then
+    if color~='red' and color~='green' then errors.raise('E_ARGUMENT','red or green connector required') end
+    return speaker.connector(rec,role,color)
   end
   local body=rec.body; local direction=body.direction; local at=body.position
   if direction~=rec.direction or at.x~=rec.position.x or at.y~=rec.position.y then return nil end
@@ -364,6 +372,9 @@ function M.upgrade_existing()
 end
 function M.on_built(event)
   local body=event.entity
+  -- Unrelated unwired speakers never consume identities; the existing bounded
+  -- native connected-frontier pass adopts them after an actual network edge.
+  if speaker.supports(body) then return end
   if radar.supports(body) then
     local rec,e=radar.build(body)
     if not rec then log('TC radar integration refused: '..(type(e)=='table' and e.message or tostring(e))) end
@@ -426,6 +437,7 @@ end
 function M.on_cloned(event)
   local body=event.destination
   if not body or not body.valid then return end
+  if speaker.supports(body) then return end
   if radar.supports(body) then radar.build(body); return end
   if defs.by_name[body.name] then
     local source,role=registry.by_entity(event.source)
@@ -478,6 +490,8 @@ function M.reconcile(tick,spend)
       spend(16)
       if rec and rec.native_carrier=='radar' then
         removed=radar.reconcile(rec,spend)
+      elseif rec and rec.native_carrier=='speaker' then
+        removed=speaker.reconcile(rec,spend)
       elseif rec and rec.physical_version==1 then
         if not rec.body.valid then
           spend(limits.registry_entries*6)
@@ -527,6 +541,8 @@ function M.power_losses(tick,spend)
     local rec=registry.record(id)
     if rec and rec.native_carrier=='radar' then
       rec.powered=radar.available(rec); rec.power_checked_tick=tick
+    elseif rec and rec.native_carrier=='speaker' then
+      rec.powered=speaker.available(rec); rec.power_checked_tick=tick
     elseif rec and rec.physical_version==1 then
       local available=rec.body.valid and not rec.physical_error
       if available then

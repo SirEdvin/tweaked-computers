@@ -1,6 +1,6 @@
 # Speaker Lua API v1
 
-This is the normative API companion to [the speaker capability](spec.md). It specifies proposed behavior, not an implemented or audibly verified service. Existing common Data, budget, authority and saved-program/Console rules continue to apply.
+This is the normative API companion to [the speaker capability](spec.md) for the active development candidate, not a published release. Existing common Data, budget, authority and saved-program/Console rules continue to apply.
 
 ## Discovery and method inventory
 
@@ -120,7 +120,7 @@ Unsupported methods such as `stop` and `playAudio` are absent, not stubs returni
 
 ## Example: discover, choose and play
 
-The following uses the canonical saved-program declaration syntax. It is illustrative until executed through the packaged compiler and service on a real powered speaker connection.
+The following uses the canonical saved-program declaration syntax. Ready-to-run alarm, melody and paginated catalogue programs are maintained in `examples/speaker-*.lua` and exercised by the packaged engine fixture.
 
 ```lua
 function start(event)

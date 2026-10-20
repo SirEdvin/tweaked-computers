@@ -4,6 +4,7 @@ local lifecycle=require('scripts.lifecycle')
 local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
 local radar=require('scripts.radar')
+local speaker=require('scripts.speaker')
 local M={}
 function M.wire(wire)
   if wire~='red' and wire~='green' then errors.raise('E_ARGUMENT','explicit red or green wire required') end
@@ -16,8 +17,8 @@ end
 function M.discovery_vertex(connector,origin,wire)
   if not connector or not connector.valid or connector.is_ghost or not M.same_scope(connector.owner,origin) then return nil end
   local rec,role=registry.by_entity(connector.owner)
-  if not rec then radar.pending(connector.owner) end
-  if not rec or (role~='network' and not (role=='body' and (rec.layout_version==2 or rec.native_carrier=='radar')))
+  if not rec then radar.pending(connector.owner); speaker.pending(connector.owner) end
+  if not rec or (role~='network' and not (role=='body' and (rec.layout_version==2 or rec.native_carrier=='radar' or rec.native_carrier=='speaker')))
     or lifecycle.connector(rec,'network',wire)~=connector then return nil end
   return rec
 end

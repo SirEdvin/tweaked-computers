@@ -9,7 +9,7 @@ local errors=require('scripts.runtime.errors')
 local data=require('scripts.runtime.data')
 local principal=require('scripts.runtime.principal')
 local M={}
-local types={kv='kv_database',monitor='monitor',logic='logic_handler',configurator='configurator',recipe_searcher='recipe_searcher',radar='modem'}
+local types={kv='kv_database',monitor='monitor',logic='logic_handler',configurator='configurator',recipe_searcher='recipe_searcher',radar='modem',speaker='speaker'}
 local bindings={}; local revocations={}
 local monitor_sync
 function M.register_monitor_sync(binding)
@@ -155,6 +155,7 @@ function M.services(computer,tick,guard,execution)
       or (not available and (not rec.powered or not lifecycle.has_power(rec)))) then
       errors.raise('E_UNPOWERED','peripheral is unpowered')
     end
+    if rec.kind=='speaker' and (method=='playNote' or method=='playSound') then guard.prepare_boolean_result() end
     if bindings[rec.kind].with_principal then return fn(computer,rec,wire,tick,spend,execution,...) end
     return fn(computer,rec,wire,tick,spend,...)
   end
@@ -201,7 +202,7 @@ function M.services(computer,tick,guard,execution)
     local rec=lookup(name,wire); if not rec then return nil end
     local b=rec.body; local def=defs.devices[rec.kind]
     local horizontal=rec.direction==0 or rec.direction==8
-    local width=rec.native_carrier=='radar' and (rec.modem_tier=='surface' and 3 or 5) or nil
+    local width=rec.native_carrier=='speaker' and 1 or rec.native_carrier=='radar' and (rec.modem_tier=='surface' and 3 or 5) or nil
     local info={name=rec.id,type=types[rec.kind],label=rec.label,powered=rec.powered,
       position={x=b.position.x,y=b.position.y},surface={index=b.surface.index,name=b.surface.name},
       quality=b.quality.name,direction=directions[width and b.direction or rec.direction],

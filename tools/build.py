@@ -8,7 +8,7 @@ from pathlib import Path
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-TOP = ('info.json', 'data.lua', 'control.lua', 'settings.lua', 'README.md', 'LICENSE', 'changelog.txt')
+TOP = ('info.json', 'data.lua', 'data-final-fixes.lua', 'control.lua', 'settings.lua', 'README.md', 'LICENSE', 'changelog.txt')
 DIRS = ('scripts', 'prototypes', 'locale', 'vendor', 'assets', 'docs', 'examples', 'tests')
 CONTRACT_FILES = (
     'openspec/api/common.md',
@@ -46,6 +46,9 @@ CONTRACT_FILES = (
 # Active feature contracts ship without prematurely archiving/synchronizing the
 # change. The campaign archival owner later promotes these exact companions.
 FEATURE_CONTRACT_FILES = (
+    'openspec/changes/add-speaker-peripheral/specs/speaker-peripheral/spec.md',
+    'openspec/changes/add-speaker-peripheral/specs/speaker-peripheral/lua-api.md',
+    'openspec/changes/add-speaker-peripheral/specs/peripheral-network/spec.md',
     'openspec/changes/add-radar-modems/specs/radar-modem/spec.md',
     'openspec/changes/add-radar-modems/specs/radar-modem/lua-api.md',
     'openspec/changes/add-radar-modems/specs/peripheral-network/spec.md',

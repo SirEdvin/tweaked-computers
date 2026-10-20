@@ -11,6 +11,7 @@ return [[return {api_version=1,handlers={start=function(event)
     assert(type(peripheral[method])=='function')
   end
   local expected={
+    speaker={'getInstruments','getLimits','getNotes','getSounds','playNote','playSound'},
     modem={'open','isOpen','close','closeAll','transmit','isWireless','getLimits'},
     recipe_searcher={'findRecipes','getLimits'},
     kv_database={'get','set','del','exists','type','hget','hset','hdel','hexists','hgetall','hlen','expire','ttl','persist','getLimits'},
@@ -25,7 +26,7 @@ return [[return {api_version=1,handlers={start=function(event)
     local device=peripheral.find(kind,'red')
     -- Legacy factory scenes have no radar; the native modem fixture separately
     -- requires and exercises this same closed seven-method inventory.
-    if kind~='modem' or device then
+    if kind~='modem' and kind~='speaker' or device then
       assert(device)
       local methods=peripheral.getMethods(peripheral.getName(device),'red')
       table.sort(list); assert(#list==#methods)

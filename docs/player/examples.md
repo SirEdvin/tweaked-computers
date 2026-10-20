@@ -7,6 +7,80 @@ factory managers; keep the described topology. Runtime effects were exercised by
 the implementation harness; documentation checks compile these blocks without
 claiming graphical keyboard/focus/touch delivery.
 
+## speaker-alarm
+
+Connect a powered vanilla programmable-speaker to a computer Network on red. Plays one positional effect every 120 ticks. False admission waits for the next timer, never a same-tick retry. Stop prevents future calls, not cancellation of an already submitted sample.
+
+```lua
+function start(event)
+  computer.setState("accepted", false)
+  computer.every(120, "alarm")
+end
+
+function alarm(event)
+  local speaker = peripheral.find("speaker", "red")
+  assert(speaker, "Connect a powered vanilla programmable speaker on red")
+  local accepted = speaker.playSound("utility/wire_connect_pole", 0.5)
+  computer.setState("accepted", accepted)
+  if not accepted then computer.log("Speaker busy; the next timer will retry") end
+end
+```
+
+## speaker-melody
+
+Connect a powered vanilla programmable-speaker on red. Discovers zero-based piano indices and requests one note every 30 ticks; advances only after admission. This is simulation scheduling, not sample-accurate sequencing. Disconnect/power errors fault the program; reconnect and Run again.
+
+```lua
+function start(event)
+  local speaker = peripheral.find("speaker", "red")
+  assert(speaker, "Connect a powered vanilla programmable speaker on red")
+  local notes = speaker.getNotes("piano")
+  assert(#notes >= 3)
+  computer.setState("speaker", peripheral.getName(speaker))
+  computer.setState("pitches", {notes[1].pitch, notes[2].pitch, notes[3].pitch, notes[2].pitch})
+  computer.setState("step", 1)
+  computer.every(30, "note")
+end
+
+function note(event)
+  local speaker = peripheral.wrap(computer.getState("speaker"), "red")
+  assert(speaker, "Speaker disconnected; reconnect and Run again")
+  local step = computer.getState("step")
+  local pitches = computer.getState("pitches")
+  if speaker.playNote("piano", 0.35, pitches[step]) then
+    computer.setState("step", step % #pitches + 1)
+  end
+end
+```
+
+## speaker-catalogue
+
+Connect a powered vanilla programmable-speaker on red. Fetches at most one page per callback and stores the last page and cumulative count as plain state. Completes without a busy loop. The bounded Console history is not a complete catalogue export; inspect last_page while paging or reuse the continuation pattern with your own storage.
+
+```lua
+function start(event)
+  computer.setState("after", "")
+  computer.setState("count", 0)
+  computer.setState("complete", false)
+  computer.after(1, "page")
+end
+
+function page(event)
+  local speaker = peripheral.find("speaker", "red")
+  assert(speaker, "Connect a powered vanilla programmable speaker on red")
+  local result = speaker.getSounds("", computer.getState("after"))
+  computer.setState("last_page", result.sounds)
+  computer.setState("count", computer.getState("count") + #result.sounds)
+  computer.log("Sound paths discovered: " .. tostring(computer.getState("count")))
+  if result.next then
+    computer.setState("after", result.next)
+    computer.after(1, "page")
+  else
+    computer.setState("complete", true)
+  end
+end
+```
+
 ## modem-sender
 
 Wire one powered computer to one native radar on red. Run modem-receiver on a different computer/radar on the same force and surface first. Sends on numeric channel 200 every 60 ticks and receives explicit replies on 201; these numbers are not wire colors.
