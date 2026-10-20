@@ -47,6 +47,42 @@ local function setup(c,io)
   c.status='running'; c.run_id=c.id..'/fixture'
   connect(c,io,'red')
 end
+local function verify_faults()
+  local a=registry.computer(f().fault_ids[1]); local b=registry.computer(f().fault_ids[2])
+  assert(a.diagnostic~=b.diagnostic and a.active.revision~=b.active.revision and a.run_id~=b.run_id)
+  for _,c in ipairs({a,b}) do
+    assert(c.status=='faulted' and c.diagnostic.code=='E_BUSY')
+    assert(c.diagnostic.message=='injected native sampling refusal')
+    assert(c.diagnostic.source_revision==c.active.revision and c.diagnostic.run_id==c.run_id)
+    assert(#c.queue==0 and next(c.timers)==nil and next(c.subscriptions)==nil)
+  end
+  local io=registry.record(f().fault_io)
+  assert(not io.output_owner and io.output_bank==nil and io.children.output.get_control_behavior().sections_count==0)
+end
+local function shared_sampler_failure()
+  local a=build('computer',-12,0); local b=build('computer',-12,3); local io=build('logic',-9,0)
+  f().fault_ids={a.id,b.id}; f().fault_io=io.id
+  for i,c in ipairs({a,b}) do
+    setup(c,io)
+    guest(c,[[local io=peripheral.find('logic_handler','red')
+      io.setOutput({{signal={type='virtual',name='signal-A'},count=1}})
+      io.subscribe({input='red',initial=true},'changed')
+      computer.after(10,'changed')]])
+    c.active.revision=i+2
+    assert(runtime.enqueue(c,'changed',{name='pending'},game.tick))
+  end
+  assert(io.output_owner.computer_id==b.id)
+  -- Refuse only the native-read envelope, not gathering/ordering/notification.
+  -- One shared sample must fan out the very same failure to both subscribers.
+  local charge=(#prototypes.item+#prototypes.fluid+#prototypes.virtual_signal+#prototypes.recipe)*#prototypes.quality*8+logic.signal_slots*16+16
+  local failure={code='E_BUSY',message='injected native sampling refusal'}; local refusals=0
+  logic.sample(game.tick,function(n)
+    if n==charge then refusals=refusals+1; error(failure,0) end
+  end)
+  assert(refusals==1 and failure.run_id==nil and failure.source_revision==nil)
+  verify_faults()
+  report('shared-native-sampler-failure-distinct-diagnostics-and-fail-closed-cleanup')
+end
 function M.run()
   registry.initialize(); storage.tc07={groups=0,phase='inputs',started=game.tick}
   local s=game.surfaces[1]; local c=build('computer',0,0); local relay=build('kv',3,0); local io=build('logic',6,0)
@@ -93,6 +129,7 @@ function M.run()
   power.power_production=1000000; power.power_usage=0
   f().power=power; f().pole=assert(s.create_entity{name='substation',position={5,5},force='player'})
   report('native-real-wire-input-output-fixture-armed')
+  shared_sampler_failure()
 end
 local function snapshot()
   local c=registry.computer(f().c); local io=registry.record(f().io); local root=registry.get()
@@ -101,6 +138,7 @@ local function snapshot()
     machine=root.ledger.machines[c.id],work=root.ledger.machines[c.id].work,compile=root.ledger.machines[c.id].compile,allocations=root.ledger.machines[c.id].allocations}
 end
 local function unchanged()
+  verify_faults()
   local a,b=f().snapshot,snapshot()
   for _,k in ipairs({'state','run','source','subscriptions','queue','bank','owner','ledger','tick','maintenance','starts','unit','machine','work','compile','allocations'}) do assert(a[k]==b[k],'cold changed '..k) end
 end
@@ -203,6 +241,7 @@ function M.on_tick(event)
       assert(c.state.starts==1 and c.run_id==f().snapshot.run)
       f().inserter.active=true; f().phase='cessation'; f().since=event.tick; f().count=f().dest.get_item_count('iron-plate')
       report('cold-owned-output-subscription-identity-and-no-startup-replay')
+      verify_faults(); report('cold-shared-sampler-fault-identities-retained')
     end
   elseif f().phase=='cessation' and event.tick-f().since>=90 then
     assert(f().dest.get_item_count('iron-plate')==f().count,'disabled inserter still transfers')
