@@ -31,7 +31,7 @@ compile returns a plain plan with compiler_version, api_version, exact source,
 generated text, handler-name map and node count; it does not execute candidate
 source. Failed candidates return nil and an ApiError-style diagnostic; the
 caller must retain its prior active source/run. run constructs a new closed
-environment and native descriptor every time. It returns true, or false plus
+environment and native handler table every time. It returns true, or false plus
 code/message/line/column. Its synchronous callback does not suspend and cannot
 be restarted after failure. E_STOP is private host-facing control, not a guest
 ApiError. Source line probes identify the current original statement/operator;
@@ -82,7 +82,38 @@ values, mixed map/array keys, sparse arrays and nonfinite numbers.
 
 ## Compiler and sandbox safety
 
-Only the literal api_version=1 / named-function handlers descriptor is accepted.
+Saved program mode accepts either the unchanged literal api_version=1 /
+named-function handlers descriptor or a declaration-only document with at least
+one simple exported `function name(...)` and optional private `local function`
+helpers. Comments and empty statements are allowed. The formats cannot mix;
+top-level effects, variable initialization, ordinary assignment, control flow,
+dotted declarations and methods are rejected. The live Console is a separate mode
+and never inherits saved-program exports.
+
+The declaration branch inventories distinct public/private identifiers under
+compile admission, rejects approved/prohibited global names, and enforces the
+existing handler cap on exports. Private helpers still pay source/compiler/native
+limits. It emits one private per-dispatch function table, prepays its bounded
+static bindings and key work, and registers every export through the same closure
+guard used for nested guest functions. No guest expression can access or write
+that table. Only parser-global reads matching the export inventory resolve through
+guarded table lookup, so forward/mutual public calls work without general globals.
+Parser-resolved locals/upvalues preserve ordinary shadowing and private helper
+declaration order/self-recursion. Unshadowed export assignment/redefinition stays
+forbidden; legacy handlers gain no implicit sibling bindings.
+
+Direct calls use existing native body/call instrumentation in the current run,
+with supplied arguments, table aliases and bounded Lua result/nil arity. Exported
+functions can be returned, captured, aliased or protected with pcall, but cannot be
+stored as Data. Calling start directly does not activate/reset a run. Named
+registration APIs remain string-only; only exported start has automatic startup
+meaning. Each dispatch reconstructs fresh ephemeral functions; nothing executes
+on load, and no closure/local state persists. API v1, compiler representation v2,
+storage v1 and the closed active-source/handler record are unchanged. Exact active
+source remains authoritative even after newer saved-but-unapplied edits. There is
+no migration or downgrade promise for newly authored syntax; retain a backup or
+convert/reapply before using an older compiler.
+
 The pinned parser resolves lexical locals. Default-deny validation rejects
 host/global writes, private names, _ENV/_G, dynamic loading, colon calls,
 labels/goto and unknown AST nodes. Every indexed read is rewritten through a

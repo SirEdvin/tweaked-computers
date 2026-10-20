@@ -24,6 +24,66 @@ local origin_source=[[return {api_version=1,handlers={
   periodic=function(e) computer.setState('periods',(computer.getState('periods') or 0)+1) end,
   restore=function(e) computer.setState('restores',computer.getState('restores')+1) end
 }}]]
+local declaration_source=[[
+local function increment(n) return n+1 end
+function start(e)
+  computer.setState('boots',increment(computer.getState('boots') or 0))
+  computer.setState('once',0); computer.setState('order','')
+  assert(sample()==1)
+  local payload={false,'',3}
+  computer.setState('timer',computer.after(7,'sample',payload)); payload[3]=99
+  computer.every(3,'periodic')
+  computer.on('power_restored','restore')
+end
+function sample(e)
+  local n=increment(computer.getState('samples') or 0)
+  computer.setState('samples',n)
+  if e then
+    assert(e.name=='timer' and e.timer_id==computer.getState('timer'))
+    assert(e.payload[1]==false and e.payload[2]=='' and e.payload[3]==3)
+    assert(e.computer_id==computer.getID())
+    computer.setState('once',increment(computer.getState('once')))
+    computer.setState('envelope',e)
+    computer.log('declaration-one-shot')
+  else computer.log('declaration-immediate') end
+  return n
+end
+function periodic(e) computer.setState('periods',increment(computer.getState('periods') or 0)) end
+function restore(e)
+  assert(e.name=='power_restored' and e.computer_id==computer.getID())
+  computer.setState('order',computer.getState('order')..e.tag)
+end
+]]
+local function clone(value)
+  if type(value)~='table' then return value end
+  local result={}; for k,v in pairs(value) do result[k]=clone(v) end; return result
+end
+local function equal(a,b)
+  if type(a)~=type(b) then return false end
+  if type(a)~='table' then return a==b end
+  for k,v in pairs(a) do if not equal(v,b[k]) then return false end end
+  for k in pairs(b) do if a[k]==nil then return false end end
+  return true
+end
+local function retained(rec)
+  local result={}
+  for _,key in ipairs({'active','saved_source','saved_revision','run_id','run_generation','status',
+    'state','state_sizes','state_bytes','state_nodes','state_node_sizes','state_entries',
+    'logs','log_bytes','queue','queue_bytes','timers','subscriptions','last_dispatch_tick'}) do
+    result[key]=clone(rec[key])
+  end
+  result.body_unit=rec.body.unit_number
+  return result
+end
+local function complete_snapshot()
+  local f=storage.tc03_fixture; local r=registry.get()
+  return {legacy=retained(registry.computer(f.id)),declaration=retained(registry.computer(f.declaration)),
+    ledger=clone(r.ledger),scheduler=clone(r.scheduler),sequence=r.next_sequence}
+end
+local function baseline_snapshot(rec)
+  local r=registry.get()
+  return {record=retained(rec),ledger=clone(r.ledger),scheduler=clone(r.scheduler),sequence=r.next_sequence}
+end
 local function scalar_graph(value,seen)
   local typ=type(value)
   assert(typ~='function' and typ~='thread','executable persisted')
@@ -55,6 +115,20 @@ local function verify_frozen()
   assert(rec.state.once==0 and rec.state.restores==0)
   for id,timer in pairs(saved.timers) do assert(now.timers[id] and now.timers[id].deadline==timer.deadline and now.timers[id].sequence==timer.sequence) end
   assert(rec.queue[1].event.run_id==rec.run_id and rec.queue[1].handler=='restore')
+  if fixture.baseline_expected then
+    assert(equal(baseline_snapshot(rec),fixture.baseline_expected),'baseline active/state/work graph rewritten on load')
+  end
+  if fixture.declaration then
+    assert(equal(complete_snapshot(),fixture.expected),'cold load changed full source/state/work graph')
+    local plain=registry.computer(fixture.declaration)
+    assert(plain.active.source==declaration_source and plain.saved_source~=plain.active.source)
+    assert(plain.state.boots==1 and plain.state.samples==1 and plain.state.once==0 and plain.state.order=='')
+    assert(plain.active.handlers.start and plain.active.handlers.sample and not plain.active.handlers.increment)
+    assert(#plain.queue==2 and plain.queue[1].event.tag=='a' and plain.queue[2].event.tag=='b'
+      and plain.queue[1].event.sequence<plain.queue[2].event.sequence)
+    assert(plain.active==fixture.active_alias and plain.state==fixture.state_alias
+      and plain.timers==fixture.timers_alias and plain.queue==fixture.queue_alias,'cold identity loss')
+  end
   scalar_graph(root,{})
   return rec
 end
@@ -65,7 +139,10 @@ function M.run()
   local rec=registry.register('computer',entity)
   runtime.save(rec.id,origin_source,0)
   assert(runtime.activate(rec.id,game.tick))
-  storage.tc03_fixture={phase='armed',id=rec.id}
+  local plain=registry.register('computer',assert(game.surfaces[1].create_entity{name='constant-combinator',position={4,4},force='player'}))
+  runtime.save(plain.id,declaration_source,0)
+  assert(runtime.activate(plain.id,game.tick))
+  storage.tc03_fixture={phase='armed',id=rec.id,declaration=plain.id}
   scalar_graph(registry.get(),{})
 end
 function M.on_load()
@@ -85,6 +162,25 @@ function M.on_tick(event)
     -- A one-unit refusal on a real retained ledger, without granting a new tick.
     assert(not admission.reserve(ctx,'work',limits.callback_work+1-saved.work))
     assert(ctx.machine.work==saved.work and ctx.ledger.total==saved.total)
+    if fixture.declaration then
+      local plain=registry.computer(fixture.declaration)
+      local c=admission.context(registry.get().ledger,plain.id,saved.ledger_tick)
+      local machine=clone(c.machine); local total=c.ledger.total
+      assert(machine.work>0 and machine.compile>0 and machine.allocations>0)
+      for kind,ceiling in pairs({work=limits.callback_work,compile=limits.compile_work,allocations=limits.callback_allocations}) do
+        assert(not admission.reserve(c,kind,ceiling+1-machine[kind]))
+        assert(equal(c.machine,machine) and c.ledger.total==total,'cold refusal renewed credits')
+      end
+      scheduler.tick(saved.scheduler_tick)
+      assert(equal(complete_snapshot(),fixture.expected),'same-tick cold dispatch replayed work')
+      log('TC_COLD_DECLARATION_FROZEN exact-active-source aliases full-ledger FIFO no-load-work')
+    else
+      -- An authentic baseline 0.1.9 fixture has no declaration peer. Its original
+      -- active record must pass unchanged, not be synthesized or reactivated.
+      assert(rec.active.api_version==1 and rec.active.compiler_version==2 and rec.active.storage_version==1)
+      assert(fixture.baseline_expected,'baseline acceptance requires authentic external before-snapshot observer')
+      log('TC_COLD_LEGACY_BASELINE_COMPATIBLE original-source-run-body-credits')
+    end
     loaded=false; fixture.phase='resumed'
     log('TC_COLD_RECONSTRUCT_BEGIN')
   elseif fixture.phase=='armed' then
@@ -95,6 +191,17 @@ function M.on_tick(event)
     -- Keep committed editor source different from the active run snapshot.
     runtime.save(rec.id,'return {api_version=1,handlers={start=function(e) error("saved-only source executed") end}}',rec.saved_revision)
     runtime.emit(rec.id,'power_restored',{outage_start_tick=0,restored_tick=event.tick},event.tick)
+    if fixture.declaration then
+      local plain=registry.computer(fixture.declaration)
+      assert(plain.status=='running' and plain.state.boots==1 and plain.state.samples==1,
+        plain.diagnostic and plain.diagnostic.message)
+      runtime.save(plain.id,'function start(e) error("new saved-only declaration executed") end',plain.saved_revision)
+      local payload={tag='a'}; runtime.emit(plain.id,'power_restored',payload,event.tick); payload.tag='changed'
+      runtime.emit(plain.id,'power_restored',{tag='b'},event.tick)
+      fixture.active_alias=plain.active; fixture.state_alias=plain.state
+      fixture.timers_alias=plain.timers; fixture.queue_alias=plain.queue
+      fixture.expected=complete_snapshot()
+    end
     fixture.phase='frozen'; fixture.snapshot=snapshot(rec); fixture.freeze_tick=event.tick
     scalar_graph(registry.get(),{})
     game.server_save('tc03-snapshot')
@@ -110,6 +217,23 @@ function M.on_tick(event)
       assert(rec.state.once==1 and rec.state.restores==1 and rec.state.periods>=3)
       local once=0; for _,entry in ipairs(rec.logs) do if entry.text=='one-shot' then once=once+1 end end
       assert(once==1,'one-shot replayed')
+      assert(rec.run_id==fixture.snapshot.run_id and rec.active.source==origin_source and rec.run_generation==1)
+      if fixture.declaration then
+        local plain=registry.computer(fixture.declaration)
+        assert(plain.status=='running',plain.diagnostic and plain.diagnostic.message)
+        assert(plain.run_id==fixture.expected.declaration.run_id and plain.run_generation==1
+          and plain.active==fixture.active_alias and plain.active.source==declaration_source)
+        assert(plain.state.boots==1 and plain.state.samples==2 and plain.state.once==1
+          and plain.state.order=='ab' and plain.state.periods>=3)
+        assert(plain.state.envelope.run_id==plain.run_id and plain.state.envelope.payload[3]==3)
+        local immediate,timed=0,0
+        for _,entry in ipairs(plain.logs) do
+          if entry.text=='declaration-immediate' then immediate=immediate+1 end
+          if entry.text=='declaration-one-shot' then timed=timed+1 end
+        end
+        assert(immediate==1 and timed==1,'declaration effect replayed')
+        log('TC_COLD_DECLARATION_OK immediate=1 timer=1 boots=1 order=ab exact-active-source')
+      end
       scalar_graph(registry.get(),{})
       fixture.phase='done'
       log('TC_COLD_OK retained-source no-startup-replay once-only FIFO same-tick-ledger data-only')

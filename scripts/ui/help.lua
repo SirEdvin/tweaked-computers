@@ -1,17 +1,21 @@
 -- Plain native help text; no rich text or file imports.
 local M={
-  template=[[return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      computer.log("Controller started")
-      computer.on("peripheral_attach", "attached")
-    end,
-    attached = function(event)
-      computer.log(event.peripheral .. " attached on " .. event.wire)
-    end
-  }
-}]],
+  template=[[local function increment(value)
+  return value + 1
+end
+
+function start(event)
+  local total = sample()
+  computer.log("Initial sample count: " .. tostring(total))
+  computer.every(60, "sample")
+end
+
+function sample(event)
+  local total = increment(computer.getState("samples") or 0)
+  computer.setState("samples", total)
+  return total
+end
+]],
   text=[[TWEAKED COMPUTERS — Lua API v1
 One document. Native named callbacks; no OS, VM or filesystem.
 
@@ -43,9 +47,19 @@ Ctrl+left-click (rebindable), empty cursor/no GUI, opens a computer or recovery.
 All essential actions are buttons, including while the text box has focus.
 
 LANGUAGE
-return {api_version=1, handlers={start=function(event) ... end, ...}}
-Handlers are named literal functions. Locals, helpers, if, loops and tables
-are supported within guarded work/depth/allocation limits. No top-level effects.
+function start(event) ... end; function sample(event) ... end
+Plain declarations export named handlers; API version 1 is implicit. start is optional.
+sample() calls directly in this program with ordinary arguments/results and the
+same callback budget. computer.every(60, "sample") schedules a later TimerEvent.
+Names alone do not subscribe. Registration uses strings, never function values.
+Declare private local function helpers before use; they are not exported.
+Exports are read-only and forward-visible; parameters/locals shadow them normally.
+Legacy return {api_version=1, handlers={start=function(event) ... end, ...}}
+still works. Use one form per document. No top-level values, calls or effects.
+Locals, helpers, if, loops and tables have guarded work/depth/allocation limits.
+Functions/locals are fresh per callback; keep durable values in computer state.
+Console cannot call saved-program functions. The starter samples once immediately,
+logs the returned count, then samples every 60 simulation ticks; no device required.
 No require/load, game/storage/remote, _ENV/_G, metatables, coroutine, patterns,
 random, string-method syntax or colon calls. API calls use dots.
 Approved globals: assert, error, ipairs, pairs, next, pcall, select, tonumber,

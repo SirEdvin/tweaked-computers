@@ -39,6 +39,7 @@ jobs:
           export TMPDIR="$RUNNER_TEMP"
           mkdir -p "$RUNNER_TEMP/tc-ci/reports"
           python tools/test_build.py
+          python tools/test_monitor_animation.py
           python tools/planning_examples.py --check
           python tools/configuration_catalog.py --check
           python -m mkdocs build --strict --site-dir "$RUNNER_TEMP/tc-ci/site"
@@ -66,8 +67,14 @@ jobs:
           archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
           engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
-            --output "$RUNNER_TEMP/tc-ci/runtime" --mode base \
+            --output "$RUNNER_TEMP/tc-ci/runtime" --mode both \
             --fixture tests.runtime_contract
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/computer-contract" --mode both \
+            --fixture tests.computer_contract
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/computer-cold" --mode both \
+            --fixture tests.computer_cold --cold
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/runtime-budgets" --mode both \
             --fixture tests.runtime_budget_engine --production-context --cold
@@ -90,6 +97,9 @@ jobs:
             python tools/monitor_animation.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/animation-$layout" --mode both --layout "$layout"
           done
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/editor-contract" --mode both \
+            --fixture tests.editor_contract
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/gui-workspace" --mode both \
             --fixture tests.editor_workspace --data-fixture tests.candidate_data
