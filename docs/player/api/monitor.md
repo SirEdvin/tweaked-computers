@@ -151,8 +151,9 @@ Invalid fronts remain accounted until retirement can accept them. Queried bounds
 include render_commit_objects=42352, render_commit_work=160000,
 render_object_limit=203872 and render_retained_cells=362336 logical cell slots
 (not host bytes). The 60,000 baseline reservation can boost to 160,000, with a
-baseline opportunity between boosts, inside the unchanged 200,000 maintenance
-reservation within the configurable shared host ceiling (default 5,000,000).
+baseline opportunity between boosts, inside the configurable maintenance
+reservation (default/minimum 200,000) within the shared host ceiling (default 5,000,000).
+Increasing maintenance does not raise the separate 160,000 whole-commit ceiling.
 See [live mod settings](limits.md#live-mod-settings). Exact progress and spent credits survive cold load.
 The 256-tick stable-world render target is provisional, not a 60-UPS/FPS or
 graphical-latency guarantee. Continuous producers retain bounded newest-pending
