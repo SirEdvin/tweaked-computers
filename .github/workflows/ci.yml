@@ -20,7 +20,9 @@ jobs:
   validate:
     name: Mod validation
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    # The complete cold/upgrade/chart matrices can exceed 25m on slower hosted
+    # runners. Keep every assertion, fixture tick deadline and game budget.
+    timeout-minutes: 35
     env:
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
