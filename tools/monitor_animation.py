@@ -44,7 +44,11 @@ def main():
     (folder / 'provenance.json').write_text(json.dumps(record, indent=2) + '\n')
     command = [sys.executable, str(ROOT / 'tools/smoke.py'), '--factorio', str(args.factorio),
                '--archive', str(target), '--output', str(folder / 'engine'), '--mode', args.mode,
-               '--fixture', 'tests.monitor_animation_engine', '--production-context', '--cold']
+               '--fixture', 'tests.monitor_animation_engine', '--production-context', '--cold',
+               # The fixed-tick cadence plus outage/recovery contract can take
+               # over 90 wall seconds on hosted CPUs. This is not a latency
+               # gate: retain its 2200-tick deadline, cadence and paid limits.
+               '--cold-timeout', '240']
     result = subprocess.run(command, check=False)
     samples = []
     profiles = []
