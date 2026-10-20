@@ -42,7 +42,7 @@ The artwork deliverable SHALL include editable sources, reproducible export inst
 - **THEN** the reviewer can inspect all five identities and socket alignments from a complete contact sheet and trace the shipped sprites to their sources without recreating an opaque manual workflow.
 
 ### Requirement: Selected Service Rack six-device family
-The computer, database, monitor, logic handler, configurator and Recipe Searcher SHALL use the user-selected Service Rack (AR2 candidate B) identity. The existing five-device requirements also apply to the Recipe Searcher, whose 1×1 footprint SHALL remain unchanged. All cardinal bodies, item icons, shadows and status sheets SHALL match the selected preview; technology icons SHALL depict the selected computer and scanner rather than unrelated vanilla equipment. Adoption MUST NOT alter gameplay, research ownership, unlock effects, power, physical contact/selection locations or monitor alpha/interior/touch geometry.
+The six devices SHALL adopt the selected Service Rack (AR2 candidate B) identity. Recipe Searcher SHALL retain its 1×1 footprint and follow five-device requirements. Cardinal bodies, item icons, shadows and status sheets SHALL match the preview; technology icons SHALL depict the selected computer and scanner. Adoption MUST NOT alter gameplay, research ownership, unlock effects, power, physical contacts/selection or monitor alpha/interior/touch geometry.
 
 #### Scenario: Identify the selected six-device family
 - **WHEN** all six devices appear beside vanilla machinery at ordinary zoom, in inventory and in their research entries
