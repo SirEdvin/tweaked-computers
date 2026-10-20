@@ -67,12 +67,15 @@ Use a fresh output directory for the packaged official-engine integration smoke:
 
 The harness exercises base and Space Age; cold phases use isolated localhost-only
 servers and acknowledged console shutdown. It never launches a graphical client.
-The source/API contracts remain in openspec/changes/add-native-circuit-computers;
-that change is deliberately unarchived pending review and user client testing.
-The shipped `buffer-monitor-presentation` API extension documents automatic
-snapshots, every 1..6-by-1..6 rectangle and optional selected-group publication.
-Broader graphical validation remains part of the user's alpha review;
-Console native/multiplayer evidence does not certify every device interaction.
+Current source/API contracts live in `openspec/specs/` and `openspec/api/`.
+The five completed changes retain their planning history under
+`openspec/changes/archive/2026-10-19-*/`; packages ship only canonical contracts.
+The monitor buffering companion documents automatic snapshots, every
+1..6-by-1..6 rectangle and optional selected-group publication.
+[Consolidated acceptance](docs/sc4-final-acceptance.md) binds automated native,
+connected-peer and packaged-engine receipts to verified production bytes.
+This remains alpha: finite llvmpipe observations are not hardware FPS, universal
+real-time guarantees or user manual/aesthetic approval.
 
 Project source is [MIT licensed](LICENSE). Pinned Phobos parser source retains
 [its license](vendor/phobos/LICENSE.txt), [notice](vendor/phobos/NOTICE.md) and

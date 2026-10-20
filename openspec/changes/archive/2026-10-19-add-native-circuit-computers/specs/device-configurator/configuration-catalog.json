@@ -1,0 +1,2693 @@
+{
+  "format_version": 1,
+  "purpose": "Pinned source inventory for the device-configurator specification; not a production adapter or an implementation claim",
+  "source": {
+    "url": "https://lua-api.factorio.com/2.0.77/runtime-api.json",
+    "application_version": "2.0.77",
+    "api_version": 6,
+    "sha256": "594b4ec98cc5fbee322d7380db49a388ab38b0d69c06f00ead877cffbb37f578"
+  },
+  "scope": "All native circuit-control behavior classes, inherited writable fields, equivalent collection operations, and constant-combinator manual sections",
+  "counts": {
+    "behavior_classes": 36,
+    "effective_writable_field_entries": 164,
+    "concepts": 29,
+    "enum_groups": 10
+  },
+  "behaviors": [
+    {
+      "class": "LuaAccumulatorControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "output_signal",
+          "declared_in": "LuaAccumulatorControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "read_charge",
+          "declared_in": "LuaAccumulatorControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaAgriculturalTowerControlBehavior",
+      "parent": "LuaGenericOnOffControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "circuit_enable_disable",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "connect_to_logistic_network",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "logistic_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "read_contents",
+          "declared_in": "LuaAgriculturalTowerControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaArithmeticCombinatorControlBehavior",
+      "parent": "LuaCombinatorControlBehavior",
+      "writable_fields": [
+        {
+          "name": "parameters",
+          "declared_in": "LuaArithmeticCombinatorControlBehavior",
+          "read_type": "ArithmeticCombinatorParameters",
+          "write_type": "ArithmeticCombinatorParameters",
+          "optional": true
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaArtilleryTurretControlBehavior",
+      "parent": "LuaGenericOnOffControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "circuit_enable_disable",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "connect_to_logistic_network",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "logistic_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "read_ammo",
+          "declared_in": "LuaArtilleryTurretControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaAssemblingMachineControlBehavior",
+      "parent": "LuaGenericOnOffControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "circuit_enable_disable",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_read_contents",
+          "declared_in": "LuaAssemblingMachineControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_read_ingredients",
+          "declared_in": "LuaAssemblingMachineControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_read_recipe_finished",
+          "declared_in": "LuaAssemblingMachineControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_read_working",
+          "declared_in": "LuaAssemblingMachineControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_recipe_finished_signal",
+          "declared_in": "LuaAssemblingMachineControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "circuit_set_recipe",
+          "declared_in": "LuaAssemblingMachineControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_working_signal",
+          "declared_in": "LuaAssemblingMachineControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "connect_to_logistic_network",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "include_fuel",
+          "declared_in": "LuaAssemblingMachineControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "include_in_crafting",
+          "declared_in": "LuaAssemblingMachineControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "logistic_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaAsteroidCollectorControlBehavior",
+      "parent": "LuaGenericOnOffControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "circuit_enable_disable",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "connect_to_logistic_network",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "include_hands",
+          "declared_in": "LuaAsteroidCollectorControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "logistic_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "read_content",
+          "declared_in": "LuaAsteroidCollectorControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "set_filter",
+          "declared_in": "LuaAsteroidCollectorControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaCargoLandingPadControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_exclusive_mode_of_operation",
+          "declared_in": "LuaCargoLandingPadControlBehavior",
+          "read_type": "defines.control_behavior.cargo_landing_pad.exclusive_mode",
+          "write_type": "defines.control_behavior.cargo_landing_pad.exclusive_mode",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaCombinatorControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [],
+      "native_methods": [
+        {
+          "name": "get_signal_last_tick",
+          "parameters": [
+            {
+              "name": "signal",
+              "type": "SignalID",
+              "optional": false
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": [
+            {
+              "type": "int32",
+              "optional": true
+            }
+          ]
+        }
+      ],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaConstantCombinatorControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "enabled",
+          "declared_in": "LuaConstantCombinatorControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        }
+      ],
+      "native_methods": [
+        {
+          "name": "add_section",
+          "parameters": [
+            {
+              "name": "group",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": [
+            {
+              "type": "LuaLogisticSection",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "get_section",
+          "parameters": [
+            {
+              "name": "section_index",
+              "type": "uint32",
+              "optional": false
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": [
+            {
+              "type": "LuaLogisticSection",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "remove_section",
+          "parameters": [
+            {
+              "name": "section_index",
+              "type": "uint32",
+              "optional": false
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": [
+            {
+              "type": "boolean",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "section_adapter": true
+    },
+    {
+      "class": "LuaContainerControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "read_contents",
+          "declared_in": "LuaContainerControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaControlBehavior",
+      "parent": null,
+      "writable_fields": [],
+      "native_methods": [
+        {
+          "name": "get_circuit_network",
+          "parameters": [
+            {
+              "name": "wire_connector_id",
+              "type": "defines.wire_connector_id",
+              "optional": false
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": [
+            {
+              "type": "LuaCircuitNetwork",
+              "optional": true
+            }
+          ]
+        }
+      ],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaDeciderCombinatorControlBehavior",
+      "parent": "LuaCombinatorControlBehavior",
+      "writable_fields": [
+        {
+          "name": "parameters",
+          "declared_in": "LuaDeciderCombinatorControlBehavior",
+          "read_type": "DeciderCombinatorParameters",
+          "write_type": "DeciderCombinatorParameters",
+          "optional": true
+        }
+      ],
+      "native_methods": [
+        {
+          "name": "add_condition",
+          "parameters": [
+            {
+              "name": "condition",
+              "type": "DeciderCombinatorCondition",
+              "optional": false
+            },
+            {
+              "name": "index",
+              "type": "uint32",
+              "optional": true
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": []
+        },
+        {
+          "name": "add_output",
+          "parameters": [
+            {
+              "name": "index",
+              "type": "uint32",
+              "optional": true
+            },
+            {
+              "name": "output",
+              "type": "DeciderCombinatorOutput",
+              "optional": false
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": []
+        },
+        {
+          "name": "get_condition",
+          "parameters": [
+            {
+              "name": "index",
+              "type": "uint32",
+              "optional": false
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": [
+            {
+              "type": "DeciderCombinatorCondition",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "get_output",
+          "parameters": [
+            {
+              "name": "index",
+              "type": "uint32",
+              "optional": false
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": [
+            {
+              "type": "DeciderCombinatorOutput",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "remove_condition",
+          "parameters": [
+            {
+              "name": "index",
+              "type": "uint32",
+              "optional": false
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": []
+        },
+        {
+          "name": "remove_output",
+          "parameters": [
+            {
+              "name": "index",
+              "type": "uint32",
+              "optional": false
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": []
+        },
+        {
+          "name": "set_condition",
+          "parameters": [
+            {
+              "name": "condition",
+              "type": "DeciderCombinatorCondition",
+              "optional": false
+            },
+            {
+              "name": "index",
+              "type": "uint32",
+              "optional": false
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": []
+        },
+        {
+          "name": "set_output",
+          "parameters": [
+            {
+              "name": "index",
+              "type": "uint32",
+              "optional": false
+            },
+            {
+              "name": "output",
+              "type": "DeciderCombinatorOutput",
+              "optional": false
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": []
+        }
+      ],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaDisplayPanelControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "messages",
+          "declared_in": "LuaDisplayPanelControlBehavior",
+          "read_type": {
+            "complex_type": "array",
+            "value": "DisplayPanelMessageDefinition"
+          },
+          "write_type": {
+            "complex_type": "array",
+            "value": "DisplayPanelMessageDefinition"
+          },
+          "optional": false
+        }
+      ],
+      "native_methods": [
+        {
+          "name": "get_message",
+          "parameters": [
+            {
+              "name": "index",
+              "type": "uint32",
+              "optional": false
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": [
+            {
+              "type": "DisplayPanelMessageDefinition",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "set_message",
+          "parameters": [
+            {
+              "name": "index",
+              "type": "int32",
+              "optional": false
+            },
+            {
+              "name": "message",
+              "type": {
+                "complex_type": "union",
+                "options": [
+                  "DisplayPanelMessageDefinition",
+                  "nil"
+                ],
+                "full_format": false
+              },
+              "optional": false
+            }
+          ],
+          "format": {
+            "takes_table": false
+          },
+          "return_values": []
+        }
+      ],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaFurnaceControlBehavior",
+      "parent": "LuaGenericOnOffControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "circuit_enable_disable",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_read_contents",
+          "declared_in": "LuaFurnaceControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_read_ingredients",
+          "declared_in": "LuaFurnaceControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_read_recipe_finished",
+          "declared_in": "LuaFurnaceControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_read_working",
+          "declared_in": "LuaFurnaceControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_recipe_finished_signal",
+          "declared_in": "LuaFurnaceControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "circuit_working_signal",
+          "declared_in": "LuaFurnaceControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "connect_to_logistic_network",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "include_fuel",
+          "declared_in": "LuaFurnaceControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "include_in_crafting",
+          "declared_in": "LuaFurnaceControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "logistic_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaGenericOnOffControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "circuit_enable_disable",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "connect_to_logistic_network",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "logistic_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaInserterControlBehavior",
+      "parent": "LuaGenericOnOffControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "circuit_enable_disable",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_hand_read_mode",
+          "declared_in": "LuaInserterControlBehavior",
+          "read_type": "defines.control_behavior.inserter.hand_read_mode",
+          "write_type": "defines.control_behavior.inserter.hand_read_mode",
+          "optional": false
+        },
+        {
+          "name": "circuit_read_hand_contents",
+          "declared_in": "LuaInserterControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_set_filters",
+          "declared_in": "LuaInserterControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_set_stack_size",
+          "declared_in": "LuaInserterControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_stack_control_signal",
+          "declared_in": "LuaInserterControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "connect_to_logistic_network",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "logistic_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaLampControlBehavior",
+      "parent": "LuaGenericOnOffControlBehavior",
+      "writable_fields": [
+        {
+          "name": "blue_signal",
+          "declared_in": "LuaLampControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "circuit_enable_disable",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "color_mode",
+          "declared_in": "LuaLampControlBehavior",
+          "read_type": "defines.control_behavior.lamp.color_mode",
+          "write_type": "defines.control_behavior.lamp.color_mode",
+          "optional": false
+        },
+        {
+          "name": "connect_to_logistic_network",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "green_signal",
+          "declared_in": "LuaLampControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "logistic_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "red_signal",
+          "declared_in": "LuaLampControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "rgb_signal",
+          "declared_in": "LuaLampControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "use_colors",
+          "declared_in": "LuaLampControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaLoaderControlBehavior",
+      "parent": "LuaGenericOnOffControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "circuit_enable_disable",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_read_transfers",
+          "declared_in": "LuaLoaderControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_set_filters",
+          "declared_in": "LuaLoaderControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "connect_to_logistic_network",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "logistic_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaLogisticContainerControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaLogisticContainerControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": false
+        },
+        {
+          "name": "circuit_condition_enabled",
+          "declared_in": "LuaLogisticContainerControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_exclusive_mode_of_operation",
+          "declared_in": "LuaLogisticContainerControlBehavior",
+          "read_type": "defines.control_behavior.logistic_container.exclusive_mode",
+          "write_type": "defines.control_behavior.logistic_container.exclusive_mode",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaMiningDrillControlBehavior",
+      "parent": "LuaGenericOnOffControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "circuit_enable_disable",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "circuit_read_resources",
+          "declared_in": "LuaMiningDrillControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "connect_to_logistic_network",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "logistic_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "resource_read_mode",
+          "declared_in": "LuaMiningDrillControlBehavior",
+          "read_type": "defines.control_behavior.mining_drill.resource_read_mode",
+          "write_type": "defines.control_behavior.mining_drill.resource_read_mode",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaProgrammableSpeakerControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaProgrammableSpeakerControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": false
+        },
+        {
+          "name": "circuit_parameters",
+          "declared_in": "LuaProgrammableSpeakerControlBehavior",
+          "read_type": "ProgrammableSpeakerCircuitParameters",
+          "write_type": "ProgrammableSpeakerCircuitParameters",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaProxyContainerControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "read_contents",
+          "declared_in": "LuaProxyContainerControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaPumpControlBehavior",
+      "parent": "LuaGenericOnOffControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "circuit_enable_disable",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "connect_to_logistic_network",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "logistic_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "set_filter",
+          "declared_in": "LuaPumpControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaRadarControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaRailSignalBaseControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "blue_signal",
+          "declared_in": "LuaRailSignalBaseControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaRailSignalBaseControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": false
+        },
+        {
+          "name": "close_signal",
+          "declared_in": "LuaRailSignalBaseControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "green_signal",
+          "declared_in": "LuaRailSignalBaseControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "orange_signal",
+          "declared_in": "LuaRailSignalBaseControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "read_signal",
+          "declared_in": "LuaRailSignalBaseControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "red_signal",
+          "declared_in": "LuaRailSignalBaseControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaReactorControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "read_fuel",
+          "declared_in": "LuaReactorControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "read_temperature",
+          "declared_in": "LuaReactorControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "temperature_signal",
+          "declared_in": "LuaReactorControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaRoboportControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "available_construction_output_signal",
+          "declared_in": "LuaRoboportControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "available_logistic_output_signal",
+          "declared_in": "LuaRoboportControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "read_items_mode",
+          "declared_in": "LuaRoboportControlBehavior",
+          "read_type": "defines.control_behavior.roboport.read_items_mode",
+          "write_type": "defines.control_behavior.roboport.read_items_mode",
+          "optional": false
+        },
+        {
+          "name": "read_logistics",
+          "declared_in": "LuaRoboportControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "read_robot_stats",
+          "declared_in": "LuaRoboportControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "roboport_count_output_signal",
+          "declared_in": "LuaRoboportControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "total_construction_output_signal",
+          "declared_in": "LuaRoboportControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "total_logistic_output_signal",
+          "declared_in": "LuaRoboportControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaRocketSiloControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "read_mode",
+          "declared_in": "LuaRocketSiloControlBehavior",
+          "read_type": "defines.control_behavior.rocket_silo.read_mode",
+          "write_type": "defines.control_behavior.rocket_silo.read_mode",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaSelectorCombinatorControlBehavior",
+      "parent": "LuaCombinatorControlBehavior",
+      "writable_fields": [
+        {
+          "name": "parameters",
+          "declared_in": "LuaSelectorCombinatorControlBehavior",
+          "read_type": "SelectorCombinatorParameters",
+          "write_type": "SelectorCombinatorParameters",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaSpacePlatformHubControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "damage_taken_signal",
+          "declared_in": "LuaSpacePlatformHubControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "read_contents",
+          "declared_in": "LuaSpacePlatformHubControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "read_damage_taken",
+          "declared_in": "LuaSpacePlatformHubControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "read_moving_from",
+          "declared_in": "LuaSpacePlatformHubControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "read_moving_to",
+          "declared_in": "LuaSpacePlatformHubControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "read_speed",
+          "declared_in": "LuaSpacePlatformHubControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "send_to_platform",
+          "declared_in": "LuaSpacePlatformHubControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "speed_signal",
+          "declared_in": "LuaSpacePlatformHubControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaSplitterControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "input_left_condition",
+          "declared_in": "LuaSplitterControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": false
+        },
+        {
+          "name": "input_right_condition",
+          "declared_in": "LuaSplitterControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": false
+        },
+        {
+          "name": "output_left_condition",
+          "declared_in": "LuaSplitterControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": false
+        },
+        {
+          "name": "output_right_condition",
+          "declared_in": "LuaSplitterControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": false
+        },
+        {
+          "name": "set_filter",
+          "declared_in": "LuaSplitterControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "set_input_side",
+          "declared_in": "LuaSplitterControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "set_output_side",
+          "declared_in": "LuaSplitterControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaStorageTankControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "read_contents",
+          "declared_in": "LuaStorageTankControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaTrainStopControlBehavior",
+      "parent": "LuaGenericOnOffControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "circuit_enable_disable",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "connect_to_logistic_network",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "logistic_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "priority_signal",
+          "declared_in": "LuaTrainStopControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "read_from_train",
+          "declared_in": "LuaTrainStopControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "read_stopped_train",
+          "declared_in": "LuaTrainStopControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "read_trains_count",
+          "declared_in": "LuaTrainStopControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "send_to_train",
+          "declared_in": "LuaTrainStopControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "set_priority",
+          "declared_in": "LuaTrainStopControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "set_trains_limit",
+          "declared_in": "LuaTrainStopControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "stopped_train_signal",
+          "declared_in": "LuaTrainStopControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "trains_count_signal",
+          "declared_in": "LuaTrainStopControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "trains_limit_signal",
+          "declared_in": "LuaTrainStopControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaTransportBeltControlBehavior",
+      "parent": "LuaGenericOnOffControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "circuit_enable_disable",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "connect_to_logistic_network",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "logistic_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "read_contents",
+          "declared_in": "LuaTransportBeltControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "read_contents_mode",
+          "declared_in": "LuaTransportBeltControlBehavior",
+          "read_type": "defines.control_behavior.transport_belt.content_read_mode",
+          "write_type": "defines.control_behavior.transport_belt.content_read_mode",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaTurretControlBehavior",
+      "parent": "LuaGenericOnOffControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "circuit_enable_disable",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "connect_to_logistic_network",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "ignore_unlisted_targets_condition",
+          "declared_in": "LuaTurretControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": false
+        },
+        {
+          "name": "logistic_condition",
+          "declared_in": "LuaGenericOnOffControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": true
+        },
+        {
+          "name": "read_ammo",
+          "declared_in": "LuaTurretControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "set_ignore_unlisted_targets",
+          "declared_in": "LuaTurretControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "set_priority_list",
+          "declared_in": "LuaTurretControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    },
+    {
+      "class": "LuaWallControlBehavior",
+      "parent": "LuaControlBehavior",
+      "writable_fields": [
+        {
+          "name": "circuit_condition",
+          "declared_in": "LuaWallControlBehavior",
+          "read_type": "CircuitConditionDefinition",
+          "write_type": "CircuitConditionDefinition",
+          "optional": false
+        },
+        {
+          "name": "open_gate",
+          "declared_in": "LuaWallControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "output_signal",
+          "declared_in": "LuaWallControlBehavior",
+          "read_type": "SignalID",
+          "write_type": "SignalID",
+          "optional": true
+        },
+        {
+          "name": "read_sensor",
+          "declared_in": "LuaWallControlBehavior",
+          "read_type": "boolean",
+          "write_type": "boolean",
+          "optional": false
+        }
+      ],
+      "native_methods": [],
+      "section_adapter": false
+    }
+  ],
+  "constant_combinator_sections": {
+    "fields": [
+      {
+        "name": "active",
+        "read_type": "boolean",
+        "write_type": "boolean",
+        "optional": false
+      },
+      {
+        "name": "filters",
+        "read_type": {
+          "complex_type": "array",
+          "value": "LogisticFilter"
+        },
+        "write_type": {
+          "complex_type": "array",
+          "value": "LogisticFilter"
+        },
+        "optional": false
+      },
+      {
+        "name": "filters_count",
+        "read_type": "uint32",
+        "write_type": null,
+        "optional": false
+      },
+      {
+        "name": "group",
+        "read_type": "string",
+        "write_type": "string",
+        "optional": false
+      },
+      {
+        "name": "index",
+        "read_type": "uint32",
+        "write_type": null,
+        "optional": false
+      },
+      {
+        "name": "is_manual",
+        "read_type": "boolean",
+        "write_type": null,
+        "optional": false
+      },
+      {
+        "name": "multiplier",
+        "read_type": "float",
+        "write_type": "float",
+        "optional": false
+      },
+      {
+        "name": "type",
+        "read_type": "defines.logistic_section_type",
+        "write_type": null,
+        "optional": false
+      }
+    ],
+    "native_methods": [
+      {
+        "name": "clear_slot",
+        "parameters": [
+          {
+            "name": "slot_index",
+            "type": "LogisticFilterIndex",
+            "optional": false
+          }
+        ],
+        "format": {
+          "takes_table": false
+        },
+        "return_values": []
+      },
+      {
+        "name": "get_slot",
+        "parameters": [
+          {
+            "name": "slot_index",
+            "type": "LogisticFilterIndex",
+            "optional": false
+          }
+        ],
+        "format": {
+          "takes_table": false
+        },
+        "return_values": [
+          {
+            "type": "LogisticFilter",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "set_slot",
+        "raises": [
+          {
+            "name": "on_entity_logistic_slot_changed",
+            "timeframe": "instantly",
+            "optional": true
+          }
+        ],
+        "parameters": [
+          {
+            "name": "filter",
+            "type": "LogisticFilter",
+            "optional": false
+          },
+          {
+            "name": "slot_index",
+            "type": "LogisticFilterIndex",
+            "optional": false
+          }
+        ],
+        "format": {
+          "takes_table": false
+        },
+        "return_values": [
+          {
+            "type": "LogisticFilterIndex",
+            "optional": true
+          }
+        ]
+      }
+    ]
+  },
+  "concepts": {
+    "ArithmeticCombinatorParameterOperation": {
+      "name": "ArithmeticCombinatorParameterOperation",
+      "type": {
+        "complex_type": "union",
+        "options": [
+          {
+            "complex_type": "literal",
+            "value": "*"
+          },
+          {
+            "complex_type": "literal",
+            "value": "/"
+          },
+          {
+            "complex_type": "literal",
+            "value": "+"
+          },
+          {
+            "complex_type": "literal",
+            "value": "-"
+          },
+          {
+            "complex_type": "literal",
+            "value": "%"
+          },
+          {
+            "complex_type": "literal",
+            "value": "^"
+          },
+          {
+            "complex_type": "literal",
+            "value": "<<"
+          },
+          {
+            "complex_type": "literal",
+            "value": ">>"
+          },
+          {
+            "complex_type": "literal",
+            "value": "AND"
+          },
+          {
+            "complex_type": "literal",
+            "value": "OR"
+          },
+          {
+            "complex_type": "literal",
+            "value": "XOR"
+          }
+        ],
+        "full_format": true
+      }
+    },
+    "ArithmeticCombinatorParameters": {
+      "name": "ArithmeticCombinatorParameters",
+      "type": {
+        "complex_type": "table",
+        "parameters": [
+          {
+            "name": "first_constant",
+            "type": "int32",
+            "optional": true
+          },
+          {
+            "name": "first_signal",
+            "type": "SignalID",
+            "optional": true
+          },
+          {
+            "name": "first_signal_networks",
+            "type": "CircuitNetworkSelection",
+            "optional": true
+          },
+          {
+            "name": "operation",
+            "type": "ArithmeticCombinatorParameterOperation",
+            "optional": true
+          },
+          {
+            "name": "output_signal",
+            "type": "SignalID",
+            "optional": true
+          },
+          {
+            "name": "second_constant",
+            "type": "int32",
+            "optional": true
+          },
+          {
+            "name": "second_signal",
+            "type": "SignalID",
+            "optional": true
+          },
+          {
+            "name": "second_signal_networks",
+            "type": "CircuitNetworkSelection",
+            "optional": true
+          }
+        ]
+      }
+    },
+    "BlueprintQualityID": {
+      "name": "BlueprintQualityID",
+      "type": {
+        "complex_type": "table",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "optional": true
+          }
+        ]
+      }
+    },
+    "CircuitConditionDefinition": {
+      "name": "CircuitConditionDefinition",
+      "type": {
+        "complex_type": "table",
+        "parameters": [
+          {
+            "name": "comparator",
+            "type": "ComparatorString",
+            "optional": true
+          },
+          {
+            "name": "constant",
+            "type": "int32",
+            "optional": true
+          },
+          {
+            "name": "first_signal",
+            "type": "SignalID",
+            "optional": true
+          },
+          {
+            "name": "fulfilled",
+            "type": "boolean",
+            "optional": true
+          },
+          {
+            "name": "second_signal",
+            "type": "SignalID",
+            "optional": true
+          }
+        ]
+      }
+    },
+    "CircuitNetworkSelection": {
+      "name": "CircuitNetworkSelection",
+      "type": {
+        "complex_type": "table",
+        "parameters": [
+          {
+            "name": "green",
+            "type": "boolean",
+            "optional": true
+          },
+          {
+            "name": "red",
+            "type": "boolean",
+            "optional": true
+          }
+        ]
+      }
+    },
+    "ComparatorString": {
+      "name": "ComparatorString",
+      "type": {
+        "complex_type": "union",
+        "options": [
+          {
+            "complex_type": "literal",
+            "value": "="
+          },
+          {
+            "complex_type": "literal",
+            "value": ">"
+          },
+          {
+            "complex_type": "literal",
+            "value": "<"
+          },
+          {
+            "complex_type": "literal",
+            "value": "≥"
+          },
+          {
+            "complex_type": "literal",
+            "value": ">="
+          },
+          {
+            "complex_type": "literal",
+            "value": "≤"
+          },
+          {
+            "complex_type": "literal",
+            "value": "<="
+          },
+          {
+            "complex_type": "literal",
+            "value": "≠"
+          },
+          {
+            "complex_type": "literal",
+            "value": "!="
+          }
+        ],
+        "full_format": true
+      }
+    },
+    "DeciderCombinatorCondition": {
+      "name": "DeciderCombinatorCondition",
+      "type": {
+        "complex_type": "table",
+        "parameters": [
+          {
+            "name": "comparator",
+            "type": "ComparatorString",
+            "optional": true
+          },
+          {
+            "name": "compare_type",
+            "type": {
+              "complex_type": "union",
+              "options": [
+                {
+                  "complex_type": "literal",
+                  "value": "and"
+                },
+                {
+                  "complex_type": "literal",
+                  "value": "or"
+                }
+              ],
+              "full_format": false
+            },
+            "optional": true
+          },
+          {
+            "name": "constant",
+            "type": "int32",
+            "optional": true
+          },
+          {
+            "name": "first_signal",
+            "type": "SignalID",
+            "optional": true
+          },
+          {
+            "name": "first_signal_networks",
+            "type": "CircuitNetworkSelection",
+            "optional": true
+          },
+          {
+            "name": "second_signal",
+            "type": "SignalID",
+            "optional": true
+          },
+          {
+            "name": "second_signal_networks",
+            "type": "CircuitNetworkSelection",
+            "optional": true
+          }
+        ]
+      }
+    },
+    "DeciderCombinatorOutput": {
+      "name": "DeciderCombinatorOutput",
+      "type": {
+        "complex_type": "table",
+        "parameters": [
+          {
+            "name": "constant",
+            "type": "int32",
+            "optional": true
+          },
+          {
+            "name": "copy_count_from_input",
+            "type": "boolean",
+            "optional": true
+          },
+          {
+            "name": "networks",
+            "type": "CircuitNetworkSelection",
+            "optional": true
+          },
+          {
+            "name": "signal",
+            "type": "SignalID",
+            "optional": false
+          }
+        ]
+      }
+    },
+    "DeciderCombinatorParameters": {
+      "name": "DeciderCombinatorParameters",
+      "type": {
+        "complex_type": "table",
+        "parameters": [
+          {
+            "name": "conditions",
+            "type": {
+              "complex_type": "array",
+              "value": "DeciderCombinatorCondition"
+            },
+            "optional": false
+          },
+          {
+            "name": "outputs",
+            "type": {
+              "complex_type": "array",
+              "value": "DeciderCombinatorOutput"
+            },
+            "optional": false
+          }
+        ]
+      }
+    },
+    "DisplayPanelMessageDefinition": {
+      "name": "DisplayPanelMessageDefinition",
+      "type": {
+        "complex_type": "table",
+        "parameters": [
+          {
+            "name": "condition",
+            "type": "CircuitConditionDefinition",
+            "optional": false
+          },
+          {
+            "name": "icon",
+            "type": "SignalID",
+            "optional": false
+          },
+          {
+            "name": "text",
+            "type": "string",
+            "optional": false
+          }
+        ]
+      }
+    },
+    "ItemCountType": {
+      "name": "ItemCountType",
+      "type": "uint32"
+    },
+    "LogisticFilter": {
+      "name": "LogisticFilter",
+      "type": {
+        "complex_type": "table",
+        "parameters": [
+          {
+            "name": "import_from",
+            "type": "SpaceLocationID",
+            "optional": true
+          },
+          {
+            "name": "max",
+            "type": "ItemCountType",
+            "optional": true
+          },
+          {
+            "name": "min",
+            "type": "int32",
+            "optional": true
+          },
+          {
+            "name": "minimum_delivery_count",
+            "type": "ItemCountType",
+            "optional": true
+          },
+          {
+            "name": "value",
+            "type": "SignalFilter",
+            "optional": true
+          }
+        ]
+      }
+    },
+    "ProgrammableSpeakerCircuitParameters": {
+      "name": "ProgrammableSpeakerCircuitParameters",
+      "type": {
+        "complex_type": "table",
+        "parameters": [
+          {
+            "name": "instrument_id",
+            "type": "uint32",
+            "optional": false
+          },
+          {
+            "name": "note_id",
+            "type": "uint32",
+            "optional": false
+          },
+          {
+            "name": "signal_value_is_pitch",
+            "type": "boolean",
+            "optional": false
+          },
+          {
+            "name": "stop_playing_sounds",
+            "type": "boolean",
+            "optional": false
+          }
+        ]
+      }
+    },
+    "QualityCondition": {
+      "name": "QualityCondition",
+      "type": {
+        "complex_type": "union",
+        "options": [
+          {
+            "complex_type": "table",
+            "parameters": [
+              {
+                "name": "comparator",
+                "type": "ComparatorString",
+                "optional": true
+              },
+              {
+                "name": "quality",
+                "type": "string",
+                "optional": true
+              }
+            ]
+          },
+          "string"
+        ],
+        "full_format": false
+      }
+    },
+    "QualityID": {
+      "name": "QualityID",
+      "type": {
+        "complex_type": "union",
+        "options": [
+          {
+            "complex_type": "type",
+            "value": "LuaQualityPrototype"
+          },
+          {
+            "complex_type": "type",
+            "value": "string"
+          }
+        ],
+        "full_format": true
+      }
+    },
+    "SelectorCombinatorParameterOperation": {
+      "name": "SelectorCombinatorParameterOperation",
+      "type": {
+        "complex_type": "union",
+        "options": [
+          {
+            "complex_type": "literal",
+            "value": "select"
+          },
+          {
+            "complex_type": "literal",
+            "value": "count"
+          },
+          {
+            "complex_type": "literal",
+            "value": "random"
+          },
+          {
+            "complex_type": "literal",
+            "value": "quality-transfer"
+          },
+          {
+            "complex_type": "literal",
+            "value": "rocket-capacity"
+          },
+          {
+            "complex_type": "literal",
+            "value": "stack-size"
+          },
+          {
+            "complex_type": "literal",
+            "value": "quality-filter"
+          }
+        ],
+        "full_format": true
+      }
+    },
+    "SelectorCombinatorParameters": {
+      "name": "SelectorCombinatorParameters",
+      "type": {
+        "complex_type": "table",
+        "parameters": [
+          {
+            "name": "operation",
+            "type": "SelectorCombinatorParameterOperation",
+            "optional": true
+          }
+        ],
+        "variant_parameter_groups": [
+          {
+            "name": "count",
+            "parameters": [
+              {
+                "name": "count_signal",
+                "type": "SignalID",
+                "optional": true
+              }
+            ]
+          },
+          {
+            "name": "quality-filter",
+            "parameters": [
+              {
+                "name": "quality_filter",
+                "type": "QualityCondition",
+                "optional": true
+              }
+            ]
+          },
+          {
+            "name": "quality-transfer",
+            "parameters": [
+              {
+                "name": "quality_destination_signal",
+                "type": "SignalID",
+                "optional": false
+              },
+              {
+                "name": "quality_source_signal",
+                "type": "SignalIDBase",
+                "optional": true
+              },
+              {
+                "name": "quality_source_static",
+                "type": "BlueprintQualityID",
+                "optional": true
+              },
+              {
+                "name": "select_quality_from_signal",
+                "type": "boolean",
+                "optional": true
+              }
+            ]
+          },
+          {
+            "name": "random",
+            "parameters": [
+              {
+                "name": "random_update_interval",
+                "type": "uint32",
+                "optional": true
+              }
+            ]
+          },
+          {
+            "name": "select",
+            "parameters": [
+              {
+                "name": "index_constant",
+                "type": "int32",
+                "optional": true
+              },
+              {
+                "name": "index_signal",
+                "type": "SignalID",
+                "optional": true
+              },
+              {
+                "name": "select_max",
+                "type": "boolean",
+                "optional": true
+              }
+            ]
+          }
+        ],
+        "variant_parameter_description": "Other attributes may be specified depending on `operation`:"
+      }
+    },
+    "SignalFilter": {
+      "name": "SignalFilter",
+      "type": {
+        "complex_type": "union",
+        "options": [
+          {
+            "complex_type": "table",
+            "parameters": [
+              {
+                "name": "comparator",
+                "type": "ComparatorString",
+                "optional": true
+              },
+              {
+                "name": "name",
+                "type": "string",
+                "optional": false
+              },
+              {
+                "name": "quality",
+                "type": "QualityID",
+                "optional": true
+              },
+              {
+                "name": "type",
+                "type": "SignalIDType",
+                "optional": true
+              }
+            ]
+          },
+          "string"
+        ],
+        "full_format": false
+      }
+    },
+    "SignalID": {
+      "name": "SignalID",
+      "type": {
+        "complex_type": "table",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "optional": true
+          },
+          {
+            "name": "quality",
+            "type": "QualityID",
+            "optional": true
+          },
+          {
+            "name": "type",
+            "type": "SignalIDType",
+            "optional": true
+          }
+        ]
+      }
+    },
+    "SignalIDBase": {
+      "name": "SignalIDBase",
+      "type": {
+        "complex_type": "table",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "optional": true
+          },
+          {
+            "name": "type",
+            "type": "SignalIDType",
+            "optional": true
+          }
+        ]
+      }
+    },
+    "SignalIDType": {
+      "name": "SignalIDType",
+      "type": {
+        "complex_type": "union",
+        "options": [
+          {
+            "complex_type": "literal",
+            "value": "item"
+          },
+          {
+            "complex_type": "literal",
+            "value": "fluid"
+          },
+          {
+            "complex_type": "literal",
+            "value": "virtual"
+          },
+          {
+            "complex_type": "literal",
+            "value": "entity"
+          },
+          {
+            "complex_type": "literal",
+            "value": "recipe"
+          },
+          {
+            "complex_type": "literal",
+            "value": "space-location"
+          },
+          {
+            "complex_type": "literal",
+            "value": "asteroid-chunk"
+          },
+          {
+            "complex_type": "literal",
+            "value": "quality"
+          }
+        ],
+        "full_format": true
+      }
+    },
+    "SpaceLocationID": {
+      "name": "SpaceLocationID",
+      "type": {
+        "complex_type": "union",
+        "options": [
+          {
+            "complex_type": "type",
+            "value": "LuaSpaceLocationPrototype"
+          },
+          {
+            "complex_type": "type",
+            "value": "string"
+          }
+        ],
+        "full_format": true
+      }
+    },
+    "boolean": {
+      "name": "boolean",
+      "type": {
+        "complex_type": "builtin"
+      }
+    },
+    "float": {
+      "name": "float",
+      "type": {
+        "complex_type": "builtin"
+      }
+    },
+    "int32": {
+      "name": "int32",
+      "type": {
+        "complex_type": "builtin"
+      }
+    },
+    "nil": {
+      "name": "nil",
+      "type": {
+        "complex_type": "builtin"
+      }
+    },
+    "string": {
+      "name": "string",
+      "type": {
+        "complex_type": "builtin"
+      }
+    },
+    "table": {
+      "name": "table",
+      "type": {
+        "complex_type": "builtin"
+      }
+    },
+    "uint32": {
+      "name": "uint32",
+      "type": {
+        "complex_type": "builtin"
+      }
+    }
+  },
+  "enum_values": {
+    "defines.control_behavior.cargo_landing_pad.exclusive_mode": [
+      "none",
+      "send_contents",
+      "set_requests"
+    ],
+    "defines.control_behavior.inserter.hand_read_mode": [
+      "hold",
+      "pulse"
+    ],
+    "defines.control_behavior.lamp.color_mode": [
+      "color_mapping",
+      "components",
+      "packed_rgb"
+    ],
+    "defines.control_behavior.logistic_container.exclusive_mode": [
+      "none",
+      "send_contents",
+      "set_requests"
+    ],
+    "defines.control_behavior.mining_drill.resource_read_mode": [
+      "entire_patch",
+      "this_miner"
+    ],
+    "defines.control_behavior.roboport.read_items_mode": [
+      "logistics",
+      "missing_requests",
+      "none"
+    ],
+    "defines.control_behavior.rocket_silo.read_mode": [
+      "logistic_inventory",
+      "none",
+      "orbital_requests"
+    ],
+    "defines.control_behavior.transport_belt.content_read_mode": [
+      "entire_belt_hold",
+      "hold",
+      "pulse"
+    ],
+    "defines.logistic_section_type": [
+      "circuit_controlled",
+      "manual",
+      "request_missing_materials_controlled",
+      "transitional_request_controlled"
+    ],
+    "defines.wire_connector_id": [
+      "circuit_green",
+      "circuit_red",
+      "combinator_input_green",
+      "combinator_input_red",
+      "combinator_output_green",
+      "combinator_output_red",
+      "pole_copper",
+      "power_switch_left_copper",
+      "power_switch_right_copper"
+    ]
+  },
+  "object_reference_types": [
+    "LuaQualityPrototype",
+    "LuaSpaceLocationPrototype"
+  ],
+  "guest_normalization": {
+    "object_references": "Never expose LuaObjects. Prototype identity unions accept prototype-name strings only; concepts containing objects require an explicit plain-data adapter before release.",
+    "enums": "Guest enum values use names from enum_values, never engine numeric ordinals.",
+    "optional_reads": "Report present/unset/unsupported separately through configuration snapshots.",
+    "fulfilled": "Read-only evaluated condition output; rejected in writes.",
+    "unknown_fields": "Reject before mutation.",
+    "shared_sections": "Manual-only edits; shared-group contents outside the target authority are refused. Explicitly detach to local settings before editing.",
+    "method_equivalence": "Decider parameter operations and display-message methods are covered by validated complete parameters/messages replacement. Circuit reads are not configuration setters."
+  }
+}

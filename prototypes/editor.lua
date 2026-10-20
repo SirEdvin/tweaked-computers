@@ -19,5 +19,11 @@ data:extend{
   -- Context guards run after delivery: never swallow native transfers or latch
   -- Ctrl until release, even when the world interaction is ignored by Lua.
   {type='custom-input',name='tc-interact',key_sequence='CONTROL + mouse-button-1',
-    action='lua',consuming='none',block_modifiers=false,include_selected_prototype=false}
+    action='lua',consuming='none',block_modifiers=false,include_selected_prototype=false},
+  -- Inoperable native shells cannot receive vanilla player rotation. Forward
+  -- only owned bodies through the native rotate method without opening their UI.
+  {type='custom-input',name='tc-rotate',key_sequence='',linked_game_control='rotate',
+    action='lua',consuming='none',block_modifiers=false},
+  {type='custom-input',name='tc-reverse-rotate',key_sequence='',linked_game_control='reverse-rotate',
+    action='lua',consuming='none',block_modifiers=false}
 }

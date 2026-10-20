@@ -146,7 +146,7 @@ python tools/configuration_catalog.py --check
 python tools/player_docs.py --check --site "$WORK/site" --report "$WORK/docs.json"
 python -m mkdocs build --strict --site-dir "$WORK/site"
 python assets/check.py --output "$WORK/art-check"
-npm exec --yes --package=@fission-ai/openspec -- openspec validate add-recipe-searcher --strict
+npm exec --yes --package=@fission-ai/openspec -- openspec validate recipe-searcher --type spec --strict
 ```
 
 The explicit package inventory includes the two new API/capability contract files,

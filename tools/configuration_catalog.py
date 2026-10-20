@@ -5,7 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / 'openspec/changes/add-native-circuit-computers/specs/device-configurator/configuration-catalog.json'
+SOURCE = ROOT / 'openspec/specs/device-configurator/configuration-catalog.json'
 BASIC = {'Accumulator','Container','ProxyContainer','GenericOnOff','Inserter','Loader','MiningDrill','Pump','Splitter','StorageTank','TransportBelt','Wall'}
 BASIC_FIXTURES = {
     'Accumulator':['accumulator'], 'Container':['wooden-chest'], 'ProxyContainer':['proxy-container'],

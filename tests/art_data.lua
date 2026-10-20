@@ -48,4 +48,8 @@ for _,kind in ipairs(defs.order) do
   end
 end
 assert(contacts==72 and statuses==192)
+for _,name in ipairs({'tc-circuit-computers','tc-recipe-searcher'}) do
+  local technology=data.raw.technology[name]
+  assert(technology.icon==art.technologies[name].icon and technology.icon_size==256)
+end
 log('TC_RD2_ART_DATA_OK contacts='..contacts..' status_frames='..statuses)

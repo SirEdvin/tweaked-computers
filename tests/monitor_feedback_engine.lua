@@ -143,7 +143,26 @@ function M.run()
     assert(g.render.hidden and not g.render.panel.visible); unchanged(row)
     p.energy=100000; marked.powered=true
     settle(); unchanged(row); assert(not g.render.hidden and g.render.panel.visible)
+    -- A real scale change makes the old front's grid obsolete immediately.
+    -- Headless table-backed Ctrl-click must not map that still-visible image
+    -- into the new character grid while its replacement is pending.
+    local old=g.render
+    model.scale(g.model,g.width_tiles,g.height_tiles,nop,2); renderer.changed(g)
+    assert(not renderer.matches(g,old))
+    local cw,ch,ox,oy=model.geometry(g)
+    local wx,wy=model.world(g,ox+cw/2,oy+ch/2)
+    local tile=registry.record(g.anchor)
+    local player={valid=true,index=1,force=tile.body.force,surface=tile.body.surface,
+      cursor_stack={valid_for_read=false},can_reach_entity=function() return true end,print=nop}
+    local state=registry.get().monitors; local touches=#state.touches
+    assert(not monitor.activate_for_player({input_name='tc-interact',tick=game.tick,cursor_position={x=wx,y=wy}},player))
+    assert(#state.touches==touches,'obsolete image accepted a touch against a new grid')
+    settle(); assert(g.id==row.id and renderer.matches(g,g.render)); properties(g); capture(row)
+    assert(monitor.activate_for_player({input_name='tc-interact',tick=game.tick,cursor_position={x=wx,y=wy}},player))
+    local payload=state.touches[#state.touches].payload
+    assert(payload.x==1 and payload.y==1 and payload.peripheral==g.id); state.touches={}
   end
+  report('four-cardinal-scale-invalidation-rejects-stale-grid-touch-until-native-publication')
   report('four-cardinal-native-marked-subsets-cancel-live-updates-power-and-non-anchor-touch')
   report('native-sprite-strata-centers-extents-cursor-below-wires-selection-info')
   -- Genuine legacy draw objects, with missing new presentation metadata. Model

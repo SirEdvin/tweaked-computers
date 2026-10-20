@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Deterministic original industrial family and independently authored glyphs.
 
-Editable Foundry geometry is in foundry.py, reusing industrial.py primitives.
+Editable Service Rack geometry is in service_rack.py, reusing contact/status
+helpers and the exact existing monitor surface from foundry.py/industrial.py.
 Socket coordinates are exported
 from production Lua by export_layout.py. No upstream image is sampled; historical
 approved Greg Flavored inputs/notices remain byte-exact for source continuity.
@@ -118,23 +119,26 @@ def sheet(images):
     return out
 
 
-def icon(image):
+def icon(image, size=64):
     w,h,pixels=image
     visible=[(i%w,i//w) for i,p in enumerate(pixels) if p[3]]
     left,top=min(x for x,y in visible),min(y for x,y in visible)
     right,bottom=max(x for x,y in visible)+1,max(y for x,y in visible)+1
-    factor=56/max(right-left,bottom-top)
-    out=canvas(64,64)
+    factor=(size * 7 / 8)/max(right-left,bottom-top)
+    out=canvas(size,size)
     iw,ih=round((right-left)*factor),round((bottom-top)*factor)
     for y in range(ih):
         for x in range(iw):
-            paint(out,(64-iw)//2+x,(64-ih)//2+y,pixels[(top+int(y/factor))*w+left+int(x/factor)])
+            paint(out,(size-iw)//2+x,(size-ih)//2+y,pixels[(top+int(y/factor))*w+left+int(x/factor)])
     return out
 
 
 def generate(output):
-    import foundry as industrial
+    import service_rack as industrial
     import PIL
+    import numpy
+    from PIL import Image
+    import io
     layout=json.loads((ROOT/'socket-layout.json').read_text())
     assert digest((ROOT.parent/layout['source']['path']).read_bytes())==layout['source']['sha256'], 'stale socket export; run export_layout.py'
     audit=json.loads((ROOT/'source-audit.json').read_text())
@@ -154,9 +158,17 @@ def generate(output):
     output.mkdir(parents=True,exist_ok=True)
     outputs=[]
     INPUT_TRACE.clear()
-    device_inputs={'assets/foundry.py','assets/industrial.py','assets/socket-layout.json','scripts/device-definitions.lua','assets/layout-data.lua','assets/export_layout.py','assets/requirements.txt'}
+    device_inputs={'assets/service_rack.py','assets/foundry.py','assets/industrial.py','assets/socket-layout.json','scripts/device-definitions.lua','assets/layout-data.lua','assets/export_layout.py','assets/requirements.txt'}
     def emit(path,image,**metadata):
-        data=png_write(image)
+        # Preserve the chosen preview's exact Pillow encoding for replacements;
+        # unchanged status/glyph/flat-monitor-shadow bytes retain filter-0 encoding.
+        preview_layer = metadata.get('layer') in ('body','icon','technology') or (metadata.get('layer')=='shadow' and metadata.get('device')!='monitor')
+        if preview_layer:
+            stream=io.BytesIO()
+            Image.frombytes('RGBA',image[:2],bytes(c for p in image[2] for c in p)).save(stream,format='PNG',compress_level=9)
+            data=stream.getvalue()
+        else:
+            data=png_write(image)
         target=output/path
         target.parent.mkdir(parents=True,exist_ok=True)
         target.write_bytes(data)
@@ -191,30 +203,38 @@ def generate(output):
         INPUT_TRACE.update(device_inputs)
         emit('icons/'+kind+'.png',icon(industrial.body(kind,2,size,entry['directions']['south'])),device=kind,layer='icon',icon_size=64)
         devices[kind]['icon']='icons/'+kind+'.png'
+    technologies={}
+    for name,kind in (('tc-circuit-computers','computer'),('tc-recipe-searcher','recipe_searcher')):
+        entry=layout['devices'][kind]; size=160
+        path='icons/'+name+'-technology.png'
+        INPUT_TRACE.update(device_inputs)
+        emit(path,icon(industrial.body(kind,2,size,entry['directions']['south']),256),device=kind,layer='technology',icon_size=256)
+        technologies[name]={'icon':path,'icon_size':256}
     emit('glyphs/atlas.png',glyph_image(),layer='glyph',cell=[6,9],columns=16,rows=16)
     # Opaque authored mask: sprites, unlike runtime rectangles, support layers.
     emit('glyphs/pixel.png',(1,1,[(255,255,255,255)]),layer='display-fill')
     authored=['assets/generate.py','assets/glyphs.txt',*sorted(device_inputs)]
-    manifest={'format_version':2,'status':'foundry-selected',
+    manifest={'format_version':2,'status':'service-rack-selected',
         'repository':audit['greg_flavored']['repository'],'revision':audit['greg_flavored']['revision'],
-        'permission_basis':'Original Foundry device geometry/materials and independent glyphs are project MIT. Approved historical Greg Flavored originals/notices retained unchanged; not sampled by new art.',
+        'permission_basis':'Original Service Rack meshes/materials, retained monitor foundation, contacts/statuses and independent glyphs are project MIT. Approved historical Greg Flavored originals/notices retained unchanged; no external pixels or models sampled.',
+        'selection':{'candidate':'B-service-rack','preview_sha256':'75f43f0ddadd4ec6c0a880a2169c2bca5e225341b311859299cc5a7411182cb3','source_commit':'9cbd4ae73c1c62763724735ea93428a3e2d5f5f5','technology_icons':'New 256px derivatives of selected computer and scanner; not part of AR2 preview'},
         'inputs':inputs,'authored_inputs':[{'path':p,'sha256':digest((ROOT.parent/p).read_bytes())} for p in authored],
         'notices':[{'path':'assets/notices/'+p.name,'sha256':digest(p.read_bytes())} for p in sorted((ROOT/'notices').iterdir())],
-        'transform':{'sampling':'Pillow integer polygon rasterization; deterministic directional shading, pitting and worn edges; no antialiasing; nearest-neighbour icon fitting',
+        'transform':{'sampling':'3x depth-buffered barycentric rasterization, fixed forward math.fma three-vector reductions, world-fixed normals/light and deterministic grain; Lanczos downsample; nearest-neighbour icon fitting; exact retained monitor foundation',
             'projection':'64*x - 48*height, 64*z - 128*height; tile units; geometry rotated clockwise before projection; fixed world light',
             'monitor':'unchanged 64x64 tile/touch area and 60x60 interior; two-unit inner bezel plus four-unit exterior mechanical skirt; 72x72 chamfered artwork; unchanged ground pivot',
             'contacts':'socket-layout.json exported from production defs.contact/offset in Factorio 2.0.77; projected at ground coordinates',
-            'shadow':'footprint cast toward world southeast proportional to body height, alpha 85',
+            'shadow':'geometry projected toward world southeast; alpha 86 before Gaussian blur and Lanczos; monitor retained alpha 85',
             'status':'grey dash stopped; amber slash unpowered; green powered; red fault cross; amber/steel four-frame activity',
-            'encoder':'RGBA8 filter 0, zlib level 9, no ancillary chunks','zlib_version':zlib.ZLIB_VERSION,'pillow_version':PIL.__version__},
-        'palette':industrial.PALETTE,'devices':devices,'outputs':outputs,
+            'encoder':'RGBA8 Pillow compress_level=9 for selected bodies/icons/mesh shadows; filter 0 zlib 9 for unchanged glyph/status/monitor shadow','zlib_version':zlib.ZLIB_VERSION,'pillow_version':PIL.__version__,'numpy_version':numpy.__version__},
+        'palette':industrial.PALETTE,'devices':devices,'technologies':technologies,'outputs':outputs,
         'glyphs':{'path':'glyphs/atlas.png','cell':[6,9],'columns':16,'rows':16,'slots':256,
             'ascii':[32,126],'mosaic':[128,159],'mosaic_bits':'bits 0..4 row-major 3x3; bottom-right always background',
             'replacement':'all bytes outside ASCII/mosaic map to outlined box; byte 32 and 128 blank',
             'provenance':'glyphs.txt independently authored for Tweaked Computers; no font/image/system-font inputs',
             'foreground':'white opaque mask; transparent background; tint via runtime palette'},
         'deferred':['native touch/input integration, multiplayer and representative hardware-GPU performance']}
-    lua=['-- Generated by assets/generate.py; paths are mod-relative and immutable.','local prefix = "__tweaked-computers__/assets/"','local art = {devices = {}, glyphs = {}}']
+    lua=['-- Generated by assets/generate.py; paths are mod-relative and immutable.','local prefix = "__tweaked-computers__/assets/"','local art = {devices = {}, glyphs = {}, technologies = {}}']
     def sprite(path,w,h,extra=''):
         return '{filename = prefix .. '+json.dumps(path)+', width = '+str(w)+', height = '+str(h)+', scale = 0.5, shift = {0, 0}'+extra+'}'
     def lua_value(value):
@@ -229,6 +249,8 @@ def generate(output):
             lua.append('art.devices.'+kind+'.'+direction+' = {roles = '+lua_value(entry_dir['roles'])+', body = '+sprite(entry_dir['body'],size,size)+', shadow = '+sprite(entry_dir['shadow'],size,size,', draw_as_shadow = true')+', states = {}}')
             for state,path in entry_dir['states'].items():
                 lua.append('art.devices.'+kind+'.'+direction+'.states.'+state+' = '+sprite(path,size,size,', frame_count = 4, line_length = 4, animation_speed = 0.15' if state=='blinking' else ''))
+    for name,entry in technologies.items():
+        lua.append('art.technologies['+json.dumps(name)+'] = {icon = prefix .. '+json.dumps(entry['icon'])+', icon_size = 256}')
     lua += ['for byte = 0, 255 do','  art.glyphs[byte] = {filename = prefix .. "glyphs/atlas.png", width = 6, height = 9,',
             '    x = (byte % 16) * 6, y = math.floor(byte / 16) * 9, scale = 1}', 'end','return art']
     (output/'sprites.lua').write_text('\n'.join(lua)+'\n')

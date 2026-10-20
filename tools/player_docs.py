@@ -15,7 +15,7 @@ from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs/player'
-CHANGE = ROOT / 'openspec/changes/add-native-circuit-computers'
+CONTRACT = ROOT / 'openspec'
 EXAMPLES = {
     'function-program': 'Power a computer; no peripheral or wire is required. In an empty Editor draft, choose Insert starter (or paste this whole document), Validate, Save, then Run. Insertion and validation do not save or execute anything. The first dispatch calls `sample()` immediately and logs its returned count in Console; the `samples` value in explicit computer state increases once, then once more at the first 60-tick timer deadline. Private `increment` is declared before use and is not exported. `sample` is forward-visible and registration uses its string name, not its function value. Each callback has fresh locals/functions; reapplying keeps the explicit count, while ordinary reload does not replay `start`. These functions are not callable from the live Console. The legacy descriptor examples below remain supported.',
     'recipe-searcher-program': 'Research Recipe Searcher separately, power it and connect its Network directly to a computer on red. Paste the whole document, Validate, Save and Run. Searches item/fluid products and refines E_LIMIT by exact category; a single category may still exceed 50 or other budgets.',
@@ -59,7 +59,7 @@ def guest_example(name):
 
 
 def generated():
-    catalog = json.loads((CHANGE / 'specs/device-configurator/configuration-catalog.json').read_text())
+    catalog = json.loads((CONTRACT / 'specs/device-configurator/configuration-catalog.json').read_text())
     ledger = json.loads(text('docs/configuration-coverage.json'))
     indexed = {(f['behavior'], f['field']): f for f in ledger['fields']}
     def typename(t):
@@ -316,7 +316,7 @@ def inventory():
                         'device-configurator': ['api/configurator.md', 'api/settings.md', 'api/schemas.md']}
     contract_inventory = {}
     for cap, pageset in capability_pages.items():
-        contract = CHANGE / manifest['capabilities'][cap]['contract']
+        contract = CONTRACT / manifest['capabilities'][cap]['contract']
         specification = contract.with_name('spec.md')
         assert contract.is_file() and specification.is_file()
         for page in pageset:
@@ -328,14 +328,14 @@ def inventory():
             'requirements': re.findall(r'^### Requirement: (.+)$', specification.read_text(), re.M),
             'reviewed_player_pages': pageset,
         }
-    shell_root=ROOT / 'openspec/changes/add-interactive-console-shell/specs/console-shell'
+    shell_root=CONTRACT / 'specs/console-shell'
     for name in ('spec.md', 'lua-api.md'):
         assert (shell_root / name).is_file(), 'missing Console contract'
     assert 'console.md' in text('mkdocs.yml') and (DOCS / 'console.md').is_file()
     assert 'no command history' in (DOCS / 'console.md').read_text().lower()
     for file in ['api/common.md', 'api/native-language.md']:
-        assert (CHANGE / file).is_file()
-    catalog = json.loads((CHANGE / 'specs/device-configurator/configuration-catalog.json').read_text())
+        assert (CONTRACT / file).is_file()
+    catalog = json.loads((CONTRACT / 'specs/device-configurator/configuration-catalog.json').read_text())
     return {'exports': {k: sorted(v) for k, v in actual.items()},
             'export_count': sum(len(v) for v in actual.values()),
             'configurator': {'behavior_classes': len(catalog['behaviors']),

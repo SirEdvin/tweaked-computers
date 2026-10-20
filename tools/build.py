@@ -10,17 +10,37 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 TOP = ('info.json', 'data.lua', 'control.lua', 'settings.lua', 'README.md', 'LICENSE', 'changelog.txt')
 DIRS = ('scripts', 'prototypes', 'locale', 'vendor', 'assets', 'docs', 'examples', 'tests')
-CONTRACT = 'openspec/changes/add-native-circuit-computers'
-CONTRACT_EXTENSIONS = (
+CONTRACT_FILES = (
+    'openspec/api/common.md',
+    'openspec/api/native-language.md',
+    'openspec/api/examples.md',
+    'openspec/api/device-experience.md',
+    'openspec/specs/computer-runtime/spec.md',
+    'openspec/specs/computer-runtime/lua-api.md',
+    'openspec/specs/console-shell/spec.md',
+    'openspec/specs/console-shell/lua-api.md',
+    'openspec/specs/device-configurator/spec.md',
+    'openspec/specs/device-configurator/lua-api.md',
+    'openspec/specs/device-configurator/configuration-catalog.md',
+    'openspec/specs/device-configurator/configuration-catalog.json',
+    'openspec/specs/device-lifecycle/spec.md',
+    'openspec/specs/device-lifecycle/lua-api.md',
+    'openspec/specs/device-visual-identity/spec.md',
+    'openspec/specs/kv-database/spec.md',
+    'openspec/specs/kv-database/lua-api.md',
+    'openspec/specs/logic-handler/spec.md',
+    'openspec/specs/logic-handler/lua-api.md',
+    'openspec/specs/monitor-display/spec.md',
+    'openspec/specs/monitor-display/lua-api.md',
+    'openspec/specs/monitor-display/buffering-api.md',
+    'openspec/specs/peripheral-network/spec.md',
+    'openspec/specs/peripheral-network/lua-api.md',
+    'openspec/specs/program-editor/spec.md',
+    'openspec/specs/program-editor/lua-api.md',
+    'openspec/specs/recipe-searcher/spec.md',
+    'openspec/specs/recipe-searcher/lua-api.md',
     'openspec/changes/add-function-program-syntax/specs/program-source/spec.md',
     'openspec/changes/add-function-program-syntax/specs/program-source/lua-api.md',
-    'openspec/changes/add-recipe-searcher/specs/recipe-searcher/spec.md',
-    'openspec/changes/add-recipe-searcher/specs/recipe-searcher/lua-api.md',
-    'openspec/changes/add-interactive-console-shell/specs/console-shell/spec.md',
-    'openspec/changes/add-interactive-console-shell/specs/console-shell/lua-api.md',
-    'openspec/changes/buffer-monitor-presentation/specs/monitor-display/spec.md',
-    'openspec/changes/buffer-monitor-presentation/specs/monitor-display/lua-api.md',
-    'openspec/changes/buffer-monitor-presentation/specs/peripheral-network/spec.md',
 )
 
 def build(destination):
@@ -62,10 +82,7 @@ def build(destination):
 
     # Ship authoritative source/API contracts too; their relative links remain
     # valid. Exclude orchestration reports, research caches and agent context.
-    for folder in ('api', 'specs'):
-        files += sorted((ROOT / CONTRACT / folder).rglob('*.md'))
-        files += sorted((ROOT / CONTRACT / folder).rglob('*.json'))
-    files += [ROOT / name for name in CONTRACT_EXTENSIONS]
+    files += [ROOT / name for name in CONTRACT_FILES]
     for p in files:
         if p.suffix.lower() in ('.exe', '.bat', '.ps1', '.sh', '.py'):
             raise ValueError(f'Mod Portal forbids executable payloads: {p}')

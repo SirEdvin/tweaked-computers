@@ -1,5 +1,14 @@
 # Alpha candidate: installation, limits and manual checks
 
+Historical TC13/0.1.0 receipt, retained rather than rewritten as newer evidence.
+Its archive names, original monitor dimensions and deferred-client checklist below
+are not the current installation or acceptance status. Use the current
+[player guide](player/index.md), [effective limits](player/api/limits.md),
+[SC2 native/peer acceptance](sc2-native-acceptance.md),
+[SC3 representative envelope](sc3-supported-envelope.md) and
+[SC4 consolidated receipt](sc4-final-acceptance.md). The five completed changes
+are promoted on the review branch; historical public alpha archives stay immutable.
+
 Target: exactly Factorio **2.0.77**, base-only or optional Space Age. This is a
 complete eight-capability implementation for user testing, not a stable or
 client-verified release. Public player documentation, developer OpenWiki and

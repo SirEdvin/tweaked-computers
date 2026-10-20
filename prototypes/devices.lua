@@ -112,9 +112,9 @@ for _,kind in ipairs(defs.order) do
   effects[def.technology]=effects[def.technology] or {}
   local owned=effects[def.technology]; owned[#owned+1]={type='unlock-recipe',recipe=def.name}
 end
-data:extend{{type='technology',name='tc-circuit-computers',icon='__base__/graphics/technology/circuit-network.png',icon_size=256,
+data:extend{{type='technology',name='tc-circuit-computers',icon=art.technologies['tc-circuit-computers'].icon,icon_size=256,
   prerequisites={'circuit-network','advanced-circuit'},effects=effects['tc-circuit-computers'],
   unit={count=100,ingredients={{'automation-science-pack',1},{'logistic-science-pack',1}},time=30},order='a-d-e'},
-  {type='technology',name='tc-recipe-searcher',icon=art.devices.recipe_searcher.icon,icon_size=64,
+  {type='technology',name='tc-recipe-searcher',icon=art.technologies['tc-recipe-searcher'].icon,icon_size=256,
     prerequisites={'tc-circuit-computers','utility-science-pack'},effects=effects['tc-recipe-searcher'],
     unit={count=200,ingredients={{'automation-science-pack',1},{'logistic-science-pack',1},{'utility-science-pack',1}},time=60},order='a-d-f'}}
