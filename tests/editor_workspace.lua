@@ -5,6 +5,7 @@ local registry=require('scripts.registry')
 local model=require('scripts.ui.editor-model')
 local editor=require('scripts.ui.editor')
 local interaction=require('scripts.ui.interaction')
+local peripheral_inspector=require('scripts.ui.peripheral-inspector')
 local monitor=require('scripts.services.monitor')
 local layout=require('scripts.ui.editor-layout')
 local runtime=require('scripts.runtime.computer')
@@ -96,7 +97,9 @@ function M.run()
         assert(connector(rec,color).disconnect_from(connector(target,color)))
         for _,r in ipairs({rec,target}) do
           a.opened=r.body; interaction.on_opened{player_index=a.index,entity=r.body,tick=tick}
-          assert(a.opened==nil and not a.gui.screen[editor.frame_name])
+          assert(not a.gui.screen[editor.frame_name])
+          if r.kind~='computer' then assert(a.opened==a.gui.screen[peripheral_inspector.frame_name]); peripheral_inspector.close(a)
+          else assert(a.opened==nil) end
         end
         assert(connector(rec,color).connect_to(connector(target,color)))
         assert(connector(rec,color).is_connected_to(connector(target,color)))
@@ -105,12 +108,15 @@ function M.run()
     group('workspace-all-device-native-dialogs-suppressed-vanilla-untouched',function()
       local devices={rec,db,mon,build('logic',12,120),build('configurator',18,120)}
       for _,r in ipairs(devices) do
-        assert(not r.body.operable,'implementation shell must not expose a native dialog')
+        assert(r.body.operable==(r.kind~='computer'),'only peripheral bodies are ordinarily openable')
         local parts={r.body}; for _,child in pairs(r.children) do parts[#parts+1]=child end
         for _,part in ipairs(parts) do
           a.selected=part; a.opened=part
           interaction.on_opened{player_index=a.index,entity=part,tick=tick}
-          assert(not a.opened and not a.gui.screen[editor.frame_name])
+          assert(not a.gui.screen[editor.frame_name])
+          if part==r.body and r.kind~='computer' then
+            assert(a.opened==a.gui.screen[peripheral_inspector.frame_name]); peripheral_inspector.close(a)
+          else assert(not a.opened) end
         end
         if r.kind~='computer' then
           a.selected=r.body; interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick}

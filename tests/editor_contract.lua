@@ -27,9 +27,10 @@ local type_args={
   ['text-box']=names('text'),textfield=names('text'),['empty-widget']={},
   ['tabbed-pane']={},tab={},['scroll-pane']=names('horizontal_scroll_policy vertical_scroll_policy'),
   ['drop-down']=names('items selected_index'),checkbox=names('state'),sprite=names('sprite'),
-  ['table']=names('column_count')}
+  ['table']=names('column_count'),['sprite-button']=names('sprite number quality')}
 local style_types={tc_editor_text='text-box',tc_editor_button='button',tc_editor_frame='frame',
   tc_editor_tabs='tabbed-pane',tc_editor_tab='tab',draggable_space_header='empty-widget'}
+for _,style in ipairs({'compact_slot','red_circuit_network_content_slot','green_circuit_network_content_slot'}) do style_types[style]='sprite-button' end
 local reserved=names([[
   allow_decimal allow_negative allow_none_state anchor auto_center auto_toggle badge_text caption children children_names
   clicked_sprite column_count direction drag_target draw_horizontal_line_after_headers draw_horizontal_lines draw_vertical_lines

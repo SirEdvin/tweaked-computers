@@ -22,6 +22,7 @@ def main():
     ap.add_argument('--layout', choices=('four-walls', 'mixed'), default='four-walls')
     ap.add_argument('--with-modem', action='store_true', help='Compete with maximum-payload eight-handler radio traffic and live logic on the same ledgers')
     ap.add_argument('--with-speaker', action='store_true', help='Compete with 64 note submissions, full catalogue pages and live logic on production ledgers')
+    ap.add_argument('--inspectors', type=int, choices=(0, 16), default=0, help='Opt-in paid GUI-double contention; not native client evidence')
     args = ap.parse_args()
     if args.with_modem and args.with_speaker:
         ap.error('choose one focused contention fixture')
@@ -40,13 +41,19 @@ def main():
             dst.writestr(entry, src.read(entry.filename))
         dst.writestr(prefix + 'tests/monitor_animation_source.lua', 'return [' + eq + '[' + source + ']' + eq + ']\n')
         dst.writestr(prefix + 'tests/monitor_animation_layout.lua', 'return ' + json.dumps(args.layout) + '\n')
+        if args.inspectors:
+            dst.writestr(prefix + 'tests/peripheral_inspector_contention_config.lua', 'return {viewers=' + str(args.inspectors) + '}\n')
+    additions = ['tests/monitor_animation_source.lua', 'tests/monitor_animation_layout.lua']
+    if args.inspectors:
+        additions.append('tests/peripheral_inspector_contention_config.lua')
     record: dict[str, object] = {'candidate_sha256': hashlib.sha256(args.archive.read_bytes()).hexdigest(),
               'test_archive_sha256': hashlib.sha256(target.read_bytes()).hexdigest(),
               'guest_sha256': hashlib.sha256(source.encode()).hexdigest(),
               'layout': args.layout,
               'modem_competition': args.with_modem,
               'speaker_competition': args.with_speaker,
-              'test_only_additions': ['tests/monitor_animation_source.lua', 'tests/monitor_animation_layout.lua']}
+              'inspector_viewers': args.inspectors,
+              'test_only_additions': additions}
     (folder / 'provenance.json').write_text(json.dumps(record, indent=2) + '\n')
     command = [sys.executable, str(ROOT / 'tools/smoke.py'), '--factorio', str(args.factorio),
                '--archive', str(target), '--output', str(folder / 'engine'), '--mode', args.mode,

@@ -82,7 +82,7 @@ function M.normalize_power(rec)
   p.power_usage=watts/60; p.power_production=0; p.electric_buffer_size=watts/30
 end
 local function passive(body)
-  body.operable=false
+  body.operable=defs.by_name[body.name]~='computer'
   local cb=body.get_or_create_control_behavior(); cb.enabled=false
   for i=cb.sections_count,1,-1 do cb.remove_section(i) end
   for _,color in ipairs({'red','green'}) do
@@ -368,6 +368,7 @@ function M.upgrade_existing()
       local ok,e=M.upgrade(rec)
       if not ok then log('TC physical upgrade '..rec.id..': '..e.message) end
     end
+    if rec and rec.layout_version==2 and rec.body.valid then M.reset_network(rec) end
   end
 end
 function M.on_built(event)

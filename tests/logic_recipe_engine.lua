@@ -132,6 +132,15 @@ function M.on_tick(event)
     assert(e.initial and #e.current==1 and e.current[1].signal.type=='recipe' and e.current[1].count==12)
     assert(e.changes[1].previous==0 and e.changes[1].current==12)
     log('TC_RECIPE_NATIVE_INPUT '..serpent.line(io.children.input.get_signals(defines.wire_connector_id.circuit_red)))
+    local sampled,bank,owner=io.logic_sample,io.output_bank,io.output_owner
+    local observed=logic.inspect(io,event.tick,function() end)
+    local identities={}
+    for _,entry in ipairs(observed.red) do identities[entry.signal.type..'/'..entry.signal.name..'/'..entry.signal.quality]=entry.count end
+    assert(identities['item/iron-plate/normal']==99 and identities['recipe/iron-plate/normal']==12)
+    assert(identities['recipe/copper-plate/normal']==-2147483648)
+    assert(#observed.output==2 and observed.output[2].signal.type=='recipe' and observed.output[2].count==7)
+    observed.output[2].signal.name='changed'; observed.output[2].count=0
+    assert(io.logic_sample==sampled and io.output_bank==bank and io.output_owner==owner and bank[2].signal.name=='iron-plate' and bank[2].count==7)
     probe(c,[[assert(p.readSignal('red',{type='recipe',name='iron-plate'})==12)
       assert(p.readSignal('green',{type='recipe',name='iron-plate'})==-5)
       assert(p.readSignal('red',{type='item',name='iron-plate'})==99)

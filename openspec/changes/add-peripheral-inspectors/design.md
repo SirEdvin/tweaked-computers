@@ -85,7 +85,9 @@ Alternative rejected: use computer peripheral discovery or sum two per-color tot
 
 ### 6. Logic: native-colored input rows and the own output bank
 
-Expose a narrow host-only inspection read from `scripts/services/logic.lua` using existing normalization, signal limits, physical connector checks and paid native reads. An already-sampled color is reusable only if its sample tick and identity are current; absence of a program subscription must not make the inspector empty. Copy the resulting plain signal records and output bank; do not register a subscription or call output publication.
+Expose narrow host-only inspection reads from `scripts/services/logic.lua` using existing normalization, signal limits, physical connector checks and paid native reads. Absence of a program subscription must not make the inspector empty. Copy the resulting plain signal records and output bank; do not register a subscription or call output publication.
+
+Approved October 20, 2026 on task `t_fb37be75`: UI-only red and green observations may be collected on separate admitted ticks. Attempt one color per 15-tick UI cycle; retain at most one private red partial for 30 ticks, then discard/retry it. Publish only a complete pair, with explicit individual red, green and own-output ticks, never as an atomic current-tick circuit snapshot. A change of power/session/physical identity drops partial state. Update tick labels without rebuilding unchanged content or stealing selection. This replaces the original same-tick reuse constraint after actual Space Age admission exposed starvation; guest API and subscription sampling remain unchanged, as do production ceilings and protected render credits.
 
 Use one Input signals panel with red and green row groups, using the pinned native slot styles, beside neutral Output signals. For the same signal on both colors, render distinct wire-qualified slots. The output panel is labelled as this handler's contribution, shared across both output colors, rather than an output-network total. There are no combinator conditions, operators or editable signal elements.
 

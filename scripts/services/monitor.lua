@@ -30,6 +30,22 @@ function M.resolve(tile)
   if state and state.job then errors.raise('E_NETWORK_PENDING','monitor regrouping is not yet committed') end
   return state and state.groups[state.membership[tile.id]] or nil
 end
+function M.inspect(tile,tick,spend)
+  spend(32)
+  local g=M.resolve(tile)
+  if not g then errors.raise('E_NETWORK_PENDING','monitor group unavailable') end
+  if type(g.id)~='string' or #g.id>limits.identifier_bytes or type(g.members)~='table'
+    or not errors.integer(g.width_tiles,1,model.limits.width_tiles)
+    or not errors.integer(g.height_tiles,1,model.limits.height_tiles)
+    or type(g.model)~='table' or not errors.integer(g.model.width,1,model.limits.cells)
+    or not errors.integer(g.model.height,1,model.limits.cells)
+    or type(g.model.scale)~='number' or not errors.integer(g.model.scale*2,1,10) then
+    errors.raise('E_UNSUPPORTED','monitor geometry unsupported; data preserved')
+  end
+  spend(#g.members+16)
+  return {tick=tick,name=g.id,width_tiles=g.width_tiles,height_tiles=g.height_tiles,
+    tiles=#g.members,columns=g.model.width,rows=g.model.height,scale=g.model.scale}
+end
 function M.available(g,spend,proofs)
   spend(#g.members*16+1)
   -- Guest callbacks cannot yield or mutate physical members. Reuse the positive

@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def prepare(archive, engine, client, output, mode, config_template=None, fixture_module='tests.shell_client_engine'):
-    if fixture_module not in ('tests.speaker_client_engine', 'tests.radar_client_engine', 'tests.shell_client_engine', 'tests.recipe_searcher_client_engine', 'tests.acceptance_client_engine', 'tests.acceptance_monitor_engine'):
+    if fixture_module not in ('tests.speaker_client_engine', 'tests.radar_client_engine', 'tests.peripheral_inspector_client_engine', 'tests.shell_client_engine', 'tests.recipe_searcher_client_engine', 'tests.acceptance_client_engine', 'tests.acceptance_monitor_engine'):
         raise ValueError('fixed native client fixture required')
     output = output.resolve()
     if output.exists() or output.is_relative_to(ROOT):
@@ -97,7 +97,7 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--mode', required=True, choices=('base', 'space-age'))
     parser.add_argument('--config-template', type=Path, help='engine-generated matching-version template if distribution has none')
-    parser.add_argument('--fixture', default='tests.shell_client_engine', choices=('tests.speaker_client_engine', 'tests.radar_client_engine', 'tests.shell_client_engine', 'tests.recipe_searcher_client_engine', 'tests.acceptance_client_engine', 'tests.acceptance_monitor_engine'))
+    parser.add_argument('--fixture', default='tests.shell_client_engine', choices=('tests.speaker_client_engine', 'tests.radar_client_engine', 'tests.peripheral_inspector_client_engine', 'tests.shell_client_engine', 'tests.recipe_searcher_client_engine', 'tests.acceptance_client_engine', 'tests.acceptance_monitor_engine'))
     args = parser.parse_args()
     print(json.dumps(prepare(args.archive.resolve(), args.factorio.resolve(), args.client.resolve(), args.output, args.mode, args.config_template, args.fixture), indent=2))
 

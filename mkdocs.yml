@@ -15,6 +15,7 @@ nav:
       - Native radar artwork: radar-native-assets.md
       - First inserter controller: first-controller.md
       - Editor and recovery: editor.md
+      - Peripheral inspectors: inspectors.md
       - Live Console: console.md
       - Combined factory controller: factory.md
       - Runnable programs: examples.md

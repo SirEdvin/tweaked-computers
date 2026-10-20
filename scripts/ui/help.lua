@@ -44,6 +44,18 @@ Conflict: Review opens Maintenance; read current source, then Rebase (retain dra
 Reload (discard your draft). The revision is checked again on either action.
 Eight bounded recovery drafts per player; no automatic dirty-draft eviction.
 Ctrl+left-click (rebindable), empty cursor/no GUI, opens a computer or recovery.
+Ordinary opening of a peripheral opens its read-only local inspector; no computer
+or running program is required. Select name for copy selects only the API ID;
+use native Copy, then paste into your draft. Escape retains computer drafts.
+KV and Configurator use explicit Refresh snapshots, with bounded pages/chunks.
+KV byte strings quote empty values, escape quotes/backslashes and use hexadecimal
+byte escapes for control/high bytes and brackets. Full values remain reachable.
+Configurator lists target-side prototypes: Unique deduplicates overlapping Red
+and Green counts. Logic shows separate colored inputs and its own output bank,
+not other emitters. Logic/monitor updates are sampled every 15 ticks when admitted.
+Monitor dimensions are local connected tiles and terminal columns/rows, not pixels.
+Ctrl-click monitor touches remain distinct. Unpowered peripherals retain identity,
+but only committed monitor geometry is readable without active service power.
 All essential actions are buttons, including while the text box has focus.
 
 LANGUAGE
