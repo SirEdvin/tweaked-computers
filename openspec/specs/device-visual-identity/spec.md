@@ -40,3 +40,14 @@ The artwork deliverable SHALL include editable sources, reproducible export inst
 #### Scenario: Review an artwork handoff
 - **WHEN** the art task is submitted for integration
 - **THEN** the reviewer can inspect all five identities and socket alignments from a complete contact sheet and trace the shipped sprites to their sources without recreating an opaque manual workflow.
+
+### Requirement: Selected Service Rack six-device family
+The computer, database, monitor, logic handler, configurator and Recipe Searcher SHALL use the user-selected Service Rack (AR2 candidate B) identity. The existing five-device requirements also apply to the Recipe Searcher, whose 1×1 footprint SHALL remain unchanged. All cardinal bodies, item icons, shadows and status sheets SHALL match the selected preview; technology icons SHALL depict the selected computer and scanner rather than unrelated vanilla equipment. Adoption MUST NOT alter gameplay, research ownership, unlock effects, power, physical contact/selection locations or monitor alpha/interior/touch geometry.
+
+#### Scenario: Identify the selected six-device family
+- **WHEN** all six devices appear beside vanilla machinery at ordinary zoom, in inventory and in their research entries
+- **THEN** the folded desk, offset cartridge stack, flat bracketed monitor, rail instrument, open caliper and low scanner sled remain recognizable and share coherent materials and lighting.
+
+#### Scenario: Reproduce the selected artwork
+- **WHEN** the production generator runs with its pinned offline dependencies
+- **THEN** all 176 pre-existing PNGs reproduce the approved B preview exactly, two new 256px technology icons are traceable to its selected bodies, and regenerated manifests record actual sources, output bytes and retained notices without an installed theme selector.

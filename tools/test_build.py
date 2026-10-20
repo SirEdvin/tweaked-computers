@@ -75,6 +75,12 @@ class PackageInventoryTests(unittest.TestCase):
                 self.assertEqual(pngs,{r['path'] for r in art['outputs']})
                 self.assertEqual(json.loads(package.read(prefix+'assets/manifest.json')),art)
                 self.assertEqual(package.read(prefix+'assets/socket-layout.json'),(build.ROOT/'assets/socket-layout.json').read_bytes())
+                self.assertEqual(art['selection']['candidate'],'B-service-rack')
+                for name in ('tc-circuit-computers','tc-recipe-searcher'):
+                    technology=art['technologies'][name]
+                    self.assertEqual(technology['icon_size'],256)
+                    self.assertEqual(package.read(prefix+'assets/'+technology['icon']),
+                                     (build.ROOT/'assets'/technology['icon']).read_bytes())
 
     def test_explicit_inventory_rejects_prohibited_suffixes(self):
         # Synthetic inventory entries test rejection before payload access; no

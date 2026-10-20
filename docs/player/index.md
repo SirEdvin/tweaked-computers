@@ -64,3 +64,9 @@ authored character atlas are MIT licensed. Approved historical Greg Flavored
 inputs and their complete MIT notices remain in the source/package; the new
 family does not sample them. No original CC:Tweaked font or complete
 CraftOS/Computer Core/Redis compatibility is implied.
+
+The unreleased source candidate adopts the selected Service Rack six-device
+family, with matching item and research icons. See the
+[identification guide](getting-started.md#research-and-craft). Published 0.1.9
+remains immutable; selection of this direction does not imply a new release or
+hardware-performance acceptance.

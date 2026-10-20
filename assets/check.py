@@ -18,7 +18,13 @@ def check(output):
     manifest = json.loads((ROOT / 'manifest.json').read_text())
     records = manifest['outputs']
     paths = [r['path'] for r in records]
-    assert len(paths) == len(set(paths)) == 176
+    assert len(paths) == len(set(paths)) == 178
+    # Frozen independent digest from every original selected-preview PNG,
+    # including untouched statuses/glyphs/shadows, not from the new manifest.
+    preview_paths=sorted(r['path'] for r in records if r['layer']!='technology')
+    assert len(preview_paths)==176
+    preview_inventory=''.join(p+' '+digest((ROOT.parent/p).read_bytes())+'\n' for p in preview_paths)
+    assert digest(preview_inventory.encode())=='84f730ba63f28fd7aa6e451dafd1bbc2bf0c99a3ce446aded2650fb889dee29c', 'selected B PNG bytes changed'
     for record in manifest['inputs']:
         assert digest((ROOT.parent / record['path']).read_bytes()) == record['sha256']
         if record['path'].endswith('.png'):
@@ -54,9 +60,12 @@ def check(output):
             assert all(pixels[x][3] == pixels[(h - 1) * w + x][3] == 0 for x in range(w))
             assert all(pixels[y * w][3] == pixels[y * w + w - 1][3] == 0 for y in range(h))
         alpha = Counter(p[3] for p in pixels)
-        assert set(alpha) <= {0, 85, 255}
+        if record['layer'] in ('glyph','display-fill','status') or record.get('device')=='monitor':
+            assert set(alpha) <= {0, 85, 255}
+        elif record['layer']=='shadow':
+            assert max(alpha)<=100, 'bounded antialiased mesh shadow'
         if record['layer'] in ('body','shadow','icon','status'):
-            assert alpha[0] and (alpha[85] if record['layer'] == 'shadow' else alpha[255])
+            assert alpha[0] and (any(a>0 for a in alpha) if record['layer'] == 'shadow' else alpha[255])
         if record['layer'] == 'shadow':
             assert all(p[:3] == (0,0,0) for p in pixels)
     # Exact sprite/native geometry mapping, including monitor's half-open raster.
@@ -94,6 +103,10 @@ def check(output):
                         assert all(-32<=x<=31 and -32<=y<=31 and not (-30<=x<30 and -30<=y<30) for x,y in lit), (direction,state)
     assert contacts==72
     assert len(set(silhouettes.values()))==6, 'family must not reuse the same silhouette'
+    for name,entry in manifest['technologies'].items():
+        w,h,pixels=png_read((ROOT/entry['icon']).read_bytes())
+        assert (w,h)==(256,256) and entry['icon_size']==256
+        assert any(p[3] for p in pixels) and name in ('tc-circuit-computers','tc-recipe-searcher')
     # Check the byte mapping independently of the renderer's source branches.
     w, h, pixels = png_read((ROOT / 'glyphs/atlas.png').read_bytes())
     assert (w,h) == (96,144)
@@ -118,11 +131,25 @@ def check(output):
             assert cell == replacement
     fresh = output / 'regenerated'
     subprocess.run([sys.executable, str(ROOT/'generate.py'), '--output', str(fresh)], check=True)
+    differences=[]
     for record in records:
         relative = Path(record['path']).relative_to('assets')
-        assert (ROOT/relative).read_bytes() == (fresh/relative).read_bytes()
-    for name in ('manifest.json','sprites.lua'):
-        assert (ROOT/name).read_bytes() == (fresh/name).read_bytes()
+        original,regenerated=(ROOT/relative).read_bytes(),(fresh/relative).read_bytes()
+        if original!=regenerated:
+            differences.append({'path':str(relative),'expected_sha256':digest(original),
+                'actual_sha256':digest(regenerated),'decoded_equal':png_read(original)==png_read(regenerated)})
+    (output/'regeneration-differences.json').write_text(json.dumps(differences,indent=2)+'\n')
+    assert not differences, differences
+    assert (ROOT/'sprites.lua').read_bytes()==(fresh/'sprites.lua').read_bytes()
+    regenerated_manifest=json.loads((fresh/'manifest.json').read_text())
+    # Compression-library build identity is factual host provenance, not an
+    # authored input. Different builds may produce the same exact PNG bytes;
+    # retain that observation, but never waive any image/source/output hash.
+    environment={'original_zlib_version':manifest['transform']['zlib_version'],
+                 'regenerated_zlib_version':regenerated_manifest['transform']['zlib_version']}
+    (output/'regeneration-environment.json').write_text(json.dumps(environment,indent=2)+'\n')
+    regenerated_manifest['transform']['zlib_version']=manifest['transform']['zlib_version']
+    assert manifest==regenerated_manifest, 'regenerated manifest differs beyond observed host zlib version'
     expected = {Path(r['path']).relative_to('assets') for r in records}
     actual = {p.relative_to(ROOT) for folder in ('sprites','icons','glyphs') for p in (ROOT/folder).glob('*.png')}
     assert actual == expected
