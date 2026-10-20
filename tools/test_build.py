@@ -57,6 +57,10 @@ class PackageInventoryTests(unittest.TestCase):
                 for relative in ('scripts/services/recipe-searcher.lua', 'examples/recipe-searcher-program.lua',
                                  'docs/player/api/recipe-searcher.md', 'assets/icons/recipe_searcher.png'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
+                for relative in ('settings.lua', 'scripts/runtime/budget-settings.lua',
+                                 'locale/en/settings.cfg', 'tests/runtime_budget_engine.lua',
+                                 'docs/player/api/limits.md'):
+                    self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 self.assertFalse(any(name.endswith(('/proposal.md', '/design.md', '/tasks.md')) for name in planning))
 
     def test_actual_gameplay_art_bytes_match_provenance(self):

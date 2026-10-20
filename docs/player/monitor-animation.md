@@ -53,8 +53,9 @@ retirement must not destroy borrowed components.
 These reference-root copies still cost work proportional to the grid; this is
 not an unbounded O(dirty-cells)-only renderer or a general GPU framebuffer.
 
-The 1024 preparation/retirement cell-check allowance, 200000 maintenance budget,
-160000 commit cap, object limits and retained-cell capacities are unchanged.
+The 1024 preparation/retirement cell-check allowance, 160000 commit cap, object
+limits and retained-cell capacities are unchanged. The maintenance default is
+still 200000; its shared allowance is now a live [Map setting](api/limits.md#live-mod-settings).
 Snapshots remain immutable, old frames remain visible until one fully admitted
 publication, and no flush or new guest frame API is required.
 

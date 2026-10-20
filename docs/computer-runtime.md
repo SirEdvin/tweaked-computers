@@ -148,9 +148,15 @@ Insufficient aggregate headroom defers untouched runs, not faults them. The
 ledger retains per-ID work/compile/allocation spending until a later real tick.
 Source replacement, stop, removal, repeated tick dispatch and cold load cannot
 renew it. Backwards clocks are refused. Guest admission uses at most the configured
-host-work ceiling minus 200000 reserved maintenance units (4800000 of the default
-5000000); maintenance is not an extra budget. Compilation, execution, allocation
-and shared-host budgets are runtime-global [Map settings](player/api/limits.md#live-mod-settings).
+host-work ceiling minus effective reserved maintenance (4800000 guest units at
+the 5000000 host / 200000 maintenance defaults); maintenance is not extra work.
+Compilation, execution, allocation, maintenance and shared-host budgets are
+runtime-global [Map settings](player/api/limits.md#live-mod-settings).
+Maintenance requests are clamped to host work minus one, without raising host
+work. Actual same-tick maintenance spending remains reserved after a decrease;
+maintenance increases cannot reuse guest credits already spent. The scheduler
+retains a plain alias from the admission ledger to its authoritative maintenance
+state, attaching it only during synchronized admission for older saves.
 Changes preserve already-spent credits, and getLimits returns current values.
 If the per-computer budgets sum above the shared allowance, the scheduler reserves
 at most that allowance rather than permanently starving small fitting callbacks;
