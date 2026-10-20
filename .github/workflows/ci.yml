@@ -45,6 +45,7 @@ jobs:
           export TMPDIR="$RUNNER_TEMP"
           mkdir -p "$RUNNER_TEMP/tc-ci/reports"
           python tools/test_build.py
+          python tools/test_monitor_animation.py
           python tools/planning_examples.py --check
           python tools/configuration_catalog.py --check
           python -m mkdocs build --strict --site-dir "$RUNNER_TEMP/tc-ci/site"
