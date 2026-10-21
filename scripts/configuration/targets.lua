@@ -26,7 +26,7 @@ function M.inventory(origin,wire,spend)
     if not network.same_scope(described,origin) then errors.raise('E_NETWORK_PENDING','owned target body scope changed') end
     if not rec or rec.id~=origin.id then
       local id=M.identity(described); local item=inventory[id]
-      if not item then item={id=id,entity=described,protected=rec~=nil,connectors={}}; inventory[id]=item end
+      if not item then item={id=id,entity=described,protected=rec~=nil and not rec.native_carrier,connectors={}}; inventory[id]=item end
       for name,value in pairs(defines.wire_connector_id) do
         if value==connector.wire_connector_id then item.connectors[name]=true; break end
       end

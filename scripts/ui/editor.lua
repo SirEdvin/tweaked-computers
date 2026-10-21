@@ -131,7 +131,7 @@ local function refresh_reference(c,s)
   enable(c.actions['select-reference'],topic~=nil,'Select the reference text, then use your native Copy control.')
   enable(c.actions.template,topic and topic.example==true or false,'Insert is available for the starter example and an empty draft only.')
 end
-local icons={monitor='item/tc-monitor',kv_database='item/tc-kv',logic_handler='item/tc-logic',configurator='item/tc-configurator',recipe_searcher='item/tc-recipe-searcher'}
+local icons={monitor='item/tc-monitor',kv_database='item/tc-kv',logic_handler='item/tc-logic',configurator='item/tc-configurator',recipe_searcher='item/tc-recipe-searcher',modem='item/radar',speaker='item/programmable-speaker'}
 local function peripheral_details(c,s)
   local inventory=s.inventory; local selected=s.peripheral; local found
   if inventory and inventory.items then
@@ -142,6 +142,7 @@ local function peripheral_details(c,s)
     text='API name: '..found.name..'\nType: '..found.type..'\nDiscovery wire: '..inventory.wire
       ..'\n'..(found.powered and 'Powered' or 'Unpowered / service paused')..'\nSnapshot tick: '..inventory.tick
       ..'\nUse peripheral.wrap(name, "'..inventory.wire..'"). Calls recheck live authority.'
+      ..'\nClick the selected row again for its Reference topic (no timer).'
   elseif inventory and inventory.error then
     text=(selected and ('Last selected name: '..selected..'\n') or '')..'Inventory unavailable; presence is not claimed.\n'..diagnostic(inventory.error)
   elseif selected then text=selected..'\nDisconnected / not present on this refreshed '..(inventory and inventory.wire or s.wire)..' path.'
@@ -153,6 +154,7 @@ local function inspect(c,s,rec,tick)
   if inspector then ok,items,e=pcall(inspector,rec,wire,tick)
   else ok=false; items={code='E_UNSUPPORTED',message='Discovery service not installed; no inventory is claimed.'} end
   c.rows.clear()
+  local retained=false
   if not ok or not items then
     local problem=ok and e or items
     s.inventory={wire=wire,tick=tick,error=type(problem)=='table' and problem or {code='E_ENGINE',message='Discovery inspection failed.'}}
@@ -168,9 +170,11 @@ local function inspect(c,s,rec,tick)
       -- These are generated opaque IDs / fixed host type names, not guest labels.
       -- Button styles do not support rich_text_setting in the pinned engine.
       local b=button(row,'peripheral_'..i,item.name..' / '..item.type..(item.powered and ' / + powered' or ' / ! unpowered'))
-      b.style.horizontally_stretchable=true; b.tooltip='Select exact '..wire..' identity '..item.name
+      b.style.horizontally_stretchable=true; b.tooltip={'tc-editor.peripheral-row',item.name,wire}
+      if s.peripheral==item.name and s.peripheral_wire==wire then retained=true end
     end
   end
+  if not retained then s.peripheral_wire=nil end -- Keep last-known details, disarm repeat.
   c.snapshot.caption=wire..' snapshot at tick '..tick..' — Refresh to recheck current wiring/power'
   peripheral_details(c,s)
 end
@@ -264,6 +268,7 @@ function M.open(player,id)
     return false
   end
   s.tab=1; s.follow=true; s.wire='red'; s.category=1; s.search=''; s.topic=1
+  s.peripheral=nil; s.peripheral_wire=nil
   local f=shell(player,s,tr('title')); local pane=f.add{type='tabbed-pane',name='content',style='tc_editor_tabs'}
   for _,name in ipairs(tabs) do
     local tab=pane.add{type='tab',name=name..'_tab',caption=tr(name),style='tc_editor_tab'}
@@ -298,6 +303,7 @@ function M.open(player,id)
   line(c,'snapshot','Select a channel and Refresh to inspect actual discovery.')
   c.add{type='scroll-pane',name='rows',horizontal_scroll_policy='never',vertical_scroll_policy='auto'}
   box(c,'details','Select a device to inspect its opaque API name and channel.',100,true)
+  c.details.tooltip=tr('peripheral-workflow')
   c=content(f,'reference')
   local filters=flow(c,'filters','horizontal'); line(filters,'label',tr('search'))
   local search=plain(filters.add{type='textfield',name='search',text=''}); search.style.width=190
@@ -417,7 +423,9 @@ function M.on_selection(event)
   elseif event.element==c.topics then
     s.topic=s.reference_entries[event.element.selected_index]; refresh_reference(c,s)
   elseif event.element==content(f,'peripherals').filter.wire then
-    s.wire=event.element.selected_index==2 and 'green' or 'red'
+    local wire=event.element.selected_index==2 and 'green' or 'red'
+    if wire~=s.wire then s.peripheral_wire=nil end
+    s.wire=wire
     inspect(content(f,'peripherals'),s,model.current(player,s.token),event.tick)
   elseif event.element==content(f,'maintenance').recovery then
     s.recovery_review=nil; s.forget=nil; M.refresh(player)
@@ -493,7 +501,26 @@ function M.on_click(event)
     if i and s.inventory and s.inventory.items and s.inventory.items[i] then
       local rows=content(f,'peripherals').rows
       if rows['device_'..i] and element==rows['device_'..i][action] then
-        s.peripheral=s.inventory.items[i].name; peripheral_details(content(f,'peripherals'),s); return 'Selected exact API identity.'
+        local item=s.inventory.items[i]; local wire=s.inventory.wire
+        if s.peripheral==item.name and s.peripheral_wire==wire then
+          local topic=help.peripheral_topic(item.type)
+          if not topic then
+            peripheral_details(content(f,'peripherals'),s)
+            player.print({'tc-editor.peripheral-reference-unavailable',item.type})
+            return 'Documentation unavailable for type '..item.type..'; identity details retained.'
+          end
+          local reference=content(f,'reference')
+          s.search=''; s.topic=topic
+          for category,name in ipairs(help.categories) do
+            if name==help.topics[topic].category then s.category=category; break end
+          end
+          reference.filters.search.text=s.search; reference.filters.category.selected_index=s.category
+          activate_tab(player,f,s,4,event.tick)
+          reference.reference_text.scroll_to_top(); reference.reference_text.scroll_to_left()
+          return 'Peripheral Reference opened; source and execution unchanged.'
+        end
+        s.peripheral=item.name; s.peripheral_wire=wire
+        peripheral_details(content(f,'peripherals'),s); return 'Selected exact API identity; click the row again for documentation.'
       end
     end
     local allowed=(s.tab==1 and element==c.actions[action] and (action=='validate' or action=='save' or action=='stop'))

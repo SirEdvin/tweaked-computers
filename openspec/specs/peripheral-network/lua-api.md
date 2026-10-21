@@ -8,7 +8,7 @@ Normative companion to [spec.md](spec.md). Shared types/errors: [common.md](../.
 | --- | --- | --- |
 | `peripheral.getNames(wire)` | `string[]` | Complete sorted unique names on explicit `"red"` or `"green"`; empty is a successful complete empty result |
 | `peripheral.isPresent(name, wire)` | boolean | Physical current reachability; an unpowered device can still be present |
-| `peripheral.getType(name, wire)` | string or nil | One of `monitor`, `kv_database`, `logic_handler`, `configurator`, `recipe_searcher`; nil if not present |
+| `peripheral.getType(name, wire)` | string or nil | One of `monitor`, `kv_database`, `logic_handler`, `configurator`, `recipe_searcher`, `modem`, `speaker`; nil if not present |
 | `peripheral.getMethods(name, wire)` | `string[]` or nil | Sorted public method names; includes declared aliases |
 | `peripheral.describe(name, wire)` | `PeripheralInfo` or nil | Current public metadata, even while unpowered |
 | `peripheral.wrap(name, wire)` | wrapped table or nil | Ephemeral dot-call method facade bound to name, entity generation and selected channel |
@@ -23,7 +23,7 @@ The explicit wire argument has no implicit default or `"both"` mode. A caller ma
 -- Documentation record; no LuaEntity/connector objects are included.
 PeripheralInfo = {
   name = PeripheralName,
-  type = "monitor" | "kv_database" | "logic_handler" | "configurator" | "recipe_searcher",
+  type = "monitor" | "kv_database" | "logic_handler" | "configurator" | "recipe_searcher" | "modem" | "speaker",
   label = string | nil,
   powered = boolean,
   position = { x = number, y = number },
@@ -41,7 +41,7 @@ Every device exposes `getLimits()` for its documented effective capacities. This
 
 ## Reachability rules
 
-Only real physical wires between this mod's public computer-network connectors participate. Computer entities can be passive graph vertices but are not exposed as a programmable peripheral type in v1. Red/green graphs are independent. Input/output/target connectors, vanilla poles/devices, ghosts, foreign forces and other surfaces do not relay discovery. Unknown external wires are left intact but ignored for discovery.
+Only real physical wires between this mod's public computer-network connectors, supported native radar sockets and vanilla programmable-speaker sockets participate. Radar-origin hidden links are excluded from discovery and witness revalidation, including paths through speakers; radio messages carry data, not remote authority. Computer entities can be passive graph vertices but are not exposed as a programmable peripheral type in v1. Red/green graphs are independent. Input/output/target connectors, other vanilla poles/devices, ghosts, foreign forces and other surfaces do not relay discovery. Unknown external wires are left intact but ignored for discovery.
 
 A merged monitor is one service identity discoverable through any reachable member. Its shared framebuffer is not an implicit network link between disconnected members or colors. KV access over both colors likewise exposes one database, not a color bridge.
 

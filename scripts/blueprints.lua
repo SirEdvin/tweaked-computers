@@ -23,7 +23,7 @@ function M.prepare(blueprint,mapping)
   end
   for _,e in ipairs(entities) do
     local native=mapping[e.entity_number]; local rec,role=registry.by_entity(native)
-    if rec and role=='body' then
+    if rec and not rec.native_carrier and role=='body' then
       selected=selected+1
       local token='tc-blueprint-'..string.format('%.0f',registry.sequence())
       e.name=defs.devices[rec.kind].entity_name
@@ -40,7 +40,7 @@ function M.prepare(blueprint,mapping)
           direction=rec.direction,quality=rec.body.quality.name,tags={tc_port={version=1,token=token,role=r,body=e.name}},wires={}}
         endpoints[#endpoints+1]={entry=entry,port=port}; output[#output+1]=entry; byunit[port.unit_number]=number
       end end
-    elseif not rec and not port_role(e.name) and not defs.power_kind(e.name) then output[#output+1]=e end
+    elseif (not rec or rec.native_carrier) and not port_role(e.name) and not defs.power_kind(e.name) then output[#output+1]=e end
   end
   if selected==0 then return false end
   local wire_count=0
@@ -120,6 +120,7 @@ function M.on_ghost(event)
 end
 function M.on_pasted(event)
   local source,source_role=registry.by_entity(event.source); local target,target_role=registry.by_entity(event.destination)
+  if source and source.native_carrier or target and target.native_carrier then return end
   -- Native settings paste must never turn the Network shell into a signal source,
   -- even when the pasted-from entity is vanilla or otherwise not our authority.
   if target and target_role=='body' then lifecycle.reset_network(target) end

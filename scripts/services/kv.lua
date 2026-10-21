@@ -173,6 +173,53 @@ function M.initialize_existing()
   end
 end
 local function noop() end
+-- MSD byte sorting bounds inspection by stored bytes, even for long common
+-- prefixes. Repeated full-string comparison charges can exceed a whole tick
+-- for a legal full database. All scratch lists are host-only and ephemeral.
+local function inspection_keys(map,spend)
+  local keys={}
+  for k in pairs(map) do spend(1); keys[#keys+1]=k end
+  local result,stack={},{ {keys=keys,offset=1} }
+  while #stack>0 do
+    local group=table.remove(stack); local values=group.keys
+    spend(#values*3+1)
+    if #values==1 then result[#result+1]=values[1]
+    elseif #values>1 then
+      local buckets,bytes={},{}
+      for _,k in ipairs(values) do
+        local b=string.byte(k,group.offset) or -1 -- Shorter prefix sorts first.
+        if not buckets[b] then buckets[b]={}; bytes[#bytes+1]=b end
+        local bucket=buckets[b]; bucket[#bucket+1]=k
+      end
+      table.sort(bytes,function(a,b) spend(1); return a<b end)
+      for i=#bytes,1,-1 do
+        stack[#stack+1]={keys=buckets[bytes[i]],offset=group.offset+1}
+      end
+    end
+  end
+  return result
+end
+-- Detached live browser snapshot. Unlike mining snapshots this excludes expiry
+-- at the exact deadline, never imports/repairs state, and requires paid reads.
+function M.inspect(rec,tick,spend)
+  clock(tick)
+  local d=db(rec); M.audit(d,spend)
+  spend(d.bytes+#d.order*80+d.fields*48+128)
+  local entries={}
+  for _,k in ipairs(inspection_keys(d.entries,spend)) do
+    local e=live(d,k,tick)
+    if e then
+      local item={key=k,type=e.type}
+      if e.type=='string' then item.value=e.value
+      else
+        item.fields={}
+        for _,f in ipairs(inspection_keys(e.fields,spend)) do item.fields[#item.fields+1]={field=f,value=e.fields[f]} end
+      end
+      entries[#entries+1]=item
+    end
+  end
+  return {tick=tick,entries=entries}
+end
 -- Snapshot representation has separately reserved metadata, with dense records
 -- rather than dynamic key serialization. Even empty/NUL keys are plain values.
 function M.snapshot(rec,tick,spend)

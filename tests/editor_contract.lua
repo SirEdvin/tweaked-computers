@@ -5,6 +5,7 @@ local scheduler=require('scripts.scheduler')
 local model=require('scripts.ui.editor-model')
 local editor=require('scripts.ui.editor')
 local limits=require('scripts.runtime.limits')
+local help=require('scripts.ui.help')
 local M={}
 local function source(value)
   return 'return {api_version=1,handlers={start=function(e) computer.setState("value",'..value..'); computer.log("started") end}}'
@@ -27,9 +28,10 @@ local type_args={
   ['text-box']=names('text'),textfield=names('text'),['empty-widget']={},
   ['tabbed-pane']={},tab={},['scroll-pane']=names('horizontal_scroll_policy vertical_scroll_policy'),
   ['drop-down']=names('items selected_index'),checkbox=names('state'),sprite=names('sprite'),
-  ['table']=names('column_count')}
+  ['table']=names('column_count'),['sprite-button']=names('sprite number quality')}
 local style_types={tc_editor_text='text-box',tc_editor_button='button',tc_editor_frame='frame',
   tc_editor_tabs='tabbed-pane',tc_editor_tab='tab',draggable_space_header='empty-widget'}
+for _,style in ipairs({'compact_slot','red_circuit_network_content_slot','green_circuit_network_content_slot'}) do style_types[style]='sprite-button' end
 local reserved=names([[
   allow_decimal allow_negative allow_none_state anchor auto_center auto_toggle badge_text caption children children_names
   clicked_sprite column_count direction drag_target draw_horizontal_line_after_headers draw_horizontal_lines draw_vertical_lines
@@ -100,6 +102,8 @@ local function gui(parent,spec)
   function e.clear() for i=#e.children,1,-1 do e.children[i].destroy() end end
   function e.add_tab(tab,content) e.tabs[#e.tabs+1]={tab=tab,content=content} end
   function e.scroll_to_bottom() e.scrolls=(e.scrolls or 0)+1 end
+  function e.scroll_to_top() e.top_scrolls=(e.top_scrolls or 0)+1 end
+  function e.scroll_to_left() e.left_scrolls=(e.left_scrolls or 0)+1 end
   function e.select(first,last) e.selection={first,last} end
   function e.select_all() e.selection={1,#e.text} end
   return e
@@ -305,6 +309,20 @@ function M.run()
     assert(runtime.activate(bad.id,tick)); assert(runtime.activate(good.id,tick))
     assert(scheduler.dispatch(bad,tick+1)); assert(bad.status=='faulted' and bad.diagnostic.code=='E_BUDGET')
     assert(scheduler.dispatch(good,tick+1)); assert(good.state.value==31 and good.status=='running')
+  end)
+  group('editor-starter-validate-save-run-print-once-and-timer',function()
+    local c=make(48); local p=M.player(1010,c.body)
+    local s=model.open(p,c.id)
+    model.edit(p,s.token,help.template)
+    model.action(p,s.token,'validate',tick)
+    assert(not c.active and #c.logs==0 and not c.state.samples)
+    model.action(p,s.token,'save',tick)
+    assert(c.saved_source==help.template and not c.active and #c.logs==0)
+    model.action(p,s.token,'run',tick)
+    assert(scheduler.dispatch(c,tick+1))
+    assert(c.state.samples==1 and #c.logs==1 and c.logs[1].text=='Initial sample count:\t1')
+    scheduler.tick(tick+61)
+    assert(c.state.samples==2 and #c.logs==1)
   end)
   storage.tweaked_computers=host_storage
   log('TC_CONTRACT_TOTAL '..groups)

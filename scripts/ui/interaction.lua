@@ -3,6 +3,7 @@ local registry=require('scripts.registry')
 local defs=require('scripts.device-definitions')
 local editor=require('scripts.ui.editor')
 local monitor=require('scripts.services.monitor')
+local inspector=require('scripts.ui.peripheral-inspector')
 local M={}
 function M.on_input(event)
   if event.input_name~='tc-interact' or event.in_gui or event.element then return end
@@ -24,9 +25,18 @@ function M.on_opened(event)
   if not entity or not entity.valid then return end
   -- Native combinator shells and role pads are implementation details, not
   -- alternate configuration UIs. Never replace a different already-open GUI.
-  if not defs.by_name[entity.name] and not defs.port_role(entity.name) and not defs.power_kind(entity.name) then return end
+  local kind=defs.by_name[entity.name]
+  if kind and kind~='computer' and not inspector.supports(kind) then return end
+  if not kind and not defs.port_role(entity.name) and not defs.power_kind(entity.name) then return end
   local player=game.get_player(event.player_index)
-  if player and player.valid and player.opened==entity then player.opened=nil end
+  if player and player.valid and player.opened==entity then
+    player.opened=nil
+    local rec,role=registry.by_entity(entity)
+    if rec and role=='body' and rec.kind~='computer' then
+      editor.on_player_unavailable(event) -- retires only the session, retains drafts
+      inspector.open(player,rec.id)
+    end
+  end
 end
 function M.on_rotate(event)
   if (event.input_name~='tc-rotate' and event.input_name~='tc-reverse-rotate') or event.in_gui or event.element then return end

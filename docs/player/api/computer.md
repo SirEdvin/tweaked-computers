@@ -45,6 +45,14 @@ Logs keep the newest 64 entries / 16,384 bytes, evicting oldest. An entry must b
 a string within supported bounds. There is no program access to editor drafts,
 other computers' state/lifecycle, wall clock or arbitrary Factorio objects.
 
+Use `print("Initial sample count:", total)` for ordinary multi-argument output.
+It writes one tab-separated entry through the same bounded log, preserving false
+and nil positions, returning no values. `print()` writes an empty entry. The
+Console displays tabs as spaces without changing stored bytes. No chat output is
+produced. `computer.log(text)` remains the exact one-string API. Complete formatting
+and retention admission precede append/eviction; earlier output survives later errors.
+See [base helpers and protected errors](language.md#printing-raw-helpers-and-error-transformation).
+
 ## General events
 
 Register declared handler names, never functions. Each `on` call is independent:
@@ -61,6 +69,7 @@ private helper names or nested local names.
 | monitor_resize | peripheral, wire, wires, old_width, old_height, width, height, reason |
 | monitor_touch | peripheral, wire, wires, x, y, player_index, sample_tick |
 | power_restored | outage_start_tick, restored_tick |
+| modem_message | peripheral, wire, wires, channel, replyChannel, message?, distance?, sent_tick; [modem semantics](modem.md#messages-and-named-handlers) |
 
 `power_restored` occurs once after a real outage for retained subscriptions, not
 cold load. No power-loss/stop/fault guest callback is required for safety. `start`,

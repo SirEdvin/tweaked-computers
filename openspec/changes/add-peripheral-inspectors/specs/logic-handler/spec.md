@@ -46,7 +46,7 @@ The Output signals area SHALL show the handler's own emitted bank, with an expli
 - **THEN** the next successful inspector update shows the cleared bank without replaying a write or restoring the former owner.
 
 ### Requirement: Bounded live signal observation
-While open, the signal panel SHALL refresh through bounded, throttled observations and expose the sample tick or stale/pending state. It SHALL NOT register guest subscriptions or promise to capture changes entirely between UI samples. Closing the window SHALL stop inspector sampling while preserving existing program subscriptions and output ownership.
+The open signal panel SHALL throttle observations, label per-wire ticks or pending/stale state, and publish only complete red/green pairs spanning at most 30 ticks. Separate-tick samples SHALL NOT be described as atomic. Incomplete pairs SHALL remain private and expire. Inspection SHALL NOT create guest subscriptions or promise pulse capture. Closing SHALL stop inspection without changing program subscriptions or output ownership.
 
 #### Scenario: Signals change with the inspector open
 - **WHEN** powered input values change and inspection work is admitted

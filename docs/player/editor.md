@@ -20,7 +20,7 @@ table-backed mocks and are not graphical-client evidence.
 | --- | --- |
 | **Editor** | Write your document; Validate, Save, Run / Apply and Stop in one row. See draft/saved/active revisions and a compact conflict/validation message. |
 | **Console** | Read bounded output and diagnostics, or try a live single-line Lua command with Enter / Execute. [Shell values and effects](console.md) are shared per computer, independent of the saved program. Follow-off holds the output snapshot; Refresh updates it once. |
-| **Peripherals** | Choose **Red** or **Green**, then **Refresh peripherals**. Rows show actual API name, type, icon and power. Select a row for its channel/details. This is a timestamped snapshot, not a live presence guarantee. |
+| **Peripherals** | Choose **Red** or **Green**, then **Refresh peripherals**. Rows show actual API name, type, icon and power. Click a row for details; click that selected row again for its Reference topic, with no double-click timer. This is a timestamped snapshot, not a live presence guarantee. |
 | **Reference** | Search and filter the existing Lua v1 help by category and topic. **Select text**, then use native Copy. The starter can be inserted only into an empty draft. |
 | **Maintenance** | Review current/active source, resolve conflicts, review/copy/forget retained drafts, and deliberately reset a stopped computer's state. |
 
@@ -126,6 +126,25 @@ Refresh after wiring or power changes. A previously selected device missing from
 complete refreshed path is shown as disconnected; if inspection is pending, presence
 is unknown instead. Red and green never silently mix. Use the exact displayed name
 and wire with `peripheral.wrap(name, wire)`; calls recheck live authority.
+
+Clicking a selected row again opens its exact device-type topic in **Reference**,
+even after a delay and even if the device is unpowered. This clears Reference
+Search, selects the Peripherals category, synchronizes both visible filters and
+reveals the topic from its beginning. Unknown types keep useful details and report
+documentation unavailable instead of opening an unrelated topic. This is static
+help navigation: no guest method, Save, Run, reset or peripheral write occurs.
+Your mounted source widget, dirty draft, saved/active revisions and shell values stay.
+
+Changing discovery wire disarms repeat-click navigation, even for a name present
+on both colors. Missing, pending or failed refreshed inventories disarm it too;
+the next click selects again. A successful same-wire refresh retains selection by
+name, not row position. A new editor session starts unselected.
+
+Discovery and every shipped family (including [radar modems](api/modem.md) and
+[speakers](api/speaker.md)) have one paragraph per method, separated by two empty
+lines. Aliases have their own entries; overloads stay together. Shared wiring,
+power, persistence and event notes remain separate. Normal category/search/topic
+browsing and **Select text**, then native Copy, still work throughout long topics.
 
 For a fault: read Console's first error, Stop if necessary, repair source/wiring/
 power, Validate, Save and Run. Reset State is a deliberate last step for application

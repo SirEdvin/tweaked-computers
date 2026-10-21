@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Color-preserving physical reachability
-Discovery SHALL follow real, same-color wires through this mod's computer-network ports and registered vanilla programmable-speaker connectors only, within one force and surface. A path MUST NOT switch color, traverse another unsupported vanilla entity, cross an input/output/target role or follow a ghost connection. Native circuit-network identity MUST NOT substitute for a physical discovery path.
+Discovery SHALL follow real, same-color physical wires through this mod's computer-network ports, supported native radar modem connectors and registered vanilla programmable-speaker connectors only, within one force and surface. A path MUST NOT switch color, traverse another unsupported vanilla entity, cross an input/output/target role, follow a ghost connection or follow a radar-origin hidden wire. Native circuit-network identity MUST NOT substitute for a physical discovery path.
 
 #### Scenario: Same-color transitive discovery
 - **WHEN** a computer reaches a database and then a monitor through red network-port wires
@@ -30,8 +30,13 @@ Discovery SHALL follow real, same-color wires through this mod's computer-networ
 - **WHEN** a speaker is reachable only from a Configurator target port or logic input/output port
 - **THEN** it can participate in that native factory network without becoming a directly discoverable speaker peripheral through that role.
 
+#### Scenario: Speaker relay preserves radar-origin isolation
+- **WHEN** a computer reaches a local supported radar through a registered speaker, and a distant radar has a database attached only through its native hidden radio link
+- **THEN** local physical discovery and saved-witness validation exclude that distant radar and database
+- **AND** local physical radar/speaker relays remain supported on the selected color.
+
 ### Requirement: Passive discovery ports
-Network ports SHALL emit no mod-generated circuit signals and SHALL expose no signal read/write service. Native continuity between wires on the same physical connector SHALL remain acceptable. Registered speakers SHALL retain native circuit playback independently of peripheral calls; native signal continuity MUST NOT grant discovery authority. The mod MUST NOT silently delete player-owned unsupported wires to enforce discovery policy.
+Network ports SHALL emit no mod-generated circuit signals and SHALL expose no signal read/write service. Native continuity between wires on the same physical connector SHALL remain acceptable. Registered speakers SHALL retain native circuit playback independently of peripheral calls, and supported radars SHALL retain native circuit transmission independently of modem traffic; native signal continuity MUST NOT grant discovery authority. The mod MUST NOT silently delete player-owned unsupported wires to enforce discovery policy.
 
 #### Scenario: External signals appear on a discovery cable
 - **WHEN** a player wires an ordinary signal source to a network port
@@ -44,7 +49,7 @@ Network ports SHALL emit no mod-generated circuit signals and SHALL expose no si
 - **AND** those values do not authorize paths across a color or unsupported entity.
 
 ### Requirement: Integrated device wiring targets
-A player SHALL connect a computer, database, monitor or supported vanilla speaker using a socket visibly belonging to that device. Normal selection and wiring MUST NOT expose an anonymous NETWORK tile or require discovering an invisible separate tile. Hover identity and connector position SHALL identify the actual device; wiring SHALL still use native red/green circuit wires. Speaker attachment SHALL use its existing native connectors and preserve its native opening behavior.
+A player SHALL connect a computer, database, monitor, supported radar modem or supported vanilla speaker using a socket visibly belonging to that device. Normal selection and wiring MUST NOT expose an anonymous NETWORK tile or require discovering an invisible separate tile. Hover identity and connector position SHALL identify the actual device; wiring SHALL still use native red/green circuit wires. Native radar/speaker attachment SHALL use existing native connectors and preserve native opening behavior.
 
 #### Scenario: Wire a computer directly to a monitor
 - **WHEN** a player selects a red or green wire and connects the visible computer and monitor sockets

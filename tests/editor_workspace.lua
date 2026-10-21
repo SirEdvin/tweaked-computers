@@ -5,6 +5,7 @@ local registry=require('scripts.registry')
 local model=require('scripts.ui.editor-model')
 local editor=require('scripts.ui.editor')
 local interaction=require('scripts.ui.interaction')
+local peripheral_inspector=require('scripts.ui.peripheral-inspector')
 local monitor=require('scripts.services.monitor')
 local layout=require('scripts.ui.editor-layout')
 local runtime=require('scripts.runtime.computer')
@@ -13,9 +14,15 @@ local admission=require('scripts.runtime.admission')
 local limits=require('scripts.runtime.limits')
 local lifecycle=require('scripts.lifecycle')
 local help=require('scripts.ui.help')
+local help_contract=require('tests.help_contract')
 local defs=require('scripts.device-definitions')
 local compiler=require('scripts.runtime.compiler')
-editor.register_inspector(require('scripts.ui.network-inspector'))
+local real_inspector=require('scripts.ui.network-inspector')
+local inspection_override -- Explicit host-inventory doubles for otherwise unreachable error cases.
+editor.register_inspector(function(...)
+  if inspection_override then return inspection_override.items,inspection_override.error end
+  return real_inspector(...)
+end)
 local M={}
 function M.run()
   local original_storage=storage.tweaked_computers
@@ -35,7 +42,10 @@ function M.run()
   end
   assert(monitor.resolve(mon) and not registry.get().monitors.job)
   local monitor_id=monitor.resolve(mon).id
-  local function connector(r,wire) return assert(lifecycle.connector(r,'network',wire)) end
+  local function connector(r,wire)
+    if r.native_carrier then return assert(r.body.get_wire_connector(defines.wire_connector_id['circuit_'..wire],true)) end
+    return assert(lifecycle.connector(r,'network',wire))
+  end
   assert(connector(rec,'red').connect_to(connector(db,'red')))
   assert(connector(rec,'green').connect_to(connector(mon,'green')))
   local a=contracts.player(2001,rec.body); local b=contracts.player(2002,rec.body)
@@ -57,6 +67,7 @@ function M.run()
       editor.on_text{player_index=(p or a).index,element=f.content.editor.source,tick=tick}
     end
     local f,c,source_widget
+    group('workspace-help-exact-inventory-spacing-signatures-aliases',help_contract.run)
     group('workspace-only-explicit-control-click-opens-editor',function()
       a.selected=rec.body
       a.opened=rec.body
@@ -96,7 +107,9 @@ function M.run()
         assert(connector(rec,color).disconnect_from(connector(target,color)))
         for _,r in ipairs({rec,target}) do
           a.opened=r.body; interaction.on_opened{player_index=a.index,entity=r.body,tick=tick}
-          assert(a.opened==nil and not a.gui.screen[editor.frame_name])
+          assert(not a.gui.screen[editor.frame_name])
+          if r.kind~='computer' then assert(a.opened==a.gui.screen[peripheral_inspector.frame_name]); peripheral_inspector.close(a)
+          else assert(a.opened==nil) end
         end
         assert(connector(rec,color).connect_to(connector(target,color)))
         assert(connector(rec,color).is_connected_to(connector(target,color)))
@@ -105,12 +118,15 @@ function M.run()
     group('workspace-all-device-native-dialogs-suppressed-vanilla-untouched',function()
       local devices={rec,db,mon,build('logic',12,120),build('configurator',18,120)}
       for _,r in ipairs(devices) do
-        assert(not r.body.operable,'implementation shell must not expose a native dialog')
+        assert(r.body.operable==(r.kind~='computer'),'only peripheral bodies are ordinarily openable')
         local parts={r.body}; for _,child in pairs(r.children) do parts[#parts+1]=child end
         for _,part in ipairs(parts) do
           a.selected=part; a.opened=part
           interaction.on_opened{player_index=a.index,entity=part,tick=tick}
-          assert(not a.opened and not a.gui.screen[editor.frame_name])
+          assert(not a.gui.screen[editor.frame_name])
+          if part==r.body and r.kind~='computer' then
+            assert(a.opened==a.gui.screen[peripheral_inspector.frame_name]); peripheral_inspector.close(a)
+          else assert(not a.opened) end
         end
         if r.kind~='computer' then
           a.selected=r.body; interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick}
@@ -167,7 +183,7 @@ function M.run()
       local exports=0; for _ in pairs(rec.active.handlers) do exports=exports+1 end; assert(exports==2)
       rec.power_checked_tick=tick -- Explicit fixture dispatch, not an actual on_tick power sample.
       assert(scheduler.dispatch(rec,tick) and rec.status=='running',rec.diagnostic and rec.diagnostic.message)
-      assert(rec.state.samples==1 and #rec.logs==1 and rec.logs[1].text=='Initial sample count: 1')
+      assert(rec.state.samples==1 and #rec.logs==1 and rec.logs[1].text=='Initial sample count:\t1')
       assert(rec.saved_source==help.template and rec.active.source==help.template and c.source.text==help.template)
       assert(bag.documents[rec.id].source==help.template and not scheduler.dispatch(rec,tick))
     end)
@@ -269,7 +285,18 @@ function M.run()
       assert(#s.reference_entries==#help.topics and #r.topics.items==#help.topics)
       local combined=''; for i=1,#help.topics-1 do combined=combined..help.topics[i].text end
       assert(combined==help.text..'\n','categorized reference dropped or duplicated text')
-      select(r.filters.category,5); assert(#s.reference_entries==6)
+      select(r.filters.category,5); assert(#s.reference_entries==8)
+      local titles={['Discovery and identity']=true,['Logic handler']=true,['KV database']=true,
+        Monitor=true,Configurator=true,['Recipe Searcher']=true,['Radar modem']=true,['Programmable speaker']=true}
+      for _,index in ipairs(s.reference_entries) do
+        local title=help.topics[index].title; assert(titles[title]); titles[title]=nil
+      end
+      assert(next(titles)==nil)
+      r.filters.search.text='RADAR MODEM'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
+      assert(#s.reference_entries==1 and r.reference_text.text:find('transmit',1,true)
+        and r.reference_text.text:find('modem_message',1,true))
+      r.filters.search.text='playNote'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
+      assert(#s.reference_entries==1 and r.reference_text.text:find('getSounds',1,true))
       r.filters.search.text='RECIPE SEARCHER'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(#s.reference_entries==1 and r.reference_text.text:find('findRecipes',1,true))
       r.filters.search.text='KV DATABASE'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
@@ -283,6 +310,96 @@ function M.run()
       click(r.actions.template); assert(c.source.text==exact and rec.active.source~=exact)
       r.filters.search.text='no-topic-here'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(#s.reference_entries==0 and r.reference_text.text:find('No matching topic',1,true))
+    end)
+    group('workspace-context-help-all-seven-live-families-filter-clear-delay-no-effects',function()
+      tab(f,2); local input=f.content.console.prompt.command
+      input.text='help_kept={value=42}; help_alias=help_kept'
+      editor.on_text{player_index=a.index,element=input,tick=tick}
+      editor.on_confirmed{player_index=a.index,element=input,tick=tick}
+      rec.power_checked_tick=tick; assert(scheduler.dispatch(rec,tick))
+      assert(rec.shell and not rec.shell.diagnostic and #rec.shell.pending==0)
+      local devices={db,mon,build('logic',30,120),build('configurator',33,120),build('recipe_searcher',36,120)}
+      for _,name in ipairs({'radar','programmable-speaker'}) do
+        local body=assert(surface.create_entity{name=name,position={40+#devices*4,120},force='player'})
+        devices[#devices+1]=assert(lifecycle.build(body))
+      end
+      -- Keep the genuine physical graph within native wire reach via a same-color chain.
+      local last=rec
+      for _,device in ipairs(devices) do
+        local from,to=connector(last,'red'),connector(device,'red')
+        assert(from.is_connected_to(to) or from.connect_to(to,false))
+        last=device
+      end
+      -- The engine validates shape/type exports elsewhere; navigation must not call any.
+      local s,bag=model.session(a.index); local r=f.content.reference; local p=f.content.peripherals
+      local before=serpent.line({saved=rec.saved_source,revision=rec.saved_revision,active=rec.active,
+        run=rec.run_id,status=rec.status,state=rec.state,shell=rec.shell,kv=db.database,model=monitor.resolve(mon).model})
+      local writes=c.source.text_writes; local source=c.source
+      for _,device in ipairs(devices) do
+        tab(f,4); select(r.filters.category,3)
+        r.filters.search.text='no-match-context'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
+        assert(#s.reference_entries==0)
+        tab(f,3); select(p.filter.wire,1)
+        local index,item
+        for i,entry in ipairs(s.inventory.items) do
+          if entry.name==(device==mon and monitor_id or device.id) then index=i; item=entry end
+        end
+        assert(index,device.kind)
+        s.peripheral_wire=nil -- Each first click is deliberately unselected.
+        click(p.rows['device_'..index]['peripheral_'..index])
+        assert(s.tab==3 and s.peripheral==item.name and s.peripheral_wire=='red')
+        assert(p.details.text:find('API name: '..item.name,1,true) and p.details.text:find('again',1,true))
+        local row=p.rows['device_'..index]['peripheral_'..index]
+        tick=tick+600; click(row)
+        local topic=help.peripheral_topic(item.type)
+        assert(s.tab==4 and s.topic==topic and r.reference_text.text==help.topics[topic].text)
+        assert(s.search=='' and r.filters.search.text=='' and s.category==5 and r.filters.category.selected_index==5)
+        assert(s.reference_entries[r.topics.selected_index]==topic and r.reference_text.top_scrolls>0 and r.reference_text.left_scrolls>0)
+        local selected=s.peripheral; click(row) -- hidden row cannot act after navigation.
+        assert(s.tab==4 and s.peripheral==selected)
+      end
+      assert(c.source==source and c.source.text==exact and c.source.text_writes==writes and bag.documents[rec.id].source==exact)
+      assert(before==serpent.line({saved=rec.saved_source,revision=rec.saved_revision,active=rec.active,
+        run=rec.run_id,status=rec.status,state=rec.state,shell=rec.shell,kv=db.database,model=monitor.resolve(mon).model}))
+    end)
+    group('workspace-context-help-identity-refresh-wire-disappearance-errors-stale',function()
+      local s=model.session(a.index); local p=f.content.peripherals
+      local one={name=db.id,type='kv_database',powered=false}; local two={name='test-current-monitor',type='monitor',powered=false}
+      local function inventory(items,problem)
+        inspection_override={items=items,error=problem}; tick=tick+1
+        if s.tab~=3 then tab(f,3) else click(p.filter.inspect) end
+      end
+      local function row(i) return p.rows['device_'..i]['peripheral_'..i] end
+      inventory({one,two}); s.peripheral_wire=nil
+      click(row(1)); assert(s.tab==3 and s.peripheral==one.name)
+      click(row(2)); assert(s.tab==3 and s.peripheral==two.name)
+      local stale=row(2); inventory({two,one}); assert(not stale.valid and s.peripheral_wire=='red')
+      click(stale); assert(s.tab==3); click(row(1)); assert(s.tab==4 and s.topic==help.peripheral_topic('monitor'))
+      inventory({one}); click(row(1)); assert(s.tab==3)
+      select(p.filter.wire,2); assert(not s.peripheral_wire and s.inventory.wire=='green')
+      click(row(1)); assert(s.tab==3 and s.peripheral_wire=='green'); click(row(1)); assert(s.tab==4)
+      inventory({one}); inventory({}); assert(not s.peripheral_wire and p.details.text:find('Disconnected',1,true))
+      inventory({one}); click(row(1)); assert(s.tab==3); click(row(1)); assert(s.tab==4)
+      for _,code in ipairs({'E_BUSY','E_NETWORK_PENDING','E_LIMIT','E_ENGINE'}) do
+        inventory({one}); inventory(nil,{code=code,message='explicit inventory failure'})
+        assert(not s.peripheral_wire and s.inventory.error.code==code)
+        inventory({one}); click(row(1)); assert(s.tab==3); click(row(1)); assert(s.tab==4)
+      end
+      inventory({{name='future-name',type='future-device',powered=false}})
+      click(row(1)); local details=p.details.text; click(row(1))
+      assert(s.tab==3 and p.details.text==details and s.message:find('Documentation unavailable',1,true))
+      local selected=s.peripheral; local current=row(1)
+      click(current,b); assert(s.peripheral==selected and s.tab==3)
+      a.permission_group={allows_action=function() return false end}; click(current)
+      assert(s.tab==3); a.permission_group=nil
+      local replacement=p.rows.device_1.add{type='button',name='peripheral_999'}; click(replacement); assert(s.tab==3)
+      a.opened={foreign=true}; click(current); assert(s.tab==3); a.opened=f
+      local token=f.tags.token; f.tags.token=token+1; click(current); assert(s.tab==3); f.tags.token=token
+      inspection_override=nil
+      assert(editor.open(a,rec.id)); f=a.gui.screen[editor.frame_name]; c=f.content.editor; source_widget=c.source
+      assert(not model.session(a.index).peripheral and not model.session(a.index).peripheral_wire)
+      tab(f,3); local current_s=model.session(a.index)
+      click(f.content.peripherals.rows.device_1.peripheral_1); assert(current_s.tab==3)
     end)
     group('workspace-conflict-explicit-navigation-recheck-rebase-reload',function()
       assert(editor.open(b,rec.id)); local other=b.gui.screen[editor.frame_name]
@@ -417,7 +534,7 @@ function M.run()
     group('workspace-reference-starter-compiles-supported-api',function()
       local context=admission.context(admission.new(),'help-example',0)
       local plan,e=compiler.compile(help.template,context); assert(plan,e and e.message)
-      assert(#help.topics==13 and #help.categories==7)
+      assert(#help.topics==15 and #help.categories==7)
       if #original_game.players==0 then log('TC_WORKSPACE_CLIENT_SKIPPED no client-created player; all GUI checks are mocks') end
     end)
   end)

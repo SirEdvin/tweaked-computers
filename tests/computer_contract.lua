@@ -6,6 +6,7 @@ local data = require('scripts.runtime.data')
 local compiler = require('scripts.runtime.compiler')
 local admission = require('scripts.runtime.admission')
 local limits = require('scripts.runtime.limits')
+local sandbox = require('scripts.runtime.sandbox')
 local M = {}
 local serial=0
 local cleanup_calls={}
@@ -369,6 +370,64 @@ end
   scheduler.tick(7)
   assert(rec.status=='running' and rec.state.unexpected==nil and rec.state.boots==1 and rec.state.samples==2)
   report('plain-optional-start-does-not-choose-arbitrary-export')
+  root=fresh()
+  local printing=[[function start()
+    print('value',false,nil,3,nil); print(); computer.log('unchanged')
+    local ok,e=pcall(print,string.rep('x',16384),'overflow')
+    assert(not ok and e.code=='E_LIMIT')
+    print('before failure'); error('later failure')
+  end]]
+  rec=registry.register('computer',body())
+  runtime.save(rec.id,printing,0); assert(runtime.validate(rec.id,0))
+  assert(#rec.logs==0 and not rec.active)
+  assert(runtime.activate(rec.id,0)); scheduler.tick(0)
+  assert(rec.status=='faulted' and #rec.logs==5)
+  assert(rec.logs[1].text=='value\tfalse\tnil\t3\tnil' and rec.logs[2].text==''
+    and rec.logs[3].text=='unchanged' and rec.logs[4].text=='before failure')
+  report('saved-print-exact-tabs-empty-no-partial-and-earlier-output-survives')
+  -- Observe the existing retention sink at the exact remaining-credit boundary.
+  -- Fatal readback is host-only: poisoned guests cannot execute witnesses.
+  for _,kind in ipairs({'work','allocations'}) do
+    local function setup()
+      local target={logs={},log_bytes=0}
+      for i=1,limits.console_entries do runtime.log(target,'old-'..i,0) end
+      local context=admission.context(admission.new(),'print-retention',0)
+      local guard=sandbox.new(context,function(g)
+        return {computer={log=function(text) runtime.log(target,text,0,g.spend) end}}
+      end)
+      guard.initialize()
+      return target,context,guard,guard.global('print')
+    end
+    local target,context,guard,fn=setup(); local before=context.machine[kind]
+    guard.call(fn,'new',false,nil); local cost=context.machine[kind]-before
+    assert(#target.logs==limits.console_entries and target.logs[1].text=='old-2' and target.logs[#target.logs].text=='new\tfalse\tnil')
+    target,context,guard,fn=setup()
+    context.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost
+    assert(pcall(guard.call,fn,'new',false,nil) and target.logs[1].text=='old-2')
+    target,context,guard,fn=setup()
+    local first,bytes=target.logs[1],target.log_bytes
+    context.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost+1
+    assert(not pcall(guard.call,fn,'new',false,nil) and #target.logs==limits.console_entries and target.logs[1]==first and target.log_bytes==bytes)
+    assert(guard.diagnostic({}).code=='E_BUDGET')
+  end
+  report('saved-print-exact-admission-before-retention-eviction')
+  for _,name in ipairs({'xpcall','unpack','_VERSION'}) do
+    root=fresh(); rec=computer('function start() computer.setState("kept",true) end')
+    scheduler.tick(0)
+    local run,active,state=rec.run_id,rec.active,rec.state
+    local collision='local function '..name..'() end\nfunction start() computer.setState("unsafe",true) end'
+    runtime.save(rec.id,collision,rec.saved_revision)
+    local replacement,problem=runtime.activate(rec.id,1)
+    assert(not replacement and problem.code=='E_PROGRAM' and rec.run_id==run and rec.active==active and rec.state==state)
+    -- Old representation only, never a retained executable cache.
+    active.source=collision
+    assert(runtime.enqueue(rec,'start',{name='fixture'},2))
+    scheduler.tick(2)
+    assert(rec.status=='faulted' and rec.diagnostic.code=='E_PROGRAM' and rec.diagnostic.message:find(name,1,true))
+    assert(rec.active==active and active.source==collision and rec.saved_source==collision and rec.state==state and state.kept and not state.unsafe)
+    assert(active.api_version==1 and active.compiler_version==2 and active.storage_version==1)
+  end
+  report('new-reserved-active-source-reconstruction-retains-source-state-and-ABI')
   log('TC_CONTRACT_TOTAL '..total)
   return total
 end

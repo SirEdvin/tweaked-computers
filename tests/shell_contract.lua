@@ -117,6 +117,34 @@ function M.run()
       execute('a = {}; b = a; a.self = a; a[false] = 7; local function twice(x) return x*2 end; answer=twice(4)')
       tick=tick+1; execute('b.value=9; assert(a.value==9 and a.self==a and a[false]==7 and answer==8)')
     end)
+    group('expanded-helpers-aliases-and-transient-retention',function()
+      execute('assert(_VERSION=="Lua 5.2" and unpack==table.unpack); a={}; b=a; rawset(a,"self",a); rawset(a,"value",false); assert(rawequal(a,b) and rawlen("abc")==3)')
+      tick=tick+1; execute('assert(rawequal(rawget(a,"self"),b) and rawget(a,"value")==false); local ok,e=xpcall(function() error(false) end,function(p) return p end); print(ok,e,unpack({1,2}))')
+      assert(rec.logs[#rec.logs].text:find('false\tfalse\t1\t2',1,true))
+      local graph=rec.shell.values
+      for _,name in ipairs({'print','rawget','rawset','rawlen','rawequal','xpcall','unpack','_VERSION'}) do
+        tick=tick+1; assert(execute(name..'=5',false).code=='E_PROGRAM'); assert(rec.shell.values==graph)
+        tick=tick+1; execute('local '..name..'=false; assert('..name..'==false)')
+        graph=rec.shell.values
+        if name~='_VERSION' then
+          tick=tick+1; assert(execute('saved='..name,false).code=='E_UNSUPPORTED'); assert(rec.shell.values==graph)
+        end
+      end
+    end)
+    group('old-reserved-root-collisions-retain-graph-before-effects',function()
+      local original=rec.shell.values; local source,run,status=rec.saved_source,rec.run_id,rec.status
+      for _,name in ipairs({'rawget','rawset','rawlen','rawequal','xpcall','unpack','_VERSION'}) do
+        local graph={version=1,root=1,nodes={{kind='table',entries={{key=name,value=false},{key='alias',value={ref=2}}}},
+          {kind='table',entries={{key='self',value={ref=2}}}}}}
+        rec.shell.values=graph
+        tick=tick+1; local d=execute('computer.setState("collision_effect",true); print("unsafe")',false)
+        assert(d.code=='E_UNSUPPORTED' and d.message:find(name,1,true) and d.message:find('Reset Shell',1,true))
+        assert(rec.shell.values==graph and graph.nodes[1].entries[1].value==false and graph.nodes[2].entries[1].value.ref==2)
+        assert(not rec.state.collision_effect and rec.saved_source==source and rec.run_id==run and rec.status==status)
+      end
+      rec.shell.values=original
+      tick=tick+1; execute('nested={rawget=false,xpcall=1,_VERSION="custom"}; assert(nested.rawget==false)')
+    end)
     group('atomic-environment-and-real-effects-before-error',function()
       local graph=rec.shell.values
       execute('computer.setState("effect",11); x=99; error("after effect")',false)
@@ -148,6 +176,7 @@ function M.run()
     end)
     group('authentic-facade-captured-method-and-generation-revocation',function()
       execute('p=peripheral.wrap("'..db.id..'","red"); put=p.set; get=p.get; p.set("shell","17")')
+      tick=tick+1; execute('assert(rawequal(p,p)); for _,fn in ipairs({rawget,rawset,rawlen}) do local ok,e=pcall(fn,p,"get",true); assert(not ok and e.code=="E_ARGUMENT") end')
       tick=tick+1; execute('assert(peripheral.getName(p)=="'..db.id..'"); assert(get==p.get and put==p.set); assert(get("shell")=="17"); put("shell","18")')
       db.generation=db.generation+1; tick=tick+1; assert(execute('get("shell")',false).code=='E_UNREACHABLE')
     end)
@@ -246,6 +275,16 @@ function M.run()
       local ctx=runtime.context(rec,tick); local spent=ctx.machine.work
       assert(runtime.context(rec,tick).machine.work==spent)
       tick=tick+1; execute('assert(x==8)')
+      for _,text in ipairs({
+        'xpcall(function() while true do end end,function(e) computer.setState("unsafe_handler",true) end)',
+        'xpcall(function() error("x") end,function(e) while true do end end)',
+        'pcall(function() xpcall(function() error("x") end,function(e) error("again") end) end)'
+      }) do
+        local graph=rec.shell.values
+        tick=tick+1; assert(execute(text,false).code=='E_BUDGET')
+        assert(rec.status=='running' and rec.shell.values==graph and not rec.state.unsafe_handler)
+        tick=tick+1; execute('assert(x==8)')
+      end
     end)
     group('failed-activation-and-automatic-fault-retain-values',function()
       local graph=rec.shell.values; local old=rec.saved_source; local session=rec.shell
@@ -260,13 +299,15 @@ function M.run()
     end)
     group('reset-confirmation-lifecycle-and-source-widget-stability',function()
       execute('x=1')
+      local collision={version=1,root=1,nodes={{kind='table',entries={{key='_VERSION',value='old custom value'}}}}}
+      rec.shell.values=collision
       local source=f.content.editor.source; local saved=rec.saved_source; local run=rec.run_id
       editor.on_click{player_index=a.index,element=f.content.console.prompt['reset-shell'],tick=tick}
-      assert(rec.shell)
+      assert(rec.shell and rec.shell.values==collision)
       editor.on_click{player_index=a.index,element=f.content.console.confirm_shell.buttons['confirm-shell'],tick=tick}
       assert(not rec.shell and rec.run_id==run and rec.saved_source==saved and rec.status=='running')
       editor.resize(a); editor.refresh(a); assert(f.content.editor.source==source)
-      tick=tick+1; execute('assert(x==nil)')
+      tick=tick+1; execute('assert(x==nil and _VERSION=="Lua 5.2" and type(rawset)=="function")')
       editor.refresh(b)
       editor.on_click{player_index=b.index,element=other.content.console.prompt['reset-shell'],tick=tick}
       assert(shell.reset(rec,'fixture'))
@@ -331,6 +372,20 @@ function M.run()
       tick=tick+1; execute('assert(sample==nil and start==nil); sample=9')
       tick=tick+1; execute('assert(sample==9)')
       assert(rec.active.handlers.sample==true and rec.state.export_called==nil)
+    end)
+    group('print-exact-prefix-byte-boundary-and-no-refusal-eviction',function()
+      local prefix='Shell #42 output: '
+      local bytes=limits.console_bytes-#prefix
+      tick=tick+1
+      local ok,d=shell.evaluate(rec,'print(string.rep("x",'..bytes..'))',tick,42)
+      assert(ok,d and d.message)
+      assert(#rec.logs==1 and #rec.logs[1].text==limits.console_bytes and rec.logs[1].text==prefix..string.rep('x',bytes))
+      local entry,graph,retained=rec.logs[1],rec.shell.values,rec.log_bytes
+      tick=tick+1; ok,d=shell.evaluate(rec,'print(string.rep("x",'..(bytes+1)..'))',tick,42)
+      assert(not ok and d.code=='E_LIMIT' and #rec.logs==1 and rec.logs[1]==entry and rec.log_bytes==retained and rec.shell.values==graph)
+      tick=tick+1; execute('print("completed"); error("after print")',false)
+      local found=false; for _,v in ipairs(rec.logs) do if v.text:find('output: completed',1,true) then found=true end end
+      assert(found)
     end)
     group('malformed-graphs-are-refused-without-publication',function()
       tick=tick+1; execute('x=1')

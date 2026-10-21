@@ -20,7 +20,9 @@ jobs:
   validate:
     name: Mod validation
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    # The complete cold/upgrade/chart matrices can exceed 25m on slower hosted
+    # runners. Keep every assertion, fixture tick deadline and game budget.
+    timeout-minutes: 35
     env:
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
@@ -73,6 +75,21 @@ jobs:
           archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
           engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/speaker-admission" --mode both --fixture tests.speaker_admission
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/speaker" --mode both --fixture tests.speaker_engine \
+            --data-fixture tests.speaker_data --final-data-fixture tests.speaker_data_final \
+            --production-context --cold --upgrade-fixture
+          for fixture in radar_engine modem_engine; do
+            upgrade=()
+            if [[ "$fixture" == radar_engine ]]; then upgrade+=(--upgrade-fixture); fi
+            python tools/smoke.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both \
+              --fixture "tests.$fixture" --data-fixture tests.radar_data --production-context --cold "${upgrade[@]}"
+          done
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/network" --mode both --fixture tests.network_engine --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/runtime" --mode both \
             --fixture tests.runtime_contract
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
@@ -103,9 +120,18 @@ jobs:
             python tools/monitor_animation.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/animation-$layout" --mode both --layout "$layout"
           done
+          python tools/monitor_animation.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/modem-competition" --mode both \
+            --layout four-walls --with-modem
+          python tools/monitor_animation.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/speaker-competition" --mode both \
+            --layout four-walls --with-speaker
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/editor-contract" --mode both \
             --fixture tests.editor_contract
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/peripheral-inspectors" --mode both \
+            --fixture tests.peripheral_inspector_engine --production-context --cold
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/gui-workspace" --mode both \
             --fixture tests.editor_workspace --data-fixture tests.candidate_data
@@ -138,6 +164,13 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/legacy_0.1.8.zip"
           python tools/recipe_searcher_upgrade.py --factorio "$engine" --archive "$archive" \
             --legacy "$RUNNER_TEMP/tc-ci/legacy_0.1.8.zip" --output "$RUNNER_TEMP/tc-ci/recipe-install"
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 120 \
+            https://github.com/SirEdvin/tweaked-computers/releases/download/alpha-0.1.10/tweaked-computers_0.1.10.zip \
+            --output "$RUNNER_TEMP/tc-ci/legacy_0.1.10.zip"
+          python tools/radar_upgrade.py --factorio "$engine" --archive "$archive" \
+            --legacy "$RUNNER_TEMP/tc-ci/legacy_0.1.10.zip" --output "$RUNNER_TEMP/tc-ci/radar-install"
+          python tools/radar_upgrade.py --carrier speaker --factorio "$engine" --archive "$archive" \
+            --legacy "$RUNNER_TEMP/tc-ci/legacy_0.1.10.zip" --output "$RUNNER_TEMP/tc-ci/speaker-install"
 
       - name: Check buffered presentation and released-save migration
         shell: bash

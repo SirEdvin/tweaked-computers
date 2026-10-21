@@ -61,6 +61,16 @@ The release source is [alpha-0.1.10](https://github.com/SirEdvin/tweaked-compute
 
 ## Development
 
+The active `add-radar-modems` candidate adds [locally wired native radar modems](docs/player/api/modem.md)
+and an optional Space Age interplanetary tier. Native hidden radio links do not
+grant discovery authority; the seven-method API has bounded channel datagrams.
+This is unreleased candidate functionality, not a change to immutable 0.1.10.
+The active `add-speaker-peripheral` candidate exposes the unmodified vanilla
+programmable speaker as a [physically wired speaker peripheral](docs/player/api/speaker.md).
+Its six methods provide installed catalogues and bounded, synchronous positional
+notes/effects. It adds no replacement entity, playback queue or completion event;
+native circuits, settings, mining results and GUI remain vanilla.
+
 Build an installable archive outside the checkout:
 
     python3 tools/build.py --output /absolute/path/to/artifacts
@@ -76,7 +86,9 @@ The harness exercises base and Space Age; cold phases use isolated localhost-onl
 servers and acknowledged console shutdown. It never launches a graphical client.
 Current source/API contracts live in `openspec/specs/` and `openspec/api/`.
 The six completed changes retain their planning history under
-`openspec/changes/archive/2026-10-{19,20}-*/`; packages ship only canonical contracts.
+`openspec/changes/archive/2026-10-{19,20}-*/`. The active radar and speaker candidates
+package their explicitly selected feature contracts without archiving or
+bulk-synchronizing the unrelated planning changes.
 The monitor buffering companion documents automatic snapshots, every
 1..6-by-1..6 rectangle and optional selected-group publication.
 [Consolidated acceptance](docs/sc4-final-acceptance.md) binds automated native,

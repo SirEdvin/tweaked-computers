@@ -10,6 +10,149 @@ import build
 
 
 class PackageInventoryTests(unittest.TestCase):
+    def test_peripheral_help_exact_signatures_including_aliases_and_overloads(self):
+        import re
+        # Independent full signatures, not merely method-name substring hits.
+        # The packaged Lua contract separately checks these methods against the
+        # compiled guest inventory and exact paragraph isolation/spacing.
+        expected = {
+            'PERIPHERALS': '''getNames(wire)
+isPresent(name, wire)
+getType(name, wire)
+getMethods(name, wire)
+describe(name, wire)
+wrap(name, wire)
+call(name, wire, method, ...)
+find(type_name, wire)
+getName(facade)
+getWire(facade)
+setMonitorSyncGroup(members)
+getMonitorSyncGroup()''',
+            'SPEAKER': '''getInstruments()
+getNotes(instrument)
+playNote(instrument, volume?, pitch?)
+playSound(path, volume?)
+getSounds(prefix?, after?)
+getLimits()''',
+            'RADAR MODEM': '''open(channel)
+isOpen(channel)
+close(channel)
+closeAll()
+transmit(channel, replyChannel, payload)
+isWireless()
+getLimits()''',
+            'LOGIC HANDLER': '''readSignal(input, signal)
+readSignals(input)
+getInputStatus()
+getOutput()
+setOutput(signals)
+clearOutput()
+subscribe(options, handler_name)
+unsubscribe(subscription_id)
+getLimits()''',
+            'KV DATABASE': '''get(key)
+set(key, value)
+del(key, ...)
+exists(key, ...)
+type(key)
+hget(key, field)
+hset(key, field, value, ...)
+hdel(key, field, ...)
+hexists(key, field)
+hgetall(key)
+hlen(key)
+expire(key, seconds)
+ttl(key)
+persist(key)
+getLimits()''',
+            'MONITOR': '''write(text)
+blit(text, foreground, background)
+clear()
+clearLine()
+scroll(lines)
+getSize()
+getCursorPos()
+setCursorPos(x, y)
+getCursorBlink()
+setCursorBlink(enabled)
+getTextColor()
+getTextColour()
+setTextColor(color)
+setTextColour(color)
+getBackgroundColor()
+getBackgroundColour()
+setBackgroundColor(color)
+setBackgroundColour(color)
+isColor()
+isColour()
+setPaletteColor(color, rgb) or setPaletteColor(color, r, g, b)
+setPaletteColour(color, rgb) or setPaletteColour(color, r, g, b)
+getPaletteColor(color)
+getPaletteColour(color)
+getTextScale()
+setTextScale(scale)
+getLimits()''',
+            'RECIPE SEARCHER': '''findRecipes("item"/"fluid", exact_product_name, exact_category?)
+getLimits()''',
+            'CONFIGURATOR': '''getDevices(target_wire)
+getDevice(id, target_wire)
+getCapabilities(id, target_wire)
+getConfiguration(id, target_wire)
+setConfiguration(id, patch, target_wire)
+getSections(id, target_wire)
+addSection(id, definition, target_wire)
+setSection(id, index, patch, target_wire)
+removeSection(id, index, target_wire)
+getLimits()''',
+        }
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            archive = build.build(output)
+            with zipfile.ZipFile(archive) as package:
+                source = package.read(next(n for n in package.namelist()
+                                           if n.endswith('/scripts/ui/help.lua'))).decode()
+        reference = re.search(r'  text=\[\[(.*?)\]\]', source, re.S)
+        assert reference is not None, 'missing packaged reference'
+        text = reference[1]
+        self.assertEqual(sum(len(signatures.splitlines()) for signatures in expected.values()), 88)
+        for heading, signatures in expected.items():
+            found = re.search(r'^' + re.escape(heading) + r'\n(.*?)(?=^[A-Z][A-Z ]+\n|\Z)',
+                              text, re.M | re.S)
+            assert found is not None, 'missing topic ' + heading
+            section = found[1]
+            for signature in signatures.splitlines():
+                with self.subTest(topic=heading, signature=signature):
+                    self.assertEqual(len(re.findall(r'^' + re.escape(signature) + r' -> ',
+                                                    section, re.M)), 1)
+
+    def test_speaker_contract_samples_and_fixtures_are_packaged_without_audio_assets(self):
+        # Independent expected paths: dropping an allowlist entry must fail even
+        # if the rest of the build remains internally self-consistent.
+        contracts = {
+            'openspec/changes/add-speaker-peripheral/specs/speaker-peripheral/spec.md',
+            'openspec/changes/add-speaker-peripheral/specs/speaker-peripheral/lua-api.md',
+            'openspec/changes/add-speaker-peripheral/specs/peripheral-network/spec.md',
+        }
+        self.assertTrue(contracts.issubset(build.FEATURE_CONTRACT_FILES))
+        required = contracts | {
+            'data-final-fixes.lua', 'prototypes/speaker-audio.lua',
+            'scripts/speaker.lua', 'scripts/speaker-audio.lua',
+            'scripts/speaker-limits.lua', 'scripts/services/speaker.lua',
+            'docs/player/api/speaker.md',
+            *(f'examples/speaker-{name}.lua' for name in ('alarm', 'melody', 'catalogue')),
+            *(f'tests/speaker_{name}.lua' for name in (
+                'engine', 'native_cases', 'admission', 'catalogue_contract', 'data', 'data_final',
+                'client_engine', 'competition_engine', 'upgrade_engine')),
+        }
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            archive = build.build(output)
+            with zipfile.ZipFile(archive) as package:
+                prefix = next(n[:-len('info.json')] for n in package.namelist() if n.endswith('/info.json'))
+                for relative in required:
+                    self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
+                self.assertFalse(any(Path(name).suffix.lower() in
+                                     ('.ogg', '.wav', '.mp3', '.flac', '.mp4')
+                                     or '/gameitself/' in name for name in package.namelist()))
+
     def test_buffered_monitor_inventory_and_determinism(self):
         # Pin the intended public contract explicitly: iterating only the build
         # allowlist cannot detect an accidental removal from that allowlist.
@@ -78,9 +221,11 @@ class PackageInventoryTests(unittest.TestCase):
                                  'examples/monitor-plot-baseline.lua', 'examples/monitor-plot-baseline.json'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
-                self.assertEqual(set(planning), set(build.CONTRACT_FILES))
+                self.assertEqual(set(planning), set(build.CONTRACT_FILES) | set(build.FEATURE_CONTRACT_FILES))
                 self.assertEqual(len(build.CONTRACT_FILES), 30)
-                self.assertFalse(any(name.startswith('openspec/changes/') for name in planning))
+                self.assertEqual({name for name in planning if name.startswith('openspec/changes/')}, set(build.FEATURE_CONTRACT_FILES))
+                for relative in build.FEATURE_CONTRACT_FILES:
+                    self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 for relative in ('openspec/specs/program-source/spec.md',
                                  'openspec/specs/program-source/lua-api.md'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())

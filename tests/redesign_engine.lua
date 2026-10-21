@@ -32,7 +32,7 @@ function M.run()
       local b=assert(s.create_entity{name=def.entity_name,position={col*5,row*12},direction=d,force='player'})
       lifecycle.on_built{entity=b}; local rec=assert(registry.by_entity(b)); records[kind]=rec.id
       assert(rec.layout_version==2 and lifecycle.endpoint(rec,'network')==b and not rec.children.network)
-      assert(b.type=='constant-combinator' and not b.operable and b.rotatable)
+      assert(b.type=='constant-combinator' and b.operable==(kind~='computer') and b.rotatable)
       assert(b.localised_name[1]=='entity-name.'..def.name)
       assert(b.get_control_behavior().sections_count==0 and not b.get_control_behavior().enabled)
       local box=b.selection_box; local horizontal=d==0 or d==8

@@ -10,7 +10,7 @@ end
 
 function start(event)
   local total = sample()
-  computer.log("Initial sample count: " .. tostring(total))
+  print("Initial sample count:", total)
   computer.every(60, "sample")
 end
 
@@ -62,7 +62,7 @@ their bodies during compilation or reconstruction.
 
 Public and private top-level names must be distinct `[A-Za-z_][A-Za-z_0-9]*`
 identifiers, at most 64 bytes. Approved API/library/global names, `print`, excluded
-global names (including raw/metatable helpers), `_ENV`, `_G` and the `__tc` prefix
+global names (including metatable helpers), `_ENV`, `_G` and the `__tc` prefix
 are reserved. At most 64 functions are exported. Private helpers do not use export
 slots, but still consume source, compiler, generated-text and native syntax limits.
 
@@ -103,12 +103,14 @@ Nonfinite values cannot cross state/API boundaries. Use dot calls everywhere.
 The [live Console](../console.md) is a separate, bounded evaluation mode: it also
 accepts statements/expressions and nonreserved scratch-global assignments, and
 provides `print(...)`. Its save-backed values are not saved-program locals.
-The saved-program forms, global-write prohibition and no-print rule below still
+The saved-program forms and global-write prohibition still
 apply to saved handler programs. Both modes use the same guards and tick ledger.
 
-Globals: `assert`, `error`, `ipairs`, `pairs`, `next`, `pcall`, `select`,
-`tonumber`, `tostring`, `type`; read-only `math`, `string`, `table`,
-`colors`/`colours`, `computer`, `peripheral`. No `print`: use `computer.log`.
+Globals in both modes: `assert`, `error`, `ipairs`, `pairs`, `next`, `pcall`,
+`xpcall`, `select`, `tonumber`, `tostring`, `type`, `print`, `rawget`, `rawset`,
+`rawlen`, `rawequal`, `unpack`, `_VERSION`; read-only `math`, `string`, `table`,
+`colors`/`colours`, `computer`, `peripheral`. `_VERSION` is exactly `Lua 5.2`:
+the language family, not a promise of unrestricted libraries or host access.
 
 | Library | Complete members |
 | --- | --- |
@@ -144,6 +146,13 @@ These helpers operate only inside a callback; they grant no persistent/host acce
 | `assert(value, ...)` | value,... if truthy; otherwise raise first message or default |
 | `error(value)` | Does not return; raises supplied guest value without a host stack-level API |
 | `pcall(fn, ...)` | true,results... or false,error for ordinary failure; fatal budget/stop escapes |
+| `xpcall(fn, handler, ...)` | true,results... or false,first handler result (one nil if no result); both callbacks share current admission |
+| `print(...)` | No values; one bounded Console entry, safe strings joined with tabs; zero arguments write an empty entry |
+| `rawget(t, key)` | One stored value, including nil; explicit nil/NaN keys read as absent |
+| `rawset(t, key, value)` | Identical t; nil deletes; key/value/capacity/admission checked before mutation |
+| `rawlen(value)` | String byte length or guest-table native border, not map entry count |
+| `rawequal(a, b)` | Native equality of approved primitives/identities without copying references |
+| `unpack(t, i?, j?)` | Identical function to table.unpack; same bounds and nil holes |
 | `select("#", ...)` | Argument count, including nils |
 | `select(index, ...)` | Suffix tuple; nonzero integer, negative counts from end |
 | `next(table, previous_key?)` | key,value or one nil at end; guest table only |
@@ -197,12 +206,55 @@ Sort failure does not publish a partially sorted target, but comparator effects 
 other guest/API state are not a callback-wide transaction. Never depend on hash
 iteration order for factory decisions: sort a bounded list when order matters.
 
+## Printing, raw helpers and error transformation
+
+`print("value", false, nil, 3, nil)` stores `value\tfalse\tnil\t3\tnil`
+as one entry without an added newline. The displayed Console substitutes one
+space per tab; stored bytes remain intact. Tables/functions/handles use safe
+descriptions, never addresses or recursive inspection. `unpack` and `table.unpack`
+share the stable description `table function`. No chat, stdout or monitor output
+is produced. Saved printing uses the existing `computer.log` sink; that API keeps
+its one-string/no-results signature. Console printing keeps Shell command prefixes.
+Formatting and retention are admitted before appending or evicting; failures
+publish no partial entry. Successful earlier output survives later faults.
+
+Raw table operations require guest-owned plain tables, including defensive
+snapshots. API namespaces, peripheral facades and foreign tables are refused.
+`rawset` preserves aliases, accepts transient self-references, and can replace or
+delete at full capacity; nil/NaN write keys are invalid. `rawget` preserves false
+versus absent nil. Required positional arguments must be supplied (explicit nil
+counts); extra arguments follow native raw-helper behavior and still pay call
+bounds. `rawequal` may compare an authentic facade/function with itself without
+revealing contents. String comparisons are bounded and metered. None of this
+widens Data or Console retention: cycles/functions/reference keys are still
+invalid where those persistence domains forbid them. `unpack` keeps i=1..1025,
+j=0..1024, defaults 1/#t and at most 128 results, including explicit nil holes.
+
+`xpcall(fn, handler, ...)` requires approved functions. Trailing arguments retain
+nil holes and aliases. Success prepends true to exact results, including zero
+results; status counts toward the 128-value limit. On ordinary failure the handler
+gets one safe error: guest references retain identity; host diagnostic records
+are defensively copied. Only its first result is returned after false, including
+nil when absent. An ordinary handler error follows native, bounded message-handler
+re-entry; exact terminal wording is not guaranteed. Work/allocation/depth/tuple
+exhaustion and saved-program stop bypass both protected helpers, never reaching
+a guest handler as private control values. No protection rolls back earlier state,
+printing or peripheral effects. Console still cannot call `computer.stop()`.
+
+New built-ins are reserved public/private top-level declaration names, not ordinary
+locals/parameters or legacy descriptor handler keys. An older colliding active
+source faults only on synchronized reconstruction, with exact source/state retained;
+rename it and explicitly Save/Run. Noncolliding old sources retain API 1/compiler 2/
+storage 1, without startup replay. A colliding old Console root reports named
+`E_UNSUPPORTED` before command effects and retains its graph. Confirm Reset Shell
+only when ready to discard scratch values; nested fields are unaffected.
+
 ## Excluded features
 
 No `_ENV`, `_G`, global assignment, generated/private names or host globals
 (`game`, `script`, `remote`, `storage`, `settings`, `defines`, `rendering`).
 No `require`, `load`, `loadstring`, `loadfile`, `dofile`, package/bytecode/debug,
-coroutines, IO, sockets, OS/wall clock, random/randomseed, `math.huge`, raw helpers
+coroutines, IO, sockets, OS/wall clock, random/randomseed, `math.huge`, GC control
 or metatable access. No goto/labels, Lua 5.3+ syntax, colon calls or indexing a
 string to reach its host metatable. Use `string.sub(s, ...)`, not `s:sub(...)`.
 No string match/gmatch/gsub/dump, no non-plain find. Protected namespaces and

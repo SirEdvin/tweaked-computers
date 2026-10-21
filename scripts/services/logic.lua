@@ -90,6 +90,18 @@ local function native_read(rec,input,spend)
   local result={}; for _,entry in pairs(values) do if entry.count~=0 then result[#result+1]=entry end end
   return sort(result,spend),connected
 end
+-- Host-only observation, independent of guest subscriptions and writer state.
+-- Read both colors before publishing any part of the candidate.
+function M.inspect(rec,tick,spend)
+  local red,connected=native_read(rec,'red',spend)
+  local green=native_read(rec,'green',spend)
+  return {tick=tick,red=red,green=green,connected=connected,output=canonical(rec.output_bank or {},spend)}
+end
+function M.inspect_input(rec,input,tick,spend)
+  local values,connected=native_read(rec,input,spend)
+  return {tick=tick,values=values,connected=connected[input]}
+end
+function M.inspect_output(rec,spend) return canonical(rec.output_bank or {},spend) end
 local function project(sample,connected,input,filter,spend)
   local result,c={},{}
   c[input]=connected[input]

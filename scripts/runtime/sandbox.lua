@@ -12,6 +12,7 @@ function M.new(context, services, shell)
   local handle_arguments = setmetatable({}, {__mode='k'}) -- Host-only opt-in, not Data.
   local bindings=setmetatable({},{__mode='k'})
   local restore_binding
+  local call_frames,service_frames={},{}
   function G.bind_value(value,descriptor) bindings[value]=descriptor end
   function G.binding(value) return bindings[value] end
   function G.binding_resolver(fn) assert(not restore_binding); restore_binding=fn end
@@ -111,6 +112,17 @@ function M.new(context, services, shell)
     integer(n,0,limits.handler_names); G.spend(n+1); allocate(n*2+1)
   end
   function G.closure(fn) allocate(1); G.spend(1); callable[fn]='guest function'; return fn end
+  -- Closed host helpers prepay the immediate return before publication. Match
+  -- the active callee, not an enclosing guest/pcall frame.
+  local function prepare_return(fn,...)
+    local frame=call_frames[#call_frames]
+    if not frame or frame.fn~=fn then return end
+    local result=table.pack(...)
+    assert(not frame.prepared_return and result.n<=limits.tuple_entries)
+    G.spend(result.n+1); allocate(result.n+1)
+    for i=1,result.n do G.scalar(result[i]) end
+    frame.prepared_return=result
+  end
   function G.call(fn,...)
     G.check()
     if type(fn)~='function' then fail('callable function required') end
@@ -121,13 +133,23 @@ function M.new(context, services, shell)
     if depth>=limits.callback_depth then fatal('callback call depth exhausted') end
     local caller_line,caller_column=line,column
     depth=depth+1
+    local frame={fn=fn}; call_frames[#call_frames+1]=frame
     local result=table.pack(pcall(fn,...))
+    call_frames[#call_frames]=nil
     depth=depth-1
     G.check()
     if not result[1] then error(result[2],0) end
     if result.n-1>limits.tuple_entries then fatal('return width exceeded') end
-    G.spend(result.n); allocate(result.n)
-    for i=2,result.n do G.scalar(result[i]) end
+    if frame.prepared_return then
+      local expected=frame.prepared_return
+      if result.n~=expected.n+1 then fatal('trusted return width contract violated') end
+      for i=1,expected.n do if not rawequal(result[i+1],expected[i]) then fatal('trusted return contract violated') end end
+    elseif frame.boolean_result then
+      if result.n~=2 or type(result[2])~='boolean' then fatal('trusted boolean return contract violated') end
+    else
+      G.spend(result.n); allocate(result.n)
+      for i=2,result.n do G.scalar(result[i]) end
+    end
     line,column=caller_line,caller_column
     return table.unpack(result,2,result.n)
   end
@@ -259,8 +281,28 @@ function M.new(context, services, shell)
     for _,v in pairs(entries) do if type(v)=='function' then callable[v]=label or 'API function' end end
     return proxy
   end
+  -- Host-only; only the closed speaker effect dispatch requests this. Reserve
+  -- its scalar snapshot and immediate guarded call's return before dispatch.
+  function G.prepare_boolean_result()
+    local service=service_frames[#service_frames]
+    assert(service,'boolean admission requires a trusted service')
+    if service.boolean_result then return end
+    G.spend(1)
+    local frame=call_frames[#call_frames]
+    if frame and frame.fn==service.wrapper then
+      G.spend(3); allocate(2); frame.boolean_result=true
+    end
+    service.boolean_result=true
+  end
+  function G.prepare_empty_result()
+    local service=assert(service_frames[#service_frames],'empty admission requires a trusted service')
+    if service.empty_result then return end
+    prepare_return(service.wrapper)
+    service.empty_result=true
+  end
   function G.service(fn)
-    return function(...)
+    local wrapper
+    wrapper=function(...)
       G.spend(1) -- Must precede trusted service's authority/admission/effect boundary.
       local n=select('#',...); integer(n,0,limits.tuple_entries)
       local args=table.pack(...)
@@ -269,14 +311,25 @@ function M.new(context, services, shell)
           args[i]=G.snapshot(args[i])
         end
       end
-      local result=table.pack(fn(table.unpack(args,1,n)))
+      local frame={wrapper=wrapper}; service_frames[#service_frames+1]=frame
+      local called=table.pack(pcall(fn,table.unpack(args,1,n)))
+      service_frames[#service_frames]=nil
+      if not called[1] then error(called[2],0) end
+      local result={n=called.n-1}; for i=2,called.n do result[i-1]=called[i] end
       if result.n>limits.tuple_entries then fatal('service result width exceeded') end
-      for i=1,result.n do
-        if not (type(result[i])=='table' and protected[result[i]]) then result[i]=G.snapshot(result[i]) end
+      if frame.empty_result then
+        if result.n~=0 then fatal('trusted empty service contract violated') end
+      elseif frame.boolean_result then
+        if result.n~=1 or type(result[1])~='boolean' then fatal('trusted boolean service contract violated') end
+      else
+        for i=1,result.n do
+          if not (type(result[i])=='table' and protected[result[i]]) then result[i]=G.snapshot(result[i]) end
+        end
       end
       G.check()
       return table.unpack(result,1,result.n)
     end
+    return wrapper
   end
 
   function G.initialize()
@@ -311,6 +364,64 @@ function M.new(context, services, shell)
     if result.n>limits.tuple_entries then fatal('protected return width exceeded') end
     return table.unpack(result,1,result.n)
   end
+  env.xpcall=function(fn,handler,...)
+    G.spend(1)
+    if not callable[fn] or not callable[handler] then fail('approved function and message handler required') end
+    local n=select('#',...); G.spend(n+1); allocate(n+2)
+    local args=table.pack(...)
+    local caller_depth=depth
+    local result=table.pack(xpcall(function() return G.call(fn,table.unpack(args,1,args.n)) end,function(problem)
+      -- Native message handling may re-enter after an ordinary handler error.
+      -- Keep each bridge frame charged until native protection has returned;
+      -- G.call unwinds its own depth before propagating that error.
+      if poison then return nil end
+      G.spend(1)
+      if depth>=limits.callback_depth then fatal('callback call depth exhausted') end
+      depth=depth+1
+      if type(problem)=='table' and not owned[problem] and not protected[problem] then problem=G.snapshot(problem) end
+      G.scalar(problem) -- Reject foreign objects/oversized scalars before guest message code.
+      return (G.call(handler,problem))
+    end))
+    depth=caller_depth
+    G.check()
+    if result.n>limits.tuple_entries then fatal('protected return width exceeded') end
+    G.spend(result.n); allocate(result.n)
+    for i=1,result.n do G.scalar(result[i]) end
+    return table.unpack(result,1,result.n)
+  end
+  local function required(n,...)
+    if select('#',...)<n then fail('missing required argument') end
+  end
+  env.rawget=function(...)
+    required(2,...)
+    local t,k=...
+    plain(t); G.spend(1)
+    if k==nil or type(k)=='number' and k~=k then return nil end
+    key(k)
+    return rawget(t,k)
+  end
+  env.rawset=function(...)
+    required(3,...)
+    local t,k,v=...
+    plain(t); G.scalar(v)
+    local targets=G.assignment_targets(1); targets[1]={t,k}
+    local values=G.assignment_values(1,v)
+    G.assignment_check(1,targets,values)
+    prepare_return(env.rawset,t)
+    rawset(t,k,v)
+    return t
+  end
+  env.rawlen=function(...)
+    required(1,...)
+    return G.length((...))
+  end
+  env.rawequal=function(...)
+    required(2,...)
+    local a,b=...
+    G.scalar(a); G.scalar(b)
+    return rawequal(a,b)
+  end
+  env._VERSION='Lua 5.2'
   env.select=function(index,...)
     local n=select('#',...); G.spend(n+1); integer(n,0,limits.tuple_entries)
     if index=='#' then return n end
@@ -483,6 +594,7 @@ function M.new(context, services, shell)
   env.math=G.namespace(mathlib,'math function')
   env.string=G.namespace(str,'string function')
   env.table=G.namespace(tab,'table function')
+  env.unpack=tab.unpack
   local colors={}
   local color_names={'white','orange','magenta','lightBlue','yellow','lime','pink','gray','lightGray','cyan','purple','blue','brown','green','red','black'}
   for i,name in ipairs(color_names) do colors[name]=2^(i-1) end
@@ -502,21 +614,28 @@ function M.new(context, services, shell)
     end end
     env[name]=G.namespace(entries,name)
   end
-  if shell then
-    env.print=function(...)
-      local n=select('#',...); local parts={}; local bytes=math.max(0,n-1)
-      G.spend(n+1); allocate(n)
-      for i=1,n do parts[i]=env.tostring(select(i,...)); bytes=bytes+#parts[i] end
+  env.print=function(...)
+    local n=select('#',...); local parts={}; local bytes=math.max(0,n-1)
+    G.spend(n+1); allocate(n)
+    for i=1,n do
+      parts[i]=env.tostring(select(i,...)); bytes=bytes+#parts[i]
       if bytes>limits.console_bytes then errors.raise('E_LIMIT','print output too large') end
-      G.spend(bytes+1); allocate(bytes)
-      shell.output(table.concat(parts,'\t'))
     end
+    if bytes>limits.console_bytes then errors.raise('E_LIMIT','print output too large') end
+    G.spend(bytes+1); allocate(bytes)
+    local text=table.concat(parts,'\t')
+    prepare_return(env.print)
+    if shell then shell.output(text) else G.get(env.computer,'log')(text) end
+  end
+  if shell then
     function G.shell_root() return shell.root end
     function G.format_results(result)
       if result.n>0 then env.print(table.unpack(result,1,result.n)) end
     end
   end
   for name,v in pairs(env) do if type(v)=='function' then callable[v]=name end end
+  callable[tab.unpack]='table function' -- One identity/description for both aliases.
+  function G.reserved_global(name) return env[name]~=nil end
   function G.global(name)
     G.spend(1)
     if env[name]~=nil then return env[name] end

@@ -11,6 +11,10 @@ local limits=require('scripts.runtime.limits')
 local compiler=require('scripts.runtime.compiler')
 local source=require('tests.monitor_animation_source') -- Test-only archive wrapper.
 local layout=require('tests.monitor_animation_layout')
+local contention
+if pcall(require,'tests.peripheral_inspector_contention_config') then
+  contention=require('tests.peripheral_inspector_contention_observer')
+end
 local M={}; local loaded=false
 local function f() return storage.tc_animation end
 local compile=compiler.compile
@@ -116,9 +120,11 @@ function M.on_tick(event)
   for _,id in ipairs(root.order) do
     local r=registry.record(id); if r and r.body.valid then lifecycle.power_entity(r).energy=id==x.outage and 0 or 100000 end
   end
+  if contention then contention.begin(event.tick) end
   local profiler=game.create_profiler()
   scheduler.tick(event.tick)
   profiler.stop()
+  if contention then contention.finish() end
   x.steps=x.steps+1; assert(x.steps<2200,'animation fixture deadline')
   if x.phase=='drawing' and x.steps>=64 then log({'','TC_ANIMATION_CPU tick=',event.tick,' ',profiler}) end
   assert(c.status=='running',serpent.line(c.diagnostic))
