@@ -103,15 +103,16 @@ Initial caps: 64 signal slots per selected input snapshot/output; 64 filter sign
 64 subscriptions per computer shared with general registrations; 128 sampled
 handlers; 1,024 aggregate subscriptions; 128 owned banks. Sample interval 1 tick,
 fail-safe target 1 tick, notification/topology ceiling 60 ticks is provisional.
-The native prototype×quality read envelope is pre-admitted; large modded universes
-can refuse instead of doing unbounded work. Queue overflow or sampling/notification
+Since 0.1.13, native calls and actual returned signals are charged, not every
+installed prototype/quality. A small chest input does not cost more because an
+unrelated mod adds recipes. The 64-signal ceiling, supported signal identities,
+validation, copying and sorting remain. Queue overflow or sampling/notification
 maintenance refusal visibly faults affected runs, not silently loses history.
-The supported-type precharge includes the installed recipe registry. Other native
-signal categories remain unsupported and are refused, not silently filtered out.
+Other native signal categories remain unsupported and are refused, not filtered out.
 Independent subscriptions on multiple colors/devices still share the unchanged
 maintenance budget; admission refusal faults the run visibly, never silently
-misses updates. The supported-type estimate is not a universal all-category bound:
-native enumeration may materialize unsupported categories before rejecting them.
+misses updates. Native enumeration materializes its list before size/type checks;
+the call charge is not a universal native CPU-time or allocation bound.
 
 Use [logic-controller](../examples.md#logic-controller) and the
 [first inserter tutorial](../first-controller.md). If reads stay zero, check chest

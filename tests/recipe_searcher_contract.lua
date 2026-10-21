@@ -27,6 +27,20 @@ function M.run(c,s)
     prototypes=setmetatable({get_recipe_filtered=function() entered=true; return {} end},{__index=original})
     accepted,problem=pcall(provider.methods.findRecipes,c,s,'red',game.tick,function() error(refusal,0) end,'item','tc-rs-overlap')
     assert(not accepted and problem==refusal and not entered,'native lookup entered before credit admission')
+    local function query_work(length)
+      local proxy={}
+      for _,kind in ipairs({'recipe','recipe_category'}) do
+        local catalogue=original[kind]
+        proxy[kind]=setmetatable({},{__index=function(_,key) return catalogue[key] end,__len=function() return length end})
+      end
+      prototypes=setmetatable(proxy,{__index=original})
+      local work=0
+      local result=provider.methods.findRecipes(c,s,'red',game.tick,function(n) work=work+n end,
+        'item','tc-rs-overlap','tc-rs-additional')
+      assert(#result==1 and result[1].name=='tc-rs-item')
+      return work
+    end
+    assert(query_work(1)==query_work(1000000),'unrelated recipes/categories changed query cost')
   end)
   prototypes=original
   if not ok then error(e,0) end

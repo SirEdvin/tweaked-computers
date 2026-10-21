@@ -79,7 +79,7 @@ function M.run()
     logic=profile.maximum and 128 or 1,monitor_tiles=tiles,subscriptions=profile.computers*profile.subscriptions,
     profile=profile.maximum and 'maximum' or 'representative'})
   local universe=(#prototypes.item+#prototypes.fluid+#prototypes.virtual_signal+#prototypes.recipe)*#prototypes.quality
-  log('TC_ENVELOPE_QUERY '..helpers.table_to_json{universe=universe,one_input_precharge=universe*8+64*16+16,
+  log('TC_ENVELOPE_QUERY '..helpers.table_to_json{universe=universe,one_input_precharge=32,actual_tuple_work=8,
     maximum_subscription_order_precharge=1024^2+128^2+1,maintenance=200000,baseline_nonrender=140000,boost_nonrender=40000})
 end
 function M.on_load() loaded=true end

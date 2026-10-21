@@ -24,6 +24,10 @@ The API SHALL require an explicit red or green input selector and SHALL NOT comb
 - **WHEN** both physical input colors are connected and a caller selects red or green
 - **THEN** only that color's native signed-32-bit values are returned; selecting both or omitting the selector fails without registration or mutation.
 
+#### Scenario: Unrelated prototype catalogue grows
+- **WHEN** installed mods add unrelated items, recipes, fluids, virtual signals or qualities without changing the selected input
+- **THEN** read admission charges the native call and actual returned data, not the global prototype inventory; actual signal capacity, validation and shared work/Data limits still apply.
+
 ### Requirement: Shared combinator-style output
 The handler SHALL hold one output signal set broadcast identically on red and green output wires. API writes SHALL replace or update that set as documented, validating all identities, counts and capacity before mutation. It MUST NOT offer independent output banks by color.
 

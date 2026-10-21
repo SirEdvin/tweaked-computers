@@ -52,8 +52,10 @@ product or field is silently omitted to make a call fit.
 The unchanged [Data/work limits](limits.md) also apply: 50 is not a guaranteed
 payload size or CPU/UPS bound. Oversized metadata may refuse with fewer recipes;
 work/allocation exhaustion remains fatal. Native catalogue filtering has an opaque
-engine cost, conservatively admitted before entry; controllable Lua scans, sorting
-and projection are charged too. There is no retained query cache/index or job.
+engine cost. Since 0.1.13, admission charges the native call, actual candidates,
+category checks and projected metadata, not every installed recipe/category.
+These charges do not bound native CPU time or initial table materialization.
+There is no retained query cache/index or job.
 
 ## Recipe record
 

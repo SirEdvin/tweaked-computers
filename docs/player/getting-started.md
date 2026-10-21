@@ -5,11 +5,11 @@
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot; removal/destruction of a device is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
-   the Mod Portal, select **0.1.12 ALPHA**, enable it, and restart when prompted.
-   This version fixes blank inspector panels, independently refreshes logic signal
-   regions and simplifies UI text, retaining all 0.1.11 features.
-3. For manual installation, download `tweaked-computers_0.1.12.zip` from the
-   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.12)
+   the Mod Portal, select **0.1.13 ALPHA**, enable it, and restart when prompted.
+   This version removes global prototype-count precharges from logic reads and
+   recipe queries, retaining independent signal panels and all previous features.
+3. For manual installation, download `tweaked-computers_0.1.13.zip` from the
+   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.13)
    and place it in your Factorio
    user-data `mods` directory without unpacking it. Remove conflicting duplicate
    versions, enable the mod, and restart. The ZIP's internal folder must match its
@@ -92,6 +92,12 @@ still require both target traversals and are never partial totals. Long UI
 instructions now live in tooltips and Reference. Old open windows may close once
 after upgrade; reopen them. Computer drafts, source, state and peripheral data
 are retained. Keep a pre-upgrade save and matching 0.1.11 ZIP for rollback.
+
+Version 0.1.13 removes catalogue-wide admission estimates from logic input reads
+and Recipe Searcher product/category queries. Adding unrelated recipes, items or
+qualities no longer makes a small input query unaffordable. Actual result limits,
+validation, power/ownership checks and shared work/Data budgets remain unchanged.
+Back up the save and keep the matching 0.1.12 ZIP before upgrading.
 
 ## Research and craft
 
