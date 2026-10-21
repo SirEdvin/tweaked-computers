@@ -156,6 +156,7 @@ function M.services(computer,tick,guard,execution)
       errors.raise('E_UNPOWERED','peripheral is unpowered')
     end
     if rec.kind=='speaker' and (method=='playNote' or method=='playSound') then guard.prepare_boolean_result() end
+    if rec.kind=='radar' and method=='transmit' then guard.prepare_empty_result() end
     if bindings[rec.kind].with_principal then return fn(computer,rec,wire,tick,spend,execution,...) end
     return fn(computer,rec,wire,tick,spend,...)
   end

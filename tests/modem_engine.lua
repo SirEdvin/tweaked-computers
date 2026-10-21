@@ -11,6 +11,7 @@ local defs=require('scripts.device-definitions')
 local limits=require('scripts.runtime.limits')
 local shell=require('scripts.runtime.shell')
 local graph=require('scripts.network')
+local sandbox=require('scripts.runtime.sandbox')
 local M={}; local loaded=false
 local function nop() end
 local function f() return storage.modem_fixture end
@@ -102,6 +103,32 @@ function M.run()
   r.body.energy=1000000; r.powered=true
   report('compiled-unpowered-metadata-limits-and-live-method-refusal')
   subscribe(d); call(d,s,'open',42); call(c,r,'open',42)
+  -- Include the real facade/service/G.call return boundary, not just the
+  -- provider body. A refused current invocation cannot enqueue or spend a send.
+  local root=registry.get(); local previous=root.modem_transport
+  for _,kind in ipairs({'work','allocations'}) do
+    local function setup()
+      root.modem_transport=previous; clear(d)
+      local ctx=admission.context(admission.new(),c.id,game.tick)
+      local g=sandbox.new(ctx,{})
+      local api=peripheral.services(c,game.tick,g).peripheral
+      local fn=g.get(api.wrap(r.id,'red'),'transmit')
+      return ctx,g,fn
+    end
+    local ctx,g,fn=setup(); local before=ctx.machine[kind]
+    assert(pcall(g.call,fn,42,17,'boundary') and #d.queue==1)
+    local cost=ctx.machine[kind]-before
+    ctx,g,fn=setup()
+    ctx.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost
+    assert(pcall(g.call,fn,42,17,'boundary') and #d.queue==1)
+    ctx,g,fn=setup(); local sequence=root.next_sequence
+    ctx.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost+1
+    local ok,e=pcall(g.call,fn,42,17,'boundary')
+    assert(not ok and g.diagnostic(e).code=='E_BUDGET' and #d.queue==0 and root.next_sequence==sequence)
+    assert(not root.modem_transport or root.modem_transport.total==0)
+  end
+  root.modem_transport=previous; clear(d)
+  report('guarded-transmit-exact-work-allocation-and-one-short-no-publication')
   f().next=1
   log('TC_CONTRACT_TOTAL '..f().groups)
 end

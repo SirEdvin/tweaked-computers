@@ -486,13 +486,13 @@ function sample() end
       return context,guard,t,guard.global('rawset')
     end
     local context,guard,t,fn=setup(); local before=context.machine[kind]
-    assert(fn(t,'key',true)==t); local cost=context.machine[kind]-before
+    assert(guard.call(fn,t,'key',true)==t); local cost=context.machine[kind]-before
     context,guard,t,fn=setup()
     context.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost
-    assert(pcall(fn,t,'key',true) and t.key==true)
+    assert(pcall(guard.call,fn,t,'key',true) and t.key==true)
     context,guard,t,fn=setup()
     context.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost+1
-    assert(not pcall(fn,t,'key',true) and t.key==false)
+    assert(not pcall(guard.call,fn,t,'key',true) and t.key==false)
     assert(guard.diagnostic({}).code=='E_BUDGET')
     assert(not pcall(fn,{},'key',true))
   end

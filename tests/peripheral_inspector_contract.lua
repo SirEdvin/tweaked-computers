@@ -174,6 +174,46 @@ function M.run()
     end)
     game=real; r.database=original; assert(ok,e)
   end)
+  check('inspector-full-byte-capacity-admitted-without-precomputed-snapshots',function()
+    local r=records.kv; local original=r.database; local real=game
+    local tick=math.ceil(((registry.get().scheduler.maintenance_tick or 0)+15)/15)*15
+    local cases={}
+    local keys={}
+    for i=0,127 do keys[#keys+1]={key=string.rep('k',127)..string.char(i),type='string',value=''} end
+    cases[#cases+1]=keys -- 128 long common prefixes exactly fill 16 KiB.
+    local hashes={}
+    for i=1,2 do
+      local fields={}
+      for j=0,127 do fields[#fields+1]={field=string.rep('f',62)..string.char(j),value=''} end
+      hashes[#hashes+1]={key=tostring(i),type='hash',fields=fields}
+    end
+    cases[#cases+1]=hashes -- All 256 fields, long common prefixes, within bytes.
+    cases[#cases+1]={{key='',type='hash',fields={{field='',value='empty'},{field='\0',value='nul'},
+      {field='\0a',value='prefix'},{field='\255',value='high'},{field='a',value='ascii'}}}}
+    local ok,e=pcall(function()
+      for _,entries in ipairs(cases) do
+        r.database=kv.import{version=1,entries=entries}
+        local database=r.database; local before=serpent.line(database)
+        lifecycle.power_entity(r).energy=defs.devices.kv.watts/30
+        local p=players.player(2001,r.body)
+        game={tick=tick,get_player=function() return p end,connected_players={p}}
+        local f=assert(inspector.open(p,r.id)); local s=model.session(p.index)
+        for _=1,4 do inspector.tick(tick); tick=tick+15; game.tick=tick end
+        assert(s.snapshot and not s.pending and not s.redraw and f.details.key_rows,'legal full data must reach actual paid GUI draw')
+        assert(#s.snapshot.details.entries==#entries and r.database==database and serpent.line(database)==before)
+        local last
+        for _,entry in ipairs(s.snapshot.details.entries) do
+          assert(not last or last<entry.key); last=entry.key
+          local previous
+          for _,field in ipairs(entry.fields or {}) do
+            assert(not previous or previous<field.field); previous=field.field
+          end
+        end
+        inspector.close(p)
+      end
+    end)
+    game=real; r.database=original; assert(ok,e)
+  end)
   check('inspector-cardinal-single-nonsquare-maximum-and-pending-geometry',function()
     local cases={}; local extras={}
     for orientation,direction in ipairs({0,4,8,12}) do

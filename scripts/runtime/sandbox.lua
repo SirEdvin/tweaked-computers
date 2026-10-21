@@ -112,6 +112,17 @@ function M.new(context, services, shell)
     integer(n,0,limits.handler_names); G.spend(n+1); allocate(n*2+1)
   end
   function G.closure(fn) allocate(1); G.spend(1); callable[fn]='guest function'; return fn end
+  -- Closed host helpers prepay the immediate return before publication. Match
+  -- the active callee, not an enclosing guest/pcall frame.
+  local function prepare_return(fn,...)
+    local frame=call_frames[#call_frames]
+    if not frame or frame.fn~=fn then return end
+    local result=table.pack(...)
+    assert(not frame.prepared_return and result.n<=limits.tuple_entries)
+    G.spend(result.n+1); allocate(result.n+1)
+    for i=1,result.n do G.scalar(result[i]) end
+    frame.prepared_return=result
+  end
   function G.call(fn,...)
     G.check()
     if type(fn)~='function' then fail('callable function required') end
@@ -129,7 +140,11 @@ function M.new(context, services, shell)
     G.check()
     if not result[1] then error(result[2],0) end
     if result.n-1>limits.tuple_entries then fatal('return width exceeded') end
-    if frame.boolean_result then
+    if frame.prepared_return then
+      local expected=frame.prepared_return
+      if result.n~=expected.n+1 then fatal('trusted return width contract violated') end
+      for i=1,expected.n do if not rawequal(result[i+1],expected[i]) then fatal('trusted return contract violated') end end
+    elseif frame.boolean_result then
       if result.n~=2 or type(result[2])~='boolean' then fatal('trusted boolean return contract violated') end
     else
       G.spend(result.n); allocate(result.n)
@@ -279,6 +294,12 @@ function M.new(context, services, shell)
     end
     service.boolean_result=true
   end
+  function G.prepare_empty_result()
+    local service=assert(service_frames[#service_frames],'empty admission requires a trusted service')
+    if service.empty_result then return end
+    prepare_return(service.wrapper)
+    service.empty_result=true
+  end
   function G.service(fn)
     local wrapper
     wrapper=function(...)
@@ -296,7 +317,9 @@ function M.new(context, services, shell)
       if not called[1] then error(called[2],0) end
       local result={n=called.n-1}; for i=2,called.n do result[i-1]=called[i] end
       if result.n>limits.tuple_entries then fatal('service result width exceeded') end
-      if frame.boolean_result then
+      if frame.empty_result then
+        if result.n~=0 then fatal('trusted empty service contract violated') end
+      elseif frame.boolean_result then
         if result.n~=1 or type(result[1])~='boolean' then fatal('trusted boolean service contract violated') end
       else
         for i=1,result.n do
@@ -384,6 +407,7 @@ function M.new(context, services, shell)
     local targets=G.assignment_targets(1); targets[1]={t,k}
     local values=G.assignment_values(1,v)
     G.assignment_check(1,targets,values)
+    prepare_return(env.rawset,t)
     rawset(t,k,v)
     return t
   end
@@ -600,6 +624,7 @@ function M.new(context, services, shell)
     if bytes>limits.console_bytes then errors.raise('E_LIMIT','print output too large') end
     G.spend(bytes+1); allocate(bytes)
     local text=table.concat(parts,'\t')
+    prepare_return(env.print)
     if shell then shell.output(text) else G.get(env.computer,'log')(text) end
   end
   if shell then

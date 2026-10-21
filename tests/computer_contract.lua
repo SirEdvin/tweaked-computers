@@ -399,15 +399,15 @@ end
       return target,context,guard,guard.global('print')
     end
     local target,context,guard,fn=setup(); local before=context.machine[kind]
-    fn('new',false,nil); local cost=context.machine[kind]-before
+    guard.call(fn,'new',false,nil); local cost=context.machine[kind]-before
     assert(#target.logs==limits.console_entries and target.logs[1].text=='old-2' and target.logs[#target.logs].text=='new\tfalse\tnil')
     target,context,guard,fn=setup()
     context.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost
-    assert(pcall(fn,'new',false,nil) and target.logs[1].text=='old-2')
+    assert(pcall(guard.call,fn,'new',false,nil) and target.logs[1].text=='old-2')
     target,context,guard,fn=setup()
     local first,bytes=target.logs[1],target.log_bytes
     context.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost+1
-    assert(not pcall(fn,'new',false,nil) and #target.logs==limits.console_entries and target.logs[1]==first and target.log_bytes==bytes)
+    assert(not pcall(guard.call,fn,'new',false,nil) and #target.logs==limits.console_entries and target.logs[1]==first and target.log_bytes==bytes)
     assert(guard.diagnostic({}).code=='E_BUDGET')
   end
   report('saved-print-exact-admission-before-retention-eviction')

@@ -8,6 +8,7 @@ local defs=require('scripts.device-definitions')
 local limits=require('scripts.runtime.limits')
 local blueprints=require('scripts.blueprints')
 local modem=require('scripts.services.modem')
+local speaker=require('scripts.speaker')
 local M={}; local loaded=false
 local function nop() end
 local function f() return storage.radar_fixture end
@@ -92,6 +93,20 @@ function M.run()
   assert(not added and e.code=='E_CAPACITY' and full.valid and full.operable and full.minable)
   full.destroy()
   report('native-registration-capacity-preserves-material')
+  for i,carrier in ipairs({radar,speaker}) do
+    local name=i==1 and 'radar' or 'programmable-speaker'
+    local body=assert(c.body.surface.create_entity{name=name,position={-12,i*8},force='player'})
+    local lost=assert(carrier.build(body)); body.destroy() -- No raised removal event.
+    local dummy={scheduler={last_tick=-1},ledger={tick=0,total=0}}
+    local spend=scheduler.maintenance(dummy,0)
+    spend(limits.maintenance_work_per_tick-dummy.scheduler.render_reserved_work-16)
+    assert(not scheduler.try_maintenance(function() carrier.reconcile(lost,spend) end))
+    assert(registry.record(lost.id)==lost,'refused cleanup must retain its identity')
+    spend=scheduler.maintenance(dummy,1)
+    assert(scheduler.try_maintenance(function() assert(carrier.reconcile(lost,spend)) end))
+    assert(not registry.record(lost.id) and dummy.scheduler.maintenance_spent==16+limits.registry_entries*6)
+  end
+  report('missed-native-radar-and-speaker-removal-prepaid-before-registry-walk')
   local old=native(-6,0,false)
   conn(c.body,'green').connect_to(conn(old,'green'),false)
   error_is('E_NETWORK_PENDING',function() peripheral.inventory(c,'green',nop) end)

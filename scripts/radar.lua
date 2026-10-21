@@ -54,7 +54,10 @@ function M.pending(body)
 end
 function M.reconcile(rec,spend)
   spend(16)
-  if not M.supports(rec.body) then return registry.remove(rec.id,'native_body_lost') end
+  if not M.supports(rec.body) then
+    spend(limits.registry_entries*6)
+    return registry.remove(rec.id,'native_body_lost')
+  end
   local b=rec.body
   if b.force.index~=rec.force_index or b.surface.index~=rec.surface_index then
     spend(16)
