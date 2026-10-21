@@ -10,6 +10,120 @@ import build
 
 
 class PackageInventoryTests(unittest.TestCase):
+    def test_peripheral_help_exact_signatures_including_aliases_and_overloads(self):
+        import re
+        # Independent full signatures, not merely method-name substring hits.
+        # The packaged Lua contract separately checks these methods against the
+        # compiled guest inventory and exact paragraph isolation/spacing.
+        expected = {
+            'PERIPHERALS': '''getNames(wire)
+isPresent(name, wire)
+getType(name, wire)
+getMethods(name, wire)
+describe(name, wire)
+wrap(name, wire)
+call(name, wire, method, ...)
+find(type_name, wire)
+getName(facade)
+getWire(facade)
+setMonitorSyncGroup(members)
+getMonitorSyncGroup()''',
+            'SPEAKER': '''getInstruments()
+getNotes(instrument)
+playNote(instrument, volume?, pitch?)
+playSound(path, volume?)
+getSounds(prefix?, after?)
+getLimits()''',
+            'RADAR MODEM': '''open(channel)
+isOpen(channel)
+close(channel)
+closeAll()
+transmit(channel, replyChannel, payload)
+isWireless()
+getLimits()''',
+            'LOGIC HANDLER': '''readSignal(input, signal)
+readSignals(input)
+getInputStatus()
+getOutput()
+setOutput(signals)
+clearOutput()
+subscribe(options, handler_name)
+unsubscribe(subscription_id)
+getLimits()''',
+            'KV DATABASE': '''get(key)
+set(key, value)
+del(key, ...)
+exists(key, ...)
+type(key)
+hget(key, field)
+hset(key, field, value, ...)
+hdel(key, field, ...)
+hexists(key, field)
+hgetall(key)
+hlen(key)
+expire(key, seconds)
+ttl(key)
+persist(key)
+getLimits()''',
+            'MONITOR': '''write(text)
+blit(text, foreground, background)
+clear()
+clearLine()
+scroll(lines)
+getSize()
+getCursorPos()
+setCursorPos(x, y)
+getCursorBlink()
+setCursorBlink(enabled)
+getTextColor()
+getTextColour()
+setTextColor(color)
+setTextColour(color)
+getBackgroundColor()
+getBackgroundColour()
+setBackgroundColor(color)
+setBackgroundColour(color)
+isColor()
+isColour()
+setPaletteColor(color, rgb) or setPaletteColor(color, r, g, b)
+setPaletteColour(color, rgb) or setPaletteColour(color, r, g, b)
+getPaletteColor(color)
+getPaletteColour(color)
+getTextScale()
+setTextScale(scale)
+getLimits()''',
+            'RECIPE SEARCHER': '''findRecipes("item"/"fluid", exact_product_name, exact_category?)
+getLimits()''',
+            'CONFIGURATOR': '''getDevices(target_wire)
+getDevice(id, target_wire)
+getCapabilities(id, target_wire)
+getConfiguration(id, target_wire)
+setConfiguration(id, patch, target_wire)
+getSections(id, target_wire)
+addSection(id, definition, target_wire)
+setSection(id, index, patch, target_wire)
+removeSection(id, index, target_wire)
+getLimits()''',
+        }
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            archive = build.build(output)
+            with zipfile.ZipFile(archive) as package:
+                source = package.read(next(n for n in package.namelist()
+                                           if n.endswith('/scripts/ui/help.lua'))).decode()
+        reference = re.search(r'  text=\[\[(.*?)\]\]', source, re.S)
+        assert reference is not None, 'missing packaged reference'
+        text = reference[1]
+        self.assertEqual(sum(len(signatures.splitlines()) for signatures in expected.values()), 88)
+        for heading, signatures in expected.items():
+            found = re.search(r'^' + re.escape(heading) + r'\n(.*?)(?=^[A-Z][A-Z ]+\n|\Z)',
+                              text, re.M | re.S)
+            assert found is not None, 'missing topic ' + heading
+            section = found[1]
+            for signature in signatures.splitlines():
+                with self.subTest(topic=heading, signature=signature):
+                    self.assertEqual(len(re.findall(r'^' + re.escape(signature) + r' -> ',
+                                                    section, re.M)), 1)
+
     def test_speaker_contract_samples_and_fixtures_are_packaged_without_audio_assets(self):
         # Independent expected paths: dropping an allowlist entry must fail even
         # if the rest of the build remains internally self-consistent.

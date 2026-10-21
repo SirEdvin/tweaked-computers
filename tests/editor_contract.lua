@@ -102,6 +102,8 @@ local function gui(parent,spec)
   function e.clear() for i=#e.children,1,-1 do e.children[i].destroy() end end
   function e.add_tab(tab,content) e.tabs[#e.tabs+1]={tab=tab,content=content} end
   function e.scroll_to_bottom() e.scrolls=(e.scrolls or 0)+1 end
+  function e.scroll_to_top() e.top_scrolls=(e.top_scrolls or 0)+1 end
+  function e.scroll_to_left() e.left_scrolls=(e.left_scrolls or 0)+1 end
   function e.select(first,last) e.selection={first,last} end
   function e.select_all() e.selection={1,#e.text} end
   return e
