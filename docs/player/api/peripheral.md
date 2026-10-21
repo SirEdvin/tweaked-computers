@@ -122,7 +122,7 @@ not exclusive locks or callback-wide transactions.
 
 Run [peripheral-program](../examples.md#peripheral-program) with at least one
 powered NETWORK-connected device; it inspects both colors and logs metadata. Use
-Refresh Peripherals to compare the same paths. Check exact role/color/force/surface
+the automatically updating Peripherals tab to compare the same paths. Check exact role/color/force/surface
 before interpreting missing as empty. A monitor regroup can invalidate an old
 name; re-enumerate, do not retarget by coordinates. For service-specific errors
 see [shared errors](common.md#errors) and the selected device reference.

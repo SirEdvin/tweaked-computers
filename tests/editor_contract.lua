@@ -98,6 +98,7 @@ local function gui(parent,spec)
     end
   end
   function e.get_index_in_parent() for i,c in ipairs(e.parent.children) do if c==e then return i end end end
+  function e.swap_children(a,b) e.children[a],e.children[b]=e.children[b],e.children[a] end
   function e.force_auto_center() e.centered=true end
   function e.focus() e.focused=true end
   function e.clear() for i=#e.children,1,-1 do e.children[i].destroy() end end

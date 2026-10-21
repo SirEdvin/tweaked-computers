@@ -108,7 +108,7 @@ The browser SHALL present keys, fields and values as literal byte-string data, w
 - **AND** the original stored strings remain byte-identical.
 
 ### Requirement: Expiry-aware inspection snapshots
-The browser SHALL label its snapshot tick and provide an explicit refresh. Each successful snapshot SHALL exclude keys whose deadlines have passed at that tick, even before reclamation. Refresh SHALL preserve selected keys/fields that still exist and clearly report expired, deleted or changed selections. Unsupported database representations SHALL report unavailable without repair or mutation.
+The browser SHALL update automatically while open through existing bounded scheduler admission, without a Refresh control or numeric snapshot tick. Each successful snapshot SHALL exclude keys whose deadlines have passed at that tick, even before reclamation. Refresh SHALL preserve selected keys/fields that still exist and clearly report expired, deleted or changed selections. Unsupported database representations SHALL report unavailable without repair or mutation.
 
 #### Scenario: Expired key awaits reclamation
 - **WHEN** a new inspection snapshot is taken at or after a retained key's deadline
@@ -116,7 +116,7 @@ The browser SHALL label its snapshot tick and provide an explicit refresh. Each 
 
 #### Scenario: Program changes the viewed key
 - **WHEN** a program updates, deletes or changes the type of the selected key after an inspection snapshot
-- **THEN** the old view remains explicitly a snapshot until refresh
+- **THEN** the next admitted automatic observation replaces the old view without manual intervention
 - **AND** a successful refresh shows the new value/type or a clear no-longer-present state without altering the database.
 
 #### Scenario: Unsupported retained database

@@ -96,7 +96,7 @@ function M.run()
       c.follow.state=false; editor.on_checked{player_index=a.index,element=c.follow,tick=tick}
       local frozen=c.output.text
       execute('print("new shell output")')
-      editor.refresh(a); assert(c.output.text==frozen and source.text_writes==writes)
+      editor.refresh(a); assert(c.output.text~=frozen and c.output.text:find('new shell output',1,true) and source.text_writes==writes)
       local input=c.prompt.command; input.text='unfinished'
       editor.on_text{player_index=a.index,element=input,tick=tick}
       local count=input.text_writes
@@ -110,7 +110,7 @@ function M.run()
       c.follow.state=false; editor.on_checked{player_index=a.index,element=c.follow,tick=tick}
       scrolls=c.output.scrolls
       editor.resize(a); editor.refresh(a)
-      assert(c.output.scrolls==scrolls,'Follow-off moved the selectable snapshot')
+      assert(c.output.scrolls==scrolls,'Follow-off scrolled the live output')
       c.follow.state=true; editor.on_checked{player_index=a.index,element=c.follow,tick=tick}
     end)
     group('aliases-cycles-scalar-keys-and-local-functions',function()

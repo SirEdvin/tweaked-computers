@@ -7,7 +7,7 @@ local layout=require('scripts.ui.editor-layout')
 local scheduler=require('scripts.scheduler')
 local console_shell=require('scripts.runtime.shell')
 local M={frame_name='tc_program_editor'}
-local ui_version=3
+local ui_version=4
 local inspector -- Fixed parsing-time callback; never persisted or exposed to guests.
 function M.register_inspector(fn) assert(type(fn)=='function' and not inspector); inspector=fn end
 local tabs={'editor','console','peripherals','reference','maintenance'}
@@ -68,22 +68,19 @@ local function console(rec)
   -- one byte for one byte, preserving stored logs, newlines and output quotas.
   return (string.gsub(table.concat(lines,'\n'),'\t',' '))
 end
-local function refresh_console(c,s,rec,force)
-  -- Follow off freezes this selectable snapshot: no reassignment can reset scroll.
-  if force or s.follow~=false then
-    local text=console(rec)
-    if c.output.text~=text then c.output.text=text end
-    -- Native text/layout updates can settle after this callback. Keep following
-    -- on later refreshes too, even when the log itself has not changed.
-    if s.follow~=false then c.output.scroll_to_bottom() end
-  end
+local function refresh_console(c,s,rec)
+  -- Follow controls scrolling, not acquisition. Changed text may clear native
+  -- selection; leave unchanged text alone so native copy works between arrivals.
+  set_text(c.output,console(rec))
+  -- Layout settles after this callback, so keep tailing on subsequent refreshes.
+  if s.follow~=false then c.output.scroll_to_bottom() end
   c.follow.state=s.follow~=false
   local state=type(rec.shell)=='table' and rec.shell or nil
   s.shell_generation=state and type(state.id)=='string' and #state.id<=128 and state.id or false
   c.shell_status.caption=state and type(state.status)=='string' and state.status:sub(1,256) or tr('shell-ready')
   c.confirm_shell.visible=s.shell_reset~=nil
   c.confirm_shell.identity.caption='Reset Shell values and pending commands? Program and peripheral data are retained.'
-  c.note.caption=s.follow==false and tr('console-paused') or tr('console-truncated')
+  c.note.caption=s.follow==false and tr(rec.log_truncated and 'console-reading-truncated' or 'console-reading') or tr('console-truncated')
   c.note.visible=s.follow==false or rec.log_truncated==true
   local details={}
   if s.validation then details[#details+1]='Draft / saved validation: '..(s.validation.diagnostic and diagnostic(s.validation.diagnostic) or 'valid') end
@@ -95,15 +92,14 @@ local function refresh_console(c,s,rec,force)
     or (rec.diagnostic and rec.diagnostic.line~=nil) or false,'Select a diagnostic location explicitly. Active source must match the draft.')
 end
 local function refresh_maintenance(c,s,b,rec)
-  c.revisions.caption='Saved '..rec.saved_revision..' | active '..(rec.active and rec.active.revision or 'none')..' | draft base '..b.documents[s.id].base_revision
   c.review_panel.visible=s.review~=nil
   if s.review then
-    c.review_panel.caption_label.caption='Current saved revision '..s.review.revision..' — read before resolving'
+    c.review_panel.caption_label.caption='Current saved source — read before resolving'
     set_text(c.review_panel.review,s.review.source)
   end
   c.active_panel.visible=s.active_review~=nil
   if s.active_review then
-    c.active_panel.caption_label.caption='Formerly active snapshot, revision '..s.active_review.revision..' — recovery only'
+    c.active_panel.caption_label.caption='Formerly active source — recovery only'
     set_text(c.active_panel.review,s.active_review.source)
   end
   update_recovery(c,s,b)
@@ -143,7 +139,7 @@ local function peripheral_details(c,s)
   local text
   if found then
     text='API name: '..found.name..'\nType: '..found.type..'\nDiscovery wire: '..inventory.wire
-      ..'\n'..(found.powered and 'Powered' or 'Unpowered / service paused')..'\nSnapshot tick: '..inventory.tick
+      ..'\n'..(found.powered and 'Powered' or 'Unpowered / service paused')
   elseif inventory and inventory.error then
     text=(selected and ('Last selected name: '..selected..'\n') or '')..'Inventory unavailable; presence is not claimed.\n'..diagnostic(inventory.error)
   elseif selected then text=selected..'\nDisconnected / not present on this refreshed '..(inventory and inventory.wire or s.wire)..' path.'
@@ -154,32 +150,49 @@ local function inspect(c,s,rec,tick)
   local wire=s.wire or 'red'; local ok,items,e
   if inspector then ok,items,e=pcall(inspector,rec,wire,tick)
   else ok=false; items={code='E_UNSUPPORTED',message='Discovery service not installed; no inventory is claimed.'} end
-  c.rows.clear()
+  local previous=s.inventory
+
   local retained=false
   if not ok or not items then
     local problem=ok and e or items
     s.inventory={wire=wire,tick=tick,error=type(problem)=='table' and problem or {code='E_ENGINE',message='Discovery inspection failed.'}}
-    label(c.rows,'pending',diagnostic(s.inventory.error))
+    -- Retire actionable rows on unknown presence, but keep a stable error widget
+    -- during repeated refusals. Never publish a successful empty inventory.
+    local children=c.rows.children
+    for i=#children,1,-1 do if children[i].name~='pending' then children[i].destroy() end end
+    if not c.rows.pending then label(c.rows,'pending','') end
+    c.rows.pending.caption=diagnostic(s.inventory.error)
   else
     assert(type(items)=='table' and #items<=limits.network_nodes,'invalid host discovery inventory')
     s.inventory={wire=wire,tick=tick,items=items}
-    if #items==0 then label(c.rows,'empty','No connected peripherals.') end
+    if c.rows.pending then c.rows.pending.destroy() end
+    if #items>0 and c.rows.empty then c.rows.empty.destroy() end
+    if #items==0 and not c.rows.empty then label(c.rows,'empty','No connected peripherals.') end
+    local keep={empty=#items==0}
     for i,item in ipairs(items) do
       assert(type(item.name)=='string' and #item.name<=128 and type(item.type)=='string' and #item.type<=64 and type(item.powered)=='boolean','invalid host descriptor')
-      local row=flow(c.rows,'device_'..i,'horizontal')
-      row.add{type='sprite',sprite=icons[item.type] or 'utility/questionmark',name='icon'}.style.size=24
+      local name='device_'..i; local row=c.rows[name]; keep[name]=true
+      local old=previous and previous.items and previous.items[i]
+      if row and (previous.wire~=wire or not old or old.name~=item.name or old.type~=item.type) then row.destroy(); row=nil end
+      if not row then
+        row=flow(c.rows,name,'horizontal')
+        row.add{type='sprite',sprite=icons[item.type] or 'utility/questionmark',name='icon'}.style.size=24
+        local b=button(row,'peripheral_'..i,'')
+        b.style.horizontally_stretchable=true; b.tooltip={'tc-editor.peripheral-row',item.name,wire}
+      end
       -- These are generated opaque IDs / fixed host type names, not guest labels.
       -- Button styles do not support rich_text_setting in the pinned engine.
-      local b=button(row,'peripheral_'..i,item.name..' / '..item.type..(item.powered and ' / + powered' or ' / ! unpowered'))
-      b.style.horizontally_stretchable=true; b.tooltip={'tc-editor.peripheral-row',item.name,wire}
+      row['peripheral_'..i].caption=item.name..' / '..item.type..(item.powered and ' / + powered' or ' / ! unpowered')
+      if row.get_index_in_parent()~=i then c.rows.swap_children(row.get_index_in_parent(),i) end
       if s.peripheral==item.name and s.peripheral_wire==wire then retained=true end
     end
+    local children=c.rows.children
+    for i=#children,1,-1 do if not keep[children[i].name] then children[i].destroy() end end
   end
   if not retained then s.peripheral_wire=nil end -- Keep last-known details, disarm repeat.
-  c.snapshot.caption=wire..' — updated: '..tick
   peripheral_details(c,s)
 end
-function M.refresh(player,message)
+function M.refresh(player,message,tick)
   local s,b=model.session(player.index); local f=frame(player)
   if not s or not f or not f.valid or f.tags.token~=s.token then return end
   -- Old saved GUI trees are not the new hierarchy. Retire only their session at
@@ -204,7 +217,7 @@ function M.refresh(player,message)
   local c=content(f,'editor'); local dirty=d.source~=d.base_source; local conflict=d.base_revision~=rec.saved_revision
   local status=rec.status..(rec.powered and ' / powered' or ' / unpowered')
   f.title.status.caption=status
-  c.status.caption=(dirty and 'Unsaved' or 'Saved')..' | base '..d.base_revision..' | saved '..rec.saved_revision..' | active '..(rec.active and rec.active.revision or 'none')
+  c.status.caption=dirty and 'Unsaved' or 'Saved'
   c.status.tooltip=rec.id..' | '..status..(conflict and ' | conflict: review the current saved source' or '')
   local validation=s.validation and (s.validation.diagnostic and diagnostic(s.validation.diagnostic) or 'Draft valid.')
   local text=conflict and 'Saved source changed. Review before Save / Run.' or s.message or validation
@@ -225,6 +238,7 @@ function M.refresh(player,message)
   f.content.console_tab.caption=rec.diagnostic and tr('console-error') or tr('console')
   -- Routine refresh never touches source or hidden supporting panels.
   if s.tab==2 then refresh_console(content(f,'console'),s,rec)
+  elseif s.tab==3 then inspect(content(f,'peripherals'),s,rec,tick or game.tick)
   elseif s.tab==5 then refresh_maintenance(content(f,'maintenance'),s,b,rec) end
 end
 local function shell(player,s,title)
@@ -288,7 +302,7 @@ function M.open(player,id)
   button(message,'template',tr('starter'))
   c=content(f,'console')
   local tools=flow(c,'actions','horizontal')
-  button(tools,'refresh-console',tr('refresh')); button(tools,'show-location',tr('show-location'))
+  button(tools,'show-location',tr('show-location'))
   c.add{type='checkbox',name='follow',caption=tr('follow'),state=true}
   line(c,'note','').visible=false
   box(c,'output','',200,true).tooltip=tr('console-bounded'); box(c,'detail','',70,true)
@@ -302,8 +316,7 @@ function M.open(player,id)
   c=content(f,'peripherals')
   local filter=flow(c,'filter','horizontal'); line(filter,'label',tr('channel'))
   filter.add{type='drop-down',name='wire',items={tr('red'),tr('green')},selected_index=1}
-  button(filter,'inspect',tr('refresh-peripherals'))
-  line(c,'snapshot','Not sampled')
+
   c.add{type='scroll-pane',name='rows',horizontal_scroll_policy='never',vertical_scroll_policy='auto'}
   box(c,'details','No peripheral selected.',100,true)
   c.details.tooltip=tr('peripheral-workflow')
@@ -317,7 +330,7 @@ function M.open(player,id)
   c.reference_text.tooltip=tr('copy-note')
   refresh_reference(c,s)
   c=content(f,'maintenance')
-  label(c,'revisions','')
+
   tools=flow(c,'review_actions','horizontal'); button(tools,'review',tr('review-current')); button(tools,'review-active',tr('review-active'))
   local review=review_panel(c,'review_panel','rebase',tr('rebase'))
   button(review.actions,'reload',tr('reload'))
@@ -404,10 +417,9 @@ local function activate_tab(player,f,s,index,tick)
   s.tab=index; f.content.selected_tab_index=index
   if index==2 then
     local rec=model.current(player,s.token); local c=content(f,'console')
-    refresh_console(c,s,rec,c.output.text=='')
-  elseif index==3 then local rec=model.current(player,s.token); inspect(content(f,'peripherals'),s,rec,tick)
+    refresh_console(c,s,rec)
   elseif index==4 then refresh_reference(content(f,'reference'),s) end
-  M.refresh(player)
+  M.refresh(player,nil,tick)
 end
 function M.on_tab(event)
   local player,f,s=owned(event)
@@ -431,7 +443,7 @@ function M.on_selection(event)
     local wire=event.element.selected_index==2 and 'green' or 'red'
     if wire~=s.wire then s.peripheral_wire=nil end
     s.wire=wire
-    inspect(content(f,'peripherals'),s,model.current(player,s.token),event.tick)
+    M.refresh(player,nil,event.tick)
   elseif event.element==content(f,'maintenance').recovery then
     s.recovery_review=nil; s.forget=nil; M.refresh(player)
   end
@@ -439,7 +451,7 @@ end
 function M.on_checked(event)
   local player,f,s=owned(event)
   if not player or s.mode=='recovery' or event.element~=content(f,'console').follow then return end
-  s.follow=event.element.state; refresh_console(content(f,'console'),s,model.current(player,s.token),s.follow)
+  s.follow=event.element.state; refresh_console(content(f,'console'),s,model.current(player,s.token))
 end
 
 local function source_location(player,f,s,rec,d)
@@ -494,11 +506,7 @@ function M.on_click(event)
     elseif element==c.message.review then
       local result,err=model.action(player,s.token,'review',event.tick)
       activate_tab(player,f,s,5,event.tick); return result,err
-    elseif element==content(f,'console').actions['refresh-console'] then
-      refresh_console(content(f,'console'),s,rec,true); return 'Console snapshot refreshed.'
     elseif element==content(f,'console').actions['show-location'] then return source_location(player,f,s,rec,d)
-    elseif element==content(f,'peripherals').filter.inspect then
-      inspect(content(f,'peripherals'),s,rec,event.tick); return 'Selected discovery channel refreshed.'
     elseif element==content(f,'reference').actions['select-reference'] then
       local text=content(f,'reference').reference_text; text.focus(); text.select_all(); return 'Use native Copy to copy the selected text.'
     end
@@ -539,8 +547,8 @@ function M.on_click(event)
     if result and (action=='reload' or action=='recover' or action=='copy-active') then c.source.text=d.source end
     return result,err
   end)
-  if not ok then M.refresh(player,diagnostic(message))
-  elseif message or e then M.refresh(player,message or diagnostic(e)) end
+  if not ok then M.refresh(player,diagnostic(message),event.tick)
+  elseif message or e then M.refresh(player,message or diagnostic(e),event.tick) end
 end
 function M.on_closed(event)
   local player,f,s=owned(event,true)
@@ -595,11 +603,15 @@ end
 function M.on_size(event) M.resize(game.get_player(event.player_index)) end
 function M.tick(tick,spend)
   if tick%15~=0 then return end
-  spend(#game.connected_players+1)
-  for _,player in pairs(game.connected_players) do
+  local viewers=game.connected_players; local n=#viewers
+  spend(n+1); if n==0 then return end
+  local root=registry.get(); local start=(root.editor_cursor or 0)%n
+  root.editor_cursor=(start+1)%n
+  for offset=1,n do
+    local player=viewers[(start+offset-1)%n+1]
     local f=frame(player)
-    if f and f.valid and player.opened==f then
-      scheduler.try_maintenance(function() spend(limits.console_bytes+limits.console_entries*64+1); M.refresh(player) end)
+    if f and f.valid and f.visible~=false and f.enabled~=false and player.opened==f then
+      scheduler.try_maintenance(function() spend(limits.console_bytes+limits.console_entries*64+1); M.refresh(player,nil,tick) end)
     end
   end
 end

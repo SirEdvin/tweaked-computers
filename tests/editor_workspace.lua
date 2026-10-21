@@ -28,7 +28,7 @@ function M.run()
   local original_storage=storage.tweaked_computers
   storage.tweaked_computers=nil; registry.initialize()
   local original_game=game; local surface=game.surfaces[1]; local groups=0; local tick=200
-  local function group(name,fn) tick=tick+1; fn(); groups=groups+1; log('TC_CONTRACT '..name) end
+  local function group(name,fn) tick=tick+1; game.tick=tick; fn(); groups=groups+1; log('TC_CONTRACT '..name) end
   local function build(kind,x,y)
     local body=assert(surface.create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
     local rec=assert(lifecycle.build(body)); rec.powered=true; return rec
@@ -169,6 +169,9 @@ function M.run()
       assert(#c.actions.children==4 and c.actions.activate and not c.actions.run and not c.actions.apply)
       assert(c.source.read_only==false and c.source.style.rich_text_setting==defines.rich_text_setting.disabled)
       assert(not c.output and not c.help_panel and not c.recovery and not c.review_panel)
+      assert(not f.content.console.actions['refresh-console'] and not f.content.peripherals.filter.inspect)
+      assert(not f.content.peripherals.snapshot and not f.content.maintenance.revisions)
+      assert(not c.status.caption:find(' | base ',1,true),'revision trackers are presentation, not safety')
     end)
     group('workspace-foreign-close-during-shell-construction-is-ignored',function()
       local pane=f.content; f.content=nil
@@ -247,15 +250,15 @@ function M.run()
       end
       assert(not layout.measure({width=1000,height=600},1.5,false).supported)
     end)
-    group('workspace-console-follow-off-no-text-or-scroll-churn',function()
+    group('workspace-console-follow-off-live-without-scroll-or-unchanged-text-churn',function()
       tab(f,2); local output=f.content.console.output; local text=output.text; local writes=output.text_writes; local scrolls=output.scrolls
       local follow=f.content.console.follow; follow.state=false
       editor.on_checked{player_index=a.index,element=follow,tick=tick}
       for i=1,limits.console_entries+3 do runtime.log(rec,'[font=bad]'..i,tick) end
       for _=1,3 do editor.refresh(a) end
       tab(f,1); tab(f,2)
-      assert(output.text==text and output.text_writes==writes and output.scrolls==scrolls)
-      click(f.content.console.actions['refresh-console']); assert(output.text~=text and output.scrolls==scrolls)
+      assert(output.text~=text and output.text_writes==writes+1 and output.scrolls==scrolls)
+      local live_writes=output.text_writes; editor.refresh(a); assert(output.text_writes==live_writes)
       follow.state=true; editor.on_checked{player_index=a.index,element=follow,tick=tick}
       runtime.log(rec,'last bounded output',tick); editor.refresh(a)
       assert(#rec.logs==limits.console_entries and output.tooltip[1]=='tc-editor.console-bounded' and output.scrolls>scrolls)
@@ -267,12 +270,17 @@ function M.run()
       assert(s.inventory.wire=='red' and #s.inventory.items==1 and s.inventory.items[1].name==db.id and not s.inventory.items[1].powered)
       assert(p.rows.device_1.icon.sprite=='item/tc-kv')
       click(p.rows.device_1.peripheral_1); assert(p.details.text:find(db.id,1,true) and p.details.text:find('Unpowered',1,true))
+      local row=p.rows.device_1; local details_writes=p.details.text_writes
+      tick=tick+15; game.tick=tick; editor.tick(tick-tick%15,function() end)
+      assert(p.rows.device_1==row and p.details.text_writes==details_writes and s.peripheral==db.id)
+      db.powered=true; editor.refresh(a,nil,tick)
+      assert(p.rows.device_1==row and p.details.text:find('Powered',1,true))
       select(p.filter.wire,2)
       assert(s.inventory.wire=='green' and s.inventory.items and #s.inventory.items==1 and s.inventory.items[1].name==monitor_id,serpent.line(s.inventory))
       assert(p.rows.device_1.icon.sprite=='item/tc-monitor')
       click(p.rows.device_1.peripheral_1); assert(s.peripheral==monitor_id)
       assert(connector(rec,'green').disconnect_from(connector(mon,'green')))
-      click(p.filter.inspect)
+      editor.refresh(a)
       assert(#s.inventory.items==0 and p.rows.empty and p.details.text:find('Disconnected',1,true))
       assert(c.source.text==exact)
     end)
@@ -280,11 +288,11 @@ function M.run()
       tab(f,3); select(f.content.peripherals.filter.wire,1)
       local context=runtime.context(rec,tick)
       assert(admission.reserve(context,'work',limits.callback_work-context.machine.work))
-      click(f.content.peripherals.filter.inspect)
+      editor.refresh(a)
       local s=model.session(a.index)
       assert(s.inventory.error and s.inventory.error.code=='E_BUSY' and not s.inventory.items and not f.content.peripherals.rows.empty)
       assert(f.content.peripherals.details.text:find('presence is not claimed',1,true))
-      tick=tick+1; click(f.content.peripherals.filter.inspect)
+      tick=tick+1; editor.refresh(a,nil,tick)
       assert(s.inventory.items and #s.inventory.items==1 and s.inventory.items[1].name==db.id)
     end)
     group('workspace-reference-complete-categories-search-select-no-overwrite',function()
@@ -374,7 +382,7 @@ function M.run()
       local one={name=db.id,type='kv_database',powered=false}; local two={name='test-current-monitor',type='monitor',powered=false}
       local function inventory(items,problem)
         inspection_override={items=items,error=problem}; tick=tick+1
-        if s.tab~=3 then tab(f,3) else click(p.filter.inspect) end
+        if s.tab~=3 then tab(f,3) else editor.refresh(a,nil,tick) end
       end
       local function row(i) return p.rows['device_'..i]['peripheral_'..i] end
       inventory({one,two}); s.peripheral_wire=nil

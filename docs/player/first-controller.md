@@ -37,7 +37,7 @@ writes A=1; at 100 or above it empties its bank. Increase/decrease the reading
 chest's contents and watch the inserter after native circuit propagation and any
 in-flight item settle. Different quality items are separate identities.
 
-**Refresh Peripherals** should show a `logic_handler` on red. The program retains
+The automatically updating **Peripherals** tab should show a `logic_handler` on red. The program retains
 stock/sample/change information in explicit computer state. There is no direct
 computer-to-computer message API.
 

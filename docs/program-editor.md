@@ -21,9 +21,9 @@ frame: tc_program_editor (player / token / id / generation / ui_version tags)
   title: heading + drag space → frame, status, Focus / Exit focus, Close
   content: native tabbed-pane
     Editor: source, empty-draft starter invitation, one action row,
-            concise revisions, contextual feedback / Review conflict
-    Console: Refresh / Go to source line, Follow, bounded output, diagnostics
-    Peripherals: Red / Green selector, Refresh, timestamp, icon/name/type/state rows,
+            saved/unsaved status, contextual feedback / Review conflict
+    Console: Go to source line, Follow, bounded live output, diagnostics
+    Peripherals: Red / Green selector, automatic icon/name/type/state rows,
                  selected opaque identity details
     Reference: Search / category / topic, selectable text, explicit select/insert
     Maintenance: revision review/rebase/reload, active-source review/copy,
@@ -126,22 +126,22 @@ presentation; no background discovery graph or hidden recovery/help rebuild occu
 The active status/Console fault marker may update without stealing navigation.
 
 Console retains the runtime's newest 64 entries / 16,384 bytes. With Follow off,
-the selectable output snapshot is **not assigned**, even on tab return; native
-scroll/selection are not repeatedly reset. Refresh is an explicit one-shot snapshot;
-Follow resumes updates/scroll-to-bottom on changed text. Older ring entries remain
+the single selectable text box stays live without automatic scrolling. Incoming
+changed text may reset native selection; unchanged text is not reassigned, so copy
+works between updates. Follow resumes tailing. Older ring entries remain
 discarded. No terminal, REPL or unsupported Clear command is implied. Source-line
 navigation is explicit, selects a line using the pinned `select` API, and refuses an
 active diagnostic that belongs to a different draft. Source/diagnostic/help fields
 have rich text disabled; diagnostic tooltip brackets are escaped for presentation.
 
-Peripherals calls the one parsing-time registered inspector only on opening its
-tab, choosing a channel or pressing Refresh. `register_inspector(fn)` accepts the
+Peripherals calls the one parsing-time registered inspector on opening its tab,
+choosing a channel and admitted scheduler updates while visible. `register_inspector(fn)` accepts the
 existing fixed host callback `fn(record,wire,tick)` → complete dense
 `{name,type,powered}` descriptors or `nil,diagnostic`. The production
 `scripts.ui.network-inspector` uses the real peripheral traversal and shared work
 admission, not a second UI graph/cache. It must never return an incomplete prefix.
 The UI distinguishes complete-empty, unpowered, disconnected-from-the-refreshed-path
-and pending/refused/unknown. It shows the snapshot tick; it does not claim continuous
+and pending/refused/unknown. It omits snapshot tick clutter and does not claim continuous
 live authorization. Friendly labels never replace API names or mix red and green.
 
 Reference is a categorized view of the same complete `help.text`; concatenating the

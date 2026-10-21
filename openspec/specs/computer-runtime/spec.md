@@ -138,7 +138,7 @@ Saved programs and Console commands SHALL expose `print`, `xpcall`, `rawequal`, 
 #### Scenario: Existing retention and failure semantics apply
 - **WHEN** a callback successfully prints and subsequently faults, or later output fills the rolling Console
 - **THEN** the successful entry is not rolled back and is subject only to the existing retention policy
-- **AND** Follow-off continues to preserve the viewer's selected output snapshot.
+- **AND** Follow-off keeps output live without automatic scrolling, under the Console's accepted changed-text selection-reset and existing eviction rules.
 
 ### Requirement: Raw access is confined to guest tables
 `rawget(t, key)` and `rawset(t, key, value)` SHALL operate only on guest-owned plain tables without invoking metamethods. `rawset` SHALL preserve aliases, return the identical table and delete a key when value is nil. Ownership, trusted-value, key, capacity, work and allocation checks SHALL precede mutation. API facades, namespaces and host-owned tables SHALL be rejected; persistent Data and shell-value restrictions SHALL remain unchanged.

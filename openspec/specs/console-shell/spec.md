@@ -57,7 +57,7 @@ The shell SHALL accept Lua statements, expressions, and shell-global assignments
 - **AND** ordinary local/parameter shadowing remains allowed without modifying the built-in.
 
 ### Requirement: Visible ordered results and diagnostics
-Submitted commands, printed output, expression return values, and shell errors SHALL appear in the bounded selectable Console in execution order and be distinguishable from program diagnostics. `print(...)` SHALL preserve nil/false positions and return no values. Zero-result expressions SHALL not display a fabricated nil. Follow-off SHALL continue to preserve the player's output snapshot.
+Submitted commands, printed output, expression return values, and shell errors SHALL appear in the bounded selectable Console in execution order and be distinguishable from program diagnostics. `print(...)` SHALL preserve nil/false positions and return no values. Zero-result expressions SHALL not display a fabricated nil. Follow-off SHALL keep the single Console text box live without automatic scrolling, preserving the reader's viewport rather than freezing output. Incoming changed text MAY clear native selection; native selection/copy SHALL work between updates and unchanged text SHALL NOT be reassigned. Follow-on SHALL resume tailing, without a separate snapshot view, per-entry widgets or Refresh action. Existing output bounds and visible truncation SHALL remain unchanged; discarded bytes SHALL NOT be recovered or unrelated bytes reselected.
 
 #### Scenario: Print a tuple without duplicate output
 - **WHEN** `print(false, nil, 3)` executes
