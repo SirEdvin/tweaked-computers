@@ -38,7 +38,12 @@ function M.show(parent,topic,width)
   end
   parent.tags={reference_topic=key}
   M.resize(parent,width)
-  for _,element in ipairs(parent.children) do element.scroll_to_top(); element.scroll_to_left() end
+  -- New text boxes place their caret at the end, and the next native layout can
+  -- scroll back to that caret after scroll_to_top. Move it without focusing or
+  -- selecting bytes, once at creation only. Never touch an unchanged selection.
+  for _,element in ipairs(parent.children) do
+    element.select(1,0); element.scroll_to_top(); element.scroll_to_left()
+  end
   parent.scroll_to_top(); parent.scroll_to_left()
 end
 return M

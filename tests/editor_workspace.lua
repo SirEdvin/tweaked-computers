@@ -333,6 +333,7 @@ function M.run()
         assert(part.type=='text-box' and part.read_only and part.style.rich_text_setting==defines.rich_text_setting.disabled)
         if part.tags.reference_kind=='code' then
           code=part; assert(not part.word_wrap and part.text==help.template and part.top_scrolls>0 and part.left_scrolls>0)
+          assert(part.selection[1]==1 and part.selection[2]==0,'new code starts at its first character without selecting bytes')
         else assert(part.word_wrap) end
       end
       assert(code and c.source.text==exact and rec.active.source~=exact)
