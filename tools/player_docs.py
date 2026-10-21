@@ -17,6 +17,10 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs/player'
 CONTRACT = ROOT / 'openspec'
 EXAMPLES = {
+    'reference-speaker': 'The in-game Reference → Examples → One speaker note tutorial includes complete research, power, red-wire setup, execution steps and expected results. This is the same small program, not an external prerequisite.',
+    'reference-recipe': 'The in-game Find iron plate recipes tutorial connects one powered Recipe Searcher on red and prints actual smelting matches. This supplementary copy uses the exact same source.',
+    'reference-factory': 'The in-game Small factory dashboard tutorial includes the exact four-peripheral and chest/inserter setup, red discovery/INPUT and green TARGETS/OUTPUT separation. It teaches one inserter, a three-second KV hash and a two-line monitor; use its complete in-game setup.',
+    'reference-writer': 'Computer 1 of the self-contained Two-computer shared data tutorial. Run this writer on the shared red database before running shared-telemetry on computer 2 with the shared red and a different physical green database.',
     'speaker-alarm': 'Connect a powered vanilla programmable-speaker to a computer Network on red. Plays one positional effect every 120 ticks. False admission waits for the next timer, never a same-tick retry. Stop prevents future calls, not cancellation of an already submitted sample.',
     'speaker-melody': 'Connect a powered vanilla programmable-speaker on red. Discovers zero-based piano indices and requests one note every 30 ticks; advances only after admission. This is simulation scheduling, not sample-accurate sequencing. Disconnect/power errors fault the program; reconnect and Run again.',
     'speaker-catalogue': 'Connect a powered vanilla programmable-speaker on red. Fetches at most one page per callback and stores the last page and cumulative count as plain state. Completes without a busy loop. The bounded Console history is not a complete catalogue export; inspect last_page while paging or reuse the continuation pattern with your own storage.',

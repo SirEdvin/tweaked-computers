@@ -3,11 +3,12 @@ local model=require('scripts.ui.editor-model')
 local registry=require('scripts.registry')
 local limits=require('scripts.runtime.limits')
 local help=require('scripts.ui.help')
+local reference=require('scripts.ui.reference')
 local layout=require('scripts.ui.editor-layout')
 local scheduler=require('scripts.scheduler')
 local console_shell=require('scripts.runtime.shell')
 local M={frame_name='tc_program_editor'}
-local ui_version=4
+local ui_version=5
 local inspector -- Fixed parsing-time callback; never persisted or exposed to guests.
 function M.register_inspector(fn) assert(type(fn)=='function' and not inspector); inspector=fn end
 local tabs={'editor','console','peripherals','reference','maintenance'}
@@ -126,9 +127,8 @@ local function refresh_reference(c,s)
   for i,id in ipairs(entries) do if id==s.topic then c.topics.selected_index=i end end
   if c.topics.selected_index==0 and #entries>0 then s.topic=entries[1]; c.topics.selected_index=1 end
   local topic=#entries>0 and help.topics[s.topic] or nil
-  set_text(c.reference_text,topic and topic.text or 'No matching topic. Clear Search or choose another category.')
-  enable(c.actions['select-reference'],topic~=nil,'Select the reference text, then use your native Copy control.')
-  enable(c.actions.template,topic and topic.example==true or false,'Insert is available for the starter example and an empty draft only.')
+  local width=c.reference_text.style.minimal_width or 700
+  reference.show(c.reference_text,topic,width)
 end
 local icons={monitor='item/tc-monitor',kv_database='item/tc-kv',logic_handler='item/tc-logic',configurator='item/tc-configurator',recipe_searcher='item/tc-recipe-searcher',modem='item/radar',speaker='item/programmable-speaker'}
 local function peripheral_details(c,s)
@@ -325,9 +325,7 @@ function M.open(player,id)
   local search=plain(filters.add{type='textfield',name='search',text=''}); search.style.width=190
   filters.add{type='drop-down',name='category',items=help.categories,selected_index=1}
   c.add{type='drop-down',name='topics',items={}}
-  box(c,'reference_text','',200,true)
-  tools=flow(c,'actions','horizontal'); button(tools,'select-reference',tr('select-text')); button(tools,'template',tr('insert-starter'))
-  c.reference_text.tooltip=tr('copy-note')
+  c.add{type='scroll-pane',name='reference_text',horizontal_scroll_policy='never',vertical_scroll_policy='auto'}
   refresh_reference(c,s)
   c=content(f,'maintenance')
 
@@ -499,7 +497,7 @@ function M.on_click(event)
       M.resize(player); return 'Focus layout changed; source and execution unchanged.'
     end
     local c=content(f,'editor'); local maintenance=content(f,'maintenance')
-    if element==c.message.template or element==content(f,'reference').actions.template then
+    if element==c.message.template then
       if d.source~='' then return nil,{code='E_BUSY',message='Starter example only inserts into an empty draft. Select/copy reference text instead.'} end
       model.edit(player,s.token,help.template); c.source.text=d.source; return 'Starter inserted into draft only. Validate, Save and Run are separate.'
     elseif element==c.actions.activate then return model.action(player,s.token,rec.status=='running' and 'apply' or 'run',event.tick)
@@ -507,8 +505,7 @@ function M.on_click(event)
       local result,err=model.action(player,s.token,'review',event.tick)
       activate_tab(player,f,s,5,event.tick); return result,err
     elseif element==content(f,'console').actions['show-location'] then return source_location(player,f,s,rec,d)
-    elseif element==content(f,'reference').actions['select-reference'] then
-      local text=content(f,'reference').reference_text; text.focus(); text.select_all(); return 'Use native Copy to copy the selected text.'
+
     end
     local i=tonumber(string.match(action,'^peripheral_(%d+)$'))
     if i and s.inventory and s.inventory.items and s.inventory.items[i] then
@@ -598,6 +595,7 @@ function M.resize(player)
   content(f,'peripherals').rows.style.height=math.max(40,size.content_height-180)
   content(f,'peripherals').rows.style.width=size.content_width
   content(f,'reference').reference_text.style.height=math.max(40,size.content_height-144)
+  reference.resize(content(f,'reference').reference_text,size.content_width)
   if not size.supported then c.message.feedback.caption='Small display: use at least 760 × 480 effective GUI units, or reduce GUI scale.' end
 end
 function M.on_size(event) M.resize(game.get_player(event.player_index)) end

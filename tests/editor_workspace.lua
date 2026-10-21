@@ -67,6 +67,10 @@ function M.run()
       editor.on_text{player_index=(p or a).index,element=f.content.editor.source,tick=tick}
     end
     local f,c,source_widget
+    local function reference_text(r)
+      local text={}; for _,block in ipairs(r.reference_text.children) do text[#text+1]=block.text end
+      return table.concat(text,'\n')
+    end
     group('workspace-help-exact-inventory-spacing-signatures-aliases',help_contract.run)
     group('workspace-only-explicit-control-click-opens-editor',function()
       a.selected=rec.body
@@ -298,7 +302,7 @@ function M.run()
     group('workspace-reference-complete-categories-search-select-no-overwrite',function()
       tab(f,4); local r=f.content.reference; local s=model.session(a.index)
       assert(#s.reference_entries==#help.topics and #r.topics.items==#help.topics)
-      local combined=''; for i=1,#help.topics-1 do combined=combined..help.topics[i].text end
+      local combined=''; for _,topic in ipairs(help.topics) do if not (topic.id or ''):find('tutorial.',1,true) then combined=combined..topic.text end end
       assert(combined==help.text..'\n','categorized reference dropped or duplicated text')
       select(r.filters.category,5); assert(#s.reference_entries==8)
       local titles={['Discovery and identity']=true,['Logic handler']=true,['KV database']=true,
@@ -308,23 +312,35 @@ function M.run()
       end
       assert(next(titles)==nil)
       r.filters.search.text='RADAR MODEM'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
-      assert(#s.reference_entries==1 and r.reference_text.text:find('transmit',1,true)
-        and r.reference_text.text:find('modem_message',1,true))
+      assert(#s.reference_entries==1 and reference_text(r):find('transmit',1,true)
+        and reference_text(r):find('modem_message',1,true))
       r.filters.search.text='playNote'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
-      assert(#s.reference_entries==1 and r.reference_text.text:find('getSounds',1,true))
+      assert(#s.reference_entries==1 and reference_text(r):find('getSounds',1,true))
       r.filters.search.text='RECIPE SEARCHER'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
-      assert(#s.reference_entries==1 and r.reference_text.text:find('findRecipes',1,true))
+      assert(#s.reference_entries==1 and reference_text(r):find('findRecipes',1,true))
       r.filters.search.text='KV DATABASE'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
-      assert(#s.reference_entries==1 and r.reference_text.text:find('hgetall',1,true))
-      click(r.actions['select-reference']); assert(r.reference_text.selection and r.reference_text.focused)
+      assert(#s.reference_entries==1 and reference_text(r):find('hgetall',1,true))
+      assert(not r.actions,'Reference has no action controls')
+      local kept=r.reference_text.children[1]; kept.select_all(); tab(f,1); tab(f,4)
+      assert(r.reference_text.children[1]==kept and kept.selection,'unchanged navigation must retain native widgets/selection')
       r.filters.search.text=string.rep('s',129); editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(r.filters.search.text=='KV DATABASE' and s.search=='KV DATABASE')
       select(r.filters.category,6); r.filters.search.text='Starter controller'
       editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
-      assert(#s.reference_entries==1 and r.actions.template.enabled)
-      click(r.actions.template); assert(c.source.text==exact and rec.active.source~=exact)
+      assert(#s.reference_entries==1 and not r.actions)
+      local code
+      for _,part in ipairs(r.reference_text.children) do
+        assert(part.type=='text-box' and part.read_only and part.style.rich_text_setting==defines.rich_text_setting.disabled)
+        if part.tags.reference_kind=='code' then
+          code=part; assert(not part.word_wrap and part.text==help.template and part.top_scrolls>0 and part.left_scrolls>0)
+          assert(part.selection[1]==1 and part.selection[2]==0,'new code starts at its first character without selecting bytes')
+        else assert(part.word_wrap) end
+      end
+      assert(code and c.source.text==exact and rec.active.source~=exact)
+      r.filters.search.text='sample(event)'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
+      assert(#s.reference_entries==1,'search includes literal tutorial code')
       r.filters.search.text='no-topic-here'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
-      assert(#s.reference_entries==0 and r.reference_text.text:find('No matching topic',1,true))
+      assert(#s.reference_entries==0 and reference_text(r):find('No matching topic',1,true))
     end)
     group('workspace-context-help-all-seven-live-families-filter-clear-delay-no-effects',function()
       tab(f,2); local input=f.content.console.prompt.command
@@ -367,7 +383,7 @@ function M.run()
         local row=p.rows['device_'..index]['peripheral_'..index]
         tick=tick+600; click(row)
         local topic=help.peripheral_topic(item.type)
-        assert(s.tab==4 and s.topic==topic and r.reference_text.text==help.topics[topic].text)
+        assert(s.tab==4 and s.topic==topic and r.reference_text.tags.reference_topic==help.topics[topic].title)
         assert(s.search=='' and r.filters.search.text=='' and s.category==5 and r.filters.category.selected_index==5)
         assert(s.reference_entries[r.topics.selected_index]==topic and r.reference_text.top_scrolls>0 and r.reference_text.left_scrolls>0)
         local selected=s.peripheral; click(row) -- hidden row cannot act after navigation.
@@ -549,7 +565,13 @@ function M.run()
     group('workspace-reference-starter-compiles-supported-api',function()
       local context=admission.context(admission.new(),'help-example',0)
       local plan,e=compiler.compile(help.template,context); assert(plan,e and e.message)
-      assert(#help.topics==15 and #help.categories==7)
+      local seen={}; local tutorials=0
+      for _,topic in ipairs(help.topics) do
+        assert(not seen[topic.title]); seen[topic.title]=true
+        if (topic.id or ''):find('tutorial.',1,true)==1 then tutorials=tutorials+1 end
+      end
+      local expected=0; for _ in pairs(help.tutorials) do expected=expected+1 end
+      assert(tutorials==expected and #help.categories==7)
       if #original_game.players==0 then log('TC_WORKSPACE_CLIENT_SKIPPED no client-created player; all GUI checks are mocks') end
     end)
   end)

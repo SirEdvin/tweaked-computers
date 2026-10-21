@@ -10,6 +10,37 @@ import build
 
 
 class PackageInventoryTests(unittest.TestCase):
+    def test_console_companion_matches_live_follow_contract(self):
+        companion = (build.ROOT / 'openspec/specs/console-shell/lua-api.md').read_text()
+        spec = (build.ROOT / 'openspec/specs/console-shell/spec.md').read_text()
+        self.assertIn('Follow-off SHALL keep the single Console text box live without automatic scrolling', spec)
+        self.assertIn('Follow-off keeps the single Console text box live without automatic scrolling', companion)
+        self.assertIn('changed text may clear native selection', companion)
+        self.assertIn('unchanged text is not reassigned', companion)
+        self.assertIn('There is no Refresh action or separate snapshot view', companion)
+        self.assertNotIn('Follow-off preserves the existing snapshot', companion)
+
+    def test_reference_tutorials_share_executable_sources_and_have_no_actions(self):
+        import re
+        import player_docs
+        tutorials = (build.ROOT / 'scripts/ui/tutorials.lua').read_text()
+        bindings = re.findall(r"source='([^']+)',code=require\('examples\.([^']+)'\)", tutorials)
+        self.assertEqual({name for name, _ in bindings}, {
+            'reference-speaker', 'logic-controller', 'reference-recipe', 'reference-factory', 'shared-telemetry'})
+        for name, module in bindings:
+            self.assertEqual(name, module)
+        self.assertIn("prelude=require('examples.reference-writer')", tutorials)
+        generated = player_docs.generated()['examples.md']
+        for name in ('reference-speaker', 'reference-recipe', 'reference-factory', 'reference-writer'):
+            match = re.search(r'## ' + name + r'\n.*?```lua\n(.*?)\n```', generated, re.S)
+            self.assertIsNotNone(match)
+            assert match is not None
+            self.assertEqual(match[1], player_docs.guest_example(name))
+        adapter = (build.ROOT / 'scripts/ui/editor.lua').read_text()
+        self.assertNotIn('select-reference', adapter)
+        self.assertNotIn("button(tools,'template'", adapter)
+        self.assertIn('if element==c.message.template then', adapter)
+
     def test_peripheral_help_exact_signatures_including_aliases_and_overloads(self):
         import re
         # Independent full signatures, not merely method-name substring hits.
@@ -296,6 +327,9 @@ class CanonicalContractTests(unittest.TestCase):
         # Every other historical scenario remains byte-for-byte checked below;
         # this is not a blanket name-only exception for modified requirements.
         evolved = {
+            ('program-editor', 'Method-isolated peripheral reference', 'Read the discovery API'):
+                ('adjacent method paragraphs have at least two empty lines between them.',
+                 'adjacent methods have separate selectable signature and result/notes blocks with visible spacing.'),
             # UI1 deliberately supersedes only numeric trackers/manual refresh
             # and the frozen Follow-off snapshot; keep all other archive bytes.
             ('program-editor', 'Separate drafts, saved source and active source', 'Save does not interrupt a working factory controller'):

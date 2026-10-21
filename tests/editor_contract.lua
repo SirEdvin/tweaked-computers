@@ -32,6 +32,7 @@ local type_args={
 local style_types={tc_editor_text='text-box',tc_editor_button='button',tc_editor_frame='frame',
   tc_editor_tabs='tabbed-pane',tc_editor_tab='tab',draggable_space_header='empty-widget',
   deep_scroll_pane='scroll-pane',slot_table='table'}
+for _,kind in ipairs({'heading','prose','signature','code'}) do style_types['tc_reference_'..kind]='text-box' end
 for _,style in ipairs({'compact_slot','red_circuit_network_content_slot','green_circuit_network_content_slot'}) do style_types[style]='sprite-button' end
 local reserved=names([[
   allow_decimal allow_negative allow_none_state anchor auto_center auto_toggle badge_text caption children children_names
@@ -262,7 +263,8 @@ function M.run()
       assert(rec.active.source==source(23) and scheduler.dispatch(rec,tick+1) and rec.state.value==23)
       assert(f.content.editor.source.focused and f.content.editor.source.style.rich_text_setting==defines.rich_text_setting.disabled)
       assert(f.content.console.output.read_only and f.content.console.output.style.rich_text_setting==defines.rich_text_setting.disabled)
-      assert(f.content.reference.reference_text.read_only and #f.content.tabs==5)
+      assert(f.content.reference.reference_text.type=='scroll-pane' and #f.content.tabs==5)
+      for _,part in ipairs(f.content.reference.reference_text.children) do assert(part.type=='text-box' and part.read_only) end
     end)
     group('editor-mocked-inactive-forged-cross-player-events',function()
       local f=a.gui.screen[editor.frame_name]; local run=rec.run_id; local saved=rec.saved_revision

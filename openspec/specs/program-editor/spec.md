@@ -114,12 +114,12 @@ The optional Console Lua input SHALL follow the independent `console-shell` cont
 - **THEN** the command follows the Console admission and ownership rules without saving, activating or overwriting the player's source draft.
 
 ### Requirement: Method-isolated peripheral reference
-The in-game Reference SHALL document each general peripheral discovery method and each shipped device-specific method in its own paragraph, with at least two empty lines between adjacent method paragraphs. Each entry SHALL identify its signature, results and relevant behavior. Aliases SHALL have separate entries. Shared device guidance SHALL remain distinct from method paragraphs, and existing API caveats and examples SHALL remain available.
+The in-game Reference SHALL document each general peripheral discovery method and each shipped device-specific method in its own visibly separated native section. Each entry SHALL distinguish its literal signature from wrapped results, arguments and relevant caveats. Aliases SHALL have separate entries; overloads SHALL remain together. Shared device guidance SHALL remain distinct from method sections. Readability SHALL be structural, not dependent on a count of blank lines in a plain text box, and existing API caveats SHALL remain available.
 
 #### Scenario: Read the discovery API
 - **WHEN** a player opens the general peripheral discovery topic
 - **THEN** each discovery method has an individually readable paragraph rather than sharing a method list or paragraph with another method
-- **AND** adjacent method paragraphs have at least two empty lines between them.
+- **AND** adjacent methods have separate selectable signature and result/notes blocks with visible spacing.
 
 #### Scenario: Read a device method and its alias
 - **WHEN** a player reads any shipped device-family topic, including Monitor methods with Color/Colour aliases
@@ -130,6 +130,19 @@ The in-game Reference SHALL document each general peripheral discovery method an
 - **WHEN** a player browses or searches the reorganized reference
 - **THEN** shared wiring, power, persistence, bounds and event guidance remains available without mixing multiple methods into a method paragraph
 - **AND** native text selection/copy, existing examples and non-peripheral topics remain available.
+
+### Requirement: Consistent selectable Reference documents
+Every topic, including Workflow, Language, Computer, Safety and examples, SHALL use native heading hierarchy, short wrapped paragraphs or lists, and distinct literal code. Prose SHALL NOT require horizontal scrolling at supported effective widths. Useful headings, prose, signatures and code SHALL remain manually selectable/copyable with native controls. Code SHALL retain exact whitespace and literal bracket bytes without rich-text or Markdown interpretation. Reference SHALL have no Select text or Insert starter action buttons; the unrelated empty-draft Editor starter and recovery controls SHALL remain available. Browsing SHALL NOT edit drafts, save/activate/stop/reset code, reset shell values or mutate peripheral data.
+
+#### Scenario: Read and copy a complete tutorial
+- **WHEN** a player opens any embedded starter, speaker, logic, Recipe Searcher, factory or shared-data tutorial
+- **THEN** it includes purpose, research/entities/power/exact wiring, complete runnable code, authoring/execution steps, expected visible results and relevant failure/safety notes without requiring an external file
+- **AND** shared data explicitly requires two computers and two physical databases, with both complete programs available in the topic.
+
+#### Scenario: Preserve literal copy and navigation
+- **WHEN** the player manually selects/copies code or prose, filters by instructional or code text, changes category/topic or opens contextual help
+- **THEN** native copy preserves the selected bytes, prose wraps independently of copied bytes, code remains literal, and no Reference action mutates a draft or executes code
+- **AND** all existing exact-type mappings, filter clearing, ownership checks, dirty draft/widget/focus and saved-versus-running separation remain intact.
 
 ### Requirement: Select-then-open peripheral documentation
 In the computer's Peripherals tab, a first click on an unselected peripheral SHALL retain the existing identity/status selection behavior without leaving the tab. Clicking the same selected peripheral again on the same discovery wire SHALL open its device-type documentation in Reference, without a double-click timing requirement. Guidance SHALL explain both actions. These actions SHALL NOT save, execute, reset or mutate program or peripheral data.
