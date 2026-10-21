@@ -1,4 +1,18 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.12
+Date: 2026-10-21
+  Bugfixes:
+    - Show useful pending content immediately in every peripheral inspector instead of leaving the details panel blank while queries wait for host work.
+    - Update Logic Handler red input, green input and own output independently; a refused wire no longer blocks the other regions. Skip native signal-list queries for disconnected inputs.
+    - Keep previous inspector snapshots visibly stale on refresh failures, including monitor geometry, while refusing to copy an unresolved monitor identity.
+    - Retire incompatible saved UI trees during gameplay without discarding computer drafts, source or peripheral data.
+    - Ignore old window-close events while the new computer workspace is still being constructed, preventing an inspector-to-editor transition crash.
+  Changes:
+    - Use compact decider-style signal trays. Move long copy, wiring, byte-format and sampling instructions out of inspector content into tooltips and Reference.
+    - Remove repeated Console headers and redundant editor instructions while retaining diagnostics, paused-output status, destructive-action confirmations and safety tooltips.
+  Info:
+    - ALPHA: back up saves and matching ZIPs. Factorio 2.0.77 base and optional Space Age; API 1, compiler 2, storage 1 and all production safety ceilings remain unchanged.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.11
 Date: 2026-10-21
   Features:

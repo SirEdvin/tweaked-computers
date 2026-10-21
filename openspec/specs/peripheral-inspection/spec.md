@@ -69,7 +69,7 @@ Inspectors SHALL NOT execute guest code, edit data/configuration, create subscri
 - **THEN** database values/deadlines, factory settings, output ownership, program state and monitor model revisions remain unchanged by inspection.
 
 ### Requirement: Bounded and honest refresh
-Inspection SHALL bound query work, retained snapshots and GUI elements, and consume shared host work allowances without renewing spent credits. Expensive refreshes SHALL be explicit or throttled and coalesced. Deferred or incomplete results SHALL be visibly pending/stale/error, never a complete empty inventory or an unmarked partial count. Closed inspectors SHALL perform no detail-query polling.
+Inspectors SHALL show meaningful pending content before query admission and bound work, snapshots and GUI elements within unchanged shared host allowances. Refreshes SHALL be throttled or explicit and coalesced. Incomplete results SHALL be marked pending/stale/error, never a successful empty inventory or complete partial count. Closed inspectors SHALL perform no detail polling.
 
 #### Scenario: Repeated refresh under contention
 - **WHEN** multiple players repeatedly request inspection while programs and monitors are active
@@ -78,9 +78,14 @@ Inspection SHALL bound query work, retained snapshots and GUI elements, and cons
 #### Scenario: Snapshot cannot be refreshed
 - **WHEN** the required query cannot complete within its work or data allowance
 - **THEN** the UI identifies the refusal or pending state and does not publish a partial result as current.
+- **AND** any previous complete detached details remain visible as explicitly stale, while unresolved monitor identities cannot be copied as current.
+
+#### Scenario: Initial query cannot be admitted
+- **WHEN** any supported peripheral inspector opens before data-query work is available
+- **THEN** its identity, controls and meaningful pending detail structure are visible without claiming an empty successful result.
 
 ### Requirement: Usable native inspection layout
-Inspectors SHALL have localized headings/actions, a draggable title bar, close/Escape behavior, bounded scrolling and reachable controls at supported resolutions and GUI scales. Text and tooltips SHALL supplement color. Refresh SHALL preserve copy selection, detail selection and scroll position when their underlying content has not changed.
+Inspectors SHALL provide localized headings/actions, dragging, close/Escape, bounded scrolling and reachable controls at supported resolutions and scales. Text and tooltips SHALL supplement color. Long static guidance SHALL live in tooltips or Reference; meaningful status and safety states SHALL remain visible. Unchanged refreshes SHALL preserve copy/detail selection, focus and scroll position.
 
 #### Scenario: Read while data changes
 - **WHEN** values or status update while the player reads or selects an unchanged name

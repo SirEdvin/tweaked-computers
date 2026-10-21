@@ -61,6 +61,10 @@ local function verify_faults()
 end
 local function shared_sampler_failure()
   local a=build('computer',-12,0); local b=build('computer',-12,3); local io=build('logic',-9,0)
+  -- Refusal must exercise an actual connected-input query. A disconnected
+  -- endpoint is known empty and no longer needs the native list envelope.
+  local source=assert(game.surfaces[1].create_entity{name='constant-combinator',position={-9,-3},force='player'})
+  wire(source,io,'red','input')
   f().fault_ids={a.id,b.id}; f().fault_io=io.id
   for i,c in ipairs({a,b}) do
     setup(c,io)
@@ -81,6 +85,7 @@ local function shared_sampler_failure()
   end)
   assert(refusals==1 and failure.run_id==nil and failure.source_revision==nil)
   verify_faults()
+  source.destroy()
   report('shared-native-sampler-failure-distinct-diagnostics-and-fail-closed-cleanup')
 end
 function M.run()

@@ -69,6 +69,9 @@ local function status(rec)
 end
 local function native_read(rec,input,spend)
   selection(input); local values={}; local size=0; local connected=status(rec)
+  -- A disconnected endpoint cannot carry signals. Avoid materializing and
+  -- charging the whole prototype envelope for a known empty wire.
+  if not connected[input] then spend(16); return {},connected end
   for _,wire in ipairs({'red','green'}) do
     if input==wire then
       -- No count query exists in 2.0.77. Pre-admit the supported prototype/quality

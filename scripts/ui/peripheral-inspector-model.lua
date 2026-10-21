@@ -6,7 +6,8 @@ local kv=require('scripts.services.kv')
 local configurator=require('scripts.services.configurator')
 local logic=require('scripts.services.logic')
 local monitor=require('scripts.services.monitor')
-local M={version=2}
+local scheduler=require('scripts.scheduler')
+local M={version=3}
 local kinds={kv=true,monitor=true,logic=true,configurator=true,recipe_searcher=true}
 function M.supports(kind) return kinds[kind]==true end
 function M.authorized(player,rec)
@@ -66,21 +67,32 @@ function M.read(rec,tick,spend,session)
     elseif rec.kind=='logic' then
       if not session then candidate.details=logic.inspect(rec,tick,spend)
       else
-        local red=session.logic_partial
-        if not red or tick-red.tick>30 or tick<red.tick then
-          session.logic_partial=logic.inspect_input(rec,'red',tick,spend)
-          return nil
+        -- Native signal panels are independent observations. Never hold the
+        -- output or one input hostage to an unaffordable query on another wire.
+        local before=session.snapshot and session.snapshot.details or {}
+        local d={tick=tick,connected={},errors={},output=logic.inspect_output(rec,spend),output_tick=tick}
+        for _,wire in ipairs({'red','green'}) do
+          d[wire]=before[wire]; d[wire..'_tick']=before[wire..'_tick']
+          d.connected[wire]=before.connected and before.connected[wire]
+          d.errors[wire]=before.errors and before.errors[wire]
         end
-        if tick==red.tick then return nil end
-        local green=logic.inspect_input(rec,'green',tick,spend)
-        candidate.details={tick=tick,red=red.values,green=green.values,
-          red_tick=red.tick,green_tick=green.tick,output_tick=tick,
-          connected={red=red.connected,green=green.connected},output=logic.inspect_output(rec,spend)}
-        session.logic_partial=nil
+        local wire=session.logic_next=='green' and 'green' or 'red'
+        session.logic_next=wire=='red' and 'green' or 'red'
+        session.logic_partial=nil -- Retire the old unpublished pair on gameplay.
+        local ok,admitted,sample=pcall(scheduler.try_maintenance,function()
+          return logic.inspect_input(rec,wire,tick,spend)
+        end)
+        if ok and admitted then
+          d[wire]=sample.values; d[wire..'_tick']=sample.tick
+          d.connected[wire]=sample.connected; d.errors[wire]=nil
+        else
+          d.errors[wire]=ok and 'E_BUSY' or type(admitted)=='table' and admitted.code or 'E_ENGINE'
+        end
+        candidate.details=d
       end
     elseif rec.kind=='configurator' then candidate.details=configurator.inspect(rec,tick,spend) end
   end
-  if session and not powered then session.logic_partial=nil end
+  if session and not powered then session.logic_partial=nil; session.logic_next=nil end
   return candidate
 end
 return M

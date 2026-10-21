@@ -30,7 +30,8 @@ local type_args={
   ['drop-down']=names('items selected_index'),checkbox=names('state'),sprite=names('sprite'),
   ['table']=names('column_count'),['sprite-button']=names('sprite number quality')}
 local style_types={tc_editor_text='text-box',tc_editor_button='button',tc_editor_frame='frame',
-  tc_editor_tabs='tabbed-pane',tc_editor_tab='tab',draggable_space_header='empty-widget'}
+  tc_editor_tabs='tabbed-pane',tc_editor_tab='tab',draggable_space_header='empty-widget',
+  deep_scroll_pane='scroll-pane',slot_table='table'}
 for _,style in ipairs({'compact_slot','red_circuit_network_content_slot','green_circuit_network_content_slot'}) do style_types[style]='sprite-button' end
 local reserved=names([[
   allow_decimal allow_negative allow_none_state anchor auto_center auto_toggle badge_text caption children children_names
@@ -281,7 +282,9 @@ function M.run()
       f.content.maintenance.recovery.selected_index=1; editor.refresh(a); assert(f.content.maintenance.recovery.selected_index==1)
       for i=1,limits.console_entries+4 do runtime.log(rec,'[font=anything]'..i,tick) end
       f.content.selected_tab_index=2; editor.on_tab{player_index=a.index,element=f.content,tick=tick}
-      editor.refresh(a); assert(#rec.logs==limits.console_entries and f.content.console.output.text:find('older output discarded',1,true))
+      editor.refresh(a); assert(#rec.logs==limits.console_entries and f.content.console.output.tooltip[1]=='tc-editor.console-bounded')
+      assert(not f.content.console.output.text:find('Rolling console:',1,true) and not f.content.reference['copy-note'])
+      assert(rec.log_truncated and f.content.console.note.visible and f.content.console.note.caption[1]=='tc-editor.console-truncated')
       a.display_resolution={width=480,height=420}; a.display_scale=1.5
       local before=a.opened; editor.on_size{player_index=a.index}
       assert(a.opened==before and f.style.minimal_width==288 and f.content.editor.actions.children[1].name=='validate')

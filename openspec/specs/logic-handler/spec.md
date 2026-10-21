@@ -130,7 +130,7 @@ The Output signals area SHALL show the handler's own emitted bank, with an expli
 - **THEN** the next successful inspector update shows the cleared bank without replaying a write or restoring the former owner.
 
 ### Requirement: Bounded live signal observation
-The open signal panel SHALL throttle observations, label per-wire ticks or pending/stale state, and publish only complete red/green pairs spanning at most 30 ticks. Separate-tick samples SHALL NOT be described as atomic. Incomplete pairs SHALL remain private and expire. Inspection SHALL NOT create guest subscriptions or promise pulse capture. Closing SHALL stop inspection without changing program subscriptions or output ownership.
+Signal trays SHALL appear before query admission and publish complete per-wire samples independently with explicit ticks or pending/stale/error states. A refused input SHALL NOT block other inputs or own-output inspection. Separate-tick samples SHALL NOT be described as atomic. Inspection SHALL NOT create subscriptions or promise pulse capture; closing SHALL stop inspection without changing program subscriptions or output ownership.
 
 #### Scenario: Signals change with the inspector open
 - **WHEN** powered input values change and inspection work is admitted
@@ -139,3 +139,8 @@ The open signal panel SHALL throttle observations, label per-wire ticks or pendi
 #### Scenario: Query exceeds supported signal capacity
 - **WHEN** a native input exceeds the existing supported signal limit or work admission fails
 - **THEN** the panel reports the relevant limit/pending state rather than presenting a truncated signal set as complete or resetting logic output.
+
+#### Scenario: One input cannot be sampled
+- **WHEN** an input repeatedly fails work admission while the other input and own output fit within unchanged host ceilings
+- **THEN** all signal trays remain visible, the failed input is marked pending/stale/error, and the other regions continue updating independently.
+- **AND** unknown samples are not shown as empty, while any retained older sample keeps its original tick and explicit refusal state.

@@ -5,6 +5,8 @@ local model=require('scripts.ui.peripheral-inspector-model')
 local lifecycle=require('scripts.lifecycle')
 local monitor=require('scripts.services.monitor')
 local M={frame_name='tc_peripheral_inspector'}
+local draw_logic
+local draw_pending
 M.supports=model.supports
 local function tr(key,...) return {'tc-inspector.'..key,...} end
 local function frame(player) return player.gui.screen[M.frame_name] end
@@ -61,17 +63,21 @@ function M.open(player,id)
   title.add{type='button',name='dismiss',caption=tr('close')}
   local identity=f.add{type='flow',name='identity',direction='horizontal'}
   text(identity,'api_name',rec.kind=='monitor' and '' or rec.id).style.height=40
-  identity.add{type='button',name='select_name',caption=tr('select-name')}
-  label(f,tr('copy-help'))
+  identity.api_name.tooltip=tr('copy-help')
+  identity.add{type='button',name='select_name',caption=tr('select-name'),tooltip=tr('copy-help')}
+  identity.select_name.enabled=rec.kind~='monitor'
   local types={kv='kv_database',logic='logic_handler',monitor='monitor',configurator='configurator',recipe_searcher='recipe_searcher'}
   label(f,tr('peripheral-type',types[rec.kind]))
-  f.add{type='label',name='availability',caption=tr('pending')}
+  local powered=lifecycle.has_power(rec)
+  f.add{type='label',name='availability',caption=tr(not powered and 'unpowered' or rec.kind=='recipe_searcher' and 'available' or 'pending')}
   local actions=f.add{type='flow',name='actions',direction='horizontal'}
   actions.add{type='label',name='sample_tick',caption=tr('pending')}
   actions.add{type='button',name='refresh_snapshot',caption=tr('refresh')}
   f.add{type='scroll-pane',name='details',horizontal_scroll_policy='auto',vertical_scroll_policy='auto'}
-  -- No device controls are constructed until an admitted detached view exists.
+  -- Structure and identity never wait for expensive data-query admission.
+  -- Pending content is not a fabricated empty snapshot.
   player.opened=f; M.resize(player)
+  draw_pending(f,s,rec,powered)
   return f
 end
 local function button(parent,name,caption) return parent.add{type='button',name=name,caption=caption} end
@@ -135,8 +141,8 @@ local function prepare(s,spend)
   elseif snapshot.kind=='logic' then
     view.signals=d; local parts={}
     for _,wire in ipairs({'red','green','output'}) do
-      parts[#parts+1]=wire..tostring(d.connected[wire])
-      for _,e in ipairs(d[wire]) do
+      parts[#parts+1]=wire..tostring(d.connected[wire])..'/'..tostring(d.errors and d.errors[wire])..'/'..tostring(d[wire]~=nil)
+      for _,e in ipairs(d[wire] or {}) do
         spend(#e.signal.name+#e.signal.quality+32)
         parts[#parts+1]=e.signal.type..'/'..e.signal.name..'/'..e.signal.quality..'/'..e.count
       end
@@ -146,12 +152,19 @@ local function prepare(s,spend)
   view.signature=view.kind..'\0'..tostring(s.narrow)..'\0'..view.signature
   return view
 end
-local function slots(parent,wire,entries,connected,tick)
+local function slots(parent,wire,entries,connected,tick,err)
   label(parent,tr(wire))
-  if tick then parent.add{type='label',name=wire..'_tick',caption=tr('snapshot',tick)} end
-  if #entries==0 then label(parent,tr(connected==false and 'disconnected' or 'empty')); return end
-  local grid=parent.add{type='table',column_count=6}
-  for i,e in ipairs(entries) do
+  parent.add{type='label',name=wire..'_tick',caption=tick and tr('snapshot',tick) or tr('pending')}
+  local status
+  if err then status=label(parent,tr('signal-unavailable',err))
+  elseif not entries then status=label(parent,tr('pending'))
+  elseif #entries==0 then status=label(parent,tr(connected==false and 'disconnected' or 'no-signals')) end
+  if status then status.style.maximal_width=260 end
+  local tray=parent.add{type='scroll-pane',name=wire..'_slots',style='deep_scroll_pane',
+    horizontal_scroll_policy='never',vertical_scroll_policy='auto'}
+  tray.style.width=260; tray.style.height=math.max(40,math.min(148,math.ceil(#(entries or {})/6)*36+4))
+  local grid=tray.add{type='table',column_count=6,style='slot_table'}
+  for i,e in ipairs(entries or {}) do
     local signal=e.signal
     local namespace=signal.type=='virtual' and 'virtual-signal' or signal.type
     grid.add{type='sprite-button',name='signal_'..i,sprite=namespace..'/'..signal.name,
@@ -161,12 +174,42 @@ local function slots(parent,wire,entries,connected,tick)
     -- action for these ordinary sprite buttons; they are never signal pickers.
   end
 end
+draw_logic=function(p,s,d)
+  p.tooltip=tr('logic-help')
+  local both=p.add{type='flow',name='logic_regions',direction=s.narrow and 'vertical' or 'horizontal'}
+  local input=both.add{type='flow',name='inputs',direction='vertical'}
+  input.style.minimal_width=280
+  label(input,tr('inputs'))
+  slots(input,'red',d.red,d.connected.red,d.red_tick,d.errors and d.errors.red)
+  slots(input,'green',d.green,d.connected.green,d.green_tick,d.errors and d.errors.green)
+  local output=both.add{type='flow',name='outputs',direction='vertical'}
+  output.style.minimal_width=280
+  label(output,tr('outputs'))
+  slots(output,'output',d.output,true,d.output_tick)
+end
+draw_pending=function(f,s,rec,powered)
+  local p=f.details; p.clear(); s.drawn=nil
+  if rec.kind=='logic' then draw_logic(p,s,{connected={},errors={}}); return end
+  local reason=tr(not powered and rec.kind~='monitor' and 'unpowered' or 'pending')
+  if rec.kind=='recipe_searcher' then reason=tr('identity-only')
+  elseif rec.kind=='kv' then label(p,tr('keys')); p.tooltip=tr('kv-help')
+  elseif rec.kind=='configurator' then
+    p.tooltip=tr('targets-help')
+    local grid=p.add{type='table',column_count=5}
+    for _,key in ipairs({'prototype','unique','red','green','entity-type'}) do label(grid,tr(key)) end
+  elseif rec.kind=='monitor' then
+    p.tooltip=tr('monitor-help')
+    label(p,tr('tiles','—','—','—')); label(p,tr('terminal','—','—')); label(p,tr('scale','—'))
+  end
+  p.add{type='label',name='pending_content',caption=reason}
+end
 local function draw(f,s,view)
   if s.drawn==view.signature then return end
   local p=f.details; p.clear()
   if view.message then label(p,view.message)
   elseif view.kind=='kv' then
-    label(p,tr('kv-help'))
+    p.tooltip=tr('kv-help')
+    label(p,tr('keys'))
     local list=p.add{type='flow',name='key_rows',direction='vertical'}
     for _,e in ipairs(view.keys) do button(list,'key_'..e.index,e.caption) end
     page(p,'keys_page',s.page,view.pages)
@@ -185,7 +228,7 @@ local function draw(f,s,view)
       else label(p,tr('selection-gone')) end
     end
   elseif view.kind=='configurator' then
-    label(p,tr('targets-help'))
+    p.tooltip=tr('targets-help')
     if #view.groups==0 then label(p,tr('empty')) end
     local grid=p.add{type='table',column_count=5}
     grid.style.horizontal_spacing=16; grid.style.vertical_spacing=12
@@ -202,17 +245,9 @@ local function draw(f,s,view)
     local g=view.geometry
     label(p,tr('tiles',g.width_tiles,g.height_tiles,g.tiles))
     label(p,tr('terminal',g.columns,g.rows)); label(p,tr('scale',g.scale))
-    label(p,tr('monitor-help'))
+    p.tooltip=tr('monitor-help')
   elseif view.kind=='logic' then
-    label(p,tr('logic-help'))
-    local both=p.add{type='flow',name='logic_regions',direction=s.narrow and 'vertical' or 'horizontal'}
-    local input=both.add{type='frame',name='inputs',direction='vertical',caption=tr('inputs')}
-    input.style.minimal_width=280
-    slots(input,'red',view.signals.red,view.signals.connected.red,view.signals.red_tick)
-    slots(input,'green',view.signals.green,view.signals.connected.green,view.signals.green_tick)
-    local output=both.add{type='frame',name='outputs',direction='vertical',caption=tr('outputs')}
-    output.style.minimal_width=280
-    slots(output,'output',view.signals.output,true,view.signals.output_tick)
+    draw_logic(p,s,view.signals)
   end
   s.drawn=view.signature
 end
@@ -285,17 +320,21 @@ function M.tick(tick)
           if not ok then M.close(player); return end
           local powered=lifecycle.has_power(rec)
           if s.snapshot and powered~=s.snapshot.powered then
-            s.snapshot=nil; s.logic_partial=nil; s.drawn=nil; f.details.clear(); s.pending=true
+            s.snapshot=nil; s.logic_partial=nil; s.pending=true
+            draw_pending(f,s,rec,powered)
           end
           if (s.pending or rec.kind=='logic' or rec.kind=='monitor') and (not s.redraw or not s.snapshot) then
-            s.pending=true; f.availability.caption=tr('pending-stale')
+            s.pending=true; f.availability.caption=tr(not powered and 'unpowered' or s.snapshot and 'pending-stale' or 'pending')
             local candidate,admitted
             local success,err=pcall(function()
               admitted=scheduler.try_maintenance(function() candidate=model.read(rec,tick,spend,s) end)
             end)
             if not success then
               spend(128); f.availability.caption=tr('unavailable',type(err)=='table' and err.code or 'E_ENGINE')
-              if rec.kind=='monitor' then f.identity.api_name.text=''; f.identity.select_name.enabled=false; f.details.clear(); s.drawn=nil end
+              if f.details.pending_content then f.details.pending_content.caption=f.availability.caption end
+              -- Retain the last detached view as explicitly stale. Monitor
+              -- identity may have changed, so it is not copyable until resolved.
+              if rec.kind=='monitor' then f.identity.api_name.text=''; f.identity.select_name.enabled=false end
               return
             end
             if not admitted or not candidate then return end -- Credits remain spent; candidate stays private.
@@ -312,13 +351,15 @@ function M.tick(tick)
               -- Tick-only changes must not rebuild slots, reset scroll or steal
               -- selection. Each color is explicitly an independent observation.
               local regions=f.details.logic_regions
-              regions.inputs.red_tick.caption=tr('snapshot',view.signals.red_tick)
-              regions.inputs.green_tick.caption=tr('snapshot',view.signals.green_tick)
+              regions.inputs.red_tick.caption=view.signals.red_tick and tr('snapshot',view.signals.red_tick) or tr('pending')
+              regions.inputs.green_tick.caption=view.signals.green_tick and tr('snapshot',view.signals.green_tick) or tr('pending')
               regions.outputs.output_tick.caption=tr('snapshot',view.signals.output_tick)
             end
             if f.identity.api_name.text~=s.snapshot.name then f.identity.api_name.text=s.snapshot.name end
             f.identity.select_name.enabled=true
             f.availability.caption=tr(not s.snapshot.powered and 'unpowered' or s.identity_changed and 'identity-changed' or 'available')
+            if view.kind=='logic' and view.signals and (not view.signals.red_tick or not view.signals.green_tick
+              or next(view.signals.errors or {})) then f.availability.caption=tr('signals-pending') end
             f.actions.sample_tick.caption=tr('snapshot',s.snapshot.tick)
             local width=math.max(300,math.min(720,math.floor(player.display_resolution.width/player.display_scale)-32))
             for _,e in pairs(f.details.children) do if e.type=='text-box' then e.style.width=width-48 end end
