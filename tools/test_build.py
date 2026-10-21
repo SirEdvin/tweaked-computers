@@ -10,6 +10,16 @@ import build
 
 
 class PackageInventoryTests(unittest.TestCase):
+    def test_console_companion_matches_live_follow_contract(self):
+        companion = (build.ROOT / 'openspec/specs/console-shell/lua-api.md').read_text()
+        spec = (build.ROOT / 'openspec/specs/console-shell/spec.md').read_text()
+        self.assertIn('Follow-off SHALL keep the single Console text box live without automatic scrolling', spec)
+        self.assertIn('Follow-off keeps the single Console text box live without automatic scrolling', companion)
+        self.assertIn('changed text may clear native selection', companion)
+        self.assertIn('unchanged text is not reassigned', companion)
+        self.assertIn('There is no Refresh action or separate snapshot view', companion)
+        self.assertNotIn('Follow-off preserves the existing snapshot', companion)
+
     def test_reference_tutorials_share_executable_sources_and_have_no_actions(self):
         import re
         import player_docs
