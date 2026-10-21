@@ -20,9 +20,9 @@ local function error_is(code,fn)
 end
 local function sorted(map) local a={}; for k in pairs(map) do a[#a+1]=k end; table.sort(a); return a end
 local function build(kind,pos)
-  local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].name,position=pos,force='player'})
-  lifecycle.on_built{entity=b}; b.energy=defs.devices[kind].watts/30
-  local rec=assert(registry.by_entity(b)); rec.powered=true; return rec
+  local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position=pos,force='player'})
+  local rec=assert(lifecycle.build(b)); lifecycle.power_entity(rec).energy=defs.devices[kind].watts/30
+  rec.powered=true; return rec
 end
 local signal={type='virtual',name='signal-A',quality='normal'}
 local each={type='virtual',name='signal-each',quality='normal'}

@@ -128,11 +128,11 @@ getLimits()''',
         # Independent expected paths: dropping an allowlist entry must fail even
         # if the rest of the build remains internally self-consistent.
         contracts = {
-            'openspec/changes/add-speaker-peripheral/specs/speaker-peripheral/spec.md',
-            'openspec/changes/add-speaker-peripheral/specs/speaker-peripheral/lua-api.md',
-            'openspec/changes/add-speaker-peripheral/specs/peripheral-network/spec.md',
+            'openspec/specs/speaker-peripheral/spec.md',
+            'openspec/specs/speaker-peripheral/lua-api.md',
+            'openspec/specs/peripheral-network/spec.md',
         }
-        self.assertTrue(contracts.issubset(build.FEATURE_CONTRACT_FILES))
+        self.assertTrue(contracts.issubset(build.CONTRACT_FILES))
         required = contracts | {
             'data-final-fixes.lua', 'prototypes/speaker-audio.lua',
             'scripts/speaker.lua', 'scripts/speaker-audio.lua',
@@ -221,11 +221,9 @@ getLimits()''',
                                  'examples/monitor-plot-baseline.lua', 'examples/monitor-plot-baseline.json'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
-                self.assertEqual(set(planning), set(build.CONTRACT_FILES) | set(build.FEATURE_CONTRACT_FILES))
-                self.assertEqual(len(build.CONTRACT_FILES), 30)
-                self.assertEqual({name for name in planning if name.startswith('openspec/changes/')}, set(build.FEATURE_CONTRACT_FILES))
-                for relative in build.FEATURE_CONTRACT_FILES:
-                    self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
+                self.assertEqual(set(planning), set(build.CONTRACT_FILES))
+                self.assertEqual(len(build.CONTRACT_FILES), 36)
+                self.assertFalse(any(name.startswith('openspec/changes/') for name in planning))
                 for relative in ('openspec/specs/program-source/spec.md',
                                  'openspec/specs/program-source/lua-api.md'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
@@ -290,7 +288,23 @@ class CanonicalContractTests(unittest.TestCase):
         archives = build.ROOT / 'openspec/changes/archive'
         changes = ('2026-10-19-add-native-circuit-computers', '2026-10-19-redesign-device-experience',
                    '2026-10-19-buffer-monitor-presentation', '2026-10-19-add-interactive-console-shell',
-                   '2026-10-19-add-recipe-searcher', '2026-10-20-add-function-program-syntax')
+                   '2026-10-19-add-recipe-searcher', '2026-10-20-add-function-program-syntax',
+                   '2026-10-21-add-peripheral-inspectors', '2026-10-21-add-radar-modems',
+                   '2026-10-21-expand-lua-globals', '2026-10-21-add-speaker-peripheral',
+                   '2026-10-21-restructure-peripheral-documentation')
+        # Exact, intentional scenario evolution in the native-carrier deltas.
+        # Every other historical scenario remains byte-for-byte checked below;
+        # this is not a blanket name-only exception for modified requirements.
+        evolved = {
+            ('device-lifecycle', 'Pinned engine and optional expansion', 'Base-only installation'):
+                ('without missing expansion references.', 'without missing expansion references'),
+            ('peripheral-network', 'Color-preserving physical reachability', 'Vanilla relay is ignored'):
+                ('electric pole or ordinary machine', 'electric pole or ordinary unsupported machine'),
+            ('peripheral-network', 'Integrated device wiring targets', 'Select without a wire'):
+                ('opens a single-role device', 'opens a mod-authored single-role device'),
+            ('peripheral-network', 'Wiring compatibility after presentation changes', 'Mixed-color and vanilla relay paths'):
+                ('traverses a vanilla relay', 'traverses an unsupported vanilla relay'),
+        }
         for change in changes:
             folder = archives / change
             self.assertTrue((folder / '.openspec.yaml').is_file(), change)
@@ -307,7 +321,30 @@ class CanonicalContractTests(unittest.TestCase):
                         for scenario, text in re.findall(
                                 r'^#### Scenario: ([^\n]+)\n(.*?)(?=^#### Scenario:|\Z)',
                                 body, re.M | re.S):
+                            replacement = evolved.get((delta.parent.name, name, scenario))
+                            if replacement:
+                                text = text.replace(*replacement)
                             self.assertIn('#### Scenario: ' + scenario + '\n' + text.strip(), found[1])
+
+    def test_native_carrier_union_and_unique_canonical_scenarios(self):
+        import re
+        text = (build.ROOT / 'openspec/specs/peripheral-network/spec.md').read_text()
+        for phrase in ('supported native radar modem connectors',
+                       'registered vanilla programmable-speaker connectors',
+                       'Native circuit-network identity MUST NOT substitute',
+                       'follow a radar-origin hidden wire',
+                       'retain circuit playback independently of peripheral calls',
+                       'retain native circuit transmission independently of modem traffic',
+                       'preserve native opening behavior',
+                       'MUST NOT delete player-owned unsupported wires'):
+            self.assertIn(phrase, text)
+        for source in (build.ROOT / 'openspec/specs').glob('*/spec.md'):
+            names = re.findall(r'^### Requirement: ([^\n]+)', source.read_text(), re.M)
+            self.assertEqual(len(names), len(set(names)), source)
+            for name, body in re.findall(r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|\Z)',
+                                         source.read_text(), re.M | re.S):
+                scenarios = re.findall(r'^#### Scenario: ([^\n]+)', body, re.M)
+                self.assertEqual(len(scenarios), len(set(scenarios)), (source, name))
 
     def test_baseline_purposes_preserved_and_no_delta_headers(self):
         import re

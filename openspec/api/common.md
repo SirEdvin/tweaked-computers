@@ -43,6 +43,8 @@ BaseEvent = {
 
 The radar-modem transport additionally accepts explicit top-level nil as the required third `transmit` argument; the resulting event omits `message`. This is a transport-only exception, not an expansion of persistent Data or nested collection values.
 
+The canonical [radar modem API](../specs/radar-modem/lua-api.md) specifies shared numeric channels and bounded message delivery; it grants no remote discovery authority. The [speaker API](../specs/speaker-peripheral/lua-api.md) specifies local positional submission, independent of native circuit playback. Neither extends the persistent Data domain or introduces a guest host-network/audio-streaming API.
+
 Identifiers are opaque case-sensitive strings. They are stable across an ordinary save/load but are not reused for a newly placed/cloned entity. Numeric native IDs never become floating-point identity keys in guest code. Prototype names are exact identifiers, not localized labels. `normal` is the only assumed quality; other names must exist in the active prototype registry. Ordinary signal collections reject wildcard pseudo-signals; configurator condition/combinator schemas explicitly permit supported wildcards in their legal positions.
 
 Collections returned by the API are defensive plain snapshots. Sorting is by complete `(type, name, quality)` for signals, opaque name for peripherals/devices, bytewise field name for hash snapshot construction, and native index for section arrays. No ordering relies on table addresses, CPU time, native hash order or player-local state.
@@ -111,3 +113,5 @@ These are release-gated values, not falsely precise promises in this planning pa
 ## Console-specific boundary
 
 The [Console contract](../specs/console-shell/lua-api.md) adds bounded synchronous commands and a separate durable scratch graph with authentic symbolic peripheral bindings. Its `print` shares the saved-program formatter, with shell-attributed output. It does not broaden ordinary Data, callback persistence or saved-handler syntax. Program and shell principals share the existing computer/tick ledger and recheck live authority; handler-dependent APIs remain saved-program-only. Recipe Searcher adds the `recipe_searcher` peripheral type under the same discovery, power and defensive-result rules.
+
+The [base-global companion](../specs/computer-runtime/base-globals-api.md) defines the complete shared `print`/`xpcall`/raw-helper/unpack/version contract and reserved-name recovery. Existing computer methods, named events, scheduling and ordinary Data remain unchanged.
