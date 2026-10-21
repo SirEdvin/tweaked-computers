@@ -55,6 +55,18 @@ function M.run()
   assert(family_count==8,'discovery plus all seven shipped families required')
   for _,kind in ipairs({'MONITOR','Monitor','radar','kv','unknown','monitor_extra',''}) do assert(not help.peripheral_topic(kind)) end
   assert(not help.peripheral_topic(nil))
+  for _,topic in ipairs(help.topics) do
+    if topic.category=='Computer' then
+      local found=false
+      for i,part in ipairs(topic.blocks) do
+        if part.kind=='signature' and part.text=='log(text)' then
+          assert(topic.blocks[i+1].text=='Returns: no values.')
+          assert(topic.blocks[i+2].text:find('Writes bounded plain output to Console.',1,true));found=true
+        end
+      end
+      assert(found,'computer.log documents its actual empty return tuple, not its output effect')
+    end
+  end
   local mon=help.topics[help.peripheral_topic('monitor')].text
   assert(mon:find('setPaletteColor(color, rgb) or setPaletteColor(color, r, g, b)',1,true))
   assert(mon:find('setPaletteColour(color, rgb) or setPaletteColour(color, r, g, b)',1,true))

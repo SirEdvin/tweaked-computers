@@ -118,7 +118,7 @@ setState(key, value) -> no values. Replace the retained Data value at key.
 
 deleteState(key) -> boolean. Remove retained state at key.
 
-log(text) -> bounded plain output
+log(text) -> no values. Writes bounded plain output to Console.
 
 stop() -> does not return; ends this callback/run and cannot be caught by pcall
 
