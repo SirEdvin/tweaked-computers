@@ -9,6 +9,7 @@ local inspector=require('scripts.ui.peripheral-inspector')
 local monitor=require('scripts.services.monitor')
 local terminal=require('scripts.monitor-model')
 local scheduler=require('scripts.scheduler')
+local logic=require('scripts.services.logic')
 local M={}
 function M.run()
   local original=storage.tweaked_computers
@@ -55,6 +56,29 @@ function M.run()
     local bad=rec.database; rec.database={version=99}
     assert(not pcall(kv.inspect,rec,60,spend)); assert(rec.database.version==99); rec.database=bad
   end)
+  check('inspector-logic-regions-exist-before-any-query-admission',function()
+    local p=players.player(2001,records.logic.body)
+    local f=assert(inspector.open(p,records.logic.id))
+    assert(f.details.logic_regions and f.details.logic_regions.inputs and f.details.logic_regions.outputs,
+      'logic inputs and output must not remain blank while a query is pending')
+    assert(f.details.logic_regions.inputs.red_tick.caption[1]=='tc-inspector.pending')
+    inspector.close(p)
+  end)
+  check('inspector-every-family-has-visible-pending-content-without-query-credits',function()
+    for _,kind in ipairs({'kv','monitor','logic','configurator','recipe_searcher'}) do
+      local p=players.player(2001,records[kind].body)
+      local f=assert(inspector.open(p,records[kind].id))
+      assert(#f.details.children>0,'initial '..kind..' inspector must never be blank')
+      local function captions(e)
+        if type(e.caption)=='table' then
+          assert(e.caption[1]~='tc-inspector.copy-help' and not tostring(e.caption[1]):match('%-help$'),
+            'long help belongs in tooltips/reference, not the main inspector')
+        end
+        for _,child in ipairs(e.children) do captions(child) end
+      end
+      captions(f); inspector.close(p)
+    end
+  end)
   check('inspector-owned-native-construction-copy-close-and-foreign-event',function()
     local real=game
     for _=1,200 do monitor.reconcile(real.tick,function() end) end
@@ -70,7 +94,7 @@ function M.run()
         inspector.tick(tick)
         if rec.kind=='logic' then
           local s=model.session(p.index)
-          assert(not s.snapshot and s.logic_partial and s.logic_partial.tick==tick)
+          assert(s.snapshot.details.red_tick==tick and not s.snapshot.details.green_tick)
           tick=tick+15; game.tick=tick; inspector.tick(tick)
         end
         assert(model.session(p.index).snapshot and not model.session(p.index).pending,'paid refresh must complete for '..rec.kind)
@@ -100,6 +124,30 @@ function M.run()
       game=real; assert(ok,e)
     end
   end)
+  check('inspector-empty-red-input-completes-through-production-scheduler',function()
+    local rec=records.logic; local real=game
+    local p=players.player(2001,rec.body)
+    local source=assert(surface.create_entity{name='constant-combinator',position={24,97},force='player'})
+    assert(source.get_wire_connector(defines.wire_connector_id.circuit_red,true).connect_to(lifecycle.connector(rec,'input','red')))
+    local tick=math.ceil(((registry.get().scheduler.maintenance_tick or 0)+15)/15)*15
+    game=setmetatable({tick=tick,connected_players={p},get_player=function(i) if i==p.index then return p end end},
+      {__index=function(_,key) return real[key] end})
+    local ok,e=pcall(function()
+      local f=assert(inspector.open(p,rec.id)); local s=model.session(p.index)
+      for _=1,90 do
+        lifecycle.power_entity(rec).energy=defs.devices.logic.watts/30
+        game.tick=tick; scheduler.tick(tick); tick=tick+1
+        if s.snapshot and s.snapshot.details.red_tick and s.snapshot.details.green_tick and not s.pending and not s.redraw then break end
+      end
+      assert(s.snapshot and not s.pending and not s.redraw,
+        'empty red input never finished: '..serpent.line({partial=s.logic_partial,snapshot=s.snapshot,pending=s.pending,redraw=s.redraw,ledger=registry.get().scheduler}))
+      assert(s.snapshot.details.connected.red and not s.snapshot.details.connected.green)
+      assert(#s.snapshot.details.red==0 and #s.snapshot.details.green==0 and #s.snapshot.details.output==0)
+      assert(f.availability.caption[1]=='tc-inspector.available')
+      inspector.close(p)
+    end)
+    game=real; source.destroy(); assert(ok,e)
+  end)
   check('inspector-exact-physical-generation-and-permission-boundaries',function()
     local r=records.kv; local p=players.player(2001,r.body)
     for _,action in ipairs({defines.input_action.open_gui,defines.input_action.gui_click,defines.input_action.gui_text_changed}) do
@@ -113,27 +161,56 @@ function M.run()
     local surface=p.surface; p.surface={index=999}; assert(not pcall(model.current,p,s.token)); p.surface=surface
     assert(model.current(p,s.token)==r); model.close(p.index,s.token)
   end)
-  check('inspector-staged-logic-expiry-admission-power-and-private-pairs',function()
+  check('inspector-independent-logic-admission-errors-power-and-retained-samples',function()
     local r=records.logic; local p=players.player(2001,r.body)
     lifecycle.power_entity(r).energy=defs.devices.logic.watts/30
     local s=model.open(p,r.id)
     local function spend() end
-    assert(not model.read(r,100,spend,s) and s.logic_partial.tick==100)
-    assert(not model.read(r,100,spend,s),'one tick cannot advance both observations')
-    local denied=0
+    local first=model.read(r,100,spend,s); s.snapshot=first
+    assert(first.details.red_tick==100 and first.details.red and not first.details.green and first.details.output_tick==100)
     local admission=scheduler.maintenance({scheduler={last_tick=-1},ledger={tick=115,total=0}},115)
-    local ok=scheduler.try_maintenance(function()
-      model.read(r,115,function(n) denied=denied+n; admission(1000000000) end,s)
-    end)
-    assert(not ok and denied>0 and s.logic_partial.tick==100 and not s.snapshot)
-    assert(not model.read(r,145,spend,s) and s.logic_partial.tick==145,'expired partial must be replaced, not published')
-    local pair=model.read(r,160,spend,s)
-    assert(pair.details.red_tick==145 and pair.details.green_tick==160 and pair.details.output_tick==160 and not s.logic_partial)
-    assert(not model.read(r,175,spend,s))
+    local input=logic.inspect_input
+    logic.inspect_input=function(rec,wire,tick,paid) paid(1000000000); return input(rec,wire,tick,paid) end
+    local ok,blocked=pcall(model.read,r,115,admission,s)
+    logic.inspect_input=input; assert(ok,blocked); s.snapshot=blocked
+    assert(blocked.details.errors.green=='E_BUSY' and not blocked.details.green and blocked.details.red_tick==100)
+    assert(blocked.details.output_tick==115 and first.details.errors.green==nil,'refusal must not mutate the prior detached view')
+    local red=model.read(r,145,spend,s); s.snapshot=red
+    assert(red.details.red_tick==145 and red.details.errors.green=='E_BUSY')
+    local green=model.read(r,160,spend,s); s.snapshot=green
+    assert(green.details.red_tick==145 and green.details.green_tick==160 and not next(green.details.errors))
+    logic.inspect_input=function() error({code='E_LIMIT'},0) end
+    local success,limited=pcall(model.read,r,175,spend,s)
+    logic.inspect_input=input; assert(success,limited)
+    assert(limited.details.errors.red=='E_LIMIT' and limited.details.red_tick==145 and limited.details.green_tick==160)
     lifecycle.power_entity(r).energy=0
     local off=model.read(r,190,spend,s)
-    assert(not off.powered and not off.details and not s.logic_partial)
+    assert(not off.powered and not off.details and not s.logic_partial and not s.logic_next)
     model.close(p.index,s.token)
+  end)
+  check('inspector-blocked-input-does-not-hide-other-wire-or-own-output',function()
+    local r=records.logic; local real=game; local input=logic.inspect_input
+    local p=players.player(2001,r.body)
+    local tick=math.ceil(((registry.get().scheduler.maintenance_tick or 0)+15)/15)*15
+    game={tick=tick,connected_players={p},get_player=function() return p end}
+    logic.inspect_input=function(rec,wire,t,spend)
+      if wire=='red' then spend(1000000000) end
+      return input(rec,wire,t,spend)
+    end
+    local ok,e=pcall(function()
+      local f=assert(inspector.open(p,r.id)); local s=model.session(p.index)
+      for _=1,4 do
+        lifecycle.power_entity(r).energy=defs.devices.logic.watts/30
+        game.tick=tick; inspector.tick(tick); tick=tick+15
+      end
+      assert(s.snapshot.details.errors.red=='E_BUSY' and not s.snapshot.details.red)
+      assert(s.snapshot.details.green and s.snapshot.details.green_tick and s.snapshot.details.output)
+      assert(f.details.logic_regions.inputs.red_slots and f.details.logic_regions.outputs.output_slots)
+      assert(f.availability.caption[1]=='tc-inspector.signals-pending')
+      assert(not r.output_owner and not r.logic_sample,'inspection must not create a writer or subscription sample')
+      inspector.close(p)
+    end)
+    logic.inspect_input=input; game=real; assert(ok,e)
   end)
   check('inspector-maximum-kv-key-field-and-value-reachable-through-paid-pages',function()
     local r=records.kv; local original=r.database; local entries={}
@@ -251,6 +328,42 @@ function M.run()
     model.close(p.index,session.token); extras[#extras+1]=replacement
     for _,r in ipairs(extras) do if registry.record(r.id) then lifecycle.remove(r.id,'fixture-cleanup',true) end end
   end)
+  for _,kind in ipairs({'kv','monitor','logic','configurator','recipe_searcher'}) do
+    check('inspector-'..kind..'-deferred-failed-and-recovered-details-stay-visible',function()
+      local r=records[kind]; local real=game; local read=model.read
+      for _=1,200 do monitor.reconcile(real.tick,function() end) end
+      local p=players.player(2001,r.body)
+      local tick=math.ceil(((registry.get().scheduler.maintenance_tick or 0)+15)/15)*15
+      game={tick=tick,connected_players={p},get_player=function() return p end}
+      local ok,e=pcall(function()
+        lifecycle.power_entity(r).energy=defs.devices[kind].watts/30
+        local f=assert(inspector.open(p,r.id)); local s=model.session(p.index)
+        local initial=f.details.children[1]
+        model.read=function(rec,t,spend,session) spend(1000000000); return read(rec,t,spend,session) end
+        inspector.tick(tick)
+        assert(not s.snapshot and initial.valid and #f.details.children>0 and s.pending)
+        if kind=='monitor' then assert(not f.identity.select_name.enabled)
+        else assert(f.identity.api_name.text==r.id and f.identity.select_name.enabled) end
+        model.read=read
+        for _=1,4 do
+          tick=tick+15; game.tick=tick; inspector.tick(tick)
+        end
+        assert(s.snapshot and not s.pending and not s.redraw and #f.details.children>0)
+        local previous=s.snapshot; local first=f.details.children[1]
+        s.pending=true
+        model.read=function() error({code='E_NETWORK_PENDING'},0) end
+        tick=tick+15; game.tick=tick; inspector.tick(tick)
+        assert(s.snapshot==previous and first.valid and #f.details.children>0,'failed refresh erased '..kind..' details')
+        assert(f.availability.caption[1]=='tc-inspector.unavailable')
+        if kind=='monitor' then assert(f.identity.api_name.text=='' and not f.identity.select_name.enabled) end
+        model.read=read
+        tick=tick+15; game.tick=tick; inspector.tick(tick)
+        assert(s.snapshot~=previous and not s.pending and f.identity.select_name.enabled)
+        inspector.close(p)
+      end)
+      model.read=read; game=real; assert(ok,e)
+    end)
+  end
   log('TC_CONTRACT_TOTAL '..groups)
   for _,r in pairs(records) do lifecycle.remove(r.id,'fixture-cleanup',true) end
   storage.tweaked_computers=original

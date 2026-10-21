@@ -7,6 +7,7 @@ local layout=require('scripts.ui.editor-layout')
 local scheduler=require('scripts.scheduler')
 local console_shell=require('scripts.runtime.shell')
 local M={frame_name='tc_program_editor'}
+local ui_version=3
 local inspector -- Fixed parsing-time callback; never persisted or exposed to guests.
 function M.register_inspector(fn) assert(type(fn)=='function' and not inspector); inspector=fn end
 local tabs={'editor','console','peripherals','reference','maintenance'}
@@ -60,7 +61,7 @@ local function update_recovery(c,s,b)
   s.recovery_names=names
 end
 local function console(rec)
-  local lines={'Rolling console: newest '..limits.console_entries..' entries / '..limits.console_bytes..' bytes; older output discarded.'}
+  local lines={}
   if rec.diagnostic then lines[#lines+1]='Active: '..diagnostic(rec.diagnostic) end
   for _,entry in ipairs(rec.logs) do lines[#lines+1]='['..entry.tick..'] '..entry.text end
   -- Native text boxes show tabs as missing glyphs. Normalize only the display,
@@ -79,15 +80,17 @@ local function refresh_console(c,s,rec,force)
   c.follow.state=s.follow~=false
   local state=type(rec.shell)=='table' and rec.shell or nil
   s.shell_generation=state and type(state.id)=='string' and #state.id<=128 and state.id or false
-  c.shell_status.caption=state and type(state.status)=='string' and state.status:sub(1,256) or 'Live Lua: changes to peripherals are real. No command history.'
+  c.shell_status.caption=state and type(state.status)=='string' and state.status:sub(1,256) or tr('shell-ready')
   c.confirm_shell.visible=s.shell_reset~=nil
   c.confirm_shell.identity.caption='Reset Shell values and pending commands? Program and peripheral data are retained.'
-  c.note.caption=s.follow==false and tr('console-paused') or tr('console-bounded')
+  c.note.caption=s.follow==false and tr('console-paused') or tr('console-truncated')
+  c.note.visible=s.follow==false or rec.log_truncated==true
   local details={}
   if s.validation then details[#details+1]='Draft / saved validation: '..(s.validation.diagnostic and diagnostic(s.validation.diagnostic) or 'valid') end
-  details[#details+1]=rec.diagnostic and ('Active run: '..diagnostic(rec.diagnostic)) or 'No active runtime diagnostic.'
+  if rec.diagnostic then details[#details+1]='Active run: '..diagnostic(rec.diagnostic) end
   if s.message then details[#details+1]=s.message end
   set_text(c.detail,table.concat(details,'\n'))
+  c.detail.visible=#details>0
   enable(c.actions['show-location'],(s.validation and s.validation.diagnostic and s.validation.diagnostic.line~=nil)
     or (rec.diagnostic and rec.diagnostic.line~=nil) or false,'Select a diagnostic location explicitly. Active source must match the draft.')
 end
@@ -141,12 +144,10 @@ local function peripheral_details(c,s)
   if found then
     text='API name: '..found.name..'\nType: '..found.type..'\nDiscovery wire: '..inventory.wire
       ..'\n'..(found.powered and 'Powered' or 'Unpowered / service paused')..'\nSnapshot tick: '..inventory.tick
-      ..'\nUse peripheral.wrap(name, "'..inventory.wire..'"). Calls recheck live authority.'
-      ..'\nClick the selected row again for its Reference topic (no timer).'
   elseif inventory and inventory.error then
     text=(selected and ('Last selected name: '..selected..'\n') or '')..'Inventory unavailable; presence is not claimed.\n'..diagnostic(inventory.error)
   elseif selected then text=selected..'\nDisconnected / not present on this refreshed '..(inventory and inventory.wire or s.wire)..' path.'
-  else text='Select a device to inspect its opaque API name and channel.' end
+  else text='No peripheral selected.' end
   set_text(c.details,text)
 end
 local function inspect(c,s,rec,tick)
@@ -162,7 +163,7 @@ local function inspect(c,s,rec,tick)
   else
     assert(type(items)=='table' and #items<=limits.network_nodes,'invalid host discovery inventory')
     s.inventory={wire=wire,tick=tick,items=items}
-    if #items==0 then label(c.rows,'empty','No connected peripherals. Wire the computer Network socket to a device Network socket on '..wire..'. Other roles and vanilla relays do not discover devices.') end
+    if #items==0 then label(c.rows,'empty','No connected peripherals.') end
     for i,item in ipairs(items) do
       assert(type(item.name)=='string' and #item.name<=128 and type(item.type)=='string' and #item.type<=64 and type(item.powered)=='boolean','invalid host descriptor')
       local row=flow(c.rows,'device_'..i,'horizontal')
@@ -175,7 +176,7 @@ local function inspect(c,s,rec,tick)
     end
   end
   if not retained then s.peripheral_wire=nil end -- Keep last-known details, disarm repeat.
-  c.snapshot.caption=wire..' snapshot at tick '..tick..' — Refresh to recheck current wiring/power'
+  c.snapshot.caption=wire..' — updated: '..tick
   peripheral_details(c,s)
 end
 function M.refresh(player,message)
@@ -183,7 +184,7 @@ function M.refresh(player,message)
   if not s or not f or not f.valid or f.tags.token~=s.token then return end
   -- Old saved GUI trees are not the new hierarchy. Retire only their session at
   -- admitted synchronized work; the accepted document stays intact. Never on_load.
-  if f.tags.ui_version~=2 or f.tags.shell_version~=1 then
+  if f.tags.ui_version~=ui_version or f.tags.shell_version~=1 then
     model.close(player.index,s.token); if player.opened==f then player.opened=nil end
     f.destroy(); player.print('Computer workspace updated; draft retained. Reopen the computer or recovery drafts.')
     return
@@ -205,9 +206,9 @@ function M.refresh(player,message)
   f.title.status.caption=status
   c.status.caption=(dirty and 'Unsaved' or 'Saved')..' | base '..d.base_revision..' | saved '..rec.saved_revision..' | active '..(rec.active and rec.active.revision or 'none')
   c.status.tooltip=rec.id..' | '..status..(conflict and ' | conflict: review the current saved source' or '')
-  local validation=s.validation and (s.validation.diagnostic and diagnostic(s.validation.diagnostic) or 'Draft valid; Save and Run remain separate.')
+  local validation=s.validation and (s.validation.diagnostic and diagnostic(s.validation.diagnostic) or 'Draft valid.')
   local text=conflict and 'Saved source changed. Review before Save / Run.' or s.message or validation
-    or (d.source=='' and 'One Lua document. Insert a starter, or type/paste your own source.') or ''
+    or ''
   if not conflict and not message and not s.validation and rec.status=='faulted' and rec.diagnostic then
     text='Active run faulted. Console: '..diagnostic(rec.diagnostic)
   end
@@ -229,7 +230,7 @@ end
 local function shell(player,s,title)
   local old=frame(player); if old then old.destroy() end
   local f=player.gui.screen.add{type='frame',name=M.frame_name,direction='vertical',style='tc_editor_frame',
-    tags={player=player.index,token=s.token,id=s.id or '',generation=s.generation or 0,ui_version=2,shell_version=1}}
+    tags={player=player.index,token=s.token,id=s.id or '',generation=s.generation or 0,ui_version=ui_version,shell_version=1}}
   local titlebar=flow(f,'title','horizontal')
   local heading=line(titlebar,'heading',title); heading.style.font='default-large-semibold'; heading.style.height=28; heading.drag_target=f
   local drag=titlebar.add{type='empty-widget',name='drag',style='draggable_space_header'}
@@ -251,7 +252,7 @@ function M.open_recovery(player,message)
   local s=model.open_recovery(player.index); local f=shell(player,s,tr('recovery-title'))
   f.title.toggle_focus.visible=false
   local c=f.add{type='scroll-pane',name='recovery_content',horizontal_scroll_policy='never',vertical_scroll_policy='auto'}
-  label(c,'message',message or 'Review retained text and use native Copy. Nothing executes here.')
+  label(c,'message',message or tr('retained-drafts'))
   c.add{type='drop-down',name='recovery',items={}}
   local actions=flow(c,'actions','horizontal')
   button(actions,'review',tr('review-selected')); button(actions,'forget',tr('forget-reviewed'))
@@ -289,20 +290,22 @@ function M.open(player,id)
   local tools=flow(c,'actions','horizontal')
   button(tools,'refresh-console',tr('refresh')); button(tools,'show-location',tr('show-location'))
   c.add{type='checkbox',name='follow',caption=tr('follow'),state=true}
-  line(c,'note',''); box(c,'output','',200,true); box(c,'detail','',70,true)
-  line(c,'shell_status','Live Lua: changes to peripherals are real.')
+  line(c,'note','').visible=false
+  box(c,'output','',200,true).tooltip=tr('console-bounded'); box(c,'detail','',70,true)
+  line(c,'shell_status',tr('shell-ready')).tooltip=tr('shell-help')
   local prompt=flow(c,'prompt','horizontal')
   local input=plain(prompt.add{type='textfield',name='command',text=s.shell_draft or ''})
   input.style.horizontally_stretchable=true
+  input.tooltip=tr('shell-help')
   button(prompt,'execute',tr('execute')); button(prompt,'reset-shell',tr('reset-shell'))
   confirm(c,'confirm_shell','shell',tr('confirm-shell'))
   c=content(f,'peripherals')
   local filter=flow(c,'filter','horizontal'); line(filter,'label',tr('channel'))
   filter.add{type='drop-down',name='wire',items={tr('red'),tr('green')},selected_index=1}
   button(filter,'inspect',tr('refresh-peripherals'))
-  line(c,'snapshot','Select a channel and Refresh to inspect actual discovery.')
+  line(c,'snapshot','Not sampled')
   c.add{type='scroll-pane',name='rows',horizontal_scroll_policy='never',vertical_scroll_policy='auto'}
-  box(c,'details','Select a device to inspect its opaque API name and channel.',100,true)
+  box(c,'details','No peripheral selected.',100,true)
   c.details.tooltip=tr('peripheral-workflow')
   c=content(f,'reference')
   local filters=flow(c,'filters','horizontal'); line(filters,'label',tr('search'))
@@ -311,7 +314,7 @@ function M.open(player,id)
   c.add{type='drop-down',name='topics',items={}}
   box(c,'reference_text','',200,true)
   tools=flow(c,'actions','horizontal'); button(tools,'select-reference',tr('select-text')); button(tools,'template',tr('insert-starter'))
-  line(c,'copy-note',tr('copy-note'))
+  c.reference_text.tooltip=tr('copy-note')
   refresh_reference(c,s)
   c=content(f,'maintenance')
   label(c,'revisions','')
@@ -336,7 +339,7 @@ local function owned(event,closing)
   local player=game.get_player(event.player_index)
   if not player or not player.valid then return end
   local f=frame(player); local s=model.session(player.index); local e=event.element
-  if not f or not f.valid or not s or f.tags.ui_version~=2 or f.tags.shell_version~=1 or f.tags.token~=s.token or f.tags.player~=player.index
+  if not f or not f.valid or not s or f.tags.ui_version~=ui_version or f.tags.shell_version~=1 or f.tags.token~=s.token or f.tags.player~=player.index
     or f.tags.id~=(s.id or '') or f.tags.generation~=(s.generation or 0) then return end
   if not closing and player.opened~=f then return end
   if not e or not e.valid then return end
@@ -353,7 +356,9 @@ local function owned(event,closing)
       return player,f,s
     end
     if not closing and (ancestor.visible==false or ancestor.enabled==false) then return end
-    if ancestor.parent==f.content then
+    -- Setting player.opened while constructing the new shell synchronously
+    -- closes the previous native window, before this frame has its tab pane.
+    if f.content and ancestor.parent==f.content then
       for _,name in ipairs(tabs) do if ancestor==f.content[name] then panel=name; break end end
     end
     ancestor=ancestor.parent; if not ancestor then return end
@@ -550,7 +555,7 @@ end
 function M.resize(player)
   local f=player and frame(player); local s=player and model.session(player.index)
   if not f or not f.valid or not s then return end
-  if f.tags.ui_version~=2 or f.tags.shell_version~=1 then M.refresh(player); return end
+  if f.tags.ui_version~=ui_version or f.tags.shell_version~=1 then M.refresh(player); return end
   local size=layout.measure(player.display_resolution,player.display_scale,s.focus)
   f.style.width=size.width; f.style.height=size.height
   f.title.style.width=size.width-24; f.title.toggle_focus.caption=s.focus and tr('exit-focus') or tr('focus')
@@ -604,7 +609,7 @@ console_shell.register_authority(function(rec,index,token)
   local s=player and model.session(index); local f=player and frame(player)
   if not player or not player.valid or not s or s.id~=rec.id or s.token~=token or s.tab~=2
     or not f or not f.valid or f.visible==false or f.enabled==false or player.opened~=f or f.tags.token~=token or f.tags.player~=index
-    or f.tags.id~=rec.id or f.tags.generation~=rec.generation or f.tags.shell_version~=1
+    or f.tags.id~=rec.id or f.tags.generation~=rec.generation or f.tags.ui_version~=ui_version or f.tags.shell_version~=1
     or f.content.selected_tab_index~=2 or f.content.console.visible==false or f.content.console.enabled==false then return false end
   return pcall(model.current,player,token)
 end)

@@ -21,6 +21,7 @@ function M.log(rec,text,tick,spend)
   if spend then spend(#text+(#rec.logs)^2+1) end
   while #rec.logs>=limits.console_entries or rec.log_bytes+#text>limits.console_bytes do
     local old=table.remove(rec.logs,1); rec.log_bytes=rec.log_bytes-#old.text
+    rec.log_truncated=true
   end
   rec.logs[#rec.logs+1]={text=text,tick=tick}; rec.log_bytes=rec.log_bytes+#text
 end

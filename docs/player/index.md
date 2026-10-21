@@ -11,7 +11,11 @@ Factorio objects, and no command history.
 
 ## Start here
 
-**0.1.11 ALPHA** adds [peripheral inspectors](inspectors.md),
+**0.1.12 ALPHA** fixes blank [inspector panels](inspectors.md), gives logic inputs
+and output independent decider-style signal trays, and removes repeated UI
+instructions. Meaningful availability, stale/error states and safety confirmations remain.
+
+Version 0.1.11 added [peripheral inspectors](inspectors.md),
 [radar modems](api/modem.md), [vanilla speaker audio](api/speaker.md),
 [guarded Lua globals](api/language.md#printing-raw-helpers-and-error-transformation)
 and a complete contextual in-game Reference. Plain function programs, legacy
@@ -72,11 +76,11 @@ versions, wiring, source and error code; remove private literals before sharing.
 
 ## Source and developer documentation
 
-The [0.1.11 ALPHA source](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.11) includes
+The [0.1.12 ALPHA source](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.12) includes
 source, notices and examples; report problems in its
 [issue tracker](https://github.com/SirEdvin/tweaked-computers/issues).
 The separately generated
-[developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.11/openwiki)
+[developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.12/openwiki)
 explains implementation internals; this site, not that wiki, is the player and
 public Lua API reference. This link identifies the source-grounded developer
 wiki snapshot independently of the repository's default branch. Generated wiki

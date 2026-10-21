@@ -5,11 +5,11 @@
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot; removal/destruction of a device is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
-   the Mod Portal, select **0.1.11 ALPHA**, enable it, and restart when prompted.
-   This version includes inspectors, radar modems, vanilla speaker audio, guarded
-   Lua globals and contextual Reference, retaining function programs and Service Rack artwork.
-3. For manual installation, download `tweaked-computers_0.1.11.zip` from the
-   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.11)
+   the Mod Portal, select **0.1.12 ALPHA**, enable it, and restart when prompted.
+   This version fixes blank inspector panels, independently refreshes logic signal
+   regions and simplifies UI text, retaining all 0.1.11 features.
+3. For manual installation, download `tweaked-computers_0.1.12.zip` from the
+   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.12)
    and place it in your Factorio
    user-data `mods` directory without unpacking it. Remove conflicting duplicate
    versions, enable the mod, and restart. The ZIP's internal folder must match its
@@ -84,6 +84,14 @@ it does not erase saved source, application state or old logs. Inspect/copy need
 data from a pre-upgrade backup first. Do not use Maintenance Reset State as a
 substitute. Keep the pre-upgrade save and matching 0.1.10 ZIP for rollback rather
 than downgrading the upgraded save in place.
+
+Version 0.1.12 shows inspector structure immediately, even when a data query is
+waiting. Logic input colors and own output update independently; a failed refresh
+keeps any previous complete view explicitly stale. Configurator unique counts
+still require both target traversals and are never partial totals. Long UI
+instructions now live in tooltips and Reference. Old open windows may close once
+after upgrade; reopen them. Computer drafts, source, state and peripheral data
+are retained. Keep a pre-upgrade save and matching 0.1.11 ZIP for rollback.
 
 ## Research and craft
 

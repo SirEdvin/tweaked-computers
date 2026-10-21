@@ -7,6 +7,15 @@ The localized device title, peripheral type, exact API name and availability
 appear above the scrollable details. Drag the title bar to move the window.
 Close or Escape retires it without discarding computer drafts.
 
+Every inspector shows its structure immediately, before expensive queries are
+admitted. Pending is distinct from an empty successful result. Refresh failures
+retain any previous complete details with an explicit stale/error status; monitor
+names cannot be copied while their logical identity is unresolved. Configurator
+counts remain complete, deduplicated snapshots, not partial per-wire totals.
+Long explanations are available in tooltips and Reference rather than repeated
+above the data. An older saved window may close once after the 0.1.12 upgrade;
+reopen it without losing device data or computer drafts.
+
 Computers keep their [workspace](editor.md): Ctrl-click with an empty cursor.
 Ctrl-click a monitor to deliver a touch instead of opening an inspector.
 Native inventory transfers and normal rotation are unchanged. Private role pads
@@ -15,7 +24,7 @@ native dialogs.
 
 ## Copy an exact peripheral name
 
-Choose **Select name for copy**, then use native Copy (normally Ctrl+C).
+Choose **Select name**, then use native Copy (normally Ctrl+C).
 Paste into your computer draft or another text field. The selection is only the
 API identifier: no quotes, wire suffix, labels or trailing whitespace. Selecting
 does not itself write the OS clipboard. The name box cannot rename the device.
@@ -76,16 +85,20 @@ One Input signals region shows both wire groups, with distinct native red and
 green slot backgrounds and text labels. The same identity on both wires remains
 two slots with separate values. Adjacent Output signals shows this handler's own
 bank shared across its two output colors, not the total from other emitters.
-The regions scroll/reflow at narrower sizes. No slot is a signal picker or editor.
+The decider-style recessed signal trays appear immediately, including while an
+input query is waiting. The regions scroll/reflow at narrower sizes. No slot is
+a signal picker or editor; decider conditions and output rules are not added.
 
 Tooltips retain exact signed counts, signal type/name and quality. Recipe signals
 use recipe icons, not same-named item icons. Disconnected, connected-empty,
 unavailable and over-limit observations have different states. The panel attempts
-one input color every 15 ticks when shared host work is admitted. Red and Green
-have separate sample-tick labels: these are independent observations, not an
-atomic circuit snapshot. A complete pair is published only if its red sample is
-at most 30 ticks old; deferred partial pairs expire and are retried. The own bank
-has its own sample tick. Tick-only updates preserve unchanged slots and scrolling.
+one input color every 15 ticks when shared host work is admitted, alternating
+Red and Green. Each input is published independently with its own sample tick;
+these are not an atomic circuit snapshot. A deferred or over-limit input shows
+its own pending/error state and retains any older sample with its original tick.
+It cannot block the other wire or the handler's own output bank. Disconnected
+inputs do not require a native signal-list query. The own bank has its own sample
+tick. Tick-only updates preserve unchanged slots and scrolling.
 The panel does not capture every pulse between samples. It creates no program
 subscription, writer or output publication.
 Existing power/writer cleanup remains responsible for fail-safe output removal.

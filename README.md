@@ -8,7 +8,11 @@ Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. No interpreter,
 OS, gameplay filesystem or dynamic guest loader is shipped; there is no command history.
 
-Version **0.1.11 ALPHA** adds [peripheral inspectors](docs/player/inspectors.md),
+Version **0.1.12 ALPHA** fixes blank/pending inspector panels across every
+peripheral, adds independently refreshed decider-style logic signal trays and
+removes repeated instructional UI text. See [0.1.12 release notes](docs/release-0.1.12.md).
+
+Version 0.1.11 added [peripheral inspectors](docs/player/inspectors.md),
 [radar modems](docs/player/api/modem.md), bounded [vanilla speaker audio](docs/player/api/speaker.md),
 [guarded Lua globals](docs/player/api/language.md#printing-raw-helpers-and-error-transformation)
 and a reorganized contextual in-game Reference. See [0.1.11 release notes](docs/release-0.1.11.md),
@@ -65,7 +69,7 @@ earlier workload separately; current matched results accompany the release.
 Version 0.1.8 retains those monitor/live-budget features and adds bounded Console
 commands with live effects, shared save-backed values and confirmed reset, but no
 retained user functions or command history. See the [release notes](docs/console-shell-release.md).
-The release source is [alpha-0.1.11](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.11);
+The release source is [alpha-0.1.12](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.12);
 [0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development
@@ -87,7 +91,7 @@ Build an installable archive outside the checkout:
 Use a fresh output directory for the packaged official-engine integration smoke:
 
     python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
-      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.11.zip \
+      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.12.zip \
       --output /absolute/path/to/new-smoke-directory \
       --fixture tests.integration_engine --production-context --cold
 
