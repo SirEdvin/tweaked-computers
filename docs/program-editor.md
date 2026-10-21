@@ -25,7 +25,7 @@ frame: tc_program_editor (player / token / id / generation / ui_version tags)
     Console: Go to source line, Follow, bounded live output, diagnostics
     Peripherals: Red / Green selector, automatic icon/name/type/state rows,
                  selected opaque identity details
-    Reference: Search / category / topic, selectable text, explicit select/insert
+    Reference: Search / category / topic, selectable structured document blocks
     Maintenance: revision review/rebase/reload, active-source review/copy,
                  retained-draft review/copy/confirmed forget, stopped-only reset
 ```
@@ -40,7 +40,7 @@ readback/free-resize API or automatic focus restoration is promised.
 
 The visual decision is concentrated in the quiet code surface, not dashboard cards.
 Supporting tasks have their own tab rather than competing with source in a global
-scroll column. Maintenance alone can scroll its long review/action content.
+scroll column. Maintenance and Reference can scroll their long document content.
 
 ## Layout contract (model evidence, not graphical acceptance)
 
@@ -103,7 +103,7 @@ linked Open GUI and Ctrl+Shift+E bindings are removed. Close/player-unavailable/
 routes remain. Native tab changes are explicitly handled; a click-only handler is
 not sufficient. Closing never reopens the workspace over another GUI.
 
-An older saved GUI tree lacking `ui_version=2` is retired on the next admitted
+An older saved GUI tree lacking the current `ui_version=5` is retired on the next admitted
 refresh/size event, never on load. Its draft is retained and the player is asked to
 reopen. It is not navigated/rebuilt invisibly into an active editing session.
 
@@ -144,17 +144,27 @@ The UI distinguishes complete-empty, unpowered, disconnected-from-the-refreshed-
 and pending/refused/unknown. It omits snapshot tick clutter and does not claim continuous
 live authorization. Friendly labels never replace API names or mix red and green.
 
-Reference is a categorized view of the same complete `help.text`; concatenating the
-non-starter topics reproduces it byte-for-byte. Search is literal, not a guest
-pattern. Select text invokes native selection only, not automatic clipboard access.
-Insert starter refuses every nonempty draft and never saves or activates it.
+Reference derives native heading/prose/signature blocks from the complete `help.text`;
+concatenating non-tutorial topic text reproduces that source byte-for-byte. Tutorial
+metadata lives in `scripts.ui.tutorials`; code is required directly from the shipped
+examples (the starter remains byte-checked against `function-program`). No duplicate
+guest source or external-file dependency is introduced. Search includes instructional
+and literal code text and remains literal, not a guest pattern.
+
+`scripts.ui.reference` renders every useful block as a read-only native text box,
+including headings and prose, so manual selection/copy remains available everywhere.
+Wrapped prose and signatures use conservative font/width sizing; literal monospaced
+code preserves exact bytes and uses bounded nested scrollbars. The outer document
+never scrolls horizontally. Unchanged topic widgets survive navigation/resize;
+admitted routine refresh never rebuilds Reference. There are no Reference action
+buttons or draft-mutation handlers. The empty-only starter remains in Editor.
 
 ## Complete action map
 
 | Action(s) | Exact location / safeguard |
 | --- | --- |
 | validate / save / run-or-apply / stop | Editor's only action row; no implicit Save-and-Run |
-| template | Empty Editor invitation; Reference's starter topic; empty-only |
+| template | Empty Editor invitation only; empty-only |
 | review / rebase / reload | Maintenance saved-source review; Editor conflict button opens that reviewed workflow |
 | review-active / copy-active | Maintenance active-snapshot preview; copy only after current-snapshot recheck |
 | review-recovery / recover | Maintenance retained identity → preview → explicit draft replacement; no save/run |
@@ -164,8 +174,8 @@ Insert starter refuses every nonempty draft and never saves or activates it.
 | close / native Escape | Title / close event; retain draft, do not stop |
 | text edit | Mounted Editor source; exact session/identity and source byte limit |
 | inspect / wire selection | Peripherals; one explicit color and timestamped complete/deferred result |
-| follow / refresh-console / show-location | Console; held snapshot / explicit matching-source navigation |
-| tab / focus / search / category / topic / select-reference | Bounded host presentation only; same ownership checks |
+| follow / show-location | Console; live output without automatic scrolling when Follow is off / explicit matching-source navigation |
+| tab / focus / search / category / topic | Bounded host presentation only; same ownership checks |
 
 `api/compatibility.md` in the redesign change preserves the original action placement
 contract. `review-recovery` adds the explicit reviewed preview required there, not

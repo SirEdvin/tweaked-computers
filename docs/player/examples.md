@@ -7,6 +7,99 @@ factory managers; keep the described topology. Runtime effects were exercised by
 the implementation harness; documentation checks compile these blocks without
 claiming graphical keyboard/focus/touch delivery.
 
+## reference-speaker
+
+The in-game Reference → Examples → One speaker note tutorial includes complete research, power, red-wire setup, execution steps and expected results. This is the same small program, not an external prerequisite.
+
+```lua
+function start(event)
+  local speaker = peripheral.find("speaker", "red")
+  assert(speaker, "Connect one speaker on red")
+  local admitted = speaker.playNote("piano", 0.5, 0)
+  print("Note submitted:", admitted)
+end
+
+```
+
+## reference-recipe
+
+The in-game Find iron plate recipes tutorial connects one powered Recipe Searcher on red and prints actual smelting matches. This supplementary copy uses the exact same source.
+
+```lua
+function start(event)
+  local recipes = peripheral.find("recipe_searcher", "red")
+  assert(recipes, "Connect one Recipe Searcher on red")
+  local matches = recipes.findRecipes("item", "iron-plate", "smelting")
+  print("Iron plate smelting recipes:", #matches)
+  for _, recipe in ipairs(matches) do
+    print(recipe.name)
+  end
+end
+
+```
+
+## reference-factory
+
+The in-game Small factory dashboard tutorial includes the exact four-peripheral and chest/inserter setup, red discovery/INPUT and green TARGETS/OUTPUT separation. It teaches one inserter, a three-second KV hash and a two-line monitor; use its complete in-game setup.
+
+```lua
+function start(event)
+  local cfg = peripheral.find("configurator", "red")
+  assert(cfg, "Connect a Configurator on red")
+  local target = nil
+  for _, device in ipairs(cfg.getDevices("green")) do
+    if device.type == "inserter" then
+      assert(not target, "Use only one target inserter")
+      target = device
+    end
+  end
+  assert(target, "Connect an inserter on TARGETS green")
+  cfg.setConfiguration(target.id, {set = {
+    circuit_enable_disable = true,
+    circuit_condition = {
+      first_signal = {type = "virtual", name = "signal-A"},
+      comparator = ">", constant = 0
+    }
+  }}, "green")
+  computer.every(60, "update")
+end
+
+function update(event)
+  local io = peripheral.find("logic_handler", "red")
+  local db = peripheral.find("kv_database", "red")
+  local screen = peripheral.find("monitor", "red")
+  assert(io and db and screen, "Connect logic, database and monitor on red")
+  local count = io.readSignal("red", {type = "item", name = "iron-plate"})
+  local output = 0
+  local status = "STOPPED"
+  if count < 100 then
+    output = 1
+    status = "FILLING"
+  end
+  io.setOutput({{signal = {type = "virtual", name = "signal-A"}, count = output}})
+  db.hset("stock:iron", "count", tostring(count), "status", status)
+  db.expire("stock:iron", 3)
+  screen.setCursorPos(1, 1)
+  screen.write("Iron: " .. tostring(count) .. "    ")
+  screen.setCursorPos(1, 2)
+  screen.write(status .. "    ")
+end
+
+```
+
+## reference-writer
+
+Computer 1 of the self-contained Two-computer shared data tutorial. Run this writer on the shared red database before running shared-telemetry on computer 2 with the shared red and a different physical green database.
+
+```lua
+function start(event)
+  local db = peripheral.find("kv_database", "red")
+  assert(db, "Connect the shared database on red")
+  db.hset("stock:iron", "count", "5", "status", "FILLING")
+end
+
+```
+
 ## speaker-alarm
 
 Connect a powered vanilla programmable-speaker to a computer Network on red. Plays one positional effect every 120 ticks. False admission waits for the next timer, never a same-tick retry. Stop prevents future calls, not cancellation of an already submitted sample.

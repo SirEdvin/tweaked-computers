@@ -3,6 +3,20 @@ local help=require('scripts.ui.help')
 local inventory=require('tests.api_inventory')
 local M={}
 function M.run()
+  for _,topic in ipairs(help.topics) do
+    assert(topic.blocks and #topic.blocks>1,'every topic needs structured, copyable sections: '..topic.title)
+    assert(topic.blocks[1].kind=='heading')
+    for _,block in ipairs(topic.blocks) do
+      assert(type(block.text)=='string' and #block.text>0)
+      assert(block.kind=='heading' or block.kind=='prose' or block.kind=='signature' or block.kind=='code')
+    end
+  end
+  for _,id in ipairs({'starter','speaker','logic','recipe','factory','shared'}) do
+    local tutorial=assert(help.tutorials[id],'missing self-contained tutorial '..id)
+    for _,key in ipairs({'purpose','setup','steps','expected','failures','code'}) do
+      assert(type(tutorial[key])=='string' and #tutorial[key]>0,id..' missing '..key)
+    end
+  end
   local expected={}
   local discovery=assert(inventory:match("for _,method in ipairs%(%{(.-)%}%)[^\n]*do"))
   expected.discovery=discovery
@@ -25,13 +39,16 @@ function M.run()
       assert(not topic.text:find(signature,last+1,true),'duplicate entry '..kind..'.'..method)
       starts[#starts+1]={pos=first,method=method}; count=count+1
     end
-    table.sort(starts,function(a,b) return a.pos<b.pos end)
-    for i=2,#starts do
-      local pos=starts[i].pos
-      assert(topic.text:sub(pos-2,pos)=='\n\n\n','exactly two empty lines required before '..kind..'.'..starts[i].method)
-      assert(topic.text:sub(pos-3,pos-3)~='\n','extra empty line before '..kind..'.'..starts[i].method)
-      local previous=topic.text:sub(starts[i-1].pos+1,pos-3)
-      assert(not previous:find('\n\n',1,true),'method paragraph split '..kind..'.'..starts[i-1].method)
+    for _,method in ipairs(starts) do
+      local matched=0
+      for i,part in ipairs(topic.blocks) do
+        if part.kind=='signature' and part.text:sub(1,#method.method+1)==method.method..'(' then
+          matched=matched+1
+          assert(topic.blocks[i+1].kind=='prose' and topic.blocks[i+1].text:find('Returns:',1,true)==1,
+            'method results/caveats must be an isolated readable block '..kind..'.'..method.method)
+        end
+      end
+      assert(matched==1,'method must have exactly one native signature block '..kind..'.'..method.method)
     end
     assert(count>0); total=total+count; family_count=family_count+1
   end

@@ -5,6 +5,16 @@ assert(data.raw.font.default,'missing core default font')
 assert(styles.textbox,'missing core textbox style')
 data:extend{{type='font',name='tc-editor-mono',from='default-mono',size=14}}
 styles.tc_editor_text={type='textbox_style',parent='textbox',font='tc-editor-mono',rich_text_setting='disabled'}
+-- Read-only text boxes retain native selection/copy even for prose and headings.
+-- Transparent backgrounds make the hierarchy a document rather than a form.
+styles.tc_reference_prose={type='textbox_style',parent='textbox',font='default',
+  font_color={0.9,0.9,0.9},rich_text_setting='disabled',padding=4,bottom_margin=8,
+  default_background={},active_background={},disabled_background={}}
+styles.tc_reference_heading={type='textbox_style',parent='tc_reference_prose',
+  font='default-large-semibold',font_color={1,0.82,0.4},top_margin=8,bottom_margin=0}
+styles.tc_reference_signature={type='textbox_style',parent='tc_reference_prose',
+  font='tc-editor-mono',font_color={0.65,0.86,1},top_margin=8,bottom_margin=0}
+styles.tc_reference_code={type='textbox_style',parent='tc_editor_text',padding=6,bottom_margin=8}
 styles.tc_editor_button={type='button_style',parent='button',font='default-semibold',
   height=28,minimal_width=72,padding=4}
 styles.tc_editor_frame={type='frame_style',parent='frame',padding=12,

@@ -1,4 +1,5 @@
--- Plain native help text; no rich text or file imports.
+-- Shipped reference content. Native block structure is derived once at parsing;
+-- every visible heading, paragraph, signature and code block remains copyable.
 local M={
   template=[[local function increment(value)
   return value + 1
@@ -33,8 +34,8 @@ Close/reopen, save/load, program faults and power loss keep committed values.
 Peripherals inspects the red or green channel, with explicit pending results.
 Click a row to select details; click the selected row again for its Reference topic.
 There is no double-click timer. Changing wire or unavailable inventory resets selection.
-Reference filters this complete help by category/search; Select text uses native Copy.
-Insert starter only changes an empty draft. It never saves or runs it.
+Reference filters complete help by category/search. Manually select/copy each
+paragraph or entire literal code box with native controls; browsing never edits a draft.
 Maintenance holds reviewed revision resolution, retained drafts and stopped-only reset.
 Type/paste into the source box. Validate checks the draft without effects.
 Save commits source, but does not change the active run. Run/Apply validates and
@@ -101,19 +102,42 @@ explicitly Save/Run. A colliding Console root reports E_UNSUPPORTED before effec
 its graph is retained until confirmed Reset Shell discards it. Nested keys are fine.
 
 COMPUTER
-getID() -> string; getLabel() -> string/nil; setLabel(label/nil)
-getTick() -> simulation tick; getLimits() -> defensive limit snapshot
-getState(key) -> copied Data/nil; setState(key, value); deleteState(key) -> boolean
+getID() -> string. Stable identity of this computer.
+
+getLabel() -> string/nil. Current optional display label.
+
+setLabel(label/nil) -> no values. Set or clear this computer's display label.
+
+getTick() -> simulation tick, not wall-clock time.
+
+getLimits() -> defensive limit snapshot.
+
+getState(key) -> copied Data/nil. Missing state is nil.
+
+setState(key, value) -> no values. Replace the retained Data value at key.
+
+deleteState(key) -> boolean. Remove retained state at key.
+
 log(text) -> bounded plain output
+
 stop() -> does not return; ends this callback/run and cannot be caught by pcall
-on(event_name, handler_name) -> subscription ID; off(ID) -> boolean
+
+on(event_name, handler_name) -> subscription ID. Register a named saved handler.
+
+off(ID) -> boolean. Remove an event subscription.
+
 General events: peripheral_attach, peripheral_detach, monitor_resize,
 monitor_touch, power_restored, modem_message. Events include name/tick/sequence/computer_id/run_id.
+
 after(delay_ticks, handler_name, payload?) -> timer ID
+
 every(interval_ticks, handler_name, payload?) -> timer ID
+
 cancelTimer(ID) -> boolean, including already queued timer notifications.
+
 Timer event: timer_id, scheduled_tick, interval_ticks?, missed, payload?.
 Recurring overdue intervals coalesce. Callbacks finish or fault; they never yield.
+
 Data: finite numbers, booleans, strings, dense arrays or string-keyed maps;
 no mixed keys, nil entries, cycles, functions, metatables or native objects.
 
@@ -188,7 +212,7 @@ reload never renew credits. Invalid arguments spend no audio quota; native failu
 Audio is positional on the current surface, eligible for nearby charted listeners
 on any force under native attenuation/mixer rules, regardless of native global mode.
 No playAudio, stop, streams, queue or completion event. Submitted samples cannot be
-cancelled. See docs/player/api/speaker.md and the speaker-alarm/melody/catalogue programs.
+cancelled. The in-game One speaker note tutorial includes complete setup and code.
 
 getInstruments() -> complete copied exact-name array, sorted bytewise. Oversized
 metadata refuses instead of truncating the result.
@@ -274,8 +298,8 @@ signal_changed includes sample_tick, previous/current, changes with disappeared
 current=0, selected connectivity, initial/resync and discovery wire.
 Admission advances the baseline. Outages discard queued transients and resync current
 input. Stop/fault/cable loss clears only the still-owned run/channel bank.
-Controller: INPUT red from stock chest, OUTPUT to inserter with signal A > 0;
-red NETWORK chain to computer; paste examples/logic-controller.lua, Save, then Run.
+The in-game Stock-controlled inserter tutorial includes stock INPUT, inserter OUTPUT,
+red NETWORK wiring, runnable source, execution steps and expected behavior.
 
 readSignal(input, signal) -> signed32 count; absent gives 0. signal is an exact
 SignalId {type,name,quality?}; type includes item/fluid/virtual/recipe.
@@ -481,7 +505,7 @@ RECIPE SEARCHER
 find("recipe_searcher", wire) -> facade. Separate Recipe Searcher research.
 Shared query guidance: no inventory, physical product input, crafting execution or
 recipe browser GUI. Reachable unpowered devices allow limits/discovery/relay only.
-Paste examples/recipe-searcher-program.lua's document, Validate, Save and Run.
+The in-game Find iron plate recipes tutorial includes research, wiring and runnable code.
 
 findRecipes("item"/"fluid", exact_product_name, exact_category?) -> one complete array.
 Includes locked, hidden, recycling, modded and surface-restricted direct producers.
@@ -545,12 +569,13 @@ getLimits() -> copied common/configurator capacities, including reachable unpowe
 Target graph, patch, section, filter and result budgets apply independently.
 
 COMBINED EXAMPLE
-Paste docs/factory-example.md's examples/factory-controller.lua document, Save/Run.
-It configures TARGETS green inserters, samples INPUT red, stores expiring shared KV
-telemetry and redraws/toggles a merged monitor. examples/shared-telemetry.lua runs
-on a second computer: shared red database, separate physical green database.
-Complete signature/type/error/event references are in docs/ and packaged source API
-contracts under openspec/api and openspec/specs.
+Choose Examples for complete, small tutorials with setup, runnable code, execution
+steps, expected results and failure notes. No external file or guest import is needed.
+Small factory dashboard combines configuration, logic, a database and a monitor.
+Two-computer shared data uses two real computers and two physical databases.
+The starter needs no peripherals. One speaker note, Stock-controlled inserter and
+Find iron plate recipes teach one service each. Larger shipped programs and docs
+are supplementary; they are not required to complete these in-game tutorials.
 
 FAILURES AND PERSISTENCE
 Ordinary errors are plain {code,message,field?,peripheral?,device?} and catchable.
@@ -581,7 +606,89 @@ for line in string.gmatch(M.text..'\n','([^\n]*)\n') do
   if section then topic={title=section[1],category=section[2],id=section[3],text=''}; M.topics[#M.topics+1]=topic end
   topic.text=topic.text..line..'\n'
 end
-M.topics[#M.topics+1]={title='Starter controller',category='Examples',text=M.template,example=true}
+local tutorials=require('scripts.ui.tutorials')
+tutorials.starter={title='Starter controller',purpose='Sample immediately, then retain a counter once per 60 simulation ticks. No peripheral is needed.',
+  setup='Research Native circuit computers (tc-circuit-computers), craft one computer and supply electricity with a powered pole in range. No wire, second computer or external file is needed.',
+  steps='Clear the cursor and Ctrl+left-click the computer. Select and copy this entire code box with native controls, paste into an empty Editor draft, then Validate, Save and Run. The Editor starter control is an optional way to insert the same source; Reference has no action buttons.',
+  expected='Console prints Initial sample count: 1 on a fresh computer. The retained samples state is 1 immediately and increases to 2 at the first 60-tick timer. Reapplying retains the previous count; cold load does not replay start.',
+  failures='Unpowered computers pause. Save alone does not activate a revision. Saved program functions cannot be called from Console. Stop cancels the timer without clearing the count. Maintenance Reset State requires Stop and separate confirmation.',
+  source='function-program',code=M.template}
+M.tutorials=tutorials
+local function block(topic,kind,text)
+  if kind=='prose' and text:find('\n',1,true) then
+    for line in text:gmatch('[^\n]+') do block(topic,kind,line) end
+    return
+  end
+  topic.blocks[#topic.blocks+1]={kind=kind,text=text}
+end
+local subheadings={
+  ['Console holds']='Live Console', ['Peripherals inspects']='Discovery and navigation',
+  ['Maintenance holds']='Editing and execution', ['Stop cancels']='Stopping and recovery',
+  ['Ctrl+left-click']='World interaction', ['Open inspectors']='Local inspectors',
+  ['Monitor dimensions']='Monitor interaction', ['All essential']='Native controls',
+  ['function start']='Named handlers', ['Legacy return']='Program forms',
+  ['Locals, helpers']='Callback lifetime', ['No require']='Sandbox boundaries',
+  ['print(...)']='Printing', ['rawget(t,key)']='Raw table helpers',
+  ['xpcall(fn,handler,...)']='Errors and protected calls', ['New global names']='Reserved names and upgrades',
+  ['General events:']='Events', ['Timer event:']='Timer delivery', ['Data:']='Persistent Data',
+  ['Ordinary errors']='Errors and partial effects', ['Unpowered computers']='Power and cold load',
+  ['Quotas are']='Resource limits'
+}
+-- Signatures stay isolated rather than relying on representation-specific blank
+-- lines. Paragraph wrapping is visual only: the actual copied bytes are plain.
+local function structure(topic)
+  topic.blocks={}; block(topic,'heading',topic.title)
+  local paragraph={}; local length=0
+  local signature=false; local first=true
+  local function flush()
+    if #paragraph>0 then
+      local text=table.concat(paragraph,' ')
+      if signature then
+        local result,notes=text:match('^(.-)%.%s+(.*)$')
+        block(topic,'prose','Returns: '..(result and result..'.' or text))
+        if notes then block(topic,'prose','Arguments and caveats: '..notes) end
+      else block(topic,'prose',text) end
+      paragraph={}; length=0
+    end
+  end
+  for line in (topic.text..'\n'):gmatch('([^\n]*)\n') do
+    if first then first=false -- The old all-caps title is replaced by the native heading.
+    elseif line=='' then flush(); signature=false
+    else
+      local heading
+      for prefix,title in pairs(subheadings) do if line:sub(1,#prefix)==prefix then heading=title; break end end
+      local call,result=line:match('^([%w_]+%b().-) %-> (.+)$')
+      if call then
+        flush(); block(topic,'signature',call); paragraph={result}; length=#result; signature=true
+      else
+        if heading and not signature then flush(); block(topic,'heading',heading) end
+        if not signature and length+#line>420 then flush() end
+        paragraph[#paragraph+1]=line; length=length+#line+1
+      end
+    end
+  end
+  flush()
+end
+for _,entry in ipairs(M.topics) do structure(entry) end
+for _,id in ipairs({'starter','speaker','logic','recipe','factory','shared'}) do
+  local tutorial=tutorials[id]
+  local entry={id='tutorial.'..id,title=tutorial.title,category='Examples',blocks={},text=''}
+  block(entry,'heading',tutorial.title)
+  for _,part in ipairs{{'Purpose','purpose'},{'Build and wire','setup'},{'Enter and run','steps'}} do
+    block(entry,'heading',part[1]); block(entry,'prose',tutorial[part[2]])
+  end
+  if tutorial.prelude then
+    block(entry,'heading','Computer 1 — writer'); block(entry,'code',tutorial.prelude)
+    block(entry,'heading','Computer 2 — observer')
+  else block(entry,'heading','Complete program') end
+  block(entry,'code',tutorial.code)
+  for _,part in ipairs{{'Expected result','expected'},{'Failures and safety','failures'}} do
+    block(entry,'heading',part[1]); block(entry,'prose',tutorial[part[2]])
+  end
+  local text={}; for _,part in ipairs(entry.blocks) do text[#text+1]=part.text end
+  entry.text=table.concat(text,'\n\n')
+  M.topics[#M.topics+1]=entry
+end
 -- Exact API types, never localized titles, substring matching or topic positions.
 local peripheral_topics={monitor='peripheral.monitor',kv_database='peripheral.kv_database',
   logic_handler='peripheral.logic_handler',configurator='peripheral.configurator',
