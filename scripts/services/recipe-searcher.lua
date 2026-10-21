@@ -4,9 +4,9 @@ local limits=require('scripts.runtime.limits')
 local peripheral=require('scripts.services.peripheral')
 local M={}
 local MAX_RESULTS=50
--- Provisional catalogue admission: charged before the opaque native filter.
--- This is not a C++ timing bound; see docs/recipe-searcher-validation.md.
-local LOOKUP_WORK=8
+-- Native-call admission, not a C++ timing bound. Charge returned candidates and
+-- projected metadata separately; unrelated installed recipes/categories are free.
+local LOOKUP_WORK=32
 local function fail(message) errors.raise('E_UNSUPPORTED',message) end
 local function native(fn,...)
   local ok,value=pcall(fn,...)
@@ -142,12 +142,12 @@ function methods.findRecipes(computer,_,_,_,spend,...)
   if category~=nil then name(category,'category',spend) end
   if not prototypes[product_type][product_name] then errors.raise('E_RANGE','unknown product','product_name') end
   if category and not prototypes.recipe_category[category] then errors.raise('E_RANGE','unknown recipe category','category') end
-  spend((#prototypes.recipe+1)*(LOOKUP_WORK+#product_name)+(category and #category or 0))
+  spend(LOOKUP_WORK+#product_name+(category and #category or 0))
   local candidates=native(prototypes.get_recipe_filtered,{{filter='has-product-'..product_type,elem_filters={{filter='name',name=product_name}}}})
   local matches={}
   for recipe_name,recipe in pairs(candidates) do
     spend(#recipe_name+(category and #category or 0)+4)
-    if category then spend((#prototypes.recipe_category+1)*(#category+1)) end
+    if category then spend(LOOKUP_WORK+#category) end
     if not category or native(recipe.has_category,category) then
       if #matches==MAX_RESULTS then errors.raise('E_LIMIT','More than 50 recipes; select a crafting category','results') end
       matches[#matches+1]=recipe_name

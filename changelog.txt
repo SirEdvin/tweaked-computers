@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.13
+Date: 2026-10-21
+  Bugfixes:
+    - Read connected Logic Handler inputs without charging for every installed item, fluid, recipe, virtual signal and quality. Small chest inputs no longer become permanently unavailable just because the mod pack has a large prototype catalogue.
+    - Remove the same catalogue-wide admission estimates from Recipe Searcher product queries and category checks. Account native calls, actual candidates and returned metadata instead.
+  Info:
+    - Preserve actual signal/result capacity limits, validation, power and path authority, fail-safe output ownership, and shared work/Data budgets. No production ceiling is raised.
+    - ALPHA: back up saves and matching ZIPs. Factorio 2.0.77 base and optional Space Age; API 1, compiler 2 and storage 1 are unchanged.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.12
 Date: 2026-10-21
   Bugfixes:

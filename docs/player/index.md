@@ -11,9 +11,11 @@ Factorio objects, and no command history.
 
 ## Start here
 
-**0.1.12 ALPHA** fixes blank [inspector panels](inspectors.md), gives logic inputs
-and output independent decider-style signal trays, and removes repeated UI
-instructions. Meaningful availability, stale/error states and safety confirmations remain.
+**0.1.13 ALPHA** fixes connected logic inputs becoming permanently unavailable
+because unrelated mods add many prototypes. Logic reads and Recipe Searcher
+queries now account actual returned data rather than the entire installed
+catalogue. Independent [signal trays](inspectors.md), concise UI text and real
+validation, authority and work/Data limits remain.
 
 Version 0.1.11 added [peripheral inspectors](inspectors.md),
 [radar modems](api/modem.md), [vanilla speaker audio](api/speaker.md),

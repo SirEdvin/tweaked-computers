@@ -1,5 +1,10 @@
 # Recipe Searcher candidate verification
 
+Historical feature evidence: the catalogue-size precharges described below were
+removed in 0.1.13. Current behavior is documented in
+[the release notes](release-0.1.13.md) and [player API](player/api/recipe-searcher.md).
+Keep the original measurements separate from current accounting.
+
 Unreleased implementation of `add-recipe-searcher`; no release/version/tag or
 Mod Portal publication is made by this change. Target: Factorio 2.0.77 build
 84539, base and optional Space Age. The candidate retains Console, monitor

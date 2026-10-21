@@ -194,14 +194,32 @@ function M.on_tick(event)
       assert(x.output.get_signal(recipe(),defines.wire_connector_id['circuit_'..color])==7)
       assert(x.output.get_signal({type='item',name='iron-plate',quality='normal'},defines.wire_connector_id['circuit_'..color])==3)
     end
-    -- Refuse at the supported-type envelope, including the new recipe registry.
-    local expected=(#prototypes.item+#prototypes.fluid+#prototypes.virtual_signal+#prototypes.recipe)*#prototypes.quality*8+logic.signal_slots*16+16
+    -- Unrelated prototype counts must not affect actual-input work admission.
+    local original=prototypes
+    local function read_work(length)
+      local proxy={}
+      for _,kind in ipairs({'item','fluid','virtual_signal','recipe','quality'}) do
+        local native=original[kind]
+        proxy[kind]=setmetatable({},{__index=function(_,key) return native[key] end,__len=function() return length end})
+      end
+      prototypes=setmetatable(proxy,{__index=original})
+      local work=0
+      local result=logic.inspect_input(io,'red',event.tick,function(n) work=work+n end)
+      assert(#result.values>=2 and result.connected)
+      return work
+    end
+    local measured,problem=pcall(function()
+      assert(read_work(1)==read_work(1000000),'unrelated prototypes changed signal read cost')
+    end)
+    prototypes=original; assert(measured,problem)
+    -- Refuse before the native call; ownership and the old bank stay intact.
+    local expected=32
     local first; local refusal={code='E_BUDGET'}; local old_bank=io.output_bank; local old_owner=io.output_owner
     local api=peripheral.services(c,event.tick,{check=function() end,accept_handle=function() end,spend=function(n)
       if n==expected then first=n; error(refusal,0) end
     end}).peripheral
     local ok,problem=pcall(api.call,io.id,'red','readSignals','red')
-    assert(not ok and problem==refusal and first==expected,'recipe registry omitted from query precharge')
+    assert(not ok and problem==refusal and first==expected,'native call entered without work admission')
     assert(io.output_bank==old_bank and io.output_owner==old_owner)
     -- The reported Console path, through real submission/authority/dispatch;
     -- only the player and native GUI objects are table-backed fixtures.

@@ -62,7 +62,7 @@ end
 local function shared_sampler_failure()
   local a=build('computer',-12,0); local b=build('computer',-12,3); local io=build('logic',-9,0)
   -- Refusal must exercise an actual connected-input query. A disconnected
-  -- endpoint is known empty and no longer needs the native list envelope.
+  -- endpoint is known empty and needs no native list call.
   local source=assert(game.surfaces[1].create_entity{name='constant-combinator',position={-9,-3},force='player'})
   wire(source,io,'red','input')
   f().fault_ids={a.id,b.id}; f().fault_io=io.id
@@ -76,9 +76,9 @@ local function shared_sampler_failure()
     assert(runtime.enqueue(c,'changed',{name='pending'},game.tick))
   end
   assert(io.output_owner.computer_id==b.id)
-  -- Refuse only the native-read envelope, not gathering/ordering/notification.
+  -- Refuse only native-call admission, not gathering/ordering/notification.
   -- One shared sample must fan out the very same failure to both subscribers.
-  local charge=(#prototypes.item+#prototypes.fluid+#prototypes.virtual_signal+#prototypes.recipe)*#prototypes.quality*8+logic.signal_slots*16+16
+  local charge=32
   local failure={code='E_BUSY',message='injected native sampling refusal'}; local refusals=0
   logic.sample(game.tick,function(n)
     if n==charge then refusals=refusals+1; error(failure,0) end

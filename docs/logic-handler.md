@@ -115,15 +115,15 @@ latency is 1 tick under the safety envelope. Notification latency reports the sh
 oversubscribed world. Limits are queried through getLimits and are not yet frozen
 release tuning. The integrated envelope remains a downstream acceptance gate.
 
-2.0.77 has no native signal-count query: reads pre-admit the immutable prototype ×
-quality universe before materializing native tuples, then refuse an oversized
-snapshot. Single-signal reads use bounded native lookups. The provisional copy-work
-weights are not a measured CPU-time bound. Heavy modded prototype universes may
-refuse admission instead of doing unpaid native work.
-The supported-type estimate includes installed recipes. Other native signal
-categories remain unsupported and are refused, not silently filtered out. Native
-enumeration can materialize them before rejection; this inherited estimate does
-not provide a universal all-category bound.
+Since 0.1.13, connected-input reads admit the native call and charge its actual
+returned tuple count, identity validation, copying and sorting. They do not charge
+the installed prototype × quality universe. Disconnected inputs avoid the native
+list query; single-signal reads keep their direct native lookup. More than 64
+actual input signals still refuses the whole snapshot, never a partial prefix.
+Unsupported native signal categories still refuse rather than being filtered out.
+Native enumeration materializes its list before Lua can inspect its size; neither
+the fixed call charge nor the copy-work weights bound opaque C++ CPU time or
+allocation. Refresh throttling and shared work/Data admission remain in effect.
 
 Argument/domain/capacity/unpowered/path failures are ordinary catchable ApiErrors.
 Queue overflow visibly faults the computer and clears its exact owned outputs.

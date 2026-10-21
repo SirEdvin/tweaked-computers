@@ -74,13 +74,12 @@ local function native_read(rec,input,spend)
   if not connected[input] then spend(16); return {},connected end
   for _,wire in ipairs({'red','green'}) do
     if input==wire then
-      -- No count query exists in 2.0.77. Pre-admit the supported prototype/quality
-      -- envelope, including recipes, then enforce the bounded native snapshot.
-      local universe=(#prototypes.item+#prototypes.fluid+#prototypes.virtual_signal+#prototypes.recipe)*#prototypes.quality
-      if not errors.integer(universe,1,1000000) then errors.raise('E_LIMIT','native signal prototype universe exceeds supported query envelope') end
-      spend(universe*8+M.signal_slots*16+16)
+      -- Admit the native call, then account its actual tuples. Unrelated installed
+      -- prototypes do not make a small connected input more expensive.
+      spend(32)
       local c=lifecycle.connector(rec,'input',wire)
       local native=c.owner.get_signals(c.wire_connector_id) or {}
+      spend(#native*8+16)
       if #native>M.signal_slots then errors.raise('E_LIMIT','native input signal inventory exceeds signal_slots') end
       for _,entry in ipairs(native) do
         local s=signal({type=entry.signal.type or 'item',name=entry.signal.name,quality=entry.signal.quality},spend); local k=key(s); local old=values[k]
