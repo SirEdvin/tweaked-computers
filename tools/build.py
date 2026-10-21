@@ -17,6 +17,7 @@ CONTRACT_FILES = (
     'openspec/api/device-experience.md',
     'openspec/specs/computer-runtime/spec.md',
     'openspec/specs/computer-runtime/lua-api.md',
+    'openspec/specs/computer-runtime/base-globals-api.md',
     'openspec/specs/console-shell/spec.md',
     'openspec/specs/console-shell/lua-api.md',
     'openspec/specs/device-configurator/spec.md',
@@ -41,19 +42,11 @@ CONTRACT_FILES = (
     'openspec/specs/recipe-searcher/lua-api.md',
     'openspec/specs/program-source/spec.md',
     'openspec/specs/program-source/lua-api.md',
-)
-
-# Active feature contracts ship without prematurely archiving/synchronizing the
-# change. The campaign archival owner later promotes these exact companions.
-FEATURE_CONTRACT_FILES = (
-    'openspec/changes/add-speaker-peripheral/specs/speaker-peripheral/spec.md',
-    'openspec/changes/add-speaker-peripheral/specs/speaker-peripheral/lua-api.md',
-    'openspec/changes/add-speaker-peripheral/specs/peripheral-network/spec.md',
-    'openspec/changes/add-radar-modems/specs/radar-modem/spec.md',
-    'openspec/changes/add-radar-modems/specs/radar-modem/lua-api.md',
-    'openspec/changes/add-radar-modems/specs/peripheral-network/spec.md',
-    'openspec/changes/add-radar-modems/specs/device-lifecycle/spec.md',
-    'openspec/changes/add-radar-modems/specs/device-visual-identity/spec.md',
+    'openspec/specs/peripheral-inspection/spec.md',
+    'openspec/specs/radar-modem/spec.md',
+    'openspec/specs/radar-modem/lua-api.md',
+    'openspec/specs/speaker-peripheral/spec.md',
+    'openspec/specs/speaker-peripheral/lua-api.md',
 )
 
 def build(destination):
@@ -96,7 +89,6 @@ def build(destination):
     # Ship authoritative source/API contracts too; their relative links remain
     # valid. Exclude orchestration reports, research caches and agent context.
     files += [ROOT / name for name in CONTRACT_FILES]
-    files += [ROOT / name for name in FEATURE_CONTRACT_FILES]
     for p in files:
         if p.suffix.lower() in ('.exe', '.bat', '.ps1', '.sh', '.py'):
             raise ValueError(f'Mod Portal forbids executable payloads: {p}')

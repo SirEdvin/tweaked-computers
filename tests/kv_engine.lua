@@ -20,9 +20,9 @@ local function err(code,fn)
     'expected '..code..', got '..(type(e)=='table' and tostring(e.code) or tostring(e)))
 end
 local function build(kind,x,y)
-  local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].name,position={x,y},force='player'})
-  lifecycle.on_built{entity=b}; local rec=assert(registry.by_entity(b))
-  b.energy=defs.devices[kind].watts/30; rec.powered=true; return rec
+  local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
+  local rec=assert(lifecycle.build(b))
+  lifecycle.power_entity(rec).energy=defs.devices[kind].watts/30; rec.powered=true; return rec
 end
 local function command(rec,name,tick,...)
   return kv.methods[name](nil,rec,'red',tick,nop,...)
@@ -37,24 +37,24 @@ end
 local function mine_event(rec,kind)
   -- Native temporary inventory/stack, table-backed event route. Actual robot
   -- event/transfer is independently exercised in the cold fixture below.
-  local buffer=game.create_inventory(1); buffer[1].set_stack{name=rec.body.name,count=1,quality=rec.body.quality}
+  local buffer=game.create_inventory(1); buffer[1].set_stack{name=defs.devices[rec.kind].name,count=1,quality=rec.body.quality}
   local old=rec.body
   lifecycle.on_removed{entity=old,buffer=buffer,tick=game.tick,name=kind}
   assert(not registry.record(rec.id)); old.destroy()
   return buffer
 end
 local function replace(buffer,x,y,robot)
-  local b=assert(game.surfaces[1].create_entity{name='tc-kv',position={x,y},force='player'})
+  local b=assert(game.surfaces[1].create_entity{name=defs.devices.kv.entity_name,position={x,y},force='player'})
   if robot then lifecycle.on_built{entity=b,stack=buffer[1]}
   else lifecycle.on_built{entity=b,consumed_items=buffer} end
-  local rec=assert(registry.by_entity(b)); b.energy=1000; rec.powered=true; return rec
+  local rec=assert(registry.by_entity(b)); lifecycle.power_entity(rec).energy=1000; rec.powered=true; return rec
 end
 -- Forward the real engine lifecycle events in this isolated test mod's registry.
 script.on_event(defines.events.on_robot_mined_entity,function(event)
   if registry.by_entity(event.entity) then lifecycle.on_removed(event); log('TC_KV_NATIVE_ROBOT_MINED') end
 end)
 script.on_event(defines.events.on_robot_built_entity,function(event)
-  if event.entity.name=='tc-kv' then
+  if event.entity.name==defs.devices.kv.entity_name then
     lifecycle.on_built(event)
     local rec=assert(registry.by_entity(event.entity))
     if f() and f().phase=='rebuilding' then f().real_placed=rec.id; log('TC_KV_NATIVE_ROBOT_BUILT') end
@@ -150,7 +150,7 @@ function M.run()
   rec.database=saved_header; kv.initialize(rec)
   local invalid=game.create_inventory(1); invalid[1].set_stack{name='tc-kv',count=1}
   invalid[1].tags={tc_kv={version=99,entries={}}}
-  local body=assert(game.surfaces[1].create_entity{name='tc-kv',position={20,0},force='player'})
+  local body=assert(game.surfaces[1].create_entity{name=defs.devices.kv.entity_name,position={20,0},force='player'})
   local robot=assert(game.surfaces[1].create_entity{name='construction-robot',position={20,3},force='player'})
   lifecycle.on_built{entity=body,stack=invalid[1],robot=robot}
   assert(not body.valid and invalid[1].tags.tc_kv.version==99)
@@ -207,12 +207,12 @@ function M.run()
   assert(lifecycle.connector(c2,'network','red').connect_to(lifecycle.connector(rec,'network','red')))
   guest(c2,[[local d=peripheral.find('kv_database','red'); assert(d.get('guest')=='value'); d.set('guest','second')]])
   guest(c,[[local d=peripheral.find('kv_database','red'); assert(d.get('guest')=='second')]])
-  rec.powered=false; rec.body.energy=0
+  rec.powered=false; lifecycle.power_entity(rec).energy=0
   guest(c,[[local d=peripheral.find('kv_database','red'); assert(d.getLimits().keys==128)
     local ok,e=pcall(d.get,'guest'); assert(not ok and e.code=='E_UNPOWERED')]])
   command(rec,'expire',0,'guest',1); assert(command(rec,'get',60,'guest')==nil)
   report('compiled-native-facades-sharing-malicious-values-static-limits-and-unpowered-expiry')
-  rec.powered=true; rec.body.energy=1000
+  rec.powered=true; lifecycle.power_entity(rec).energy=1000
   runtime.save(c.id,example,c.saved_revision); assert(runtime.activate(c.id,game.tick))
   assert(scheduler.dispatch(c,game.tick)); assert(c.status=='running',c.diagnostic and c.diagnostic.message)
   assert(command(rec,'hget',game.tick,'machine','owner')==c.id)
@@ -261,7 +261,7 @@ function M.on_tick(event)
     assert(f().chest.get_inventory(defines.inventory.chest).insert(f().carried[1])==1)
     f().carried[1].clear(); f().roboport.active=true; f().roboport.energy=100000000
     f().phase='rebuilding'; f().rebuild_tick=event.tick
-    assert(game.surfaces[1].create_entity{name='entity-ghost',inner_name='tc-kv',position={3,0},force='player'})
+    assert(game.surfaces[1].create_entity{name='entity-ghost',inner_name=defs.devices.kv.entity_name,position={3,0},force='player'})
     return
   elseif f().phase=='rebuilding' then
     assert(event.tick-f().rebuild_tick<1200,'native robot rebuild deadline exceeded')
@@ -295,7 +295,7 @@ function M.on_tick(event)
   -- Validate another ordinary save/load alias while the genuine mined item is carried.
   local restored=build('kv',12,0)
   kv.restore(restored,carried[1].tags.tc_kv)
-  restored.body.energy=0; restored.powered=false; restored.body.active=false
+  lifecycle.power_entity(restored).energy=0; restored.powered=false; restored.body.active=false
   f().restored=restored
   local spend=scheduler.maintenance(registry.get(),event.tick); spend(77)
   f().saved={deadline=f().deadline,value=carried[1].tags.tc_kv.entries[1].value,

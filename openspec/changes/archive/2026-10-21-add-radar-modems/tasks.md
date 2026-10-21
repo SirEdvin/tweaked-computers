@@ -1,6 +1,6 @@
 # Tasks
 
-Implementation starts only after a separate apply request. All tasks below are intentionally unchecked. New module/fixture names are proposed paths, not claims that those files already exist. Use the exact packaged archive and isolated scratch/save directories described in `AGENTS.md`; keep distributions and verification outputs outside git. Preserve the unrelated config edit and `add-peripheral-inspectors` change.
+This checklist originated as an unchecked proposal; the subsequent authorized apply and integrated acceptance completed the rows below. Proposed path names in the original obligations are retained for traceability. Use the exact packaged archive and isolated scratch/save directories described in `AGENTS.md`; keep distributions and verification outputs outside git. Preserve unrelated edits and the other campaign contracts.
 
 ## 1. Usable native radar attachment without vanilla regressions
 
@@ -37,6 +37,6 @@ Implementation starts only after a separate apply request. All tasks below are i
 
 ## Workflow follow-up
 
-- Start apply only on a new user request; do not implement from this proposal workflow.
+- The original proposal required a separate apply request; that authorization and implementation are now complete.
 - Archive/synchronize the change after implementation and review under the explicit archive workflow; preserve the radar API companion when syncing. The tracked tasks do not depend on archival.
 - Release/publication requires separate authorization and the exact tested archive; no release is implied by proposal completion.

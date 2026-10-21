@@ -113,6 +113,8 @@ An uncaught error faults this run, retaining source/state/logs and prior success
 
 ## Expanded Lua base globals
 
+The complete [base-global contract](base-globals-api.md) is normative alongside the inventory below, including argument/result adjustment, ordinary and fatal errors, retained-name recovery and compatibility exclusions. It extends rather than replaces the computer methods, events and scheduling above.
+
 The same guarded globals are available in declaration/descriptor callbacks and Console. `_VERSION` is the fixed string `Lua 5.2`, a language-family label rather than unrestricted standard-library compatibility. No new namespace members, host facilities, Data domains or persistence schema are introduced; API 1/compiler 2/storage 1 remain unchanged.
 
 | Signature | Result and contract |

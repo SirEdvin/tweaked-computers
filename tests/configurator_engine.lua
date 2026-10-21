@@ -18,9 +18,9 @@ local function error_is(code,fn)
   local ok,e=pcall(fn); assert(not ok and type(e)=='table' and e.code==code,'expected '..code..', got '..serpent.line(e))
 end
 local function build(kind,pos)
-  local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].name,position=pos,force='player'})
-  lifecycle.on_built{entity=b}; b.energy=defs.devices[kind].watts/30
-  local rec=assert(registry.by_entity(b)); rec.powered=true; return rec
+  local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position=pos,force='player'})
+  local rec=assert(lifecycle.build(b)); lifecycle.power_entity(rec).energy=defs.devices[kind].watts/30
+  rec.powered=true; return rec
 end
 local function create(name,pos,force)
   return assert(game.surfaces[1].create_entity{name=name,position=pos,force=force or 'player'})
