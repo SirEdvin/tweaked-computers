@@ -13,12 +13,11 @@ function M.on_input(event)
   if (cursor and cursor.valid_for_read) or player.cursor_ghost then return end
   local group=player.permission_group
   if group and not group.allows_action(defines.input_action.custom_input) then return end
-  local rec=registry.by_entity(player.selected)
-  if rec and rec.kind=='computer' then return editor.open(player,rec.id) end
-  -- Position-based monitor hit testing takes precedence over empty-ground
-  -- recovery, even when selection priority does not identify a monitor tile.
+  local rec,role=registry.by_entity(player.selected)
+  if rec and role=='body' and rec.kind=='computer' then return editor.open(player,rec.id) end
+  -- Monitor cells use position-based hit testing even when selection priority
+  -- does not identify a tile. All other world clicks leave computer UI alone.
   if monitor.activate(event) then return true end
-  if not player.selected then editor.open_recovery(player); return true end
 end
 function M.on_opened(event)
   local entity=event.entity

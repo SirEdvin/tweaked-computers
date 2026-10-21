@@ -26,7 +26,9 @@ save containing the new device. This is a user-test alpha, not stable.
   Output is still one shared bank mirrored onto both colors. Separate subscriptions
   share unchanged budgets; simultaneous maximum subscriptions are not guaranteed.
 - Ctrl-click preserves native transfers and subsequent held-Ctrl shortcuts while
-  retaining guarded computer opening, monitor touch and empty-ground recovery.
+  retaining guarded computer opening, monitor touch and (at that release) empty-ground recovery.
+  Current versions leave empty ground inert; recover drafts through another
+  computer's Maintenance or the capacity viewer when opening a ninth computer.
 
 ## Install and learn
 
