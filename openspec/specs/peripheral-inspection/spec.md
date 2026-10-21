@@ -69,7 +69,7 @@ Inspectors SHALL NOT execute guest code, edit data/configuration, create subscri
 - **THEN** database values/deadlines, factory settings, output ownership, program state and monitor model revisions remain unchanged by inspection.
 
 ### Requirement: Bounded and honest refresh
-Inspectors SHALL show meaningful pending content before query admission and bound work, snapshots and GUI elements within unchanged shared host allowances. Refreshes SHALL be throttled or explicit and coalesced. Incomplete results SHALL be marked pending/stale/error, never a successful empty inventory or complete partial count. Closed inspectors SHALL perform no detail polling.
+Inspectors SHALL show meaningful pending content before query admission and bound work, snapshots and GUI elements within unchanged shared host allowances. All open inspectors, including KV and Configurator, SHALL poll automatically through throttled, coalesced scheduler admission. Refresh controls and numeric update/sample tick trackers SHALL NOT be displayed, including logic subpanels. Incomplete results SHALL be marked pending/stale/error, never a successful empty inventory or complete partial count. Closed/hidden inspectors SHALL perform no detail polling. Automatic updates SHALL retain key/field/page selection and mounted unchanged rows/text rather than recreating them on each observation.
 
 #### Scenario: Repeated refresh under contention
 - **WHEN** multiple players repeatedly request inspection while programs and monitors are active

@@ -10,6 +10,7 @@ local monitor=require('scripts.services.monitor')
 local terminal=require('scripts.monitor-model')
 local scheduler=require('scripts.scheduler')
 local logic=require('scripts.services.logic')
+local limits=require('scripts.runtime.limits')
 local M={}
 function M.run()
   local original=storage.tweaked_computers
@@ -61,7 +62,7 @@ function M.run()
     local f=assert(inspector.open(p,records.logic.id))
     assert(f.details.logic_regions and f.details.logic_regions.inputs and f.details.logic_regions.outputs,
       'logic inputs and output must not remain blank while a query is pending')
-    assert(f.details.logic_regions.inputs.red_tick.caption[1]=='tc-inspector.pending')
+    assert(not f.actions and not f.details.logic_regions.inputs.red_tick,'no sample trackers or Refresh controls')
     inspector.close(p)
   end)
   check('inspector-every-family-has-visible-pending-content-without-query-credits',function()
@@ -105,7 +106,7 @@ function M.run()
           tick=tick+15; game.tick=tick; inspector.tick(tick)
           tick=tick+15; game.tick=tick; inspector.tick(tick)
           assert(s.snapshot.details.red_tick>old and details==f.details.logic_regions and rows==details.inputs)
-          assert(rows.red_tick.caption[2]==s.snapshot.details.red_tick and rows.green_tick.caption[2]==tick)
+          assert(not rows.red_tick and not rows.green_tick and not details.outputs.output_tick)
         end
         inspector.on_click{player_index=p.index,element=f.identity.select_name}
         if rec.kind~='monitor' then assert(f.identity.api_name.focused and f.identity.api_name.selection[2]==#rec.id) end
@@ -289,6 +290,57 @@ function M.run()
         inspector.close(p)
       end
     end)
+    game=real; r.database=original; assert(ok,e)
+  end)
+  check('inspector-automatic-kv-changes-preserve-mounted-selection-and-close-stops-queries',function()
+    local r=records.kv; local real=game; local original=r.database; local read=model.read; local calls=0
+    r.database=kv.import{version=1,entries={{key='kept',type='hash',fields={{field='field',value='before'}}}}}
+    local p=players.player(2001,r.body)
+    local tick=math.ceil(((registry.get().scheduler.maintenance_tick or 0)+15)/15)*15
+    game={tick=tick,connected_players={p},get_player=function() return p end}
+    model.read=function(...) calls=calls+1; return read(...) end
+    local ok,e=pcall(function()
+      lifecycle.power_entity(r).energy=defs.devices.kv.watts/30
+      local f=assert(inspector.open(p,r.id)); local s=model.session(p.index)
+      local function poll() game.tick=tick; inspector.tick(tick); tick=tick+15 end
+      poll(); assert(s.snapshot and not s.pending)
+      local key=f.details.key_rows.key_1; local field=f.details.field_rows.field_1
+      local full=f.details.full_key; full.focus(); full.select_all(); local writes=full.text_writes
+      kv.methods.hset(nil,r,nil,tick,function() end,'kept','field','after')
+      poll()
+      assert(f.details.full_value.text=='"after"' and f.details.key_rows.key_1==key and f.details.field_rows.field_1==field)
+      assert(f.details.full_key==full and full.text_writes==writes and full.focused and full.selection)
+      assert(s.key=='kept' and s.field=='field' and s.page==1 and s.field_page==1 and s.value_page==1)
+      local value=f.details.full_value; local value_writes=value.text_writes; poll()
+      assert(f.details.full_value==value and value.text_writes==value_writes)
+      inspector.close(p); local stopped=calls; poll(); assert(calls==stopped)
+    end)
+    model.read=read; game=real; r.database=original; assert(ok,e)
+  end)
+  check('inspector-automatic-multiviewer-admission-rotates-without-new-credits',function()
+    local r=records.kv; local real=game; local original=r.database; local viewers={}
+    local entries={}; for i=1,128 do entries[i]={key=string.format('k%03d',i),type='string',value=string.rep('v',100)} end
+    r.database=kv.import{version=1,entries=entries}
+    local tick=math.ceil(((registry.get().scheduler.maintenance_tick or 0)+15)/15)*15
+    local first=tick
+    game={tick=tick,connected_players=viewers,get_player=function(i) return viewers[i-3000] end}
+    local ok,e=pcall(function()
+      lifecycle.power_entity(r).energy=defs.devices.kv.watts/30
+      for i=1,16 do viewers[i]=players.player(3000+i,r.body); inspector.open(viewers[i],r.id) end
+      for _=1,32 do
+        game.tick=tick; inspector.tick(tick)
+        local spent=registry.get().scheduler.maintenance_spent
+        assert(spent<=limits.maintenance_work_per_tick and spent+(registry.get().ledger.tick==tick and registry.get().ledger.total or 0)<=limits.host_work_per_tick)
+        tick=tick+15
+      end
+      for _,p in ipairs(viewers) do
+        local s=model.session(p.index)
+        assert(s.snapshot and s.snapshot.tick>first and #s.snapshot.details.entries==128,'automatic viewer starved or published a prefix')
+        assert(not s.logic_partial and type(s.pending)=='boolean')
+        inspector.close(p)
+      end
+    end)
+    for _,p in ipairs(viewers) do inspector.close(p) end
     game=real; r.database=original; assert(ok,e)
   end)
   check('inspector-cardinal-single-nonsquare-maximum-and-pending-geometry',function()

@@ -88,7 +88,7 @@ function M.action(player,token,action,tick,arg)
   elseif action=='save' then
     local revision=runtime.save(rec.id,d.source,d.base_revision)
     d.base_revision=revision; d.base_source=d.source; s.review=nil
-    return 'Saved revision '..revision..'; active run unchanged.'
+    return 'Source saved; active run unchanged.'
   elseif action=='run' or action=='apply' then
     -- Never activate unseen newer text, nor pretend unsaved edits were consumed.
     if d.base_revision~=rec.saved_revision or d.source~=rec.saved_source then
@@ -96,7 +96,7 @@ function M.action(player,token,action,tick,arg)
     end
     local run,e=runtime.activate(rec.id,tick,d.base_revision)
     if not run then s.validation={kind='saved',revision=d.base_revision,diagnostic=e}; return nil,e end
-    s.validation=nil; s.reset=nil; return 'Activated saved revision '..rec.saved_revision..'.'
+    s.validation=nil; s.reset=nil; return 'Saved source activated.'
   elseif action=='stop' then
     s.reset=nil
     if not runtime.stop(rec.id) then return nil,rec.diagnostic end

@@ -34,7 +34,7 @@ function M.begin(tick)
   if not stopped and tick%15==0 then
     for _,p in ipairs(viewers) do
       local f=p.gui.screen[inspector.frame_name]
-      for _=1,100 do inspector.on_click{player_index=p.index,element=f.actions.refresh_snapshot} end
+      assert(not f.actions,'automatic inspector polling must not need Refresh controls')
     end
   end
 end

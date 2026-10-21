@@ -21,7 +21,8 @@ One document. Native named callbacks; no OS, VM or filesystem.
 
 WORKFLOW
 Editor is the writing workspace. Focus hides tabs without replacing your source.
-Console holds bounded output; turn Follow off to pause its selectable snapshot.
+Console holds bounded live output; Follow off stops automatic scrolling, not updates.
+Incoming changed text may clear selection; native selection/copy works between updates.
 Console also accepts one live Lua line with Enter or Execute; no command history.
 Scratch globals/tables and peripheral bindings are shared per computer and saved.
 print(p.getSize()) inspects a retained p=peripheral.wrap(name,"red") binding.
@@ -50,7 +51,7 @@ Ordinary opening of a composite peripheral opens its read-only local inspector;
 radars and programmable speakers keep their native configuration windows.
 No computer or running program is required. Select name for copy selects only the API ID;
 use native Copy, then paste into your draft. Escape retains computer drafts.
-KV and Configurator use explicit Refresh snapshots, with bounded pages/chunks.
+Open inspectors and Peripherals update automatically, with bounded pages/chunks.
 KV byte strings quote empty values, escape quotes/backslashes and use hexadecimal
 byte escapes for control/high bytes and brackets. Full values remain reachable.
 Configurator lists target-side prototypes: Unique deduplicates overlapping Red
@@ -124,7 +125,7 @@ INPUT/OUTPUT/TARGETS ports and color changes are not discovery paths.
 Types: monitor, kv_database, logic_handler, configurator, recipe_searcher, modem, speaker.
 Each has getLimits().
 Store name/wire in state, not ephemeral facades. Calls recheck live authority.
-Use Peripherals / Refresh for current names/types/power on the selected color.
+Use Peripherals for automatically updated names/types/power on the selected color.
 Incomplete discovery reports pending/limit, never a successful empty prefix.
 
 getNames(wire) -> complete sorted name array. Includes reachable unpowered devices;

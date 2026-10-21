@@ -13,7 +13,7 @@ The saved program can continue running beside the prompt, or remain stopped.
 ## Try a monitor
 
 Wire a powered computer NETWORK socket to a powered monitor NETWORK socket on red.
-Use **Peripherals → Red → Refresh peripherals** to find the exact logical monitor
+Use **Peripherals → Red** to find the automatically updated exact logical monitor
 name. Replace `tc-monitor-4` below with that name. Return to Console and submit
 these lines individually (do not paste the entire block at once):
 
@@ -60,8 +60,11 @@ wrap returns nil. Earlier successful writes are not replayed on loading.
 Each command echo identifies its sequence and submitting player index. Results
 and diagnostics are marked **Shell**, not confused with saved-source errors.
 **Go to source line** remains for saved-program/draft diagnostics, not a shell
-line. Follow-off freezes selectable output without discarding shell execution;
-Refresh or re-enable Follow to see its new output. Command status stays visible.
+line. Follow-off keeps output live without automatic scrolling. Incoming changed
+text may clear native selection; select/copy between arrivals. Unchanged text is
+not reassigned. Re-enable Follow to resume tailing. Command status stays visible.
+The same 64-entry / 16,384-byte history bound applies in either mode: discarded
+output cannot be recovered, and truncation is reported even while Follow is off.
 
 ## Effects and ownership
 

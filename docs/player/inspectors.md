@@ -56,8 +56,8 @@ The display is a reversible, ASCII-only representation:
   individually too; this representation preserves bytes rather than guessing an
   encoding. Stored rich-text-looking data is never rendered as markup.
 
-The snapshot tick is explicit. Background program writes do not interrupt your
-reading; choose Refresh to observe them. A fresh snapshot excludes entries at
+Open inspectors update automatically under bounded admission, without Refresh or
+numeric tick displays. Unchanged rows/text stay mounted. A fresh snapshot excludes entries at
 or after their expiry deadline even when reclamation has not yet removed them.
 Selections still present are retained. A disappeared key/field is identified as
 no longer present, not silently replaced. Unsupported or corrupt representations
@@ -76,7 +76,7 @@ are overlapping memberships: one device connected to both contributes one to
 each color and one to Unique. Do not add the two color columns to get a total.
 Owned helper sockets and the origin are not extra devices. A successful snapshot
 includes both color traversals; a failed traversal is pending/error, never a
-plausible partial total. Groups are sorted and paged. Refresh observes wiring
+plausible partial total. Groups are sorted and paged. Automatic polling observes wiring
 changes without reading full configuration schemas or changing machine settings.
 
 ## Logic Handler: inputs and its own output
@@ -93,12 +93,12 @@ Tooltips retain exact signed counts, signal type/name and quality. Recipe signal
 use recipe icons, not same-named item icons. Disconnected, connected-empty,
 unavailable and over-limit observations have different states. The panel attempts
 one input color every 15 ticks when shared host work is admitted, alternating
-Red and Green. Each input is published independently with its own sample tick;
+Red and Green. Each input is published independently;
 these are not an atomic circuit snapshot. A deferred or over-limit input shows
-its own pending/error state and retains any older sample with its original tick.
+its own pending/error state and retains any older sample as explicitly stale.
 It cannot block the other wire or the handler's own output bank. Disconnected
-inputs do not require a native signal-list query. The own bank has its own sample
-tick. Tick-only updates preserve unchanged slots and scrolling.
+inputs do not require a native signal-list query. The own bank is an independent
+observation too. Unchanged slots and their scrolling survive polling.
 The panel does not capture every pulse between samples. It creates no program
 subscription, writer or output publication.
 Existing power/writer cleanup remains responsible for fail-safe output removal.
@@ -131,8 +131,8 @@ check. Independent viewers have independent selections. Removed/replaced devices
 stale events and incompatible saved UI sessions cannot acquire new access.
 Save/load runs no inspector code during load; gameplay revalidates retained UI.
 
-Refresh requests coalesce: repeated clicks do not create a queue. Query, sorting,
+Automatic observations coalesce without a request queue. Query, sorting,
 escaping and GUI work use the shared non-render maintenance budget. Under load,
-Refresh may remain pending and a previous snapshot is explicitly stale; this is
+an update may remain pending and a previous snapshot is explicitly stale; this is
 not an empty successful read. Closing the window stops inspector detail polling.
 Unchanged data does not rebuild the detail widgets or steal copy selection.

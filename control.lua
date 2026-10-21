@@ -60,7 +60,7 @@ if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixt
   local monitor_state_fixture={['tests.monitor_state_waiting']=true,['tests.monitor_state_preparing']=true,
     ['tests.monitor_state_ready']=true,['tests.monitor_state_retiring']=true,
     ['tests.acceptance_monitor_engine']=true,['tests.editor_reference_client_engine']=true,['tests.peripheral_inspector_engine']=true,
-    ['tests.peripheral_inspector_client_engine']=true,['tests.peripheral_inspector_upgrade_engine']=true}
+    ['tests.peripheral_inspector_client_engine']=true,['tests.peripheral_inspector_upgrade_engine']=true,['tests.ui_live_client_engine']=true}
   assert(monitor_state_fixture[name] or name=='tests.speaker_competition_engine' or name=='tests.speaker_engine' or name=='tests.speaker_client_engine' or name=='tests.modem_competition_engine' or name=='tests.radar_client_engine' or name=='tests.radar_engine' or name=='tests.modem_engine' or name=='tests.acceptance_client_engine' or name=='tests.logic_recipe_engine' or name=='tests.recipe_searcher_client_engine' or name=='tests.recipe_searcher_engine' or name=='tests.shell_client_engine' or name=='tests.shell_cold' or name=='tests.lifecycle_engine' or name=='tests.integration_engine' or name=='tests.redesign_engine' or name=='tests.monitor_feedback_engine' or name=='tests.rd1_upgrade_engine' or name=='tests.monitor_budget_engine' or name=='tests.monitor_presentation_engine' or name=='tests.monitor_plot_baseline_engine' or name=='tests.runtime_budget_engine' or name=='tests.monitor_animation_engine','unknown production-context fixture')
 
   local test=require(name) -- control parsing only; never a guest source loader

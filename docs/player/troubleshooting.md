@@ -26,7 +26,7 @@ save before manual repair; redact secrets or private source literals before repo
 
 ## Discovery and power
 
-Refresh Peripherals for red and green independently. Check uninterrupted same-color
+Open Peripherals and inspect its automatic updates for red and green independently. Check uninterrupted same-color
 mod NETWORK-to-NETWORK paths, exact force/surface and real wires, not matching
 circuit values. Vanilla poles are not discovery relays; INPUT/OUTPUT/TARGETS are
 not NETWORK. An unpowered device may still be present while active calls fail.

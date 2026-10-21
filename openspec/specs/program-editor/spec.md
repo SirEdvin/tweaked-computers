@@ -22,7 +22,7 @@ An editor draft, saved source revision and running source revision SHALL be dist
 
 #### Scenario: Save does not interrupt a working factory controller
 - **WHEN** a player saves new source while the previous revision is running
-- **THEN** the old active revision continues and the UI displays both revision identities until Run/Apply succeeds.
+- **THEN** the old active source continues until Run/Apply succeeds, and Maintenance permits separate reviewed inspection of saved and active source without numeric revision trackers.
 
 #### Scenario: Invalid replacement preserves the previous run
 - **WHEN** compilation or validation of a replacement fails
@@ -69,7 +69,7 @@ The editor SHALL support native text entry/paste, visible keyboard focus, scalab
 - **THEN** the UI distinguishes red and green paths, device types and disconnected/pending status and provides names usable by the Lua API.
 
 ### Requirement: Code-first editor and focus layout
-The Editor tab SHALL contain the source, one compact action row, concise revision/run status and contextual diagnostics. Console output, peripheral inventories, full reference text and recovery lists MUST NOT occupy the normal editing surface. A reversible focus layout SHALL keep essential controls accessible while removing nonessential navigation chrome.
+The Editor tab SHALL contain the source, one compact action row, concise dirty/run status and contextual diagnostics. Saved/base/active revision trackers SHALL NOT be displayed, including in Maintenance; internal revisions, generation checks and conflict-safe review SHALL remain unchanged. Console output, peripheral inventories, full reference text and recovery lists MUST NOT occupy the normal editing surface. A reversible focus layout SHALL keep essential controls accessible while removing nonessential navigation chrome.
 
 #### Scenario: Open a normal editing session
 - **WHEN** the Editor tab opens at a supported display size
@@ -91,11 +91,12 @@ Save SHALL remain separate from activation. The UI SHALL show one contextual Run
 - **THEN** the current draft survives, a compact conflict notice offers reviewed resolution, and no automatic reload, save or activation occurs.
 
 ### Requirement: Accessible bounded supporting tabs
-Console SHALL retain bounded selectable output with a user-controlled follow mode. Peripherals SHALL use meaningful rows with explicit channel and availability. Reference SHALL expose complete existing help and examples by topic. Maintenance SHALL retain every existing recovery/reset action. Text and symbols SHALL supplement color; all essential actions SHALL remain accessible at supported GUI scales.
+Console SHALL retain bounded selectable output with a user-controlled follow mode. Peripherals SHALL use meaningful rows with explicit channel and availability. Console and Peripherals SHALL update automatically while open under existing admission bounds, without Refresh controls or numeric update/sample trackers. Hidden/closed panels SHALL NOT poll discovery; automatic updates SHALL preserve identity/selection, unchanged rows, source focus and scrolling. Reference SHALL expose complete existing help and examples by topic. Maintenance SHALL retain every existing recovery/reset action. Text and symbols SHALL supplement color; all essential actions SHALL remain accessible at supported GUI scales.
 
 #### Scenario: Review logs without scroll fighting
 - **WHEN** the player disables Console follow and new output arrives
 - **THEN** the interface does not repeatedly force the visible log position to the newest entry.
+- **AND** the single selectable text box continues receiving live output; changed text may reset native selection, unchanged text is not reassigned, and re-enabling Follow resumes tailing. Existing bounded-history eviction remains visible and cannot recover discarded bytes.
 
 #### Scenario: Recover without an accessible computer
 - **WHEN** the computer is gone or draft capacity is exhausted
@@ -135,7 +136,7 @@ In the computer's Peripherals tab, a first click on an unselected peripheral SHA
 
 #### Scenario: First click selects details
 - **WHEN** a player clicks an unselected peripheral row
-- **THEN** the Peripherals tab remains active and displays that peripheral's API name, type, discovery wire, power status and snapshot details
+- **THEN** the Peripherals tab remains active and displays that peripheral's API name, type, discovery wire and power status without snapshot metadata
 - **AND** the interface explains that another click opens documentation.
 
 #### Scenario: Repeat click opens the matching topic

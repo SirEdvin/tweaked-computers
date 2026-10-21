@@ -7,7 +7,7 @@ local configurator=require('scripts.services.configurator')
 local logic=require('scripts.services.logic')
 local monitor=require('scripts.services.monitor')
 local scheduler=require('scripts.scheduler')
-local M={version=3}
+local M={version=4}
 local kinds={kv=true,monitor=true,logic=true,configurator=true,recipe_searcher=true}
 function M.supports(kind) return kinds[kind]==true end
 function M.authorized(player,rec)

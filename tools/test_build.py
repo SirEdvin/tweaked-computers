@@ -296,6 +296,21 @@ class CanonicalContractTests(unittest.TestCase):
         # Every other historical scenario remains byte-for-byte checked below;
         # this is not a blanket name-only exception for modified requirements.
         evolved = {
+            # UI1 deliberately supersedes only numeric trackers/manual refresh
+            # and the frozen Follow-off snapshot; keep all other archive bytes.
+            ('program-editor', 'Separate drafts, saved source and active source', 'Save does not interrupt a working factory controller'):
+                ('the old active revision continues and the UI displays both revision identities until Run/Apply succeeds.',
+                 'the old active source continues until Run/Apply succeeds, and Maintenance permits separate reviewed inspection of saved and active source without numeric revision trackers.'),
+            ('program-editor', 'Select-then-open peripheral documentation', 'First click selects details'):
+                ('discovery wire, power status and snapshot details', 'discovery wire and power status without snapshot metadata'),
+            ('device-configurator', 'Complete bounded inventory refresh', 'Wire removed before refresh'):
+                ('and the player refreshes', 'and the open inspector next polls automatically'),
+            ('kv-database', 'Expiry-aware inspection snapshots', 'Program changes the viewed key'):
+                ('the old view remains explicitly a snapshot until refresh',
+                 'the next admitted automatic observation replaces the old view without manual intervention'),
+            ('computer-runtime', 'Program print uses the computer Console', 'Existing retention and failure semantics apply'):
+                ("Follow-off continues to preserve the viewer's selected output snapshot.",
+                 "Follow-off keeps output live without automatic scrolling, under the Console's accepted changed-text selection-reset and existing eviction rules."),
             ('device-lifecycle', 'Pinned engine and optional expansion', 'Base-only installation'):
                 ('without missing expansion references.', 'without missing expansion references'),
             ('peripheral-network', 'Color-preserving physical reachability', 'Vanilla relay is ignored'):

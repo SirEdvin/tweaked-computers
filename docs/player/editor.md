@@ -18,9 +18,9 @@ table-backed mocks and are not graphical-client evidence.
 
 | Tab | What to do there |
 | --- | --- |
-| **Editor** | Write your document; Validate, Save, Run / Apply and Stop in one row. See draft/saved/active revisions and a compact conflict/validation message. |
-| **Console** | Read bounded output and diagnostics, or try a live single-line Lua command with Enter / Execute. [Shell values and effects](console.md) are shared per computer, independent of the saved program. Follow-off holds the output snapshot; Refresh updates it once. |
-| **Peripherals** | Choose **Red** or **Green**, then **Refresh peripherals**. Rows show actual API name, type, icon and power. Click a row for details; click that selected row again for its Reference topic, with no double-click timer. This is a timestamped snapshot, not a live presence guarantee. |
+| **Editor** | Write your document; Validate, Save, Run / Apply and Stop in one row. See saved/unsaved status and a compact conflict/validation message. |
+| **Console** | Read bounded live output and diagnostics, or try a live single-line Lua command with Enter / Execute. [Shell values and effects](console.md) are shared per computer, independent of the saved program. Follow-off stops automatic scrolling, not arrivals; changed text may clear native selection. |
+| **Peripherals** | Choose **Red** or **Green**. Rows update automatically and show actual API name, type, icon and power. Click a row for details; click that selected row again for its Reference topic, with no double-click timer. Pending/errors remain explicit; observations are not continuous authorization. |
 | **Reference** | Search and filter the existing Lua v1 help by category and topic. **Select text**, then use native Copy. The starter can be inserted only into an empty draft. |
 | **Maintenance** | Review current/active source, resolve conflicts, review/copy/forget retained drafts, and deliberately reset a stopped computer's state. |
 
@@ -29,7 +29,7 @@ essential action row; **Exit focus** restores navigation and the previous tab.
 The same source widget stays mounted across tabs, focus toggles, status updates
 and display-size changes. Those actions do not save, run or replace your text.
 Errors may mark Console with **(!)**, but never switch tabs or grab typing focus.
-In focus mode, hover the title status for revision/action detail.
+In focus mode, hover the title status for dirty/action detail.
 
 At an effective display of at least **760 × 480 GUI units** (physical resolution
 divided by GUI scale), the window is clamped to the screen and the Editor action
@@ -41,8 +41,8 @@ restoration is not promised when explicitly replacing source.
 ## Draft, saved, active
 
 Each player has a private draft and base saved revision. The computer has committed
-saved source and a possibly different active snapshot. Editor displays these
-revisions separately; Maintenance offers source previews.
+saved source and a possibly different active snapshot. Numeric revision tracking
+stays internal for conflict checks; Maintenance offers separate source previews.
 
 | Action | Source | Execution and data |
 | --- | --- | --- |
@@ -110,7 +110,7 @@ See [lifecycle](lifecycle.md).
 ## Diagnostics and discovery
 
 `computer.log(text)` writes plain text into a ring of **64 entries / 16,384 bytes**;
-older output is discarded even when Follow is off. Refresh/resume cannot retrieve
+older output is discarded even when Follow is off. Re-enabling Follow cannot retrieve
 those discarded entries. The [live Console](console.md) evaluates bounded Lua
 lines; Reset Shell clears scratch values, not historical logs. There is no Clear command.
 
@@ -122,7 +122,7 @@ first. Program/source/help text is displayed without interpreting rich-text tags
 
 Peripherals distinguishes complete inventory, pending/refused inspection and an
 empty complete inventory. It does not turn deferred work into successful discovery.
-Refresh after wiring or power changes. A previously selected device missing from a
+The open tab polls automatically after wiring or power changes. A previously selected device missing from a
 complete refreshed path is shown as disconnected; if inspection is pending, presence
 is unknown instead. Red and green never silently mix. Use the exact displayed name
 and wire with `peripheral.wrap(name, wire)`; calls recheck live authority.
@@ -168,8 +168,9 @@ This short user-owned native-client review is not yet performed. Use the exact
   move the caret and keep an unsaved edit while visiting all tabs and toggling
   Focus. Confirm exact text, native typing focus and no surprise tab changes.
 - Validate, Save, then Run separately. Edit again while logs arrive; pause Console
-  Follow, scroll/select, switch away/back, then Refresh. Test Go to source line.
-- Wire a device on each color, inspect/select it, disconnect it, and Refresh.
+  Follow, scroll/select and switch away/back. New output stays live; selection may
+  reset on arrival. Resume Follow and test Go to source line.
+- Wire a device on each color, inspect/select it, disconnect it, and observe automatic updates.
   Try reviewed rebase/reload, cancel reset/forget, then close/reopen a dirty draft.
   Open standalone recovery after the original computer is unavailable.
 - On a powered 2×2 monitor, keep text/background/cursor changing; mark one

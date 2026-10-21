@@ -114,10 +114,10 @@ The inventory SHALL show each prototype group's red-connected count, green-conne
 - **THEN** the inventory counts only the target-side reachable entities without adding discovery devices or crossing isolated combinator roles.
 
 ### Requirement: Complete bounded inventory refresh
-The inspector SHALL identify the target inventory's snapshot tick and provide explicit refresh. Counts SHALL be published only from complete admitted target-network observations; incomplete or over-limit traversal SHALL report pending/error rather than a plausible partial total. Display rows SHALL be deterministically ordered and bounded, with all successful groups reachable by scrolling or pagination.
+The inspector SHALL update its target inventory automatically while open under existing scheduler admission, without a Refresh control or numeric snapshot tick. Counts SHALL be published only from complete admitted target-network observations; incomplete or over-limit traversal SHALL report pending/error rather than a plausible partial total. Display rows SHALL be deterministically ordered and bounded, with all successful groups reachable by scrolling or pagination.
 
 #### Scenario: Wire removed before refresh
-- **WHEN** a target loses its last qualifying connection and the player refreshes
+- **WHEN** a target loses its last qualifying connection and the open inspector next polls automatically
 - **THEN** the new complete snapshot removes it from the applicable group and color counts without changing any machine settings.
 
 #### Scenario: One wire cannot be enumerated

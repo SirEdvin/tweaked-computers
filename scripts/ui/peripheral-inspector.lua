@@ -14,8 +14,8 @@ local function text(parent,name,value)
   local e=parent.add{type='text-box',name=name,text=value or ''}
   e.read_only=true; e.word_wrap=true; e.style.rich_text_setting=defines.rich_text_setting.disabled; return e
 end
-local function label(parent,caption)
-  local e=parent.add{type='label',caption=caption}; e.style.single_line=false
+local function label(parent,caption,name)
+  local e=parent.add{type='label',name=name,caption=caption}; e.style.single_line=false
   e.style.maximal_width=650; return e
 end
 function M.close(player)
@@ -29,7 +29,10 @@ local function owned(event,closing)
   local f=frame(player); local s=model.session(player.index)
   if not f or not f.valid or not s or (not closing and player.opened~=f) then return end
   local e=event.element
-  while e and e~=f do e=e.parent end
+  while e and e~=f do
+    if not closing and (e.visible==false or e.enabled==false) then return end
+    e=e.parent
+  end
   if e~=f or f.tags.player~=player.index or f.tags.token~=s.token or f.tags.ui_version~=model.version then return end
   local ok,rec=pcall(model.current,player,s.token)
   if not ok then M.close(player); return end
@@ -70,9 +73,7 @@ function M.open(player,id)
   label(f,tr('peripheral-type',types[rec.kind]))
   local powered=lifecycle.has_power(rec)
   f.add{type='label',name='availability',caption=tr(not powered and 'unpowered' or rec.kind=='recipe_searcher' and 'available' or 'pending')}
-  local actions=f.add{type='flow',name='actions',direction='horizontal'}
-  actions.add{type='label',name='sample_tick',caption=tr('pending')}
-  actions.add{type='button',name='refresh_snapshot',caption=tr('refresh')}
+
   f.add{type='scroll-pane',name='details',horizontal_scroll_policy='auto',vertical_scroll_policy='auto'}
   -- Structure and identity never wait for expensive data-query admission.
   -- Pending content is not a fabricated empty snapshot.
@@ -84,7 +85,7 @@ local function button(parent,name,caption) return parent.add{type='button',name=
 local function page(parent,name,current,total)
   local flow=parent.add{type='flow',name=name,direction='horizontal'}
   button(flow,'previous',tr('previous')).enabled=current>1
-  label(flow,tr('page',current,math.max(1,total)))
+  label(flow,tr('page',current,math.max(1,total)),'page_label')
   button(flow,'next_page',tr('next')).enabled=current<total
 end
 local function find(entries,key,field)
@@ -101,7 +102,7 @@ local function prepare(s,spend)
     s.page=math.min(s.page,pages); view.pages=pages
     for i=(s.page-1)*8+1,math.min(s.page*8,#entries) do
       local e=entries[i]
-      view.keys[#view.keys+1]={index=i,caption=e.type..'  '..model.escape(e.key:sub(1,32),spend)..(#e.key>32 and '…' or '')}
+      view.keys[#view.keys+1]={index=i,identity=model.escape(e.key,spend),caption=e.type..'  '..model.escape(e.key:sub(1,32),spend)..(#e.key>32 and '…' or '')}
     end
     local entry=s.key~=nil and find(entries,s.key,'key') or nil
     if not entry and s.key==nil and #entries>0 then entry=entries[1]; s.key=entry.key end
@@ -113,7 +114,7 @@ local function prepare(s,spend)
         local fields=entry.fields; view.fields={}; local n=math.max(1,math.ceil(#fields/8))
         s.field_page=math.min(s.field_page,n); view.field_pages=n
         for i=(s.field_page-1)*8+1,math.min(s.field_page*8,#fields) do
-          local e=fields[i]; view.fields[#view.fields+1]={index=i,caption=model.escape(e.field:sub(1,32),spend)..(#e.field>32 and '…' or '')}
+          local e=fields[i]; view.fields[#view.fields+1]={index=i,identity=model.escape(e.field,spend),caption=model.escape(e.field:sub(1,32),spend)..(#e.field>32 and '…' or '')}
         end
         local selected=s.field~=nil and find(fields,s.field,'field') or nil
         if not selected and s.field==nil then selected=fields[1]; s.field=selected and selected.field end
@@ -125,8 +126,8 @@ local function prepare(s,spend)
       end
     end
     local parts={tostring(s.page),tostring(s.field_page),tostring(s.value_page),view.key or '',view.field or '',view.value or '',tostring(view.pages),tostring(view.field_pages),tostring(view.value_pages)}
-    for _,e in ipairs(view.keys) do parts[#parts+1]=e.caption end
-    for _,e in ipairs(view.fields or {}) do parts[#parts+1]=e.caption end
+    for _,e in ipairs(view.keys) do parts[#parts+1]=e.identity; parts[#parts+1]=e.caption end
+    for _,e in ipairs(view.fields or {}) do parts[#parts+1]=e.identity; parts[#parts+1]=e.caption end
     view.signature=table.concat(parts,'\0')
   elseif snapshot.kind=='configurator' then
     view.groups={}; view.pages=math.max(1,math.ceil(#d.groups/8)); s.page=math.min(s.page,view.pages)
@@ -153,39 +154,52 @@ local function prepare(s,spend)
   return view
 end
 local function slots(parent,wire,entries,connected,tick,err)
-  label(parent,tr(wire))
-  parent.add{type='label',name=wire..'_tick',caption=tick and tr('snapshot',tick) or tr('pending')}
-  local status
-  if err then status=label(parent,tr('signal-unavailable',err))
-  elseif not entries then status=label(parent,tr('pending'))
-  elseif #entries==0 then status=label(parent,tr(connected==false and 'disconnected' or 'no-signals')) end
-  if status then status.style.maximal_width=260 end
-  local tray=parent.add{type='scroll-pane',name=wire..'_slots',style='deep_scroll_pane',
-    horizontal_scroll_policy='never',vertical_scroll_policy='auto'}
+  local tray=parent[wire..'_slots']
+  if not tray then
+    label(parent,tr(wire))
+    label(parent,'',wire..'_status').style.maximal_width=260
+    tray=parent.add{type='scroll-pane',name=wire..'_slots',style='deep_scroll_pane',
+      horizontal_scroll_policy='never',vertical_scroll_policy='auto'}
+    tray.add{type='table',name='signal_grid',column_count=6,style='slot_table'}
+  end
+  local status=parent[wire..'_status']
+  status.visible=err~=nil or not entries or #entries==0
+  status.caption=err and tr('signal-unavailable',err) or tr(not entries and 'pending' or connected==false and 'disconnected' or 'no-signals')
   tray.style.width=260; tray.style.height=math.max(40,math.min(148,math.ceil(#(entries or {})/6)*36+4))
-  local grid=tray.add{type='table',column_count=6,style='slot_table'}
+  local grid=tray.signal_grid
   for i,e in ipairs(entries or {}) do
     local signal=e.signal
     local namespace=signal.type=='virtual' and 'virtual-signal' or signal.type
-    grid.add{type='sprite-button',name='signal_'..i,sprite=namespace..'/'..signal.name,
+    local name='signal_'..i; local slot=grid[name]; local sprite=namespace..'/'..signal.name
+    local identity=sprite..'/'..signal.quality
+    if slot and slot.tags.identity~=identity then slot.destroy(); slot=nil end
+    if not slot then slot=grid.add{type='sprite-button',name=name,sprite=sprite,
       number=e.count,quality=signal.quality,style=wire=='output' and 'compact_slot' or wire..'_circuit_network_content_slot',
-      tooltip={ '',tr(wire),'\n',signal.type,'/',signal.name,'\n',signal.quality,'\n',tostring(e.count)}}
+      tags={identity=identity},tooltip={ '',tr(wire),'\n',signal.type,'/',signal.name,'\n',signal.quality,'\n',tostring(e.count)}} end
+    slot.number=e.count
+    slot.tooltip={ '',tr(wire),'\n',signal.type,'/',signal.name,'\n',signal.quality,'\n',tostring(e.count)}
+    if slot.get_index_in_parent()~=i then grid.swap_children(slot.get_index_in_parent(),i) end
     -- Enabled only for native tooltips/backplates. The click router exposes no
     -- action for these ordinary sprite buttons; they are never signal pickers.
   end
+  local children=grid.children
+  for i=#children,#(entries or {})+1,-1 do children[i].destroy() end
 end
 draw_logic=function(p,s,d)
   p.tooltip=tr('logic-help')
-  local both=p.add{type='flow',name='logic_regions',direction=s.narrow and 'vertical' or 'horizontal'}
-  local input=both.add{type='flow',name='inputs',direction='vertical'}
-  input.style.minimal_width=280
-  label(input,tr('inputs'))
+  local both=p.logic_regions
+  if both and both.direction~=(s.narrow and 'vertical' or 'horizontal') then both.destroy(); both=nil end
+  if not both then
+    p.clear(); both=p.add{type='flow',name='logic_regions',direction=s.narrow and 'vertical' or 'horizontal'}
+    local input=both.add{type='flow',name='inputs',direction='vertical'}
+    input.style.minimal_width=280; label(input,tr('inputs'))
+    local output=both.add{type='flow',name='outputs',direction='vertical'}
+    output.style.minimal_width=280; label(output,tr('outputs'))
+  end
+  local input=both.inputs
   slots(input,'red',d.red,d.connected.red,d.red_tick,d.errors and d.errors.red)
   slots(input,'green',d.green,d.connected.green,d.green_tick,d.errors and d.errors.green)
-  local output=both.add{type='flow',name='outputs',direction='vertical'}
-  output.style.minimal_width=280
-  label(output,tr('outputs'))
-  slots(output,'output',d.output,true,d.output_tick)
+  slots(both.outputs,'output',d.output,true,d.output_tick)
 end
 draw_pending=function(f,s,rec,powered)
   local p=f.details; p.clear(); s.drawn=nil
@@ -203,51 +217,100 @@ draw_pending=function(f,s,rec,powered)
   end
   p.add{type='label',name='pending_content',caption=reason}
 end
+local function set_text(e,value) if e.text~=value then e.text=value end end
+local function update_page(p,current,total)
+  p.previous.enabled=current>1; p.next_page.enabled=current<total
+  p.page_label.caption=tr('page',current,math.max(1,total))
+end
+local function update_rows(p,prefix,entries)
+  local keep={}
+  for position,entry in ipairs(entries) do
+    local name=prefix..entry.index; local row=p[name]
+    if row and row.tags.identity~=entry.identity then row.destroy(); row=nil end
+    if not row then row=button(p,name,entry.caption); row.tags={identity=entry.identity} end
+    row.caption=entry.caption; keep[name]=true
+    if row.get_index_in_parent()~=position then p.swap_children(row.get_index_in_parent(),position) end
+  end
+  local children=p.children
+  for i=#children,1,-1 do if not keep[children[i].name] then children[i].destroy() end end
+end
+local function draw_kv(p,s,view)
+  -- Keep the native value/key widgets mounted across polling and type changes.
+  -- Only rows whose exact identity disappeared are retired; unchanged text is
+  -- never reassigned, preserving selection, focus and each native scroll bar.
+  if not p.key_rows then
+    p.clear(); p.tooltip=tr('kv-help'); label(p,tr('keys'))
+    p.add{type='flow',name='key_rows',direction='vertical'}
+    page(p,'keys_page',1,1)
+    label(p,'','selection_status')
+    label(p,tr('key'),'key_label'); text(p,'full_key','').style.height=60
+    p.add{type='flow',name='field_rows',direction='vertical'}
+    page(p,'fields_page',1,1)
+    label(p,tr('field'),'field_label'); text(p,'full_field','').style.height=60
+    label(p,tr('value'),'value_label'); text(p,'full_value','').style.height=180
+    page(p,'value_chunks',1,1)
+  end
+  update_rows(p.key_rows,'key_',view.keys); update_page(p.keys_page,s.page,view.pages)
+  update_rows(p.field_rows,'field_',view.fields or {})
+  update_page(p.fields_page,s.field_page,view.field_pages or 1)
+  update_page(p.value_chunks,s.value_page,view.value_pages or 1)
+  p.selection_status.caption=tr(s.key~=nil and 'selection-gone' or 'empty')
+  p.selection_status.visible=not view.entry or (view.fields~=nil and view.field==nil)
+  for _,name in ipairs({'key_label','full_key'}) do p[name].visible=view.entry~=nil end
+  for _,name in ipairs({'field_rows','fields_page'}) do p[name].visible=view.fields~=nil end
+  for _,name in ipairs({'field_label','full_field'}) do p[name].visible=view.field~=nil end
+  for _,name in ipairs({'value_label','full_value','value_chunks'}) do p[name].visible=view.value~=nil end
+  set_text(p.full_key,view.key or ''); set_text(p.full_field,view.field or ''); set_text(p.full_value,view.value or '')
+end
 local function draw(f,s,view)
   if s.drawn==view.signature then return end
+  if view.kind=='kv' and not view.message then
+    draw_kv(f.details,s,view); s.drawn=view.signature; return
+  end
+  if view.kind=='logic' and not view.message then
+    draw_logic(f.details,s,view.signals); s.drawn=view.signature; return
+  end
+  if view.kind=='configurator' and not view.message then
+    local p=f.details
+    if not p.groups then
+      p.clear(); p.tooltip=tr('targets-help'); label(p,tr('empty'),'empty_groups')
+      local grid=p.add{type='table',name='groups',column_count=5}
+      grid.style.horizontal_spacing=16; grid.style.vertical_spacing=12
+      for _,key in ipairs({'prototype','unique','red','green','entity-type'}) do label(grid,tr(key)) end
+      page(p,'groups_page',1,1)
+    end
+    local grid=p.groups
+    p.empty_groups.visible=#view.groups==0
+    for i,g in ipairs(view.groups) do
+      local name='group_'..i; local row=grid[name]
+      if row and row.tags.prototype~=g.prototype then row.destroy(); row=nil end
+      if not row then
+        row=grid.add{type='flow',name=name,direction='vertical',tags={prototype=g.prototype}}
+        row.add{type='sprite',sprite='entity/'..g.prototype}
+        label(row,prototypes.entity[g.prototype].localised_name); label(row,g.prototype)
+      end
+      for column,key in ipairs({'total','red','green','type'}) do
+        local cell=name..'_'..key
+        if not grid[cell] then label(grid,'',cell) end
+        grid[cell].caption=key=='type' and prototypes.entity[g.prototype].type or tostring(g[key])
+        local target=5+(i-1)*5+column+1
+        if grid[cell].get_index_in_parent()~=target then grid.swap_children(grid[cell].get_index_in_parent(),target) end
+      end
+      local target=6+(i-1)*5
+      if row.get_index_in_parent()~=target then grid.swap_children(row.get_index_in_parent(),target) end
+    end
+    local children=grid.children
+    for i=#children,6+#view.groups*5,-1 do children[i].destroy() end
+    update_page(p.groups_page,s.page,view.pages); s.drawn=view.signature; return
+  end
   local p=f.details; p.clear()
   if view.message then label(p,view.message)
-  elseif view.kind=='kv' then
-    p.tooltip=tr('kv-help')
-    label(p,tr('keys'))
-    local list=p.add{type='flow',name='key_rows',direction='vertical'}
-    for _,e in ipairs(view.keys) do button(list,'key_'..e.index,e.caption) end
-    page(p,'keys_page',s.page,view.pages)
-    if not view.entry then label(p,tr(s.key~=nil and 'selection-gone' or 'empty'))
-    else
-      label(p,tr('key')); text(p,'full_key',view.key).style.height=60
-      if view.fields then
-        local fields=p.add{type='flow',name='field_rows',direction='vertical'}
-        for _,e in ipairs(view.fields) do button(fields,'field_'..e.index,e.caption) end
-        page(p,'fields_page',s.field_page,view.field_pages)
-        if view.field then label(p,tr('field')); text(p,'full_field',view.field).style.height=60 end
-      end
-      if view.value then
-        label(p,tr('value')); text(p,'full_value',view.value).style.height=180
-        page(p,'value_chunks',s.value_page,view.value_pages)
-      else label(p,tr('selection-gone')) end
-    end
-  elseif view.kind=='configurator' then
-    p.tooltip=tr('targets-help')
-    if #view.groups==0 then label(p,tr('empty')) end
-    local grid=p.add{type='table',column_count=5}
-    grid.style.horizontal_spacing=16; grid.style.vertical_spacing=12
-    for _,key in ipairs({'prototype','unique','red','green','entity-type'}) do label(grid,tr(key)) end
-    for _,g in ipairs(view.groups) do
-      local proto=prototypes.entity[g.prototype]
-      local row=grid.add{type='flow',direction='vertical'}
-      row.add{type='sprite',sprite='entity/'..g.prototype}
-      label(row,proto.localised_name); label(row,g.prototype)
-      label(grid,tostring(g.total)); label(grid,tostring(g.red)); label(grid,tostring(g.green)); label(grid,proto.type)
-    end
-    page(p,'groups_page',s.page,view.pages)
   elseif view.kind=='monitor' then
     local g=view.geometry
     label(p,tr('tiles',g.width_tiles,g.height_tiles,g.tiles))
     label(p,tr('terminal',g.columns,g.rows)); label(p,tr('scale',g.scale))
     p.tooltip=tr('monitor-help')
-  elseif view.kind=='logic' then
-    draw_logic(p,s,view.signals)
+
   end
   s.drawn=view.signature
 end
@@ -264,7 +327,7 @@ function M.on_click(event)
     end
     f.identity.api_name.focus(); f.identity.api_name.select_all(); return
   end
-  if e==f.actions.refresh_snapshot then s.pending=true; return end
+
   -- A candidate may be admitted before its GUI construction fits the ledger.
   -- Old row indices must not select data from that not-yet-presented snapshot.
   if s.redraw then return end
@@ -312,7 +375,7 @@ function M.tick(tick)
     local player=viewers[(start+offset-1)%n+1]
     local s=model.session(player.index); local f=frame(player)
     if s then
-      if not f or not f.valid or player.opened~=f or f.tags.token~=s.token or f.tags.ui_version~=model.version then M.close(player)
+      if not f or not f.valid or f.visible==false or f.enabled==false or player.opened~=f or f.tags.token~=s.token or f.tags.ui_version~=model.version then M.close(player)
       else
         scheduler.try_maintenance(function()
           spend(128)
@@ -323,7 +386,7 @@ function M.tick(tick)
             s.snapshot=nil; s.logic_partial=nil; s.pending=true
             draw_pending(f,s,rec,powered)
           end
-          if (s.pending or rec.kind=='logic' or rec.kind=='monitor') and (not s.redraw or not s.snapshot) then
+          if not s.redraw or not s.snapshot then
             s.pending=true; f.availability.caption=tr(not powered and 'unpowered' or s.snapshot and 'pending-stale' or 'pending')
             local candidate,admitted
             local success,err=pcall(function()
@@ -347,20 +410,13 @@ function M.tick(tick)
             -- chunks; no partial query is published as a complete inventory.
             spend(12000+(view.groups and #view.groups*160 or 0))
             draw(f,s,view); s.redraw=false
-            if view.kind=='logic' and view.signals then
-              -- Tick-only changes must not rebuild slots, reset scroll or steal
-              -- selection. Each color is explicitly an independent observation.
-              local regions=f.details.logic_regions
-              regions.inputs.red_tick.caption=view.signals.red_tick and tr('snapshot',view.signals.red_tick) or tr('pending')
-              regions.inputs.green_tick.caption=view.signals.green_tick and tr('snapshot',view.signals.green_tick) or tr('pending')
-              regions.outputs.output_tick.caption=tr('snapshot',view.signals.output_tick)
-            end
+
             if f.identity.api_name.text~=s.snapshot.name then f.identity.api_name.text=s.snapshot.name end
             f.identity.select_name.enabled=true
             f.availability.caption=tr(not s.snapshot.powered and 'unpowered' or s.identity_changed and 'identity-changed' or 'available')
             if view.kind=='logic' and view.signals and (not view.signals.red_tick or not view.signals.green_tick
               or next(view.signals.errors or {})) then f.availability.caption=tr('signals-pending') end
-            f.actions.sample_tick.caption=tr('snapshot',s.snapshot.tick)
+
             local width=math.max(300,math.min(720,math.floor(player.display_resolution.width/player.display_scale)-32))
             for _,e in pairs(f.details.children) do if e.type=='text-box' then e.style.width=width-48 end end
           end

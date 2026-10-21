@@ -118,7 +118,7 @@ source separately from the saved source and unsaved player draft.
 
 ## Troubleshooting
 
-- Missing peripheral: Refresh Peripherals; inspect red and green separately.
+- Missing peripheral: open Peripherals; inspect automatic red and green observations separately.
   Check actual NETWORK ports, force/surface, power and physical same-color paths.
 - Target absent: check TARGETS color, actual isolated native connector and relay
   wires. Being visible in computer discovery does not authorize factory targets.

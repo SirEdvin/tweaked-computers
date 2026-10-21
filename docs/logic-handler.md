@@ -23,7 +23,7 @@ and [physical-devices.md](physical-devices.md) for authoring and wiring.
    box. Validate, Save, then Run. Save alone does not change the active run.
 6. The controller enables the inserter below 100 normal-quality iron plates,
    stops at/above 100, and retains stock/sample/changes/connectivity in state.
-   Refresh Peripherals shows complete, separately admitted red/green inventories.
+   Peripherals automatically shows complete, separately admitted red/green inventories.
 7. Stop the computer or disconnect its red discovery path. Its still-owned output
    clears independently of the guest handler. A newer writer's bank is untouched.
 

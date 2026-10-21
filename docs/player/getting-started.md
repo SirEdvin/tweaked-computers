@@ -215,4 +215,4 @@ For a merged monitor, connect a NETWORK wire to any member, but shared display
 geometry does not make unwired members relay each other's networks.
 
 Next: [your first controller](first-controller.md). If a device is missing, use
-[Refresh Peripherals and troubleshooting](troubleshooting.md).
+[Peripherals and troubleshooting](troubleshooting.md).

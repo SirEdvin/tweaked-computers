@@ -96,7 +96,7 @@ another explicit configuration write; read/reconnect does not enforce old settin
 
 ## Troubleshooting
 
-- Missing required peripheral: Refresh Peripherals, inspect NETWORK color, exact
+- Missing required peripheral: open Peripherals, inspect NETWORK color, exact
   ports, force/surface and power. This example faults on missing services; it is
   not an automatic reconnect manager. Repair and Run explicitly.
 - Target absent: inspect TARGETS green and actual isolated native connectors.
