@@ -5,11 +5,11 @@
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot; removal/destruction of a device is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
-   the Mod Portal, select **0.1.10 ALPHA**, enable it, and restart when prompted.
-   This version includes function programs, the live maintenance setting and
-   Service Rack artwork/research icons, retaining the direct wiring and editor.
-3. For manual installation, download `tweaked-computers_0.1.10.zip` from the
-   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.10)
+   the Mod Portal, select **0.1.11 ALPHA**, enable it, and restart when prompted.
+   This version includes inspectors, radar modems, vanilla speaker audio, guarded
+   Lua globals and contextual Reference, retaining function programs and Service Rack artwork.
+3. For manual installation, download `tweaked-computers_0.1.11.zip` from the
+   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.11)
    and place it in your Factorio
    user-data `mods` directory without unpacking it. Remove conflicting duplicate
    versions, enable the mod, and restart. The ZIP's internal folder must match its
@@ -24,8 +24,9 @@ Artwork and live charts have isolated software-rendered base/Space Age checks;
 the Console has native workflow checks in both modes and real base two-client
 late-join/cold-server checks. Recipe Searcher appearance and Ctrl-click transfer,
 held-modifier and monitor-touch checks cover both native clients; connected recipe
-query checks cover base. Space Age connected joining, exhaustive native wire
-selection and audible playback remain unverified.
+query checks cover base. The new campaign adds native inspector/Reference and
+independently recorded speaker audio checks, plus actual two-client fresh/cold
+radar/speaker/inspector cases in both modes, not exhaustive multiplayer certification.
 Read the [alpha warning](index.md#alpha-warning). Keep backups before upgrades;
 unknown saved formats are retained for recovery, not automatically reset.
 Version 0.1.5 adds automatic buffered monitors, all complete rectangles up to
@@ -65,6 +66,24 @@ fault diagnostics no longer overwrite each other's run/revision identity.
 Keep the pre-upgrade save and matching 0.1.9 ZIP; do not downgrade a save after
 adopting declaration-form source. This release does not add a new connected
 multiplayer or hardware-performance certification.
+
+Version 0.1.11 adds [read-only peripheral inspectors](inspectors.md),
+[radar modems](api/modem.md), [vanilla speaker audio](api/speaker.md) and
+[guarded Lua helpers](api/language.md#printing-raw-helpers-and-error-transformation).
+Both native carriers retain their original GUI, circuits and mining result;
+hidden radar radio links never grant discovery authority, and hearing sound never
+grants speaker control. The optional interplanetary radar has separate Space Age research.
+
+New built-ins reserve only top-level function declaration names, not ordinary
+locals/parameters, legacy handler keys or nested scratch fields. An older colliding
+active declaration faults at synchronized reconstruction while preserving exact
+source/state; rename the declaration and explicitly Save/Run. An older colliding
+Console root returns named `E_UNSUPPORTED` before effects and keeps its graph.
+Confirmed **Reset Shell discards all scratch values**, not just the colliding name;
+it does not erase saved source, application state or old logs. Inspect/copy needed
+data from a pre-upgrade backup first. Do not use Maintenance Reset State as a
+substitute. Keep the pre-upgrade save and matching 0.1.10 ZIP for rollback rather
+than downgrading the upgraded save in place.
 
 ## Research and craft
 
@@ -164,9 +183,10 @@ but its native combinator configuration remains deliberately unavailable.
 Each role has separate red and green connectors. There are **no internal wires**
 between roles. Cable color and role-marker color are unrelated.
 
-- NETWORK: computer discovery through mod-owned NETWORK ports only. Computers
-  relay it but are not callable peripherals. Vanilla poles/machines do not relay
-  discovery. Ports do not emit a computer-message signal protocol.
+- NETWORK: computer discovery through mod-owned NETWORK ports and the exact
+  supported native radar/speaker sockets. Computers relay it but are not callable
+  peripherals. Vanilla poles and other machines do not relay discovery; hidden
+  radar radio links never grant it. Ports do not emit a computer-message signal protocol.
 - INPUT: read native factory circuit signals through a logic handler.
 - OUTPUT: the logic handler's one programmed bank contributes equally to red and
   green. External contributions on each color can still differ.

@@ -8,12 +8,19 @@ Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. No interpreter,
 OS, gameplay filesystem or dynamic guest loader is shipped; there is no command history.
 
-Version **0.1.10 ALPHA** adds [plain function programs](docs/player/api/language.md),
+Version **0.1.11 ALPHA** adds [peripheral inspectors](docs/player/inspectors.md),
+[radar modems](docs/player/api/modem.md), bounded [vanilla speaker audio](docs/player/api/speaker.md),
+[guarded Lua globals](docs/player/api/language.md#printing-raw-helpers-and-error-transformation)
+and a reorganized contextual in-game Reference. See [0.1.11 release notes](docs/release-0.1.11.md),
+including the narrow reserved-name recovery and destructive Reset Shell warning.
+All five feature specifications are finalized and archived on main.
+
+Version 0.1.10 added [plain function programs](docs/player/api/language.md),
 the [live maintenance setting](docs/player/api/limits.md#maintenance-and-shared-headroom),
 independent fault diagnostics and the selected [Service Rack six-device artwork](docs/player/artwork.md),
 including both research icons. The maintenance default stays **200000**;
 the benchmark's provisional 300000 recommendation is not adopted.
-See [0.1.10 release notes](docs/release-0.1.10.md). Legacy programs remain supported.
+See [historical 0.1.10 release notes](docs/release-0.1.10.md). Legacy programs remain supported.
 
 Version 0.1.9 added the separately researched
 [Recipe Searcher](docs/player/api/recipe-searcher.md): a powered 1×1 read-only
@@ -35,8 +42,10 @@ checks with software rendering. Console input/workflows have native-client check
 in both modes and actual base two-client late-join/cold-server acceptance.
 Recipe Searcher appearance and Ctrl-click transfers/modifier reuse/monitor touch
 have native checks in both modes; recipe queries also have actual base two-client
-late-join/cold-server checks. Space Age connected joining, exhaustive native wire
-selection and audible playback remain unverified. Full-world
+late-join/cold-server checks. The five-feature campaign adds native inspector/Reference,
+radar and independently recorded speaker audio checks, plus actual two-client fresh/cold
+cases in base and Space Age. These finite receipts do not certify every platform,
+wire topology, third-party mod or simultaneous maximum-world workload. Full-world
 performance limits are provisional; software rendering is not a GPU benchmark.
 Install from the [Factorio Mod Portal](https://mods.factorio.com/mod/tweaked-computers)
 and follow the guide above. Report problems with engine/mod versions, wiring,
@@ -56,16 +65,16 @@ earlier workload separately; current matched results accompany the release.
 Version 0.1.8 retains those monitor/live-budget features and adds bounded Console
 commands with live effects, shared save-backed values and confirmed reset, but no
 retained user functions or command history. See the [release notes](docs/console-shell-release.md).
-The release source is [alpha-0.1.10](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.10);
+The release source is [alpha-0.1.11](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.11);
 [0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development
 
-The active `add-radar-modems` candidate adds [locally wired native radar modems](docs/player/api/modem.md)
+The finalized radar integration provides [locally wired native radar modems](docs/player/api/modem.md)
 and an optional Space Age interplanetary tier. Native hidden radio links do not
 grant discovery authority; the seven-method API has bounded channel datagrams.
-This is unreleased candidate functionality, not a change to immutable 0.1.10.
-The active `add-speaker-peripheral` candidate exposes the unmodified vanilla
+This ships in 0.1.11, without changing immutable 0.1.10.
+The finalized speaker integration exposes the unmodified vanilla
 programmable speaker as a [physically wired speaker peripheral](docs/player/api/speaker.md).
 Its six methods provide installed catalogues and bounded, synchronous positional
 notes/effects. It adds no replacement entity, playback queue or completion event;
@@ -78,17 +87,16 @@ Build an installable archive outside the checkout:
 Use a fresh output directory for the packaged official-engine integration smoke:
 
     python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
-      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.10.zip \
+      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.11.zip \
       --output /absolute/path/to/new-smoke-directory \
       --fixture tests.integration_engine --production-context --cold
 
 The harness exercises base and Space Age; cold phases use isolated localhost-only
 servers and acknowledged console shutdown. It never launches a graphical client.
 Current source/API contracts live in `openspec/specs/` and `openspec/api/`.
-The six completed changes retain their planning history under
-`openspec/changes/archive/2026-10-{19,20}-*/`. The active radar and speaker candidates
-package their explicitly selected feature contracts without archiving or
-bulk-synchronizing the unrelated planning changes.
+All eleven completed changes retain their planning history under
+`openspec/changes/archive/2026-10-{19,20,21}-*/`. All five new feature contracts and
+their complete API companions are canonical and packaged without active-change dependencies.
 The monitor buffering companion documents automatic snapshots, every
 1..6-by-1..6 rectangle and optional selected-group publication.
 [Consolidated acceptance](docs/sc4-final-acceptance.md) binds automated native,

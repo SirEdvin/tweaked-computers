@@ -1,4 +1,20 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.11
+Date: 2026-10-21
+  Features:
+    - Add read-only native inspectors for KV, monitor, logic, Configurator and Recipe Searcher, with copied names, bounded refresh and dirty editor draft preservation.
+    - Adopt physically wired vanilla radar modems with bounded same-force channel datagrams; add a separately researched Space Age interplanetary radar tier. Native hidden links never grant peripheral authority.
+    - Add guarded print, rawget/rawset/rawlen/rawequal, xpcall, unpack and _VERSION to saved programs and Console without widening host access or persistent Data.
+    - Adopt the unmodified vanilla programmable speaker for bounded positional notes/effects and paginated sound catalogues. No audio queue, streaming, completion event or cancellation of submitted samples.
+    - Reorganize in-game Reference into common APIs, peripheral discovery and seven complete peripheral kinds, with contextual navigation and matching player/API examples.
+  Bugfixes:
+    - Admit immediate guarded return tuples before irreversible effects, bound full-capacity inspector ordering and account native radar/speaker removal within registry-sized maintenance.
+  Info:
+    - ALPHA: back up saves and matching ZIPs. Factorio 2.0.77 base and optional Space Age; API 1, compiler 2 and storage 1 remain unchanged. Production safety ceilings are not raised.
+    - Newly reserved top-level function names require explicit rename/Save/Run after a retained-source reconstruction fault. Colliding Console roots remain intact with named E_UNSUPPORTED; confirmed Reset Shell discards all scratch values, not saved source/application state/logs.
+    - Native radar/speaker GUI, circuits, settings and mining remain vanilla. Speaker true means engine submission, not audible acknowledgement; hearing grants no control rights.
+    - All five feature contracts are canonical and archived. Native UI/audio and connected two-client fresh/cold cases cover base and Space Age within recorded scope, not exhaustive compatibility or GPU FPS certification.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.10
 Date: 2026-10-20
   Features:
