@@ -7,6 +7,15 @@ function M.new(context, services, shell, durable)
   local G = {shell_enabled=shell~=nil,continuation_enabled=durable~=nil}
   local poison, line, column, depth = nil, 1, 1, 0
   local owned = durable and durable.owned or setmetatable({}, {__mode='k'})
+  local function own(t)
+    if durable then
+      local keys={}
+      for k in pairs(t) do G.host_work(1,1); keys[#keys+1]=k end
+      if not owned[t] then durable.owned_order[#durable.owned_order+1]=t end
+      owned[t]={keys=keys}
+    else owned[t]=true end
+    return t
+  end
   local protected = setmetatable({}, {__mode='k'})
   local callable = setmetatable({}, {__mode='k'})
   local handle_arguments = setmetatable({}, {__mode='k'}) -- Host-only opt-in, not Data.
@@ -207,6 +216,19 @@ function M.new(context, services, shell, durable)
     for i=1,actual do G.scalar(values[i]) end
     return values
   end
+  local function changed_keys(t,updates)
+    local old=owned[t].keys
+    G.host_work(#old+#updates+1,#old+#updates+1)
+    local present,keys={},{}
+    for _,k in ipairs(old) do present[k]=true end
+    for _,update in ipairs(updates) do present[update[1]]=update[2] end
+    for _,k in ipairs(old) do if present[k] then keys[#keys+1]=k; present[k]=false end end
+    for _,update in ipairs(updates) do
+      local k=update[1]
+      if present[k] then keys[#keys+1]=k; present[k]=false end
+    end
+    return keys
+  end
   function G.assignment_check(n,targets,values)
     G.spend(n*3+1); allocate(n)
     local staged={}
@@ -217,14 +239,19 @@ function M.new(context, services, shell, durable)
       if pair then
         local t,k,v=pair[1],pair[2],values[i]
         plain(t); key(k)
-        if not staged[t] then staged[t]={count=inventory(t),keys={}} end
+        if not staged[t] then staged[t]={count=inventory(t),keys={},updates={}} end
         local state=staged[t]
         local present=state.keys[k]
         if present==nil then present=t[k]~=nil end
         if (v~=nil)~=present then state.count=state.count+(v~=nil and 1 or -1) end
         state.keys[k]=v~=nil
+        if durable then state.updates[#state.updates+1]={k,v~=nil} end
         if state.count>limits.table_entries then errors.raise('E_LIMIT','table growth exceeded') end
       end
+    end
+    if durable then
+      for t,state in pairs(staged) do state.next_keys=changed_keys(t,state.updates) end
+      for t,state in pairs(staged) do owned[t].keys=state.next_keys end
     end
     -- Publication is statically emitted native writes after complete preflight.
   end
@@ -236,11 +263,12 @@ function M.new(context, services, shell, durable)
     depth=depth-1
     G.check()
     if not ok then error(t,0) end
-    owned[t]=true
+    own(t)
     inventory(t)
     for k,v in pairs(t) do key(k); G.scalar(v) end
     return t
   end
+  function G.reindex(t) plain(t); own(t) end
   function G.length(v)
     G.spend(1)
     if type(v)=='string' then string_value(v); return #v end
@@ -286,7 +314,7 @@ function M.new(context, services, shell, durable)
       kind=kt; t[k]=copy(x,seen,level+1,stats)
     end
     if kind=='number' and max~=count then fail('Data array must be dense') end
-    seen[v]=nil; owned[t]=true
+    seen[v]=nil; own(t)
     return t
   end
   function G.snapshot(v)
@@ -431,8 +459,8 @@ function M.new(context, services, shell, durable)
     plain(t); G.scalar(v)
     local targets=G.assignment_targets(1); targets[1]={t,k}
     local values=G.assignment_values(1,v)
-    G.assignment_check(1,targets,values)
     prepare_return(env.rawset,t)
+    G.assignment_check(1,targets,values)
     rawset(t,k,v)
     return t
   end
@@ -561,7 +589,7 @@ function M.new(context, services, shell, durable)
     for i=1,n do G.spend(1); if t[i]==nil then fail('dense sequence required') end end
     return n
   end
-  tab.pack=function(...) local n=select('#',...); integer(n,0,limits.tuple_entries); G.spend(n+1); allocate(n+1); local t=table.pack(...); owned[t]=true; return t end
+  tab.pack=function(...) local n=select('#',...); integer(n,0,limits.tuple_entries); G.spend(n+1); allocate(n+1); return own(table.pack(...)) end
   tab.unpack=function(t,i,j)
     plain(t); inventory(t)
     if i==nil then i=1 end; if j==nil then j=#t end
@@ -584,7 +612,9 @@ function M.new(context, services, shell, durable)
     integer(pos,1,n+1); G.scalar(value)
     if n>=limits.table_entries then errors.raise('E_LIMIT','table full') end
     G.spend(n-pos+3); allocate(1)
+    local keys=durable and changed_keys(t,{{n+1,pos<=n or value~=nil},{pos,value~=nil}})
     table.insert(t,pos,value)
+    if keys then owned[t].keys=keys end
   end
   tab.remove=function(t,pos)
     local n=dense(t); if pos==nil then pos=n end; integer(pos,0,n+1)
@@ -593,9 +623,11 @@ function M.new(context, services, shell, durable)
     -- Factorio's host helper need not have stock Lua 5.2 return arity. Publish
     -- the bounded sequence shift directly and always return one value, nil
     -- included, as Lua 5.2.4 ltablib.c does for empty/past-end removal.
+    local keys=durable and changed_keys(t,{{math.max(pos,n),false}})
     local removed=t[pos]
     for i=pos,n-1 do t[i]=t[i+1] end
     t[math.max(pos,n)]=nil
+    if keys then owned[t].keys=keys end
     return removed
   end
   tab.sort=function(t,less)
@@ -614,7 +646,13 @@ function M.new(context, services, shell, durable)
     G.spend(n)
     for i=1,n do if t[i]==nil then count=count+1 end end
     if count>limits.table_entries then errors.raise('E_LIMIT','sort publication exceeds table capacity') end
+    local keys
+    if durable then
+      local updates={}; for i=1,n do updates[i]={i,true} end
+      keys=changed_keys(t,updates)
+    end
     for i=1,n do t[i]=staged[i] end
+    if keys then owned[t].keys=keys end
   end
   env.math=G.namespace(mathlib,'math function')
   env.string=G.namespace(str,'string function')

@@ -144,6 +144,7 @@ function M.decode(graph,guard)
         end
         values[i][k]=value(entry.value)
       end
+      guard.reindex(values[i])
     end
   end
   return values[1]

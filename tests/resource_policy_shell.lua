@@ -35,11 +35,14 @@ function M.run()
   end
   assert(before==1 and after==1,'command effect replayed')
   for _,case in ipairs({{source='nil',count=1},{source='false',count=1},
+    {source='false,nil,3',count=3},
     {source='print("one")',count=0},{source='computer.setState("void",true)',count=0}}) do
     local state={}; local passed,diagnostic=shell.evaluate(rec,case.source,tick,4,state)
     assert(passed,diagnostic and diagnostic.message)
     assert(state.result and state.result.n==case.count,'expression result arity changed')
     tick=tick+1
   end
+  local passed,diagnostic=shell.evaluate(rec,'a,b,c=1,nil,false; a,b=b,a; a,a=4,5; assert(a==4 and b==1 and c==false); a,b,c=nil,nil,nil',tick,5,{})
+  assert(passed,diagnostic and diagnostic.message)
 end
 return M
