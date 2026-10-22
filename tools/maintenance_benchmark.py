@@ -36,6 +36,14 @@ def distribution(values):
             'max': max(values), 'min': min(values)}
 
 
+def complete_profiles(profiles, inventories, ticks):
+    if len(inventories) != 1:
+        return False
+    names = inventories[0]
+    return (len(names) == len(set(names)) and set(names) == set(profiles)
+            and all(len(samples) == ticks for samples in profiles.values()))
+
+
 def extract(folder, ticks, profile):
     paths = list((folder / 'engine').glob('*/cold-second-engine.log'))
     text = paths[0].read_text() if len(paths) == 1 else ''
@@ -66,7 +74,7 @@ def extract(folder, ticks, profile):
                   and len(records.get('DONE', [])) == 1 and len(records.get('CLEANUP', [])) == 1
                   and len(shutdown) == 2 and all(p['passed'] for p in shutdown)
                   and len(profiles.get('scheduler', {})) == ticks
-                  and (not profile or len(profiles) == 15 and all(len(v) == ticks for v in profiles.values())))
+                  and (not profile or complete_profiles(profiles, records.get('PHASES', []), ticks)))
     result = {'structural_pass': structural, 'sample_count': len(samples),
               'functional_pass': structural and all(r['faults'] == 0 for r in samples),
               'cpu_ms': {key: distribution(list(values.values())) for key, values in profiles.items()},

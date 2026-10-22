@@ -3,7 +3,7 @@
 import copy
 import unittest
 
-from maintenance_benchmark import distribution
+from maintenance_benchmark import complete_profiles, distribution
 from maintenance_benchmark_summary import canonical_records, idle_window_equivalent
 
 
@@ -21,6 +21,18 @@ def idle(start):
 
 
 class CountedBenchmarkTests(unittest.TestCase):
+    def test_profiles_match_registered_inventory(self):
+        names = ['scheduler', 'dispatch', 'advance_timers', 'render/extra']
+        samples = {name: {1: 0.1, 2: 0.2} for name in names}
+        self.assertTrue(complete_profiles(samples, [names], 2))
+        self.assertFalse(complete_profiles(samples, [], 2))
+        self.assertFalse(complete_profiles(samples, [names, names], 2))
+        self.assertFalse(complete_profiles(samples, [names + ['render/extra']], 2))
+        self.assertFalse(complete_profiles(samples, [names[:-1]], 2))
+        self.assertFalse(complete_profiles({**samples, 'unknown': {1: .1, 2: .2}}, [names], 2))
+        samples['dispatch'].pop(2)
+        self.assertFalse(complete_profiles(samples, [names], 2))
+
     def test_nearest_rank_and_empty(self):
         self.assertEqual(distribution([]), {'count': 0})
         self.assertEqual(distribution(list(range(1, 101)))['p95'], 95)
