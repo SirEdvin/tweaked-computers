@@ -76,7 +76,9 @@ function M.save(id,source,expected_revision)
 end
 function M.validate(id,tick)
   local rec=registry.computer(id)
-  return compiler.compile(rec.saved_source,M.context(rec,tick))
+  local plan,diagnostic=compiler.prepare(rec.saved_source,M.context(rec,tick))
+  if not plan then return nil,diagnostic end
+  return plan
 end
 function M.activate(id,tick,expected_revision)
   local r=root(); local rec=registry.computer(id)

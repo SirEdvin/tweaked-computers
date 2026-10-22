@@ -81,7 +81,7 @@ end
 function M.action(player,token,action,tick,arg)
   local rec,d,s,b=M.current(player,token)
   if action=='validate' then
-    local plan,e=compiler.compile(d.source,runtime.context(rec,tick))
+    local plan,e=compiler.prepare(d.source,runtime.context(rec,tick))
     s.validation={revision=d.base_revision,kind='draft',diagnostic=e}
     if not plan then return nil,e end
     return 'Draft valid; Save before Run/Apply.'

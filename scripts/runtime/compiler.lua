@@ -395,41 +395,54 @@ function M.compile(source, context, mode)
   return plan
 end
 
+function M.prepare(source,context,mode)
+  local executable,diagnostic=M.compile(source,context,mode)
+  if not executable then return nil,diagnostic end
+  local cache_key=(mode or 'program')..'\0'..source
+  local retained=cache[cache_key]
+  local lowering=retained and retained.continuation
+  local charges=not lowering and {} or nil
+  parsing.begin(context,charges)
+  local ok,generated=pcall(function()
+    if lowering then
+      if not admission.replay_compile(context,lowering.charges) then errors.raise('E_BUDGET','source compilation work exhausted') end
+      return lowering.generated
+    end
+    local main,diagnostics
+    if mode=='shell' then
+      main,diagnostics=parse('return '..source,'@computer')
+      if #diagnostics>0 then main,diagnostics=parse(source,'@computer') end
+    else main,diagnostics=parse(source,'@computer') end
+    if #diagnostics>0 then reject(main,'invalid continuation source') end
+    local output=continuation.lower(main,reject,position,mode)
+    parsing.enter(#output)
+    return output
+  end)
+  parsing.finish()
+  if not ok then return nil,type(generated)=='table' and generated or errors.new('E_PROGRAM',tostring(generated)) end
+  local loaded,factory,problem=pcall(load,generated,'@continuation','t',{})
+  if not loaded or not factory then
+    local message=loaded and problem or factory
+    local e=errors.new('E_PROGRAM','generated continuation: '..(type(message)=='string' and message:gsub('continuation:%d+: ','') or 'native compilation refused'))
+    e.line=1; e.column=1
+    return nil,e
+  end
+  if retained and charges and not charges.overflow then
+    retain(cache_key,{plan=retained.plan,charges=retained.charges,
+      continuation={generated=generated,charges=charges},bytes=retained.bytes+#generated+proof_bytes(charges)+64})
+  end
+  return executable,nil,factory
+end
+
 function M.run(plan, name, event, services, context, checkpoint, shell)
   if type(plan) ~= 'table' or (plan.mode~=nil and not (plan.mode=='shell' and checkpoint)) or plan.compiler_version ~= limits.compiler_version or plan.api_version ~= 1 then
     return false,errors.new('E_PROGRAM','unsupported compiler/API version; source retained')
   end
   if checkpoint then
     if checkpoint.wait_tick==context.tick then return false,nil,'wait' end
-    local executable,diagnostic=M.compile(plan.source,context,plan.mode)
+    local executable,diagnostic,factory=M.prepare(plan.source,context,plan.mode)
     if not executable then return false,diagnostic end
-    local cache_key=(plan.mode or 'program')..'\0'..plan.source
-    local retained=cache[cache_key]
-    local lowering=retained and retained.continuation
-    local charges=not lowering and {} or nil
-    parsing.begin(context,charges)
-    local ok,generated=pcall(function()
-      if lowering then
-        if not admission.replay_compile(context,lowering.charges) then errors.raise('E_BUDGET','source compilation work exhausted') end
-        return lowering.generated
-      end
-      local main,diagnostics
-      if plan.mode=='shell' then
-        main,diagnostics=parse('return '..plan.source,'@computer')
-        if #diagnostics>0 then main,diagnostics=parse(plan.source,'@computer') end
-      else main,diagnostics=parse(plan.source,'@computer') end
-      if #diagnostics>0 then reject(main,'invalid continuation source') end
-      local output=continuation.lower(main,reject,position,plan.mode)
-      parsing.enter(#output)
-      return output
-    end)
-    parsing.finish()
-    if not ok then return false,type(generated)=='table' and generated or errors.new('E_PROGRAM',tostring(generated)) end
-    if retained and charges and not charges.overflow then
-      retain(cache_key,{plan=retained.plan,charges=retained.charges,
-        continuation={generated=generated,charges=charges},bytes=retained.bytes+#generated+proof_bytes(charges)+64})
-    end
-    return continuation.run(plan.source,generated,name,event,services,context,checkpoint,shell)
+    return continuation.run(executable.source,factory,name,event,services,context,checkpoint,shell)
   end
   -- Revalidate or replay the private exact-source proof every dispatch, retaining
   -- identical cold/warm credits. Saved/caller-generated text is never executed.

@@ -161,6 +161,12 @@ Evidence: `resume-heap-boundary-01/`. An actual pinned-engine red fixture found 
 
 This is an explicit **temporary backend coverage limitation**, not satisfaction or reduction of task 4.1's callable/closure heap contract. Complete symbolic container encoding remains required before broad language acceptance. The historical direct runtime still accepts its prior cases; production does not silently fall back to it. The new fixture verifies both source forms, native direct compatibility, rejection with a plain checkpoint, safe symbolic function/namespace locals across suspension, and a real separate-process cold resume with once-only prepared completion and unchanged load state. No production memory setting or full-resource gate is inferred.
 
+## Candidate executability checkpoint
+
+Evidence: `resume-activation-01/`. A pinned-engine red fixture showed that a front-end-valid program unsupported by the early continuation lowerer could retire the accepted active generation before failing on first dispatch. Compiler preparation is now shared by draft validation, saved-source activation and durable dispatch: it verifies lowering and native syntax without executing a handler. The ephemeral prepared factory goes directly to the evaluator, never into storage or caller-controlled plan fields, so this introduces neither a second native compilation per dispatch nor a native execution fallback. Cache proofs and their charges remain exact-source-derived.
+
+The focused native fixture verifies that rejected constructor/local-function/function-expression candidates preserve the active source, generation, FIFO event object/bytes, timers, subscriptions, state and spent credits. The editor-model path (mock player, **not actual GUI acceptance**) rejects the same drafts while retaining their text; successful validation keeps diagnostics plain and does not execute its candidate. These are pre-publication safety checks for the incomplete backend, not acceptance of the still-required syntax or incremental compiler jobs. Task 4.4 remains unchecked.
+
 ## Still required
 
 The source-site disposition audit is not complete. Settings/resources, recoverable capacity handling, non-lossy settings decreases, all language/library/service continuations, event diagnostics, native inventories/UI, complete migration and engine matrix, actual rendering/audio and connected multiplayer remain mandatory. No production budget increase or weaker test gate is authorized by this checkpoint.

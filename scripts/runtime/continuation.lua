@@ -269,7 +269,7 @@ function M.lower(main,reject,position,mode)
   return 'return {blocks={'..table.concat(blocks,',\n')..'},cleanup={'..table.concat(cleanups,',')..'},entries={'..table.concat(entries,',')..'},slots='..slots..',locals='..local_count..'}'
 end
 
-function M.run(source,generated,name,event,services,context,checkpoint,shell)
+function M.run(source,factory,name,event,services,context,checkpoint,shell)
   if checkpoint.version~=nil and (checkpoint.version~=M.version or checkpoint.source~=source or checkpoint.handler~=name) then
     return false,errors.new('E_UNSUPPORTED','continuation identity/ABI mismatch; retained')
   end
@@ -280,8 +280,7 @@ function M.run(source,generated,name,event,services,context,checkpoint,shell)
     or checkpoint.version~=nil and memory_owner and checkpoint.memory_owner~=memory_owner.id then
     return false,errors.new('E_UNSUPPORTED','continuation memory owner mismatch; retained')
   end
-  local factory,problem=load(generated,'@continuation','t',{})
-  if not factory then return false,errors.new('E_PROGRAM',problem) end
+  if type(factory)~='function' then return false,errors.new('E_PROGRAM','unprepared continuation; source retained') end
   local executable=factory()
   if checkpoint.version==nil then
     if not executable.entries[name] then return false,errors.new('E_NOT_FOUND','handler not declared') end
