@@ -15,10 +15,11 @@ local function root() local r=registry.get(); if not registry.supported(r) then 
 local function arity(n,min,max) if n<min or n>(max or min) then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end end
 local function count(t) local n=0; for _ in pairs(t) do n=n+1 end; return n end
 function M.context(rec,tick) return admission.context(root().ledger,rec.id,tick) end
-function M.log(rec,text,tick,spend)
+function M.log(rec,text,tick,spend,prepare)
   if type(text)~='string' then errors.raise('E_ARGUMENT','log requires a string') end
   if #text>limits.console_bytes then errors.raise('E_LIMIT','log entry too large') end
   if spend then spend(#text+(#rec.logs)^2+1) end
+  if prepare then prepare() end
   while #rec.logs>=limits.console_entries or rec.log_bytes+#text>limits.console_bytes do
     local old=table.remove(rec.logs,1); rec.log_bytes=rec.log_bytes-#old.text
     rec.log_truncated=true
@@ -219,7 +220,8 @@ function M.services(rec,tick,guard,execution)
   method('getLabel',0,0,function() return rec.label end)
   method('setLabel',0,1,function(label)
     if label~=nil and (type(label)~='string' or #label>limits.identifier_bytes) then errors.raise('E_ARGUMENT','bounded label or nil required') end
-    spend(label and #label+1 or 1); rec.label=label
+    spend(label and #label+1 or 1)
+    guard.prepare_empty_result(); rec.label=label
   end)
   method('getTick',0,0,function() return tick end)
   method('getLimits',0,0,function() return (data.copy(limits,spend)) end)
@@ -235,17 +237,19 @@ function M.services(rec,tick,guard,execution)
     local entries=rec.state_entries+(rec.state[key]==nil and 1 or 0)
     local nodes=rec.state_nodes-(rec.state_node_sizes[key] or 0)+stats.nodes
     if entries>limits.state_entries or rec.state_bytes-old+size>limits.state_bytes or nodes>limits.data_nodes then errors.raise('E_CAPACITY','state capacity exceeded') end
+    guard.prepare_empty_result()
     rec.state[key]=copied; rec.state_sizes[key]=size; rec.state_entries=entries; rec.state_bytes=rec.state_bytes-old+size
     rec.state_nodes=nodes; rec.state_node_sizes[key]=stats.nodes
   end)
   method('deleteState',1,1,function(key)
     data.key(key); spend(#key+1)
+    guard.prepare_result(rec.state[key]~=nil)
     if rec.state[key]==nil then return false end
     rec.state[key]=nil; rec.state_bytes=rec.state_bytes-rec.state_sizes[key]; rec.state_sizes[key]=nil; rec.state_entries=rec.state_entries-1
     rec.state_nodes=rec.state_nodes-rec.state_node_sizes[key]; rec.state_node_sizes[key]=nil
     return true
   end)
-  method('log',1,1,function(text) M.log(rec,text,tick,spend) end)
+  method('log',1,1,function(text) M.log(rec,text,tick,spend,guard.prepare_empty_result) end)
   method('on',2,2,function(event_name,handler_name)
     if not general[event_name] then errors.raise('E_ARGUMENT','unsupported general event name') end
     return M.subscribe(rec,event_name,handler_name,nil,spend)

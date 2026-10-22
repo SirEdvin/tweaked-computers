@@ -70,7 +70,43 @@ local function scalar_result(kind,value,available,refuse)
   else assert(entered==0,'scalar result refusal happened after publication') end
   return result[1],ctx.machine.work-(limits.callback_work-available)
 end
+local function direct_effect(kind,available,refuse)
+  local ctx=admission.context(admission.new(),'direct-effect-result',0)
+  local printed=0
+  local g=sandbox.new(ctx,{}, {output=function() printed=printed+1 end})
+  g.initialize()
+  local value=g.new(0,function() return {} end)
+  local fn=g.global(kind)
+  local checkpoint={}
+  local function tuple(v)
+    local result={n=v.n}; for i=1,v.n do result[i]=v[i] end; return result
+  end
+  g.call_checkpoint(checkpoint,{
+    encode=function(v) assert(printed==0 and value.key==nil,'direct result encoded after mutation'); return tuple(v) end,
+    decode=tuple,prepare=function(v)
+      assert(printed==0 and value.key==nil,'direct result prepared after mutation')
+      if refuse then error('test-only direct result storage refusal',0) end
+      local called={n=v.n+1,true}; for i=1,v.n do called[i+1]=v[i] end
+      return {called=called,values=tuple(v)}
+    end,
+  })
+  ctx.machine.work=limits.callback_work-available
+  local result
+  if kind=='print' then result=table.pack(pcall(g.call,fn,'text'))
+  else result=table.pack(pcall(g.call,fn,value,'key',false)) end
+  if result[1] then
+    assert(kind=='print' and printed==1 and result.n==1 or kind=='rawset' and value.key==false and result.n==2 and result[2]==value)
+    assert(checkpoint.call_result==checkpoint.prepared.called)
+  else assert(printed==0 and value.key==nil,'direct effect preceded return admission') end
+  return result[1],ctx.machine.work-(limits.callback_work-available)
+end
 function M.run()
+  for _,kind in ipairs({'print','rawset'}) do
+    local ok,cost=direct_effect(kind,limits.callback_work); assert(ok)
+    for available=0,cost-1 do assert(not direct_effect(kind,available)) end
+    assert(not direct_effect(kind,limits.callback_work,true))
+  end
+  log('TC_CONTRACT direct-print-and-rawset-admit-durable-returns-before-effect')
   for _,case in ipairs({{'empty'},{'boolean',false},{'boolean',true}}) do
     local ok,cost=scalar_result(case[1],case[2],limits.callback_work)
     assert(ok)
@@ -198,6 +234,31 @@ function M.run()
     assert(db.database~=before,'accepted native KV mutation did not publish')
   end
   log('TC_CONTRACT native-KV-result-refusal-preserves-original-before-every-mutator')
+  local function computer_method(name) return g.get(g.global('computer'),name) end
+  for _,case in ipairs({{'setState',{'before','new'}},{'deleteState',{'before'},true},
+    {'deleteState',{'absent'},false},{'setLabel',{'new label'}},{'log',{'new log'}}}) do
+    g.call(computer_method('setState'),'before','old')
+    if case[1]=='log' then
+      for _=1,limits.console_entries do runtime.log(computer,'retained',game.tick) end
+    end
+    local before={label=computer.label,state=computer.state.before,bytes=computer.state_bytes,
+      nodes=computer.state_nodes,entries=computer.state_entries,size=computer.state_sizes.before,
+      logs=#computer.logs,log_bytes=computer.log_bytes,first_log=computer.logs[1],truncated=computer.log_truncated}
+    local empty,prepare=g.prepare_empty_result,g.prepare_result
+    local marker={}
+    g.prepare_empty_result=function() error(marker,0) end
+    g.prepare_result=function() error(marker,0) end
+    local ran,problem=pcall(g.call,computer_method(case[1]),table.unpack(case[2]))
+    assert(not ran and problem==marker,'computer mutator skipped return admission')
+    assert(computer.label==before.label and computer.state.before==before.state and computer.state_bytes==before.bytes)
+    assert(computer.state_nodes==before.nodes and computer.state_entries==before.entries and computer.state_sizes.before==before.size)
+    assert(#computer.logs==before.logs and computer.log_bytes==before.log_bytes and computer.logs[1]==before.first_log
+      and computer.log_truncated==before.truncated,'refused log evicted accepted history')
+    g.prepare_empty_result,g.prepare_result=empty,prepare
+    local result=table.pack(g.call(computer_method(case[1]),table.unpack(case[2])))
+    assert(result.n==(case[1]=='deleteState' and 1 or 0) and result[1]==case[3],'computer result arity changed')
+  end
+  log('TC_CONTRACT computer-state-label-log-results-admitted-before-publication')
   storage.tc_scalar_results={phase='armed',cases={}}
 end
 local loaded=false

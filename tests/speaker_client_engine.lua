@@ -45,7 +45,7 @@ end]]
 local function state(key,value)
   local c=registry.record(f().computer)
   local guard=sandbox.new(admission.context(admission.new(),'speaker-scene-controller',game.tick),{})
-  runtime.services(c,game.tick,guard).computer.setState(key,value)
+  guard.call(guard.service(runtime.services(c,game.tick,guard).computer.setState),key,value)
 end
 function M.run()
   storage.speaker_client={phase='boot',joined={},requests={},start=game.tick}

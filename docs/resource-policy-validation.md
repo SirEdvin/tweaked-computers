@@ -135,6 +135,14 @@ The original native speaker factory/upgrade fixture was also attempted. It fails
 
 Actual runtime/host memory ceilings, emergency full-memory recovery and the earlier remaining requirements are still absent. Checklist progress remains **2/47**. No PR, push, merge, release, same-card review or accepted completion is implied by this checkpoint.
 
+## Resumed computer/direct-effect result checkpoint
+
+Evidence: `resume-computer-results-01/`. The same pre-effect guarantee now covers `computer.setState`, `deleteState`, `setLabel` and `log`. State counters, contents and labels are unchanged if result preparation refuses; log preparation happens before any oldest-entry eviction, including when history is full. `deleteState` retains exact true/false arity. Host diagnostics still use `runtime.log` without a guest return reservation; its new optional preparation hook applies only at guarded guest publication. The speaker client fixture's internal state writer now enters through the actual service guard rather than bypassing its return protocol; this does not constitute new rendered/audio/client acceptance.
+
+The existing direct-helper return preparer now also prepays checkpoint storage for `rawset` and `print`. Service preparers reuse that path when their own guarded call is active, avoiding duplicate proof allocation. The focused fixture exhausts every shorter work allowance and injects codec refusal before either raw mutation or Console print; the effect stays absent on refusal and exact result identities/arity survive success. Native computer cases inject refusal at all four mutators and test both present/absent deletion plus full-history log retention. These are actual pre-publication checks, not a pretend implementation of configured memory bytes.
+
+The exact final archive, real cold phases and regression results are recorded in this checkpoint's receipt. Aggregate runtime/host admission, other services' effect reservations and all earlier outstanding gates remain required. No additional OpenSpec checklist item is claimed complete from these prerequisites.
+
 ## Still required
 
 The source-site disposition audit is not complete. Settings/resources, recoverable capacity handling, non-lossy settings decreases, all language/library/service continuations, event diagnostics, native inventories/UI, complete migration and engine matrix, actual rendering/audio and connected multiplayer remain mandatory. No production budget increase or weaker test gate is authorized by this checkpoint.

@@ -164,6 +164,8 @@ function M.new(context, services, shell, durable)
     G.spend(result.n+1); allocate(result.n+1)
     for i=1,result.n do G.scalar(result[i]) end
     frame.prepared_return=result
+    prepare_checkpoint(result)
+    return true
   end
   function G.call(fn,...)
     G.check()
@@ -373,8 +375,7 @@ function M.new(context, services, shell, durable)
   function G.prepare_empty_result()
     local service=assert(service_frames[#service_frames],'empty admission requires a trusted service')
     if service.empty_result then return end
-    prepare_return(service.wrapper)
-    prepare_checkpoint({n=0})
+    if not prepare_return(service.wrapper) then prepare_checkpoint({n=0}) end
     service.empty_result=true
   end
   function G.prepare_result(...)
@@ -385,8 +386,7 @@ function M.new(context, services, shell, durable)
     for i=1,result.n do
       if not (type(result[i])=='table' and protected[result[i]]) then result[i]=G.snapshot(result[i]) end
     end
-    prepare_return(service.wrapper,table.unpack(result,1,result.n))
-    prepare_checkpoint(result)
+    if not prepare_return(service.wrapper,table.unpack(result,1,result.n)) then prepare_checkpoint(result) end
     service.prepared_result=result
     return table.unpack(result,1,result.n)
   end
