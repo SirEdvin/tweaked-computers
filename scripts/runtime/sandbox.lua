@@ -681,6 +681,7 @@ function M.new(context, services, shell, durable)
     if n>=limits.table_entries then errors.raise('E_LIMIT','table full') end
     G.spend(n-pos+3); allocate(1)
     local keys=durable and changed_keys(t,{{n+1,pos<=n or value~=nil},{pos,value~=nil}})
+    prepare_return(tab.insert)
     table.insert(t,pos,value)
     if keys then owned[t].keys=keys end
   end
@@ -693,6 +694,7 @@ function M.new(context, services, shell, durable)
     -- included, as Lua 5.2.4 ltablib.c does for empty/past-end removal.
     local keys=durable and changed_keys(t,{{math.max(pos,n),false}})
     local removed=t[pos]
+    prepare_return(tab.remove,removed)
     for i=pos,n-1 do t[i]=t[i+1] end
     t[math.max(pos,n)]=nil
     if keys then owned[t].keys=keys end
@@ -719,6 +721,7 @@ function M.new(context, services, shell, durable)
       local updates={}; for i=1,n do updates[i]={i,true} end
       keys=changed_keys(t,updates)
     end
+    prepare_return(tab.sort)
     for i=1,n do t[i]=staged[i] end
     if keys then owned[t].keys=keys end
   end

@@ -30,10 +30,10 @@ function M.session(rec)
   if rec.shell and not supported(rec.shell) then errors.raise('E_UNSUPPORTED','unknown shell schema; data retained') end
   return rec.shell
 end
-local function log(rec,id,kind,text,tick,spend)
+local function log(rec,id,kind,text,tick,spend,prepare)
   local prefix='Shell #'..tostring(id)..' '..kind..': '
   if #prefix+#text>limits.console_bytes then errors.raise('E_LIMIT','shell console entry too large') end
-  runtime.log(rec,prefix..text,tick,spend)
+  runtime.log(rec,prefix..text,tick,spend,prepare)
 end
 function M.reset(rec,reason)
   if not rec.shell then return true end
@@ -82,7 +82,7 @@ function M.evaluate(rec,source,tick,command,checkpoint)
     local ok,diagnostic,control=compiler.run(plan,'command',{},function(g)
       guard=g
       local services=runtime.services(rec,tick,g,execution)
-      services.computer.log=function(text) log(rec,command,'output',text,tick,g.spend) end
+      services.computer.log=function(text) log(rec,command,'output',text,tick,g.spend,g.prepare_empty_result) end
       return services
     end,ctx,checkpoint,shell)
     if ok then s.values=checkpoint.value_graph
@@ -99,7 +99,7 @@ function M.evaluate(rec,source,tick,command,checkpoint)
   local shell={output=function(text) log(rec,command,'output',text,tick,guard.spend) end}
   guard=sandbox.new(ctx,function(g)
     local services=runtime.services(rec,tick,g,execution)
-    services.computer.log=function(text) log(rec,command,'output',text,tick,g.spend) end
+    services.computer.log=function(text) log(rec,command,'output',text,tick,g.spend,g.prepare_empty_result) end
     return services
   end,shell)
   local started=false

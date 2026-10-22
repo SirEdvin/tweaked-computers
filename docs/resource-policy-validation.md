@@ -167,6 +167,32 @@ Evidence: `resume-activation-01/`. A pinned-engine red fixture showed that a fro
 
 The focused native fixture verifies that rejected constructor/local-function/function-expression candidates preserve the active source, generation, FIFO event object/bytes, timers, subscriptions, state and spent credits. The editor-model path (mock player, **not actual GUI acceptance**) rejects the same drafts while retaining their text; successful validation keeps diagnostics plain and does not execute its candidate. These are pre-publication safety checks for the incomplete backend, not acceptance of the still-required syntax or incremental compiler jobs. Task 4.4 remains unchecked.
 
+## Prepaid preparation-to-caller ownership checkpoint
+
+Evidence: `resume-memory-handoff-01/`. Preparation jobs can now admit an owner and its peak reservation atomically, without leaving an orphan owner or consuming an identity when the combined request cannot fit. An explicit same-account sponsor can fund destination ownership links from its existing reservation. Ordinary lane allocations cannot consume that other owner's credit; shared payloads remain singly charged, and prepaid handoff remains non-growing in total usage even after a limit decrease. Invalid, closing or closed sponsors cannot fund delivery. A one-unit deficit refuses before changing either reservation or published ownership.
+
+The native fixture freezes a paid adoption cursor after its first transferred object and resumes the remaining prefix in a separate process, checking unchanged load/same-tick credits and exact action count. Closing the preparation owner leaves delivered destination values alive; final teardown releases all records and credit. This is the private allocator mechanism required for snapshot/result staging, **not yet a production snapshot job, complete temporary accounting or universal memory-setting enforcement**. Existing result admission and baseline native evidence are not reclassified as full memory acceptance.
+
+## Interactive scalar-slice acceptance: tasks 3.1–3.3
+
+The interactive takeover closes these three **scalar-slice** checklist items, not full-language or resource-policy acceptance. Evidence is preserved under `interactive-takeover-01/` in the durable evidence root. Earlier checkpoints and their incomplete-status statements remain historical records.
+
+- The production-context `tests.resource_policy_engine` fixture runs declaration and descriptor loops for 300,000 and 600,000 iterations, writes KV progress every 50,000 iterations, and cold-saves after each has crossed its midpoint but before completion. Separate-process reload preserves locals, exact binding/facade identities, active versus saved source, generation, queued FIFO, and paid ledgers. Final KV counters prove that neither the prefix nor loop effects repeat.
+- Both source forms also run infinite handlers across the cold boundary. The finite neighbor continues. A finite Console command on the **same computer as an infinite handler** commits successfully; host Console reset leaves the program continuation intact, and explicit Stop cancels both runaways without renewing their work/allocation credits or repeating their log prefixes.
+- A separate long Console command retains its staged `x=10` through the cold boundary and commits `x=600000` only on success. Its KV mutation and printed output occur once. These tests use real engines, electricity, wiring, services and scheduling, but mocked editor/player ingress; they do not claim native GUI or multiplayer acceptance.
+
+### Storage and cancellation boundary
+
+Each program invocation is retained in `rec.invocation`, with its dispatched event and private checkpoint tied to the active source/run. The independent Console lane is `rec.shell.invocation`; its staged graph is published as committed `rec.shell.values` only after successful completion. Budget suspension retains either lane; neither starts another callback/command while unfinished. The scheduler alternates competing lanes under one computer ledger. Cold load does not execute them or renew that ledger; synchronized dispatch reconstructs executable code from source. Program Stop retires its invocation and applies existing principal cleanup; Console reset cancels the shell lane without retiring the program. Completed external effects are not rolled back. Broader migration, full-resource recovery and native UI acceptance remain separate unchecked gates.
+
+### Additional result-admission fixes and remaining gate
+
+Console's `computer.log` override now preserves the shared pre-effect return preparation, including refusal before history eviction. Private memory sponsorship prepays destination links without stealing another owner's reservation; real cold tests preserve the transfer cursor and same-tick credits. This is still not universal memory enforcement.
+
+A fresh native red test additionally reproduced `table.insert` modifying a guest table before durable result admission. `insert`, `remove` and `sort` now use the existing `prepare_return` immediately before their final table mutation. Focused tests enumerate every shorter work allowance and inject codec-storage refusal, verifying unchanged tables and exact zero/one-result arity. This does not claim resumable comparator callbacks or removal of table limits.
+
+The original four-wall animation gate was run unchanged. It fails during initialization at `tests/monitor_animation_engine.lua:95` because the continuation compiler does not yet lower `func_proto`. No cadence/timing samples were produced: this is a missing language prerequisite, **not a measured performance failure**. Task 3.4 stays unchecked, as do full-language, aggregate memory, services and all other outstanding gates. No production-budget increase, native fallback or publication is authorized by these passing scalar checks.
+
 ## Still required
 
 The source-site disposition audit is not complete. Settings/resources, recoverable capacity handling, non-lossy settings decreases, all language/library/service continuations, event diagnostics, native inventories/UI, complete migration and engine matrix, actual rendering/audio and connected multiplayer remain mandatory. No production budget increase or weaker test gate is authorized by this checkpoint.

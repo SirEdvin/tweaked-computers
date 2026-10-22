@@ -75,16 +75,20 @@ local function direct_effect(kind,available,refuse)
   local printed=0
   local g=sandbox.new(ctx,{}, {output=function() printed=printed+1 end})
   g.initialize()
-  local value=g.new(0,function() return {} end)
-  local fn=g.global(kind)
+  local table_effect=kind=='insert' or kind=='remove' or kind=='sort'
+  local value=g.new(table_effect and 2 or 0,function() return table_effect and {2,1} or {} end)
+  local fn=table_effect and g.get(g.global('table'),kind) or g.global(kind)
+  local function unchanged()
+    return printed==0 and value.key==nil and (not table_effect or #value==2 and value[1]==2 and value[2]==1)
+  end
   local checkpoint={}
   local function tuple(v)
     local result={n=v.n}; for i=1,v.n do result[i]=v[i] end; return result
   end
   g.call_checkpoint(checkpoint,{
-    encode=function(v) assert(printed==0 and value.key==nil,'direct result encoded after mutation'); return tuple(v) end,
+    encode=function(v) assert(unchanged(),'direct result encoded after mutation: '..kind); return tuple(v) end,
     decode=tuple,prepare=function(v)
-      assert(printed==0 and value.key==nil,'direct result prepared after mutation')
+      assert(unchanged(),'direct result prepared after mutation: '..kind)
       if refuse then error('test-only direct result storage refusal',0) end
       local called={n=v.n+1,true}; for i=1,v.n do called[i+1]=v[i] end
       return {called=called,values=tuple(v)}
@@ -93,20 +97,27 @@ local function direct_effect(kind,available,refuse)
   ctx.machine.work=limits.callback_work-available
   local result
   if kind=='print' then result=table.pack(pcall(g.call,fn,'text'))
+  elseif kind=='insert' then result=table.pack(pcall(g.call,fn,value,1,3))
+  elseif kind=='remove' then result=table.pack(pcall(g.call,fn,value,1))
+  elseif kind=='sort' then result=table.pack(pcall(g.call,fn,value))
   else result=table.pack(pcall(g.call,fn,value,'key',false)) end
   if result[1] then
-    assert(kind=='print' and printed==1 and result.n==1 or kind=='rawset' and value.key==false and result.n==2 and result[2]==value)
+    assert(kind=='print' and printed==1 and result.n==1
+      or kind=='rawset' and value.key==false and result.n==2 and result[2]==value
+      or kind=='insert' and #value==3 and value[1]==3 and value[2]==2 and value[3]==1 and result.n==1
+      or kind=='remove' and #value==1 and value[1]==1 and result.n==2 and result[2]==2
+      or kind=='sort' and #value==2 and value[1]==1 and value[2]==2 and result.n==1)
     assert(checkpoint.call_result==checkpoint.prepared.called)
-  else assert(printed==0 and value.key==nil,'direct effect preceded return admission') end
+  else assert(unchanged(),'direct effect preceded return admission: '..kind) end
   return result[1],ctx.machine.work-(limits.callback_work-available)
 end
 function M.run()
-  for _,kind in ipairs({'print','rawset'}) do
+  for _,kind in ipairs({'print','rawset','insert','remove','sort'}) do
     local ok,cost=direct_effect(kind,limits.callback_work); assert(ok)
     for available=0,cost-1 do assert(not direct_effect(kind,available)) end
     assert(not direct_effect(kind,limits.callback_work,true))
   end
-  log('TC_CONTRACT direct-print-and-rawset-admit-durable-returns-before-effect')
+  log('TC_CONTRACT direct-print-rawset-and-table-mutators-admit-durable-returns-before-effect')
   for _,case in ipairs({{'empty'},{'boolean',false},{'boolean',true}}) do
     local ok,cost=scalar_result(case[1],case[2],limits.callback_work)
     assert(ok)

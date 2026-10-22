@@ -17,9 +17,9 @@ Planning only. Every checkbox remains unfinished until real implementation and i
 
 ## 3. Durable execution vertical slice
 
-- [ ] 3.1 Extend the compiler's accepted-source lowering with explicit frames, block positions and a host trampoline for straight-line code, locals and loops; verify a finite loop spans multiple actual ticks, an infinite loop remains stoppable, and completed primitive effects occur once using both descriptor and declaration sources.
-- [ ] 3.2 Persist and validate the slice's continuation graph, active source identity and paid progress; verify a separate-process cold load halfway through a KV-writing loop resumes at the next step with unchanged locals, queue order and run generation, and executes nothing in `on_load`.
-- [ ] 3.3 Wire the slice into program and Console scheduling with separate non-reentrant lanes and shared credits; verify a suspended program does not starve a finite neighbor or Console controls and that a suspended command preserves its staged environment. Document continuation storage and cancellation boundaries.
+- [x] 3.1 Extend the compiler's accepted-source lowering with explicit frames, block positions and a host trampoline for straight-line code, locals and loops; verify a finite loop spans multiple actual ticks, an infinite loop remains stoppable, and completed primitive effects occur once using both descriptor and declaration sources.
+- [x] 3.2 Persist and validate the slice's continuation graph, active source identity and paid progress; verify a separate-process cold load halfway through a KV-writing loop resumes at the next step with unchanged locals, queue order and run generation, and executes nothing in `on_load`.
+- [x] 3.3 Wire the slice into program and Console scheduling with separate non-reentrant lanes and shared credits; verify a suspended program does not starve a finite neighbor or Console controls and that a suspended command preserves its staged environment. Document continuation storage and cancellation boundaries.
 - [ ] 3.4 Compare the slice against the recorded baseline for work, retained growth, tick time and input-to-effect latency; preserve the evidence and verify the architecture can meet original controller/monitor gates before widening language/service coverage. A failed gate requires design review, not a hidden native/fatal fallback.
 
 ## 4. Complete language and compiler continuity
