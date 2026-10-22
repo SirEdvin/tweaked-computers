@@ -371,6 +371,12 @@ function M.run(source,generated,name,event,services,context,checkpoint,shell)
     for i=1,tuple.n do result[i]=r.decode(tuple[i]) end
     return result
   end
+  function codec.prepare(tuple)
+    local values=codec.encode(tuple)
+    local called={n=values.n+1,true}
+    for i=1,values.n do called[i+1]=values[i] end
+    return {called=called,values=values}
+  end
   function r.get(object,key)
     local path=checkpoint.symbols[object]
     if path then
@@ -387,7 +393,9 @@ function M.run(source,generated,name,event,services,context,checkpoint,shell)
     for i=1,args.n do args[i]=r.decode(args[i]) end
     local fn=r.decode(symbol)
     if not guard.is_callable(fn) then errors.raise('E_ARGUMENT','approved callable required') end
-    local result=codec.encode(table.pack(guard.call(fn,table.unpack(args,1,args.n))))
+    local result=table.pack(guard.call(fn,table.unpack(args,1,args.n)))
+    local prepared=f.pending.prepared
+    result=prepared and f.pending.call_result==prepared.called and prepared.values or codec.encode(result)
     f.tuples[out]=result
     return result[1]
   end
@@ -430,10 +438,11 @@ function M.run(source,generated,name,event,services,context,checkpoint,shell)
   end)
   if not ok then
     local diagnostic=guard.diagnostic(result)
-    if diagnostic.code=='E_BUDGET' then
+    if guard.work_suspended() then
       if not checkpoint.collection then ownership.begin(checkpoint,executable) end
       checkpoint.wait_tick=context.tick; return false,nil,'wait'
     end
+    if diagnostic.recoverable then return false,diagnostic,'resource' end
     return false,diagnostic,guard.stop_requested() and 'stop' or nil
   end
   checkpoint.completed=true

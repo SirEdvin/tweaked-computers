@@ -86,7 +86,7 @@ function M.evaluate(rec,source,tick,command,checkpoint)
       return services
     end,ctx,checkpoint,shell)
     if ok then s.values=checkpoint.value_graph
-    elseif control~='wait' and checkpoint.frame and not principal.cleanup(rec,execution,'shell_failure') then
+    elseif control~='wait' and control~='resource' and checkpoint.frame and not principal.cleanup(rec,execution,'shell_failure') then
       diagnostic=errors.new('E_ENGINE','shell resource cleanup failed; committed values retained')
     end
     return ok,diagnostic,control

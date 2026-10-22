@@ -50,14 +50,16 @@ local function stage(d,tick,spend)
   end
   return nextdb
 end
-local function publish(rec,d,spend)
+local function publish(rec,d,spend,prepare,result)
   local order=sorted(d.entries,spend); local bytes,fields=0,0
   for _,k in ipairs(order) do
     local e=d.entries[k]; bytes=bytes+#k+e.bytes; fields=fields+(e.count or 0)
   end
   if #order>L.keys or bytes>L.bytes or fields>L.total_hash_fields then fail('E_CAPACITY','database content capacity exceeded') end
   spend(#order+1)
+  if prepare then result=prepare(result) end
   d.order=order; d.bytes=bytes; d.fields=fields; rec.database=d
+  return result
 end
 local methods={}
 local exact={get=1,set=2,type=1,hget=2,hexists=2,hgetall=1,hlen=1,expire=2,ttl=1,persist=1,getLimits=0}
@@ -69,7 +71,7 @@ local function arguments(name,...)
     or name=='hset' and (n<3 or n%2~=1) then fail('E_ARGUMENT','missing/incomplete command operands') end
   return table.pack(...)
 end
-local function call(name,rec,tick,spend,...)
+local function call(name,rec,tick,spend,prepare,...)
   local a=arguments(name,...); clock(tick)
   if name=='getLimits' then local out={}; for k,v in pairs(L) do out[k]=v end; spend(32); return out end
   local payload=0
@@ -149,11 +151,15 @@ local function call(name,rec,tick,spend,...)
     if count>0 then candidate.entries[k]={type='hash',fields=fields,count=count,bytes=bytes,deadline=e and e.deadline}
     else candidate.entries[k]=nil end
   else fail('E_ARGUMENT','unknown database command') end
-  publish(rec,candidate,spend); return result
+  return publish(rec,candidate,spend,prepare,result)
 end
+local guarded_methods={}
 for _,name in ipairs({'get','set','del','exists','type','hget','hset','hdel','hexists','hgetall','hlen','expire','ttl','persist','getLimits'}) do
   local command=name
-  methods[command]=function(computer,rec,wire,tick,spend,...) return call(command,rec,tick,spend,...) end
+  methods[command]=function(computer,rec,wire,tick,spend,...) return call(command,rec,tick,spend,nil,...) end
+  guarded_methods[command]=function(computer,rec,wire,tick,spend,guard,...)
+    return call(command,rec,tick,spend,guard.prepare_result,...)
+  end
 end
 -- Fixed host entry used by compact fixtures and lifecycle; not a guest namespace.
 M.methods=methods
@@ -362,7 +368,7 @@ function M.maintenance(tick,spend)
     if visited>=L.reclaim_devices_per_tick then return end
   end
 end
-peripheral.register_type('kv',{methods=methods})
+peripheral.register_type('kv',{methods=guarded_methods,with_guard=true})
 lifecycle.register_item_adapter('kv',{initialize=M.initialize,snapshot=M.snapshot,restore=M.restore,tag='tc_kv'})
 scheduler.register_phase('render','kv-reclamation',M.maintenance)
 return M

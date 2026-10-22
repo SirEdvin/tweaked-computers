@@ -157,7 +157,11 @@ function M.services(computer,tick,guard,execution)
     end
     if rec.kind=='speaker' and (method=='playNote' or method=='playSound') then guard.prepare_boolean_result() end
     if rec.kind=='radar' and method=='transmit' then guard.prepare_empty_result() end
-    if bindings[rec.kind].with_principal then return fn(computer,rec,wire,tick,spend,execution,...) end
+    if bindings[rec.kind].with_principal then
+      if bindings[rec.kind].with_guard then return fn(computer,rec,wire,tick,spend,execution,guard,...) end
+      return fn(computer,rec,wire,tick,spend,execution,...)
+    end
+    if bindings[rec.kind].with_guard then return fn(computer,rec,wire,tick,spend,guard,...) end
     return fn(computer,rec,wire,tick,spend,...)
   end
   local function facade(rec,wire)

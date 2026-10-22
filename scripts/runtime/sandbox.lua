@@ -24,7 +24,8 @@ function M.new(context, services, shell, durable)
   local call_frames,service_frames={},{}
   local call_checkpoint,checkpoint_codec
   function G.call_checkpoint(checkpoint,codec) call_checkpoint=checkpoint; checkpoint_codec=codec end
-  local function checkpoint_result(result)
+  local function checkpoint_result(result,prepared)
+    if prepared then return prepared.called end
     if checkpoint_codec then return checkpoint_codec.encode(result) end
     -- Scalar vertical slice only; wider value/binding graphs are a later gate.
     for i=2,result.n do
@@ -56,6 +57,7 @@ function M.new(context, services, shell, durable)
   end
   function G.check() if poison then error(sentinel,0) end end
   function G.stop_requested() return poison=='stopped' end
+  function G.work_suspended() return poison~=nil and poison~='stopped' end
   function G.spend(n)
     G.check()
     if not admission.reserve(context,'work',n or 1) then fatal() end
@@ -83,6 +85,13 @@ function M.new(context, services, shell, durable)
   end
   function G.diagnostic(e)
     if poison then return {code=poison == 'stopped' and 'E_STOP' or 'E_BUDGET', message=poison, line=line, column=column} end
+    local record=durable and owned[e]
+    local resource=errors.resource_diagnostic(e) or type(record)=='table' and record.resource
+    if type(resource)=='table' then
+      local diagnostic={}; for key,value in pairs(resource) do diagnostic[key]=value end
+      diagnostic.line=diagnostic.line or line; diagnostic.column=diagnostic.column or column
+      return diagnostic
+    end
     if type(e) == 'table' and getmetatable(e) == nil then
       return {code=type(e.code)=='string' and e.code:sub(1,64) or 'E_PROGRAM',message=type(e.message)=='string' and e.message:sub(1,1024) or 'program raised an error',line=line,column=column,
         field=type(e.field)=='string' and e.field:sub(1,128) or nil,
@@ -164,7 +173,9 @@ function M.new(context, services, shell, durable)
     local result=call_checkpoint and restored_result(call_checkpoint.call_result)
     if not result then
       result=table.pack(pcall(fn,...))
-      if call_checkpoint and result[1] then call_checkpoint.call_result=checkpoint_result(result) end
+      if call_checkpoint and result[1] then
+        call_checkpoint.call_result=checkpoint_result(result,frame.prepared_return and call_checkpoint.prepared)
+      end
     end
     call_frames[#call_frames]=nil
     depth=depth-1
@@ -323,6 +334,14 @@ function M.new(context, services, shell, durable)
     local stats={nodes=0,bytes=0}
     local result=copy(v,{},0,stats)
     if stats.bytes>limits.peripheral_call_bytes then errors.raise('E_LIMIT','Data snapshot byte limit exceeded') end
+    if durable and type(result)=='table' then
+      local resource=errors.resource_diagnostic(v) or owned[v] and owned[v].resource
+      if resource then
+        local diagnostic={}; for key,value in pairs(resource) do diagnostic[key]=value end
+        diagnostic.line=diagnostic.line or line; diagnostic.column=diagnostic.column or column
+        owned[result].resource=diagnostic
+      end
+    end
     return result
   end
   function G.namespace(entries,label)
@@ -350,6 +369,22 @@ function M.new(context, services, shell, durable)
     prepare_return(service.wrapper)
     service.empty_result=true
   end
+  function G.prepare_result(...)
+    local service=assert(service_frames[#service_frames],'result admission requires a trusted service')
+    assert(not service.prepared_result and not service.empty_result and not service.boolean_result,'duplicate result admission')
+    local result=table.pack(...)
+    if result.n>limits.tuple_entries then fatal('service result width exceeded') end
+    for i=1,result.n do
+      if not (type(result[i])=='table' and protected[result[i]]) then result[i]=G.snapshot(result[i]) end
+    end
+    prepare_return(service.wrapper,table.unpack(result,1,result.n))
+    if call_checkpoint and checkpoint_codec then
+      G.host_work(result.n*2+4,result.n*2+4)
+      call_checkpoint.prepared=checkpoint_codec.prepare(result)
+    end
+    service.prepared_result=result
+    return table.unpack(result,1,result.n)
+  end
   function G.service(fn)
     local wrapper
     wrapper=function(...)
@@ -365,13 +400,24 @@ function M.new(context, services, shell, durable)
       local called=call_checkpoint and restored_result(call_checkpoint.service_result)
       if not called then
         called=table.pack(pcall(fn,table.unpack(args,1,n)))
-        if call_checkpoint and called[1] then call_checkpoint.service_result=checkpoint_result(called) end
+        if called[1] and frame.prepared_result then
+          local expected=frame.prepared_result
+          if called.n~=expected.n+1 then errors.raise('E_ENGINE','trusted service result width contract violated') end
+          for i=1,expected.n do
+            if not rawequal(called[i+1],expected[i]) then errors.raise('E_ENGINE','trusted service result contract violated') end
+          end
+        end
+        if call_checkpoint and called[1] then
+          call_checkpoint.service_result=checkpoint_result(called,frame.prepared_result and call_checkpoint.prepared)
+        end
       end
       service_frames[#service_frames]=nil
       if not called[1] then error(called[2],0) end
       local result={n=called.n-1}; for i=2,called.n do result[i-1]=called[i] end
       if result.n>limits.tuple_entries then fatal('service result width exceeded') end
-      if frame.empty_result then
+      if frame.prepared_result then
+        -- Snapshot, call-return and durable result storage precede publication.
+      elseif frame.empty_result then
         if result.n~=0 then fatal('trusted empty service contract violated') end
       elseif frame.boolean_result then
         if result.n~=1 or type(result[1])~='boolean' then fatal('trusted boolean service contract violated') end

@@ -50,6 +50,13 @@ function M.stop(id)
   if shell_lifecycle then ok=shell_lifecycle(rec,'stop') and ok end
   return ok
 end
+function M.resource_refused(rec,diagnostic,tick)
+  local owned={}; for key,value in pairs(diagnostic) do owned[key]=value end
+  owned.source_revision=rec.active and rec.active.revision or nil; owned.run_id=rec.run_id
+  rec.diagnostic=owned
+  local text=owned.code..': '..owned.message
+  if #text<=limits.console_bytes then M.log(rec,text,tick) else rec.log_truncated=true end
+end
 function M.reset_state(id)
   root()
   local rec=registry.computer(id)

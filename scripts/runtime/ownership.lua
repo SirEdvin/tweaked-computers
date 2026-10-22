@@ -2,6 +2,7 @@
 local errors=require('scripts.runtime.errors')
 local M={}
 local binding_fields={'name','wire','generation','kind','method','facade'}
+local resource_fields={'code','message','resource','setting','used','requested','limit','recoverable','line','column'}
 local function push(gc,value,kind,count)
   gc.queue[#gc.queue+1]={value=value,kind=kind,cursor=1,count=count}
 end
@@ -17,6 +18,8 @@ function M.begin(checkpoint,executable)
   push(gc,checkpoint.result,'tuple')
   if f.pending then
     push(gc,f.pending.call_result,'tuple'); push(gc,f.pending.service_result,'tuple')
+    local prepared=f.pending.prepared
+    if prepared then push(gc,prepared.called,'tuple'); push(gc,prepared.values,'tuple') end
   end
   checkpoint.collection=gc
 end
@@ -60,6 +63,10 @@ function M.advance(checkpoint,spend)
       local descriptor=assert(checkpoint.bindings[value])
       local key=binding_fields[job.cursor]
       if key then push(gc,descriptor[key]); job.cursor=job.cursor+1; done=false end
+    elseif job.kind=='resource' then
+      if job.cursor==1 then gc.bytes=gc.bytes+256 end
+      local key=resource_fields[job.cursor]
+      if key then push(gc,value[key]); job.cursor=job.cursor+1; done=false end
     elseif type(value)=='table' then
       if getmetatable(value) then malformed() end
       if not gc.seen[value] then
@@ -71,6 +78,7 @@ function M.advance(checkpoint,spend)
           if type(owned)~='table' or type(owned.keys)~='table' then malformed() end
           gc.bytes=gc.bytes+192+48*#owned.keys
           push(gc,value,'edges')
+          if owned.resource then push(gc,owned.resource,'resource') end
         elseif symbol then gc.bytes=gc.bytes+112; push(gc,symbol)
         elseif binding then gc.bytes=gc.bytes+256; push(gc,value,'binding')
         else malformed() end

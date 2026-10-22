@@ -157,6 +157,7 @@ local function dispatch_program(rec,tick)
   rec.invocation=nil
   if not ok then
     if control=='stop' then runtime.retire(rec,'stopped','stop')
+    elseif control=='resource' then runtime.resource_refused(rec,diagnostic,tick)
     else runtime.fault(rec,diagnostic,tick) end
   end
   return true
