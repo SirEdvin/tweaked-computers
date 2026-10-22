@@ -7,16 +7,21 @@ function M.new(context, services, shell, durable)
   local G = {shell_enabled=shell~=nil,continuation_enabled=durable~=nil}
   local poison, line, column, depth = nil, 1, 1, 0
   local owned = durable and durable.owned or setmetatable({}, {__mode='k'})
+  local protected = setmetatable({}, {__mode='k'})
+  local function retained(value)
+    if durable and (type(value)=='function' or type(value)=='table' and protected[value]) then
+      errors.raise('E_UNSUPPORTED','continuation containers require encoded callable/API values')
+    end
+  end
   local function own(t)
     if durable then
       local keys={}
-      for k in pairs(t) do G.host_work(1,1); keys[#keys+1]=k end
+      for k,v in pairs(t) do G.host_work(1,1); retained(k); retained(v); keys[#keys+1]=k end
       if not owned[t] then durable.owned_order[#durable.owned_order+1]=t end
       owned[t]={keys=keys}
     else owned[t]=true end
     return t
   end
-  local protected = setmetatable({}, {__mode='k'})
   local callable = setmetatable({}, {__mode='k'})
   local handle_arguments = setmetatable({}, {__mode='k'}) -- Host-only opt-in, not Data.
   local bindings=setmetatable({},{__mode='k'})
@@ -518,6 +523,7 @@ function M.new(context, services, shell, durable)
     required(3,...)
     local t,k,v=...
     plain(t); G.scalar(v)
+    if v~=nil then retained(k); retained(v) end
     local targets=G.assignment_targets(1); targets[1]={t,k}
     local values=G.assignment_values(1,v)
     prepare_return(env.rawset,t)
@@ -671,6 +677,7 @@ function M.new(context, services, shell, durable)
     local n=dense(t); local argc=select('#',...); local pos,value
     if argc==1 then pos,value=n+1,... elseif argc==2 then pos,value=... else fail('insert arity') end
     integer(pos,1,n+1); G.scalar(value)
+    retained(value)
     if n>=limits.table_entries then errors.raise('E_LIMIT','table full') end
     G.spend(n-pos+3); allocate(1)
     local keys=durable and changed_keys(t,{{n+1,pos<=n or value~=nil},{pos,value~=nil}})

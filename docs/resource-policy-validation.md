@@ -155,6 +155,12 @@ Its separate-process cold case saves both a partial owner-close job and the actu
 
 Next integration must attach allocation-time charges/reservations to existing ownership indices and prepared returns, include frame/tuple/string/binding and collector/validator peaks, then connect the shared computer account to both lanes and their staged/committed lifetimes. Existing `checkpoint.memory_bytes` is still only the older provisional measurement and must not be mistaken for the new account's complete usage. The first enabled scalar path needs the same cold/effect/cleanup tests before broader service rollout. Earlier original performance, full-language and native-client gates remain mandatory.
 
+## Durable-container trust-boundary checkpoint
+
+Evidence: `resume-heap-boundary-01/`. An actual pinned-engine red fixture found `table.pack(type)` retaining a native function in a suspended checkpoint. Protected namespace proxies could likewise be placed in guest containers without a durable encoding. The current early backend now refuses these unencoded values before publishing a new owned table, `rawset` entry/key or `table.insert` value. Nil-valued deletion does not retain its key and remains permitted. Existing encoded symbolic locals and bindings are not rejected by this check.
+
+This is an explicit **temporary backend coverage limitation**, not satisfaction or reduction of task 4.1's callable/closure heap contract. Complete symbolic container encoding remains required before broad language acceptance. The historical direct runtime still accepts its prior cases; production does not silently fall back to it. The new fixture verifies both source forms, native direct compatibility, rejection with a plain checkpoint, safe symbolic function/namespace locals across suspension, and a real separate-process cold resume with once-only prepared completion and unchanged load state. No production memory setting or full-resource gate is inferred.
+
 ## Still required
 
 The source-site disposition audit is not complete. Settings/resources, recoverable capacity handling, non-lossy settings decreases, all language/library/service continuations, event diagnostics, native inventories/UI, complete migration and engine matrix, actual rendering/audio and connected multiplayer remain mandatory. No production budget increase or weaker test gate is authorized by this checkpoint.
