@@ -5,8 +5,8 @@ Planning only. Every checkbox remains unfinished until real implementation and i
 ## 1. Baseline and executable contract fixtures
 
 - [ ] 1.1 Record the actual implementation base, overlapping signal-read work and a source-site disposition for every `limit-policy.md` row; verify the inventory covers constants, hard-coded/structural guards, generated schemas, serialized validators and advertised values without changing unrelated work.
-- [ ] 1.2 Extend `tests/runtime_contract.lua`, `tests/computer_contract.lua` and `tests/computer_cold.lua` with desired suspension, recoverable-capacity and exactly-once side-effect cases; verify they fail for the current fatal/non-resumable behavior and preserve existing language/trust-boundary assertions.
-- [ ] 1.3 Capture a matched packaged baseline for current finite controller, Console and monitor workloads using the repository smoke/animation/maintenance harnesses; preserve source/archive hashes and complete output, and verify observer overhead is separated from timed runs. Add a short acceptance matrix documenting changed semantics versus unchanged regression gates.
+- [x] 1.2 Extend `tests/runtime_contract.lua`, `tests/computer_contract.lua` and `tests/computer_cold.lua` with desired suspension, recoverable-capacity and exactly-once side-effect cases; verify they fail for the current fatal/non-resumable behavior and preserve existing language/trust-boundary assertions.
+- [x] 1.3 Capture a matched packaged baseline for current finite controller, Console and monitor workloads using the repository smoke/animation/maintenance harnesses; preserve source/archive hashes and complete output, and verify observer overhead is separated from timed runs. Add a short acceptance matrix documenting changed semantics versus unchanged regression gates.
 
 ## 2. Configurable policy and resource ownership
 

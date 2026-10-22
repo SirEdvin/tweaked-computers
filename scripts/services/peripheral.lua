@@ -168,7 +168,7 @@ function M.services(computer,tick,guard,execution)
 
     end
     local proxy=guard.namespace(methods,'peripheral method')
-    if guard.shell_enabled then
+    if guard.shell_enabled or guard.continuation_enabled then
       for key,fn in pairs(methods) do
         guard.host_work(#name+#key+64,#name+#key+64)
         guard.bind_value(fn,{name=name,wire=wire,generation=generation,kind=rec.kind,method=key,facade=proxy})
@@ -234,7 +234,7 @@ function M.services(computer,tick,guard,execution)
     end)
     guard.accept_handle(api[key],1)
   end
-  if guard.shell_enabled then guard.binding_resolver(function(d,parent)
+  if guard.shell_enabled or guard.continuation_enabled then guard.binding_resolver(function(d,parent)
     if type(d)~='table' or type(d.name)~='string' or #d.name==0 or #d.name>limits.identifier_bytes
       or not bindings[d.kind] or not errors.integer(d.generation,1,9007199254740991)
       or (d.wire~='red' and d.wire~='green') then errors.raise('E_ARGUMENT','invalid retained peripheral identity') end

@@ -28,6 +28,7 @@ end
 function M.retire(rec,status,reason)
   local cleaned=registry.cleanup(rec,rec.run_id,reason or status)
   rec.queue={}; rec.queue_bytes=0; rec.timers={}; rec.subscriptions={}
+  rec.invocation=nil
   rec.status=cleaned and status or 'faulted'
   if not cleaned then rec.diagnostic=errors.new('E_ENGINE','host teardown failed; cleanup recovery retained') end
   return cleaned

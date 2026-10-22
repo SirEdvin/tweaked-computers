@@ -431,4 +431,31 @@ end
   log('TC_CONTRACT_TOTAL '..total)
   return total
 end
+-- Desired resource-policy scheduler semantics; opt in before replacing old assertions.
+function M.resource_policy()
+  for _,text in ipairs({source('computer.setState("prefix",true); while true do end'),
+    'function start() computer.setState("prefix",true); while true do end end'}) do
+  fresh()
+  local rec=computer(text)
+  local peer=computer(source('computer.setState("healthy",true)'))
+  scheduler.tick(1)
+  assert(rec.status=='running' and rec.state.prefix,'work pressure retired the active run')
+  assert(peer.state.healthy and peer.status=='running','suspended lane starved its neighbor')
+  local generation,active=rec.run_generation,rec.active
+  scheduler.tick(2)
+  assert(rec.status=='running' and rec.run_generation==generation and rec.active==active)
+  assert(runtime.stop(rec.id) and rec.status=='stopped' and rec.state.prefix,'host Stop lost accepted state')
+  end
+end
+function M.resource_capacity()
+  fresh()
+  local rec=computer(source([[
+    computer.setState('kept',true)
+    local s=string.rep('x',16000)
+    for n=1,10 do computer.setState(tostring(n),s) end
+  ]]))
+  scheduler.tick(3)
+  assert(rec.status=='running' and rec.state.kept,'uncaught capacity refusal must end only the invocation')
+  assert(rec.diagnostic and rec.diagnostic.recoverable,'capacity refusal lacks recovery metadata')
+end
 return M

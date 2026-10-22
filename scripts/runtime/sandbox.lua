@@ -3,16 +3,33 @@ local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local M = {}
 
-function M.new(context, services, shell)
-  local G = {shell_enabled=shell~=nil}
+function M.new(context, services, shell, durable)
+  local G = {shell_enabled=shell~=nil,continuation_enabled=durable~=nil}
   local poison, line, column, depth = nil, 1, 1, 0
-  local owned = setmetatable({}, {__mode='k'})
+  local owned = durable and durable.owned or setmetatable({}, {__mode='k'})
   local protected = setmetatable({}, {__mode='k'})
   local callable = setmetatable({}, {__mode='k'})
   local handle_arguments = setmetatable({}, {__mode='k'}) -- Host-only opt-in, not Data.
   local bindings=setmetatable({},{__mode='k'})
   local restore_binding
   local call_frames,service_frames={},{}
+  local call_checkpoint,checkpoint_codec
+  function G.call_checkpoint(checkpoint,codec) call_checkpoint=checkpoint; checkpoint_codec=codec end
+  local function checkpoint_result(result)
+    if checkpoint_codec then return checkpoint_codec.encode(result) end
+    -- Scalar vertical slice only; wider value/binding graphs are a later gate.
+    for i=2,result.n do
+      local t=type(result[i])
+      if t~='nil' and t~='boolean' and t~='string' and t~='number' then
+        errors.raise('E_UNSUPPORTED','continuation slice requires scalar host results')
+      end
+    end
+    return result
+  end
+  local function restored_result(result)
+    if result and checkpoint_codec then return checkpoint_codec.decode(result) end
+    return result
+  end
   function G.bind_value(value,descriptor) bindings[value]=descriptor end
   function G.binding(value) return bindings[value] end
   function G.binding_resolver(fn) assert(not restore_binding); restore_binding=fn end
@@ -134,7 +151,11 @@ function M.new(context, services, shell)
     local caller_line,caller_column=line,column
     depth=depth+1
     local frame={fn=fn}; call_frames[#call_frames+1]=frame
-    local result=table.pack(pcall(fn,...))
+    local result=call_checkpoint and restored_result(call_checkpoint.call_result)
+    if not result then
+      result=table.pack(pcall(fn,...))
+      if call_checkpoint and result[1] then call_checkpoint.call_result=checkpoint_result(result) end
+    end
     call_frames[#call_frames]=nil
     depth=depth-1
     G.check()
@@ -312,7 +333,11 @@ function M.new(context, services, shell)
         end
       end
       local frame={wrapper=wrapper}; service_frames[#service_frames+1]=frame
-      local called=table.pack(pcall(fn,table.unpack(args,1,n)))
+      local called=call_checkpoint and restored_result(call_checkpoint.service_result)
+      if not called then
+        called=table.pack(pcall(fn,table.unpack(args,1,n)))
+        if call_checkpoint and called[1] then call_checkpoint.service_result=checkpoint_result(called) end
+      end
       service_frames[#service_frames]=nil
       if not called[1] then error(called[2],0) end
       local result={n=called.n-1}; for i=2,called.n do result[i-1]=called[i] end

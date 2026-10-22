@@ -520,4 +520,72 @@ function sample() end
   end
   return tests
 end
+-- Opt-in desired-contract checks, kept separate until the continuation gate.
+function M.resource_policy()
+  for _,text in ipairs({source([[
+    computer.log('before'); local n=0
+    while n<300000 do n=n+1 end
+    computer.log(tostring(n))
+  ]]), [[function start()
+    computer.log('before'); local n=0
+    while n<300000 do n=n+1 end
+    computer.log(tostring(n))
+  end]],source([[
+    computer.log('before'); local n=0
+    for i=1,300000 do n=n+1 end
+    computer.log(tostring(n))
+  ]]), [[function start()
+    computer.log('before'); local n=0
+    for i=1,300000 do n=n+1 end
+    computer.log(tostring(n))
+  end]]}) do
+    local ledger=admission.new()
+    local plan=assert(compiler.compile(text,admission.context(ledger,'continuity',0)))
+    local checkpoint,effects={},{}
+    local function services()
+      return {computer={log=function(value) effects[#effects+1]=value end}}
+    end
+    local ok,problem,control=compiler.run(plan,'start',{},services,admission.context(ledger,'continuity',1),checkpoint)
+    assert(not ok and control=='wait','slice must suspend, not fail: '..(problem and problem.message or tostring(control)))
+    assert(#effects==1 and effects[1]=='before','completed prefix must execute once')
+    local first_work=ledger.total
+    ok,problem,control=compiler.run(plan,'start',{},services,admission.context(ledger,'continuity',1),checkpoint)
+    assert(not ok and control=='wait' and ledger.total==first_work and #effects==1,'same-tick retry renewed work or replayed prefix')
+    local tick=2
+    repeat
+      ok,problem,control=compiler.run(plan,'start',{},services,admission.context(ledger,'continuity',tick),checkpoint)
+      assert(ok or control=='wait',problem and problem.message)
+      tick=tick+1; assert(tick<200,'finite continuation made no progress')
+    until ok
+    assert(#effects==2 and effects[2]=='300000','locals lost or completed effect replayed')
+  end
+  -- Force exhaustion after the service effect but before guarded return delivery.
+  local ledger=admission.new()
+  local plan=assert(compiler.compile(source("computer.log('before'); computer.log('after')"),admission.context(ledger,'return-boundary',0)))
+  local checkpoint,effects={},{}
+  local context=admission.context(ledger,'return-boundary',1)
+  local function provider()
+    return {computer={log=function(text)
+      effects[#effects+1]=text
+      if text=='before' then assert(admission.reserve(context,'work',limits.callback_work-context.machine.work)) end
+    end}}
+  end
+  local ok,problem,control=compiler.run(plan,'start',{},provider,context,checkpoint)
+  assert(not ok and control=='wait' and #effects==1,problem and problem.message)
+  context=admission.context(ledger,'return-boundary',2)
+  ok,problem,control=compiler.run(plan,'start',{},provider,context,checkpoint)
+  assert(ok and #effects==2 and effects[1]=='before' and effects[2]=='after',problem and problem.message)
+  local plan=assert(compiler.compile(source('while true do end'),admission.context(admission.new(),'invalid-checkpoint-compile',0)))
+  for _,damage in ipairs({'pc','function','header'}) do
+    local state={}; local ledger=admission.new()
+    local waiting,_,control=compiler.run(plan,'start',{}, {},admission.context(ledger,'invalid-checkpoint',1),state)
+    assert(not waiting and control=='wait')
+    if damage=='pc' then state.frame.pc=999999
+    elseif damage=='function' then state.frame.slots[1]=function() end
+    else state.version=999 end
+    local passed,diagnostic=compiler.run(plan,'start',{}, {},admission.context(ledger,'invalid-checkpoint',2),state)
+    assert(not passed and diagnostic.code=='E_UNSUPPORTED','malformed checkpoint executed or reset')
+    assert(damage~='pc' or state.frame.pc==999999,'invalid checkpoint repaired silently')
+  end
+end
 return M

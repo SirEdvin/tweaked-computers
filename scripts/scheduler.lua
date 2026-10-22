@@ -116,7 +116,7 @@ function M.advance_timers(rec,tick,spend)
   end
 end
 local function dispatch_program(rec,tick)
-  if rec.status~='running' or not rec.powered or #rec.queue==0 or rec.last_dispatch_tick==tick then return false end
+  if rec.status~='running' or not rec.powered or (#rec.queue==0 and not rec.invocation) or rec.last_dispatch_tick==tick then return false end
   -- Physical sampling can defer under maintenance pressure. Never dispatch from
   -- an old positive power observation; standalone runtime fixtures have no tag.
   if rec.physical_version and (rec.physical_error or rec.power_checked_tick~=tick) then return false end
@@ -141,15 +141,20 @@ local function dispatch_program(rec,tick)
     runtime.fault(rec,errors.new('E_UNSUPPORTED','malformed admission record; source/state/credits retained'),tick)
     return false
   end
-  local item=rec.queue[1]
-  if monitor_refresh and item.event.name=='monitor_resize' then
+  local item=rec.invocation and rec.invocation.item or rec.queue[1]
+  if not rec.invocation and monitor_refresh and item.event.name=='monitor_resize' then
     if not admission.reserve(ctx,'work',8) then return false end
     monitor_refresh(item.event)
   end
   rec.last_dispatch_tick=tick
-  table.remove(rec.queue,1); rec.queue_bytes=rec.queue_bytes-item.bytes
-  item.event.tick=tick
-  local ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,function(guard) return runtime.services(rec,tick,guard) end,ctx)
+  if not rec.invocation then
+    table.remove(rec.queue,1); rec.queue_bytes=rec.queue_bytes-item.bytes
+    item.event.tick=tick
+    rec.invocation={run_id=rec.run_id,item=item,checkpoint={}}
+  end
+  local ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,function(guard) return runtime.services(rec,tick,guard) end,ctx,rec.invocation.checkpoint)
+  if control=='wait' then return true end
+  rec.invocation=nil
   if not ok then
     if control=='stop' then runtime.retire(rec,'stopped','stop')
     else runtime.fault(rec,diagnostic,tick) end
@@ -166,7 +171,7 @@ function M.dispatch(rec,tick)
   if maximum==0 then return false end
   if root.ledger.tick==tick and root.ledger.total+maximum>admission.guest_ceiling(root.ledger,tick) then return false end
   local pending=shell.waiting(rec)
-  local program=rec.status=='running' and #rec.queue>0
+  local program=rec.status=='running' and (#rec.queue>0 or rec.invocation~=nil)
   if pending and (not program or rec.next_work_class~='program') then
     local dispatched=shell.dispatch(rec,tick)
     if dispatched then rec.next_work_class='program' end
