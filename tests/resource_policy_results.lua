@@ -38,7 +38,46 @@ local function direct(available,refuse)
   else assert(entered==0,'result admission failed after the effect') end
   return result[1],ctx.machine.work-(limits.callback_work-available)
 end
+local function scalar_result(kind,value,available,refuse)
+  local ctx=admission.context(admission.new(),'prepared-scalar-result',0)
+  ctx.machine.work=limits.callback_work-available
+  local g=sandbox.new(ctx,{})
+  local checkpoint,entered={},0
+  local function copy(tuple)
+    local result={n=tuple.n}; for i=1,tuple.n do result[i]=tuple[i] end; return result
+  end
+  g.call_checkpoint(checkpoint,{
+    encode=function(tuple) assert(entered==0,'result encoding ran after the effect'); return copy(tuple) end,
+    decode=copy,
+    prepare=function(tuple)
+      assert(entered==0,'result storage was prepared after the effect')
+      if refuse then error('test-only scalar result-storage refusal',0) end
+      local called={n=tuple.n+1,true}; for i=1,tuple.n do called[i+1]=tuple[i] end
+      return {called=called,values=copy(tuple)}
+    end,
+  })
+  local fn=g.service(function()
+    if kind=='empty' then g.prepare_empty_result() else g.prepare_boolean_result() end
+    entered=entered+1
+    if kind=='boolean' then return value end
+  end)
+  local result=table.pack(pcall(g.call,fn))
+  if result[1] then
+    assert(entered==1 and result.n==(kind=='empty' and 1 or 2))
+    assert(result[2]==value and checkpoint.call_result==checkpoint.service_result)
+    assert(checkpoint.prepared.called==checkpoint.call_result)
+    assert(checkpoint.prepared.values.n==result.n-1 and checkpoint.prepared.values[1]==value)
+  else assert(entered==0,'scalar result refusal happened after publication') end
+  return result[1],ctx.machine.work-(limits.callback_work-available)
+end
 function M.run()
+  for _,case in ipairs({{'empty'},{'boolean',false},{'boolean',true}}) do
+    local ok,cost=scalar_result(case[1],case[2],limits.callback_work)
+    assert(ok)
+    for available=0,cost-1 do assert(not scalar_result(case[1],case[2],available)) end
+    assert(not scalar_result(case[1],case[2],limits.callback_work,true))
+  end
+  log('TC_CONTRACT prepaid-empty-and-both-boolean-results-before-effect')
   local ok,cost=direct(limits.callback_work)
   assert(ok)
   for available=0,cost-1 do assert(not direct(available),'short allowance admitted an unpaid result') end
@@ -53,6 +92,23 @@ function M.run()
     end)
     local ran,problem=pcall(g.call,bad)
     assert(not ran and calls==1 and g.diagnostic(problem).code=='E_ENGINE','provider contract failure became retryable pressure')
+    assert(not pcall(g.prepare_empty_result),'failed provider leaked its private service frame')
+  end
+  for _,kind in ipairs({'empty','boolean'}) do
+    for _,wrong_width in ipairs({false,true}) do
+      local g=sandbox.new(admission.context(admission.new(),'bad-scalar-provider',0),{})
+      local calls=0
+      local bad=g.service(function()
+        if kind=='empty' then g.prepare_empty_result() else g.prepare_boolean_result() end
+        calls=calls+1
+        if wrong_width then return true,false end
+        if kind=='empty' then return false end
+        return 'not a boolean'
+      end)
+      local ran,problem=pcall(g.call,bad)
+      assert(not ran and calls==1 and g.diagnostic(problem).code=='E_ENGINE','scalar provider contract failure became suspension')
+      assert(not pcall(g.prepare_empty_result),'failed scalar provider leaked its private service frame')
+    end
   end
   local body=[[local a,b,c=computer.probe(); assert(a==false and b==nil and c=='tail'); computer.finished()]]
   for _,source in ipairs({'function start() '..body..' end','return {api_version=1,handlers={start=function() '..body..' end}}'}) do
@@ -80,6 +136,36 @@ function M.run()
       if ran then break end
     end
     assert(ran and entered==1 and finished==1,'prepared result lost, changed arity or replayed its effect')
+  end
+  for _,case in ipairs({{'empty'},{'boolean',false},{'boolean',true}}) do
+    local body=case[1]=='empty' and 'assert(select("#",computer.probe())==0); computer.finished()' or
+      'assert(computer.probe()=='..tostring(case[2])..'); computer.finished()'
+    for _,source in ipairs({'function start() '..body..' end','return {api_version=1,handlers={start=function() '..body..' end}}'}) do
+      local ledger,checkpoint=admission.new(),{}
+      local ctx=admission.context(ledger,'durable-scalar-result',0)
+      local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
+      local entered,finished=0,0
+      local function services(g)
+        return {computer={probe=function()
+          if case[1]=='empty' then g.prepare_empty_result() else g.prepare_boolean_result() end
+          entered=entered+1
+          assert(admission.reserve(ctx,'work',limits.callback_work-ctx.machine.work))
+          assert(not pcall(g.spend,1)) -- Trusted fixture poisons after the effect, then supplies its real result.
+          if case[1]=='boolean' then return case[2] end
+        end,finished=function() finished=finished+1 end}}
+      end
+      local ran,diagnostic,control=compiler.run(plan,'start',{},services,ctx,checkpoint)
+      assert(not ran and control=='wait' and entered==1 and finished==0,diagnostic and diagnostic.message)
+      assert(checkpoint.frame.pending.service_result==checkpoint.frame.pending.prepared.called)
+      assert(checkpoint.frame.pending.call_result==nil,'fixture did not stop between service and caller delivery')
+      for tick=1,20 do
+        ctx=admission.context(ledger,'durable-scalar-result',tick)
+        ran,diagnostic,control=compiler.run(plan,'start',{},services,ctx,checkpoint)
+        assert(ran or control=='wait',diagnostic and diagnostic.message)
+        if ran then break end
+      end
+      assert(ran and entered==1 and finished==1,'scalar effect/result was replayed or changed arity')
+    end
   end
   log('TC_CONTRACT prepaid-service-result-before-effect-and-exact-resume')
   local function nop() end
@@ -112,5 +198,60 @@ function M.run()
     assert(db.database~=before,'accepted native KV mutation did not publish')
   end
   log('TC_CONTRACT native-KV-result-refusal-preserves-original-before-every-mutator')
+  storage.tc_scalar_results={phase='armed',cases={}}
+end
+local loaded=false
+function M.on_load()
+  local f=storage.tc_scalar_results
+  if f.phase=='frozen' then
+    for _,case in ipairs(f.cases) do
+      assert(case.entered==1 and case.finished==0 and case.checkpoint.frame.pc==case.pc)
+      assert(case.ledger.total==case.spent and case.checkpoint.frame.pending.call_result==nil)
+      assert(case.checkpoint.frame.pending.service_result==case.checkpoint.frame.pending.prepared.called)
+    end
+    loaded=true; log('TC_SCALAR_RESULTS_ON_LOAD_UNCHANGED')
+  end
+end
+function M.on_tick(event)
+  local f=storage.tc_scalar_results
+  if f.phase=='done' or f.phase=='frozen' and not loaded then return end
+  if f.phase=='armed' then
+    for _,value in ipairs({'empty','false','true'}) do
+      for _,declaration in ipairs({false,true}) do
+        local body=value=='empty' and 'assert(select("#",computer.probe())==0); computer.finished()' or
+          'assert(computer.probe()=='..value..'); computer.finished()'
+        f.cases[#f.cases+1]={value=value,source=declaration and 'function start() '..body..' end' or
+          'return {api_version=1,handlers={start=function() '..body..' end}}',
+          ledger=admission.new(),checkpoint={},entered=0,finished=0}
+      end
+    end
+  end
+  for _,case in ipairs(f.cases) do
+    local ctx=admission.context(case.ledger,'cold-scalar-result',event.tick)
+    local plan,e=compiler.compile(case.source,ctx); assert(plan,e and e.message)
+    local function services(g)
+      return {computer={probe=function()
+        if case.value=='empty' then g.prepare_empty_result() else g.prepare_boolean_result() end
+        case.entered=case.entered+1
+        assert(admission.reserve(ctx,'work',limits.callback_work-ctx.machine.work))
+        assert(not pcall(g.spend,1))
+        if case.value~='empty' then return case.value=='true' end
+      end,finished=function() case.finished=case.finished+1 end}}
+    end
+    local ok,diagnostic,control=compiler.run(plan,'start',{},services,ctx,case.checkpoint)
+    if f.phase=='armed' then
+      assert(not ok and control=='wait' and case.entered==1 and case.finished==0,diagnostic and diagnostic.message)
+      local pending=case.checkpoint.frame.pending
+      assert(pending and pending.call_result==nil and pending.service_result==pending.prepared.called)
+      case.pc=case.checkpoint.frame.pc; case.spent=case.ledger.total
+    else
+      assert(ok and case.entered==1 and case.finished==1,diagnostic and diagnostic.message)
+    end
+  end
+  if f.phase=='armed' then
+    f.phase='frozen'; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
+  else
+    f.phase='done'; log('TC_CONTRACT scalar-results-cold-between-effect-and-caller-delivery'); log('TC_COLD_OK')
+  end
 end
 return M

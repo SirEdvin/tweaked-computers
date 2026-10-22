@@ -40,6 +40,12 @@ function M.new(context, services, shell, durable)
     if result and checkpoint_codec then return checkpoint_codec.decode(result) end
     return result
   end
+  local function prepare_checkpoint(result)
+    if call_checkpoint and checkpoint_codec then
+      G.host_work(result.n*2+4,result.n*2+4)
+      call_checkpoint.prepared=checkpoint_codec.prepare(result)
+    end
+  end
   function G.bind_value(value,descriptor) bindings[value]=descriptor end
   function G.binding(value) return bindings[value] end
   function G.is_callable(value) return callable[value]~=nil end
@@ -361,12 +367,14 @@ function M.new(context, services, shell, durable)
     if frame and frame.fn==service.wrapper then
       G.spend(3); allocate(2); frame.boolean_result=true
     end
+    prepare_checkpoint({n=1,false})
     service.boolean_result=true
   end
   function G.prepare_empty_result()
     local service=assert(service_frames[#service_frames],'empty admission requires a trusted service')
     if service.empty_result then return end
     prepare_return(service.wrapper)
+    prepare_checkpoint({n=0})
     service.empty_result=true
   end
   function G.prepare_result(...)
@@ -378,10 +386,7 @@ function M.new(context, services, shell, durable)
       if not (type(result[i])=='table' and protected[result[i]]) then result[i]=G.snapshot(result[i]) end
     end
     prepare_return(service.wrapper,table.unpack(result,1,result.n))
-    if call_checkpoint and checkpoint_codec then
-      G.host_work(result.n*2+4,result.n*2+4)
-      call_checkpoint.prepared=checkpoint_codec.prepare(result)
-    end
+    prepare_checkpoint(result)
     service.prepared_result=result
     return table.unpack(result,1,result.n)
   end
@@ -396,10 +401,12 @@ function M.new(context, services, shell, durable)
           args[i]=G.snapshot(args[i])
         end
       end
-      local frame={wrapper=wrapper}; service_frames[#service_frames+1]=frame
+      local frame={wrapper=wrapper}
       local called=call_checkpoint and restored_result(call_checkpoint.service_result)
       if not called then
+        service_frames[#service_frames+1]=frame
         called=table.pack(pcall(fn,table.unpack(args,1,n)))
+        service_frames[#service_frames]=nil
         if called[1] and frame.prepared_result then
           local expected=frame.prepared_result
           if called.n~=expected.n+1 then errors.raise('E_ENGINE','trusted service result width contract violated') end
@@ -407,24 +414,31 @@ function M.new(context, services, shell, durable)
             if not rawequal(called[i+1],expected[i]) then errors.raise('E_ENGINE','trusted service result contract violated') end
           end
         end
+        if called[1] and frame.boolean_result then
+          if called.n~=2 or type(called[2])~='boolean' then errors.raise('E_ENGINE','trusted boolean service contract violated') end
+          if call_checkpoint and call_checkpoint.prepared then
+            -- Both outcomes use the same prepaid scalar slots, never a post-effect allocation.
+            call_checkpoint.prepared.called[2]=called[2]; call_checkpoint.prepared.values[1]=called[2]
+          end
+        end
+        if called[1] and frame.empty_result and called.n~=1 then errors.raise('E_ENGINE','trusted empty service contract violated') end
         if call_checkpoint and called[1] then
-          call_checkpoint.service_result=checkpoint_result(called,frame.prepared_result and call_checkpoint.prepared)
+          call_checkpoint.service_result=checkpoint_result(called,(frame.prepared_result or frame.boolean_result or frame.empty_result) and call_checkpoint.prepared)
         end
       end
-      service_frames[#service_frames]=nil
       if not called[1] then error(called[2],0) end
       local result={n=called.n-1}; for i=2,called.n do result[i-1]=called[i] end
       if result.n>limits.tuple_entries then fatal('service result width exceeded') end
-      if frame.prepared_result then
-        -- Snapshot, call-return and durable result storage precede publication.
-      elseif frame.empty_result then
-        if result.n~=0 then fatal('trusted empty service contract violated') end
-      elseif frame.boolean_result then
-        if result.n~=1 or type(result[1])~='boolean' then fatal('trusted boolean service contract violated') end
-      else
+      local prepared=call_checkpoint and call_checkpoint.prepared
+      local prepaid=prepared and call_checkpoint.service_result==prepared.called
+      if not (frame.prepared_result or frame.empty_result or frame.boolean_result or prepaid) then
         for i=1,result.n do
           if not (type(result[i])=='table' and protected[result[i]]) then result[i]=G.snapshot(result[i]) end
         end
+      end
+      if prepaid then
+        local frame=call_frames[#call_frames]
+        if frame and frame.fn==wrapper then frame.prepared_return=result end
       end
       G.check()
       return table.unpack(result,1,result.n)
