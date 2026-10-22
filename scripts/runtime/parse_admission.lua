@@ -11,7 +11,7 @@ function M.enter(cost)
     errors.raise('E_BUDGET', 'source compilation work exhausted')
   end
   if trace then
-    if #trace<32768 then
+    if (#trace+1)*16+64<=limits.compiler_cache_bytes then
       trace[#trace+1]=cost; trace.total=(trace.total or 0)+cost
     else trace.overflow=true; trace=nil end
   end

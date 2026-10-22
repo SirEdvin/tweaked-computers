@@ -9,7 +9,7 @@ provisional safety ceilings, not simultaneous maximum-world guarantees.
 
 ## Live mod settings
 
-Open **Settings → Mod settings → Map** to change the five runtime-global
+Open **Settings → Mod settings → Map** to change the runtime-global
 budgets below while playing. They apply to every player and computer in the
 save, without restarting the map. The table lists defaults; computer.getLimits()
 returns the current effective values in a defensive copy.
@@ -20,6 +20,7 @@ returns the current effective values in a defensive copy.
 | Execution work per computer per tick (`tc-callback-work`) | `callback_work` | 500000 | 1–100000000 |
 | Guest allocations per computer per tick (`tc-callback-allocations`) | `callback_allocations` | 81920 | 1–100000000 |
 | Shared host work per tick (`tc-host-work-per-tick`) | `host_work_per_tick` | 5000000 | 200001–1000000000 |
+| Disposable compiler cache bytes (`tc-compiler-cache-bytes`) | `compiler_cache_bytes` | 8388608 | 1–1000000000 |
 | World maintenance work per tick (`tc-maintenance-work-per-tick`) | `maintenance_work_per_tick` | 200000 | 200000–100000000 requested |
 
 Compilation, execution and allocation defaults are five times the original
@@ -36,6 +37,16 @@ Run to restart. Validate, Run validation and callback reconstruction share
 compilation credits. Higher budgets may reduce UPS; these are not speed or
 frame-rate controls. Source, state, depth, monitor and other structural caps
 remain unchanged.
+
+### Disposable compiler cache
+
+`compiler_cache_bytes` bounds shared retained plans, generated continuation text
+and deterministic charge traces, including metadata. These are accounting bytes,
+not measured Lua heap bytes. There is no separate plan-count or trace-count cap.
+Capacity pressure evicts the cache as a batch; an oversized proof is simply rebuilt.
+The cache is private and disposable: cold, warm and evicted proofs charge the same
+accepted work prefixes, so cache warmth cannot change progress or renew credits.
+Reducing cache retention does not invalidate saved source or suspended invocations.
 
 ### Maintenance and shared headroom
 
@@ -87,6 +98,7 @@ is needed; ordinary synchronized admission resets counters only on a new tick.
 | `callback_allocations` | 81920 |
 | `compile_work` | 1250000 |
 | `host_work_per_tick` | 5000000 |
+| `compiler_cache_bytes` | 8388608 |
 | `active_computers` | 64 |
 | `active_logic_handlers` | 128 |
 | `aggregate_subscriptions` | 1024 |

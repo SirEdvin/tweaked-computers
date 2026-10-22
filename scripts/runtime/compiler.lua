@@ -11,7 +11,18 @@ local M = {}
 -- Host-only, bounded, exact-source validation cache. No caller-owned plan or
 -- executable closure is trusted. Replay every original charge, in order, so
 -- warm/cold peers retain identical admission and partial-refusal behavior.
-local cache,order={},{}
+local cache,cache_bytes={},0
+local function prune_cache()
+  if cache_bytes>limits.compiler_cache_bytes then cache,cache_bytes={},0 end
+end
+local function retain(key,entry)
+  if entry.bytes>limits.compiler_cache_bytes then return end
+  local previous=cache[key]
+  local total=cache_bytes-(previous and previous.bytes or 0)+entry.bytes
+  if total>limits.compiler_cache_bytes then cache,cache_bytes={},0; total=entry.bytes end
+  cache[key]=entry; cache_bytes=total
+end
+local function proof_bytes(charges) return 64+16*#charges end
 local function plan_copy(p)
   local names={}; for k,v in pairs(p.handlers) do names[k]=v end
   return {compiler_version=p.compiler_version,api_version=p.api_version,source=p.source,
@@ -321,6 +332,7 @@ function M.compile(source, context, mode)
   if type(source) ~= 'string' then return nil, errors.new('E_ARGUMENT','source must be a string') end
   if #source > limits.source_bytes then return nil, errors.new('E_LIMIT','source byte limit exceeded') end
   local cache_key=(mode or 'program')..'\0'..source
+  prune_cache()
   local retained=cache[cache_key]; local charges=not retained and {} or nil
   local expression_source=false
   parsing.begin(context,charges)
@@ -376,8 +388,9 @@ function M.compile(source, context, mode)
     return nil,plan
   end
   if charges and not charges.overflow then
-    if #order>=8 then cache[table.remove(order,1)]=nil end
-    cache[cache_key]={plan=plan_copy(plan),charges=charges}; order[#order+1]=cache_key
+    local bytes=256+#cache_key+#plan.source+#plan.generated+proof_bytes(charges)
+    for name in pairs(plan.handlers) do bytes=bytes+#name+48 end
+    retain(cache_key,{plan=plan_copy(plan),charges=charges,bytes=bytes})
   end
   return plan
 end
@@ -390,8 +403,16 @@ function M.run(plan, name, event, services, context, checkpoint, shell)
     if checkpoint.wait_tick==context.tick then return false,nil,'wait' end
     local executable,diagnostic=M.compile(plan.source,context,plan.mode)
     if not executable then return false,diagnostic end
-    parsing.begin(context)
+    local cache_key=(plan.mode or 'program')..'\0'..plan.source
+    local retained=cache[cache_key]
+    local lowering=retained and retained.continuation
+    local charges=not lowering and {} or nil
+    parsing.begin(context,charges)
     local ok,generated=pcall(function()
+      if lowering then
+        if not admission.replay_compile(context,lowering.charges) then errors.raise('E_BUDGET','source compilation work exhausted') end
+        return lowering.generated
+      end
       local main,diagnostics
       if plan.mode=='shell' then
         main,diagnostics=parse('return '..plan.source,'@computer')
@@ -404,6 +425,10 @@ function M.run(plan, name, event, services, context, checkpoint, shell)
     end)
     parsing.finish()
     if not ok then return false,type(generated)=='table' and generated or errors.new('E_PROGRAM',tostring(generated)) end
+    if retained and charges and not charges.overflow then
+      retain(cache_key,{plan=retained.plan,charges=retained.charges,
+        continuation={generated=generated,charges=charges},bytes=retained.bytes+#generated+proof_bytes(charges)+64})
+    end
     return continuation.run(plan.source,generated,name,event,services,context,checkpoint,shell)
   end
   -- Revalidate or replay the private exact-source proof every dispatch, retaining

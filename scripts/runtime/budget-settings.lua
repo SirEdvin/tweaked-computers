@@ -7,6 +7,7 @@ local M={maintenance_max=maintenance_max,definitions={
   {key='callback_work',name='tc-callback-work',minimum_value=1,maximum_value=100000000},
   {key='callback_allocations',name='tc-callback-allocations',minimum_value=1,maximum_value=100000000},
   {key='host_work_per_tick',name='tc-host-work-per-tick',minimum_value=limits.maintenance_work_per_tick+1,maximum_value=1000000000},
+  {key='compiler_cache_bytes',name='tc-compiler-cache-bytes',minimum_value=1,maximum_value=1000000000},
   {key='maintenance_work_per_tick',name='tc-maintenance-work-per-tick',minimum_value=limits.maintenance_work_per_tick,maximum_value=maintenance_max},
 }}
 for _,definition in ipairs(M.definitions) do definition.default_value=limits[definition.key] end

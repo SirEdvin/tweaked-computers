@@ -64,7 +64,8 @@ local function snapshot()
       invocation=copy(r.invocation),shell=copy(r.shell),queue=copy(r.queue),bytes=r.queue_bytes,state=copy(r.state),dispatch=r.last_dispatch_tick,next_class=r.next_work_class}
   end
   local dbs={}; for _,id in ipairs(f.databases) do dbs[#dbs+1]=copy(registry.record(id).database) end
-  return {computers=records,databases=dbs,ledger=copy(root.ledger),scheduler=copy(root.scheduler),sequence=root.next_sequence}
+  return {computers=records,databases=dbs,ledger=copy(root.ledger),scheduler=copy(root.scheduler),sequence=root.next_sequence,
+    cache_limit=limits.compiler_cache_bytes}
 end
 local function frozen()
   local f=storage.tc_resource_engine
@@ -82,6 +83,15 @@ local function frozen()
   assert(s.invocation.checkpoint.shell_root.x==10,'staged scratch value lost')
   data_only(s.invocation.checkpoint,{})
 end
+local function cache_setting(value)
+  local ledger=registry.get().ledger
+  local before=copy(ledger)
+  settings.global['tc-compiler-cache-bytes']={value=value}
+  local handler=assert(script.get_event_handler(defines.events.on_runtime_mod_setting_changed))
+  handler{setting='tc-compiler-cache-bytes',setting_type='runtime-global',tick=game.tick}
+  assert(settings.global['tc-compiler-cache-bytes'].value==value and limits.compiler_cache_bytes==value)
+  assert(registry.get().ledger==ledger and equal(ledger,before),'cache setting renewed spent credits')
+end
 local function source(db,descriptor)
   local body="local db=peripheral.wrap('"..db.."','red'); local write=db.set; "..
     "write('prefix',tostring((tonumber(db.get('prefix')) or 0)+1)); "..
@@ -96,7 +106,8 @@ function M.run()
   local function build(kind,x,y)
     return assert(lifecycle.build(assert(s.create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})))
   end
-  local f={phase='power',origin=game.tick,computers={},databases={}}
+  local f={phase='power',origin=game.tick,computers={},databases={},cache_limit=limits.compiler_cache_bytes}
+  assert(f.cache_limit==8388608 and settings.global['tc-compiler-cache-bytes'].value==8388608)
   storage.tc_resource_engine=f
   for i=1,2 do
     local c=build('computer',0,(i-1)*6); local db=build('kv',3,(i-1)*6)
@@ -171,6 +182,7 @@ function M.on_tick(event)
       f.links[#f.links+1]={checkpoint=f.shell_checkpoint,token=token,descriptor=descriptor,parent=descriptor.facade}
     end
     assert(#f.links>=4,'real captured facade/method witnesses required')
+    cache_setting(1)
     f.phase='frozen'; f.freeze_tick=event.tick; f.expected=snapshot()
     game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED'); return
   end
@@ -200,6 +212,7 @@ function M.on_tick(event)
     assert(x==300000,'Console staging was not committed on success')
     local prints=0; for _,entry in ipairs(owner.logs) do if entry.text:find('output: shell-before',1,true) then prints=prints+1 end end
     assert(prints==1,'Console print replayed or lost')
+    cache_setting(f.cache_limit)
     f.phase='done'; log('TC_COLD_OK durable-KV-loop both-source-forms locals aliases FIFO neighbor Console-staging once-only')
   end
 end

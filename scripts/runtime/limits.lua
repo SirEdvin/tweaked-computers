@@ -6,7 +6,7 @@ return {
   source_nodes = 4096, source_tokens = 4096, source_nesting = 48,
   handler_names = 64, identifier_bytes = 64, tuple_entries = 128,
   callback_work = 500000, callback_depth = 32, callback_allocations = 81920,
-  compile_work = 1250000, host_work_per_tick = 5000000,
+  compile_work = 1250000, host_work_per_tick = 5000000, compiler_cache_bytes = 8388608,
   active_computers = 64, active_logic_handlers = 128,
   aggregate_subscriptions = 1024, aggregate_owned_outputs = 128,
   state_bytes = 65536, state_entries = 256, data_nodes = 4096, data_depth = 16,
