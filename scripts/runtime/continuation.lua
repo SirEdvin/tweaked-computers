@@ -9,7 +9,7 @@ local checkpoint_validation=require('scripts.runtime.checkpoint-validation')
 local M={version=2}
 local function quote(s) return string.format('%q',s) end
 local checkpoint_fields={version=true,source=true,handler=true,frame=true,symbols=true,intern=true,bindings=true,
-  owned=true,owned_order=true,symbols_order=true,bindings_order=true,collection=true,validation=true,memory_bytes=true,
+  owned=true,owned_order=true,symbols_order=true,bindings_order=true,collection=true,validation=true,memory_bytes=true,memory_owner=true,
   wait_tick=true,event_initialized=true,shell_root=true,result=true,result_printed=true,value_graph=true,completed=true}
 local function validate(checkpoint,executable,tick,spend)
   local function refuse(message) errors.raise('E_UNSUPPORTED',message..'; continuation retained') end
@@ -274,6 +274,12 @@ function M.run(source,generated,name,event,services,context,checkpoint,shell)
     return false,errors.new('E_UNSUPPORTED','continuation identity/ABI mismatch; retained')
   end
   if checkpoint.wait_tick==context.tick then return false,nil,'wait' end
+  local memory_owner=context.memory_owner
+  if memory_owner and (memory_owner.closed or memory_owner.closing)
+    or checkpoint.memory_owner~=nil and (not memory_owner or memory_owner.id~=checkpoint.memory_owner)
+    or checkpoint.version~=nil and memory_owner and checkpoint.memory_owner~=memory_owner.id then
+    return false,errors.new('E_UNSUPPORTED','continuation memory owner mismatch; retained')
+  end
   local factory,problem=load(generated,'@continuation','t',{})
   if not factory then return false,errors.new('E_PROGRAM',problem) end
   local executable=factory()
@@ -283,6 +289,7 @@ function M.run(source,generated,name,event,services,context,checkpoint,shell)
     checkpoint.frame={pc=executable.entries[name],locals={},slots={},tuples={},event=event}
     checkpoint.symbols={}; checkpoint.intern={}; checkpoint.bindings={}; checkpoint.owned={}
     checkpoint.owned_order={}; checkpoint.symbols_order={}; checkpoint.bindings_order={}
+    if memory_owner then checkpoint.memory_owner=memory_owner.id end
   end
   local f=checkpoint.frame
   local guard=sandbox.new(context,services,shell,checkpoint)
@@ -412,7 +419,7 @@ function M.run(source,generated,name,event,services,context,checkpoint,shell)
   local ok,result=pcall(function()
     guard.initialize()
     validate(checkpoint,executable,context.tick,guard.spend)
-    if checkpoint.collection then ownership.advance(checkpoint,guard.spend) end
+    if checkpoint.collection then ownership.advance(checkpoint,guard.spend,memory_owner) end
     if not checkpoint.event_initialized then
       f.event=guard.snapshot(event); checkpoint.event_initialized=true
     end

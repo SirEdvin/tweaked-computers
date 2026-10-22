@@ -1,5 +1,6 @@
 -- Saved strong indices are ephemerons: only roots/guest edges keep values alive.
 local errors=require('scripts.runtime.errors')
+local memory=require('scripts.runtime.memory')
 local M={}
 local binding_fields={'name','wire','generation','kind','method','facade'}
 local resource_fields={'code','message','resource','setting','used','requested','limit','recoverable','line','column'}
@@ -25,8 +26,11 @@ function M.begin(checkpoint,executable)
 end
 local function malformed() errors.raise('E_UNSUPPORTED','invalid continuation ownership graph; retained') end
 -- One admitted action changes one cursor/edge only; native hash cursors never persist.
-function M.advance(checkpoint,spend)
+function M.advance(checkpoint,spend,memory_owner)
   local gc=assert(checkpoint.collection)
+  if memory_owner then
+    if memory_owner.id~=checkpoint.memory_owner or memory_owner.closed or memory_owner.closing then malformed() end
+  elseif checkpoint.memory_owner~=nil then malformed() end
   local function scalar(value)
     local kind=type(value)
     if kind=='string' then
@@ -86,7 +90,7 @@ function M.advance(checkpoint,spend)
     else scalar(value) end
     if done then gc.queue[gc.head]=false; gc.head=gc.head+1 end
   end
-  while gc.phase~='mark' do
+  while gc.phase~='mark' and gc.phase~='memory' do
     local field=gc.phase
     local order=checkpoint[field..'_order']
     local value=order[gc.cursor]
@@ -103,8 +107,19 @@ function M.advance(checkpoint,spend)
       gc.order={}; gc.cursor=1
       if field=='owned' then gc.phase='symbols'
       elseif field=='symbols' then gc.phase='bindings'
+      elseif memory_owner then gc.phase='memory'; gc.memory_cursor=memory_owner.head
       else checkpoint.memory_bytes=gc.bytes; checkpoint.collection=nil; return end
     end
+  end
+  while gc.phase=='memory' do
+    local node=gc.memory_cursor
+    if not node then checkpoint.memory_bytes=gc.bytes; checkpoint.collection=nil; return end
+    spend(1)
+    local successor=node.next
+    if not (gc.seen[node.value] or gc.strings[node.value] or gc.records[node.value]) then
+      memory.release(memory_owner,node.value)
+    end
+    gc.memory_cursor=successor
   end
 end
 return M
