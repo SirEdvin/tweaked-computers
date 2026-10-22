@@ -41,6 +41,7 @@ function M.new(context, services, shell, durable)
   end
   function G.bind_value(value,descriptor) bindings[value]=descriptor end
   function G.binding(value) return bindings[value] end
+  function G.is_callable(value) return callable[value]~=nil end
   function G.binding_resolver(fn) assert(not restore_binding); restore_binding=fn end
   function G.restore_binding(descriptor,facade) return assert(restore_binding,'binding provider unavailable')(descriptor,facade) end
   function G.is_plain(value) return owned[value] and not protected[value] and getmetatable(value)==nil end

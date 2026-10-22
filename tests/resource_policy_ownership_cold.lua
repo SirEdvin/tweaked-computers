@@ -29,8 +29,7 @@ local function frozen(f)
 end
 function M.on_load()
   local f=storage.tc_ownership_fixture
-  if f.phase=='frozen' then frozen(f); log('TC_OWNERSHIP_ON_LOAD_UNCHANGED') end
-  loaded=true
+  if f.phase=='frozen' then frozen(f); log('TC_OWNERSHIP_ON_LOAD_UNCHANGED'); loaded=true end
 end
 function M.on_tick()
   local f=storage.tc_ownership_fixture

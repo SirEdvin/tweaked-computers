@@ -5,10 +5,11 @@ local sandbox=require('scripts.runtime.sandbox')
 local parsing=require('scripts.runtime.parse_admission')
 local shell_values=require('scripts.runtime.shell-values')
 local ownership=require('scripts.runtime.ownership')
+local checkpoint_validation=require('scripts.runtime.checkpoint-validation')
 local M={version=2}
 local function quote(s) return string.format('%q',s) end
 local checkpoint_fields={version=true,source=true,handler=true,frame=true,symbols=true,intern=true,bindings=true,
-  owned=true,owned_order=true,symbols_order=true,bindings_order=true,collection=true,memory_bytes=true,
+  owned=true,owned_order=true,symbols_order=true,bindings_order=true,collection=true,validation=true,memory_bytes=true,
   wait_tick=true,event_initialized=true,shell_root=true,result=true,result_printed=true,value_graph=true,completed=true}
 local function validate(checkpoint,executable,tick,spend)
   local function refuse(message) errors.raise('E_UNSUPPORTED',message..'; continuation retained') end
@@ -20,21 +21,15 @@ local function validate(checkpoint,executable,tick,spend)
     or type(checkpoint.symbols)~='table' or type(checkpoint.intern)~='table'
     or type(checkpoint.bindings)~='table' or type(checkpoint.owned)~='table'
     or checkpoint.wait_tick~=nil and not errors.integer(checkpoint.wait_tick,0,tick) then refuse('invalid checkpoint header') end
-  for key in pairs(frame.locals) do spend(1); if not errors.integer(key,1,executable.locals) then refuse('invalid local slot') end end
-  for key in pairs(frame.slots) do spend(1); if not errors.integer(key,1,executable.slots) then refuse('invalid temporary slot') end end
-  if frame.pending and (type(frame.pending)~='table' or frame.pending.block~=frame.pc) then refuse('invalid pending primitive') end
-  local seen,stack={},{checkpoint}
-  while #stack>0 do
-    local value=table.remove(stack); local kind=type(value)
-    spend(1+(kind=='string' and #value or 0))
-    if kind=='table' then
-      if getmetatable(value)~=nil then refuse('non-data checkpoint table') end
-      if not seen[value] then
-        seen[value]=true
-        for k,v in pairs(value) do spend(2); stack[#stack+1]=k; if v~=nil then stack[#stack+1]=v end end
-      end
-    elseif kind~='nil' and kind~='boolean' and kind~='number' and kind~='string' then refuse('non-data checkpoint value') end
+  for _,value in ipairs({frame,frame.locals,frame.slots,frame.tuples,checkpoint.symbols,checkpoint.intern,checkpoint.bindings,checkpoint.owned}) do
+    if getmetatable(value) then refuse('invalid checkpoint container') end
   end
+  for _,name in ipairs({'owned_order','symbols_order','bindings_order'}) do
+    if type(checkpoint[name])~='table' or getmetatable(checkpoint[name]) then refuse('invalid ownership order') end
+  end
+  if checkpoint.collection~=nil and (type(checkpoint.collection)~='table' or getmetatable(checkpoint.collection)) then refuse('invalid collection cursor') end
+  if frame.pending~=nil and (type(frame.pending)~='table' or getmetatable(frame.pending) or frame.pending.block~=frame.pc) then refuse('invalid pending primitive') end
+  checkpoint_validation.advance(checkpoint,executable,spend)
 end
 
 -- The ordinary compiler validates the source before passing its AST here.
@@ -390,7 +385,9 @@ function M.run(source,generated,name,event,services,context,checkpoint,shell)
     guard.call_checkpoint(f.pending,codec)
     local args=table.pack(...)
     for i=1,args.n do args[i]=r.decode(args[i]) end
-    local result=codec.encode(table.pack(guard.call(r.decode(symbol),table.unpack(args,1,args.n))))
+    local fn=r.decode(symbol)
+    if not guard.is_callable(fn) then errors.raise('E_ARGUMENT','approved callable required') end
+    local result=codec.encode(table.pack(guard.call(fn,table.unpack(args,1,args.n))))
     f.tuples[out]=result
     return result[1]
   end
