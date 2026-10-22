@@ -11,8 +11,9 @@ schema: spec-driven
 
 rules:
   proposal:
-    - Run at least one round of clarification before finilizing proposal
+    - Run at least two rounds of clarification before finalizing proposal
     - If you not sure, don't assume, just ask
+    - When planning new limits in specification, always confirm that they are necessary
     - When introducing new peripherals or changes for peripherals always introduce extra artifact - new api specification for this peripheral
 
 # Per-operation guidance (optional)
