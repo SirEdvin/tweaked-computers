@@ -7,12 +7,17 @@ local shell_values=require('scripts.runtime.shell-values')
 local ownership=require('scripts.runtime.ownership')
 local checkpoint_validation=require('scripts.runtime.checkpoint-validation')
 local memory=require('scripts.runtime.memory')
-local M={version=2}
+local M={version=3}
 local function quote(s) return string.format('%q',s) end
 local checkpoint_fields={version=true,source=true,handler=true,frame=true,symbols=true,intern=true,bindings=true,
   owned=true,owned_order=true,symbols_order=true,symbol_roots=true,bindings_order=true,collection=true,validation=true,preparation=true,memory_bytes=true,memory_owner=true,
-  wait_tick=true,event_initialized=true,shell_root=true,result=true,result_printed=true,value_graph=true,completed=true}
-local function validate(checkpoint,executable,tick,spend,deep)
+  wait_tick=true,event_initialized=true,shell_root=true,result=true,result_printed=true,value_graph=true,completed=true,
+  tuple_capacities=true,tuple_control=true}
+local function frame_bytes(executable)
+  return 14*192+21*48+16*(executable.locals+2*executable.slots+#executable.symbols+#executable.strings+executable.call_count)
+    +80*executable.call_count+96+288+384
+end
+local function validate(checkpoint,executable,tick,spend,deep,owner)
   local function refuse(message) errors.raise('E_UNSUPPORTED',message..'; continuation retained') end
   if getmetatable(checkpoint)~=nil then refuse('invalid checkpoint metatable') end
   for key in pairs(checkpoint) do spend(1); if not checkpoint_fields[key] then refuse('unknown checkpoint field') end end
@@ -34,15 +39,18 @@ local function validate(checkpoint,executable,tick,spend,deep)
     or phase=='collect' and (checkpoint.validation~=nil or type(checkpoint.collection)~='table') then refuse('invalid preparation phase') end
   if checkpoint.collection~=nil and (type(checkpoint.collection)~='table' or getmetatable(checkpoint.collection)) then refuse('invalid collection cursor') end
   if checkpoint.symbol_roots~=nil and (type(checkpoint.symbol_roots)~='table' or getmetatable(checkpoint.symbol_roots)) then refuse('invalid source symbol roots') end
+  if checkpoint.memory_owner~=nil and (type(checkpoint.tuple_capacities)~='table' or getmetatable(checkpoint.tuple_capacities)
+    or not errors.integer(checkpoint.tuple_control,2,9007199254740991))
+    or checkpoint.memory_owner==nil and (checkpoint.tuple_capacities~=nil or checkpoint.tuple_control~=nil) then refuse('invalid tuple workspace') end
   if frame.pending~=nil and (type(frame.pending)~='table' or getmetatable(frame.pending) or frame.pending.block~=frame.pc) then refuse('invalid pending primitive') end
-  if deep then checkpoint_validation.advance(checkpoint,executable,spend) end
+  if deep then checkpoint_validation.advance(checkpoint,executable,spend,owner,frame_bytes(executable)) end
 end
 
 -- The ordinary compiler validates the source before passing its AST here.
 -- Unsupported slice syntax is explicit, never executed by a native fallback.
 function M.lower(main,reject,position,mode)
   local blocks,flow,locals,local_count,slots={},{},{},0,0
-  local symbol_paths,literals={},{}
+  local symbol_paths,literals,calls={},{},{}
   local function static_path(node)
     local parts,bytes={},0
     while node and node.node_type=='index' and node.suffix.node_type=='string' do
@@ -130,6 +138,7 @@ function M.lower(main,reject,position,mode)
       return expression(n.ex,a,output('('..operand..')',{'s'..a}))
     elseif k=='call' then
       local callee=slot()
+      calls[out]=true
       local pc=expressions(n.args,function(tuple,uses)
         uses[#uses+1]='s'..callee
         return output('r.call('..out..','..value(callee)..',r.arguments('..tuple..'))',uses,true)
@@ -181,6 +190,7 @@ function M.lower(main,reject,position,mode)
     elseif k=='breakstat' then return block(n,'',assert(breakpc))
     elseif k=='retstat' and #n.exp_list==0 then return block(n,'',0)
     elseif k=='retstat' and mode=='shell' then
+      calls[0]=true
       return expressions(n.exp_list,function(tuple,uses)
         return block(n,'r.finish('..tuple..')',0,uses)
       end)
@@ -296,7 +306,10 @@ function M.lower(main,reject,position,mode)
     for i,value in ipairs(ordered) do ordered[i]=quote(value) end
     return '{'..table.concat(ordered,',')..'}'
   end
-  return 'return {blocks={'..table.concat(blocks,',\n')..'},cleanup={'..table.concat(cleanups,',')..'},entries={'..table.concat(entries,',')..'},symbols='..quoted_set(symbol_paths)..',strings='..quoted_set(literals)..',slots='..slots..',locals='..local_count..'}'
+  local outputs={}; for out in pairs(calls) do outputs[#outputs+1]=out end
+  table.sort(outputs,function(a,b) parsing.enter(1); return a<b end)
+  for i,out in ipairs(outputs) do outputs[i]='['..out..']=true' end
+  return 'return {blocks={'..table.concat(blocks,',\n')..'},cleanup={'..table.concat(cleanups,',')..'},entries={'..table.concat(entries,',')..'},symbols='..quoted_set(symbol_paths)..',strings='..quoted_set(literals)..',calls={'..table.concat(outputs,',')..'},call_count='..#outputs..',slots='..slots..',locals='..local_count..'}'
 end
 
 function M.run(source,factory,name,event,services,context,checkpoint,shell)
@@ -315,11 +328,12 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   if checkpoint.version==nil then
     if not executable.entries[name] then return false,errors.new('E_NOT_FOUND','handler not declared') end
     local symbols,intern,order={},{},{}
-    local roots
+    local roots,capacities
     if memory_owner then
       roots={}
+      capacities={}; for out in pairs(executable.calls) do capacities[out]=1 end
       -- Source constants are part of the accepted frame, not new growth after a decrease.
-      local bytes=13*192+19*48+16*(executable.locals+2*executable.slots+#executable.symbols+#executable.strings)
+      local bytes=frame_bytes(executable)
       local items={{checkpoint,bytes},{source,#source+32},{name,#name+32}}
       for i,path in ipairs(executable.symbols) do
         local token={}
@@ -339,7 +353,9 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     checkpoint.frame={pc=executable.entries[name],locals={},slots={},tuples={},event=event}
     checkpoint.symbols=symbols; checkpoint.intern=intern; checkpoint.bindings={}; checkpoint.owned={}
     checkpoint.owned_order={}; checkpoint.symbols_order=order; checkpoint.bindings_order={}; checkpoint.symbol_roots=roots
-    if memory_owner then checkpoint.memory_owner=memory_owner.id end
+    if memory_owner then
+      checkpoint.memory_owner=memory_owner.id; checkpoint.tuple_capacities=capacities; checkpoint.tuple_control=2
+    end
   end
   local f=checkpoint.frame
   local guard=sandbox.new(context,services,shell,checkpoint)
@@ -436,18 +452,32 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
       else f.locals[target.slot]=values[i] end
     end
   end
-  function r.finish(tuple) checkpoint.result=tuple end
-  local codec={}
-  function codec.encode(tuple)
-    if memory_owner then
-      guard.host_work(tuple.n*6+2,tuple.n*3+2)
-      local items={}
-      for i=1,tuple.n do
-        local value=tuple[i]
-        if type(value)=='string' then items[#items+1]={value,#value+32} end
-      end
-      memory.acquire_all(memory_owner,items)
+  local call_output
+  local function admit_tuple(tuple,out,called)
+    if not memory_owner then return end
+    guard.host_work(tuple.n*6+2,tuple.n*3+2)
+    local width=tuple.n-(called and 1 or 0)
+    local previous=checkpoint.tuple_capacities[out]
+    if not errors.integer(previous,1,9007199254740991) or width<0 then
+      errors.raise('E_UNSUPPORTED','invalid tuple capacity; continuation retained')
     end
+    local control=math.max(checkpoint.tuple_control,width+1)
+    local node=memory_owner.values[checkpoint]
+    if not node then errors.raise('E_UNSUPPORTED','missing frame allocation; continuation retained') end
+    -- Frame reservations survive limit decreases without retaining dead tuple identities.
+    local bytes=node.record.bytes+16*(math.max(0,width-previous)+control-checkpoint.tuple_control)
+    local items={{checkpoint,bytes}}
+    for i=1,tuple.n do
+      local value=tuple[i]
+      if type(value)=='string' then items[#items+1]={value,#value+32} end
+    end
+    memory.acquire_all(memory_owner,items)
+    checkpoint.tuple_capacities[out]=math.max(previous,width); checkpoint.tuple_control=control
+  end
+  function r.finish(tuple) admit_tuple(tuple,0); checkpoint.result=tuple end
+  local codec={}
+  function codec.encode(tuple,values)
+    admit_tuple(tuple,call_output,not values)
     local result={n=tuple.n}
     for i=1,tuple.n do result[i]=r.encode(tuple[i]) end
     return result
@@ -458,7 +488,7 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     return result
   end
   function codec.prepare(tuple)
-    local values=codec.encode(tuple)
+    local values=codec.encode(tuple,true)
     local called={n=values.n+1,true}
     for i=1,values.n do called[i+1]=values[i] end
     return {called=called,values=values}
@@ -473,6 +503,8 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   end
   local owned_before,symbols_before,bindings_before,memory_before
   function r.call(out,symbol,...)
+    call_output=out
+    f.tuples[out]=nil -- The overwritten call site's old cache is dead before preparing its replacement.
     owned_before=#checkpoint.owned_order; symbols_before=#checkpoint.symbols_order; bindings_before=#checkpoint.bindings_order
     memory_before=memory_owner and memory_owner.count
     f.pending=f.pending or {block=f.pc}
@@ -484,7 +516,7 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     if not guard.is_callable(fn) then errors.raise('E_ARGUMENT','approved callable required') end
     local result=table.pack(guard.call(fn,table.unpack(args,1,args.n)))
     local prepared=f.pending.prepared
-    result=prepared and f.pending.call_result==prepared.called and prepared.values or codec.encode(result)
+    result=prepared and f.pending.call_result==prepared.called and prepared.values or codec.encode(result,true)
     f.tuples[out]=result
     return result[1]
   end
@@ -500,7 +532,7 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   local progressed=false
   local ok,result=pcall(function()
     guard.initialize()
-    validate(checkpoint,executable,context.tick,guard.spend,checkpoint.preparation==nil or checkpoint.preparation=='validate')
+    validate(checkpoint,executable,context.tick,guard.spend,checkpoint.preparation==nil or checkpoint.preparation=='validate',memory_owner)
     if checkpoint.preparation==nil or checkpoint.preparation=='validate' then checkpoint.preparation='collect' end
     if checkpoint.preparation=='collect' then
       local reclaimed=checkpoint.collection and ownership.advance(checkpoint,guard.spend,memory_owner)
