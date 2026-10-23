@@ -90,7 +90,8 @@ local protected_body=[[
   outer,ok,result=pcall(xpcall,function() error('first') end,function()
     attempts=attempts+1; error('again')
   end)
-  assert(outer and not ok and attempts>1 and result.recoverable and result.resource=='call_depth')
+  assert(outer and not ok and attempts==32 and result.recoverable and result.resource=='call_depth')
+  assert(result.used==attempts and result.limit==attempts and result.setting=='tc-host-stack-depth')
   ok,result=xpcall(error,error,'native re-entry')
   assert(not ok and result.recoverable and result.resource=='call_depth')
   computer.finished()
@@ -123,6 +124,7 @@ function M.on_load()
     for _,f in ipairs(state.cases) do
       assert(f.checkpoint.frame==f.frame and f.frame.pc==f.pc and f.frame.parent and f.frame.parent.parent)
       assert(f.ledger.total==f.spent and f.prefix==1 and f.finished==0)
+      if f.expect_bridge then assert(f.handler_pending.handling and f.handler_pending.handler_depth==2) end
     end
     loaded=true; log('TC_FUNCTIONS_ON_LOAD_UNCHANGED')
   end
@@ -140,8 +142,13 @@ function M.on_tick(event)
       if state.phase=='arm' then
         assert(not ok and f.prefix==1 and f.checkpoint.frame.parent and f.checkpoint.frame.parent.parent)
         local live={}; local frame=f.checkpoint.frame; local bridge=false
-        while frame do live[frame]=true; bridge=bridge or frame.bridge~=nil; frame=frame.parent end
+        while frame do
+          live[frame]=true; bridge=bridge or frame.bridge~=nil
+          if frame.pending and frame.pending.handling then f.handler_pending=frame.pending end
+          frame=frame.parent
+        end
         assert(not f.expect_bridge or bridge,'nested protected bridge was not frozen')
+        if f.expect_bridge then assert(f.handler_pending and f.handler_pending.handler_depth==2) end
         for value in pairs(f.owner.values) do
           if type(value)=='table' and value.parent and value.locals and value.slots then
             assert(live[value],'unwound frame retained its memory charge')

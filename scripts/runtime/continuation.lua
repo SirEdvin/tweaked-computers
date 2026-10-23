@@ -900,11 +900,21 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   end
   local uncaught
   local function advance_failure()
+    guard.step(f.failure.diagnostic.line,f.failure.diagnostic.column)
     guard.host_work(4,4)
     if f.pending and f.pending.protection then
       local pending=f.pending
-      if pending.handler then
-        if pending.handling then pending.handler_depth=(pending.handler_depth or 0)+1 end
+      local handler_depth=pending.handler_depth or 0
+      if pending.handler and handler_depth>=limits.host_stack_depth then
+        -- Unwinding must not renew the logical native message-handler budget.
+        local _,problem=pcall(guard.refuse_depth,handler_depth)
+        problem.line=f.failure.diagnostic.line; problem.column=f.failure.diagnostic.column
+        problem=guard.snapshot(problem)
+        local tuple={n=2,false,problem}
+        admit_tuple(tuple,pending.output)
+        pending.guest_result=tuple
+      elseif pending.handler then
+        pending.handler_depth=handler_depth+1
         pending.target=pending.handler; pending.args={n=1,f.failure.value}; pending.handling=true
         pending.call_result=nil; pending.service_result=nil; pending.prepared=nil
         pending.jobs=nil; pending.service_args=nil; pending.result_kind=nil

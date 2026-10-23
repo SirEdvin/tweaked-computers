@@ -171,6 +171,10 @@ function M.new(context, services, shell, durable)
     if not admission.reserve(context,'allocations',n) then fatal('callback allocation budget exhausted') end
   end
   function G.host_work(work,allocations) G.spend(work); allocate(allocations) end
+  function G.refuse_depth(used)
+    if not durable then fatal('callback call depth exhausted') end
+    errors.refuse('call_depth','tc-host-stack-depth',used,1,limits.host_stack_depth,'host call or message-handler re-entry depth exhausted')
+  end
   function G.step(source_line,source_column) line=source_line or line; column=source_column or column; G.spend(1) end
   function G.enter(source_line,source_column,parameters)
     G.step(source_line,source_column); G.spend(parameters); allocate(parameters)
@@ -268,7 +272,7 @@ function M.new(context, services, shell, durable)
     local n=select('#',...)
     if n>limits.tuple_entries then fatal('argument width exceeded') end
     G.spend(n+1); allocate(n+1)
-    if depth>=limits.callback_depth then fatal('callback call depth exhausted') end
+    if depth>=limits.host_stack_depth then G.refuse_depth(depth) end
     local caller_line,caller_column=line,column
     depth=depth+1
     local frame={fn=fn}; call_frames[#call_frames+1]=frame
@@ -419,7 +423,7 @@ function M.new(context, services, shell, durable)
   end
   function G.new(count, factory, ...)
     integer(count,0,limits.table_entries); G.spend(count+1); allocate(count+1)
-    if depth>=limits.callback_depth then fatal('callback call depth exhausted') end
+    if depth>=limits.host_stack_depth then G.refuse_depth(depth) end
     depth=depth+1
     local ok,t=pcall(factory,...)
     depth=depth-1
@@ -654,7 +658,10 @@ function M.new(context, services, shell, durable)
       -- G.call unwinds its own depth before propagating that error.
       if poison then return nil end
       G.spend(1)
-      if depth>=limits.callback_depth then fatal('callback call depth exhausted') end
+      if depth>=limits.host_stack_depth then
+        local _,refusal=pcall(G.refuse_depth,depth)
+        return G.snapshot(refusal) -- Never send exhaustion back through the exhausted handler.
+      end
       depth=depth+1
       if type(problem)=='table' and not owned[problem] and not protected[problem] then problem=G.snapshot(problem) end
       G.scalar(problem) -- Reject foreign objects/oversized scalars before guest message code.

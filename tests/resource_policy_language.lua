@@ -49,7 +49,8 @@ end]=],
     if attempts<40 then error(e) end
     return 'caught'
   end)
-  assert(outer and not ok and problem=='caught' and attempts==40)
+  assert(outer and not ok and problem.recoverable and problem.resource=='call_depth')
+  assert(attempts==problem.limit and attempts==32 and problem.setting=='tc-host-stack-depth')
   computer.finished()
 end]=],
 }

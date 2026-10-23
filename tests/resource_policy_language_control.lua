@@ -50,6 +50,8 @@ function M.run()
     computer.after()
   end]])
   assert(not ok and control=='stop' and e.code=='E_STOP' and e.line==2 and effects.handled==0 and effects.after==0)
+  ok,e,control,effects=run('function start()\n local ok,e=xpcall(error,error,"re-entry")\n assert(not ok and e.recoverable and e.resource=="call_depth" and e.line==2 and e.column>0)\n computer.after()\nend')
+  assert(ok and effects.after==1,e and e.message)
   log('TC_CONTRACT private-suspension-stop-and-protected-refusal-locations')
 end
 return M
