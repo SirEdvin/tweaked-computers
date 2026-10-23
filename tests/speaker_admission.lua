@@ -39,6 +39,16 @@ local function native_policy()
     local ok,e=pcall(s.getLimits,1); assert(not ok and e.code=='E_ARGUMENT')
     if not event.powered then
       ok,e=pcall(s.getInstruments); assert(not ok and e.code=='E_UNPOWERED')
+    else
+      local names=s.getInstruments(); assert(#names>0)
+      for i=2,#names do assert(names[i-1]<names[i]) end
+      local notes=s.getNotes('piano'); assert(notes[1].pitch==0 and notes[1].name=='F3')
+      notes[1].name='changed'; assert(s.getNotes('piano')[1].name=='F3')
+      local page=s.getSounds('utility/'); assert(#page.sounds>0 and #page.sounds<=50)
+      assert(#s.getSounds(string.rep('x',257)).sounds==0)
+      for i=1,9 do assert(s.playNote('piano',0,0)) end
+      assert(s.playSound('utility/wire_connect_pole',0))
+      assert(s.playSound('utility/wire_connect_pole',0))
     end
   end]]
   local plan,e=compiler.compile(source); assert(plan,e and e.message)
@@ -57,7 +67,7 @@ local function native_policy()
     memory.close(owner,function() end)
   end
   runtime.stop(computer.id)
-  log('TC_CONTRACT native-powered-and-unpowered-speaker-policy-v2')
+  log('TC_CONTRACT native-powered-unpowered-policy-catalogue-and-sequential-submissions')
 end
 local function real_guard_submission(record)
   local native=record.body.surface.play_sound
@@ -159,7 +169,7 @@ function M.run()
   local source='function start() local ok,value=pcall(computer.submit); computer.result(ok,value) end'
   local plan,e=compiler.compile(source); assert(plan,e and e.message)
   storage.speaker_admission_cold={phase='arm',cases={}}
-  for _,cut in ipairs({'before','after','failed','revoked'}) do
+  for _,cut in ipairs({'before','after','failed','revoked','work'}) do
     local account=memory.new(1000000,256)
     storage.speaker_admission_cold.cases[#storage.speaker_admission_cold.cases+1]={
       cut=cut,plan=plan,checkpoint={},ledger=admission.new(),account=account,owner=memory.owner(account),calls=0,deliveries=0}
@@ -181,6 +191,9 @@ local function cold_step(f,tick,arming)
     g.prepare_boolean_result=function()
       prepare()
       if arming and (f.cut=='before' or f.cut=='revoked') then g.suspend() end
+      if arming and f.cut=='work' then
+        assert(admission.reserve(ctx,'work',limits.callback_work-ctx.machine.work))
+      end
     end
     return {computer={
       submit=function()
@@ -226,6 +239,7 @@ function M.on_tick(event)
         assert(job.attempted==submitted and job.failed==(f.cut=='failed'))
         assert(f.calls==(submitted and 1 or 0) and f.pending.prepared and f.pending.result_kind=='boolean')
         assert(f.account.values[job].bytes==192+48*2)
+        if f.cut=='work' then assert(f.ledger.machines['speaker-cold-work'].work==limits.callback_work) end
         f.saved_calls=f.calls; f.spent=f.ledger.total
       elseif ok then
         assert(f.deliveries==1 and f.calls==(f.cut=='revoked' and 0 or 1),'speaker replayed or lost submission/delivery')
@@ -243,6 +257,6 @@ function M.on_tick(event)
     game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED'); return
   end
   assert(event.tick-state.tick<30,'speaker cold continuation deadline')
-  if done then state.phase='done'; log('TC_CONTRACT real-speaker-guard-cold-before-after-failure-and-revocation'); log('TC_COLD_OK') end
+  if done then state.phase='done'; log('TC_CONTRACT real-speaker-guard-cold-before-after-failure-revocation-and-work-exhaustion'); log('TC_COLD_OK') end
 end
 return M

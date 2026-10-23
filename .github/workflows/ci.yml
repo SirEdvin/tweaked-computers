@@ -100,6 +100,9 @@ jobs:
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/speaker-admission" --mode both --fixture tests.speaker_admission --cold
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/speaker-resource" --mode both \
+            --fixture tests.speaker_resource_engine --data-fixture tests.speaker_resource_data --production-context --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/speaker" --mode both --fixture tests.speaker_engine \
             --data-fixture tests.speaker_data --final-data-fixture tests.speaker_data_final \
             --production-context --cold --upgrade-fixture

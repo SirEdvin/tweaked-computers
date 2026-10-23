@@ -140,9 +140,8 @@ function note(event)
   assert(speaker, "Speaker disconnected; reconnect and Run again")
   local step = computer.getState("step")
   local pitches = computer.getState("pitches")
-  if speaker.playNote("piano", 0.35, pitches[step]) then
-    computer.setState("step", step % #pitches + 1)
-  end
+  assert(speaker.playNote("piano", 0.35, pitches[step]))
+  computer.setState("step", step % #pitches + 1)
 end
 ```
 

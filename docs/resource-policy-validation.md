@@ -4,6 +4,44 @@ This is an **unfinished implementation checkpoint**, not a release candidate or 
 
 The [source-site disposition inventory](resource-policy-inventory.md) maps every policy-manifest audit row and shared limit constant to its implementation paths and required treatment. Inventory coverage is not proof that those limits have been removed.
 
+## Native oversized speaker inventories and maintained examples
+
+The new `speaker_resource_engine` fixture installs **real native prototypes**:
+65 additional instruments, a 129-note instrument, 32,769 named sounds and valid
+instrument/note/sound names longer than 256 bytes. It uses an actual wired
+programmable speaker, production program scheduling and a live page-size setting
+of 73; no runtime catalogue, authority or audio sink is replaced in this fixture.
+
+Both base and Space Age pass complete sorted pagination of the 32,769 test
+sounds, defensive note snapshots, native pitch validation and sequential
+submissions beyond the former per-speaker ceilings. A separate-process cold
+reload during pagination retains the run, count, spent work and start/submission
+markers. Native speaker configuration remains unchanged. The same fixture then
+executes all three maintained speaker examples; the melody now explicitly
+requires a successful sequential return rather than branching on a retired
+quota-rejection result.
+
+The expanded `speaker_admission` fixture also exercises real wired discovery and
+playback. Its separately labelled native-sink/authority doubles still verify
+exact native-call counts and failure/revocation boundaries. A new cold case
+exhausts the real work ledger before submission (rather than merely injecting a
+suspension), verifies zero submissions at that boundary and exactly one after
+reload. The existing before/after/failure/revocation cases remain intact.
+
+The two fixtures pass in both modes: **four native cases and eight clean cold
+phases**. Build, animation-wrapper/settings tests, generated examples/catalogue,
+strict OpenSpec and MkDocs/player-doc checks pass. Final archive/source hashes,
+native result markers and receipts are recorded in
+`/home/siredvin/artifacts/tweaked-computers/resource-policy-speaker-native-inventories/verification-index.json`.
+CI adds the oversized fixture without removing the legacy speaker fixture.
+
+This is native catalogue/submission evidence, not audible playback or connected
+multiplayer acceptance. The legacy `speaker_engine` still contains retired
+quota assertions, a non-durable guest driver and a Configurator transaction
+dependency; its migration remains open. Task 8.3 and overall integration are not
+closed by this checkpoint; progress remains **12/47**. Production budgets and the
+unchanged controller/chart gates were not modified.
+
 ## Protected-call refusal and application-state recovery
 
 Task 4.2 is complete; overall implementation progress is **12/47**. The exact
