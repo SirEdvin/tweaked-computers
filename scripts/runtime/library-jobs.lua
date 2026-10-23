@@ -137,7 +137,8 @@ end
 local function unpack_values(g,j,args)
   local t=args[1]; g.plain(t)
   if not j.phase then
-    local first,last=args[2] or 1,args[3]
+    local first,last=args[2],args[3]
+    if first==nil then first=1 end
     if last==nil then last=#t end
     integer(first,-MAX,MAX); integer(last,-MAX,MAX)
     keep(g,j,0,0); j.index=first; j.first=first; j.last=last; j.values={n=math.max(0,last-first+1)}; j.phase='copy'
@@ -232,7 +233,8 @@ local function character(g,j,args)
   return joined(g,j)
 end
 local function repeat_string(g,j,args)
-  local value,sep=args[1],args[3] or ''
+  local value,sep=args[1],args[3]
+  if sep==nil then sep='' end
   if type(value)~='string' or type(sep)~='string' then fail('string required') end
   local count=integer(args[2],-MAX,MAX)
   if count<=0 or #value==0 and #sep==0 then return {n=1,''} end
