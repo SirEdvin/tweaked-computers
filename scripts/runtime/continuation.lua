@@ -10,9 +10,9 @@ local memory=require('scripts.runtime.memory')
 local M={version=2}
 local function quote(s) return string.format('%q',s) end
 local checkpoint_fields={version=true,source=true,handler=true,frame=true,symbols=true,intern=true,bindings=true,
-  owned=true,owned_order=true,symbols_order=true,symbol_roots=true,bindings_order=true,collection=true,validation=true,memory_bytes=true,memory_owner=true,
+  owned=true,owned_order=true,symbols_order=true,symbol_roots=true,bindings_order=true,collection=true,validation=true,preparation=true,memory_bytes=true,memory_owner=true,
   wait_tick=true,event_initialized=true,shell_root=true,result=true,result_printed=true,value_graph=true,completed=true}
-local function validate(checkpoint,executable,tick,spend)
+local function validate(checkpoint,executable,tick,spend,deep)
   local function refuse(message) errors.raise('E_UNSUPPORTED',message..'; continuation retained') end
   if getmetatable(checkpoint)~=nil then refuse('invalid checkpoint metatable') end
   for key in pairs(checkpoint) do spend(1); if not checkpoint_fields[key] then refuse('unknown checkpoint field') end end
@@ -28,17 +28,21 @@ local function validate(checkpoint,executable,tick,spend)
   for _,name in ipairs({'owned_order','symbols_order','bindings_order'}) do
     if type(checkpoint[name])~='table' or getmetatable(checkpoint[name]) then refuse('invalid ownership order') end
   end
+  local phase=checkpoint.preparation
+  if phase~=nil and phase~='validate' and phase~='collect' and phase~='execute'
+    or phase=='execute' and (checkpoint.validation~=nil or checkpoint.collection~=nil)
+    or phase=='collect' and (checkpoint.validation~=nil or type(checkpoint.collection)~='table') then refuse('invalid preparation phase') end
   if checkpoint.collection~=nil and (type(checkpoint.collection)~='table' or getmetatable(checkpoint.collection)) then refuse('invalid collection cursor') end
   if checkpoint.symbol_roots~=nil and (type(checkpoint.symbol_roots)~='table' or getmetatable(checkpoint.symbol_roots)) then refuse('invalid source symbol roots') end
   if frame.pending~=nil and (type(frame.pending)~='table' or getmetatable(frame.pending) or frame.pending.block~=frame.pc) then refuse('invalid pending primitive') end
-  checkpoint_validation.advance(checkpoint,executable,spend)
+  if deep then checkpoint_validation.advance(checkpoint,executable,spend) end
 end
 
 -- The ordinary compiler validates the source before passing its AST here.
 -- Unsupported slice syntax is explicit, never executed by a native fallback.
 function M.lower(main,reject,position,mode)
   local blocks,flow,locals,local_count,slots={},{},{},0,0
-  local symbol_paths={}
+  local symbol_paths,literals={},{}
   local function static_path(node)
     local parts,bytes={},0
     while node and node.node_type=='index' and node.suffix.node_type=='string' do
@@ -85,7 +89,7 @@ function M.lower(main,reject,position,mode)
       return block(n,target..'='..code,nextpc,uses,{'s'..out,tuple and 't'..out or nil})
     end
     if k=='number' then return output(n.src_value or tostring(n.value))
-    elseif k=='string' then return output(quote(n.value))
+    elseif k=='string' then literals[n.value]=true; return output(quote(n.value))
     elseif k=='boolean' then return output(tostring(n.value))
     elseif k=='nil' then return output('nil')
     elseif k=='local_ref' then
@@ -286,10 +290,13 @@ function M.lower(main,reject,position,mode)
     local b=blocks[i]
     blocks[i]='function(f,r) r.guard.step('..b.line..','..b.column..'); r.guard.spend('..maximum..'); '..b.code..' end'
   end
-  local paths={}; for path in pairs(symbol_paths) do paths[#paths+1]=path end
-  table.sort(paths,function(a,b) parsing.enter(#a+#b+1); return a<b end)
-  for i,path in ipairs(paths) do paths[i]=quote(path) end
-  return 'return {blocks={'..table.concat(blocks,',\n')..'},cleanup={'..table.concat(cleanups,',')..'},entries={'..table.concat(entries,',')..'},symbols={'..table.concat(paths,',')..'},slots='..slots..',locals='..local_count..'}'
+  local function quoted_set(values)
+    local ordered={}; for value in pairs(values) do ordered[#ordered+1]=value end
+    table.sort(ordered,function(a,b) parsing.enter(#a+#b+1); return a<b end)
+    for i,value in ipairs(ordered) do ordered[i]=quote(value) end
+    return '{'..table.concat(ordered,',')..'}'
+  end
+  return 'return {blocks={'..table.concat(blocks,',\n')..'},cleanup={'..table.concat(cleanups,',')..'},entries={'..table.concat(entries,',')..'},symbols='..quoted_set(symbol_paths)..',strings='..quoted_set(literals)..',slots='..slots..',locals='..local_count..'}'
 end
 
 function M.run(source,factory,name,event,services,context,checkpoint,shell)
@@ -311,13 +318,16 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     local roots
     if memory_owner then
       roots={}
-      -- Source symbols are part of the accepted frame, not new growth after a decrease.
-      local bytes=13*192+18*48+16*(executable.locals+2*executable.slots+#executable.symbols)
+      -- Source constants are part of the accepted frame, not new growth after a decrease.
+      local bytes=13*192+19*48+16*(executable.locals+2*executable.slots+#executable.symbols+#executable.strings)
       local items={{checkpoint,bytes},{source,#source+32},{name,#name+32}}
       for i,path in ipairs(executable.symbols) do
         local token={}
         symbols[token]=path; intern[path]=token; order[i]=token; roots[i]=token
         items[#items+1]={token,192+2*48+16}; items[#items+1]={path,#path+32}
+      end
+      for _,value in ipairs(executable.strings) do
+        roots[#roots+1]=value; items[#items+1]={value,#value+32}
       end
       local admitted,problem=pcall(memory.acquire_all,memory_owner,items)
       if not admitted then
@@ -368,6 +378,7 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     return token
   end
   function r.encode(v)
+    if memory_owner and type(v)=='string' then memory.acquire(memory_owner,v,#v+32) end
     if type(v)~='table' and type(v)~='function' then return v end
     if encoded[v] then return encoded[v] end
     local binding=guard.binding(v)
@@ -428,6 +439,15 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   function r.finish(tuple) checkpoint.result=tuple end
   local codec={}
   function codec.encode(tuple)
+    if memory_owner then
+      guard.host_work(tuple.n*6+2,tuple.n*3+2)
+      local items={}
+      for i=1,tuple.n do
+        local value=tuple[i]
+        if type(value)=='string' then items[#items+1]={value,#value+32} end
+      end
+      memory.acquire_all(memory_owner,items)
+    end
     local result={n=tuple.n}
     for i=1,tuple.n do result[i]=r.encode(tuple[i]) end
     return result
@@ -451,7 +471,10 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     end
     return r.encode(guard.get(r.decode(object),r.decode(key)))
   end
+  local owned_before,symbols_before,bindings_before,memory_before
   function r.call(out,symbol,...)
+    owned_before=#checkpoint.owned_order; symbols_before=#checkpoint.symbols_order; bindings_before=#checkpoint.bindings_order
+    memory_before=memory_owner and memory_owner.count
     f.pending=f.pending or {block=f.pc}
     assert(f.pending.block==f.pc,'mismatched pending call')
     guard.call_checkpoint(f.pending,codec)
@@ -474,10 +497,18 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     end,
     binding=function(v) return checkpoint.bindings[v] end,
   },{__index=guard}) -- Ephemeral host adapter, never saved or exposed.
+  local progressed=false
   local ok,result=pcall(function()
     guard.initialize()
-    validate(checkpoint,executable,context.tick,guard.spend)
-    if checkpoint.collection then ownership.advance(checkpoint,guard.spend,memory_owner) end
+    validate(checkpoint,executable,context.tick,guard.spend,checkpoint.preparation==nil or checkpoint.preparation=='validate')
+    if checkpoint.preparation==nil or checkpoint.preparation=='validate' then checkpoint.preparation='collect' end
+    if checkpoint.preparation=='collect' then
+      local reclaimed=checkpoint.collection and ownership.advance(checkpoint,guard.spend,memory_owner)
+      checkpoint.preparation='execute'
+      if reclaimed then return 'prepared' end -- Do not rebuild abandoned prefixes in a permanently too-small tail.
+    end
+    owned_before=#checkpoint.owned_order; symbols_before=#checkpoint.symbols_order; bindings_before=#checkpoint.bindings_order
+    memory_before=memory_owner and memory_owner.count
     if not checkpoint.event_initialized then
       f.event=guard.snapshot(event); checkpoint.event_initialized=true
     end
@@ -492,6 +523,7 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
       f.pc=fn(f,r)
       executable.cleanup[previous][f.pc](f)
       f.pending=nil; guard.call_checkpoint(nil)
+      progressed=true
     end
     if shell then
       if not checkpoint.result_printed then
@@ -504,12 +536,19 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   if not ok then
     local diagnostic=guard.diagnostic(result)
     if guard.work_suspended() then
-      if not checkpoint.collection then ownership.begin(checkpoint,executable) end
+      -- Keep paid preparation only while a failed attempt publishes no retained staging.
+      local staged=owned_before and (#checkpoint.owned_order>owned_before or #checkpoint.symbols_order>symbols_before
+        or #checkpoint.bindings_order>bindings_before or memory_owner and memory_owner.count>memory_before)
+      if checkpoint.preparation~='execute' or progressed or staged then
+        if progressed or staged or checkpoint.preparation==nil then checkpoint.preparation='validate' end
+        if not checkpoint.collection then ownership.begin(checkpoint,executable,staged) end
+      end
       checkpoint.wait_tick=context.tick; return false,nil,'wait'
     end
     if diagnostic.recoverable then return false,diagnostic,'resource' end
     return false,diagnostic,guard.stop_requested() and 'stop' or nil
   end
+  if result=='prepared' then checkpoint.wait_tick=context.tick; return false,nil,'wait' end
   checkpoint.completed=true
   return true
 end

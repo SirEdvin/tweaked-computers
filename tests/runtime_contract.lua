@@ -576,7 +576,7 @@ function M.resource_policy()
   ok,problem,control=compiler.run(plan,'start',{},provider,context,checkpoint)
   assert(ok and #effects==2 and effects[1]=='before' and effects[2]=='after',problem and problem.message)
   local plan=assert(compiler.compile(source('while true do end'),admission.context(admission.new(),'invalid-checkpoint-compile',0)))
-  for _,damage in ipairs({'pc','function','header','validation','validation-identity','validation-field','tuple','ownership-order','pending'}) do
+  for _,damage in ipairs({'pc','function','header','validation','validation-identity','validation-field','tuple','ownership-order','pending','preparation','preparation-conflict'}) do
     local state={}; local ledger=admission.new()
     local waiting,_,control=compiler.run(plan,'start',{}, {},admission.context(ledger,'invalid-checkpoint',1),state)
     assert(not waiting and control=='wait')
@@ -588,6 +588,8 @@ function M.resource_policy()
     elseif damage=='tuple' then state.frame.tuples[1]={n=-1}
     elseif damage=='ownership-order' then state.owned_order=false
     elseif damage=='pending' then state.frame.pending=false
+    elseif damage=='preparation' then state.preparation='foreign'
+    elseif damage=='preparation-conflict' then state.preparation='execute'
     else state.version=999 end
     local passed,diagnostic=compiler.run(plan,'start',{}, {},admission.context(ledger,'invalid-checkpoint',2),state)
     assert(not passed and diagnostic.code=='E_UNSUPPORTED','malformed checkpoint executed or reset')

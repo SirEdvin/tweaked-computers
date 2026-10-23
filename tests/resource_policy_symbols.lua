@@ -19,7 +19,7 @@ function M.run()
     assert(not ok and control=='wait',e and e.message)
     assert(type(checkpoint.symbol_roots)=='table' and #checkpoint.symbol_roots>0,'source symbol pool missing')
     for _,token in ipairs(checkpoint.symbol_roots) do
-      assert(owner.values[token] and owner.values[checkpoint.symbols[token]],'source symbol bypassed retained admission')
+      assert(owner.values[token] and (type(token)=='string' or owner.values[checkpoint.symbols[token]]),'source symbol bypassed retained admission')
     end
     local dynamic=assert(checkpoint.intern['math.floor'],'computed namespace path missing')
     local future=assert(checkpoint.intern['computer.finished'],'future source path was not prepaid')

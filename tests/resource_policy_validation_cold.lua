@@ -66,7 +66,9 @@ function M.on_tick(event)
       game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
     end
   elseif f.phase=='resume' and not c.owned[f.garbage] then
-    assert(c.validation==nil and c.collection~=nil,'guest ran before validation and collection completed')
+    assert(c.validation==nil and c.frame.pc==f.pc
+      and (c.collection~=nil and c.preparation=='collect' or c.collection==nil and c.preparation=='execute'),
+      'guest ran before the paid preparation boundary: '..serpent.line({phase=c.preparation,collection=c.collection~=nil,pc=c.frame.pc,expected=f.pc}))
     assert(f.slices>2)
     limits.callback_work=f.saved_work
     f.phase='done'; log('TC_COLD_OK bounded-checkpoint-validation mid-table no-prefix-restart')

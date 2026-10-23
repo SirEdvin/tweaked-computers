@@ -7,10 +7,10 @@ local resource_fields={'code','message','resource','setting','used','requested',
 local function push(gc,value,kind,count)
   gc.queue[#gc.queue+1]={value=value,kind=kind,cursor=1,count=count}
 end
-function M.begin(checkpoint,executable)
+function M.begin(checkpoint,executable,retry)
   local f=checkpoint.frame
   local gc={queue={},head=1,seen={},records={},strings={},bytes=128+16*(executable.locals+executable.slots),
-    phase='mark',cursor=1,order={}}
+    phase='mark',cursor=1,order={},retry=retry or nil}
   gc.records[checkpoint]=true
   if checkpoint.source then push(gc,checkpoint.source); push(gc,checkpoint.handler) end
   if checkpoint.symbol_roots then push(gc,checkpoint.symbol_roots,'range',#checkpoint.symbol_roots) end
@@ -103,6 +103,7 @@ function M.advance(checkpoint,spend,memory_owner)
       else
         if field=='symbols' then checkpoint.intern[checkpoint.symbols[value]]=nil end
         checkpoint[field][value]=nil
+        gc.reclaimed=true
       end
       gc.cursor=gc.cursor+1
     else
@@ -111,16 +112,17 @@ function M.advance(checkpoint,spend,memory_owner)
       if field=='owned' then gc.phase='symbols'
       elseif field=='symbols' then gc.phase='bindings'
       elseif memory_owner then gc.phase='memory'; gc.memory_cursor=memory_owner.head
-      else checkpoint.memory_bytes=gc.bytes; checkpoint.collection=nil; return end
+      else checkpoint.memory_bytes=gc.bytes; checkpoint.collection=nil; return gc.retry and gc.reclaimed end
     end
   end
   while gc.phase=='memory' do
     local node=gc.memory_cursor
-    if not node then checkpoint.memory_bytes=gc.bytes; checkpoint.collection=nil; return end
+    if not node then checkpoint.memory_bytes=gc.bytes; checkpoint.collection=nil; return gc.retry and gc.reclaimed end
     spend(1)
     local successor=node.next
     if not (gc.seen[node.value] or gc.strings[node.value] or gc.records[node.value]) then
       memory.release(memory_owner,node.value)
+      gc.reclaimed=true
     end
     gc.memory_cursor=successor
   end
