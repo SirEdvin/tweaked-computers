@@ -7,6 +7,7 @@ local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local budgets = require('scripts.runtime.budget-settings')
 local shell = require('scripts.runtime.shell')
+local policy = require('scripts.runtime.resource-policy')
 local M = {}
 local hooks={lifecycle={},sample={},notifications={},render={}}
 local refusal={} -- Host-only ephemeral maintenance deferral identity.
@@ -213,6 +214,7 @@ function M.tick(tick)
   end
   root.scheduler.last_tick=tick
   phase('lifecycle',tick,spend)
+  M.try_maintenance(function() policy.reconcile(root,spend) end)
   phase('sample',tick,spend)
   phase('notifications',tick,spend)
   -- Advance clocks before callback dispatch; the cursor also rotates maintenance

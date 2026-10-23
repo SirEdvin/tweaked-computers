@@ -5,6 +5,7 @@ local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
 local data = require('scripts.runtime.data')
 local principal = require('scripts.runtime.principal')
+local policy = require('scripts.runtime.resource-policy')
 local M = {}
 local providers = {}
 local shell_lifecycle
@@ -55,6 +56,7 @@ function M.resource_refused(rec,diagnostic,tick)
   local owned={}; for key,value in pairs(diagnostic) do owned[key]=value end
   owned.source_revision=rec.active and rec.active.revision or nil; owned.run_id=rec.run_id
   rec.diagnostic=owned
+  rec.resource_refusal=owned
   local text=owned.code..': '..owned.message
   if #text<=limits.console_bytes then M.log(rec,text,tick) else rec.log_truncated=true end
 end
@@ -244,6 +246,7 @@ function M.services(rec,tick,guard,execution)
     guard.check()
     principal.check(rec,execution)
   end
+  guard.host_resize=function(key,bytes) current(); return policy.host_resize(key,bytes,spend) end
   local api={}
   local function method(name,min,max,fn)
     api[name]=function(...)
@@ -259,7 +262,8 @@ function M.services(rec,tick,guard,execution)
     guard.prepare_empty_result(); rec.label=label
   end)
   method('getTick',0,0,function() return tick end)
-  method('getLimits',0,0,function() return (data.copy(limits,spend)) end)
+  method('getLimits',0,0,function() return (data.copy(policy.limits(),spend)) end)
+  method('getResourceStatus',0,0,function() return (data.copy(policy.status(rec,tick),spend)) end)
   method('getState',1,1,function(key)
     data.key(key); spend(#key+1)
     if rec.state[key]~=nil then return (data.copy(rec.state[key],spend)) end

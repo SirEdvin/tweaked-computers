@@ -7,8 +7,10 @@ local function integer(value) assert(errors.integer(value,0,MAX),'invalid memory
 local function capacity(account,amount)
   integer(amount)
   if amount>0 and amount>account.limit-account.used-account.reserved then
-    errors.refuse('runtime_memory','tc-runtime-memory-bytes',account.used+account.reserved,amount,account.limit,
-      'runtime memory growth refused; release retained values or raise tc-runtime-memory-bytes')
+    local resource=account.resource or 'runtime_memory'
+    local setting=resource=='host_memory' and 'tc-host-memory-bytes' or 'tc-runtime-memory-bytes'
+    errors.refuse(resource,setting,account.used+account.reserved,amount,account.limit,
+      'memory growth refused; release retained values or raise '..setting)
   end
 end
 local function active(owner)
@@ -28,11 +30,12 @@ local function growth(owner,amount,sponsor)
   funding.reserved=funding.reserved-prepaid
   owner.account.reserved=owner.account.reserved-prepaid
 end
-function M.new(limit,control)
+function M.new(limit,control,resource)
   integer(limit); integer(control)
+  assert(resource==nil or resource=='runtime_memory' or resource=='host_memory','invalid memory domain')
   assert(limit>0,'positive memory allowance required')
   local account={version=1,limit=limit,used=0,reserved=0,control_reserved=control,
-    owners={},values={},next_id=1}
+    owners={},values={},next_id=1,resource=resource}
   capacity(account,ACCOUNT); account.used=ACCOUNT
   capacity(account,control); account.used=account.used+control
   return account

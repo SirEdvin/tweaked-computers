@@ -2,6 +2,7 @@
 local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
+local memory = require('scripts.runtime.memory')
 local M = {}
 local cleanup = {} -- Ephemeral host hooks, registered during control parsing.
 function M.initialize()
@@ -136,6 +137,9 @@ function M.remove(id,reason)
   if not M.cleanup(rec,rec.run_id,reason or 'removed') then
     rec.status='faulted'; rec.diagnostic=errors.new('E_ENGINE','cleanup failed; entity/data retained for recovery')
     return false
+  end
+  if rec.host_channels then
+    memory.release(root.host_memory_owner,rec.host_channels); rec.host_channels=nil
   end
   rec.status='removed'; rec.queue={}; rec.timers={}; rec.subscriptions={}
   for unit,binding in pairs(root.entities) do if binding.id==id then root.entities[unit]=nil end end
