@@ -66,13 +66,13 @@ function M.maintenance(root,tick,for_render)
   root.ledger.maintenance=s
   return function(n)
     assert(s.maintenance_tick==tick,'stale maintenance admission')
-    assert(errors.integer(n,0,1000000000),'invalid maintenance cost')
+    assert(errors.integer(n,0,9007199254740991),'invalid maintenance cost')
     -- Read live ceilings even for an already captured spend callback. A setting
     -- increase cannot reclaim guest credits already spent under the old split.
     local guest_spent=root.ledger.tick==tick and root.ledger.total or 0
     local ceiling=math.min(limits.maintenance_work_per_tick-(for_render and 0 or s.render_reserved_work),
       limits.host_work_per_tick-guest_spent)
-    if s.maintenance_spent+n>ceiling then error(refusal,0) end
+    if n>ceiling-s.maintenance_spent then error(refusal,0) end
     s.maintenance_spent=s.maintenance_spent+n
   end
 end
@@ -190,7 +190,7 @@ function M.tick(tick)
   local root=registry.get()
   if not registry.supported(root) then return end -- Unknown storage stays inert.
   local ledger=root.ledger
-  if type(ledger)~='table' or ledger.version~=1 or not errors.integer(ledger.total,0,1000000000)
+  if type(ledger)~='table' or ledger.version~=1 or not errors.integer(ledger.total,0,9007199254740991)
     or not errors.integer(ledger.tick,-1,9007199254740991) or tick<ledger.tick
     or not render_state_valid(root.scheduler,tick)
     or ledger.maintenance~=nil and ledger.maintenance~=root.scheduler then

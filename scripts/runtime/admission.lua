@@ -32,7 +32,7 @@ function M.guest_ceiling(ledger,tick)
   return math.max(0,limits.host_work_per_tick-math.max(limits.maintenance_work_per_tick,spent))
 end
 function M.reserve(ctx, kind, amount)
-  assert(errors.integer(amount, 0, 1000000000), 'invalid work reservation')
+  assert(errors.integer(amount, 0, 9007199254740991), 'invalid work reservation')
   assert(ctx.tick == ctx.ledger.tick, 'stale admission context')
   local ceiling
   if kind=='work' then ceiling=limits.callback_work
@@ -40,7 +40,7 @@ function M.reserve(ctx, kind, amount)
   elseif kind=='allocations' then ceiling=limits.callback_allocations end
   assert(ceiling, 'unknown admission kind')
   local aggregate_ceiling=M.guest_ceiling(ctx.ledger,ctx.tick)
-  if ctx.machine[kind] + amount > ceiling or ctx.ledger.total + amount > aggregate_ceiling then
+  if amount > ceiling-ctx.machine[kind] or amount > aggregate_ceiling-ctx.ledger.total then
     return false
   end
   ctx.machine[kind] = ctx.machine[kind] + amount

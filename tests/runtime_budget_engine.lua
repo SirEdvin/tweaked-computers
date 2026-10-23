@@ -75,9 +75,10 @@ local function frozen()
 end
 local function maintenance_contracts(report)
   local definitions=budgets.definitions
-  local definition=definitions[#definitions]
-  assert(definition.name==names.maintenance and definition.minimum_value==200000
-    and definition.maximum_value==100000000 and definition.default_value==200000)
+  local definition
+  for _,candidate in ipairs(definitions) do if candidate.name==names.maintenance then definition=candidate end end
+  assert(definition and definition.minimum_value==1
+    and definition.maximum_value==9007199254740991 and definition.default_value==200000)
   local root=fresh(); local t=game.tick
   local spend=scheduler.maintenance(root,t,true)
   spend(25000)

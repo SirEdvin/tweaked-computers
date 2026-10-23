@@ -4,6 +4,57 @@ This is an **unfinished implementation checkpoint**, not a release candidate or 
 
 The [source-site disposition inventory](resource-policy-inventory.md) maps every policy-manifest audit row and shared limit constant to its implementation paths and required treatment. Inventory coverage is not proof that those limits have been removed.
 
+## Settings registration checkpoint (partial task 2.1)
+
+Evidence: `/home/siredvin/artifacts/tweaked-computers/resource-policy-settings-aa769238bb43/`.
+The tested package SHA-256 is `aa769238bb431f339c43730962cdbc40d9a0e42b2004a92a59b82f49e93402e2`.
+The settings registry contains every approved setting, with localized descriptions,
+resource units/scopes, positive ranges and monitor axes capped at six. This is
+registration and refresh acceptance, **not proof of every owner's enforcement or
+the completed policy-v2 introspection contract**; task 2.1 remains open.
+
+- `tests.resource_policy_settings` passes in base and Space Age in production
+  context. It exercises every registered maximum through native settings,
+  changed effective values, selected minimum allowances, derived maintenance,
+  unchanged spent credits and retained ledger identity through cold reload.
+- `tests.runtime_budget_engine` passes its unchanged execution/accounting
+  regression coverage in both modes with the revised maintenance setting range.
+- Each fixture has two separate cold phases per mode: all recorded exits are
+  zero, console `/quit` is acknowledged, and no signal or forced cleanup is used.
+- `python tools/test_resource_policy_settings.py` passes manifest/localization
+  agreement; all 18 packaging tests pass and reproduce the tested package hash.
+  Static checks are not native enforcement evidence.
+
+The original failing settings fixture and its build receipt/log remain under
+`settings-red/` in the bundle. The earlier interrupted lock wait is not counted
+as an engine failure or a passing run. Subsequent implementation changes need
+their own integrated archive and acceptance; these results cannot be inherited
+by a changed runtime or service implementation.
+
+### Accounting-domain review correction
+
+Review found that the new legal work settings could exceed the scheduler's old
+one-billion retained-total validator. The added native regression reproduced
+that failure before the fix (`settings-accounting-red.log`). Guest reservations,
+maintenance costs and retained totals now share the safe-integer domain;
+admission checks remaining allowance before adding a charge.
+
+The corrected package SHA-256 is
+`d7ff8c8c4be9835ee8e1925c43e100b1049c4bf2e17a286d535d91f61424c496`.
+Both `settings-accounting/summary.json` and
+`settings-accounting-budget/summary.json` pass base and Space Age, including
+two cold phases per mode, acknowledged `/quit`, zero exits and no forced
+cleanup. The new fixture covers accumulated and individual spending above
+one billion, scheduler entry, next-tick rollover, invalid amounts and exact
+refusal near the safe-integer maximum. Spec and follow-up code-quality reviews
+approved this bounded registration/accounting change, not full task 2.1.
+
+These newer receipts and the failing attempt currently remain in
+`/home/siredvin/.hermes/profiles/albina/cache/scratch/tc-policy-parallel-QqFKCi/`.
+Copying this newer bundle to durable artifacts was not authorized by the tool
+approval prompt; it has **not** been preserved there. The earlier durable
+settings bundle above is not evidence for this correction.
+
 ## Scope and source
 
 - Implementation base and fetched `origin/main`: `d9e17929620ee9995a6b3235635ac12a283a0e72` (includes the approved planning change).
