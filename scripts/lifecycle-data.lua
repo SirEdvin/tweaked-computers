@@ -3,10 +3,9 @@ local registry=require('scripts.registry')
 local lifecycle=require('scripts.lifecycle')
 local runtime=require('scripts.runtime.computer')
 local limits=require('scripts.runtime.limits')
-local data=require('scripts.runtime.data')
 local errors=require('scripts.runtime.errors')
 local model=require('scripts.monitor-model')
-local M={computer_snapshot_bytes=131072}
+local M={}
 local MAX=9007199254740991
 local function fail(message) errors.raise('E_ARGUMENT',message) end
 local function shape(t,allowed,max)
@@ -14,31 +13,63 @@ local function shape(t,allowed,max)
   local n=0
   for k in pairs(t) do n=n+1; if n>max or not allowed[k] then fail('unknown lifecycle snapshot field') end end
 end
-local function text(s,max) if type(s)~='string' or #s>max then fail('bounded source/label required') end; return s end
+local function text(s) if type(s)~='string' then fail('source/label string required') end; return s end
 local function integer(n) if not errors.integer(n,0,MAX) then fail('invalid retained revision/version') end; return n end
 
 local function active_copy(a)
   if a==nil then return nil end
   shape(a,{source=true,revision=true,api_version=true,compiler_version=true,storage_version=true,handlers=true},6)
-  local result={source=text(a.source,limits.source_bytes),revision=integer(a.revision),
+  local result={source=text(a.source),revision=integer(a.revision),
     api_version=integer(a.api_version),compiler_version=integer(a.compiler_version),storage_version=integer(a.storage_version),handlers={}}
   if type(a.handlers)~='table' or getmetatable(a.handlers)~=nil then fail('plain retained handler inventory required') end
-  local n=0
   for name,v in pairs(a.handlers) do
-    n=n+1; if n>limits.handler_names or type(name)~='string' or #name==0 or #name>limits.identifier_bytes or v~=true then fail('invalid retained handler inventory') end
+    if type(name)~='string' or #name==0 or v~=true then fail('invalid retained handler inventory') end
     result.handlers[name]=true
   end
   return result
+end
+-- Material transport checks Data shape iteratively, not new-write quotas.
+local function material_data(value)
+  local root,seen,stats={},{},{bytes=0,nodes=0}
+  local stack={{value=value,parent=root,key=1}}
+  while #stack>0 do
+    local item=table.remove(stack); local v=item.value
+    if item.exit then seen[v]=nil
+    else
+      stats.nodes=stats.nodes+1
+      local typ=type(v)
+      if typ=='string' then stats.bytes=stats.bytes+#v+8; item.parent[item.key]=v
+      elseif typ=='boolean' then stats.bytes=stats.bytes+1; item.parent[item.key]=v
+      elseif typ=='number' and errors.finite(v) then stats.bytes=stats.bytes+8; item.parent[item.key]=v
+      elseif typ=='table' and getmetatable(v)==nil then
+        if seen[v] then fail('cyclic material Data') end
+        seen[v]=true; stats.bytes=stats.bytes+16
+        local copy={}; item.parent[item.key]=copy
+        stack[#stack+1]={value=v,exit=true}
+        local kind,count,maximum=nil,0,0
+        for k,x in pairs(v) do
+          local kt=type(k); count=count+1
+          if kt=='string' then stats.bytes=stats.bytes+#k+8
+          elseif kt=='number' and errors.integer(k,1,MAX) then
+            stats.bytes=stats.bytes+8; maximum=math.max(maximum,k)
+          else fail('Data keys must be strings or dense indexes') end
+          if kind and kind~=kt then fail('Data arrays and maps cannot mix') end
+          kind=kt; stack[#stack+1]={value=x,parent=copy,key=k}
+        end
+        if kind=='number' and maximum~=count then fail('Data array must be dense') end
+      else fail('plain finite nonnil Data required') end
+    end
+  end
+  return root[1],stats
 end
 local function state_copy(state)
   if type(state)~='table' or getmetatable(state)~=nil then fail('plain computer state map required') end
   local out,sizes,node_sizes={}, {}, {}; local bytes,nodes,count=16,1,0
   for k,v in pairs(state) do
-    data.key(k); count=count+1
-    if count>limits.state_entries then errors.raise('E_CAPACITY','state entry capacity exceeded') end
-    local copy,stats=data.copy(v)
+    if type(k)~='string' or #k==0 then fail('nonempty state key required') end
+    count=count+1
+    local copy,stats=material_data(v)
     local size=stats.bytes+#k+16; bytes=bytes+size; nodes=nodes+stats.nodes
-    if bytes>limits.state_bytes or nodes>limits.data_nodes then errors.raise('E_CAPACITY','state aggregate capacity exceeded') end
     out[k]=copy; sizes[k]=size; node_sizes[k]=stats.nodes
   end
   return out,bytes,nodes,count,sizes,node_sizes
@@ -46,15 +77,12 @@ end
 function M.import_computer(s,settings_only)
   shape(s,{version=true,saved_source=true,saved_revision=true,active=true,state=true,label=true},6)
   if s.version~=1 then errors.raise('E_UNSUPPORTED','unsupported computer item; original data retained') end
-  local c={saved_source=text(s.saved_source,limits.source_bytes),saved_revision=integer(s.saved_revision),label=s.label and text(s.label,limits.identifier_bytes) or nil}
-  if s.label~=nil then c.label=text(s.label,limits.identifier_bytes) end
+  local c={saved_source=text(s.saved_source),saved_revision=integer(s.saved_revision)}
+  if s.label~=nil then c.label=text(s.label) end
   if not settings_only then
     c.active=active_copy(s.active)
     c.state,c.state_bytes,c.state_nodes,c.state_entries,c.state_sizes,c.state_node_sizes=state_copy(s.state)
   elseif s.active~=nil or s.state~=nil then fail('blueprint/settings must not carry state or active execution') end
-  -- Content ceilings leave a separate fixed reservation for keys/headers/labels.
-  local bytes=#c.saved_source+(c.active and #c.active.source or 0)+(c.state_bytes or 16)+limits.state_entries*80+8192
-  if bytes>M.computer_snapshot_bytes then errors.raise('E_CAPACITY','computer snapshot metadata reservation exceeded') end
   return c
 end
 function M.computer_snapshot(rec,settings_only)

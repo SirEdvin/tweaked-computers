@@ -72,41 +72,53 @@ faults the run with its private fatal control and preserves prior data. Capacity
 wrong-type and argument errors remain catchable. Do not spin on busy/pending
 admission failures; retry in another named event.
 
-## Queryable initial ceilings
+## Queryable storage policy
 
-| Limit | Value |
-| --- | ---: |
-| `keys` | 128 |
-| `bytes` (sum of keys + string values + hash fields/values) | 16384 |
-| `key_bytes` (also each hash field) | 256 |
-| `value_bytes` | 8192 |
-| `hash_fields` (per hash) | 128 |
-| `hash_bytes` (sum of one hash's fields/values) | 8192 |
-| `total_hash_fields` (whole database) | 256 |
-| `command_arguments` | 128 |
-| `peripheral_call_bytes` | 65536 |
-| `peripheral_call_entries` | 4096 |
-| `snapshot_bytes` (separate accounted structure reservation) | 65536 |
-| `reclaim_keys_per_device` | 8 |
-| `reclaim_devices_per_tick` | 2 |
+`getLimits()` reports effective runtime-global settings, not frozen constants:
 
-These are initial alpha tuning, not measured graphical latency or a frozen
-aggregate factory envelope. The whole sandbox's work/allocation limits still
-apply to sequences of calls and defensive readback. The separate hash-byte cap
-leaves room for full hash readback under the unchanged sandbox allocation cap.
-There is no implicit unlimited capacity or automatic truncation on load.
+| Field | Setting | Default |
+| --- | --- | ---: |
+| `keys` | `tc-kv-keys` | 128 |
+| `bytes` (keys plus content) | `tc-kv-bytes` | 16384 |
+| `key_bytes` (also hash fields) | `tc-kv-key-bytes` | 256 |
+| `value_bytes` | `tc-kv-value-bytes` | 8192 |
+| `hash_fields` | `tc-kv-hash-fields` | 128 |
+| `hash_bytes` | `tc-kv-hash-bytes` | 8192 |
+| `total_hash_fields` | `tc-kv-total-hash-fields` | 256 |
+| `command_arguments` | `tc-kv-command-arguments` | 128 |
+| `command_bytes` / `peripheral_call_bytes` | `tc-kv-command-bytes` | 65536 |
+| `snapshot_bytes` | `tc-kv-snapshot-bytes` | 65536 |
 
-The reserved snapshot accounting is content plus at most 80 units per key,
-48 per hash field and 128 header units; this is independent of the live content
-allowance. Snapshot limits describe our bounded plain structure, not JSON file
-length or a compressed save size. At maximum accepted content, mining/save
-metadata has room without deleting data or reducing the content cap.
+The result also contains `policy_version=2` and a defensive `resources` map
+with setting names, units, scope, limits and rejection behavior. `usage` reports
+retained inventory, peak key/value/hash dimensions and `over_limit`; it includes
+expired entries until reclamation. `snapshot_metadata_bytes` is the current
+metadata reservation. `effective_bytes` is the content allowance for that
+inventory after reserving metadata, not a promise that a new key or field fits.
+The removed shared `peripheral_call_entries` and fixed reclamation batch fields
+are no longer advertised.
 
-Background reclamation visits at most eight indexed keys in each of two selected
-databases per tick, on a persisted fair device/key cursor. It uses the existing
-reserved maintenance ledger, not guest callback credits, and also visits
-unpowered databases. Deferral preserves the cursor. Per-command logical expiry
-is independent of the sweep. Ordinary save/load retains both cursors/counters.
+Each growing dimension must fit its setting. Lowering settings does not make
+accepted data corrupt: existing addresses remain readable and deletable,
+non-growing value/hash updates remain possible, and absolute expiry persists.
+A minimal recovery command remains available even when its necessary argument
+count exceeds a lowered command limit; larger batches must be split. Its input
+bytes may use the retained database byte footprint. New growth still uses the
+configured command limits. Refusals report the resource, setting, used/requested
+accounting and limit without publishing any part of the candidate.
+
+Before a write commits, snapshot admission reserves content plus 80 units per
+key, 48 per hash field and 128 header units. A smaller snapshot setting can
+therefore reduce effective write capacity. This is logical structure accounting,
+not native heap, JSON length or compressed save size. Existing over-limit
+snapshots remain exportable/importable; metadata limits never strand data that
+was already accepted. Shared runtime work/allocation admission still applies;
+see the storage validation report for outstanding shared-core integration gates.
+
+Background reclamation uses paid constant-size steps on persisted fair device/key
+cursors, rather than fixed eight-key/two-device batches. It also visits unpowered
+databases. Per-command logical expiry is independent of sweep progress; ordinary
+save/load retains the cursors and accounting.
 
 ## Mining, placement and recovery
 
