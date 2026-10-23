@@ -11,6 +11,8 @@ function M.begin(checkpoint,executable)
   local f=checkpoint.frame
   local gc={queue={},head=1,seen={},records={},strings={},bytes=128+16*(executable.locals+executable.slots),
     phase='mark',cursor=1,order={}}
+  gc.records[checkpoint]=true
+  if checkpoint.source then push(gc,checkpoint.source); push(gc,checkpoint.handler) end
   push(gc,f.locals,'range',executable.locals)
   push(gc,f.slots,'range',executable.slots)
   push(gc,f.tuples,'tuples',executable.slots)

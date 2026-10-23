@@ -6,6 +6,7 @@ local parsing=require('scripts.runtime.parse_admission')
 local shell_values=require('scripts.runtime.shell-values')
 local ownership=require('scripts.runtime.ownership')
 local checkpoint_validation=require('scripts.runtime.checkpoint-validation')
+local memory=require('scripts.runtime.memory')
 local M={version=2}
 local function quote(s) return string.format('%q',s) end
 local checkpoint_fields={version=true,source=true,handler=true,frame=true,symbols=true,intern=true,bindings=true,
@@ -284,6 +285,16 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   local executable=factory()
   if checkpoint.version==nil then
     if not executable.entries[name] then return false,errors.new('E_NOT_FOUND','handler not declared') end
+    if memory_owner then
+      -- Twelve initial containers, seventeen header entries and static value ranges.
+      local bytes=12*192+17*48+16*(executable.locals+2*executable.slots)
+      local admitted,problem=pcall(memory.acquire_all,memory_owner,
+        {{checkpoint,bytes},{source,#source+32},{name,#name+32}})
+      if not admitted then
+        local diagnostic=errors.resource_diagnostic(problem)
+        return false,diagnostic or errors.new('E_ENGINE','continuation storage admission failed'),diagnostic and 'resource' or nil
+      end
+    end
     checkpoint.version=M.version; checkpoint.source=source; checkpoint.handler=name
     checkpoint.frame={pc=executable.entries[name],locals={},slots={},tuples={},event=event}
     checkpoint.symbols={}; checkpoint.intern={}; checkpoint.bindings={}; checkpoint.owned={}

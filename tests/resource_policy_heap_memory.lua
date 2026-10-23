@@ -134,8 +134,40 @@ local function growth()
   assert(next(account.values)==nil and next(account.owners)==nil)
   log('TC_CONTRACT actual-guest-cross-tick-allocation-refuses-without-retained-credit-renewal')
 end
+local function frames()
+  local account=memory.new(1000000,256); local owner=memory.owner(account)
+  local ledger=admission.new(); local ctx=admission.context(ledger,'frame-admission',0); ctx.memory_owner=owner
+  local source='function start() computer.finished() end'
+  local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
+  memory.configure(account,account.used)
+  local checkpoint,effects={},0
+  local function services(g)
+    return {computer={finished=function() g.prepare_empty_result(); effects=effects+1 end}}
+  end
+  local used,count=account.used,owner.count
+  local ok,diagnostic,control=compiler.run(plan,'start',nil,services,ctx,checkpoint)
+  assert(not ok and control=='resource' and diagnostic.recoverable and effects==0 and next(checkpoint)==nil,
+    'unadmitted frame/source was initialized or executed')
+  same(account,used,count,owner)
+  memory.configure(account,1000000)
+  ctx=admission.context(ledger,'frame-admission',1); ctx.memory_owner=owner
+  assert(compiler.run(plan,'start',nil,services,ctx,checkpoint))
+  assert(effects==1 and owner.values[checkpoint] and owner.values[source] and owner.values.start,
+    'accepted frame/source storage has no lifetime ownership')
+  local other=memory.owner(account); local second={}
+  local before=account.used
+  ctx=admission.context(ledger,'frame-admission-other',2); ctx.memory_owner=other
+  assert(compiler.run(plan,'start',nil,services,ctx,second))
+  assert(effects==2 and account.used-before==account.values[checkpoint].bytes+512,
+    'shared source/handler payloads were charged twice across frames')
+  memory.close(owner,function() end)
+  assert(other.values[source] and other.values.start and other.values[second] and not account.values[checkpoint])
+  memory.close(other,function() end)
+  assert(next(account.values)==nil and next(account.owners)==nil)
+  log('TC_CONTRACT initial-frame-source-and-handler-admission-precedes-checkpoint-publication')
+end
 function M.run()
-  bulk(); mutations(); copies(); growth()
+  frames(); bulk(); mutations(); copies(); growth()
   for _,kind in ipairs({'rawset','insert','remove','sort'}) do
     local ok,cost=metered(kind,limits.callback_work); assert(ok)
     for available=0,cost-1 do assert(not metered(kind,available),'short heap allowance published a mutation') end
@@ -165,7 +197,8 @@ function M.on_load()
     assert(f.account.used==f.used and f.account.limit==1 and f.account.reserved==f.reserved
       and f.owner.count==f.count and f.ledger.total==f.spent and f.checkpoint.frame.pc==f.pc
       and f.checkpoint.collection==f.collection and f.root.self==f.root and f.root.child==f.child
-      and f.child[1]=='kept' and f.owner.values[f.root] and f.owner.values[f.child] and f.effects==0)
+      and f.child[1]=='kept' and f.owner.values[f.root] and f.owner.values[f.child] and f.effects==0
+      and f.owner.values[f.checkpoint] and f.owner.values[f.plan.source] and f.owner.values.start)
     loaded=true; log('TC_HEAP_MEMORY_ON_LOAD_UNCHANGED')
   end
 end
@@ -190,7 +223,8 @@ function M.on_tick(event)
   end
   local ok,e,control=step(f,event.tick)
   assert(ok or control=='wait',e and e.message)
-  assert(event.tick-f.resumed<100 and f.account.used<=f.used and f.root.self==f.root and f.child[1]=='kept')
+  assert(event.tick-f.resumed<100 and f.account.used<=f.used and f.root.self==f.root and f.child[1]=='kept'
+    and f.owner.values[f.checkpoint] and f.owner.values[f.plan.source] and f.owner.values.start)
   if ok then
     assert(f.effects==1 and f.root.child==nil and f.account.limit==1 and f.owner.values[f.root])
     memory.close(f.owner,function() end)
