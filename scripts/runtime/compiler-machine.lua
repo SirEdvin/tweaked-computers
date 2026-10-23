@@ -1,3 +1,4 @@
+-- Unvalidated prototype internals; production callers must use the quarantined compiler facade.
 -- Host compiler frames only. Guest execution remains continuation ABI 9.
 local admission=require('scripts.runtime.admission')
 local limits=require('scripts.runtime.limits')

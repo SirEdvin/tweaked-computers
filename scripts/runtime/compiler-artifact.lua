@@ -1,3 +1,4 @@
+-- Unvalidated prototype internals; never pass saved/caller-owned text to this module.
 -- Separate syntax admission and lazy native reconstruction of ABI-9 blocks.
 local admission=require('scripts.runtime.admission')
 local limits=require('scripts.runtime.limits')

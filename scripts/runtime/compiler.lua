@@ -8,7 +8,6 @@ local errors = require('scripts.runtime.errors')
 local sandbox = require('scripts.runtime.sandbox')
 local continuation = require('scripts.runtime.continuation')
 local compiler_machine = require('scripts.runtime.compiler-machine')
-local compiler_artifact = require('scripts.runtime.compiler-artifact')
 local M = {}
 -- Host-only, bounded, exact-source validation cache. No caller-owned plan or
 -- executable closure is trusted. Replay every original charge, in order, so
@@ -486,17 +485,12 @@ end
 function M.new_job(source,mode)
   return compiler_machine.new(source,mode)
 end
-function M.advance(job,context,admit)
-  if type(admit)~='function' then return nil,errors.new('E_UNSUPPORTED','compiler host-memory admission adapter required') end
-
-  local plan,diagnostic,status=compiler_machine.advance(job,context,admit)
-  if plan then
-    local ready,e,control=compiler_artifact.check(job,context)
-    if not ready then return nil,e,control end
-    plan.compiler_version=limits.compiler_version; plan.api_version=1
-    admit(job,0)
-  end
-  return plan,diagnostic,status
+-- Saved compiler locals/text have no source-bound proof or complete allocation ledger.
+local function unavailable()
+  local diagnostic=errors.new('E_UNSUPPORTED','durable compiler trust and allocation validation unavailable; source retained')
+  diagnostic.recoverable=true
+  return nil,diagnostic
 end
-function M.reconstruct(plan,admit_native) return compiler_artifact.factory(plan,admit_native) end
+M.advance=unavailable
+M.reconstruct=unavailable
 return M
