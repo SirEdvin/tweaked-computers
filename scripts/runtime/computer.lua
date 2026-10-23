@@ -30,6 +30,7 @@ end
 function M.retire(rec,status,reason)
   local cleaned=registry.cleanup(rec,rec.run_id,reason or status)
   rec.queue={}; rec.queue_bytes=0; rec.timers={}; rec.subscriptions={}
+  policy.release(rec.invocation)
   rec.invocation=nil
   rec.status=cleaned and status or 'faulted'
   if not cleaned then rec.diagnostic=errors.new('E_ENGINE','host teardown failed; cleanup recovery retained') end
@@ -44,7 +45,8 @@ function M.fault(rec,diagnostic,tick)
   diagnostic.source_revision=rec.active and rec.active.revision or nil
   diagnostic.run_id=rec.run_id
   rec.diagnostic=diagnostic
-  M.log(rec,(diagnostic.code or 'E_PROGRAM')..': '..(diagnostic.message or 'program failed'):sub(1,512),tick)
+  local text=(diagnostic.code or 'E_PROGRAM')..': '..(diagnostic.message or 'program failed'):sub(1,512)
+  if #text<=limits.console_bytes then M.log(rec,text,tick) else rec.log_truncated=true end
 end
 function M.stop(id)
   root(); local rec=registry.computer(id)

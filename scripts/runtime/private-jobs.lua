@@ -5,8 +5,9 @@ local M={}
 local function guest(checkpoint,value)
   return checkpoint.owned[value] or checkpoint.symbols[value] or checkpoint.bindings[value] or checkpoint.functions[value]
 end
-function M.admit(checkpoint,owner,value,spend)
-  local queue,seen,items={value},{},{}
+function M.admit(checkpoint,owner,value,spend,items)
+  local queue,seen={value},{}
+  items=items or {}
   local head=1
   while queue[head]~=nil do
     spend(1)

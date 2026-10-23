@@ -63,6 +63,39 @@ function M.status(rec,tick)
   -- Runtime, total host, pending, shell and draft bytes await complete domain enrollment.
   return out
 end
+-- Fixed control metadata is available even when the configured growth limit is one.
+function M.runtime_account(rec)
+  local account=rec.runtime_memory
+  if not account then
+    account=memory.new(8448,8192)
+    memory.configure(account,limits.runtime_memory_bytes)
+    rec.runtime_memory=account
+  else
+    assert(account.version==1 and (account.resource==nil or account.resource=='runtime_memory'),'invalid runtime account')
+    memory.configure(account,limits.runtime_memory_bytes)
+  end
+  return account
+end
+function M.attach(rec,invocation,context)
+  local account=M.runtime_account(rec)
+  local owner=invocation.memory_owner
+  if owner then
+    if owner.account~=account or owner.closed or owner.closing or account.owners[owner.id]~=owner then
+      errors.raise('E_UNSUPPORTED','invalid invocation ownership; retained')
+    end
+  else
+    if invocation.checkpoint.version~=nil then errors.raise('E_UNSUPPORTED','legacy unowned continuation; source retained') end
+    owner=memory.owner(account); invocation.memory_owner=owner
+  end
+  context.memory_owner=owner
+  return owner
+end
+function M.release(invocation)
+  if invocation then memory.retire(invocation.memory_owner) end
+end
+function M.collect_runtime(rec,spend)
+  if rec.runtime_memory then memory.collect(rec.runtime_memory,spend) end
+end
 local function channel_bytes(rec,spend)
   local s=rec.modem
   if type(s)~='table' or getmetatable(s) or s.version~=1 or type(s.channels)~='table' or getmetatable(s.channels)

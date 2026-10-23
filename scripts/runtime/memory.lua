@@ -146,6 +146,38 @@ function M.release(owner,value)
   node.value=nil; node.record=nil; node.previous=nil; node.next=nil
   return true
 end
+-- Only bounded error unwinding can spend this prepaid reserve, never guest growth.
+function M.control(owner,fn,...)
+  if not owner then return fn(...) end
+  active(owner)
+  local account=owner.account
+  local credit=account.control_reserved
+  account.control_reserved=0; account.used=account.used-credit
+  owner.reserved=owner.reserved+credit; account.reserved=account.reserved+credit
+  local before=owner.reserved
+  local result=table.pack(pcall(fn,...))
+  local consumed=math.min(credit,math.max(0,before-owner.reserved))
+  local remaining=credit-consumed
+  M.unreserve(owner,remaining)
+  account.control_reserved=remaining; account.used=account.used+remaining
+  owner.control_used=(owner.control_used or 0)+consumed
+  if not result[1] then error(result[2],0) end
+  return table.unpack(result,2,result.n)
+end
+-- Retirement is constant-time; maintenance pays each ledger unlink later.
+function M.retire(owner)
+  if not owner or owner.closed or owner.closing then return end
+  owner.closing=true
+  local account=owner.account
+  owner.next_closing=account.closing; account.closing=owner
+end
+function M.collect(account,spend)
+  while account.closing do
+    local owner=account.closing
+    M.close(owner,spend)
+    account.closing=owner.next_closing; owner.next_closing=nil
+  end
+end
 -- The linked owner list is also the durable cleanup cursor; no tombstone vector.
 function M.close(owner,spend)
   active(owner)
@@ -157,6 +189,10 @@ function M.close(owner,spend)
   spend(1)
   M.unreserve(owner)
   local account=owner.account
+  local control=owner.control_used or 0
+  account.control_reserved=account.control_reserved+control
+  account.used=account.used+control
+  owner.control_used=nil
   account.owners[owner.id]=nil; account.used=account.used-OWNER; owner.closed=true
 end
 return M

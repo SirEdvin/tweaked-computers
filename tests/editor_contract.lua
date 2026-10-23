@@ -81,11 +81,19 @@ local function gui(parent,spec)
       style_values.minimal_height=h; style_values.maximal_height=h; style_values.minimal_width=w; style_values.maximal_width=w
     else style_values[key]=value end
   end})
-  local e={valid=true,parent=parent,children={},type=spec.type,name=spec.name or '',direction=spec.direction,style=style,tags=spec.tags or {},
+  local e={valid=true,parent=parent,children={},type=spec.type,_name=spec.name or '',direction=spec.direction,style=style,tags=spec.tags or {},
     _text=spec.text or '',text_writes=0,caption=spec.caption,visible=spec.visible~=false,enabled=true,
     items=spec.items or {},selected_index=spec.selected_index or 0,state=spec.state,sprite=spec.sprite,tabs={}}
-  setmetatable(e,{__index=function(t,k) if k=='text' then return rawget(t,'_text') end end,
-    __newindex=function(t,k,v) if k=='text' then rawset(t,'_text',v); t.text_writes=t.text_writes+1 else rawset(t,k,v) end end})
+  setmetatable(e,{__index=function(t,k)
+    if k=='text' then return rawget(t,'_text') elseif k=='name' then return rawget(t,'_name') end
+  end,__newindex=function(t,k,v)
+    if k=='text' then rawset(t,'_text',v); t.text_writes=t.text_writes+1
+    elseif k=='name' then
+      assert(type(v)=='string' and (not parent or not parent[v] or parent[v]==t),'duplicate GUI name')
+      if parent and parent[t.name]==t then parent[t.name]=nil end
+      rawset(t,'_name',v); if parent and v~='' then parent[v]=t end
+    else rawset(t,k,v) end
+  end})
   function e.add(child)
     local c=gui(e,child)
     table.insert(e.children,child.index or (#e.children+1),c); e[c.name]=c; return c

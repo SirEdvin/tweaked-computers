@@ -890,13 +890,16 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     parent.pending.guest_result=result; checkpoint.frame=parent
     if memory_owner then memory.release(memory_owner,child) end
   end
-  local function unwind(problem)
+  local function record_failure(problem)
     guard.check()
     if not f.failure then
       local diagnostic=guard.diagnostic(problem)
       if type(problem)=='table' and not guard.is_plain(problem) and not guard.encoded_type(problem) then problem=guard.snapshot(problem) end
       f.failure={value=r.encode(problem),diagnostic=diagnostic}
     end
+  end
+  local function unwind(problem)
+    return memory.control(memory_owner,record_failure,problem)
   end
   local uncaught
   local function advance_failure()
@@ -996,7 +999,7 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     end
     while true do
       f=checkpoint.frame
-      if f.failure then advance_failure()
+      if f.failure then memory.control(memory_owner,advance_failure)
       elseif f.pc==0 then
         if not f.parent then break end
         local ran,problem=pcall(complete_child)

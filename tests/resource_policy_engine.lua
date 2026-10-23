@@ -110,7 +110,8 @@ end
 function M.run()
   local s=game.surfaces[1]
   local function build(kind,x,y)
-    return assert(lifecycle.build(assert(s.create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})))
+    local rec,e=lifecycle.build(assert(s.create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'}))
+    assert(rec,e and (e.code..': '..e.message)); return rec
   end
   local f={phase='power',origin=game.tick,computers={},databases={},runaways={},loop_targets={300000,600000},cache_limit=limits.compiler_cache_bytes}
   assert(f.cache_limit==8388608 and settings.global['tc-compiler-cache-bytes'].value==8388608)

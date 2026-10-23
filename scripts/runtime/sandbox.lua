@@ -137,8 +137,15 @@ function M.new(context, services, shell, durable)
     G.host_work(4,4)
     local value=initial()
     assert(type(value)=='table' and not getmetatable(value),'private job requires a plain record')
-    private_jobs.admit(durable,heap,value,G.spend)
-    pending.jobs=pending.jobs or {}; pending.jobs[name]=value
+    local jobs=pending.jobs or {}
+    local count=0
+    for _ in pairs(jobs) do G.spend(1); count=count+1 end
+    local fields=0
+    for _ in pairs(pending) do G.spend(1); fields=fields+1 end
+    if not pending.jobs then fields=fields+1 end
+    private_jobs.admit(durable,heap,value,G.spend,{
+      {jobs,192+48*(count+1)},{name,#name+32},{pending,192+48*fields}})
+    pending.jobs=jobs; jobs[name]=value
     current_job=value
     return value
   end
@@ -257,7 +264,7 @@ function M.new(context, services, shell, durable)
     return ...
   end
   function G.prepare_descriptor(n)
-    integer(n,0,limits.handler_names); G.spend(n+1); allocate(n*2+1)
+    integer(n,0,9007199254740991); G.spend(n+1); allocate(n*2+1)
   end
   function G.closure(fn) allocate(1); G.spend(1); callable[fn]='guest function'; return fn end
   -- Closed host helpers prepay the immediate return before publication. Match
@@ -975,6 +982,7 @@ function M.new(context, services, shell, durable)
     if shell then return G.get(shell.root,name) end
   end
   end
+  if not durable then G.job=nil; G.job_resize=nil; G.suspend=nil end
   return G
 end
 return M

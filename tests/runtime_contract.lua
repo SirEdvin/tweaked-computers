@@ -60,7 +60,8 @@ function M.run(report_total)
   local plan,e=compiler.compile(source('local ='),ctx)
   assert(not plan and e.line and e.column); report('source-diagnostic')
   plan,e=compiler.compile(source('local x='..string.rep('not ',128)..'true'),admission.context(admission.new(),'depth',0))
-  assert(not plan and e.code=='E_LIMIT'); report('parser-depth')
+  assert(not plan and e.code=='E_CAPACITY' and e.recoverable and e.resource=='host_stack_depth'
+    and e.setting=='tc-host-stack-depth' and e.limit==limits.host_stack_depth); report('parser-depth')
   -- Shared admission survives reentry on the same tick and admits a healthy peer.
   local ledger=admission.new()
   plan,ctx=compiled('while true do end','malicious',ledger,10)
@@ -269,7 +270,9 @@ end
     refused('function '..name..'() end')
     refused('local function '..name..'() end; function start() end')
   end
-  refused('function '..string.rep('x',limits.identifier_bytes+1)..'() end')
+  local long_name=string.rep('x',limits.identifier_bytes+1)
+  success,diagnostic=document('function '..long_name..'() end',long_name)
+  assert(success,diagnostic and diagnostic.message)
   report('declaration-reserved-public-and-private-identifiers')
   local declarations={}
   for i=1,limits.handler_names do declarations[i]='function f'..i..'() end' end
@@ -278,7 +281,8 @@ end
   assert(success,diagnostic and diagnostic.message)
   local export_count=0; for _ in pairs(candidate.handlers) do export_count=export_count+1 end
   assert(export_count==limits.handler_names)
-  refused(maximum..'\nfunction overflow() end','E_LIMIT','handler count')
+  success,diagnostic=document(maximum..'\nfunction overflow() end','overflow')
+  assert(success,diagnostic and diagnostic.message)
   report('declaration-maximum-export-inventory')
   declarations={}
   for i=1,limits.handler_names do
@@ -516,8 +520,9 @@ function sample() end
   local print_args={}; for i=1,limits.tuple_entries do print_args[i]='""' end
   assert(run_case('print-maximum-tuple','print('..table.concat(print_args,',')..')',true)==1)
   print_args[#print_args+1]='""'
-  refused(source('print('..table.concat(print_args,',')..')'),'E_LIMIT')
-  report('print-overwide-tuple-refused-before-execution')
+  assert(compiler.compile(source('print('..table.concat(print_args,',')..')'),
+    admission.context(admission.new(),'print-former-tuple-boundary',0)))
+  report('print-former-tuple-boundary-not-a-source-restriction')
   if report_total~=false then
     if log then log('TC_CONTRACT_TOTAL '..tests) else print('TC_CONTRACT_TOTAL '..tests) end
   end

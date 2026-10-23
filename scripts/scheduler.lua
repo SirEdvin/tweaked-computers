@@ -157,8 +157,16 @@ local function dispatch_program(rec,tick)
   if rec.invocation.pending_start then
     item.event.tick=tick; rec.invocation.pending_start=nil
   end
-  local ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,function(guard) return runtime.services(rec,tick,guard) end,ctx,rec.invocation.checkpoint)
+  local attached,problem=pcall(policy.attach,rec,rec.invocation,ctx)
+  local ok,diagnostic,control
+  if attached then
+    ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,function(guard) return runtime.services(rec,tick,guard) end,ctx,rec.invocation.checkpoint)
+  else
+    diagnostic=errors.resource_diagnostic(problem) or errors.new('E_UNSUPPORTED','runtime ownership unavailable; source retained')
+    control=diagnostic.recoverable and 'resource' or nil
+  end
   if control=='wait' then return true end
+  policy.release(rec.invocation)
   rec.invocation=nil
   if not ok then
     if control=='stop' then runtime.retire(rec,'stopped','stop')
@@ -228,6 +236,7 @@ function M.tick(tick)
     local i=(maintenance_start+offset-1)%n+1
     local rec=root.computers[root.order[i]]
     M.try_maintenance(function()
+      if rec then policy.collect_runtime(rec,spend) end
       if rec and rec.status=='running' then
         if not runtime.check_active(rec) then runtime.fault(rec,errors.new('E_UNSUPPORTED','unsupported retained computer/source header; source/state retained'),tick)
         else M.advance_timers(rec,tick,spend) end

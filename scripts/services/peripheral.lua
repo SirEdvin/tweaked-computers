@@ -229,23 +229,24 @@ function M.services(computer,tick,guard,execution)
     return proxy
   end
   local api={}
-  local function method(name,n,fn)
+  local function method(name,n,fn,maximum)
     api[name]=function(...)
       current()
-      if select('#',...)~=n then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end
+      local count=select('#',...)
+      if count<n or count>(maximum or n) then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end
       return fn(...)
     end
   end
   method('getNames',1,function(wire) return work.names(inventory(wire),work.job(guard,'peripheral-names'),spend) end)
-  method('setMonitorSyncGroup',1,function(members)
+  method('setMonitorSyncGroup',1,function(members,key)
     if not monitor_sync then errors.raise('E_UNSUPPORTED','monitor provider unavailable') end
     guard.prepare_empty_result()
-    return monitor_sync.set(computer,tick,spend,members,execution)
-  end)
-  method('getMonitorSyncGroup',0,function()
+    return monitor_sync.set(computer,tick,spend,members,execution,key)
+  end,2)
+  method('getMonitorSyncGroup',0,function(key)
     if not monitor_sync then errors.raise('E_UNSUPPORTED','monitor provider unavailable') end
-    return monitor_sync.get(computer,spend,execution)
-  end)
+    return monitor_sync.get(computer,spend,execution,key)
+  end,1)
   method('isPresent',2,function(name,wire) return lookup(name,wire)~=nil end)
   method('getType',2,function(name,wire) local rec=lookup(name,wire); return rec and types[rec.kind] or nil end)
   method('getMethods',2,function(name,wire) local rec=lookup(name,wire); if rec then return sorted(bindings[rec.kind].methods,spend) end; return nil end)

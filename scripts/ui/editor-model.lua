@@ -113,6 +113,14 @@ function M.shell_edit(player,token,text)
   admit(b,s.id,{shell_draft=text})
   d.shell_draft=text; s.shell_draft=text
 end
+-- Player-local draft ownership is not authority to save, execute or inspect a computer.
+function M.retain_input(index,id,field,text)
+  local b=bucket(index); local d=b.documents[id]
+  if not d then errors.raise('E_NOT_FOUND','accepted draft not found; editable input retained') end
+  if (field~='source' and field~='shell_draft') or type(text)~='string'
+    or (field=='shell_draft' and text:find('[\r\n]')) then errors.raise('E_ARGUMENT','invalid draft input') end
+  admit(b,id,{[field]=text}); d[field]=text
+end
 function M.shell_submit(player,token,tick)
   local rec,d,s=M.current(player,token)
   if s.tab~=2 then errors.raise('E_UNREACHABLE','active Console required') end

@@ -8,17 +8,20 @@ local principal=require('scripts.runtime.principal')
 local admission=require('scripts.runtime.admission')
 local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
+local policy=require('scripts.runtime.resource-policy')
+local memory=require('scripts.runtime.memory')
+local private_jobs=require('scripts.runtime.private-jobs')
 local M={}
 local authorize
 function M.register_authority(fn) assert(not authorize); authorize=fn end
 local function supported(s)
   if type(s)~='table' or getmetatable(s) or s.version~=1 or type(s.id)~='string' or #s.id==0 or #s.id>128
-    or type(s.pending)~='table' or getmetatable(s.pending) or not errors.integer(s.pending_bytes,0,limits.shell_pending_bytes) then return false end
+    or type(s.pending)~='table' or getmetatable(s.pending) or not errors.integer(s.pending_bytes,0,9007199254740991) then return false end
   local count,bytes=0,0
   for k,item in pairs(s.pending) do
     count=count+1
-    if count>limits.shell_pending_entries or not errors.integer(k,1,limits.shell_pending_entries)
-      or type(item)~='table' or getmetatable(item) or type(item.source)~='string' or #item.source>limits.shell_source_bytes
+    if not errors.integer(k,1,9007199254740991)
+      or type(item)~='table' or getmetatable(item) or type(item.source)~='string'
       or not errors.integer(item.id,1,9007199254740991) or not errors.integer(item.player,1,9007199254740991)
       or not errors.integer(item.token,1,9007199254740991) or type(item.session)~='string' or #item.session>128 then return false end
     bytes=bytes+#item.source
@@ -42,6 +45,8 @@ function M.reset(rec,reason)
     errors.raise('E_UNSUPPORTED','unknown shell schema; data retained')
   end
   if not principal.cleanup(rec,principal.shell(rec),reason or 'reset') then return false end
+  policy.release(rec.shell.invocation)
+  memory.retire(rec.shell.values_owner)
   rec.shell=nil
   return true
 end
@@ -76,6 +81,20 @@ end
 function M.evaluate(rec,source,tick,command,checkpoint)
   local s=M.session(rec); local ctx=runtime.context(rec,tick)
   if checkpoint then
+    local invocation=s.invocation
+    local direct=not invocation or invocation.checkpoint~=checkpoint
+    if direct then
+      invocation={checkpoint=checkpoint,memory_owner=rec.runtime_memory and rec.runtime_memory.owners[checkpoint.memory_owner]}
+    end
+    local function finish(ok,diagnostic,control)
+      if direct and control~='wait' then policy.release(invocation) end
+      return ok,diagnostic,control
+    end
+    local attached,problem=pcall(policy.attach,rec,invocation,ctx)
+    if not attached then
+      local diagnostic=errors.resource_diagnostic(problem) or errors.new('E_UNSUPPORTED','runtime ownership unavailable; source retained')
+      return finish(false,diagnostic,diagnostic.recoverable and 'resource' or nil)
+    end
     local execution=principal.shell(rec); local guard
     local shell={values=s.values,output=function(text) log(rec,command,'output',text,tick,guard.spend) end}
     local plan={source=source,mode='shell',api_version=1,compiler_version=limits.compiler_version}
@@ -85,11 +104,23 @@ function M.evaluate(rec,source,tick,command,checkpoint)
       services.computer.log=function(text) log(rec,command,'output',text,tick,g.spend,g.prepare_empty_result) end
       return services
     end,ctx,checkpoint,shell)
-    if ok then s.values=checkpoint.value_graph
+    if ok then
+      local owner
+      local admitted,problem=pcall(function()
+        owner=memory.owner(ctx.memory_owner.account)
+        private_jobs.admit(checkpoint,owner,checkpoint.value_graph,guard.spend)
+      end)
+      if not admitted then
+        memory.retire(owner)
+        local diagnostic=guard.diagnostic(problem)
+        return finish(false,diagnostic,diagnostic.recoverable and 'resource' or nil)
+      end
+      memory.retire(s.values_owner)
+      s.values_owner=owner; s.values=checkpoint.value_graph
     elseif control~='wait' and control~='resource' and checkpoint.frame and not principal.cleanup(rec,execution,'shell_failure') then
       diagnostic=errors.new('E_ENGINE','shell resource cleanup failed; committed values retained')
     end
-    return ok,diagnostic,control
+    return finish(ok,diagnostic,control)
   end
   local plan,diagnostic=compiler.compile(source,ctx,'shell')
   if not plan then return false,diagnostic end
@@ -144,7 +175,10 @@ function M.dispatch(rec,tick)
   if not started then table.remove(s.pending,1); s.pending_bytes=s.pending_bytes-#item.source end
   local valid=rec.powered and rec.body.valid and item.session==s.id and authorize and authorize(rec,item.player,item.token)
   if not valid then
-    if started then principal.cleanup(rec,principal.shell(rec),'command_canceled'); s.invocation=nil end
+    if started then
+      principal.cleanup(rec,principal.shell(rec),'command_canceled')
+      policy.release(s.invocation); s.invocation=nil
+    end
     s.status='Canceled #'..item.id..': Console authority or power changed'
     log(rec,item.id,'canceled','Console authority or power changed',tick); return true
   end
@@ -155,9 +189,11 @@ function M.dispatch(rec,tick)
   end
   local ok,problem,control=M.evaluate(rec,item.source,tick,item.id,s.invocation.checkpoint)
   if control=='wait' then s.status='Waiting #'..item.id; return true end
+  policy.release(s.invocation)
   s.invocation=nil
   s.status=(ok and 'Completed #' or 'Failed #')..item.id
   s.diagnostic=problem
+  if problem and problem.recoverable then runtime.resource_refused(rec,problem,tick) end
   if not ok then
     log(rec,item.id,'error',(problem.code or 'E_PROGRAM')..': '..(problem.message or 'command failed')..' | '..(problem.line or 1)..':'..(problem.column or 1),tick)
   end
@@ -171,5 +207,6 @@ registry.register_cleanup('shell-safety',function(rec,run,reason)
   if #s.pending>0 then s.status='Canceled pending commands: '..reason end
   s.pending={}; s.pending_bytes=0
   if not principal.cleanup(rec,principal.shell(rec),reason) then error('shell cleanup failed',0) end
+  policy.release(s.invocation); s.invocation=nil
 end)
 return M
