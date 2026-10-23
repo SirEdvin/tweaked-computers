@@ -113,7 +113,7 @@ function M.run()
     ok,e=pcall(io.setOutput,{{signal={type='item',name='iron-plate'},count=2147483648}}); assert(not ok and e.code=='E_RANGE')
     ok,e=pcall(io.readSignals,'blue'); assert(not ok and e.code=='E_ARGUMENT')
     ok,e=pcall(io.clearOutput,io); assert(not ok and e.code=='E_ARGUMENT')
-    assert(io.getLimits().sample_interval_ticks==1 and io.getLimits().signal_slots==64)]])
+    assert(io.getLimits().sample_interval_ticks==1 and io.getLimits().signal_slots==nil)]])
   report('native-sections-canonical-copy-duplicate-domain-and-arity-refusals')
   guest(b,[[peripheral.find('logic_handler','red').setOutput({{signal={type='virtual',name='signal-A'},count=7}})]])
   local newer=io.output_owner; runtime.stop(c.id); assert(io.output_owner==newer and io.output_bank[1].count==7)
@@ -313,8 +313,12 @@ function M.on_tick(event)
       io.subscribe({input='red',initial=true},'changed')]])
     local root=registry.get(); root.scheduler.maintenance_tick=event.tick; root.scheduler.maintenance_spent=limits.maintenance_work_per_tick
     logic.sample(event.tick,scheduler.maintenance(root,event.tick))
-    assert(c.status=='faulted' and c.diagnostic.code=='E_BUSY' and not io.output_owner)
-    report('exhausted-sampling-admission-is-visible-fail-closed')
+    assert(c.status=='running' and io.output_owner)
+    local pending; for _,sub in pairs(c.subscriptions) do if sub.event_name=='signal_changed' then pending=sub end end
+    assert(pending and pending.details.initial and pending.details.resync)
+    logic.sample(event.tick+1,nop)
+    assert(c.queue[#c.queue].event.resync and not pending.details.initial)
+    report('exhausted-sampling-admission-retains-run-baseline-and-resyncs')
     f().phase='done'; log('TC_COLD_OK')
   end
 end

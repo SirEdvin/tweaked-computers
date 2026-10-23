@@ -99,20 +99,25 @@ recovery and clears output; never assume a callback-wide factory transaction.
 
 ## Bounds and use
 
-Initial caps: 64 signal slots per selected input snapshot/output; 64 filter signals;
-64 subscriptions per computer shared with general registrations; 128 sampled
-handlers; 1,024 aggregate subscriptions; 128 owned banks. Sample interval 1 tick,
-fail-safe target 1 tick, notification/topology ceiling 60 ticks is provisional.
-Since 0.1.13, native calls and actual returned signals are charged, not every
-installed prototype/quality. A small chest input does not cost more because an
-unrelated mod adds recipes. The 64-signal ceiling, supported signal identities,
-validation, copying and sorting remain. Queue overflow or sampling/notification
-maintenance refusal visibly faults affected runs, not silently loses history.
-Other native signal categories remain unsupported and are refused, not filtered out.
-Independent subscriptions on multiple colors/devices still share the unchanged
-maintenance budget; admission refusal faults the run visibly, never silently
-misses updates. Native enumeration materializes its list before size/type checks;
-the call charge is not a universal native CPU-time or allocation bound.
+Input snapshots and filters have no signal-count ceiling. Each explicit color
+returns its complete sorted native inventory, including negative counts, quality
+and recipe identities. Output replacement has no mod-defined 64-slot ceiling:
+the engine must accept and read back the complete staged bank before publication.
+Invalid counts and identities leave the previous bank and writer unchanged.
+
+Private preparation cursors retain paid read/filter/sort/change progress across
+slices and cold reload. Work deferral does not retire the run or advance its
+last admitted baseline; delayed observations are marked `resync`. Queue overflow
+drops the newest notification, counts the loss, and requests resynchronization.
+Stop, lost authority and power still clear exact-owned output independently.
+
+Shared work, retained-memory and event-byte admission still apply. Sampling is
+attempted every tick, not promised every tick under pressure. Native enumeration
+materializes its list before Lua can inspect its size; call charges are not a
+native CPU-time or allocation bound. Unsupported native signal categories are
+refused, never silently filtered out. See the integration gates in
+`docs/inventory-resource-validation.md` before treating the resource-policy branch
+as a fully validated release.
 
 Use [logic-controller](../examples.md#logic-controller) and the
 [first inserter tutorial](../first-controller.md). If reads stay zero, check chest

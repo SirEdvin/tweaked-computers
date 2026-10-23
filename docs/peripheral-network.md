@@ -18,11 +18,11 @@ Unknown external wires remain intact. Discovery ports do not generate signals,
 read factory signals, or transport a computer messaging protocol. Normal native
 continuity between wires on one connector remains intact.
 
-Call `computer.getLimits()` to inspect graph limits. There are 256 physical nodes
-(including the source) and 512 examined directed adjacency entries per complete
-search. Each undirected wire may be examined at both ends; ignored external
-edges consume the bound too, preventing a huge external wire list from bypassing
-admission. No query returns an apparently complete prefix when a bound is hit.
+Graph preparation has no node/edge-count ceiling. Private saved cursors retain
+IDs, generations, visited edges and BFS parents; native objects are not retained.
+Each undirected wire may be examined at both ends; ignored external edges also
+consume work. A prepaid final live graph pass rejects changed topology before
+publication. No query returns an apparently complete prefix after work deferral.
 
 ## Exact Lua surface
 
@@ -45,9 +45,8 @@ All calls use dots; arity and wire types are checked, with no implicit wire or
 Types are `kv_database`, `monitor`, `logic_handler`, `configurator`, and
 `recipe_searcher` (see [recipe API](player/api/recipe-searcher.md)). An unknown
 string type has zero matches, not a fabricated facade. `find` is multiple returns,
-not an array; `{peripheral.find("monitor", "red")}` collects them. More than 128
-matches produces `E_LIMIT` before creating a partial tuple; enumerate names and
-wrap individual devices instead.
+not an array; `{peripheral.find("monitor", "red")}` collects them. The provider
+does not impose a result-count ceiling; shared tuple/result admission still applies.
 
 Metadata is `{name, type, label?, powered, position={x,y}, surface={index,name},
 quality, direction, footprint={width,height}, wire}`. Position is the actual
@@ -74,7 +73,7 @@ is no callback-wide transaction: successful prior effects survive a later error.
 ## Errors and notifications
 
 `E_ARGUMENT`: malformed/extra arguments, wrong wire, fake facade, unknown method.
-`E_LIMIT`: graph/result bound exceeded. `E_NETWORK_PENDING`: proof/reconciliation
+`E_NETWORK_PENDING`: proof/reconciliation
 is incomplete. A captured detached method throws `E_UNREACHABLE`, while fresh
 presence/type/describe/wrap queries return false/nil only after a complete search.
 Active methods on unpowered devices throw `E_UNPOWERED`. Ordinary errors are
@@ -135,10 +134,10 @@ base_info)` supplies the group's public geometry. Logical records have an opaque
 `id`, `generation`, `kind`, `body`, force/surface, direction and power fields.
 Group resolution does not alter physical traversal; absorbed names stop resolving.
 
-`inventory(computer, wire, spend)` returns `(plain_inventory, physical_parents)`.
+`inventory(computer, wire, spend [, job])` returns `(plain_inventory, physical_parents)`.
 Each inventory entry has `name, type, generation, member`. Those host-only return
 values must be scalar-adjusted when passing to functions expecting one argument.
-`authority(computer, name, wire, spend)` returns `(target, plain_physical_id_path)`
+`authority(computer, name, wire, spend [, job])` returns `(target, plain_physical_id_path)`
 or one nil, after a complete live search. `scripts.network` exposes `wire`,
 `same_scope`, `real_edges`, `discovery_vertex`, `discover`, `witness` and
 `validate_witness`. Reuse the scope/real-edge primitives for configurator target

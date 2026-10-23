@@ -107,26 +107,25 @@ suppress cleanup. New placement/clones start with empty bank/no owner.
 
 ## Bounds and failures
 
-Initial development ceilings: 64 signal slots per selected input snapshot/output,
-64 filter identities, 64 subscriptions per computer, 128 sampled handlers, 1024
-aggregate subscriptions and 128 owned banks. Sampling interval is 1; fail-safe
-latency is 1 tick under the safety envelope. Notification latency reports the shared
-60-tick scheduler/topology ceiling, not guaranteed real-time latency under an
-oversubscribed world. Limits are queried through getLimits and are not yet frozen
-release tuning. The integrated envelope remains a downstream acceptance gate.
+Signal snapshots, filters and output banks have no mod-defined cardinality cap.
+Native output capacity, signed 32-bit counts, exact identities and shared resource
+admission remain authoritative. Output is staged inactive, read back completely,
+and then replaces the old bank in one non-yielding publication.
 
 Since 0.1.13, connected-input reads admit the native call and charge its actual
 returned tuple count, identity validation, copying and sorting. They do not charge
 the installed prototype × quality universe. Disconnected inputs avoid the native
-list query; single-signal reads keep their direct native lookup. More than 64
-actual input signals still refuses the whole snapshot, never a partial prefix.
+list query; single-signal reads keep their direct native lookup. Large inventories
+use persisted private preparation cursors and return the whole sorted snapshot.
 Unsupported native signal categories still refuse rather than being filtered out.
 Native enumeration materializes its list before Lua can inspect its size; neither
 the fixed call charge nor the copy-work weights bound opaque C++ CPU time or
 allocation. Refresh throttling and shared work/Data admission remain in effect.
 
 Argument/domain/capacity/unpowered/path failures are ordinary catchable ApiErrors.
-Queue overflow visibly faults the computer and clears its exact owned outputs.
-Sampling/notification maintenance refusal also visibly faults affected runs rather
-than silently skipping input history. Earlier accepted state/KV/other effects remain;
-this is signal fail-safe cleanup, not a whole-factory transaction.
+Queue overflow drops newest with durable diagnostics and resynchronization.
+Sampling/notification work deferral retains the run, paid preparation and admitted
+baseline. Power/path/stop cleanup remains independent of notification admission.
+Earlier accepted state/KV/other effects remain; this is signal fail-safe cleanup,
+not a whole-factory transaction. Shared runtime integration gates are recorded in
+[inventory resource validation](inventory-resource-validation.md).

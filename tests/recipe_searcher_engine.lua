@@ -66,8 +66,8 @@ local cases={
     refused('E_RANGE',s.findRecipes,'item','TC-RS-OVERLAP')
     refused('E_RANGE',s.findRecipes,'fluid','tc-rs-empty')
     refused('E_RANGE',s.findRecipes,'item','iron-plate','tc-missing-category')
-    local l=s.getLimits(); assert(l.recipe_search_results==50 and l.callback_work==500000)
-    l.recipe_search_results=1; assert(s.getLimits().recipe_search_results==50)
+    local l=s.getLimits(); assert(l.recipe_search_results==nil and l.callback_work==500000)
+    l.callback_work=1; assert(s.getLimits().callback_work==500000)
   ]]},
   {'exact-fifty-complete-sorted',[[
     local a=s.findRecipes('item','tc-rs-fifty'); assert(#a==50)
@@ -76,9 +76,9 @@ local cases={
       assert(v.products[1].amount==1 and v.products[1].probability==1)
     end
   ]]},
-  {'fiftyone-refusal-category-before-count',[[
-    assert(refused('E_LIMIT',s.findRecipes,'item','tc-rs-fiftyone').field=='results')
-    assert(refused('E_LIMIT',s.findRecipes,'item','tc-rs-single51','tc-rs-primary').field=='results')
+  {'fiftyone-complete-category-filtering',[[
+    assert(#s.findRecipes('item','tc-rs-fiftyone')==51)
+    assert(#s.findRecipes('item','tc-rs-single51','tc-rs-primary')==51)
     local a=s.findRecipes('item','tc-rs-fiftyone','tc-rs-refined')
     assert(#a==2 and a[1].name=='tc-rs-51-01' and a[2].name=='tc-rs-51-02')
     local b=s.findRecipes('item','tc-rs-fiftyone','tc-rs-primary'); assert(#b==49)
@@ -96,7 +96,7 @@ local cases={
     v.ingredients[2].amount=999; table.remove(v.products)
     local b=s.findRecipes('item','tc-rs-complex'); assert(b[1].ingredients[2].amount==10 and #b[1].products==3)
   ]]},
-  {'large-complete-metadata-refused',[[refused('E_LIMIT',s.findRecipes,'item','tc-rs-large')]]},
+  {'large-complete-metadata',[[local a=s.findRecipes('item','tc-rs-large'); assert(#a==1 and #a[1].products==600)]]},
   {'live-force-enabled-without-reboot',[[
     local a=s.findRecipes('item','tc-rs-overlap','tc-rs-additional')
     computer.setState('enabled',a[1].enabled)
@@ -218,7 +218,7 @@ function M.on_tick(event)
     report('native-cardinal-clone-one-drop-and-helper-cleanup')
     assert(peripheral.inventory(c,'red',nop)[x.relay] and peripheral.inventory(c,'green',nop)[s.id])
     lifecycle.power_entity(s).energy=0; s.powered=false
-    guest(c,prefix..[[assert(s.getLimits().recipe_search_results==50); refused('E_UNPOWERED',s.findRecipes,'item','iron-plate')]])
+    guest(c,prefix..[[assert(s.getLimits().recipe_search_results==nil); refused('E_UNPOWERED',s.findRecipes,'item','iron-plate')]])
     assert(peripheral.inventory(c,'red',nop)[x.relay],'unpowered relay lost discovery')
     lifecycle.power_entity(s).energy=1000; s.powered=true
     guest(c,prefix..[[assert(#s.findRecipes('item','tc-rs-fifty')==50)]])

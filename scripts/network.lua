@@ -1,7 +1,6 @@
 -- Host-only physical graph policy. Native network IDs are never authority.
 local registry=require('scripts.registry')
 local lifecycle=require('scripts.lifecycle')
-local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
 local radar=require('scripts.radar')
 local speaker=require('scripts.speaker')
@@ -22,69 +21,122 @@ function M.discovery_vertex(connector,origin,wire)
     or lifecycle.connector(rec,'network',wire)~=connector then return nil end
   return rec
 end
--- Shared primitive for the separate configurator target policy. Count admission
--- precedes native array materialization and includes ignored external edges.
+-- The third argument is retained for host callers, not a cardinality ceiling.
 function M.real_edges(connector,spend,remaining)
   if not connector or not connector.valid or connector.is_ghost then return {} end
-  local n=connector.real_connection_count
-  if n>remaining then errors.raise('E_LIMIT','physical edge inventory exceeds network limit') end
-  spend(n*4+4)
+  spend(connector.real_connection_count*4+4)
   return connector.real_connections
 end
-local function origin_connector(origin,wire)
-  local c=lifecycle.connector(origin,'network',wire)
-  if not c or not M.same_scope(c.owner,origin) then errors.raise('E_UNREACHABLE','computer network endpoint unavailable') end
-  return c
+local function vertex(origin,wire,id)
+  local rec=registry.record(id)
+  local connector=rec and lifecycle.connector(rec,'network',wire)
+  if M.discovery_vertex(connector,origin,wire)~=rec or not rec then return nil end
+  return rec,connector
 end
--- Complete bounded BFS. A result is published only after the entire reachable
--- physical component is proved. Group identities are deliberately not vertices.
-function M.discover(origin,wire,spend)
-  M.wire(wire); spend=spend or function() end
-  spend(16); origin_connector(origin,wire)
-  local queue={origin.id}; local seen={[origin.id]=true}; local parents={}; local members={}
-  local cursor,edges=1,0
-  while cursor<=#queue do
-    spend(8)
-    local rec=registry.record(queue[cursor]); cursor=cursor+1
-    local connector=rec and lifecycle.connector(rec,'network',wire)
-    if not connector or not M.discovery_vertex(connector,origin,wire) then errors.raise('E_NETWORK_PENDING','physical topology changed during traversal') end
-    if rec.kind~='computer' then members[#members+1]=rec end
-    local connections=M.real_edges(connector,spend,limits.network_edges-edges)
-    edges=edges+#connections
-    for _,connection in ipairs(connections) do
-      local next_rec=connection.origin~=defines.wire_origin.radars and M.discovery_vertex(connection.target,origin,wire)
-      if next_rec and not seen[next_rec.id] then
-        if #queue>=limits.network_nodes then errors.raise('E_LIMIT','physical node inventory exceeds network limit') end
-        seen[next_rec.id]=true; parents[next_rec.id]=rec.id; queue[#queue+1]=next_rec.id
+local function neighbor(connection,origin,wire)
+  return connection.origin~=defines.wire_origin.radars and M.discovery_vertex(connection.target,origin,wire) or nil
+end
+local function reset(job,origin,wire)
+  for k in pairs(job) do job[k]=nil end
+  job.origin=origin.id; job.wire=wire; job.queue={origin.id}; job.seen={[origin.id]=true}
+  job.parents={}; job.members={}; job.graph={}; job.cursor=1; job.cost=16
+end
+-- One final live pass is prepaid before consulting native objects. Saved graph
+-- preparation is never itself authority after a yield, reload or cable edit.
+function M.validate_graph(origin,wire,job,spend)
+  spend(job.cost)
+  for _,id in ipairs(job.queue) do
+    local rec,c=vertex(origin,wire,id); local saved=job.graph[id]
+    if not rec or not saved or saved.generation~=rec.generation or saved.physical_count~=c.real_connection_count then return false end
+    local found={}; local count=0
+    for _,edge in ipairs(c.real_connections) do
+      local other=neighbor(edge,origin,wire)
+      if other and not found[other.id] then
+        if not saved.neighbors[other.id] then return false end
+        found[other.id]=true; count=count+1
       end
     end
+    if count~=saved.count then return false end
   end
-  return members,parents
+  return true
 end
-function M.witness(origin,member,parents,spend)
-  local reversed={}; local id=member.id
-  while id do
-    if spend then spend(4) end
-    reversed[#reversed+1]=id
-    if id==origin.id then break end
-    id=parents[id]
+-- The optional job contains only IDs, scalars and tables; old host callers keep
+-- the same return values. No member/prefix escapes before final revalidation.
+function M.discover(origin,wire,spend,job)
+  M.wire(wire); spend=spend or function() end; job=job or {}
+  if not job.queue then spend(16); reset(job,origin,wire) end
+  assert(job.origin==origin.id and job.wire==wire,'graph job binding mismatch')
+  while job.cursor<=#job.queue do
+    local id=job.queue[job.cursor]
+    local rec,c=vertex(origin,wire,id)
+    if not rec then reset(job,origin,wire); errors.raise('E_NETWORK_PENDING','physical topology changed during traversal') end
+    if not job.graph[id] then
+      spend(8)
+      job.graph[id]={generation=rec.generation,neighbors={},count=0,physical_count=c.real_connection_count}
+      job.cost=job.cost+8+c.real_connection_count*4
+      job.edge=1
+      if rec.kind~='computer' then job.members[#job.members+1]=rec.id end
+    end
+    local connections=M.real_edges(c,spend)
+    local saved=job.graph[id]
+    while job.edge<=#connections do
+      spend(4)
+      local other=neighbor(connections[job.edge],origin,wire)
+      if other then
+        if not saved.neighbors[other.id] then saved.neighbors[other.id]=true; saved.count=saved.count+1 end
+        if not job.seen[other.id] then
+          job.seen[other.id]=true; job.parents[other.id]=id; job.queue[#job.queue+1]=other.id
+        end
+      end
+      job.edge=job.edge+1
+    end
+    job.cursor=job.cursor+1; job.edge=nil
   end
-  assert(reversed[#reversed]==origin.id,'missing physical witness')
-  local path={}; for i=#reversed,1,-1 do path[#path+1]=reversed[i] end
-  return path
+  if not M.validate_graph(origin,wire,job,spend) then
+    reset(job,origin,wire); errors.raise('E_NETWORK_PENDING','physical topology changed during traversal')
+  end
+  spend(#job.members+1)
+  local members={}; for _,id in ipairs(job.members) do members[#members+1]=registry.record(id) end
+  return members,job.parents
+end
+function M.witness(origin,member,parents,spend,job)
+  job=job or {}; job.reversed=job.reversed or {}; job.seen=job.seen or {}
+  if not job.started then job.id=member.id; job.started=true end
+  while job.id do
+    if spend then spend(4) end
+    local id=job.id
+    assert(not job.seen[id],'cyclic physical witness'); job.seen[id]=true
+    job.reversed[#job.reversed+1]=id
+    if id==origin.id then job.id=nil; break end
+    job.id=parents[id]
+  end
+  assert(job.reversed[#job.reversed]==origin.id,'missing physical witness')
+  job.path=job.path or {}; job.cursor=job.cursor or #job.reversed
+  while job.cursor>0 do
+    if spend then spend(2) end
+    job.path[#job.path+1]=job.reversed[job.cursor]; job.cursor=job.cursor-1
+  end
+  return job.path
 end
 function M.validate_witness(origin,wire,path,spend)
   M.wire(wire)
-  if type(path)~='table' or #path<1 or #path>limits.network_nodes or path[1]~=origin.id then return false end
-  local previous; local edges=0
+  if type(path)~='table' or #path<1 or path[1]~=origin.id then return false end
+  local cost=0
   for _,id in ipairs(path) do
-    spend(8)
-    local rec=registry.record(id); local connector=rec and lifecycle.connector(rec,'network',wire)
-    if not M.discovery_vertex(connector,origin,wire) then return false end
+    local _,c=vertex(origin,wire,id); if not c then return false end
+    cost=cost+8+c.real_connection_count*4+4
+  end
+  spend(cost)
+  local previous; local seen={}
+  for _,id in ipairs(path) do
+    if seen[id] then return false end; seen[id]=true
+    local _,connector=vertex(origin,wire,id)
+    if not connector then return false end
     if previous then
       local found=false
-      local connections=M.real_edges(previous,spend,limits.network_edges-edges); edges=edges+#connections
-      for _,connection in ipairs(connections) do if connection.origin~=defines.wire_origin.radars and connection.target==connector then found=true; break end end
+      for _,connection in ipairs(previous.real_connections) do
+        if connection.origin~=defines.wire_origin.radars and connection.target==connector then found=true; break end
+      end
       if not found then return false end
     end
     previous=connector

@@ -10,7 +10,8 @@ function M.run(c,s)
     ingredients=actual.ingredients,products=actual.products,surface_conditions={}}
   local function failure(code,change)
     local rec={}; for k,v in pairs(base) do rec[k]=v end; change(rec)
-    prototypes=setmetatable({get_recipe_filtered=function() return {['tc-rs-item']=rec} end},{__index=original})
+    prototypes=setmetatable({get_recipe_filtered=function() return {['tc-rs-item']=rec} end,
+      recipe=setmetatable({['tc-rs-item']=rec},{__index=original.recipe})},{__index=original})
     local ok,e=pcall(provider.methods.findRecipes,c,s,'red',game.tick,function() end,'item','tc-rs-overlap')
     assert(not ok and type(e)=='table' and e.code==code,'expected '..code..': '..serpent.line(e))
   end
@@ -19,7 +20,7 @@ function M.run(c,s)
     failure('E_UNSUPPORTED',function(rec) rec.products={{type='item',name='tc-rs-overlap',probability=0/0,amount=1}} end)
     failure('E_UNSUPPORTED',function(rec) rec.ingredients={{type='fluid',name='water',amount=1,fluidbox_index=.5}} end)
     failure('E_UNSUPPORTED',function(rec) rec.surface_conditions={{property='pressure',min=math.huge}} end)
-    failure('E_LIMIT',function(rec) rec.category=string.rep('x',16385) end)
+    failure('E_UNSUPPORTED',function(rec) rec.category=false end)
     prototypes=setmetatable({get_recipe_filtered=function() error('injected native failure') end},{__index=original})
     local accepted,problem=pcall(provider.methods.findRecipes,c,s,'red',game.tick,function() end,'item','tc-rs-overlap')
     assert(not accepted and problem.code=='E_ENGINE')

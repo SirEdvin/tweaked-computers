@@ -4,6 +4,9 @@ Historical feature evidence: the catalogue-size precharges described below were
 removed in 0.1.13. Current behavior is documented in
 [the release notes](release-0.1.13.md) and [player API](player/api/recipe-searcher.md).
 Keep the original measurements separate from current accounting.
+The resource-policy branch additionally removes the 50-result/projector shape
+ceilings; its cursor evidence and unresolved shared-runtime gates are recorded
+in [inventory resource validation](inventory-resource-validation.md).
 
 Unreleased implementation of `add-recipe-searcher`; no release/version/tag or
 Mod Portal publication is made by this change. Target: Factorio 2.0.77 build

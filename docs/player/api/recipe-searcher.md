@@ -28,7 +28,7 @@ return {
   complete dense recipe array, possibly empty. Exactly two or three arguments;
   an explicit nil category means no filter.
 - `getLimits()` takes no arguments and returns a defensive snapshot of current
-  common limits plus the fixed `recipe_search_results=50`.
+  common resource limits; there is no recipe result-count setting.
 
 Type is exactly `"item"` or `"fluid"`; names are exact, case-sensitive installed
 prototype IDs in that namespace. Category is an optional exact installed recipe
@@ -44,18 +44,16 @@ producers returns an empty array; an unknown product/category is an error.
 ## Complete results, not a prefix
 
 Results are unique recipes in ascending bytewise name order. Category filtering
-happens before counting. Fifty matching small records can succeed; 51 filtered
-matches raise `E_LIMIT` with `field="results"`. The error suggests selecting a
-crafting category. A single category can still exceed 50. No recipe, ingredient,
-product or field is silently omitted to make a call fit.
+happens before projection. More than 50 matches return the same complete dense
+array contract. No recipe, ingredient, product or field is silently omitted.
 
-The unchanged [Data/work limits](limits.md) also apply: 50 is not a guaranteed
-payload size or CPU/UPS bound. Oversized metadata may refuse with fewer recipes;
-work/allocation exhaustion remains fatal. Native catalogue filtering has an opaque
-engine cost. Since 0.1.13, admission charges the native call, actual candidates,
-category checks and projected metadata, not every installed recipe/category.
-These charges do not bound native CPU time or initial table materialization.
-There is no retained query cache/index or job.
+Private plain-data cursors preserve candidate scanning, sorting and metadata
+projection across work slices and cold reload. This is not a public future,
+iterator, pagination or lazy details API. Shared retained-memory/result admission
+can refuse an operation without returning a prefix. Native catalogue filtering
+still has an opaque engine cost; charges cover actual candidates and metadata,
+not every installed recipe/category, and do not bound native materialization.
+See `docs/inventory-resource-validation.md` for outstanding integration gates.
 
 ## Recipe record
 
@@ -136,21 +134,19 @@ do not parse messages. Fatal resource controls remain noncatchable.
 | --- | --- |
 | Wrong arity/type, colon receiver or empty name | `E_ARGUMENT` |
 | Unsupported product type, unknown product/category | `E_RANGE` |
-| 51 filtered matches | `E_LIMIT`, `field="results"` |
-| Input/result shape, strings or bytes exceed common bounds | `E_LIMIT`, never partial data |
+| Retained-memory/result admission refused | Resource ApiError, never partial data |
 | Metadata cannot be represented by the schema | `E_UNSUPPORTED` |
 | Unpowered active search | `E_UNPOWERED` |
 | Lost bound identity/path/force/surface | `E_UNREACHABLE` |
 | Incomplete/oversized proof | Existing `E_NETWORK_PENDING` / `E_LIMIT` |
-| Work/allocation exhausted | Fatal `E_BUDGET` |
+| Work slice exhausted | Private deferral; no public partial return |
 | Native failure or missing force recipe | `E_ENGINE` |
 
 Already consumed credits remain spent after refusal. Under pressure an earlier
-budget error can precede a later semantic/count error.
+resource refusal can precede a later semantic error.
 
 Copy the complete [Recipe Searcher program](../examples.md#recipe-searcher-program),
-then Validate → Save → Run. It searches iron plates, handles `E_LIMIT` with one
-bounded smelting-category fallback and queries petroleum gas in chemistry. The
-fallback is not a promise that every limit failure is count overflow, nor that a
-modpack's smelting set fits. Let repeated refusal surface rather than retrying
-without a bound.
+then Validate → Save → Run. It searches iron plates in smelting and petroleum gas
+in chemistry. Categories describe the desired recipes; they are not a workaround
+for a result-count ceiling. Let retained-resource refusal surface rather than
+retrying in a busy loop.
