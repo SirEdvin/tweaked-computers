@@ -1,2 +1,2 @@
 -- Generated compiler cursor ABI; source and transform identity.
-return "bf208753f268db526094274e2b25e13bd857ee4d30ade3aa33c06b24ca7d74a8"
+return "08c27609a8b0dc724420cd480c3896ea5ada8e17c452c67bedb8630750a9e1cc"

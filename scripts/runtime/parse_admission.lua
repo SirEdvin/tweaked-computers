@@ -19,7 +19,7 @@ end
 function M.push()
   M.enter()
   depth = depth + 1
-  if depth > limits.source_nesting then errors.raise('E_LIMIT', 'source nesting exceeds compiler limit') end
+  if depth > limits.host_stack_depth then errors.raise('E_CAPACITY', 'compiler host depth exceeded') end
 end
 function M.pop() depth = depth - 1 end
 return M

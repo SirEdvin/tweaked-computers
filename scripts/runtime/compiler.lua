@@ -51,8 +51,8 @@ local function reject(node, message, code)
   error(err, 0)
 end
 local function identifier(name, node)
-  if type(name) ~= 'string' or #name > limits.identifier_bytes or name == '_ENV' or name == '_G' or name:sub(1,4) == '__tc' then
-    reject(node, 'forbidden or oversized identifier')
+  if type(name) ~= 'string' or name == '_ENV' or name == '_G' or name:sub(1,4) == '__tc' then
+    reject(node, 'forbidden identifier')
   end
   return name
 end

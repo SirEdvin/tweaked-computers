@@ -54,6 +54,7 @@ function M.run()
   local missing,missing_error=compiler.advance(compiler.new_job('function start() end'),admission.context(admission.new(),'missing-owner',1))
   assert(not missing and missing_error.code=='E_UNSUPPORTED')
   for _,source in ipairs({
+    'function '..string.rep('long_identifier_',16)..'() local '..string.rep('long_local_',16)..'=1 end',
     'function start() local n=0; for i=1,4 do n=n+i end; computer.log(tostring(n)) end',
     'function start(...) local function f(a,...) return a,... end; local t={f(1,nil,3)}; pcall(f,t) end',
     'return {api_version=1,handlers={start=function() local s=[=[line\ntext]=]; if s then return s end end}}',

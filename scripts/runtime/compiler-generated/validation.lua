@@ -2187,10 +2187,10 @@ B[2180]=function(f,r) f.s[1905]=f.l[110].v; f.pc=2179 end
 B[2181]=function(f,r) f.l[7]={}; f.l[7].v=r.closure(f,13); f.pc=2169 end
 B[2182]=function(f,r) r.finish({n=0}) end
 B[2183]=function(f,r) r.finish({n=1,f.s[1907]}) end
-B[2184]=function(f,r) f.s[1907]=f.l[112].v; f.pc=2183 end
+B[2184]=function(f,r) f.s[1907]=f.l[111].v; f.pc=2183 end
 B[2185]=function(f,r) r.call(f,f.s[1910],{n=2,f.s[1911],f.s[1912]},1909,2184) end
-B[2186]=function(f,r) f.s[1912]="forbidden or oversized identifier"; f.pc=2185 end
-B[2187]=function(f,r) f.s[1911]=f.l[113].v; f.pc=2186 end
+B[2186]=function(f,r) f.s[1912]="forbidden identifier"; f.pc=2185 end
+B[2187]=function(f,r) f.s[1911]=f.l[112].v; f.pc=2186 end
 B[2188]=function(f,r) f.s[1910]=f.l[2].v; f.pc=2187 end
 B[2189]=function(f,r) f.pc=f.s[1908] and 2188 or 2184 end
 B[2190]=function(f,r) f.s[1908]=(f.s[1915] == f.s[1916]); f.pc=2189 end
@@ -2199,246 +2199,239 @@ B[2192]=function(f,r) r.call(f,f.s[1917],r.join({n=1,f.s[1918]},{n=2,f.s[1919],f
 B[2193]=function(f,r) f.s[1920]=4; f.pc=2192 end
 B[2194]=function(f,r) f.s[1919]=1; f.pc=2193 end
 B[2195]=function(f,r) f.s[1917]=r.get(f.s[1918],"sub"); f.pc=2194 end
-B[2196]=function(f,r) f.s[1918]=f.l[112].v; f.pc=2195 end
+B[2196]=function(f,r) f.s[1918]=f.l[111].v; f.pc=2195 end
 B[2197]=function(f,r) if not f.s[1913] then f.pc=2196 else f.s[1908]=f.s[1913]; f.pc=2189 end end
 B[2198]=function(f,r) f.s[1913]=(f.s[1923] == f.s[1924]); f.pc=2197 end
 B[2199]=function(f,r) f.s[1924]="_G"; f.pc=2198 end
-B[2200]=function(f,r) f.s[1923]=f.l[112].v; f.pc=2199 end
+B[2200]=function(f,r) f.s[1923]=f.l[111].v; f.pc=2199 end
 B[2201]=function(f,r) if not f.s[1921] then f.pc=2200 else f.s[1913]=f.s[1921]; f.pc=2197 end end
 B[2202]=function(f,r) f.s[1921]=(f.s[1927] == f.s[1928]); f.pc=2201 end
 B[2203]=function(f,r) f.s[1928]="_ENV"; f.pc=2202 end
-B[2204]=function(f,r) f.s[1927]=f.l[112].v; f.pc=2203 end
+B[2204]=function(f,r) f.s[1927]=f.l[111].v; f.pc=2203 end
 B[2205]=function(f,r) if not f.s[1925] then f.pc=2204 else f.s[1921]=f.s[1925]; f.pc=2201 end end
-B[2206]=function(f,r) f.s[1925]=(f.s[1931] > f.s[1932]); f.pc=2205 end
-B[2207]=function(f,r) f.s[1932]=r.get(f.s[1933],f.s[1934]); f.pc=2206 end
-B[2208]=function(f,r) f.s[1934]="identifier_bytes"; f.pc=2207 end
-B[2209]=function(f,r) f.s[1933]=f.l[111].v; f.pc=2208 end
-B[2210]=function(f,r) f.s[1931]=(# f.s[1935]); f.pc=2209 end
-B[2211]=function(f,r) f.s[1935]=f.l[112].v; f.pc=2210 end
-B[2212]=function(f,r) if not f.s[1929] then f.pc=2211 else f.s[1925]=f.s[1929]; f.pc=2205 end end
-B[2213]=function(f,r) f.s[1929]=(f.s[1936] ~= f.s[1937]); f.pc=2212 end
-B[2214]=function(f,r) f.s[1937]="string"; f.pc=2213 end
-B[2215]=function(f,r) r.call(f,f.s[1938],{n=1,f.s[1939]},1936,2214) end
-B[2216]=function(f,r) f.s[1939]=f.l[112].v; f.pc=2215 end
-B[2217]=function(f,r) f.s[1938]=r.global("type"); f.pc=2216 end
-B[2218]=function(f,r) f.l[3]={}; f.l[3].v=r.closure(f,14); f.pc=2181 end
-B[2219]=function(f,r) r.finish({n=0}) end
-B[2220]=function(f,r) r.call(f,f.s[1941],{n=2,f.s[1942],f.s[1943]},1940,2219) end
-B[2221]=function(f,r) f.s[1943]=0; f.pc=2220 end
-B[2222]=function(f,r) f.s[1942]=f.l[117].v; f.pc=2221 end
-B[2223]=function(f,r) f.s[1941]=r.global("error"); f.pc=2222 end
-B[2224]=function(f,r) local t=r.join({n=0},f.t[1948]); f.s[1946][f.s[1947]]=t[2]; f.s[1944][f.s[1945]]=t[1]; f.pc=2223 end
-B[2225]=function(f,r) r.call(f,f.s[1949],{n=1,f.s[1950]},1948,2224) end
-B[2226]=function(f,r) f.s[1950]=f.l[114].v; f.pc=2225 end
-B[2227]=function(f,r) f.s[1949]=f.l[1].v; f.pc=2226 end
-B[2228]=function(f,r) f.s[1947]="column"; f.pc=2227 end
-B[2229]=function(f,r) f.s[1946]=f.l[117].v; f.pc=2228 end
-B[2230]=function(f,r) f.s[1945]="line"; f.pc=2229 end
-B[2231]=function(f,r) f.s[1944]=f.l[117].v; f.pc=2230 end
-B[2232]=function(f,r) local t=r.join({n=0},f.t[1951]); f.l[117]={v=t[1]}; f.pc=2231 end
-B[2233]=function(f,r) r.call(f,f.s[1952],{n=2,f.s[1953],f.s[1954]},1951,2232) end
-B[2234]=function(f,r) f.s[1954]=f.l[115].v; f.pc=2233 end
-B[2235]=function(f,r) f.s[1953]="E_PROGRAM"; f.pc=2234 end
-B[2236]=function(f,r) if not f.s[1955] then f.pc=2235 else f.s[1953]=f.s[1955]; f.pc=2234 end end
-B[2237]=function(f,r) f.s[1955]=f.l[116].v; f.pc=2236 end
-B[2238]=function(f,r) f.s[1952]=r.get(f.s[1957],f.s[1958]); f.pc=2237 end
-B[2239]=function(f,r) f.s[1958]="new"; f.pc=2238 end
-B[2240]=function(f,r) f.s[1957]=f.l[6].v; f.pc=2239 end
-B[2241]=function(f,r) f.l[2]={}; f.l[2].v=r.closure(f,15); f.pc=2218 end
-B[2242]=function(f,r) r.finish({n=0}) end
-B[2243]=function(f,r) r.finish({n=1,f.s[1959]}) end
-B[2244]=function(f,r) r.call(f,r.global("concat"),{n=3,f.s[1960],f.s[1961],f.s[1962]},1959,2243) end
-B[2245]=function(f,r) f.s[1962]=f.l[120].v; f.pc=2244 end
-B[2246]=function(f,r) f.s[1961]=","; f.pc=2245 end
-B[2247]=function(f,r) f.s[1960]=f.l[121].v; f.pc=2246 end
-B[2248]=function(f,r) local t=r.join({n=0},f.t[1963]); f.l[120]={v=t[2]}; f.l[121]={v=t[1]}; f.pc=2247 end
-B[2249]=function(f,r) r.call(f,f.s[1964],{n=1,f.s[1965]},1963,2248) end
-B[2250]=function(f,r) f.s[1965]=f.l[119].v; f.pc=2249 end
-B[2251]=function(f,r) f.s[1964]=f.l[1].v; f.pc=2250 end
-B[2252]=function(f,r) f.l[118]={}; f.l[118].v=r.closure(f,16); f.pc=2241 end
-B[2253]=function(f,r) r.finish({n=0}) end
-B[2254]=function(f,r) r.finish(r.join({n=0},f.t[1966])) end
-B[2255]=function(f,r) r.call(f,f.s[1967],{n=1,f.s[1968]},1966,2254) end
-B[2256]=function(f,r) f.s[1968]=r.get(f.s[1973],f.s[1974]); f.pc=2255 end
-B[2257]=function(f,r) f.s[1974]=1; f.pc=2256 end
-B[2258]=function(f,r) f.s[1973]=r.get(f.s[1975],f.s[1976]); f.pc=2257 end
-B[2259]=function(f,r) f.s[1976]="ifs"; f.pc=2258 end
-B[2260]=function(f,r) f.s[1975]=f.l[122].v; f.pc=2259 end
-B[2261]=function(f,r) if f.s[1971] then f.pc=2260 else f.s[1968]=f.s[1971]; f.pc=2255 end end
-B[2262]=function(f,r) f.s[1971]=r.get(f.s[1977],f.s[1978]); f.pc=2261 end
-B[2263]=function(f,r) f.s[1978]="ifs"; f.pc=2262 end
-B[2264]=function(f,r) f.s[1977]=f.l[122].v; f.pc=2263 end
-B[2265]=function(f,r) if not f.s[1969] then f.pc=2264 else f.s[1968]=f.s[1969]; f.pc=2255 end end
-B[2266]=function(f,r) f.s[1969]=r.get(f.s[1981],f.s[1982]); f.pc=2265 end
-B[2267]=function(f,r) f.s[1982]="name"; f.pc=2266 end
-B[2268]=function(f,r) f.s[1981]=f.l[122].v; f.pc=2267 end
-B[2269]=function(f,r) if not f.s[1979] then f.pc=2268 else f.s[1969]=f.s[1979]; f.pc=2265 end end
-B[2270]=function(f,r) f.s[1979]=r.get(f.s[1985],f.s[1986]); f.pc=2269 end
-B[2271]=function(f,r) f.s[1986]="ex"; f.pc=2270 end
-B[2272]=function(f,r) f.s[1985]=f.l[122].v; f.pc=2271 end
-B[2273]=function(f,r) if not f.s[1983] then f.pc=2272 else f.s[1979]=f.s[1983]; f.pc=2269 end end
-B[2274]=function(f,r) f.s[1983]=r.get(f.s[1989],f.s[1990]); f.pc=2273 end
-B[2275]=function(f,r) f.s[1990]=1; f.pc=2274 end
-B[2276]=function(f,r) f.s[1989]=r.get(f.s[1991],f.s[1992]); f.pc=2275 end
-B[2277]=function(f,r) f.s[1992]="lhs"; f.pc=2276 end
-B[2278]=function(f,r) f.s[1991]=f.l[122].v; f.pc=2277 end
-B[2279]=function(f,r) if f.s[1987] then f.pc=2278 else f.s[1983]=f.s[1987]; f.pc=2273 end end
-B[2280]=function(f,r) f.s[1987]=r.get(f.s[1993],f.s[1994]); f.pc=2279 end
-B[2281]=function(f,r) f.s[1994]="lhs"; f.pc=2280 end
-B[2282]=function(f,r) f.s[1993]=f.l[122].v; f.pc=2281 end
-B[2283]=function(f,r) f.s[1967]=f.l[1].v; f.pc=2282 end
-B[2284]=function(f,r) r.finish({n=2,f.s[1996],f.s[1997]}) end
-B[2285]=function(f,r) f.s[1997]=1; f.pc=2284 end
-B[2286]=function(f,r) if not f.s[1998] then f.pc=2285 else f.s[1997]=f.s[1998]; f.pc=2284 end end
-B[2287]=function(f,r) f.s[1998]=r.get(f.s[2002],f.s[2003]); f.pc=2286 end
-B[2288]=function(f,r) f.s[2003]="column"; f.pc=2287 end
-B[2289]=function(f,r) f.s[2002]=f.l[123].v; f.pc=2288 end
-B[2290]=function(f,r) if not f.s[2000] then f.pc=2289 else f.s[1998]=f.s[2000]; f.pc=2286 end end
-B[2291]=function(f,r) f.s[2000]=r.get(f.s[2004],f.s[2005]); f.pc=2290 end
-B[2292]=function(f,r) f.s[2005]="column"; f.pc=2291 end
-B[2293]=function(f,r) f.s[2004]=f.l[122].v; f.pc=2292 end
-B[2294]=function(f,r) f.s[1996]=1; f.pc=2293 end
-B[2295]=function(f,r) if not f.s[2006] then f.pc=2294 else f.s[1996]=f.s[2006]; f.pc=2293 end end
-B[2296]=function(f,r) f.s[2006]=r.get(f.s[2010],f.s[2011]); f.pc=2295 end
-B[2297]=function(f,r) f.s[2011]="line"; f.pc=2296 end
-B[2298]=function(f,r) f.s[2010]=f.l[123].v; f.pc=2297 end
-B[2299]=function(f,r) if not f.s[2008] then f.pc=2298 else f.s[2006]=f.s[2008]; f.pc=2295 end end
-B[2300]=function(f,r) f.s[2008]=r.get(f.s[2012],f.s[2013]); f.pc=2299 end
-B[2301]=function(f,r) f.s[2013]="line"; f.pc=2300 end
-B[2302]=function(f,r) f.s[2012]=f.l[122].v; f.pc=2301 end
-B[2303]=function(f,r) f.pc=f.s[1995] and 2302 or 2283 end
-B[2304]=function(f,r) f.s[1995]=f.l[123].v; f.pc=2303 end
-B[2305]=function(f,r) if not f.s[2014] then f.pc=2304 else f.s[1995]=f.s[2014]; f.pc=2303 end end
-B[2306]=function(f,r) f.s[2014]=r.get(f.s[2016],f.s[2017]); f.pc=2305 end
-B[2307]=function(f,r) f.s[2017]="line"; f.pc=2306 end
-B[2308]=function(f,r) f.s[2016]=f.l[122].v; f.pc=2307 end
-B[2309]=function(f,r) local t={n=1,f.s[2018]}; f.l[123]={v=t[1]}; f.pc=2308 end
-B[2310]=function(f,r) f.s[2018]=r.get(f.s[2021],f.s[2022]); f.pc=2309 end
-B[2311]=function(f,r) f.s[2022]="semi_colon_token"; f.pc=2310 end
-B[2312]=function(f,r) f.s[2021]=f.l[122].v; f.pc=2311 end
-B[2313]=function(f,r) if not f.s[2019] then f.pc=2312 else f.s[2018]=f.s[2019]; f.pc=2309 end end
-B[2314]=function(f,r) f.s[2019]=r.get(f.s[2025],f.s[2026]); f.pc=2313 end
-B[2315]=function(f,r) f.s[2026]="if_token"; f.pc=2314 end
-B[2316]=function(f,r) f.s[2025]=f.l[122].v; f.pc=2315 end
-B[2317]=function(f,r) if not f.s[2023] then f.pc=2316 else f.s[2019]=f.s[2023]; f.pc=2313 end end
-B[2318]=function(f,r) f.s[2023]=r.get(f.s[2029],f.s[2030]); f.pc=2317 end
-B[2319]=function(f,r) f.s[2030]="break_token"; f.pc=2318 end
-B[2320]=function(f,r) f.s[2029]=f.l[122].v; f.pc=2319 end
-B[2321]=function(f,r) if not f.s[2027] then f.pc=2320 else f.s[2023]=f.s[2027]; f.pc=2317 end end
-B[2322]=function(f,r) f.s[2027]=r.get(f.s[2033],f.s[2034]); f.pc=2321 end
-B[2323]=function(f,r) f.s[2034]="do_token"; f.pc=2322 end
-B[2324]=function(f,r) f.s[2033]=f.l[122].v; f.pc=2323 end
-B[2325]=function(f,r) if not f.s[2031] then f.pc=2324 else f.s[2027]=f.s[2031]; f.pc=2321 end end
-B[2326]=function(f,r) f.s[2031]=r.get(f.s[2037],f.s[2038]); f.pc=2325 end
-B[2327]=function(f,r) f.s[2038]="for_token"; f.pc=2326 end
-B[2328]=function(f,r) f.s[2037]=f.l[122].v; f.pc=2327 end
-B[2329]=function(f,r) if not f.s[2035] then f.pc=2328 else f.s[2031]=f.s[2035]; f.pc=2325 end end
-B[2330]=function(f,r) f.s[2035]=r.get(f.s[2041],f.s[2042]); f.pc=2329 end
-B[2331]=function(f,r) f.s[2042]="repeat_token"; f.pc=2330 end
-B[2332]=function(f,r) f.s[2041]=f.l[122].v; f.pc=2331 end
-B[2333]=function(f,r) if not f.s[2039] then f.pc=2332 else f.s[2035]=f.s[2039]; f.pc=2329 end end
-B[2334]=function(f,r) f.s[2039]=r.get(f.s[2045],f.s[2046]); f.pc=2333 end
-B[2335]=function(f,r) f.s[2046]="while_token"; f.pc=2334 end
-B[2336]=function(f,r) f.s[2045]=f.l[122].v; f.pc=2335 end
-B[2337]=function(f,r) if not f.s[2043] then f.pc=2336 else f.s[2039]=f.s[2043]; f.pc=2333 end end
-B[2338]=function(f,r) f.s[2043]=r.get(f.s[2049],f.s[2050]); f.pc=2337 end
-B[2339]=function(f,r) f.s[2050]="local_token"; f.pc=2338 end
-B[2340]=function(f,r) f.s[2049]=f.l[122].v; f.pc=2339 end
-B[2341]=function(f,r) if not f.s[2047] then f.pc=2340 else f.s[2043]=f.s[2047]; f.pc=2337 end end
-B[2342]=function(f,r) f.s[2047]=r.get(f.s[2053],f.s[2054]); f.pc=2341 end
-B[2343]=function(f,r) f.s[2054]="open_token"; f.pc=2342 end
-B[2344]=function(f,r) f.s[2053]=f.l[122].v; f.pc=2343 end
-B[2345]=function(f,r) if not f.s[2051] then f.pc=2344 else f.s[2047]=f.s[2051]; f.pc=2341 end end
-B[2346]=function(f,r) f.s[2051]=r.get(f.s[2057],f.s[2058]); f.pc=2345 end
-B[2347]=function(f,r) f.s[2058]="op_token"; f.pc=2346 end
-B[2348]=function(f,r) f.s[2057]=f.l[122].v; f.pc=2347 end
-B[2349]=function(f,r) if not f.s[2055] then f.pc=2348 else f.s[2051]=f.s[2055]; f.pc=2345 end end
-B[2350]=function(f,r) f.s[2055]=r.get(f.s[2061],f.s[2062]); f.pc=2349 end
-B[2351]=function(f,r) f.s[2062]="return_token"; f.pc=2350 end
-B[2352]=function(f,r) f.s[2061]=f.l[122].v; f.pc=2351 end
-B[2353]=function(f,r) if not f.s[2059] then f.pc=2352 else f.s[2055]=f.s[2059]; f.pc=2349 end end
-B[2354]=function(f,r) f.s[2059]=r.get(f.s[2063],f.s[2064]); f.pc=2353 end
-B[2355]=function(f,r) f.s[2064]="function_token"; f.pc=2354 end
-B[2356]=function(f,r) f.s[2063]=f.l[122].v; f.pc=2355 end
-B[2357]=function(f,r) r.finish({n=2,f.s[2066],f.s[2067]}) end
-B[2358]=function(f,r) f.s[2067]=1; f.pc=2357 end
-B[2359]=function(f,r) f.s[2066]=1; f.pc=2358 end
-B[2360]=function(f,r) f.pc=f.s[2065] and 2359 or 2356 end
-B[2361]=function(f,r) f.s[2065]=(not f.s[2068]); f.pc=2360 end
-B[2362]=function(f,r) f.s[2068]=f.l[122].v; f.pc=2361 end
-B[2363]=function(f,r) f.l[1]={}; f.l[1].v=r.closure(f,17); f.pc=2252 end
-B[2364]=function(f,r) r.call(f,f.s[2069],{n=2,f.s[2070],f.s[2071]},2072,2369) end
-B[2365]=function(f,r) local t={n=1,f.s[2075]}; f.s[2073][f.s[2074]]=t[1]; f.pc=2364 end
-B[2366]=function(f,r) f.s[2075]=true; f.pc=2365 end
-B[2367]=function(f,r) f.s[2074]=f.l[124].v; f.pc=2366 end
-B[2368]=function(f,r) f.s[2073]=f.l[9].v; f.pc=2367 end
-B[2369]=function(f,r) if f.t[2072][1]~=nil then f.s[2071]=f.t[2072][1]; f.l[125]={v=f.t[2072][1]}; f.l[124]={v=f.t[2072][2]}; f.pc=2368 else f.pc=2363 end end
-B[2370]=function(f,r) local t=r.join({n=0},f.t[2076]); f.s[2069],f.s[2070],f.s[2071]=t[1],t[2],t[3]; f.pc=2364 end
-B[2371]=function(f,r) r.call(f,f.s[2077],{n=1,f.s[2078]},2076,2370) end
-B[2372]=function(f,r) f.s[2078][25]=f.s[2080]; f.pc=2371 end
-B[2373]=function(f,r) f.s[2080]="peripheral"; f.pc=2372 end
-B[2374]=function(f,r) f.s[2078][24]=f.s[2082]; f.pc=2373 end
-B[2375]=function(f,r) f.s[2082]="computer"; f.pc=2374 end
-B[2376]=function(f,r) f.s[2078][23]=f.s[2084]; f.pc=2375 end
-B[2377]=function(f,r) f.s[2084]="colours"; f.pc=2376 end
-B[2378]=function(f,r) f.s[2078][22]=f.s[2086]; f.pc=2377 end
-B[2379]=function(f,r) f.s[2086]="colors"; f.pc=2378 end
-B[2380]=function(f,r) f.s[2078][21]=f.s[2088]; f.pc=2379 end
-B[2381]=function(f,r) f.s[2088]="table"; f.pc=2380 end
-B[2382]=function(f,r) f.s[2078][20]=f.s[2090]; f.pc=2381 end
-B[2383]=function(f,r) f.s[2090]="string"; f.pc=2382 end
-B[2384]=function(f,r) f.s[2078][19]=f.s[2092]; f.pc=2383 end
-B[2385]=function(f,r) f.s[2092]="math"; f.pc=2384 end
-B[2386]=function(f,r) f.s[2078][18]=f.s[2094]; f.pc=2385 end
-B[2387]=function(f,r) f.s[2094]="_VERSION"; f.pc=2386 end
-B[2388]=function(f,r) f.s[2078][17]=f.s[2096]; f.pc=2387 end
-B[2389]=function(f,r) f.s[2096]="unpack"; f.pc=2388 end
-B[2390]=function(f,r) f.s[2078][16]=f.s[2098]; f.pc=2389 end
-B[2391]=function(f,r) f.s[2098]="xpcall"; f.pc=2390 end
-B[2392]=function(f,r) f.s[2078][15]=f.s[2100]; f.pc=2391 end
-B[2393]=function(f,r) f.s[2100]="rawequal"; f.pc=2392 end
-B[2394]=function(f,r) f.s[2078][14]=f.s[2102]; f.pc=2393 end
-B[2395]=function(f,r) f.s[2102]="rawlen"; f.pc=2394 end
-B[2396]=function(f,r) f.s[2078][13]=f.s[2104]; f.pc=2395 end
-B[2397]=function(f,r) f.s[2104]="rawset"; f.pc=2396 end
-B[2398]=function(f,r) f.s[2078][12]=f.s[2106]; f.pc=2397 end
-B[2399]=function(f,r) f.s[2106]="rawget"; f.pc=2398 end
-B[2400]=function(f,r) f.s[2078][11]=f.s[2108]; f.pc=2399 end
-B[2401]=function(f,r) f.s[2108]="print"; f.pc=2400 end
-B[2402]=function(f,r) f.s[2078][10]=f.s[2110]; f.pc=2401 end
-B[2403]=function(f,r) f.s[2110]="type"; f.pc=2402 end
-B[2404]=function(f,r) f.s[2078][9]=f.s[2112]; f.pc=2403 end
-B[2405]=function(f,r) f.s[2112]="tostring"; f.pc=2404 end
-B[2406]=function(f,r) f.s[2078][8]=f.s[2114]; f.pc=2405 end
-B[2407]=function(f,r) f.s[2114]="tonumber"; f.pc=2406 end
-B[2408]=function(f,r) f.s[2078][7]=f.s[2116]; f.pc=2407 end
-B[2409]=function(f,r) f.s[2116]="select"; f.pc=2408 end
-B[2410]=function(f,r) f.s[2078][6]=f.s[2118]; f.pc=2409 end
-B[2411]=function(f,r) f.s[2118]="pcall"; f.pc=2410 end
-B[2412]=function(f,r) f.s[2078][5]=f.s[2120]; f.pc=2411 end
-B[2413]=function(f,r) f.s[2120]="next"; f.pc=2412 end
-B[2414]=function(f,r) f.s[2078][4]=f.s[2122]; f.pc=2413 end
-B[2415]=function(f,r) f.s[2122]="pairs"; f.pc=2414 end
-B[2416]=function(f,r) f.s[2078][3]=f.s[2124]; f.pc=2415 end
-B[2417]=function(f,r) f.s[2124]="ipairs"; f.pc=2416 end
-B[2418]=function(f,r) f.s[2078][2]=f.s[2126]; f.pc=2417 end
-B[2419]=function(f,r) f.s[2126]="error"; f.pc=2418 end
-B[2420]=function(f,r) f.s[2078][1]=f.s[2128]; f.pc=2419 end
-B[2421]=function(f,r) f.s[2128]="assert"; f.pc=2420 end
-B[2422]=function(f,r) f.s[2078]={}; f.pc=2421 end
-B[2423]=function(f,r) f.s[2077]=r.global("ipairs"); f.pc=2422 end
-B[2424]=function(f,r) local t={n=1,f.s[2129]}; f.l[9]={v=t[1]}; f.pc=2423 end
-B[2425]=function(f,r) f.s[2129]={}; f.pc=2424 end
-B[2426]=function(f,r) local t=r.join({n=0},f.t[2130]); f.l[6]={v=t[1]}; f.pc=2425 end
-B[2427]=function(f,r) r.call(f,f.s[2131],{n=1,f.s[2132]},2130,2426) end
-B[2428]=function(f,r) f.s[2132]="scripts.runtime.errors"; f.pc=2427 end
-B[2429]=function(f,r) f.s[2131]=r.global("require"); f.pc=2428 end
-B[2430]=function(f,r) local t=r.join({n=0},f.t[2133]); f.l[111]={v=t[1]}; f.pc=2429 end
-B[2431]=function(f,r) r.call(f,f.s[2134],{n=1,f.s[2135]},2133,2430) end
-B[2432]=function(f,r) f.s[2135]="scripts.runtime.limits"; f.pc=2431 end
-B[2433]=function(f,r) f.s[2134]=r.global("require"); f.pc=2432 end
-B[2434]=function(f,r) local t=r.join({n=0},f.t[2136]); f.l[5]={v=t[1]}; f.pc=2433 end
-B[2435]=function(f,r) r.call(f,f.s[2137],{n=1,f.s[2138]},2136,2434) end
-B[2436]=function(f,r) f.s[2138]="scripts.runtime.parse_admission"; f.pc=2435 end
-B[2437]=function(f,r) f.s[2137]=r.global("require"); f.pc=2436 end
-return {blocks=B,protos={{entry=2437,params={},captures={}},{entry=2061,params={12,13,14},captures={1,5,2,3,6,7,8,9,10,11}},{entry=1297,params={54},captures={39,3,50,20,36,51,13,7,8,52,2,49,53,38,34}},{entry=1325,params={77},captures={36}},{entry=1884,params={81},captures={39,6,2,3,7,13,8,9,42,52,50,20,80,38,34}},{entry=1965,params={88},captures={39,2,3,80,49,53,38}},{entry=1988,params={95},captures={52}},{entry=2003,params={100},captures={5,99}},{entry=2011,params={102},captures={101}},{entry=2025,params={103},captures={5,15,101}},{entry=2060,params={104},captures={1,14}},{entry=2089,params={107,108,109},captures={3,10,9,2}},{entry=2180,params={110},captures={}},{entry=2217,params={112,113},captures={111,2}},{entry=2240,params={114,115,116},captures={6,1}},{entry=2251,params={119},captures={1}},{entry=2362,params={122},captures={1}}}}
+B[2206]=function(f,r) f.s[1925]=(f.s[1929] ~= f.s[1930]); f.pc=2205 end
+B[2207]=function(f,r) f.s[1930]="string"; f.pc=2206 end
+B[2208]=function(f,r) r.call(f,f.s[1931],{n=1,f.s[1932]},1929,2207) end
+B[2209]=function(f,r) f.s[1932]=f.l[111].v; f.pc=2208 end
+B[2210]=function(f,r) f.s[1931]=r.global("type"); f.pc=2209 end
+B[2211]=function(f,r) f.l[3]={}; f.l[3].v=r.closure(f,14); f.pc=2181 end
+B[2212]=function(f,r) r.finish({n=0}) end
+B[2213]=function(f,r) r.call(f,f.s[1934],{n=2,f.s[1935],f.s[1936]},1933,2212) end
+B[2214]=function(f,r) f.s[1936]=0; f.pc=2213 end
+B[2215]=function(f,r) f.s[1935]=f.l[116].v; f.pc=2214 end
+B[2216]=function(f,r) f.s[1934]=r.global("error"); f.pc=2215 end
+B[2217]=function(f,r) local t=r.join({n=0},f.t[1941]); f.s[1939][f.s[1940]]=t[2]; f.s[1937][f.s[1938]]=t[1]; f.pc=2216 end
+B[2218]=function(f,r) r.call(f,f.s[1942],{n=1,f.s[1943]},1941,2217) end
+B[2219]=function(f,r) f.s[1943]=f.l[113].v; f.pc=2218 end
+B[2220]=function(f,r) f.s[1942]=f.l[1].v; f.pc=2219 end
+B[2221]=function(f,r) f.s[1940]="column"; f.pc=2220 end
+B[2222]=function(f,r) f.s[1939]=f.l[116].v; f.pc=2221 end
+B[2223]=function(f,r) f.s[1938]="line"; f.pc=2222 end
+B[2224]=function(f,r) f.s[1937]=f.l[116].v; f.pc=2223 end
+B[2225]=function(f,r) local t=r.join({n=0},f.t[1944]); f.l[116]={v=t[1]}; f.pc=2224 end
+B[2226]=function(f,r) r.call(f,f.s[1945],{n=2,f.s[1946],f.s[1947]},1944,2225) end
+B[2227]=function(f,r) f.s[1947]=f.l[114].v; f.pc=2226 end
+B[2228]=function(f,r) f.s[1946]="E_PROGRAM"; f.pc=2227 end
+B[2229]=function(f,r) if not f.s[1948] then f.pc=2228 else f.s[1946]=f.s[1948]; f.pc=2227 end end
+B[2230]=function(f,r) f.s[1948]=f.l[115].v; f.pc=2229 end
+B[2231]=function(f,r) f.s[1945]=r.get(f.s[1950],f.s[1951]); f.pc=2230 end
+B[2232]=function(f,r) f.s[1951]="new"; f.pc=2231 end
+B[2233]=function(f,r) f.s[1950]=f.l[6].v; f.pc=2232 end
+B[2234]=function(f,r) f.l[2]={}; f.l[2].v=r.closure(f,15); f.pc=2211 end
+B[2235]=function(f,r) r.finish({n=0}) end
+B[2236]=function(f,r) r.finish({n=1,f.s[1952]}) end
+B[2237]=function(f,r) r.call(f,r.global("concat"),{n=3,f.s[1953],f.s[1954],f.s[1955]},1952,2236) end
+B[2238]=function(f,r) f.s[1955]=f.l[119].v; f.pc=2237 end
+B[2239]=function(f,r) f.s[1954]=","; f.pc=2238 end
+B[2240]=function(f,r) f.s[1953]=f.l[120].v; f.pc=2239 end
+B[2241]=function(f,r) local t=r.join({n=0},f.t[1956]); f.l[119]={v=t[2]}; f.l[120]={v=t[1]}; f.pc=2240 end
+B[2242]=function(f,r) r.call(f,f.s[1957],{n=1,f.s[1958]},1956,2241) end
+B[2243]=function(f,r) f.s[1958]=f.l[118].v; f.pc=2242 end
+B[2244]=function(f,r) f.s[1957]=f.l[1].v; f.pc=2243 end
+B[2245]=function(f,r) f.l[117]={}; f.l[117].v=r.closure(f,16); f.pc=2234 end
+B[2246]=function(f,r) r.finish({n=0}) end
+B[2247]=function(f,r) r.finish(r.join({n=0},f.t[1959])) end
+B[2248]=function(f,r) r.call(f,f.s[1960],{n=1,f.s[1961]},1959,2247) end
+B[2249]=function(f,r) f.s[1961]=r.get(f.s[1966],f.s[1967]); f.pc=2248 end
+B[2250]=function(f,r) f.s[1967]=1; f.pc=2249 end
+B[2251]=function(f,r) f.s[1966]=r.get(f.s[1968],f.s[1969]); f.pc=2250 end
+B[2252]=function(f,r) f.s[1969]="ifs"; f.pc=2251 end
+B[2253]=function(f,r) f.s[1968]=f.l[121].v; f.pc=2252 end
+B[2254]=function(f,r) if f.s[1964] then f.pc=2253 else f.s[1961]=f.s[1964]; f.pc=2248 end end
+B[2255]=function(f,r) f.s[1964]=r.get(f.s[1970],f.s[1971]); f.pc=2254 end
+B[2256]=function(f,r) f.s[1971]="ifs"; f.pc=2255 end
+B[2257]=function(f,r) f.s[1970]=f.l[121].v; f.pc=2256 end
+B[2258]=function(f,r) if not f.s[1962] then f.pc=2257 else f.s[1961]=f.s[1962]; f.pc=2248 end end
+B[2259]=function(f,r) f.s[1962]=r.get(f.s[1974],f.s[1975]); f.pc=2258 end
+B[2260]=function(f,r) f.s[1975]="name"; f.pc=2259 end
+B[2261]=function(f,r) f.s[1974]=f.l[121].v; f.pc=2260 end
+B[2262]=function(f,r) if not f.s[1972] then f.pc=2261 else f.s[1962]=f.s[1972]; f.pc=2258 end end
+B[2263]=function(f,r) f.s[1972]=r.get(f.s[1978],f.s[1979]); f.pc=2262 end
+B[2264]=function(f,r) f.s[1979]="ex"; f.pc=2263 end
+B[2265]=function(f,r) f.s[1978]=f.l[121].v; f.pc=2264 end
+B[2266]=function(f,r) if not f.s[1976] then f.pc=2265 else f.s[1972]=f.s[1976]; f.pc=2262 end end
+B[2267]=function(f,r) f.s[1976]=r.get(f.s[1982],f.s[1983]); f.pc=2266 end
+B[2268]=function(f,r) f.s[1983]=1; f.pc=2267 end
+B[2269]=function(f,r) f.s[1982]=r.get(f.s[1984],f.s[1985]); f.pc=2268 end
+B[2270]=function(f,r) f.s[1985]="lhs"; f.pc=2269 end
+B[2271]=function(f,r) f.s[1984]=f.l[121].v; f.pc=2270 end
+B[2272]=function(f,r) if f.s[1980] then f.pc=2271 else f.s[1976]=f.s[1980]; f.pc=2266 end end
+B[2273]=function(f,r) f.s[1980]=r.get(f.s[1986],f.s[1987]); f.pc=2272 end
+B[2274]=function(f,r) f.s[1987]="lhs"; f.pc=2273 end
+B[2275]=function(f,r) f.s[1986]=f.l[121].v; f.pc=2274 end
+B[2276]=function(f,r) f.s[1960]=f.l[1].v; f.pc=2275 end
+B[2277]=function(f,r) r.finish({n=2,f.s[1989],f.s[1990]}) end
+B[2278]=function(f,r) f.s[1990]=1; f.pc=2277 end
+B[2279]=function(f,r) if not f.s[1991] then f.pc=2278 else f.s[1990]=f.s[1991]; f.pc=2277 end end
+B[2280]=function(f,r) f.s[1991]=r.get(f.s[1995],f.s[1996]); f.pc=2279 end
+B[2281]=function(f,r) f.s[1996]="column"; f.pc=2280 end
+B[2282]=function(f,r) f.s[1995]=f.l[122].v; f.pc=2281 end
+B[2283]=function(f,r) if not f.s[1993] then f.pc=2282 else f.s[1991]=f.s[1993]; f.pc=2279 end end
+B[2284]=function(f,r) f.s[1993]=r.get(f.s[1997],f.s[1998]); f.pc=2283 end
+B[2285]=function(f,r) f.s[1998]="column"; f.pc=2284 end
+B[2286]=function(f,r) f.s[1997]=f.l[121].v; f.pc=2285 end
+B[2287]=function(f,r) f.s[1989]=1; f.pc=2286 end
+B[2288]=function(f,r) if not f.s[1999] then f.pc=2287 else f.s[1989]=f.s[1999]; f.pc=2286 end end
+B[2289]=function(f,r) f.s[1999]=r.get(f.s[2003],f.s[2004]); f.pc=2288 end
+B[2290]=function(f,r) f.s[2004]="line"; f.pc=2289 end
+B[2291]=function(f,r) f.s[2003]=f.l[122].v; f.pc=2290 end
+B[2292]=function(f,r) if not f.s[2001] then f.pc=2291 else f.s[1999]=f.s[2001]; f.pc=2288 end end
+B[2293]=function(f,r) f.s[2001]=r.get(f.s[2005],f.s[2006]); f.pc=2292 end
+B[2294]=function(f,r) f.s[2006]="line"; f.pc=2293 end
+B[2295]=function(f,r) f.s[2005]=f.l[121].v; f.pc=2294 end
+B[2296]=function(f,r) f.pc=f.s[1988] and 2295 or 2276 end
+B[2297]=function(f,r) f.s[1988]=f.l[122].v; f.pc=2296 end
+B[2298]=function(f,r) if not f.s[2007] then f.pc=2297 else f.s[1988]=f.s[2007]; f.pc=2296 end end
+B[2299]=function(f,r) f.s[2007]=r.get(f.s[2009],f.s[2010]); f.pc=2298 end
+B[2300]=function(f,r) f.s[2010]="line"; f.pc=2299 end
+B[2301]=function(f,r) f.s[2009]=f.l[121].v; f.pc=2300 end
+B[2302]=function(f,r) local t={n=1,f.s[2011]}; f.l[122]={v=t[1]}; f.pc=2301 end
+B[2303]=function(f,r) f.s[2011]=r.get(f.s[2014],f.s[2015]); f.pc=2302 end
+B[2304]=function(f,r) f.s[2015]="semi_colon_token"; f.pc=2303 end
+B[2305]=function(f,r) f.s[2014]=f.l[121].v; f.pc=2304 end
+B[2306]=function(f,r) if not f.s[2012] then f.pc=2305 else f.s[2011]=f.s[2012]; f.pc=2302 end end
+B[2307]=function(f,r) f.s[2012]=r.get(f.s[2018],f.s[2019]); f.pc=2306 end
+B[2308]=function(f,r) f.s[2019]="if_token"; f.pc=2307 end
+B[2309]=function(f,r) f.s[2018]=f.l[121].v; f.pc=2308 end
+B[2310]=function(f,r) if not f.s[2016] then f.pc=2309 else f.s[2012]=f.s[2016]; f.pc=2306 end end
+B[2311]=function(f,r) f.s[2016]=r.get(f.s[2022],f.s[2023]); f.pc=2310 end
+B[2312]=function(f,r) f.s[2023]="break_token"; f.pc=2311 end
+B[2313]=function(f,r) f.s[2022]=f.l[121].v; f.pc=2312 end
+B[2314]=function(f,r) if not f.s[2020] then f.pc=2313 else f.s[2016]=f.s[2020]; f.pc=2310 end end
+B[2315]=function(f,r) f.s[2020]=r.get(f.s[2026],f.s[2027]); f.pc=2314 end
+B[2316]=function(f,r) f.s[2027]="do_token"; f.pc=2315 end
+B[2317]=function(f,r) f.s[2026]=f.l[121].v; f.pc=2316 end
+B[2318]=function(f,r) if not f.s[2024] then f.pc=2317 else f.s[2020]=f.s[2024]; f.pc=2314 end end
+B[2319]=function(f,r) f.s[2024]=r.get(f.s[2030],f.s[2031]); f.pc=2318 end
+B[2320]=function(f,r) f.s[2031]="for_token"; f.pc=2319 end
+B[2321]=function(f,r) f.s[2030]=f.l[121].v; f.pc=2320 end
+B[2322]=function(f,r) if not f.s[2028] then f.pc=2321 else f.s[2024]=f.s[2028]; f.pc=2318 end end
+B[2323]=function(f,r) f.s[2028]=r.get(f.s[2034],f.s[2035]); f.pc=2322 end
+B[2324]=function(f,r) f.s[2035]="repeat_token"; f.pc=2323 end
+B[2325]=function(f,r) f.s[2034]=f.l[121].v; f.pc=2324 end
+B[2326]=function(f,r) if not f.s[2032] then f.pc=2325 else f.s[2028]=f.s[2032]; f.pc=2322 end end
+B[2327]=function(f,r) f.s[2032]=r.get(f.s[2038],f.s[2039]); f.pc=2326 end
+B[2328]=function(f,r) f.s[2039]="while_token"; f.pc=2327 end
+B[2329]=function(f,r) f.s[2038]=f.l[121].v; f.pc=2328 end
+B[2330]=function(f,r) if not f.s[2036] then f.pc=2329 else f.s[2032]=f.s[2036]; f.pc=2326 end end
+B[2331]=function(f,r) f.s[2036]=r.get(f.s[2042],f.s[2043]); f.pc=2330 end
+B[2332]=function(f,r) f.s[2043]="local_token"; f.pc=2331 end
+B[2333]=function(f,r) f.s[2042]=f.l[121].v; f.pc=2332 end
+B[2334]=function(f,r) if not f.s[2040] then f.pc=2333 else f.s[2036]=f.s[2040]; f.pc=2330 end end
+B[2335]=function(f,r) f.s[2040]=r.get(f.s[2046],f.s[2047]); f.pc=2334 end
+B[2336]=function(f,r) f.s[2047]="open_token"; f.pc=2335 end
+B[2337]=function(f,r) f.s[2046]=f.l[121].v; f.pc=2336 end
+B[2338]=function(f,r) if not f.s[2044] then f.pc=2337 else f.s[2040]=f.s[2044]; f.pc=2334 end end
+B[2339]=function(f,r) f.s[2044]=r.get(f.s[2050],f.s[2051]); f.pc=2338 end
+B[2340]=function(f,r) f.s[2051]="op_token"; f.pc=2339 end
+B[2341]=function(f,r) f.s[2050]=f.l[121].v; f.pc=2340 end
+B[2342]=function(f,r) if not f.s[2048] then f.pc=2341 else f.s[2044]=f.s[2048]; f.pc=2338 end end
+B[2343]=function(f,r) f.s[2048]=r.get(f.s[2054],f.s[2055]); f.pc=2342 end
+B[2344]=function(f,r) f.s[2055]="return_token"; f.pc=2343 end
+B[2345]=function(f,r) f.s[2054]=f.l[121].v; f.pc=2344 end
+B[2346]=function(f,r) if not f.s[2052] then f.pc=2345 else f.s[2048]=f.s[2052]; f.pc=2342 end end
+B[2347]=function(f,r) f.s[2052]=r.get(f.s[2056],f.s[2057]); f.pc=2346 end
+B[2348]=function(f,r) f.s[2057]="function_token"; f.pc=2347 end
+B[2349]=function(f,r) f.s[2056]=f.l[121].v; f.pc=2348 end
+B[2350]=function(f,r) r.finish({n=2,f.s[2059],f.s[2060]}) end
+B[2351]=function(f,r) f.s[2060]=1; f.pc=2350 end
+B[2352]=function(f,r) f.s[2059]=1; f.pc=2351 end
+B[2353]=function(f,r) f.pc=f.s[2058] and 2352 or 2349 end
+B[2354]=function(f,r) f.s[2058]=(not f.s[2061]); f.pc=2353 end
+B[2355]=function(f,r) f.s[2061]=f.l[121].v; f.pc=2354 end
+B[2356]=function(f,r) f.l[1]={}; f.l[1].v=r.closure(f,17); f.pc=2245 end
+B[2357]=function(f,r) r.call(f,f.s[2062],{n=2,f.s[2063],f.s[2064]},2065,2362) end
+B[2358]=function(f,r) local t={n=1,f.s[2068]}; f.s[2066][f.s[2067]]=t[1]; f.pc=2357 end
+B[2359]=function(f,r) f.s[2068]=true; f.pc=2358 end
+B[2360]=function(f,r) f.s[2067]=f.l[123].v; f.pc=2359 end
+B[2361]=function(f,r) f.s[2066]=f.l[9].v; f.pc=2360 end
+B[2362]=function(f,r) if f.t[2065][1]~=nil then f.s[2064]=f.t[2065][1]; f.l[124]={v=f.t[2065][1]}; f.l[123]={v=f.t[2065][2]}; f.pc=2361 else f.pc=2356 end end
+B[2363]=function(f,r) local t=r.join({n=0},f.t[2069]); f.s[2062],f.s[2063],f.s[2064]=t[1],t[2],t[3]; f.pc=2357 end
+B[2364]=function(f,r) r.call(f,f.s[2070],{n=1,f.s[2071]},2069,2363) end
+B[2365]=function(f,r) f.s[2071][25]=f.s[2073]; f.pc=2364 end
+B[2366]=function(f,r) f.s[2073]="peripheral"; f.pc=2365 end
+B[2367]=function(f,r) f.s[2071][24]=f.s[2075]; f.pc=2366 end
+B[2368]=function(f,r) f.s[2075]="computer"; f.pc=2367 end
+B[2369]=function(f,r) f.s[2071][23]=f.s[2077]; f.pc=2368 end
+B[2370]=function(f,r) f.s[2077]="colours"; f.pc=2369 end
+B[2371]=function(f,r) f.s[2071][22]=f.s[2079]; f.pc=2370 end
+B[2372]=function(f,r) f.s[2079]="colors"; f.pc=2371 end
+B[2373]=function(f,r) f.s[2071][21]=f.s[2081]; f.pc=2372 end
+B[2374]=function(f,r) f.s[2081]="table"; f.pc=2373 end
+B[2375]=function(f,r) f.s[2071][20]=f.s[2083]; f.pc=2374 end
+B[2376]=function(f,r) f.s[2083]="string"; f.pc=2375 end
+B[2377]=function(f,r) f.s[2071][19]=f.s[2085]; f.pc=2376 end
+B[2378]=function(f,r) f.s[2085]="math"; f.pc=2377 end
+B[2379]=function(f,r) f.s[2071][18]=f.s[2087]; f.pc=2378 end
+B[2380]=function(f,r) f.s[2087]="_VERSION"; f.pc=2379 end
+B[2381]=function(f,r) f.s[2071][17]=f.s[2089]; f.pc=2380 end
+B[2382]=function(f,r) f.s[2089]="unpack"; f.pc=2381 end
+B[2383]=function(f,r) f.s[2071][16]=f.s[2091]; f.pc=2382 end
+B[2384]=function(f,r) f.s[2091]="xpcall"; f.pc=2383 end
+B[2385]=function(f,r) f.s[2071][15]=f.s[2093]; f.pc=2384 end
+B[2386]=function(f,r) f.s[2093]="rawequal"; f.pc=2385 end
+B[2387]=function(f,r) f.s[2071][14]=f.s[2095]; f.pc=2386 end
+B[2388]=function(f,r) f.s[2095]="rawlen"; f.pc=2387 end
+B[2389]=function(f,r) f.s[2071][13]=f.s[2097]; f.pc=2388 end
+B[2390]=function(f,r) f.s[2097]="rawset"; f.pc=2389 end
+B[2391]=function(f,r) f.s[2071][12]=f.s[2099]; f.pc=2390 end
+B[2392]=function(f,r) f.s[2099]="rawget"; f.pc=2391 end
+B[2393]=function(f,r) f.s[2071][11]=f.s[2101]; f.pc=2392 end
+B[2394]=function(f,r) f.s[2101]="print"; f.pc=2393 end
+B[2395]=function(f,r) f.s[2071][10]=f.s[2103]; f.pc=2394 end
+B[2396]=function(f,r) f.s[2103]="type"; f.pc=2395 end
+B[2397]=function(f,r) f.s[2071][9]=f.s[2105]; f.pc=2396 end
+B[2398]=function(f,r) f.s[2105]="tostring"; f.pc=2397 end
+B[2399]=function(f,r) f.s[2071][8]=f.s[2107]; f.pc=2398 end
+B[2400]=function(f,r) f.s[2107]="tonumber"; f.pc=2399 end
+B[2401]=function(f,r) f.s[2071][7]=f.s[2109]; f.pc=2400 end
+B[2402]=function(f,r) f.s[2109]="select"; f.pc=2401 end
+B[2403]=function(f,r) f.s[2071][6]=f.s[2111]; f.pc=2402 end
+B[2404]=function(f,r) f.s[2111]="pcall"; f.pc=2403 end
+B[2405]=function(f,r) f.s[2071][5]=f.s[2113]; f.pc=2404 end
+B[2406]=function(f,r) f.s[2113]="next"; f.pc=2405 end
+B[2407]=function(f,r) f.s[2071][4]=f.s[2115]; f.pc=2406 end
+B[2408]=function(f,r) f.s[2115]="pairs"; f.pc=2407 end
+B[2409]=function(f,r) f.s[2071][3]=f.s[2117]; f.pc=2408 end
+B[2410]=function(f,r) f.s[2117]="ipairs"; f.pc=2409 end
+B[2411]=function(f,r) f.s[2071][2]=f.s[2119]; f.pc=2410 end
+B[2412]=function(f,r) f.s[2119]="error"; f.pc=2411 end
+B[2413]=function(f,r) f.s[2071][1]=f.s[2121]; f.pc=2412 end
+B[2414]=function(f,r) f.s[2121]="assert"; f.pc=2413 end
+B[2415]=function(f,r) f.s[2071]={}; f.pc=2414 end
+B[2416]=function(f,r) f.s[2070]=r.global("ipairs"); f.pc=2415 end
+B[2417]=function(f,r) local t={n=1,f.s[2122]}; f.l[9]={v=t[1]}; f.pc=2416 end
+B[2418]=function(f,r) f.s[2122]={}; f.pc=2417 end
+B[2419]=function(f,r) local t=r.join({n=0},f.t[2123]); f.l[6]={v=t[1]}; f.pc=2418 end
+B[2420]=function(f,r) r.call(f,f.s[2124],{n=1,f.s[2125]},2123,2419) end
+B[2421]=function(f,r) f.s[2125]="scripts.runtime.errors"; f.pc=2420 end
+B[2422]=function(f,r) f.s[2124]=r.global("require"); f.pc=2421 end
+B[2423]=function(f,r) local t=r.join({n=0},f.t[2126]); f.l[125]={v=t[1]}; f.pc=2422 end
+B[2424]=function(f,r) r.call(f,f.s[2127],{n=1,f.s[2128]},2126,2423) end
+B[2425]=function(f,r) f.s[2128]="scripts.runtime.limits"; f.pc=2424 end
+B[2426]=function(f,r) f.s[2127]=r.global("require"); f.pc=2425 end
+B[2427]=function(f,r) local t=r.join({n=0},f.t[2129]); f.l[5]={v=t[1]}; f.pc=2426 end
+B[2428]=function(f,r) r.call(f,f.s[2130],{n=1,f.s[2131]},2129,2427) end
+B[2429]=function(f,r) f.s[2131]="scripts.runtime.parse_admission"; f.pc=2428 end
+B[2430]=function(f,r) f.s[2130]=r.global("require"); f.pc=2429 end
+return {blocks=B,protos={{entry=2430,params={},captures={}},{entry=2061,params={12,13,14},captures={1,5,2,3,6,7,8,9,10,11}},{entry=1297,params={54},captures={39,3,50,20,36,51,13,7,8,52,2,49,53,38,34}},{entry=1325,params={77},captures={36}},{entry=1884,params={81},captures={39,6,2,3,7,13,8,9,42,52,50,20,80,38,34}},{entry=1965,params={88},captures={39,2,3,80,49,53,38}},{entry=1988,params={95},captures={52}},{entry=2003,params={100},captures={5,99}},{entry=2011,params={102},captures={101}},{entry=2025,params={103},captures={5,15,101}},{entry=2060,params={104},captures={1,14}},{entry=2089,params={107,108,109},captures={3,10,9,2}},{entry=2180,params={110},captures={}},{entry=2210,params={111,112},captures={2}},{entry=2233,params={113,114,115},captures={6,1}},{entry=2244,params={118},captures={1}},{entry=2355,params={121},captures={1}}}}
