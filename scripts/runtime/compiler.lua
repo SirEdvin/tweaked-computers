@@ -7,6 +7,8 @@ local parsing = require('scripts.runtime.parse_admission')
 local errors = require('scripts.runtime.errors')
 local sandbox = require('scripts.runtime.sandbox')
 local continuation = require('scripts.runtime.continuation')
+local compiler_machine = require('scripts.runtime.compiler-machine')
+local compiler_artifact = require('scripts.runtime.compiler-artifact')
 local M = {}
 -- Host-only, bounded, exact-source validation cache. No caller-owned plan or
 -- executable closure is trusted. Replay every original charge, in order, so
@@ -82,7 +84,7 @@ local function emit(main,mode,expression)
   local function visit(n)
     parsing.enter(1)
     nodes, nesting = nodes + 1, nesting + 1
-    if nodes > limits.source_nodes or nesting > limits.source_nesting then reject(n, 'source AST limit exceeded', 'E_LIMIT') end
+    if nesting > (limits.host_stack_depth or limits.callback_depth) then reject(n, 'compiler host depth exceeded', 'E_CAPACITY') end
   end
   local function leave(text)
     nesting = nesting - 1
@@ -91,11 +93,11 @@ local function emit(main,mode,expression)
   local function text(s)
     parsing.enter(#s)
     generated = generated + #s
-    if generated > limits.generated_source_bytes then reject(nil, 'generated text limit exceeded', 'E_LIMIT') end
+
     return s
   end
   local function list(xs)
-    if #xs > limits.tuple_entries then reject(xs[1], 'tuple width exceeded', 'E_LIMIT') end
+
     local out = {}
     for i,n in ipairs(xs) do out[i] = expr(n) end
     return table.concat(out, ',')
@@ -105,7 +107,7 @@ local function emit(main,mode,expression)
     if n.is_method then reject(n, 'colon declarations are not supported') end
     local names = {}
     for i,p in ipairs(n.params) do names[i] = identifier(p.name,p) end
-    if #names > limits.tuple_entries then reject(n, 'parameter width exceeded', 'E_LIMIT') end
+
     if n.is_vararg then names[#names+1] = '...' end
     local previous=variadic; variadic=n.is_vararg
     local contents=body(n); variadic=previous
@@ -137,7 +139,7 @@ local function emit(main,mode,expression)
       s = '__tc.call('..expr(n.ex)..(#n.args > 0 and ','..list(n.args) or '')..')'
     elseif k == 'func_proto' then s = '__tc.closure('..func(n.func_def)..')'
     elseif k == 'constructor' then
-      if #n.fields > limits.table_entries then reject(n, 'table width exceeded','E_LIMIT') end
+
       local out = {}
       for i,f in ipairs(n.fields) do
         if f.type == 'list' then out[i] = expr(f.value)
@@ -176,7 +178,7 @@ local function emit(main,mode,expression)
     if k == 'empty' then s = ';'
     elseif k == 'localstat' then
       local names = {}; for i,p in ipairs(n.lhs) do names[i] = identifier(p.name,p) end
-      if #names>limits.tuple_entries then reject(n,'local width exceeded','E_LIMIT') end
+
       s = 'local '..table.concat(names,',')..' = __tc.bind('..#names..(n.rhs and #n.rhs > 0 and ','..list(n.rhs) or '')..');'
     elseif k == 'localfunc' then
       local name = identifier(n.name.name,n.name)
@@ -185,7 +187,7 @@ local function emit(main,mode,expression)
       -- Desugar through the same fully preflighted assignment path.
       s = statement({node_type='assignment', lhs={n.name}, rhs={{node_type='func_proto',func_def=n.func_def}}})
     elseif k == 'assignment' then
-      if #n.lhs > limits.tuple_entries then reject(n,'assignment width exceeded','E_LIMIT') end
+
       temp = temp + 1
       local prefix = '__tc_a'..temp..'_'
       local count=#n.lhs
@@ -226,7 +228,7 @@ local function emit(main,mode,expression)
       s = 'for '..identifier(n.var.name,n.var)..' = __tc.number('..expr(n.start)..'),__tc.number('..expr(n.stop)..'),__tc.number('..(n.step and expr(n.step) or '1')..') do __tc.loop('..coordinates(n.for_token)..',1); '..body(n)..' end'
     elseif k == 'forlist' then
       local names = {}; for i,p in ipairs(n.name_list) do names[i] = identifier(p.name,p) end
-      if #names>limits.tuple_entries then reject(n,'iterator width exceeded','E_LIMIT') end
+
       s = 'for '..table.concat(names,',')..' in __tc.iter('..list(n.exp_list)..') do __tc.loop('..coordinates(n.for_token)..','..#names..'); '..body(n)..' end'
     elseif k == 'ifstat' then
       local out = {}
@@ -239,7 +241,7 @@ local function emit(main,mode,expression)
   if mode=='shell' then
     local output='return function() '..body(main)..' end'
     parsing.enter(#output)
-    if #output>limits.generated_source_bytes then reject(nil,'generated source too large','E_LIMIT') end
+
     return output,{},nodes
   end
   local first=main.body.first
@@ -266,7 +268,7 @@ local function emit(main,mode,expression)
         if kind=='funcstat' then
           count=count+1; names[name]=true
           key_work=key_work+#name+1
-          if count>limits.handler_names then reject(node,'handler count exceeded','E_LIMIT') end
+
         end
       end
       stat=stat.next
@@ -290,7 +292,7 @@ local function emit(main,mode,expression)
     out[#out+1]=text('return __tc_functions')
     local output=table.concat(out,'\n')
     parsing.enter(#output)
-    if #output>limits.generated_source_bytes then reject(first,'generated source too large','E_LIMIT') end
+
     return output,names,nodes
   end
   local ret, stat = nil, main.body.first
@@ -322,10 +324,10 @@ local function emit(main,mode,expression)
     if not name:match('^[a-zA-Z_][a-zA-Z_0-9]*$') or names[name] then reject(f.key,'invalid or duplicate handler name') end
     names[name] = true
     handlers[#handlers+1] = '['..string.format('%q',name)..']='..func(f.value.func_def)
-    if #handlers > limits.handler_names then reject(ret,'handler count exceeded','E_LIMIT') end
+
   end
   local output = 'return {'..table.concat(handlers,',\n')..'}'
-  if #output > limits.generated_source_bytes then reject(ret,'generated source too large','E_LIMIT') end
+
   parsing.enter(#output)
   return output, names, nodes
 end
@@ -333,7 +335,7 @@ end
 function M.compile(source, context, mode)
   if mode~=nil and mode~='shell' then return nil,errors.new('E_ARGUMENT','unknown compiler mode') end
   if type(source) ~= 'string' then return nil, errors.new('E_ARGUMENT','source must be a string') end
-  if #source > limits.source_bytes then return nil, errors.new('E_LIMIT','source byte limit exceeded') end
+
   local cache_key=(mode or 'program')..'\0'..source
   prune_cache()
   local retained=cache[cache_key]; local charges=not retained and {} or nil
@@ -354,7 +356,7 @@ function M.compile(source, context, mode)
       local tok; index,tok = iter(state,index)
       if not tok or tok.token_type == 'eof' then break end
       count = count + 1
-      if count > limits.source_tokens then reject(tok,'source token limit exceeded','E_LIMIT') end
+
       if tok.token_type == 'ident' then identifier(tok.value,tok) end
     end
     local main, diagnostics, expression
@@ -480,4 +482,21 @@ function M.run(plan, name, event, services, context, checkpoint, shell)
   if not ok then return false,guard.diagnostic(result),guard.stop_requested() and 'stop' or nil end
   return true
 end
+-- A cursor belongs to one private candidate/reconstruction owner, never guest Data.
+function M.new_job(source,mode)
+  return compiler_machine.new(source,mode)
+end
+function M.advance(job,context,admit)
+  if type(admit)~='function' then return nil,errors.new('E_UNSUPPORTED','compiler host-memory admission adapter required') end
+
+  local plan,diagnostic,status=compiler_machine.advance(job,context,admit)
+  if plan then
+    local ready,e,control=compiler_artifact.check(job,context)
+    if not ready then return nil,e,control end
+    plan.compiler_version=limits.compiler_version; plan.api_version=1
+    admit(job,0)
+  end
+  return plan,diagnostic,status
+end
+function M.reconstruct(plan,admit_native) return compiler_artifact.factory(plan,admit_native) end
 return M
