@@ -246,9 +246,11 @@ function M.run()
       local seq=registry.get().next_sequence; editor.on_confirmed{player_index=a.index,element=input,tick=tick}
       assert(registry.get().next_sequence==seq)
       input.text='draft'; editor.on_text{player_index=a.index,element=input,tick=tick}
-      for _,bad in ipairs({'one\ntwo',string.rep('x',limits.shell_source_bytes+1)}) do
-        input.text=bad; editor.on_text{player_index=a.index,element=input,tick=tick}; assert(input.text=='draft')
-      end
+      input.text='one\ntwo'; editor.on_text{player_index=a.index,element=input,tick=tick}
+      assert(input.text=='one\ntwo' and model.session(a.index).shell_draft=='draft')
+      input.text=string.rep('x',limits.shell_source_bytes+1)
+      editor.on_text{player_index=a.index,element=input,tick=tick}
+      assert(model.session(a.index).shell_draft==input.text,'draft storage is not the legacy runtime command gate')
       submit('x=6'); local count=#rec.shell.pending
       editor.on_click{player_index=a.index,element=f.content.console.prompt.execute,tick=tick}
       assert(#rec.shell.pending==count); dispatch()

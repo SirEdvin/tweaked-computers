@@ -232,7 +232,7 @@ function M.refresh(player,message,tick)
   local c=content(f,'editor'); local dirty=d.source~=d.base_source; local conflict=d.base_revision~=rec.saved_revision
   local status=rec.status..(rec.powered and ' / powered' or ' / unpowered')
   local resource_status=refresh_resources(player,f,s,rec,tick or game.tick)
-  c.status.caption=(dirty and 'Unsaved' or 'Saved')..' / '..resources.summary(resource_status)
+  c.status.caption=(s.unretained and 'Input not retained' or dirty and 'Unsaved' or 'Saved')..' / '..resources.summary(resource_status)
   c.status.tooltip=rec.id..' | '..status..(conflict and ' | conflict: review the current saved source' or '')
   local validation=s.validation and (s.validation.diagnostic and diagnostic(s.validation.diagnostic) or 'Draft valid.')
   local text=conflict and 'Saved source changed. Review before Save / Run.' or s.message or validation
@@ -277,7 +277,25 @@ local function review_panel(parent,name,action,caption)
   local p=flow(parent,name); label(p,'caption_label',''); box(p,'review','',140,true)
   local row=flow(p,'actions','horizontal'); button(row,action,caption); p.visible=false; return p
 end
+-- Refused bytes stay only in the native widget, never in an unaccounted draft copy.
+local function retain_input(player,f,s)
+  if not f or not s or s.mode=='recovery' or not f.content then return true end
+  local ok,rec,d=pcall(model.current,player,s.token)
+  if not ok then return not s.unretained end
+  local problem
+  for _,input in ipairs({{f.content.editor.source,d.source,model.edit},
+    {f.content.console.prompt.command,d.shell_draft or s.shell_draft or '',model.shell_edit}}) do
+    if input[1].text~=input[2] then
+      local accepted,e=pcall(input[3],player,s.token,input[1].text)
+      if not accepted then problem=problem or e end
+    end
+  end
+  s.unretained=problem~=nil
+  if problem then M.refresh(player,diagnostic(problem)); return false end
+  return true
+end
 function M.open_recovery(player,message)
+  if not retain_input(player,frame(player),model.session(player.index)) then return false end
   local s=model.open_recovery(player.index); local f=shell(player,s,tr('recovery-title'))
   f.title.toggle_focus.visible=false
   local c=f.add{type='scroll-pane',name='recovery_content',horizontal_scroll_policy='never',vertical_scroll_policy='auto'}
@@ -291,6 +309,13 @@ function M.open_recovery(player,message)
   M.refresh(player); M.resize(player)
 end
 function M.open(player,id)
+  local previous=frame(player); local session=model.session(player.index)
+  if previous and session and session.unretained then
+    if id==session.id and pcall(model.current,player,session.token) then
+      previous.visible=true; player.opened=previous; M.refresh(player); return true
+    end
+    if not retain_input(player,previous,session) then return false end
+  end
   local ok,s,d=pcall(model.open,player,id)
   if not ok then
     if type(s)=='table' and s.code=='E_CAPACITY' then M.open_recovery(player,diagnostic(s))
@@ -394,11 +419,7 @@ local function selection(c,s) return s.recovery_names and s.recovery_names[c.rec
 function M.on_text(event)
   local player,f,s=owned(event); if not player or s.mode=='recovery' then return end
   if event.element==content(f,'console').prompt.command then
-    local ok,problem=pcall(model.shell_edit,player,s.token,event.element.text)
-    if not ok then
-      event.element.text=s.shell_draft or ''
-      M.refresh(player,diagnostic(problem),event.tick)
-    end
+    if retain_input(player,f,s) then s.message=nil; M.refresh(player) end
     return
   end
   if event.element==content(f,'reference').filters.search then
@@ -406,14 +427,11 @@ function M.on_text(event)
     s.search=text; refresh_reference(content(f,'reference'),s); return
   end
   if event.element~=content(f,'editor').source then return end
-  local ok,e=pcall(model.edit,player,s.token,event.element.text)
-  if not ok then
-    local _,b=model.session(player.index); event.element.text=b.documents[s.id].source
-    M.refresh(player,diagnostic(e)); return
-  end
+  if not retain_input(player,f,s) then return end
   s.message=nil; M.refresh(player)
 end
 local function submit_shell(player,f,s,tick)
+  if not retain_input(player,f,s) then return end
   local ok,result=pcall(model.shell_submit,player,s.token,tick)
   local c=content(f,'console')
   if ok then
@@ -493,6 +511,7 @@ function M.on_click(event)
   local player,f,s=owned(event); if not player then return end
   local element=event.element; local action=element.name
   if element==f.title.close then
+    if not retain_input(player,f,s) then return end
     model.close(player.index,s.token); if player.opened==f then player.opened=nil end; f.destroy(); return
   end
   local ok,message,e=pcall(function()
@@ -515,9 +534,11 @@ function M.on_click(event)
     end
     local c=content(f,'editor'); local maintenance=content(f,'maintenance')
     if element==c.message.template then
-      if d.source~='' then return nil,{code='E_BUSY',message='Starter example only inserts into an empty draft. Select/copy reference text instead.'} end
+      if d.source~='' or c.source.text~='' then return nil,{code='E_BUSY',message='Starter example only inserts into an empty draft. Select/copy reference text instead.'} end
       model.edit(player,s.token,help.template); c.source.text=d.source; return 'Starter inserted into draft only. Validate, Save and Run are separate.'
-    elseif element==c.actions.activate then return model.action(player,s.token,rec.status=='running' and 'apply' or 'run',event.tick)
+    elseif element==c.actions.activate then
+      if not retain_input(player,f,s) then return end
+      return model.action(player,s.token,rec.status=='running' and 'apply' or 'run',event.tick)
     elseif element==c.message.review then
       local result,err=model.action(player,s.token,'review',event.tick)
       activate_tab(player,f,s,5,event.tick); return result,err
@@ -557,8 +578,11 @@ function M.on_click(event)
         or element==maintenance.confirm_forget.buttons[action] or element==maintenance.confirm_reset.buttons[action]
         or element==maintenance.danger[action]))
     if not allowed then return end
+    if (action=='save' or action=='validate') and not retain_input(player,f,s) then return end
     local result,err=model.action(player,s.token,action,event.tick,selection(maintenance,s))
-    if result and (action=='reload' or action=='recover' or action=='copy-active') then c.source.text=d.source end
+    if result and (action=='reload' or action=='recover' or action=='copy-active') then
+      c.source.text=d.source; retain_input(player,f,s)
+    end
     return result,err
   end)
   if not ok then M.refresh(player,diagnostic(message),event.tick)
@@ -567,10 +591,12 @@ end
 function M.on_closed(event)
   local player,f,s=owned(event,true)
   if not player or event.element~=f then return end
+  if not retain_input(player,f,s) then f.visible=false; return end
   model.close(player.index,s.token); f.destroy() -- Never reopen over the next GUI.
 end
 function M.on_player_unavailable(event)
   local player=game.get_player(event.player_index); local s=model.session(event.player_index)
+  if s and s.unretained then return end -- Keep native editable bytes through disconnect/authority loss.
   if s then model.close(event.player_index,s.token) end
   if player and player.valid then local f=frame(player); if f then f.destroy() end end
 end

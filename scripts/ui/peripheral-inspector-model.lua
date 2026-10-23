@@ -79,20 +79,24 @@ function M.read(rec,tick,spend,session)
         local wire=session.logic_next=='green' and 'green' or 'red'
         session.logic_next=wire=='red' and 'green' or 'red'
         session.logic_partial=nil -- Retire the old unpublished pair on gameplay.
+        session.logic_jobs=session.logic_jobs or {}
+        local job=session.logic_jobs[wire] or {}; session.logic_jobs[wire]=job
         local ok,admitted,sample=pcall(scheduler.try_maintenance,function()
-          return logic.inspect_input(rec,wire,tick,spend)
+          return logic.inspect_input(rec,wire,tick,spend,job)
         end)
         if ok and admitted then
+          session.logic_jobs[wire]=nil
           d[wire]=sample.values; d[wire..'_tick']=sample.tick
           d.connected[wire]=sample.connected; d.errors[wire]=nil
         else
           d.errors[wire]=ok and 'E_BUSY' or type(admitted)=='table' and admitted.code or 'E_ENGINE'
+          if not ok then session.logic_jobs[wire]=nil end
         end
         candidate.details=d
       end
     elseif rec.kind=='configurator' then candidate.details=configurator.inspect(rec,tick,spend) end
   end
-  if session and not powered then session.logic_partial=nil; session.logic_next=nil end
+  if session and not powered then session.logic_partial=nil; session.logic_next=nil; session.logic_jobs=nil end
   return candidate
 end
 return M

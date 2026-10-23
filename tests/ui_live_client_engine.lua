@@ -53,6 +53,21 @@ remote.add_interface('tc-ui1',{
   fill=function()
     for i=1,55 do runtime.log(rec('computer'),string.format('Retained line %02d: native live Console witness ABCDEFGHIJ',i),game.tick) end
   end,
+  drafts=function()
+    local p=game.get_player(1); local x=storage.tc_ui1
+    assert(not x.draft_ids); x.draft_ids={}
+    for i=1,11 do
+      local entity=assert(game.surfaces[1].create_entity{name='tc-computer',position={-3*i,10},force='player'})
+      local other=assert(lifecycle.build(entity)); x.draft_ids[i]=other.id
+      p.teleport({-3*i,8}); assert(editor.open(p,other.id))
+      local f=p.gui.screen[editor.frame_name]; f.content.editor.source.text='-- retained native draft '..i
+      editor.on_text{player_index=p.index,element=f.content.editor.source,tick=game.tick}
+    end
+    p.teleport({0,-2}); assert(editor.open(p,rec('computer').id))
+  end,
+  draft_limit=function(value)
+    settings.global['tc-draft-storage-bytes']={value=value}
+  end,
   signals=function(count)
     assert(type(count)=='number' and count>=1 and count<=150 and count%1==0)
     local x=storage.tc_ui1
@@ -112,6 +127,8 @@ function M.on_tick(event)
   local draft_count=0; for _ in pairs(b and b.documents or {}) do draft_count=draft_count+1 end
   local state={tick=event.tick,events=x.events,frame=f and tree(f),editor=s and {tab=s.tab,peripheral=s.peripheral,wire=s.peripheral_wire},
     resource_status=resources.read(rec('computer'),event.tick),draft_count=draft_count,draft_retention=model.retention(1),
+    unretained=s and s.unretained,command_draft=s and b.documents[s.id] and b.documents[s.id].shell_draft,
+    logic_output=rec('logic').output_bank,logic_owner=rec('logic').output_owner,subscriptions=rec('computer').subscriptions,
     draft=s and b.documents[s.id] and b.documents[s.id].source,inspection=i and {key=i.key,field=i.field,page=i.page,field_page=i.field_page,value_page=i.value_page,
     snapshot_tick=i.snapshot and i.snapshot.tick,pending=i.pending,signals=i.snapshot and i.snapshot.kind=='logic' and i.snapshot.details},
     native_signals={},maintenance=registry.get().scheduler.maintenance_spent}

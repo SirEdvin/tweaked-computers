@@ -5,17 +5,48 @@ local compiler=require('scripts.runtime.compiler')
 local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
 local shell=require('scripts.runtime.shell')
-local M={draft_slots=8}
--- Deterministic retained-text accounting, including document/identity metadata.
-local function document_bytes(id,d)
-  return 128+#id+#d.source+#d.base_source+#(d.shell_draft or '')
-end
-local function usage(b)
-  local used=0
-  for id,d in pairs(b.documents) do used=used+document_bytes(id,d) end
-  local s=b.session; local d=s and b.documents[s.id]
-  if d and d.shell_draft==nil then used=used+#(s.shell_draft or '') end
+local M={}
+-- Account UTF-8 bytes, not characters; fixed metadata is deterministic, not heap size.
+local function usage(b,id,candidate,session)
+  local used=0; local strings={}
+  local function text(value)
+    if value and not strings[value] then strings[value]=true; used=used+#value end
+  end
+  local function document(key,d)
+    used=used+128+#key
+    text(d.source); text(d.base_source); text(d.shell_draft)
+  end
+  for key,d in pairs(b.documents) do document(key,key==id and candidate or d) end
+  if id and not b.documents[id] then document(id,candidate) end
+  local s=session or b.session; local d=s and (s.id==id and candidate or b.documents[s.id])
+  if d and d.shell_draft==nil then text(s.shell_draft) end
+  if s then
+    for _,key in ipairs({'review','active_review','recovery_review'}) do
+      local review=s[key]; if review then text(review.source) end
+    end
+    text(s.selected_source); text(s.forget_source)
+  end
   return used
+end
+local function merged(value,patch)
+  local candidate={}; for k,v in pairs(value or {}) do candidate[k]=v end
+  for k,v in pairs(patch) do candidate[k]=v end
+  return candidate
+end
+local function admit(b,id,patch,session_patch)
+  local candidate=id and merged(b.documents[id],patch or {})
+  local session=session_patch and merged(b.session,session_patch)
+  local before=usage(b); local after=usage(b,id,candidate,session)
+  local limit=limits.draft_storage_bytes
+  if after>before and (not limit or after>limit) then
+    error({code='E_CAPACITY',message='Draft storage growth refused; accepted drafts and current editable input retained. Reduce text, explicitly forget a reviewed draft, or raise tc-draft-storage-bytes.',
+      resource='draft_storage',setting='tc-draft-storage-bytes',used=before,requested=math.max(0,after-before),limit=limit,recoverable=true},0)
+  end
+  return candidate
+end
+local function retain_command(b)
+  local s=b.session; local d=s and b.documents[s.id]
+  if d and d.shell_draft==nil then d.shell_draft=s.shell_draft or '' end
 end
 
 function M.retention(index)
@@ -49,12 +80,11 @@ function M.open(player,id)
   if not M.authorized(player,rec) then errors.raise('E_UNREACHABLE','computer is not accessible') end
   local b=bucket(player.index); local d=b.documents[id]
   if not d then
-    local n=0; for _ in pairs(b.documents) do n=n+1 end
-    if n>=M.draft_slots then errors.raise('E_CAPACITY','eight recovery drafts retained; explicitly forget one before opening another computer') end
-    d={source=rec.saved_source,base_source=rec.saved_source,base_revision=rec.saved_revision}
+    d=admit(b,id,{source=rec.saved_source,base_source=rec.saved_source,base_revision=rec.saved_revision,shell_draft=''})
     b.documents[id]=d
   end
-  local session={id=id,unit=rec.body.unit_number,generation=rec.generation,token=registry.sequence()}
+  retain_command(b)
+  local session={id=id,unit=rec.body.unit_number,generation=rec.generation,token=registry.sequence(),shell_draft=d.shell_draft or ''}
   b.session=session
   return session,d
 end
@@ -72,20 +102,22 @@ function M.current(player,token)
   return rec,b.documents[s.id],s,b
 end
 function M.edit(player,token,source)
-  local _,d,s=M.current(player,token)
-  if type(source)~='string' or #source>limits.source_bytes then errors.raise('E_LIMIT','source exceeds '..limits.source_bytes..' bytes; previous draft retained') end
+  local _,d,s,b=M.current(player,token)
+  if type(source)~='string' then errors.raise('E_ARGUMENT','source string required; previous draft retained') end
+  admit(b,s.id,{source=source})
   d.source=source; s.validation=nil; s.reset=nil
 end
 function M.shell_edit(player,token,text)
-  local _,_,s=M.current(player,token)
-  if type(text)~='string' or #text>limits.shell_source_bytes or text:find('[\r\n]') then errors.raise('E_ARGUMENT','one bounded line required; draft retained') end
-  s.shell_draft=text
+  local _,d,s,b=M.current(player,token)
+  if type(text)~='string' or text:find('[\r\n]') then errors.raise('E_ARGUMENT','one line required; draft retained') end
+  admit(b,s.id,{shell_draft=text})
+  d.shell_draft=text; s.shell_draft=text
 end
 function M.shell_submit(player,token,tick)
-  local rec,_,s=M.current(player,token)
+  local rec,d,s=M.current(player,token)
   if s.tab~=2 then errors.raise('E_UNREACHABLE','active Console required') end
   local id=shell.submit(rec,s.shell_draft or '',player.index,token,tick,s.shell_generation or false)
-  if id then s.shell_draft=''; s.shell_generation=rec.shell.id end
+  if id then d.shell_draft=''; s.shell_draft=''; s.shell_generation=rec.shell.id end
   return id
 end
 function M.shell_reset(player,token,confirm)
@@ -106,6 +138,7 @@ function M.action(player,token,action,tick,arg)
     if not plan then return nil,e end
     return 'Draft valid; Save before Run/Apply.'
   elseif action=='save' then
+    admit(b,s.id,{base_source=d.source})
     local revision=runtime.save(rec.id,d.source,d.base_revision)
     d.base_revision=revision; d.base_source=d.source; s.review=nil
     return 'Source saved; active run unchanged.'
@@ -129,6 +162,7 @@ function M.action(player,token,action,tick,arg)
     runtime.reset_state(rec.id); s.reset=nil; return 'Computer state cleared; KV data unchanged.'
   elseif action=='cancel-reset' then s.reset=nil; return 'Reset cancelled.'
   elseif action=='review' then
+    admit(b,nil,nil,{review={revision=rec.saved_revision,source=rec.saved_source}})
     s.review={revision=rec.saved_revision,source=rec.saved_source}
     return 'Review current saved source below. Rebase retains your draft; Reload discards it.'
   elseif action=='rebase' or action=='reload' then
@@ -136,12 +170,14 @@ function M.action(player,token,action,tick,arg)
     if not review or review.revision~=rec.saved_revision or review.source~=rec.saved_source then
       errors.raise('E_BUSY','saved source changed since review; review again')
     end
+    admit(b,s.id,{base_source=review.source,source=action=='reload' and review.source or d.source})
     d.base_revision=review.revision; d.base_source=review.source
     if action=='reload' then d.source=review.source end
     s.review=nil; s.validation=nil; s.reset=nil
     return action=='rebase' and 'Draft retained and rebased; Save is still required.' or 'Loaded reviewed saved source.'
   elseif action=='review-active' then
     if not rec.active then errors.raise('E_NOT_FOUND','no formerly active source snapshot retained') end
+    admit(b,nil,nil,{active_review={source=rec.active.source,revision=rec.active.revision}})
     s.active_review={source=rec.active.source,revision=rec.active.revision}
     return 'Formerly active source below is recovery text, not a running program. Copy to Draft does not Save or Run.'
   elseif action=='copy-active' then
@@ -149,7 +185,7 @@ function M.action(player,token,action,tick,arg)
     if not review or not rec.active or review.source~=rec.active.source or review.revision~=rec.active.revision then
       errors.raise('E_BUSY','active source changed; review its snapshot again')
     end
-    d.source=review.source; s.validation=nil; s.reset=nil
+    M.edit(player,token,review.source)
     return 'Formerly active source copied into the draft; Save and Run are still separate.'
   elseif action=='review-recovery' then
     local recovered=b.documents[arg]
@@ -162,7 +198,7 @@ function M.action(player,token,action,tick,arg)
     if not review or review.id~=arg or review.source~=recovered.source then
       errors.raise('E_BUSY','review the selected recovery source before replacing this draft')
     end
-    d.source=review.source; s.validation=nil; s.reset=nil
+    M.edit(player,token,review.source)
     return 'Recovery text copied into this draft; Save and Run remain separate.'
   elseif action=='forget' then
     if arg==s.id then errors.raise('E_ARGUMENT','cannot forget the open document; use reviewed Reload instead') end
@@ -185,6 +221,7 @@ function M.action(player,token,action,tick,arg)
 end
 function M.open_recovery(index)
   local b=bucket(index)
+  retain_command(b)
   local s={mode='recovery',token=registry.sequence()}; b.session=s
   return s,b
 end
@@ -211,6 +248,7 @@ end
 function M.close(index,token)
   local s,b=M.session(index)
   if not s or s.token~=token then return false end
+  retain_command(b)
   b.session=nil -- Documents remain even after destruction, disconnect or force changes.
   return true
 end
