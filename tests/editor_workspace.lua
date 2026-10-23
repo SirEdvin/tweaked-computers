@@ -72,6 +72,12 @@ function M.run()
       return table.concat(text,'\n')
     end
     group('workspace-help-exact-inventory-spacing-signatures-aliases',help_contract.run)
+    group('workspace-empty-ground-without-drafts-is-inert',function()
+      a.selected=nil
+      interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick,cursor_position={x=30,y=120}}
+      assert(not a.opened and not a.gui.screen[editor.frame_name] and not model.session(a.index))
+      assert(not registry.get().player_drafts[a.index],'empty ground must not even allocate a draft bucket')
+    end)
     group('workspace-only-explicit-control-click-opens-editor',function()
       a.selected=rec.body
       a.opened=rec.body
@@ -103,6 +109,11 @@ function M.run()
       local other={other_gui=true}; a.opened=other; input(); assert(a.opened==other); a.opened=nil
       a.permission_group={allows_action=function() return false end}; input(); a.permission_group=nil
       a.can_reach_entity=function() return false end; input(); a.can_reach_entity=function() return true end
+      local force,surface=a.force,a.surface
+      a.force={index=-1}; input(); a.force=force
+      a.surface={index=-1}; input(); a.surface=surface
+      a.permission_group={allows_action=function(action) return action~=defines.input_action.open_gui end}
+      input(); a.permission_group=nil
       assert(connector(rec,'red').is_connected_to(connector(db,'red')))
       assert(connector(rec,'green').is_connected_to(connector(mon,'green')))
       -- Real engine wiring is untouched by ordinary UI events on either end.
@@ -141,10 +152,26 @@ function M.run()
       a.opened=vanilla; interaction.on_opened{player_index=a.index,entity=vanilla,tick=tick}; assert(a.opened==vanilla)
       interaction.on_opened{player_index=a.index,entity=rec.body,tick=tick}; assert(a.opened==vanilla)
       a.opened=nil; a.selected=nil
+      local _,bag=model.session(a.index); local documents=serpent.line(bag.documents)
       interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick}
-      local opened=a.gui.screen[editor.frame_name]
-      assert(opened and model.session(a.index).mode=='recovery','control-click empty ground opens recovery')
-      editor.on_closed{player_index=a.index,element=opened}; a.opened=nil
+      assert(not a.opened and not a.gui.screen[editor.frame_name] and not model.session(a.index),
+        'control-click empty ground must not open recovery even with retained drafts')
+      assert(serpent.line(bag.documents)==documents)
+    end)
+    group('workspace-only-exact-computer-body-not-helper-ghost-or-removed-target',function()
+      local function refused(target)
+        a.selected=target
+        interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick}
+        assert(not a.opened and not a.gui.screen[editor.frame_name] and not model.session(a.index))
+      end
+      local helpers=0
+      for _,child in pairs(rec.children) do refused(child); helpers=helpers+1 end
+      assert(helpers>0,'exercise a real owned computer helper')
+      local ghost=assert(surface.create_entity{name='entity-ghost',inner_name=rec.body.name,position={30,120},force='player'})
+      refused(ghost); ghost.destroy()
+      local removed=build('computer',33,120); local body=removed.body
+      registry.remove(removed.id); refused(body)
+      body.destroy(); refused(body); refused({valid=false}); a.selected=nil
     end)
     group('workspace-vanilla-control-click-leaves-world-and-open-inventory-alone',function()
       for i,name in ipairs({'steel-chest','stone-furnace'}) do
@@ -459,8 +486,16 @@ function M.run()
     end)
     group('workspace-retained-draft-reviewed-copy-and-identity-confirmation',function()
       local removed=build('computer',6,120)
-      local session=model.open(a,removed.id); model.edit(a,session.token,'-- removed draft')
-      registry.remove(removed.id); assert(editor.open(a,rec.id)); f=a.gui.screen[editor.frame_name]; c=f.content.editor
+      assert(editor.open(a,removed.id)); f=a.gui.screen[editor.frame_name]
+      local session=model.session(a.index); model.edit(a,session.token,'-- removed draft')
+      registry.remove(removed.id); removed.body.destroy()
+      click(f.title.close); a.opened=nil; a.selected=nil
+      local _,retained=model.session(a.index); local documents=serpent.line(retained.documents)
+      interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick}
+      assert(not a.opened and not model.session(a.index) and serpent.line(retained.documents)==documents)
+      a.selected=rec.body
+      assert(interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick})
+      f=a.gui.screen[editor.frame_name]; c=f.content.editor
       tab(f,5); local m=f.content.maintenance; local s,bag=model.session(a.index); local index
       for i,id in ipairs(s.recovery_names) do if id==removed.id then index=i end end
       select(m.recovery,index); click(m.recovery_panel.actions.recover) -- hidden: cannot copy without review
@@ -561,6 +596,29 @@ function M.run()
       click(r.actions.forget); click(r.confirm_forget.buttons['confirm-forget']); assert(not bag.documents[rec.id])
       assert(rec.saved_source==saved and rec.status==removed_status)
       click(f.title.close); assert(not f.valid)
+    end)
+    group('workspace-capacity-recovery-requires-an-accessible-computer-body',function()
+      local _,bag=model.session(a.index)
+      while true do
+        local n=0; for _ in pairs(bag.documents) do n=n+1 end
+        if n>=model.draft_slots then break end
+        local target=build('computer',60+n*3,120)
+        model.open(a,target.id)
+      end
+      assert(model.close(a.index,model.session(a.index).token))
+      local target=build('computer',90,120); local documents=serpent.line(bag.documents)
+      a.selected=nil
+      interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick}
+      assert(not a.opened and not model.session(a.index) and serpent.line(bag.documents)==documents)
+      a.selected=target.body; a.can_reach_entity=function() return false end
+      interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick}
+      assert(not a.opened and not model.session(a.index))
+      a.can_reach_entity=function() return true end
+      interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick}
+      f=a.gui.screen[editor.frame_name]
+      assert(f and f.recovery_content and model.session(a.index).mode=='recovery')
+      assert(serpent.line(bag.documents)==documents and not bag.documents[target.id])
+      click(f.title.close); a.opened=nil
     end)
     group('workspace-reference-starter-compiles-supported-api',function()
       local context=admission.context(admission.new(),'help-example',0)

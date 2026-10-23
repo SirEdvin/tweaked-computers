@@ -223,7 +223,7 @@ function M.run()
     local event={input_name='tc-interact',player_index=world_player.index,tick=original_game.tick,cursor_position={x=px,y=py}}
     local before=#registry.get().monitors.touches
     world_player.selected=b0.body; assert(interaction.on_input(event))
-    world_player.selected=nil; assert(interaction.on_input(event),'position-based monitor touch must precede recovery')
+    world_player.selected=nil; assert(interaction.on_input(event),'position-based monitor touch must work without a selected tile')
     assert(#registry.get().monitors.touches==before+2 and not world_player.opened and #world_player.gui.screen.children==0)
     world_player.cursor_ghost='tc-computer'; assert(not interaction.on_input(event)); world_player.cursor_ghost=nil
     assert(#registry.get().monitors.touches==before+2)

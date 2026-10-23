@@ -327,6 +327,15 @@ class CanonicalContractTests(unittest.TestCase):
         # Every other historical scenario remains byte-for-byte checked below;
         # this is not a blanket name-only exception for modified requirements.
         evolved = {
+            # Empty-ground recovery is deliberately retired. Keep the exact
+            # replacement workflow checked, not a name-only archive exemption.
+            ('program-editor', 'Accessible bounded supporting tabs', 'Recover without an accessible computer'):
+                ('#### Scenario: Recover without an accessible computer\n'
+                 '- **WHEN** the computer is gone or draft capacity is exhausted\n'
+                 '- **THEN** the standalone recovery entry remains available and permits reviewed copy/forget without executing source.',
+                 "#### Scenario: Recover a removed computer's draft\n"
+                 '- **WHEN** the original computer is gone and the player Ctrl-clicks another accessible computer body\n'
+                 '- **THEN** Maintenance permits reviewed draft replacement and confirmed forget without executing source or deleting drafts automatically.'),
             ('program-editor', 'Method-isolated peripheral reference', 'Read the discovery API'):
                 ('adjacent method paragraphs have at least two empty lines between them.',
                  'adjacent methods have separate selectable signature and result/notes blocks with visible spacing.'),
@@ -370,10 +379,11 @@ class CanonicalContractTests(unittest.TestCase):
                         for scenario, text in re.findall(
                                 r'^#### Scenario: ([^\n]+)\n(.*?)(?=^#### Scenario:|\Z)',
                                 body, re.M | re.S):
+                            text = '#### Scenario: ' + scenario + '\n' + text.strip()
                             replacement = evolved.get((delta.parent.name, name, scenario))
                             if replacement:
                                 text = text.replace(*replacement)
-                            self.assertIn('#### Scenario: ' + scenario + '\n' + text.strip(), found[1])
+                            self.assertIn(text, found[1])
 
     def test_native_carrier_union_and_unique_canonical_scenarios(self):
         import re

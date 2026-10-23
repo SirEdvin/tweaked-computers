@@ -77,7 +77,7 @@ xvfb-run -a -s '-screen 0 1280x720x24 -nolisten tcp' \
 
 Use the ordinary Ctrl+left-click interaction to reopen the computer after closing.
 Let mouse motion settle before an automated Ctrl-click so Factorio's native
-`player.selected` resolves the body rather than empty-ground recovery. Inspect the
+`player.selected` resolves the body rather than leaving an inert empty-ground click. Inspect the
 actual window before coordinates are used. Capture inside that same display with
 its own XAUTHORITY. The native client scene writes bounded current observations to
 `client1/write/script-output/shell-client-state.json` and command status changes to

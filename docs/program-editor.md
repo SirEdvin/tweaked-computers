@@ -95,8 +95,10 @@ session while preserving its draft; they do not require a reachable computer.
 
 `control.lua` registers native click, text, tab-selection, dropdown-selection and
 checkbox-change handlers. `scripts.ui.interaction` is the sole world-opening route:
-the shared Ctrl + left-click input opens a computer, activates a monitor cell, or
-opens recovery on empty ground. Held items/wires, cursor ghosts and another open
+the shared Ctrl + left-click input opens only a selected, registered computer body
+or activates a monitor cell. Empty ground, unrelated entities, ghosts and helpers
+never open computer UI. Recovery remains in another computer's Maintenance, or
+the capacity viewer when opening a ninth computer. Held items/wires, cursor ghosts and another open
 GUI refuse the gesture. Native open events never create workspaces; native device
 shell/socket dialogs are suppressed without closing other entity dialogs. The old
 linked Open GUI and Ctrl+Shift+E bindings are removed. Close/player-unavailable/display-size
@@ -170,7 +172,7 @@ buttons or draft-mutation handlers. The empty-only starter remains in Editor.
 | review-recovery / recover | Maintenance retained identity → preview → explicit draft replacement; no save/run |
 | forget / confirm-forget / cancel-forget | Maintenance identity-specific review and separate confirmation; never open document |
 | reset / confirm-reset / cancel-reset | Maintenance stopped-only application-state section; run-generation confirmation |
-| open_recovery / recovery_action | Independent viewer without an accessible computer; review/select/native copy and confirmed forget only |
+| open_recovery / recovery_action | Capacity viewer when opening an accessible computer with eight retained slots; review/select/native copy and confirmed forget only |
 | close / native Escape | Title / close event; retain draft, do not stop |
 | text edit | Mounted Editor source; exact session/identity and source byte limit |
 | inspect / wire selection | Peripherals; one explicit color and timestamped complete/deferred result |
