@@ -543,11 +543,16 @@ function M.new(context, services, shell, durable)
   end
   function G.snapshot(v)
     if v==nil then return nil end
+    local resource=errors.resource_diagnostic(v)
+    if resource then
+      resource.line=resource.line or line; resource.column=resource.column or column
+      v=resource -- Admit source fields with the snapshot, not after publication.
+    end
     local stats={nodes=0,bytes=0}
     local result=copy(v,{},0,stats)
     if stats.bytes>limits.peripheral_call_bytes then errors.raise('E_LIMIT','Data snapshot byte limit exceeded') end
     if durable and type(result)=='table' then
-      local resource=errors.resource_diagnostic(v) or owned[v] and owned[v].resource
+      resource=resource or owned[v] and owned[v].resource
       if resource then
         local diagnostic={}; for key,value in pairs(resource) do diagnostic[key]=value end
         diagnostic.line=diagnostic.line or line; diagnostic.column=diagnostic.column or column

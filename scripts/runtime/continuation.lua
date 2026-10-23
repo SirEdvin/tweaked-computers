@@ -956,6 +956,7 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
         admit_tuple(tuple,pending.output)
         pending.guest_result=tuple
       elseif pending.handler then
+        admit_tuple({n=2},pending.output) -- Reserve the failure carrier before leaving control unwinding.
         pending.handler_depth=handler_depth+1
         pending.target=pending.handler; pending.args={n=1,f.failure.value}; pending.handling=true
         pending.call_result=nil; pending.service_result=nil; pending.prepared=nil

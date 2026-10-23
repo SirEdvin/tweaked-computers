@@ -268,16 +268,23 @@ function M.services(rec,tick,guard,execution)
   method('getResourceStatus',0,0,function() return (data.copy(policy.status(rec,tick),spend)) end)
   method('getState',1,1,function(key)
     data.key(key); spend(#key+1)
-    if rec.state[key]~=nil then return (data.copy(rec.state[key],spend)) end
+    if rec.state[key]~=nil then return (data.copy(rec.state[key],spend,math.max(limits.state_bytes,rec.state_sizes[key] or 0))) end
     return nil
   end)
   method('setState',2,2,function(key,value)
     data.key(key); spend(#key+1)
-    local copied,stats=data.copy(value,spend)
-    local old=rec.state_sizes[key] or 0; local size=stats.bytes+#key+16
+    local old=rec.state_sizes[key] or 0; local overhead=#key+16
+    local room=math.max(limits.state_bytes,rec.state_bytes)-rec.state_bytes+old
+    local function refuse(bytes)
+      errors.refuse('state_bytes','tc-state-bytes',rec.state_bytes,math.max(0,bytes-old+overhead),
+        limits.state_bytes,'state growth exceeds configured storage; delete data or raise tc-state-bytes')
+    end
+    -- Accepted over-limit state may shrink; refuse growth before publication.
+    if overhead>room then refuse(0) end
+    local copied,stats=data.copy(value,spend,room-overhead,refuse)
+    local size=stats.bytes+overhead
     local entries=rec.state_entries+(rec.state[key]==nil and 1 or 0)
     local nodes=rec.state_nodes-(rec.state_node_sizes[key] or 0)+stats.nodes
-    if entries>limits.state_entries or rec.state_bytes-old+size>limits.state_bytes or nodes>limits.data_nodes then errors.raise('E_CAPACITY','state capacity exceeded') end
     guard.prepare_empty_result()
     rec.state[key]=copied; rec.state_sizes[key]=size; rec.state_entries=entries; rec.state_bytes=rec.state_bytes-old+size
     rec.state_nodes=nodes; rec.state_node_sizes[key]=stats.nodes

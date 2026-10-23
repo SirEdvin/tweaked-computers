@@ -572,8 +572,9 @@ function M.resource_policy()
   local plan=assert(compiler.compile(source("computer.log('before'); computer.log('after')"),admission.context(ledger,'return-boundary',0)))
   local checkpoint,effects={},{}
   local context=admission.context(ledger,'return-boundary',1)
-  local function provider()
+  local function provider(g)
     return {computer={log=function(text)
+      g.prepare_empty_result()
       effects[#effects+1]=text
       if text=='before' then assert(admission.reserve(context,'work',limits.callback_work-context.machine.work)) end
     end}}

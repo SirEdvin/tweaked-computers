@@ -2,12 +2,15 @@
 local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
 local M = {}
-function M.copy(value, spend, ceiling)
+function M.copy(value, spend, ceiling, on_capacity)
   local stats, seen = {bytes=0,nodes=0}, {}
   local function charge(n)
     if spend then spend(n) end
     stats.bytes=stats.bytes+n
-    if stats.bytes>(ceiling or limits.state_bytes) then errors.raise('E_CAPACITY','Data byte capacity exceeded','data_bytes') end
+    if stats.bytes>(ceiling or limits.state_bytes) then
+      if on_capacity then on_capacity(stats.bytes) end
+      errors.raise('E_CAPACITY','Data byte capacity exceeded','data_bytes')
+    end
   end
   local function visit(v,depth)
     if spend then spend(1) end

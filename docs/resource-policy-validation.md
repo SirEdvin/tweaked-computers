@@ -4,6 +4,55 @@ This is an **unfinished implementation checkpoint**, not a release candidate or 
 
 The [source-site disposition inventory](resource-policy-inventory.md) maps every policy-manifest audit row and shared limit constant to its implementation paths and required treatment. Inventory coverage is not proof that those limits have been removed.
 
+## Protected-call refusal and application-state recovery
+
+Task 4.2 is complete; overall implementation progress is **12/47**. The exact
+archive, source correspondence, fixture receipts and failed/diagnostic attempts
+are recorded in
+`/home/siredvin/artifacts/tweaked-computers/resource-policy-protected-state/verification-index.json`.
+This is a language/control milestone, not full resource-policy acceptance.
+
+- Real retained-heap saturation exposed two defects: caught native refusals did
+  not expose their original source location, and `xpcall` admitted its failure
+  tuple after leaving control unwinding. Source fields are now admitted with the
+  diagnostic snapshot, and the bounded failure tuple is prepaid in the existing
+  control reserve before invoking the message handler. Neither guest credits nor
+  production reserves were increased. Guest edits still cannot forge or change
+  trusted diagnostic provenance.
+- Caught application-state byte refusals now report `state_bytes` and
+  `tc-state-bytes` before publication. Uncaught refusals terminate only the
+  invocation, preserving accepted state and the active run. Reads, equal-size
+  replacement, shrink and deletion remain available after lowering the storage
+  ceiling; growth is refused without partial publication.
+- Eleven fixtures pass in both content modes: `resource_policy_capacity`,
+  `resource_policy_runtime`, `resource_policy_computer`,
+  `resource_policy_language_control`, `computer_contract`, `runtime_contract`,
+  `resource_policy_refusal`, `resource_policy_memory`,
+  `resource_policy_heap_memory`, `resource_policy_functions` and
+  `resource_policy_state`. These provide 22 native cases and 20 clean cold phases.
+  The final five fixtures use separate-process cold reload; the state fixture
+  also uses real production-context setting changes and scheduler dispatch.
+- Coverage includes nested protection, nil/false results, failing message
+  handlers, depth refusal, private suspension, explicit Stop, real heap refusal,
+  original locations and cold provenance/re-entry preservation. Existing
+  injected-error cases remain explicitly distinguished from real heap pressure.
+  The state fixture lowers the live ceiling, reloads accepted over-limit state,
+  reads/shrinks/deletes it, raises the ceiling and verifies recovery without
+  startup replay or renewed same-tick work credits.
+
+The prior runtime return-boundary fixture now prepares its empty result before
+its test-side effect, matching the production service contract. CI runs the
+protected-call/state matrix before the still-failing legacy speaker integration.
+Package, animation-wrapper, settings, generated-contract, strict documentation
+and OpenSpec checks pass separately from native execution.
+
+Tasks 2.2–2.4 remain open: this does not establish universal ownership/control
+admission or grandfathering of shell graphs, drafts, pending work and queues.
+Legacy generic Data/string/key transfer ceilings still block larger-shape
+probes; those failures are preserved rather than presented as state acceptance.
+Compiler continuity, mixed-chart performance, full speaker integration,
+native-client UI/audio and connected multiplayer remain incomplete.
+
 ## Speaker policy-v2 introspection (not full speaker acceptance)
 
 Speaker `getLimits()` now uses the shared descriptor registry and returns

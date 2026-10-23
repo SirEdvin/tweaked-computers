@@ -452,14 +452,43 @@ function M.resource_policy()
   end
 end
 function M.resource_capacity()
-  fresh()
-  local rec=computer(source([[
-    computer.setState('kept',true)
-    local s=string.rep('x',16000)
-    for n=1,10 do computer.setState(tostring(n),s) end
-  ]]))
-  scheduler.tick(3)
-  assert(rec.status=='running' and rec.state.kept,'uncaught capacity refusal must end only the invocation')
-  assert(rec.diagnostic and rec.diagnostic.recoverable,'capacity refusal lacks recovery metadata')
+  for _,caught in ipairs({false,true}) do
+    fresh()
+    local body=[[
+      computer.setState('kept',true)
+      local s=string.rep('x',16000)
+      for n=1,4 do computer.setState(tostring(n),s) end
+    ]]
+    if caught then
+      body=body..[[
+        local ok,e=pcall(computer.setState,'5',s)
+        assert(not ok and e.recoverable and e.resource=='state_bytes')
+        assert(e.setting=='tc-state-bytes' and e.limit==65536 and e.used+e.requested>e.limit)
+        assert(computer.getState('5')==nil and computer.getState('1')==s)
+        ok,e=pcall(computer.setState,'oversized',{s,s})
+        assert(not ok and e.recoverable and e.resource=='state_bytes' and computer.getState('oversized')==nil)
+        assert(computer.deleteState('1'))
+        computer.setState('recovered',true)
+      ]]
+    else body=body.." computer.setState('5',s); computer.setState('unreachable',true)" end
+    local rec=computer(source(body))
+    local run,active=rec.run_id,rec.active
+    for tick=1,100 do
+      scheduler.tick(tick)
+      if not rec.invocation and #rec.queue==0 then break end
+    end
+    assert(not rec.invocation and #rec.queue==0,'state-capacity invocation did not finish')
+    assert(rec.status=='running' and rec.state.kept and rec.run_id==run and rec.active==active,
+      'capacity refusal must not retire the active run: '..serpent.line(rec.diagnostic))
+    assert(rec.state['5']==nil and not rec.state.unreachable,'refused state write partially committed')
+    if caught then assert(rec.state.recovered and rec.state['1']==nil)
+    else
+      assert(rec.diagnostic and rec.diagnostic.recoverable,'capacity refusal lacks recovery metadata')
+      assert(rec.diagnostic.resource=='state_bytes' and rec.diagnostic.setting=='tc-state-bytes')
+      assert(rec.state['1']==string.rep('x',16000))
+    end
+    assert(runtime.stop(rec.id) and rec.status=='stopped' and rec.state.kept)
+  end
+  log('TC_CONTRACT caught-and-uncaught-state-capacity-preserve-data-and-run')
 end
 return M
