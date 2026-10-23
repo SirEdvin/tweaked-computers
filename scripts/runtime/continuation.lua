@@ -752,18 +752,21 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   end
   local codec={}
   function codec.encode(tuple,values)
+    guard.atomic(tuple.n*2+1,tuple.n+1)
     admit_tuple(tuple,call_output,not values)
     local result={n=tuple.n}
     for i=1,tuple.n do result[i]=r.encode(tuple[i]) end
     return result
   end
   function codec.decode(tuple)
+    guard.atomic(tuple.n*2+1,tuple.n+1)
     local result={n=tuple.n}
     for i=1,tuple.n do result[i]=r.decode(tuple[i]) end
     return result
   end
   function codec.prepare(tuple)
     local values=codec.encode(tuple,true)
+    guard.atomic(values.n+1,values.n+2)
     local called={n=values.n+1,true}
     for i=1,values.n do called[i+1]=values[i] end
     return {called=called,values=values}
@@ -866,16 +869,20 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     f.slots[out]=value
     return nextpc
   end
+  local function protected_result(pending,result)
+    if pending.handling then return {n=2,false,result[1]} end
+    if pending.protection then
+      local protected={n=result.n+1,true}
+      for i=1,result.n do protected[i+1]=result[i] end
+      return protected
+    end
+    return result
+  end
   local function complete_child()
     local child=f; local parent=assert(child.parent)
     local result=child.results or {n=0}
     guard.host_work(result.n+4,result.n+4)
-    if parent.pending.handling then result={n=2,false,result[1]}
-    elseif parent.pending.protection then
-      local protected={n=result.n+1,true}
-      for i=1,result.n do protected[i+1]=result[i] end
-      result=protected
-    end
+    result=protected_result(parent.pending,result)
     f=parent
     local admitted,problem=pcall(admit_tuple,result,child.return_out)
     f=child
@@ -933,8 +940,11 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
       admit_tuple(result,f.return_out)
       for i=1,result.n do result[i]=r.encode(result[i]) end
       local child=f
-      f=assert(child.parent)
-      local ok,problem=pcall(admit_tuple,result,child.return_out)
+      local parent=assert(child.parent)
+      guard.atomic(result.n+2,result.n+2)
+      local returned=protected_result(parent.pending,result)
+      f=parent
+      local ok,problem=pcall(admit_tuple,returned,child.return_out)
       f=child
       if not ok then error(problem,0) end
       state.result=result
@@ -947,7 +957,8 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
       f.pending=nil; guard.call_checkpoint(nil)
       return result
     end
-    local result=library_jobs.advance(state.name,guard,state.job,f.args,compare,prepare)
+    local library_guard=setmetatable({describe=function(value) return guard.describe(r.decode(value)) end},{__index=guard})
+    local result=library_jobs.advance(state.name,library_guard,state.job,f.args,compare,prepare)
     if not result then return transfer end
     result=prepare(result)
     f.results=result; f.args=nil; f.pending=nil; f.pc=0

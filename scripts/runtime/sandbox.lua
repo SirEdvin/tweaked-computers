@@ -3,7 +3,6 @@ local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local memory = require('scripts.runtime.memory')
 local private_jobs = require('scripts.runtime.private-jobs')
-local MAX = 9007199254740991
 local M = {}
 
 function M.new(context, services, shell, durable)
@@ -123,7 +122,15 @@ function M.new(context, services, shell, durable)
   function G.job(name,initial)
     assert(type(name)=='string' and type(initial)=='function','invalid private job')
     local pending=assert(call_checkpoint,'private job requires a durable call')
-    if pending.jobs and pending.jobs[name] then return pending.jobs[name] end
+    assert(durable,'private job requires durable ownership')
+    if pending.jobs then
+      assert(type(pending.jobs)=='table' and not getmetatable(pending.jobs),'invalid private job map')
+      local saved=pending.jobs[name]
+      if saved~=nil then
+        assert(type(saved)=='table' and not getmetatable(saved),'invalid private job record')
+        return saved
+      end
+    end
     G.host_work(4,4)
     local value=initial()
     assert(type(value)=='table' and not getmetatable(value),'private job requires a plain record')
