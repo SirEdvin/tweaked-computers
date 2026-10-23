@@ -1,4 +1,4 @@
--- Closed native radar datagrams. All proof/copy/admission precedes publication.
+-- Broadcast preparation is private; publication resumes at the saved recipient.
 local registry=require('scripts.registry')
 local runtime=require('scripts.runtime.computer')
 local peripheral=require('scripts.services.peripheral')
@@ -8,77 +8,46 @@ local data=require('scripts.runtime.data')
 local errors=require('scripts.runtime.errors')
 local common=require('scripts.runtime.limits')
 local M={methods={}}
--- Frozen transport envelope: tests.modem_engine and the paid chart/logic
--- competition fixture exercise these bounds without increasing common budgets.
-local limits={channel_min=0,channel_max=65535,open_channels=128,
-  message_bytes=4096,message_nodes=256,message_depth=8,routing_candidates=64,
-  deliveries_per_transmit=8,transmits_per_computer_tick=2,transmits_per_tick=16}
+local MAX=9007199254740991
 local function arity(n,want) if n~=want then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end end
 local function channel(value)
   if type(value)~='number' then errors.raise('E_ARGUMENT','numeric channel required') end
-  if not errors.integer(value,0,65535) then errors.raise('E_RANGE','channel must be an integer from 0 to 65535') end
+  if not errors.integer(value,0,MAX) then errors.raise('E_RANGE','channel must be a nonnegative safe integer') end
   return value
 end
 local function state(rec,spend) return radar.state(rec,spend) end
-function M.methods.getLimits(c,r,w,t,spend,...)
+local function channels(rec,s,count,guard)
+  -- The owner outlives the calling computer; registry retirement releases it.
+  guard.host_resize('radar-channels:'..rec.id,count==0 and 0 or 128+count*32)
+end
+function M.methods.getLimits(c,r,w,t,spend,guard,...)
   arity(select('#',...),0)
-  local result={}; for k,v in pairs(limits) do result[k]=v end
-  result.string_bytes=common.string_bytes; result.table_entries=common.table_entries
-  result.data_nodes=common.data_nodes; result.data_depth=common.data_depth
+  local result={}; for k,v in pairs(common) do result[k]=v end
+  result.channel_min=0; result.channel_max=MAX
   return result
 end
-function M.methods.isWireless(c,r,w,t,spend,...)
+function M.methods.isWireless(c,r,w,t,spend,guard,...)
   arity(select('#',...),0); return true
 end
-function M.methods.open(c,r,w,t,spend,...)
+function M.methods.open(c,r,w,t,spend,guard,...)
   arity(select('#',...),1); local ch=channel(...); local s=state(r,spend)
   if s.channels[ch] then return end
-  if s.count==limits.open_channels then errors.raise('E_CAPACITY','open modem channel capacity reached') end
+  guard.prepare_empty_result(); channels(r,s,s.count+1,guard)
   s.channels[ch]=true; s.count=s.count+1
 end
-function M.methods.isOpen(c,r,w,t,spend,...)
+function M.methods.isOpen(c,r,w,t,spend,guard,...)
   arity(select('#',...),1); local ch=channel(...); return state(r,spend).channels[ch]==true
 end
-function M.methods.close(c,r,w,t,spend,...)
+function M.methods.close(c,r,w,t,spend,guard,...)
   arity(select('#',...),1); local ch=channel(...); local s=state(r,spend)
-  if s.channels[ch] then s.channels[ch]=nil; s.count=s.count-1 end
+  if s.channels[ch] then
+    guard.prepare_empty_result(); channels(r,s,s.count-1,guard)
+    s.channels[ch]=nil; s.count=s.count-1
+  end
 end
-function M.methods.closeAll(c,r,w,t,spend,...)
-  arity(select('#',...),0); local s=state(r,spend); s.channels={}; s.count=0
-end
-local function payload(value,spend)
-  if value==nil then return nil end
-  local ok,copied,stats=pcall(data.copy,value,spend,limits.message_bytes)
-  if not ok then
-    if type(copied)=='table' and copied.code=='E_CAPACITY' then errors.raise('E_LIMIT','modem payload byte limit exceeded') end
-    error(copied,0)
-  end
-  if stats.nodes>limits.message_nodes then errors.raise('E_LIMIT','modem payload node limit exceeded') end
-  local function depth(v,d)
-    spend(1)
-    if d>limits.message_depth then errors.raise('E_LIMIT','modem payload depth limit exceeded') end
-    if type(v)=='table' then for _,x in pairs(v) do depth(x,d+1) end end
-  end
-  depth(copied,0); return copied
-end
-local function ledger(root,tick,spend)
-  spend((limits.transmits_per_tick+1)*8+1)
-  local s=root.modem_transport
-  if s==nil then s={version=1,tick=tick,total=0,computers={}}; root.modem_transport=s end
-  if type(s)~='table' or s.version~=1 or not errors.integer(s.tick,0,tick)
-    or not errors.integer(s.total,0,limits.transmits_per_tick) or type(s.computers)~='table' then
-    errors.raise('E_UNSUPPORTED','unsupported modem admission state; retained')
-  end
-  local count=0; local sum=0
-  for id,n in pairs(s.computers) do
-    count=count+1
-    if count>limits.transmits_per_tick or type(id)~='string' or #id>common.identifier_bytes
-      or not errors.integer(n,1,limits.transmits_per_computer_tick) then errors.raise('E_UNSUPPORTED','invalid modem credits; retained') end
-    sum=sum+n
-  end
-  if sum~=s.total then errors.raise('E_UNSUPPORTED','invalid modem aggregate credits; retained') end
-  if s.tick~=tick then s.tick=tick; s.total=0; s.computers={} end
-  return s
+function M.methods.closeAll(c,r,w,t,spend,guard,...)
+  arity(select('#',...),0); local s=state(r,spend)
+  guard.prepare_empty_result(); channels(r,s,0,guard); s.channels={}; s.count=0
 end
 local function eligible(sender,receiver)
   return receiver.native_carrier=='radar' and sender.id~=receiver.id
@@ -86,76 +55,150 @@ local function eligible(sender,receiver)
     and (sender.surface_index==receiver.surface_index
       or sender.modem_tier=='interplanetary' and receiver.modem_tier=='interplanetary' and script.active_mods['space-age'])
 end
-function M.methods.transmit(c,r,w,t,spend,...)
-  arity(select('#',...),3)
-  local ch,reply,value=...; channel(ch); channel(reply); state(r,spend)
-  local message=payload(value,spend)
-  local root=registry.get(); local credits=ledger(root,t,spend)
-  if credits.total>=limits.transmits_per_tick or (credits.computers[c.id] or 0)>=limits.transmits_per_computer_tick then
-    errors.raise('E_LIMIT','modem transmission rate exceeded; retry on a later tick')
-  end
-  spend(#root.order*8+1)
-  local candidates={}; local surfaces={}; local count=0
-  for _,id in ipairs(root.order) do
-    local rec=registry.record(id)
-    if rec and eligible(r,rec) and state(rec,spend).channels[ch] then
-      count=count+1
-      if count>limits.routing_candidates then errors.raise('E_LIMIT','modem routing candidate limit exceeded') end
-      candidates[id]=rec; surfaces[rec.surface_index]=true
-    end
-  end
-  local computers={}
-  if count>0 then
-    for _,id in ipairs(root.order) do
-      local rec=root.computers[id]
-      if rec and rec.status=='running' and rec.powered and rec.force_index==r.force_index and surfaces[rec.surface_index]
-        and lifecycle.has_power(rec) then
-        for _,sub in pairs(rec.subscriptions) do
-          spend(4)
-          if sub.event_name=='modem_message' then computers[#computers+1]=rec; break end
-        end
-      end
-    end
-  end
-  spend(#computers*16+1); table.sort(computers,function(a,b) return a.id<b.id end)
-  local plan={}
-  for _,computer in ipairs(computers) do
-    local paths={}
-    -- Both full inventories must succeed, even when the first has a match.
-    for _,wire in ipairs({'red','green'}) do
-      local inventory=peripheral.inventory(computer,wire,spend)
-      for id in pairs(inventory) do
-        if candidates[id] then paths[id]=paths[id] or {}; paths[id][#paths[id]+1]=wire end
-      end
-    end
-    local names={}; for id in pairs(paths) do names[#names+1]=id end
-    local subscriptions={}
-    spend(common.subscriptions*16+#names*16+1)
-    for _,sub in pairs(computer.subscriptions) do if sub.event_name=='modem_message' then subscriptions[#subscriptions+1]=sub end end
-    table.sort(names); table.sort(subscriptions,function(a,b) return a.sequence<b.sequence end)
-    for _,id in ipairs(names) do
-      local receiver=candidates[id]; local distance
-      if receiver.surface_index==r.surface_index then
-        local a,b=r.body.position,receiver.body.position
-        distance=math.sqrt((a.x-b.x)^2+(a.y-b.y)^2)
-      end
-      for _,sub in ipairs(subscriptions) do
-        if #plan>=limits.deliveries_per_transmit then errors.raise('E_LIMIT','modem handler delivery limit exceeded') end
-        local event={name='modem_message',peripheral=id,wire=paths[id][1],wires=paths[id],
-          channel=ch,replyChannel=reply,message=message,distance=distance,sent_tick=t}
-        local item=assert(runtime.prepare_event(computer,sub.handler,event,t,spend))
-        plan[#plan+1]={computer=computer,item=item}
-      end
-    end
-  end
-  if not errors.integer(root.next_sequence,1,9007199254740990-#plan) then errors.raise('E_CAPACITY','modem event sequence exhausted') end
-  -- Cover every possible recipient retirement, cleanup hook and diagnostic log.
-  -- No spend/copy/graph proof remains after this reservation.
-  spend(#plan*(#root.order*16+common.subscriptions^2+common.console_entries^2+2048)+1)
-  credits.total=credits.total+1; credits.computers[c.id]=(credits.computers[c.id] or 0)+1
-  for _,delivery in ipairs(plan) do runtime.publish_event(delivery.computer,delivery.item,t) end
+local function running(computer,sender)
+  return computer and computer.status=='running' and computer.powered
+    and computer.force_index==sender.force_index and lifecycle.has_power(computer)
+    and computer.body.force.index==sender.force_index and computer.body.surface.index==computer.surface_index
+    and (computer.surface_index==sender.surface_index
+      or sender.modem_tier=='interplanetary' and script.active_mods['space-age'])
 end
-peripheral.register_type('radar',{methods=M.methods,callback_stable=true,available=function(rec,spend)
+local function grow(job,guard,bytes)
+  guard.job_resize(job.bytes+bytes)
+  job.bytes=job.bytes+bytes
+end
+local function receiver_plan(computer,sender,ch,spend)
+  local paths={}
+  for _,wire in ipairs({'red','green'}) do
+    for id in pairs(peripheral.inventory(computer,wire,spend)) do
+      spend(4)
+      local receiver=registry.record(id)
+      if receiver and eligible(sender,receiver) and state(receiver,spend).channels[ch] then
+        paths[id]=paths[id] or {}; paths[id][#paths[id]+1]=wire
+      end
+    end
+  end
+  local names,subscriptions={},{}
+  for id in pairs(paths) do spend(#id+4); names[#names+1]=id end
+  for _,sub in pairs(computer.subscriptions) do
+    spend(4)
+    if sub.event_name=='modem_message' then
+      subscriptions[#subscriptions+1]={id=sub.id,handler=sub.handler,sequence=sub.sequence}
+    end
+  end
+  spend((#names+#subscriptions)*16+1)
+  table.sort(names); table.sort(subscriptions,function(a,b) return a.sequence<b.sequence end)
+  return {computer=computer.id,run_id=computer.run_id,generation=computer.generation,
+    paths=paths,names=names,subscriptions=subscriptions,receiver=1,subscription=1}
+end
+local function live_delivery(sender,delivery,spend,guard)
+  local computer=registry.record(delivery.computer); local receiver=registry.record(delivery.receiver)
+  if not running(computer,sender) or computer.run_id~=delivery.run_id or computer.generation~=delivery.generation
+    or not receiver or receiver.generation~=delivery.receiver_generation or not eligible(sender,receiver)
+    or not state(receiver,spend).channels[delivery.channel] then return nil end
+  local sub=computer.subscriptions[delivery.subscription]
+  if not sub or sub.event_name~='modem_message' or sub.handler~=delivery.item.handler or sub.sequence~=delivery.sequence then return nil end
+  -- Rebuild both local paths; no captured inventory is authority after suspension.
+  local wires={}
+  for _,wire in ipairs({'red','green'}) do
+    local ok,inventory=pcall(peripheral.inventory,computer,wire,spend)
+    if not ok then
+      if type(inventory)=='table' and (inventory.code=='E_NETWORK_PENDING' or inventory.code=='E_UNREACHABLE') then return nil end
+      if type(inventory)=='table' and inventory.code=='E_CAPACITY' then return guard.suspend() end
+      error(inventory,0)
+    end
+    if inventory[receiver.id] then wires[#wires+1]=wire end
+  end
+  if #wires==0 then return nil end
+  return computer,wires
+end
+function M.methods.transmit(c,r,w,t,spend,guard,...)
+  arity(select('#',...),3)
+  local ch,reply,value=...; channel(ch); channel(reply)
+  local job=guard.job('modem-transmit',function()
+    return {phase='payload',sent_tick=t,ids={},scan=1,plan={},cursor=1,bytes=512,
+      sender_generation=r.generation,force=r.force_index,surface=r.surface_index}
+  end)
+  if job.phase=='payload' then
+    local message,stats
+    if value~=nil then message,stats=data.copy(value,spend,common.pending_work_bytes) end
+    grow(job,guard,stats and stats.bytes or 0)
+    job.message=message; job.phase='inventory'
+  end
+  local root=registry.get()
+  if job.phase=='inventory' then
+    while job.scan<=#root.order do
+      local id=root.order[job.scan]; spend(#id+8)
+      if root.computers[id] then grow(job,guard,#id+32); job.ids[#job.ids+1]=id end
+      job.scan=job.scan+1
+    end
+    spend(#job.ids*16+1); table.sort(job.ids); job.scan=1; job.phase='prepare'
+  end
+  while job.phase=='prepare' do
+    if not job.current then
+      if job.scan>#job.ids then job.phase='deliver'; break end
+      local computer=registry.record(job.ids[job.scan]); spend(8)
+      if running(computer,r) then
+        local current=receiver_plan(computer,r,ch,spend)
+        local bytes=256+#current.computer+#current.run_id
+        for _,id in ipairs(current.names) do bytes=bytes+#id+192 end
+        for _,sub in ipairs(current.subscriptions) do bytes=bytes+#sub.id+#sub.handler+128 end
+        grow(job,guard,bytes); current.bytes=bytes; job.current=current
+      else job.scan=job.scan+1 end
+    else
+      local current=job.current
+      local id=current.names[current.receiver]; local sub=current.subscriptions[current.subscription]
+      if not id then
+        guard.job_resize(job.bytes-current.bytes); job.bytes=job.bytes-current.bytes
+        job.current=nil; job.scan=job.scan+1
+      elseif not sub then spend(1); current.receiver=current.receiver+1; current.subscription=1
+      else
+        local computer=registry.record(current.computer); local receiver=registry.record(id)
+        spend(16)
+        if running(computer,r) and computer.run_id==current.run_id and receiver and eligible(r,receiver) then
+          local distance
+          if receiver.surface_index==r.surface_index then
+            local a,b=r.body.position,receiver.body.position
+            distance=math.sqrt((a.x-b.x)^2+(a.y-b.y)^2)
+          end
+          local event={name='modem_message',peripheral=id,wire=current.paths[id][1],wires=current.paths[id],
+            channel=ch,replyChannel=reply,message=job.message,distance=distance,sent_tick=job.sent_tick}
+          local item=runtime.prepare_event(computer,sub.handler,event,job.sent_tick,spend)
+          if item then
+            grow(job,guard,(item.bytes or 256)+256+#id+#current.computer+#current.run_id+#sub.id)
+            job.plan[#job.plan+1]={computer=current.computer,generation=current.generation,run_id=current.run_id,
+              receiver=id,receiver_generation=receiver.generation,subscription=sub.id,sequence=sub.sequence,channel=ch,item=item}
+          end
+        end
+        current.subscription=current.subscription+1
+      end
+    end
+  end
+  guard.prepare_empty_result()
+  while job.cursor<=#job.plan do
+    local delivery=job.plan[job.cursor]
+    local authorized,target=pcall(peripheral.authority,c,r.id,w,spend)
+    if not authorized then
+      if type(target)=='table' and target.code=='E_CAPACITY' then return guard.suspend() end
+      if type(target)=='table' and (target.code=='E_NETWORK_PENDING' or target.code=='E_UNREACHABLE') then target=nil
+      else error(target,0) end
+    end
+    if not radar.available(r) or r.generation~=job.sender_generation or r.force_index~=job.force
+      or r.surface_index~=job.surface or target~=r then
+      -- Losing the sending endpoint cancels the remaining datagram, not its prefix.
+      job.cursor=#job.plan+1; return
+    end
+    local computer=live_delivery(r,delivery,spend,guard)
+    -- Authority, sequence and publication work are paid before this one effect.
+    spend(32)
+    if computer then
+      if not errors.integer(root.next_sequence,1,MAX-1) then errors.raise('E_CAPACITY','modem event sequence exhausted') end
+      -- Metadata remains the prepared receive-time route; authority above is live.
+      runtime.publish_event(computer,delivery.item,game.tick)
+    end
+    job.cursor=job.cursor+1
+  end
+end
+peripheral.register_type('radar',{methods=M.methods,with_guard=true,callback_stable=true,available=function(rec,spend)
   radar.state(rec,spend); return radar.available(rec)
 end})
 return M

@@ -12,6 +12,7 @@ local limits=require('scripts.runtime.limits')
 local shell=require('scripts.runtime.shell')
 local graph=require('scripts.network')
 local sandbox=require('scripts.runtime.sandbox')
+local radio_guard=require('tests.radio_test_guard')
 local M={}; local loaded=false
 local function nop() end
 local function f() return storage.modem_fixture end
@@ -42,7 +43,7 @@ local function guest(c,source,handler,event)
   return ctx
 end
 local function call(c,r,method,...)
-  return modem.methods[method](c,r,'red',game.tick,nop,...)
+  return radio_guard.call(modem,c,r,method,...)
 end
 local receiver_source=[[
 function received(e)
@@ -73,17 +74,18 @@ function M.run()
     local actual=peripheral.getMethods(name,'red'); assert(#actual==#expected)
     for i,v in ipairs(expected) do assert(actual[i]==v) end
     local info=peripheral.describe(name,'red'); assert(info.modem_tier=='surface' and info.footprint.width==3 and info.footprint.height==3)
-    assert(m.isWireless() and m.getLimits().open_channels==128)
+    assert(m.isWireless() and m.getLimits().channel_max==9007199254740991)
     assert(select('#',m.open(0))==0 and select('#',m.open(65535))==0)
     assert(green.isOpen(0) and green.isOpen(65535))
     assert(select('#',m.close(65535))==0 and not m.isOpen(65535))
     m.closeAll(); assert(not green.isOpen(0))
     for ch=0,127 do m.open(ch) end
     m.open(0); assert(green.isOpen(127))
-    local ok,e=pcall(m.open,128); assert(not ok and e.code=='E_CAPACITY')
+    local ok,e=pcall(m.open,128); assert(ok and green.isOpen(128))
     m.close(0); m.open(128); assert(not m.isOpen(0) and m.isOpen(128))
     for _,v in ipairs({'x',false,{}}) do ok,e=pcall(m.open,v); assert(not ok and e.code=='E_ARGUMENT') end
-    for _,v in ipairs({-1,65536,0.5}) do ok,e=pcall(m.open,v); assert(not ok and e.code=='E_RANGE') end
+    m.open(65536); m.open(9007199254740991); assert(green.isOpen(9007199254740991))
+    for _,v in ipairs({-1,9007199254740992,0.5}) do ok,e=pcall(m.open,v); assert(not ok and e.code=='E_RANGE') end
     for _,method in ipairs({'open','close','isOpen'}) do
       ok,e=pcall(m[method]); assert(not ok and e.code=='E_ARGUMENT')
       ok,e=pcall(m[method],m,1); assert(not ok and e.code=='E_ARGUMENT')
@@ -150,8 +152,8 @@ local function traffic(c,r,d,s)
   assert(#d.queue==1)
   connect(d,s,'red'); connect(d,s,'green'); call(d,s,'open',42)
   clear(d); call(c,r,'transmit',42,17,nil); assert(#d.queue==1 and d.queue[1].event.message==nil)
-  error_is('E_LIMIT',function() call(c,r,'transmit',42,17,false) end)
-  assert(#d.queue==1); clear(d)
+  call(c,r,'transmit',42,17,false)
+  assert(#d.queue==2); clear(d)
   report('broadcast-defensive-copy-nil-distance-both-wire-dedup-detach-close-and-rate')
 end
 local function failures(c,r,d,s)
@@ -159,8 +161,8 @@ local function failures(c,r,d,s)
   local invalid={function() end,0/0,{[1]=1,a=2},{[2]=1}}
   local cycle={}; cycle.self=cycle; invalid[#invalid+1]=cycle
   for _,v in ipairs(invalid) do error_is('E_ARGUMENT',function() call(c,r,'transmit',42,17,v) end) end
-  error_is('E_LIMIT',function() call(c,r,'transmit',42,17,string.rep('x',4097)) end)
-  assert(#d.queue==before)
+  call(c,r,'transmit',42,17,string.rep('x',4097))
+  assert(#d.queue==before+1); clear(d); before=0
   -- A relevant unresolved physical frontier refuses the entire broadcast.
   local old=assert(d.body.surface.create_entity{name='radar',position={1012,0},force='player'})
   assert(conn(d,'red').connect_to(old.get_wire_connector(defines.wire_connector_id.circuit_red,true),false))
@@ -188,18 +190,18 @@ local function duplicates(c,r,d,s)
   d.queue[1].event.message.value=99
   for i=2,4 do assert(d.queue[i].event.message.value==1) end
   clear(d); lifecycle.remove(second.id,'fixture',true)
-  -- Fanout counts subscriptions, not computers. No prefix at nine handlers.
+  -- Fanout counts subscriptions, not computers; nine handlers are supported.
   for _=3,9 do runtime.subscribe(d,'modem_message','received',nil,nop) end
-  error_is('E_LIMIT',function() call(c,r,'transmit',42,17,'fanout') end)
-  assert(#d.queue==0)
+  call(c,r,'transmit',42,17,'fanout')
+  assert(#d.queue==9); clear(d)
   d.subscriptions={}; runtime.subscribe(d,'modem_message','received',nil,nop)
-  report('multiple-radars-subscription-order-copy-isolation-and-fanout-refusal')
+  report('multiple-radars-subscription-order-copy-isolation-and-nine-handler-fanout')
 end
 function M.on_load()
   loaded=true
   if f().phase=='frozen' then
     local d=registry.record(f().receiver); local s=registry.record(f().remote)
-    assert(#d.queue==1 and s.modem.channels[42] and registry.get().modem_transport==f().credits)
+    assert(#d.queue==1 and s.modem.channels[42])
     assert(d.queue[1].event.message=='cold-once'); log('TC_MODEM_LOAD_UNCHANGED')
   end
 end
@@ -265,16 +267,16 @@ local function envelope(c,r,d,s)
   assert(#d.queue==1 and #d.queue[1].event.message==255); clear(d)
   c.shell={version=1,id=c.id..'/shell-quota-fixture',pending={},pending_bytes=0}
   local ok,e=shell.evaluate(c,"peripheral.find('modem','green').transmit(42,17,nil)",game.tick,'quota')
-  assert(not ok and e.code=='E_LIMIT' and #d.queue==0,serpent.line(e))
+  assert(ok and #d.queue==1,serpent.line(e)); clear(d)
   c.shell=nil
   report('maximum-payload-envelope-eight-handler-compiled-work-nodes-and-console-shared-quota')
 end
 local function global_rate(c,r,d,s)
   local depth='value'; for _=1,8 do depth={child=depth} end
   call(c,r,'transmit',42,17,depth); clear(d)
-  error_is('E_LIMIT',function() call(c,r,'transmit',42,17,{child=depth}) end)
+  call(c,r,'transmit',42,17,{child=depth}); clear(d)
   local nodes={}; for i=1,256 do nodes[i]=false end
-  error_is('E_LIMIT',function() call(c,r,'transmit',42,17,nodes) end)
+  call(c,r,'transmit',42,17,nodes); clear(d)
   call(c,r,'transmit',999,17,'no-recipient')
   local others={}
   for i=1,7 do
@@ -284,14 +286,14 @@ local function global_rate(c,r,d,s)
     end]])
     others[#others+1]=other
   end
-  assert(registry.get().modem_transport.total==16)
+  assert(registry.get().modem_transport==nil)
   local other=build('computer',c.body.surface,-40,0); connect(other,r,'red'); others[#others+1]=other
   guest(other,[[function start(e)
     local ok,e=pcall(peripheral.find('modem','red').transmit,999,17,nil)
-    assert(not ok and e.code=='E_LIMIT')
+    assert(ok)
   end]])
   for _,rec in ipairs(others) do lifecycle.remove(rec.id,'fixture-cleanup',true) end
-  report('depth-node-boundaries-sixteen-global-transmits-and-no-op-accounting')
+  report('former-depth-node-rate-boundaries-and-no-recipient-broadcasts')
 end
 local function lifecycle_cases(c,r,d,s)
   local peer=build('computer',c.body.surface,0,-6); connect(peer,r,'green')
@@ -330,7 +332,7 @@ local function lifecycle_cases(c,r,d,s)
   r.body.active=false
   guest(c,[[function start(e)
     local m=peripheral.find('modem','red'); local ok,e=pcall(m.isOpen,42)
-    assert(not ok and e.code=='E_UNPOWERED' and m.getLimits().open_channels==128)
+    assert(not ok and e.code=='E_UNPOWERED' and m.getLimits().channel_max==9007199254740991)
   end]])
   r.body.active=true; assert(r.modem.channels[42])
   lifecycle.remove(fc.id,'fixture-cleanup',true); lifecycle.remove(fr.id,'fixture-cleanup',true)
@@ -400,8 +402,8 @@ local function candidates_setup(c,r,d,s)
   end
   call(c,r,'transmit',42,17,'maximum-candidates'); assert(#d.queue==1); clear(d)
   local extra=build('radar',c.body.surface,2400,0); call(c,extra,'open',42); ids[#ids+1]=extra.id
-  error_is('E_LIMIT',function() call(c,r,'transmit',42,17,'candidate-overload') end)
-  assert(#d.queue==0); f().crowded=ids
+  call(c,r,'transmit',42,17,'candidate-overload')
+  assert(#d.queue==1); clear(d); f().crowded=ids
 end
 local function candidates_cleanup(c,r,d,s)
   local hidden=0
@@ -421,8 +423,7 @@ function M.on_tick(event)
     if not loaded then return end
     loaded=false
     assert(#d.queue==1 and d.queue[1].event.sequence==fixture.sequence)
-    assert(registry.get().modem_transport.total==fixture.spent)
-    error_is('E_LIMIT',function() modem.methods.transmit(c,r,'green',fixture.credits.tick,nop,42,17,'no-same-tick-renewal') end)
+    assert(registry.get().modem_transport==nil)
     fixture.phase='resuming'; power()
   elseif fixture.phase=='armed' then
     loaded=false; power()
@@ -443,7 +444,7 @@ function M.on_tick(event)
       end]])
       assert(ctx.machine.work>0 and #d.queue==1)
       call(c,r,'transmit',999,17,'spend-second-credit')
-      fixture.credits=registry.get().modem_transport; fixture.spent=fixture.credits.total
+      assert(registry.get().modem_transport==nil)
       fixture.sequence=d.queue[1].event.sequence; fixture.phase='frozen'
       game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED'); return
     end

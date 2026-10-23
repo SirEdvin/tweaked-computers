@@ -30,8 +30,8 @@ socket or automatic repeater.
 
 ## Seven methods
 
-All calls use dots and exact argument counts. The channel domain is integer
-0–65535, including both endpoints. Wrong types or arity give `E_ARGUMENT`;
+All calls use dots and exact argument counts. The channel domain is every
+nonnegative safe integer, 0–9007199254740991 inclusive. Wrong types or arity give `E_ARGUMENT`;
 out-of-domain numbers give `E_RANGE`.
 
 | Call | Result | Meaning |
@@ -42,11 +42,13 @@ out-of-domain numbers give `E_RANGE`.
 | `closeAll()` | no values | Close every channel, including another computer's. |
 | `transmit(channel, replyChannel, payload)` | no values | Submit an independent broadcast, with no ACK or delivery count. |
 | `isWireless()` | true | Both tiers are wireless. |
-| `getLimits()` | copied record | Effective finite transport and common Data bounds. |
+| `getLimits()` | copied record | Effective resource policy and the native numeric channel domain. |
 
-128 distinct channels may be open per physical radar. At capacity reopening an
-existing channel succeeds; opening a new channel gives `E_CAPACITY` without
-changing the set. Both computers, both colors, saved programs and Console share
+There is no channel-count ceiling. The shared channel set consumes retained host
+memory until channels are closed or the radar identity is retired. Reopening an
+existing channel succeeds; insufficient memory for a new channel gives recoverable
+`E_CAPACITY` without changing the set. Closing channels remains available under
+pressure. Both computers, both colors, saved programs and Console share
 that set. Stop/fault does not close channels. Use separate radars for independent
 channel ownership. Console can configure and transmit, but cannot register a
 background receiver. Only a running saved program receives callbacks.
@@ -71,7 +73,7 @@ A modem event has ordinary `name`, dispatch `tick`, `sequence`, `computer_id` an
 | Field | Value |
 | --- | --- |
 | `peripheral` | The locally receiving radar name, never sender authority. |
-| `wire`, `wires` | Receive-time local paths, red before green; `wire` is first. |
+| `wire`, `wires` | Prepared local paths, red before green; current authority is rechecked before publication. |
 | `channel`, `replyChannel` | Exact numeric values selected by the sender. |
 | `message` | Independent Data snapshot, or absent for explicit nil. |
 | `distance` | Euclidean radar-center distance in tiles on the same surface; absent across surfaces. |
@@ -94,24 +96,23 @@ remain distinct. No cycles, facades, metatables, native objects, functions,
 nonfinite numbers, sparse arrays or mixed-key maps are serialized. Every handler
 owns its own copy; changing one copy cannot affect the sender or another handler.
 
-## Bounds and datagram failure
+## Resource pressure and datagram failure
 
-The measured initial transport envelope is `message_bytes=4096`,
-`message_nodes=256`, `message_depth=8`,
-`routing_candidates=64`, `deliveries_per_transmit=8`,
-`transmits_per_computer_tick=2`, `transmits_per_tick=16`. Encoded Data bytes include
-string/table/key overhead; a string's length alone is not its Data byte size.
-`getLimits()` also exposes `channel_min=0`, `channel_max=65535`, `open_channels=128`
-and common string/table/node/depth ceilings. Quality does not change these bounds.
-The full event envelope, not only payload bytes, must fit the recipient queue.
+There are no independent payload-shape, routing-candidate, delivery-count or
+per-tick transmission ceilings. Work, retained host/pending-plan memory and the
+recipient event queue govern resource use. The full event envelope, not only
+payload bytes, must fit the recipient queue. `getLimits()` reports effective
+resource policy plus `channel_min=0` and `channel_max=9007199254740991`.
 
-Proof, copies and complete fanout are admitted before publication. A relevant
-incomplete graph, invalid payload, payload/fanout/rate bound or fatal host budget
-refusal publishes no recipient prefix. Unrelated forces/surfaces are excluded
-from relevant proof. Rate allowance is shared across programs, Console and both
-colors; retry a rate refusal on a later tick, not in a tight loop. Existing global
-callback/host/maintenance budgets remain unchanged and can refuse a smaller
-workload under contention.
+The service prepares independent payload copies and a complete delivery plan
+before publishing its first event. Work pressure pauses the same private call;
+there is no public future or sender retry loop. Its saved delivery cursor advances
+after each publication, including an overflowing receiver's single drop. Cold
+reload resumes the undelivered suffix rather than replaying the prefix. Memory
+refusal during preparation leaves receivers unchanged. Current receiver run,
+subscription, power, channel, force, surface, tier and physical wire authority
+are checked again immediately before each event; unavailable recipients are
+skipped. Losing the sender cancels the remaining suffix, never recalls its prefix.
 
 The packaged competition scene combines four 6×6 charts, one maximum-size
 transmission to eight handler registrations every 15 ticks, and a live logic
@@ -123,8 +124,9 @@ Polling/reapplying an appropriate controller or reducing workload is explicit
 player recovery, not an automatic change to a saved program. Headless publication
 intervals and a 30 FPS recording are not measured client FPS.
 
-After acceptance, a full recipient queue visibly faults that run, discards its
-remaining deliveries and continues other recipients. The sender is not given a
+After acceptance, a full recipient queue drops the newest delivery and increments
+that receiver's persistent loss counter without retiring its run or replacing
+older events. Other recipients continue. The sender is not given a
 retryable partial-send error. There is no ACK, retry, delivery guarantee or offline
 mailbox. Closing/detaching a radar after queue admission does not recall accepted
 data. Computer Stop/fault/removal/power loss can cancel transient queued messages.
@@ -159,7 +161,7 @@ Base-only games have no advanced entity, item, recipe or technology.
 ## Saves and moving devices
 
 Ordinary save/load retains exact radar IDs, channels, accepted queues, subscriptions
-and spent same-tick transport credits. Load executes no guest startup or transmit.
+and in-progress delivery cursors. Load executes no guest startup or transmit.
 An ordinary same-scope power cycle retains channels. Force/surface changes revoke
 old bindings and clear channels before participation in the new scope. Mining,
 replacement, clone and blueprint placement create a new empty identity; channel

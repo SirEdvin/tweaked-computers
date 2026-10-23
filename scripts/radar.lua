@@ -34,12 +34,12 @@ end
 function M.state(rec,spend)
   local s=rec.modem
   if type(s)~='table' or getmetatable(s) or s.version~=1 or type(s.channels)~='table' or getmetatable(s.channels)
-    or not errors.integer(s.count,0,128) then errors.raise('E_UNSUPPORTED','unsupported modem state; retained') end
-  spend(129*4)
+    or not errors.integer(s.count,0,9007199254740991) then errors.raise('E_UNSUPPORTED','unsupported modem state; retained') end
   local count=0
   for channel,value in pairs(s.channels) do
+    spend(4)
     count=count+1
-    if count>128 or not errors.integer(channel,0,65535) or value~=true then
+    if not errors.integer(channel,0,9007199254740991) or value~=true then
       errors.raise('E_UNSUPPORTED','invalid modem channels; retained')
     end
   end
