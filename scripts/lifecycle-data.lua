@@ -118,10 +118,21 @@ function M.monitor_snapshot(rec)
   local palette={}; for i=1,16 do local p=m.palette[i]; palette[i]={p[1],p[2],p[3]} end
   return M.import_monitor{version=1,scale=m.scale,fg=m.fg,bg=m.bg,blink=m.blink,palette=palette}
 end
+local function monitor_size(w,h,scale)
+  if not errors.finite(scale) or scale<=0 then fail('positive finite monitor scale required') end
+  -- Native MapPosition is signed 24.8; reject cells outside its coordinate domain.
+  if not errors.finite(9*scale) or 9*scale/64>2^23-1/256 then fail('unrepresentable native monitor geometry') end
+  local width,height=model.size(w,h,scale)
+  if not errors.integer(width,1,MAX) or not errors.integer(height,1,MAX)
+    or not errors.integer(width*height,1,MAX) then fail('unrepresentable monitor dimensions') end
+  if width*height>model.limits.cells then errors.raise('E_CAPACITY','monitor storage admission requires shared host ownership') end
+  return width,height
+end
 function M.import_monitor(s)
   shape(s,{version=true,scale=true,fg=true,bg=true,blink=true,palette=true},6)
   if s.version~=1 then errors.raise('E_UNSUPPORTED','unsupported monitor item settings') end
-  if type(s.scale)~='number' or not errors.integer(s.scale*2,1,10) or not errors.integer(s.fg,0,15)
+  monitor_size(1,1,s.scale)
+  if not errors.integer(s.fg,0,15)
     or not errors.integer(s.bg,0,15) or type(s.blink)~='boolean' then fail('invalid monitor settings') end
   if type(s.palette)~='table' or getmetatable(s.palette)~=nil then fail('plain palette required') end
   local n=0; local palette={}
@@ -133,11 +144,23 @@ function M.import_monitor(s)
   end
   return {version=1,scale=s.scale,fg=s.fg,bg=s.bg,blink=s.blink,palette=palette}
 end
+local function monitor_settings(settings,w,h,previous)
+  local width,height=monitor_size(w,h,settings.scale)
+  local inherit={x=previous and previous.x or 1,y=previous and previous.y or 1,
+    scale=settings.scale,fg=settings.fg,bg=settings.bg,blink=settings.blink,palette=settings.palette}
+  local m
+  if previous and previous.width==width and previous.height==height then
+    m={}; for k,v in pairs(previous) do m[k]=v end
+    for k,v in pairs(inherit) do m[k]=v end
+  else m=model.new(w,h,inherit) end
+  m.revision=previous and previous.revision+2 or m.revision
+  model.invalidate(m)
+  return m
+end
 function M.restore_monitor(rec,s)
   local settings=M.import_monitor(s)
-  local m=model.new(1,1); m.scale=settings.scale; m.fg=settings.fg; m.bg=settings.bg; m.blink=settings.blink; m.palette=settings.palette
   -- No obsolete group buffer or cursor travels with a tile.
-  rec.monitor_settings=m
+  rec.monitor_settings=monitor_settings(settings,1,1)
 end
 function M.settings(rec)
   if rec.kind=='computer' then return {version=1,kind=rec.kind,computer=M.computer_snapshot(rec,true)} end
@@ -150,14 +173,12 @@ function M.apply_settings(rec,s)
   if rec.kind=='computer' then M.restore_computer(rec,s.computer,true)
   elseif rec.kind=='monitor' then
     local settings=M.import_monitor(s.monitor)
-    M.restore_monitor(rec,settings)
     local root=registry.get(); local state=root.monitors; local g=state and state.groups[state.membership[rec.id]]
-    if g then
-      local m=g.model
-      model.scale(m,g.width_tiles,g.height_tiles,function() end,settings.scale)
-      m.fg=settings.fg; m.bg=settings.bg; m.blink=settings.blink; m.palette=settings.palette; m.revision=m.revision+1
-      model.invalidate(m)
-    end
+    local tile=monitor_settings(settings,1,1)
+    local replacement=g and monitor_settings(settings,g.width_tiles,g.height_tiles,g.model)
+    -- Preflight the whole group before publishing either settings or palette.
+    rec.monitor_settings=tile
+    if g then g.model=replacement end
   elseif s.computer~=nil or s.monitor~=nil then fail('unexpected family settings') end
 end
 function M.initialize_existing()

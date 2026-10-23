@@ -5,6 +5,8 @@ local registry=require('scripts.registry')
 local scheduler=require('scripts.scheduler')
 local peripheral=require('scripts.services.peripheral')
 local lifecycle=require('scripts.lifecycle')
+local preparation=require('scripts.services.kv-preparation')
+local ownership=require('scripts.services.kv-memory')
 local M={}
 local budgets=require('scripts.runtime.budget-settings')
 local MAX=9007199254740991
@@ -21,33 +23,52 @@ local function capacity(key,used,requested,code)
   end
 end
 local function snapshot_bytes(bytes,keys,fields) return bytes+keys*80+fields*48+128 end
-local function query_limits(rec,spend)
-  local out={policy_version=2,resources={}}
-  for _,definition in ipairs(budgets.definitions) do
-    if definition.key:sub(1,3)=='kv_' then
-      local value=shared[definition.key]
-      out[definition.key:sub(4)]=value
-      out.resources[definition.key]={limit=value,unit=definition.unit,scope=definition.scope,
-        setting=definition.name,behavior=definition.behavior}
-    end
-  end
-  out.peripheral_call_bytes=out.command_bytes
-  local d=rec.database
-  if not d or d.version~=1 or rec.mining_guard=='unsupported-database' then spend(32); return out end
-  out.usage={keys=#d.order,bytes=d.bytes,total_hash_fields=d.fields,
-    key_bytes=0,value_bytes=0,hash_fields=0,hash_bytes=0,
-    snapshot_bytes=snapshot_bytes(d.bytes,#d.order,d.fields),over_limit=false}
-  for k,e in pairs(d.entries) do
-    spend(1); out.usage.key_bytes=math.max(out.usage.key_bytes,#k)
-    if e.type=='string' then out.usage.value_bytes=math.max(out.usage.value_bytes,#e.value)
-    else
-      out.usage.hash_fields=math.max(out.usage.hash_fields,e.count)
-      out.usage.hash_bytes=math.max(out.usage.hash_bytes,e.bytes)
-      for field,value in pairs(e.fields) do
-        spend(1); out.usage.key_bytes=math.max(out.usage.key_bytes,#field)
-        out.usage.value_bytes=math.max(out.usage.value_bytes,#value)
+local function query_limits(rec,spend,j,g)
+  local out=j and j.limits or {policy_version=2,resources={}}
+  if not j or not j.limits then
+    if g then g.job_resize(16384) end
+    for _,definition in ipairs(budgets.definitions) do
+      if definition.key:sub(1,3)=='kv_' then
+        local value=shared[definition.key]
+        out[definition.key:sub(4)]=value
+        out.resources[definition.key]={limit=value,unit=definition.unit,scope=definition.scope,
+          setting=definition.name,behavior=definition.behavior}
       end
     end
+    out.peripheral_call_bytes=out.command_bytes
+  end
+  local d=rec.database
+  if not d or d.version~=1 or rec.mining_guard=='unsupported-database' then spend(32); return out end
+  local scan=j and j.usage_scan or {index=1}
+  if not out.usage then
+    out.usage={keys=#d.order,bytes=d.bytes,total_hash_fields=d.fields,
+      key_bytes=0,value_bytes=0,hash_fields=0,hash_bytes=0,
+      snapshot_bytes=snapshot_bytes(d.bytes,#d.order,d.fields),over_limit=false}
+  end
+  if j then j.limits=out; j.usage_scan=scan end
+  while scan.index<=#d.order do
+    if not scan.entry then
+      spend(1)
+      local k=d.order[scan.index]; local e=d.entries[k]
+      out.usage.key_bytes=math.max(out.usage.key_bytes,#k)
+      if e.type=='string' then out.usage.value_bytes=math.max(out.usage.value_bytes,#e.value)
+      else
+        out.usage.hash_fields=math.max(out.usage.hash_fields,e.count)
+        out.usage.hash_bytes=math.max(out.usage.hash_bytes,e.bytes)
+      end
+      scan.entry=true
+    end
+    local e=d.entries[d.order[scan.index]]
+    if e.fields then
+      while true do
+        spend(1)
+        local field,value=next(e.fields,scan.field)
+        if field==nil then break end
+        out.usage.key_bytes=math.max(out.usage.key_bytes,#field)
+        out.usage.value_bytes=math.max(out.usage.value_bytes,#value); scan.field=field
+      end
+    end
+    scan.index=scan.index+1; scan.entry=nil; scan.field=nil
   end
   for key,value in pairs(out.usage) do
     if type(value)=='number' and value>out[key] then out.usage.over_limit=true end
@@ -93,20 +114,31 @@ local function stage(d,tick,spend)
   end
   return nextdb
 end
-local function publish(rec,d,spend,prepare,result,previous)
-  local order=sorted(d.entries,spend); local bytes,fields=0,0
-  for _,k in ipairs(order) do
-    local e=d.entries[k]; bytes=bytes+#k+e.bytes; fields=fields+(e.count or 0)
+local function publish(rec,d,spend,prepare,result,previous,j,g)
+  local order=j and preparation.sorted(d.entries,spend,j,g) or sorted(d.entries,spend)
+  local totals=j and j.totals or {index=1,bytes=0,fields=0}
+  if j then j.totals=totals end
+  while totals.index<=#order do
+    spend(1)
+    local k=order[totals.index]; local e=d.entries[k]
+    totals.bytes=totals.bytes+#k+e.bytes; totals.fields=totals.fields+(e.count or 0)
+    totals.index=totals.index+1
   end
+  local bytes,fields=totals.bytes,totals.fields
   if previous then
     capacity('keys',previous.keys,#order)
     capacity('bytes',previous.bytes,bytes)
     capacity('total_hash_fields',previous.fields,fields)
     capacity('snapshot_bytes',snapshot_bytes(previous.bytes,previous.keys,previous.fields),snapshot_bytes(bytes,#order,fields))
   end
-  spend(#order+1)
+  d.order=order; d.bytes=bytes; d.fields=fields
+  if j and j.owner_id then ownership.prepare(j.owner_id,d,spend,j) end
+  spend(1)
   if prepare then result=prepare(result) end
-  d.order=order; d.bytes=bytes; d.fields=fields; rec.database=d
+  rec.database=d
+  if rec.id then rec.kv_basis=d end
+  rec.kv_revision=(rec.kv_revision or 0)+1
+  if j and j.owner_id then ownership.publish(rec,j.owner_id); j.owner_id=nil end
   return result
 end
 local methods={}
@@ -118,46 +150,53 @@ local function arguments(name,...)
     or name=='hset' and (n<3 or n%2~=1) then fail('E_ARGUMENT','missing/incomplete command operands') end
   return table.pack(...)
 end
-local function call(name,rec,tick,spend,prepare,...)
+local function call(name,rec,tick,spend,prepare,j,g,...)
   local a=arguments(name,...); clock(tick)
-  if name=='getLimits' then return query_limits(rec,spend) end
-  local payload=0
-  for i=1,a.n do
-    if not (name=='expire' and i==2) then
-      byte(a[i]); payload=payload+#a[i]
-    end
+  if name=='getLimits' then return query_limits(rec,spend,j,g) end
+  local payload=j and j.payload or 0
+  local i=j and j.argument or 1
+  while i<=a.n do
+    spend(1)
+    if not (name=='expire' and i==2) then byte(a[i]); payload=payload+#a[i] end
+    i=i+1
+    if j then j.argument=i; j.payload=payload end
   end
-  spend(payload+a.n*8+1)
   if name=='expire' then
     if not errors.integer(a[2],-MAX,MAX) then fail('E_RANGE','integer simulation seconds required') end
     if a[2]>0 and a[2]>math.floor((MAX-tick)/60) then fail('E_RANGE','expiry deadline exceeds safe integer range') end
   end
-  local d=db(rec); local k=a[1]; local e=live(d,k,tick)
+  local d=db(rec); local k=a[1]; local e=live(d,k,j and j.tick or tick)
+  if j and e and e.deadline then j.deadline=math.min(j.deadline or e.deadline,e.deadline) end
+  if j and j.deadline and tick>=j.deadline then fail('E_BUSY','database expired during preparation; retry the command') end
   -- Existing addresses remain usable after key/command limits are lowered.
-  local recovery=d.entries[k]~=nil
-  if name=='set' then recovery=e and e.type=='string' and #a[2]<=#e.value
-  elseif name=='hset' then
-    recovery=e and e.type=='hash'
-    for i=2,a.n,2 do
-      if not recovery or e.fields[a[i]]==nil or #a[i+1]>#e.fields[a[i]] then recovery=false; break end
+  local validation=j and j.validation or {index=1,recovery=d.entries[k]~=nil}
+  if j then j.validation=validation end
+  if not validation.done then
+    if not validation.started then
+      if name=='set' then validation.recovery=e and e.type=='string' and #a[2]<=#e.value
+      elseif name=='hset' then validation.recovery=e and e.type=='hash'; validation.index=2
+      elseif name=='del' or name=='exists' then validation.recovery=true end
+      validation.started=true
     end
-  elseif name=='del' or name=='exists' then
-    recovery=true
-    for i=1,a.n do if not d.entries[a[i]] then recovery=false; break end end
-  end
-  local minimum=exact[name] or (name=='hset' and 3 or name=='hdel' and 2 or 1)
-  capacity('command_arguments',recovery and minimum or 0,a.n,'E_LIMIT')
-  capacity('command_bytes',recovery and d.bytes or 0,payload,'E_LIMIT')
-  if not d.entries[k] or (name=='set' or name=='hset') and not e then capacity('key_bytes',0,#k,'E_LIMIT') end
-  if name=='del' or name=='exists' then
-    for i=2,a.n do if not d.entries[a[i]] then capacity('key_bytes',0,#a[i],'E_LIMIT') end end
-  elseif name=='hget' or name=='hexists' or name=='hdel' then
-    for i=2,a.n do
-      local retained=d.entries[k]
-      if not (retained and retained.type=='hash' and retained.fields[a[i]]~=nil) then
-        capacity('key_bytes',0,#a[i],'E_LIMIT')
+    while validation.index<=a.n do
+      spend(1)
+      local index=validation.index
+      if name=='hset' then
+        if not validation.recovery or e.fields[a[index]]==nil or #a[index+1]>#e.fields[a[index]] then validation.recovery=false end
+      elseif name=='del' or name=='exists' then
+        if not d.entries[a[index]] then validation.recovery=false end
+        if index>1 and not d.entries[a[index]] then capacity('key_bytes',0,#a[index],'E_LIMIT') end
+      elseif (name=='hget' or name=='hexists' or name=='hdel') and index>1 then
+        local retained=d.entries[k]
+        if not (retained and retained.type=='hash' and retained.fields[a[index]]~=nil) then capacity('key_bytes',0,#a[index],'E_LIMIT') end
       end
+      validation.index=index+(name=='hset' and 2 or 1)
     end
+    local minimum=exact[name] or (name=='hset' and 3 or name=='hdel' and 2 or 1)
+    capacity('command_arguments',validation.recovery and minimum or 0,a.n,'E_LIMIT')
+    capacity('command_bytes',validation.recovery and d.bytes or 0,payload,'E_LIMIT')
+    if not d.entries[k] or (name=='set' or name=='hset') and not e then capacity('key_bytes',0,#k,'E_LIMIT') end
+    validation.done=true
   end
   if name=='get' then
     if e and e.type~='string' then fail('E_WRONGTYPE','WRONGTYPE expected string') end
@@ -165,7 +204,21 @@ local function call(name,rec,tick,spend,prepare,...)
     return nil
   elseif name=='type' then return e and e.type or 'none'
   elseif name=='exists' then
-    local n=0; for i=1,a.n do if live(d,a[i],tick) then n=n+1 end end; return n
+    local scan=j and j.exists or {index=1,count=0}
+    if j then j.exists=scan end
+    while scan.index<=a.n do
+      spend(1)
+      local value=live(d,a[scan.index],j and j.tick or tick)
+      if value then
+        if j and value.deadline then
+          j.deadline=math.min(j.deadline or value.deadline,value.deadline)
+          if tick>=j.deadline then fail('E_BUSY','database expired during preparation; retry the command') end
+        end
+        scan.count=scan.count+1
+      end
+      scan.index=scan.index+1
+    end
+    return scan.count
   elseif name=='ttl' then
     if not e then return -2 end
     if not e.deadline then return -1 end
@@ -176,10 +229,22 @@ local function call(name,rec,tick,spend,prepare,...)
     hash(e)
     if name=='hlen' then return e and e.count or 0 end
     if name=='hgetall' then
-      local out={}
+      if j and not j.read then
+        if g then g.job_resize(4096+(e and e.count or 0)*192) end
+        j.read={}
+      end
+      local out=j and j.read or {}
       if e then
-        spend(e.bytes+e.count*2+1)
-        for _,f in ipairs(sorted(e.fields,spend)) do out[f]=e.fields[f] end
+        if j then
+          while not j.read_done do
+            spend(1)
+            local f,v=next(e.fields,j.read_cursor)
+            if f==nil then j.read_done=true else out[f]=v; j.read_cursor=f end
+          end
+        else
+          spend(e.bytes+e.count*2+1)
+          for _,f in ipairs(sorted(e.fields,spend)) do out[f]=e.fields[f] end
+        end
       end
       return out
     end
@@ -190,14 +255,26 @@ local function call(name,rec,tick,spend,prepare,...)
   if name=='hset' or name=='hdel' then hash(e) end
   -- Every mutator builds a private candidate; no capacity/admission/type failure
   -- may change original values, counters, index aliases or deadlines.
-  local candidate=stage(d,tick,spend); local result
-  local previous={keys=#candidate.order,bytes=candidate.bytes,fields=candidate.fields}
+  if j and not j.owner_id then
+    j.owner_id=ownership.begin(rec,j.computer_id and registry.record(j.computer_id),payload,a.n,spend)
+  end
+  local candidate=j and preparation.stage(d,j.tick,spend,j,g) or stage(d,tick,spend)
+  local previous=j and j.previous or {keys=#candidate.order,bytes=candidate.bytes,fields=candidate.fields}
+  if j then j.previous=previous end
+  local result=j and j.result
+  if not j or not j.mutated then
   if name=='set' then
     capacity('value_bytes',e and e.type=='string' and #e.value or 0,#a[2],'E_LIMIT')
     candidate.entries[k]={type='string',value=a[2],bytes=#a[2]}; result='OK'
   elseif name=='del' then
-    result=0
-    for i=1,a.n do if candidate.entries[a[i]] then candidate.entries[a[i]]=nil; result=result+1 end end
+    result=result or 0
+    local index=j and j.edit_index or 1
+    while index<=a.n do
+      spend(1)
+      if candidate.entries[a[index]] then candidate.entries[a[index]]=nil; result=result+1 end
+      index=index+1
+      if j then j.edit_index=index; j.result=result end
+    end
   elseif name=='expire' or name=='persist' then
     result=0
     if e and (name=='expire' or e.deadline) then
@@ -210,44 +287,101 @@ local function call(name,rec,tick,spend,prepare,...)
       end
     end
   elseif name=='hset' or name=='hdel' then
-    local fields={}; result=0
-    if e then spend(e.bytes+e.count+1); for f,v in pairs(e.fields) do fields[f]=v end end
-    if name=='hset' then
-      for i=2,a.n,2 do if fields[a[i]]==nil then result=result+1 end; fields[a[i]]=a[i+1] end
+    local fields
+    if j then fields=preparation.fields(e,spend,j,g)
     else
-      for i=2,a.n do if fields[a[i]]~=nil then result=result+1; fields[a[i]]=nil end end
+      fields={}
+      if e then spend(e.bytes+e.count+1); for f,v in pairs(e.fields) do fields[f]=v end end
     end
-    local count,bytes=0,0
-    for f,v in pairs(fields) do spend(#f+#v+1); count=count+1; bytes=bytes+#f+#v end
-    if name=='hset' then
-      for f,v in pairs(fields) do
-        local old=e and e.fields[f]
-        capacity('key_bytes',old~=nil and #f or 0,#f,'E_LIMIT')
-        capacity('value_bytes',old and #old or 0,#v,'E_LIMIT')
+    result=result or 0
+    local index=j and j.edit_index or 2
+    while index<=a.n do
+      spend(1)
+      if name=='hset' then
+        if fields[a[index]]==nil then result=result+1 end
+        fields[a[index]]=a[index+1]; index=index+2
+      else
+        if fields[a[index]]~=nil then result=result+1; fields[a[index]]=nil end
+        index=index+1
+      end
+      if j then j.edit_index=index; j.result=result end
+    end
+    local scan=j and j.field_totals or {count=0,bytes=0}
+    if j then j.field_totals=scan end
+    while not scan.done do
+      spend(1)
+      local f,v=next(fields,scan.cursor)
+      if f==nil then scan.done=true
+      else
+        if name=='hset' then
+          local old=e and e.fields[f]
+          capacity('key_bytes',old~=nil and #f or 0,#f,'E_LIMIT')
+          capacity('value_bytes',old and #old or 0,#v,'E_LIMIT')
+        end
+        scan.count=scan.count+1; scan.bytes=scan.bytes+#f+#v; scan.cursor=f
       end
     end
+    local count,bytes=scan.count,scan.bytes
     capacity('hash_fields',e and e.count or 0,count)
     capacity('hash_bytes',e and e.bytes or 0,bytes)
     if count>0 then candidate.entries[k]={type='hash',fields=fields,count=count,bytes=bytes,deadline=e and e.deadline}
     else candidate.entries[k]=nil end
   else fail('E_ARGUMENT','unknown database command') end
-  return publish(rec,candidate,spend,prepare,result,previous)
+  if j then j.mutated=true; j.result=result end
+  end
+  if j and j.deadline and tick>=j.deadline then fail('E_BUSY','database expired during preparation; retry the command') end
+  if j and name=='expire' and a[2]>0 and candidate.entries[k] then
+    candidate.entries[k].deadline=tick+a[2]*60
+  end
+  return publish(rec,candidate,spend,prepare,result,previous,j,g)
 end
 local guarded_methods={}
+local function invoke(command,computer,rec,tick,spend,guard,...)
+  local n=select('#',...)
+  local j={tick=tick,argument=1,payload=0,operands=n,computer_id=computer and computer.id}
+  local durable=guard and guard.continuation_enabled
+  if durable then
+    if rec.kv_basis~=rec.database then rec.kv_basis=rec.database; rec.kv_revision=(rec.kv_revision or 0)+1 end
+    j=guard.job('kv:'..command,function()
+      local policy={}; for _,d in ipairs(budgets.definitions) do if d.key:sub(1,3)=='kv_' then policy[d.key]=shared[d.key] end end
+      return {id=rec.id,generation=rec.generation,revision=rec.kv_revision or 0,tick=tick,argument=1,payload=0,operands=n,
+        computer_id=computer and computer.id,policy=policy}
+    end)
+    if not j.admitted then guard.job_resize(4096+n*64); j.admitted=true end
+  end
+  local function run(...)
+    if durable and j.policy then
+      for key,value in pairs(j.policy) do if shared[key]~=value then fail('E_BUSY','KV admission settings changed; retry the command') end end
+      if j.id~=rec.id or j.generation~=rec.generation or j.revision~=(rec.kv_revision or 0)
+        or j.deadline and tick>=j.deadline then
+        fail('E_BUSY','database changed or expired during preparation; retry the command')
+      end
+    end
+    return call(command,rec,tick,spend,guard and guard.prepare_result,j,durable and guard or nil,...)
+  end
+  local ok,result=pcall(run,...)
+  if not ok then
+    if j.owner_id and not (durable and guard.work_suspended()) then ownership.cancel(j.owner_id); j.owner_id=nil end
+    error(result,0)
+  end
+  return result
+end
 for _,name in ipairs({'get','set','del','exists','type','hget','hset','hdel','hexists','hgetall','hlen','expire','ttl','persist','getLimits'}) do
   local command=name
-  methods[command]=function(computer,rec,wire,tick,spend,...) return call(command,rec,tick,spend,nil,...) end
+  methods[command]=function(computer,rec,wire,tick,spend,...) return invoke(command,computer,rec,tick,spend,nil,...) end
   guarded_methods[command]=function(computer,rec,wire,tick,spend,guard,...)
-    return call(command,rec,tick,spend,guard.prepare_result,...)
+    return invoke(command,computer,rec,tick,spend,guard,...)
   end
 end
 -- Fixed host entry used by compact fixtures and lifecycle; not a guest namespace.
 M.methods=methods
+M.guarded_methods=guarded_methods
 function M.initialize(rec)
   if rec.database==nil then rec.database=empty() end
   local ok=pcall(M.audit,rec.database,function() end)
   if not ok then rec.body.minable=false; rec.mining_guard='unsupported-database'; return end
   rec.body.minable=true; rec.mining_guard=nil
+  ownership.ensure(rec,function() end)
 end
 function M.initialize_existing()
   local root=registry.get()
@@ -429,12 +563,14 @@ function M.reclaim(rec,tick,spend)
       -- Swap/pop keeps each paid cleanup step independent of database size.
       d.entries[k]=nil; d.order[cursor]=d.order[#d.order]; d.order[#d.order]=nil
       d.bytes=d.bytes-#k-e.bytes; d.fields=d.fields-(e.count or 0)
+      rec.kv_revision=(rec.kv_revision or 0)+1
     else cursor=cursor+1 end
     if #d.order==0 then d.cursor=1; return end
     d.cursor=cursor>#d.order and 1 or cursor
   end
 end
 function M.maintenance(tick,spend)
+  if not scheduler.try_maintenance(function() ownership.maintenance(spend) end) then return end
   local root=registry.get(); local n=#root.order
   if n==0 then return end
   local cursor=math.min(root.scheduler.kv_cursor or 1,n)

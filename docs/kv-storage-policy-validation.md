@@ -99,6 +99,11 @@ fixtures were rerun as separately tracked jobs to successful completion.
 
 ## Outstanding shared-core acceptance
 
+This section records the original checkpoint. The subsequent scoped implementation
+and its remaining integration gaps are in
+[Owned KV preparation](kv-owned-preparation-validation.md); do not treat the
+historical synchronous/ownership status below as the current service status.
+
 This is not completion of all of OpenSpec tasks 10.1/10.3:
 
 1. KV command preparation and snapshot/browser traversal are still synchronous.
