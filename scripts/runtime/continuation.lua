@@ -7,7 +7,7 @@ local shell_values=require('scripts.runtime.shell-values')
 local ownership=require('scripts.runtime.ownership')
 local checkpoint_validation=require('scripts.runtime.checkpoint-validation')
 local memory=require('scripts.runtime.memory')
-local M={version=3}
+local M={version=4}
 local function quote(s) return string.format('%q',s) end
 local checkpoint_fields={version=true,source=true,handler=true,frame=true,symbols=true,intern=true,bindings=true,
   owned=true,owned_order=true,symbols_order=true,symbol_roots=true,bindings_order=true,collection=true,validation=true,preparation=true,memory_bytes=true,memory_owner=true,
@@ -173,6 +173,13 @@ function M.lower(main,reject,position,mode)
     if k=='empty' then return nextpc
     elseif k=='call' then return expression(n,slot(),nextpc)
     elseif k=='localstat' or k=='assignment' then
+      local lhs=n.lhs[1]
+      if #n.lhs==1 and lhs.node_type=='local_ref' and n.rhs and #n.rhs==1 then
+        local ref=register(lhs); local out=slot()
+        local pc=block(n,'r.guard.scalar(r.decode('..value(out)..')); '..ref..'=r.guard.bind(1,'..value(out)..')',
+          nextpc,{'s'..out},{'l'..locals[lhs.reference_def]})
+        return expression(n.rhs[1],out,pc)
+      end
       local targets,defs={},{}
       for i,lhs in ipairs(n.lhs) do
         if lhs.node_type=='local_ref' then

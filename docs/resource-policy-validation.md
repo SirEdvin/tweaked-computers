@@ -251,6 +251,16 @@ The tuple cold fixture freezes with a triple's prepared service result saved but
 
 Temporary/argument/decode/snapshot peaks, full compiler/service/collector/validator/control reservations, Console committed/staged lifetime transfer and universal production setting/ownership wiring remain outstanding. Overall checklist progress remains **5/47**; this checkpoint cannot be published or merged as the completed policy.
 
+## Scalar-local assignment hot path (private ABI 4)
+
+Source review after the cold deadline tail found that each ordinary scalar-local update constructed the generic argument/target/decoded/staging vectors needed for multi-target publication. The lowerer now specializes only one local target with one RHS: it preserves decoded scalar validation before publication and uses the existing metered `bind(1, value)`. Shell-global and multi-target assignments retain the existing atomic path. A function RHS still executes fully and adjusts to its first result as Lua requires; control flow and safe-point positions remain explicit.
+
+The native red records 9,000 allocation units and 34,000 work for 1,000 scalar updates after subtracting identical startup. The candidate records 1,000 allocations and 25,000 work in both source forms and both engines: discarded vectors are no longer constructed, while one canonical binding allocation and its scalar guard remain. No resource default or gate increased. Guard injection verifies refusal before the local is written; existing tuple/nil/alias/cold cases remain required.
+
+One serial matched production-context cold pair per engine uses the identical finite KV/Console/runaway fixture and unchanged settings/deadlines. Complete wrapper times are 140.700 → 90.679 seconds in base and 143.204 → 92.919 seconds in Space Age, with every functional and clean-shutdown assertion passing. These are whole-scenario observations including creation, two cold phases, assertion/GUI-mock overhead and background actors, not isolated guest timings, representative FPS/UPS or a statistical performance guarantee. Host load was recorded; unrelated activity was not fully excluded. Earlier failed deadline evidence remains failed. The original controller/monitor performance gate still requires its actual workload and the missing function-lowering prerequisite.
+
+The private checkpoint ABI is now **4**, because single-result versus tuple liveness at a saved assignment boundary changed. Earlier private experimental ABI 3 frames are refused with their accepted locals retained; no replay or implicit migration is claimed. Public compiler/API/storage versions remain unchanged. Overall acceptance remains **5/47**, and universal resource integration plus the complete specification are unfinished.
+
 ## Still required
 
 The source-site disposition audit is not complete. Settings/resources, recoverable capacity handling, non-lossy settings decreases, all language/library/service continuations, event diagnostics, native inventories/UI, complete migration and engine matrix, actual rendering/audio and connected multiplayer remain mandatory. No production budget increase or weaker test gate is authorized by this checkpoint.
