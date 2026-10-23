@@ -86,7 +86,7 @@ function M.advance(checkpoint,spend,memory_owner)
           push(gc,value,'edges')
           if owned.resource then push(gc,owned.resource,'resource') end
         elseif symbol then gc.bytes=gc.bytes+112; push(gc,symbol)
-        elseif binding then gc.bytes=gc.bytes+256; push(gc,value,'binding')
+        elseif binding then gc.bytes=gc.bytes+2*192+6*48+16+48; push(gc,value,'binding')
         else malformed() end
       end
     else scalar(value) end

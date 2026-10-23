@@ -318,6 +318,22 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     return r.symbol(name)
   end
   local encoded,decoded={},{}
+  local function binding_token(descriptor)
+    guard.host_work(12,12)
+    local token={}
+    if memory_owner then
+      -- Token, six-field descriptor, order slot and binding-index entry.
+      local items={{token,2*192+6*48+16+48}}
+      for _,key in ipairs({'name','wire','generation','kind','method'}) do
+        local value=descriptor[key]
+        if type(value)=='string' then items[#items+1]={value,#value+32} end
+      end
+      memory.acquire_all(memory_owner,items)
+    end
+    checkpoint.bindings[token]=descriptor
+    checkpoint.bindings_order[#checkpoint.bindings_order+1]=token
+    return token
+  end
   function r.encode(v)
     if type(v)~='table' and type(v)~='function' then return v end
     if encoded[v] then return encoded[v] end
@@ -326,11 +342,11 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
       if guard.is_plain(v) then return v end
       errors.raise('E_UNSUPPORTED','continuation cannot retain a foreign value')
     end
-    local token,descriptor={},{}
-    encoded[v]=token; decoded[token]=v; checkpoint.bindings[token]=descriptor
-    checkpoint.bindings_order[#checkpoint.bindings_order+1]=token
+    local descriptor={}
     for _,key in ipairs({'name','wire','generation','kind','method'}) do descriptor[key]=binding[key] end
     if binding.facade then descriptor.facade=r.encode(binding.facade) end
+    local token=binding_token(descriptor)
+    encoded[v]=token; decoded[token]=v
     return token
   end
   function r.decode(v)
@@ -418,11 +434,10 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   end
   local value_guard=setmetatable({
     restore_binding=function(d,parent)
-      local token,descriptor={},{}
+      local descriptor={}
       for _,key in ipairs({'name','wire','generation','kind','method'}) do descriptor[key]=d[key] end
-      descriptor.facade=parent; checkpoint.bindings[token]=descriptor
-      checkpoint.bindings_order[#checkpoint.bindings_order+1]=token
-      return token
+      descriptor.facade=parent
+      return binding_token(descriptor)
     end,
     binding=function(v) return checkpoint.bindings[v] end,
   },{__index=guard}) -- Ephemeral host adapter, never saved or exposed.
