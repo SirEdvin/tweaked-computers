@@ -63,8 +63,10 @@ function M.new(context, services, shell, durable)
   end
   local restore_binding
   local call_frames,service_frames={},{}
-  local call_checkpoint,checkpoint_codec
-  function G.call_checkpoint(checkpoint,codec) call_checkpoint=checkpoint; checkpoint_codec=codec end
+  local call_checkpoint,checkpoint_codec,current_job
+  function G.call_checkpoint(checkpoint,codec)
+    call_checkpoint=checkpoint; checkpoint_codec=codec; current_job=nil
+  end
   local function checkpoint_result(result,prepared)
     if prepared then return prepared.called end
     if checkpoint_codec then return checkpoint_codec.encode(result) end
@@ -128,6 +130,7 @@ function M.new(context, services, shell, durable)
       local saved=pending.jobs[name]
       if saved~=nil then
         assert(type(saved)=='table' and not getmetatable(saved),'invalid private job record')
+        current_job=saved
         return saved
       end
     end
@@ -136,10 +139,15 @@ function M.new(context, services, shell, durable)
     assert(type(value)=='table' and not getmetatable(value),'private job requires a plain record')
     private_jobs.admit(durable,heap,value,G.spend)
     pending.jobs=pending.jobs or {}; pending.jobs[name]=value
+    current_job=value
     return value
   end
   -- Library cursors reserve retained capacity before appending or publishing.
   function G.job_resize(value,bytes)
+    if bytes==nil then
+      bytes=value; value=assert(current_job,'job_resize requires a current private job')
+      if not heap then errors.raise('E_UNSUPPORTED','private service job growth requires a memory owner') end
+    end
     if heap then memory.acquire(heap,value,bytes) end
   end
   function G.atomic(work,allocations)
