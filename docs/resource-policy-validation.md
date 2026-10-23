@@ -4,6 +4,60 @@ This is an **unfinished implementation checkpoint**, not a release candidate or 
 
 The [source-site disposition inventory](resource-policy-inventory.md) maps every policy-manifest audit row and shared limit constant to its implementation paths and required treatment. Inventory coverage is not proof that those limits have been removed.
 
+## Consolidated checkpoint: `f571405` (not acceptance)
+
+The current integration branch is `feature/resource-policy-completion`. Lane
+commits and foundation/UI work were collected at `1a33bd4`; `258b4c7` fixes
+observation timestamps and documentation, and `f571405` removes redundant
+ownership/tuple preparation and bounded native-copy allocation. Earlier sections
+below describe historical archives, not acceptance inherited by this checkout.
+
+Evidence: `/home/siredvin/artifacts/tweaked-computers/resource-policy-consolidated-f571405-2026-10-23/`.
+Candidate SHA-256: `b9bdfdac6fd96e4ae1473ee77c510ae565ace4d7e7b7f1a3662924a819501aac`.
+
+- Heap ownership and function-continuation fixtures pass in both modes: four
+  native cases, eight separate clean cold phases with acknowledged `/quit`.
+  The heap fixture includes constant-shape replacement, atomic memory refusal,
+  scalar-result storage reuse and the 256/257-byte native-copy boundary.
+- Packaging, animation-wrapper, settings, generated examples/catalogue, strict
+  MkDocs and player-doc checks pass. These establish task 11.2 only.
+- The unchanged four-wall gate **fails** at tick 6 in the shared-model oracle
+  (`tests/monitor_animation_engine.lua:62`). This is not evidence of visible
+  front-buffer tearing. The earlier consolidated candidate also failed cadence
+  with a three-tick gap. Budgets, workload and assertions were not weakened.
+- Mixed-layout, full-client and connected-multiplayer acceptance were not run
+  after this early-gate failure. Task 3.4 is reopened for the integrated tree.
+- The durable compiler remains quarantined: task 4.4 needs a safe representation
+  and real memory integration, not simply re-enabling its public methods.
+  Monitor ownership, other owner/lifecycle paths and contract migration remain
+  unfinished. The preserved monitor-memory helper is not integrated acceptance.
+
+`verification-index.json` distinguishes passes, failures and unrun gates. The
+diagnostic-only archive is separate and changes only the test fixture; it is not
+a production acceptance archive. No feature-completion claim is made.
+
+### Review correction: empty substring ranges (`b26b8c1`)
+
+Review found that `f571405` passed a negative normalized substring endpoint to
+native `string.sub` a second time. An empty range could therefore copy a large
+input after admitting zero payload bytes. A native regression reproduced the
+failure; `b26b8c1` returns the empty result before that native call. Tests include
+a 10,000-byte input, negative/out-of-range and reversed endpoints, result reuse
+under a lowered memory limit, and ownership release.
+
+Evidence: `/home/siredvin/artifacts/tweaked-computers/resource-policy-empty-substring-b26b8c1-2026-10-23/`.
+The corrected archive SHA-256 is `f4568785e1272eaf14b468966bae66454dbee7bb7ac802aa33129e8626d8770f`.
+Heap and function fixtures pass four native cases/eight clean cold phases in
+base and Space Age. These are bounded regression results, not chart or full
+feature acceptance. The original `f571405` archive is superseded for this fix;
+its preserved failures and earlier receipts remain unchanged.
+
+The corrected substring blocker passed independent specification re-review;
+the four-file optimization diff `258b4c7..b26b8c1` then received code-quality
+approval with no required changes. Both reviews were bounded source/evidence
+reviews, not new engine runs or approval of the incomplete feature. The chart
+regression and quarantined compiler remain open.
+
 ## Settings registration checkpoint (partial task 2.1)
 
 Evidence: `/home/siredvin/artifacts/tweaked-computers/resource-policy-settings-aa769238bb43/`.
