@@ -142,7 +142,7 @@ local function prepare(s,spend)
   elseif snapshot.kind=='logic' then
     view.signals=d; local parts={}
     for _,wire in ipairs({'red','green','output'}) do
-      parts[#parts+1]=wire..tostring(d.connected[wire])..'/'..tostring(d.errors and d.errors[wire])..'/'..tostring(d[wire]~=nil)
+      parts[#parts+1]=wire..tostring(d.connected[wire])..'/'..tostring(d.errors and d.errors[wire])..'/'..tostring(d[wire..'_tick'])
       for _,e in ipairs(d[wire] or {}) do
         spend(#e.signal.name+#e.signal.quality+32)
         parts[#parts+1]=e.signal.type..'/'..e.signal.name..'/'..e.signal.quality..'/'..e.count
@@ -163,8 +163,11 @@ local function slots(parent,wire,entries,connected,tick,err)
     tray.add{type='table',name='signal_grid',column_count=6,style='slot_table'}
   end
   local status=parent[wire..'_status']
-  status.visible=err~=nil or not entries or #entries==0
-  status.caption=err and tr('signal-unavailable',err) or tr(not entries and 'pending' or connected==false and 'disconnected' or 'no-signals')
+  status.visible=true
+  if entries then
+    status.caption=(err and ('Stale ('..err..') / ') or connected==false and 'Disconnected / ' or '')
+      ..#entries..' signals / sampled tick '..tostring(tick)
+  else status.caption=err and ('Unavailable ('..err..') / no sample') or tr('pending') end
   tray.style.width=260; tray.style.height=math.max(40,math.min(148,math.ceil(#(entries or {})/6)*36+4))
   local grid=tray.signal_grid
   for i,e in ipairs(entries or {}) do
@@ -406,9 +409,12 @@ function M.tick(tick)
           end
           if s.redraw and s.snapshot then
             local view=prepare(s,spend)
-            -- Bound native construction including worst-case slot rows and KV
-            -- chunks; no partial query is published as a complete inventory.
-            spend(12000+(view.groups and #view.groups*160 or 0))
+            -- Charge the complete native inventory, not a fixed slot ceiling.
+            local rows=view.groups and #view.groups or 0
+            if view.signals then
+              for _,wire in ipairs({'red','green','output'}) do rows=rows+#(view.signals[wire] or {}) end
+            end
+            spend(12000+rows*160)
             draw(f,s,view); s.redraw=false
 
             if f.identity.api_name.text~=s.snapshot.name then f.identity.api_name.text=s.snapshot.name end

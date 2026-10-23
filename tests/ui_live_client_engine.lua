@@ -9,6 +9,7 @@ local editor=require('scripts.ui.editor')
 local inspector=require('scripts.ui.peripheral-inspector')
 local model=require('scripts.ui.editor-model')
 local inspection=require('scripts.ui.peripheral-inspector-model')
+local resources=require('scripts.ui.resource-status')
 local read=inspection.read
 inspection.read=function(...)
   if storage.tc_ui1 and storage.tc_ui1.query_error then error({code='E_NETWORK_PENDING'},0) end
@@ -52,6 +53,24 @@ remote.add_interface('tc-ui1',{
   fill=function()
     for i=1,55 do runtime.log(rec('computer'),string.format('Retained line %02d: native live Console witness ABCDEFGHIJ',i),game.tick) end
   end,
+  signals=function(count)
+    assert(type(count)=='number' and count>=1 and count<=150 and count%1==0)
+    local x=storage.tc_ui1
+    if x.signal_sources then for _,entity in pairs(x.signal_sources) do entity.destroy() end end
+    x.signal_sources={}; x.signal_count=count
+    local names={}; for name in pairs(prototypes.item) do names[#names+1]=name end; table.sort(names)
+    assert(#names>=count)
+    for offset,color in ipairs({'red','green'}) do
+      local source=assert(game.surfaces[1].create_entity{name='constant-combinator',position={6,-2-offset},force='player'})
+      local cb=source.get_or_create_control_behavior()
+      while cb.sections_count>0 do cb.remove_section(cb.sections_count) end
+      local section=cb.add_section()
+      for i=1,count do section.set_slot(i,{value={type='item',name=names[i],quality='normal'},min=i*offset}) end
+      cb.enabled=true
+      assert(lifecycle.connector(rec('logic'),'input',color).connect_to(source.get_wire_connector(defines.wire_connector_id['circuit_'..color],true)))
+      x.signal_sources[color]=source
+    end
+  end,
 })
 local function mutate(action)
   if action=='append' then runtime.log(rec('computer'),'NEW LIVE OUTPUT',game.tick)
@@ -90,9 +109,16 @@ function M.on_tick(event)
   local p=game.get_player(1); if not p then return end
   local f=p.gui.screen[editor.frame_name] or p.gui.screen[inspector.frame_name]
   local s,b=model.session(1); local i=inspection.session(1)
+  local draft_count=0; for _ in pairs(b and b.documents or {}) do draft_count=draft_count+1 end
   local state={tick=event.tick,events=x.events,frame=f and tree(f),editor=s and {tab=s.tab,peripheral=s.peripheral,wire=s.peripheral_wire},
+    resource_status=resources.read(rec('computer'),event.tick),draft_count=draft_count,draft_retention=model.retention(1),
     draft=s and b.documents[s.id] and b.documents[s.id].source,inspection=i and {key=i.key,field=i.field,page=i.page,field_page=i.field_page,value_page=i.value_page,
-    snapshot_tick=i.snapshot and i.snapshot.tick,pending=i.pending},maintenance=registry.get().scheduler.maintenance_spent}
+    snapshot_tick=i.snapshot and i.snapshot.tick,pending=i.pending,signals=i.snapshot and i.snapshot.kind=='logic' and i.snapshot.details},
+    native_signals={},maintenance=registry.get().scheduler.maintenance_spent}
+  for color,source in pairs(x.signal_sources or {}) do
+    local network=source.get_circuit_network(defines.wire_connector_id['circuit_'..color])
+    state.native_signals[color]=network and network.signals or {}
+  end
   helpers.write_file('ui1-state.json',helpers.table_to_json(state),false)
 end
 return M

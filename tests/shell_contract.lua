@@ -365,7 +365,10 @@ function M.run()
       local input=f.content.console.prompt.command; input.text='x=1'
       editor.on_text{player_index=a.index,element=input,tick=tick}
       editor.on_confirmed{player_index=a.index,element=input,tick=tick}
-      assert(not rec.shell and input.text=='x=1' and f.content.console.shell_status.caption:find('E_CAPACITY',1,true))
+      assert(not rec.shell and input.text=='x=1' and f.content.console.detail.text:find('E_CAPACITY',1,true))
+      local refusal=f.content.console.detail.text
+      editor.refresh(a,nil,tick+15)
+      assert(f.content.console.detail.text==refusal and input.text=='x=1','refusal must remain selectable after refresh')
       for _,c in ipairs(placeholders) do c.shell=nil end
     end)
     group('transport-excludes-shell-without-changing-original-identity',function()

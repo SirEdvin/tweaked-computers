@@ -6,6 +6,26 @@ local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
 local shell=require('scripts.runtime.shell')
 local M={draft_slots=8}
+-- Deterministic retained-text accounting, including document/identity metadata.
+local function document_bytes(id,d)
+  return 128+#id+#d.source+#d.base_source+#(d.shell_draft or '')
+end
+local function usage(b)
+  local used=0
+  for id,d in pairs(b.documents) do used=used+document_bytes(id,d) end
+  local s=b.session; local d=s and b.documents[s.id]
+  if d and d.shell_draft==nil then used=used+#(s.shell_draft or '') end
+  return used
+end
+
+function M.retention(index)
+  local root=registry.get(); local b=root and root.player_drafts[index]
+  local used=b and usage(b) or 0
+  local limit=limits.draft_storage_bytes
+  if not limit then return nil end
+  return {used=used,limit=limit,over_limit=used>limit,unit='bytes',setting='tc-draft-storage-bytes'}
+end
+
 local function bucket(index)
   local root=registry.get()
   if not registry.supported(root) then errors.raise('E_UNSUPPORTED','unsupported storage; drafts retained') end

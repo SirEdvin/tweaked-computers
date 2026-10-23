@@ -81,7 +81,7 @@ local function gui(parent,spec)
       style_values.minimal_height=h; style_values.maximal_height=h; style_values.minimal_width=w; style_values.maximal_width=w
     else style_values[key]=value end
   end})
-  local e={valid=true,parent=parent,children={},type=spec.type,name=spec.name or '',style=style,tags=spec.tags or {},
+  local e={valid=true,parent=parent,children={},type=spec.type,name=spec.name or '',direction=spec.direction,style=style,tags=spec.tags or {},
     _text=spec.text or '',text_writes=0,caption=spec.caption,visible=spec.visible~=false,enabled=true,
     items=spec.items or {},selected_index=spec.selected_index or 0,state=spec.state,sprite=spec.sprite,tabs={}}
   setmetatable(e,{__index=function(t,k) if k=='text' then return rawget(t,'_text') end end,
