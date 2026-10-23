@@ -202,6 +202,25 @@ local function scalar_results()
   log('TC_CONTRACT scalar-tuple-storage-reuse-and-bounded-character-results')
 end
 local function bounded_transforms()
+  for _,args in ipairs({
+    {n=3,'abcdef',1,-8},
+    {n=3,string.rep('x',10000),1,-10003},
+    {n=3,'abcdef',7,-1},
+    {n=3,'abcdef',3,2},
+    {n=3,'',1,-2},
+  }) do
+    local g,account,owner,checkpoint,ctx=guard()
+    local allocations=ctx.machine.allocations
+    local job={}
+    local result=library_jobs.advance('string.sub',g,job,args)
+    assert(result.n==1 and result[1]==string.sub(args[1],args[2],args[3]) and result[1]=='',
+      'empty normalized substring range copied input')
+    assert(ctx.machine.allocations-allocations==2,'empty substring admitted payload allocation')
+    memory.configure(account,1)
+    assert(library_jobs.advance('string.sub',g,job,args)==result)
+    memory.close(owner,function() end)
+    assert(next(account.values)==nil and next(account.owners)==nil)
+  end
   for _,name in ipairs({'sub','lower','upper','reverse'}) do
     for _,width in ipairs({0,256,257}) do
       local g,account,owner,checkpoint,ctx=guard()

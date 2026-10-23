@@ -207,7 +207,8 @@ local function transform(g,j,args,call,prepare,name)
       g.atomic(count*2+2,count+2)
       keep(g,j,count,0)
       local value
-      if name=='sub' then value=string.sub(source,first,last)
+      if count==0 then value=''
+      elseif name=='sub' then value=string.sub(source,first,last)
       else value=string[name](source) end
       j.result={n=1,value}
       return j.result
