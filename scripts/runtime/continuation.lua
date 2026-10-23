@@ -839,8 +839,13 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     local path=checkpoint.symbols[symbol]
     local bridge=path=='pcall' or path=='xpcall'
     local count=pending.protection and pending.args.n or select('#',...)
-    -- A zero/single-byte constructor has no input-dependent traversal to suspend.
-    local library=library_jobs.supports(path) and not (path=='string.char' and count<=1)
+    local first
+    if pending.protection then first=pending.args[1] else first=select(1,...) end
+    local bounded_copy=type(first)=='string' and #first<=256 and
+      (path=='string.sub' and count<=3 or count==1 and
+        (path=='string.lower' or path=='string.upper' or path=='string.reverse'))
+    -- Small native atoms use the existing guarded call, not a library frame.
+    local library=library_jobs.supports(path) and not (path=='string.char' and count<=1 or bounded_copy)
     if descriptor or bridge or library then
       local captures=descriptor and executable.protos[descriptor.proto].captures or {}
       if not pending.protection then guard.host_work(count+1,count+1) end

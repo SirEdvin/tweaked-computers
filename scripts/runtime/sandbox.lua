@@ -415,6 +415,20 @@ function M.new(context, services, shell, durable)
           end
           return
         end
+        if t[k]==nil and v~=nil then
+          local keys=owned[t].keys
+          local count=#keys+1
+          if count>limits.table_entries then errors.raise('E_LIMIT','table growth exceeded') end
+          G.host_work(24,12)
+          if heap then
+            local items={{t,192+48*count}}
+            string_charge(items,k); string_charge(items,v)
+            memory.acquire_all(heap,items)
+          end
+          -- Only the new entry changes ownership; publish after the complete proof.
+          keys[count]=k
+          return
+        end
       end
     end
     local staged={}
@@ -773,6 +787,17 @@ function M.new(context, services, shell, durable)
     end
   end
   local str={}
+  local function string_copy(bytes,native,...)
+    if not heap then return native(...) end
+    local reserved=heap.reserved
+    -- Payload plus immutable-string record/link; unused peak credit is returned.
+    memory.reserve(heap,bytes+32+256)
+    local ok,value=pcall(native,...)
+    if ok then memory.acquire(heap,value,#value+32) end
+    memory.unreserve(heap,heap.reserved-reserved)
+    if not ok then error(value,0) end
+    return value
+  end
   str.len=function(s) G.spend(1); return #string_value(s) end
   local function slice(s,i,j)
     string_value(s); local len=#s
@@ -782,7 +807,7 @@ function M.new(context, services, shell, durable)
     j=j<0 and math.max(len+math.ceil(j)+1,0) or math.min(math.floor(j),len)
     return i,j,math.max(0,j-i+1)
   end
-  str.sub=function(s,i,j) local a,b,n=slice(s,i,j); G.spend(n+1); allocate(n); return string.sub(s,a,b) end
+  str.sub=function(s,i,j) local a,b,n=slice(s,i,j); G.spend(n+1); allocate(n); return string_copy(n,string.sub,s,a,b) end
   str.byte=function(s,i,j)
     if j==nil then j=i or 1 end
     local a,b,n=slice(s,i,j); integer(n,0,limits.tuple_entries); G.spend(n+1); allocate(n); return string.byte(s,a,b)
@@ -790,10 +815,10 @@ function M.new(context, services, shell, durable)
   str.char=function(...)
     local n=select('#',...); integer(n,0,limits.tuple_entries); G.spend(n+1); allocate(n)
     local args=table.pack(...); for i=1,n do integer(args[i],0,255) end
-    return string.char(table.unpack(args,1,n))
+    return string_copy(n,string.char,table.unpack(args,1,n))
   end
   for _,name in ipairs({'lower','upper','reverse'}) do
-    str[name]=function(s) string_value(s); G.spend(#s*2+1); allocate(#s); return string[name](s) end
+    str[name]=function(s) string_value(s); G.spend(#s*2+1); allocate(#s); return string_copy(#s,string[name],s) end
   end
   str.rep=function(s,n,sep)
     string_value(s); integer(n,-9007199254740991,9007199254740991)

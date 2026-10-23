@@ -169,11 +169,68 @@ local function single_replacement()
     'single replacement rescanned unchanged table ownership')
   log('TC_CONTRACT single-replacement-constant-shape-cost-and-atomic-retained-refusal')
 end
+local function single_insertion()
+  local function cost(width)
+    local g,account,owner,checkpoint,ctx=guard()
+    local value=g.new(width,function()
+      local result={}; for i=1,width do result[i]=false end; return result
+    end)
+    local keys=checkpoint.owned[value].keys
+    local used,count=account.used,owner.count
+    memory.configure(account,used+47)
+    local ok,e=pcall(g.assignment_one,value,width+1,false)
+    assert(not ok and errors.resource_diagnostic(e) and value[width+1]==nil and #keys==width)
+    same(account,used,count,owner)
+    memory.configure(account,1000000)
+    local work,allocations=ctx.machine.work,ctx.machine.allocations
+    g.assignment_one(value,width+1,false); value[width+1]=false
+    local spent,allocated=ctx.machine.work-work,ctx.machine.allocations-allocations
+    assert(checkpoint.owned[value].keys==keys and #keys==width+1 and keys[width+1]==width+1)
+    assert(account.values[value].bytes==192+48*(width+1))
+    used,count=account.used,owner.count
+    memory.configure(account,used+48)
+    ok,e=pcall(g.assignment_one,value,'new string key','new string value')
+    assert(not ok and errors.resource_diagnostic(e) and value['new string key']==nil and #keys==width+1)
+    assert(not owner.values['new string key'] and not owner.values['new string value'])
+    same(account,used,count,owner)
+    memory.close(owner,function() end)
+    return spent,allocated
+  end
+  local small_work,small_allocations=cost(4)
+  local large_work,large_allocations=cost(1000)
+  assert(large_work==small_work and large_allocations==small_allocations,
+    'single insertion rescanned unchanged table ownership')
+  log('TC_CONTRACT single-insertion-constant-shape-cost-and-atomic-retained-refusal')
+end
+local function native_copy_admission()
+  for _,name in ipairs({'sub','lower','upper','reverse'}) do
+    local g,account,owner=guard()
+    local fn=g.get(g.global('string'),name)
+    local native=string[name]; local calls=0
+    string[name]=function(...) calls=calls+1; return native(...) end
+    local used,count=account.used,owner.count
+    memory.configure(account,used)
+    local ok,e=pcall(g.call,fn,'Unowned native copy',2,4)
+    string[name]=native
+    assert(not ok and errors.resource_diagnostic(e) and calls==0,'native copy occurred before retained admission')
+    same(account,used,count,owner)
+    memory.configure(account,1000000)
+    local value=g.call(fn,'Unowned native copy',2,4)
+    assert(value==native('Unowned native copy',2,4) and owner.values[value])
+    assert(account.reserved==0)
+    memory.close(owner,function() end)
+  end
+  log('TC_CONTRACT bounded-native-copy-prepaid-peak-and-owned-result')
+end
 local function scalar_results()
   local account=memory.new(1000000,256); local owner=memory.owner(account)
   local ctx=admission.context(admission.new(),'scalar-results',0); ctx.memory_owner=owner
   local source=[[function start()
     for i=1,100 do assert(math.abs(-i)==i and string.char(65)=='A') end
+    assert(string.sub('abcdef',1,-8)=='')
+    assert(string.sub('abcdef',2,-2)=='bcde')
+    assert(string.lower('AbC')=='abc' and string.upper('AbC')=='ABC' and string.reverse('AbC')=='CbA')
+    local ok,value=pcall(string.sub,'abcdef',2,3); assert(ok and value=='bc')
     assert(string.char()=='' and string.char(0)==string.sub('x\0',2))
     assert(string.char(65,66)=='AB')
     local ok=pcall(string.char,256); assert(not ok)
@@ -181,6 +238,12 @@ local function scalar_results()
   end]]
   local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
   local acquire_all=memory.acquire_all; local redundant=0
+  local advance=library_jobs.advance; local small_transforms=0
+  library_jobs.advance=function(name,g,job,args,...)
+    if (name=='string.sub' or name=='string.lower' or name=='string.upper' or name=='string.reverse')
+      and type(args[1])=='string' and #args[1]<=256 then small_transforms=small_transforms+1 end
+    return advance(name,g,job,args,...)
+  end
   memory.acquire_all=function(o,items,...)
     for _,item in ipairs(items) do
       local value=item[1]
@@ -195,7 +258,9 @@ local function scalar_results()
   end
   local called,ok,diagnostic=pcall(compiler.run,plan,'start',nil,services,ctx,{})
   memory.acquire_all=acquire_all
+  library_jobs.advance=advance
   assert(called and ok,diagnostic and diagnostic.message or tostring(ok))
+  assert(small_transforms==0,'bounded native transforms allocated library continuation frames')
   assert(effects==1 and redundant==0,'scalar tuples rebuilt already-admitted frame storage')
   memory.close(owner,function() end)
   assert(next(account.values)==nil and next(account.owners)==nil)
@@ -408,7 +473,7 @@ local function binding_shell()
   log('TC_CONTRACT shell-graph-binding-restoration-shares-accounted-parent-and-method-identities')
 end
 function M.run()
-  single_replacement(); scalar_results(); bounded_transforms(); lazy_bindings(); stable_keys(); frames(); bulk(); mutations(); copies(); growth(); binding_refusal(); binding_shell()
+  single_replacement(); single_insertion(); native_copy_admission(); scalar_results(); bounded_transforms(); lazy_bindings(); stable_keys(); frames(); bulk(); mutations(); copies(); growth(); binding_refusal(); binding_shell()
   for _,kind in ipairs({'rawset','insert','remove','sort'}) do
     local ok,cost=metered(kind,limits.callback_work); assert(ok)
     for available=0,cost-1 do assert(not metered(kind,available),'short heap allowance published a mutation') end
