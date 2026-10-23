@@ -37,16 +37,15 @@ local function role_for(concept,key,context)
   if key=='second_signal' then return nil end
   return context
 end
-function M.validate(schema,value,path,context)
+function M.validate(schema,value,path,context,shallow)
   local kind=schema.kind; local concept=schema.concept
   if kind=='boolean' then
     if type(value)~='boolean' then fail('E_ARGUMENT',path,'boolean required') end
   elseif kind=='integer' or kind=='number' then
     if not errors.finite(value) or (kind=='integer' and value~=math.floor(value)) then fail('E_ARGUMENT',path,'finite numeric value required') end
-    if value<(schema.min or -9007199254740991) or value>(schema.max or 9007199254740991) then fail('E_RANGE',path,'number outside schema range') end
+    if (schema.min and value<schema.min) or (schema.max and value>schema.max) then fail('E_RANGE',path,'number outside native range') end
   elseif kind=='string' then
     if type(value)~='string' then fail('E_ARGUMENT',path,'string required') end
-    if #value>(schema.max_bytes or 256) or value:find('\0',1,true) then fail('E_RANGE',path,'invalid identity/string size') end
     if schema.prototype_registry then exists(schema.prototype_registry,value,path) end
   elseif kind=='enum' then
     local found=false; for _,v in ipairs(schema.values) do if v==value then found=true end end
@@ -55,7 +54,7 @@ function M.validate(schema,value,path,context)
     if type(value)~='table' or getmetatable(value) then fail('E_ARGUMENT',path,'plain object required') end
     for key,v in pairs(value) do
       if not schema.fields[key] then fail(key=='fulfilled' and 'E_READ_ONLY' or 'E_ARGUMENT',path..'.'..tostring(key),'unknown or read-only nested field') end
-      M.validate(schema.fields[key],v,path..'.'..key,role_for(concept,key,context))
+      if not shallow then M.validate(schema.fields[key],v,path..'.'..key,role_for(concept,key,context)) end
     end
     for _,key in ipairs(schema.required or {}) do if value[key]==nil then fail('E_ARGUMENT',path..'.'..key,'required field missing') end end
     if schema.variants then
@@ -71,7 +70,7 @@ function M.validate(schema,value,path,context)
       if value.constant~=nil and value.second_signal~=nil then fail('E_ARGUMENT',path,'constant and second_signal are exclusive') end
     elseif concept=='ArithmeticCombinatorParameters' then
       if value.output_signal and value.output_signal.name=='signal-each' and (not value.first_signal or value.first_signal.name~='signal-each') then fail('E_ARGUMENT',path,'each output requires each input') end
-    elseif concept=='DeciderCombinatorParameters' then
+    elseif concept=='DeciderCombinatorParameters' and not shallow then
       local each=false
       for _,c in ipairs(value.conditions) do if c.first_signal and c.first_signal.name=='signal-each' then each=true end end
       for _,o in ipairs(value.outputs) do if o.signal.name=='signal-each' and not each then fail('E_ARGUMENT',path,'each output requires an each condition') end end
@@ -83,13 +82,13 @@ function M.validate(schema,value,path,context)
     end
   elseif kind=='array' then
     if type(value)~='table' or getmetatable(value) then fail('E_ARGUMENT',path,'dense array required') end
-    local n=0; for k,v in pairs(value) do n=n+1; if not errors.integer(k,1,schema.max_items) then fail('E_ARGUMENT',path,'dense bounded indexes required') end; M.validate(schema.items,v,path..'['..k..']',context) end
-    if n~=#value or n>schema.max_items then fail('E_ARGUMENT',path,'dense bounded array required') end
+    local n=0; for k,v in pairs(value) do n=n+1; if not errors.integer(k,1,#value) then fail('E_ARGUMENT',path,'dense indexes required') end; M.validate(schema.items,v,path..'['..k..']',context) end
+    if n~=#value then fail('E_ARGUMENT',path,'dense array required') end
   elseif kind=='union' then
     local found=false
     for _,s in ipairs(schema.alternatives) do
       if (s.kind=='object' and type(value)=='table') or (s.kind=='string' and type(value)=='string') then
-        M.validate(s,value,path,context); found=true; break
+        if not shallow then M.validate(s,value,path,context) end; found=true; break
       end
     end
     if not found then fail('E_ARGUMENT',path,'no matching union alternative') end
@@ -100,6 +99,71 @@ function M.validate(schema,value,path,context)
       signal({type=v.type or 'item',name=v.name,quality=v.quality},path,nil)
     end
   else fail('E_UNSUPPORTED',path,'explicit adapter required for this type') end
+end
+-- Private plain-data cursor: a paid node is never revisited after suspension.
+function M.begin(schema,value,path,context)
+  return {stack={{schema=schema,value=value,path=path,context=context,phase='enter'}}}
+end
+function M.resume(job,spend)
+  local stack=job.stack
+  while #stack>0 do
+    local frame=stack[#stack]; local schema,value,path=frame.schema,frame.value,frame.path
+    spend(#path+1)
+    if frame.phase=='enter' then
+      if schema.kind=='object' or schema.kind=='array' then
+        if type(value)~='table' or getmetatable(value) then fail('E_ARGUMENT',path,'plain table required') end
+        frame.phase='children'; frame.count=0; frame.maximum=0
+      elseif schema.kind=='union' then
+        local selected
+        for _,s in ipairs(schema.alternatives) do
+          if s.kind=='object' and type(value)=='table' or s.kind=='string' and type(value)=='string' then selected=s; break end
+        end
+        if not selected then fail('E_ARGUMENT',path,'no matching union alternative') end
+        frame.phase='finish'
+        stack[#stack+1]={schema=selected,value=value,path=path,context=frame.context,phase='enter'}
+      else
+        M.validate(schema,value,path,frame.context); stack[#stack]=nil
+      end
+    elseif frame.phase=='children' then
+      local key,child=next(value,frame.key)
+      if key==nil then
+        if schema.kind=='array' and frame.count~=frame.maximum then fail('E_ARGUMENT',path,'dense array required') end
+        frame.phase=schema.concept=='DeciderCombinatorParameters' and 'conditions' or 'finish'
+        frame.index=1
+      else
+        local child_schema,child_path,context
+        if schema.kind=='array' then
+          if not errors.finite(key) or key<1 or key~=math.floor(key) then fail('E_ARGUMENT',path,'dense indexes required') end
+          child_schema=schema.items; child_path=path..'['..key..']'; context=frame.context
+          frame.maximum=math.max(frame.maximum,key)
+        else
+          child_schema=schema.fields[key]
+          if not child_schema then fail(key=='fulfilled' and 'E_READ_ONLY' or 'E_ARGUMENT',path..'.'..tostring(key),'unknown or read-only nested field') end
+          child_path=path..'.'..key; context=role_for(schema.concept,key,frame.context)
+        end
+        frame.key=key; frame.count=frame.count+1
+        stack[#stack+1]={schema=child_schema,value=child,path=child_path,context=context,phase='enter'}
+      end
+    elseif frame.phase=='conditions' then
+      local condition=value.conditions and value.conditions[frame.index]
+      if not condition then frame.phase='outputs'; frame.index=1
+      else
+        if condition.first_signal and condition.first_signal.name=='signal-each' then frame.each=true end
+        frame.index=frame.index+1
+      end
+    elseif frame.phase=='outputs' then
+      local output=value.outputs and value.outputs[frame.index]
+      if not output then frame.phase='finish'
+      else
+        if output.signal.name=='signal-each' and not frame.each then fail('E_ARGUMENT',path,'each output requires an each condition') end
+        frame.index=frame.index+1
+      end
+    else
+      if schema.kind~='array' then M.validate(schema,value,path,frame.context,true) end
+      stack[#stack]=nil
+    end
+  end
+  job.done=true
 end
 local function alternative(schema,value)
   for _,s in ipairs(schema.alternatives) do
@@ -169,7 +233,11 @@ function M.normal(schema,value)
     elseif c=='BlueprintQualityID' then result.name=result.name or 'normal'
     elseif c=='LogisticFilter' then
       result.min=result.min or 0
-      if result.value and result.value.type=='item' and not result.import_from and prototypes.space_location.nauvis then result.import_from='nauvis' end
+      if result.value and result.value.type=='item' and not result.import_from then
+        local prototype=prototypes.item[result.value.name]
+        local location=prototype and prototype.default_import_location
+        if location then result.import_from=location.name end
+      end
     end
     return result
   end

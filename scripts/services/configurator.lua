@@ -38,7 +38,7 @@ function M.describe(item,wire,spend)
   return (data.copy({id=item.id,prototype=entity.name,type=entity.type,position={x=entity.position.x,y=entity.position.y},
     surface={index=entity.surface.index,name=entity.surface.name},direction=direction,quality=entity.quality.name,
     target_wire=wire,connected_connector_ids=keys(item.connectors),configurable=#summary.writable>0,
-    configuration=summary},spend))
+    configuration=summary},spend,common_limits.host_memory_bytes))
 end
 local methods={}
 local function method(name,n,fn)
@@ -49,7 +49,6 @@ local function method(name,n,fn)
 end
 method('getLimits',0,function(rec,spend)
   local limits=data.copy(common_limits,spend)
-  for k,v in pairs(adapters.limits) do limits[k]=v end
   return limits
 end)
 method('getDevices',1,function(rec,spend,wire)
@@ -69,5 +68,37 @@ method('addSection',3,function(rec,spend,id,definition,wire) return sections.add
 method('setSection',4,function(rec,spend,id,index,patch,wire) return sections.set(targets.lookup(rec,id,wire,spend),rec,index,patch,spend) end)
 method('removeSection',3,function(rec,spend,id,index,wire) return sections.remove(targets.lookup(rec,id,wire,spend),rec,index,spend) end)
 M.methods=methods
-peripheral.register_type('configurator',{methods=methods})
+local mutations={
+  setConfiguration={prepare=function(item,rec,args,spend,cursor) return adapters.prepare(item,rec,args[2],spend,cursor) end,commit=adapters.commit},
+  addSection={prepare=function(item,rec,args,spend,cursor) return sections.prepare_add(item,rec,args[2],spend,cursor) end,commit=sections.commit},
+  setSection={prepare=function(item,rec,args,spend,cursor) return sections.prepare_set(item,rec,args[2],args[3],spend,cursor) end,commit=sections.commit},
+  removeSection={prepare=function(item,rec,args,spend) return sections.prepare_remove(item,rec,args[2],spend) end,commit=sections.commit},
+}
+local arities={setConfiguration=3,addSection=3,setSection=4,removeSection=3}
+local guarded={}
+for name,fn in pairs(methods) do
+  local mutation=mutations[name]
+  guarded[name]=function(c,rec,wire,tick,spend,guard,...)
+    if not mutation or not guard.job then return fn(c,rec,wire,tick,spend,...) end
+    local args=table.pack(...)
+    if args.n~=arities[name] then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end
+    -- The common owner must prepay both native readback and retained recovery.
+    if not guard.commit_configuration then errors.raise('E_BUSY','configurator transaction resource admission unavailable') end
+    local id,target_wire=args[1],args[args.n]
+    local job=guard.job('configurator.'..name,function() return {id=id,wire=target_wire,phase='prepare',prepare={}} end)
+    if job.id~=id or job.wire~=target_wire then errors.raise('E_ARGUMENT','configuration job identity changed') end
+    if job.phase=='prepare' then
+      local item=targets.lookup(rec,id,target_wire,spend)
+      local plan=mutation.prepare(item,rec,args,spend,job.prepare)
+      spend(1); job.plan=plan; job.prepare=nil; job.phase='commit'
+      guard.suspend()
+    end
+    return guard.commit_configuration(rec,job.plan,function(commit_spend)
+      local item=targets.lookup(rec,id,target_wire,commit_spend)
+      return mutation.commit(item,rec,job.plan,commit_spend)
+    end)
+  end
+end
+M.guarded_methods=guarded -- Host fixtures exercise the private continuation contract.
+peripheral.register_type('configurator',{methods=guarded,with_guard=true})
 return M

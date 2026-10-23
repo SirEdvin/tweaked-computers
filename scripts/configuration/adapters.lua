@@ -3,8 +3,8 @@ local catalog=require('scripts.configuration.catalog')
 local validation=require('scripts.configuration.validation')
 local errors=require('scripts.runtime.errors')
 local data=require('scripts.runtime.data')
+local limits=require('scripts.runtime.limits')
 local M={}
-M.limits={target_nodes=256,target_edges=512,configuration_bytes=16384,configuration_nodes=4096,patch_fields=32,sections=32,section_filters=128}
 local function nop() end
 local function unavailable(item,class,name)
   if class=='LuaAsteroidCollectorControlBehavior' and name=='connect_to_logistic_network' then return 'native_asteroid_no_logistic_connection' end
@@ -66,8 +66,8 @@ function M.capabilities(item,spend)
   for _,s in pairs(fields) do if s.writable then writable=true end end
   if not reason and not writable then reason='no_writable_native_settings' end
   local caps={api_version=1,behavior=class,settings=settings,observations=observations,
-    sections={supported=class=='LuaConstantCombinatorControlBehavior',fields=validation.public(catalog.section_fields),limits={sections=M.limits.sections,section_filters=M.limits.section_filters}},reason=reason}
-  return (data.copy(caps,spend,M.limits.configuration_bytes))
+    sections={supported=class=='LuaConstantCombinatorControlBehavior',fields=validation.public(catalog.section_fields),limits={}},reason=reason}
+  return (data.copy(caps,spend,limits.host_memory_bytes))
 end
 local function read_snapshot(item,spend)
   spend(256)
@@ -84,7 +84,7 @@ local function read_snapshot(item,spend)
     end
   end
   if cb then local ok,value=pcall(function() return cb.disabled end); if ok and type(value)=='boolean' then result.observations.disabled=value end end
-  return data.copy(result,spend,M.limits.configuration_bytes)
+  return data.copy(result,spend,limits.host_memory_bytes)
 end
 function M.snapshot(item,spend) return (read_snapshot(item,spend)) end
 -- Signals/modes first, activation switches last; alphabetical within each rank.
@@ -98,14 +98,21 @@ local function order(fields)
   table.sort(keys,function(a,b) local ra,rb=rank(a),rank(b); return ra==rb and a<b or ra<rb end)
   return keys
 end
-function M.preflight(item,patch,spend)
-  local stats
-  patch,stats=data.copy(patch,spend,M.limits.configuration_bytes)
+function M.preflight(item,patch,spend,cursor)
+  cursor=cursor or {}
+  if not cursor.patch then
+    local copy,stats=data.copy(patch,spend,limits.host_memory_bytes)
+    spend(1); cursor.patch=copy; cursor.stats=stats; cursor.changes={}
+  end
+  patch=cursor.patch; local stats=cursor.stats
   if type(patch)~='table' then errors.raise('E_ARGUMENT','configuration patch object required') end
   for k in pairs(patch) do if k~='set' and k~='clear' then errors.raise('E_ARGUMENT','unknown patch key',tostring(k)) end end
   if patch.set~=nil and type(patch.set)~='table' then errors.raise('E_ARGUMENT','set map required','set') end
   if patch.clear~=nil and type(patch.clear)~='table' then errors.raise('E_ARGUMENT','clear array required','clear') end
-  local _,class=behavior(item); local schemas=catalog.schemas[class] or {}; local changes={}; local count=0
+  local _,class=behavior(item); local schemas=catalog.schemas[class] or {}; local changes=cursor.changes
+  if cursor.behavior and cursor.behavior~=class then errors.raise('E_BUSY','target behavior changed while validating') end
+  cursor.behavior=class
+  if cursor.complete then return changes,schemas,patch,stats end
   local function admit(name)
     if type(name)~='string' then errors.raise('E_ARGUMENT','setting name required') end
     local schema=schemas[name]
@@ -115,42 +122,67 @@ function M.preflight(item,patch,spend)
     end
     if not schema.writable or unavailable(item,class,name) then errors.raise('E_UNSUPPORTED',unavailable(item,class,name) or 'native setting not writable',name) end
     if changes[name] then errors.raise('E_ARGUMENT','repeated set/clear field',name) end
-    count=count+1; if count>M.limits.patch_fields then errors.raise('E_LIMIT','patch field limit exceeded') end
     return schema
   end
   for name,value in pairs(patch.set or {}) do
-    local schema=admit(name); validation.validate(schema,value,name)
-    if class=='LuaCargoLandingPadControlBehavior' and name=='circuit_exclusive_mode_of_operation' and value=='set_requests' and not script.feature_flags.space_travel then errors.raise('E_UNSUPPORTED','set_requests_requires_space_travel',name) end
-    if schema.concept=='ProgrammableSpeakerCircuitParameters' then
-      local instrument=item.entity.prototype.instruments[value.instrument_id+1]
-      if not instrument or not instrument.notes[value.note_id+1] then errors.raise('E_RANGE','unknown speaker instrument/note',name) end
+    if not changes[name] then
+      local schema=admit(name)
+      if not cursor.validation then spend(1); cursor.validation=validation.begin(schema,value,name) end
+      validation.resume(cursor.validation,spend)
+      if class=='LuaCargoLandingPadControlBehavior' and name=='circuit_exclusive_mode_of_operation' and value=='set_requests' and not script.feature_flags.space_travel then errors.raise('E_UNSUPPORTED','set_requests_requires_space_travel',name) end
+      if schema.concept=='ProgrammableSpeakerCircuitParameters' then
+        local instrument=item.entity.prototype.instruments[value.instrument_id+1]
+        if not instrument or not instrument.notes[value.note_id+1] then errors.raise('E_RANGE','unknown speaker instrument/note',name) end
+      end
+      spend(stats.bytes+stats.nodes)
+      local native=validation.native(schema,value)
+      changes[name]={native=native,expected=validation.normal(schema,native)}
+      cursor.validation=nil
     end
-    changes[name]={native=validation.native(schema,value),expected=validation.normal(schema,validation.native(schema,value))}
   end
   local n=0
   for key,name in pairs(patch.clear or {}) do
-    n=n+1; if not errors.integer(key,1,M.limits.patch_fields) then errors.raise('E_ARGUMENT','clear must be dense array') end
+    n=n+1; if not errors.integer(key,1,#patch.clear) then errors.raise('E_ARGUMENT','clear must be dense array') end
     local schema=admit(name); if not schema.clearable then errors.raise('E_READ_ONLY','setting cannot be cleared',name) end
     changes[name]={clear=true}
   end
   if n~=#(patch.clear or {}) then errors.raise('E_ARGUMENT','clear must be dense array') end
-  if item.protected and count>0 then errors.raise('E_READ_ONLY','owned device cannot be configured') end
+  if item.protected and next(changes) then errors.raise('E_READ_ONLY','owned device cannot be configured') end
+  cursor.complete=true
   return changes,schemas,patch,stats
 end
-function M.apply(item,origin,patch,spend)
+local function healthy(item,origin)
   if origin.configuration_recovery and origin.configuration_recovery[item.id] then errors.raise('E_ENGINE','target adapter faulted; retained recovery requires host attention') end
-  local changes,schemas,retained_patch,patch_stats=M.preflight(item,patch,spend)
+end
+function M.prepare(item,origin,patch,spend,cursor)
+  healthy(item,origin)
+  local changes,schemas,retained_patch,patch_stats=M.preflight(item,patch,spend,cursor)
   local _,class=behavior(item)
   local before,before_stats=read_snapshot(item,spend)
-  if next(changes)==nil then return before end
+  local field_count=0; for _ in pairs(schemas) do field_count=field_count+1 end
+  return {id=item.id,behavior=class,changes=changes,patch=retained_patch,before=before,
+    work=3*(before_stats.bytes+patch_stats.bytes+field_count*128+1024)+4*(before_stats.nodes+patch_stats.nodes)+1024}
+end
+function M.commit(item,origin,plan,spend)
+  healthy(item,origin)
+  local _,class=behavior(item)
+  if item.id~=plan.id or class~=plan.behavior or item.protected and next(plan.changes) then errors.raise('E_UNREACHABLE','prepared target identity or protection changed') end
+  local schemas=catalog.schemas[class] or {}
+  local changes,before,retained_patch=plan.changes,plan.before,plan.patch
+  local current=read_snapshot(item,spend)
+  if not validation.equal(current.values,before.values) or not validation.equal(current.unset,before.unset) then
+    errors.raise('E_BUSY','target configuration changed while preparing; retry with current configuration')
+  end
+  for name in pairs(changes) do
+    if not schemas[name] or not schemas[name].writable or unavailable(item,class,name) then errors.raise('E_UNSUPPORTED','prepared setting no longer writable',name) end
+  end
+  if next(changes)==nil then return current end
   -- Reserve every native setter, readback, restoration and defensive publication
   -- before any mutation. No spend call is allowed inside the native transaction.
   -- The replacement payload plus current snapshot bound copied values; the fixed
   -- per-field allowance covers normalized defaults and native getter/setter work.
-  local field_count=0; for _ in pairs(schemas) do field_count=field_count+1 end
-  spend(3*(before_stats.bytes+patch_stats.bytes+field_count*128+1024)+4*(before_stats.nodes+patch_stats.nodes)+1024)
-  local recovery_count=0; for _ in pairs(origin.configuration_recovery or {}) do recovery_count=recovery_count+1 end
-  if recovery_count>=M.limits.target_nodes then errors.raise('E_CAPACITY','adapter recovery inventory full') end
+  spend(plan.work)
+
   local cb=item.entity.get_control_behavior()
   local absent=not cb
   local function setall(values)
@@ -180,7 +212,7 @@ function M.apply(item,origin,patch,spend)
   local restored=pcall(function()
     if not item.entity.valid or not cb or not cb.valid then error('target removed') end
     local prior={}
-    for name,s in pairs(schemas) do if s.writable and not unavailable(item,class,name) then prior[name]={native=validation.native(s,before.values[name])} end end
+    for name in pairs(changes) do prior[name]={native=validation.native(schemas[name],before.values[name])} end
     setall(prior)
     local actual=M.snapshot(item,nop)
     if not validation.equal(actual.values,before.values) or not validation.equal(actual.unset,before.unset) then error('restoration readback differs') end
@@ -192,5 +224,8 @@ function M.apply(item,origin,patch,spend)
   end
   local e=errors.new('E_ENGINE',restored and 'native update failed; target settings restored (external effects not rolled back)' or 'native update failed; restoration failed; target-local recovery retained')
   e.device=item.id; error(e,0)
+end
+function M.apply(item,origin,patch,spend)
+  return M.commit(item,origin,M.prepare(item,origin,patch,spend),spend)
 end
 return M

@@ -24,7 +24,7 @@ gets a different ID. Readback is copied Data, not Factorio objects.
 | `cfg.addSection(id, definition, target_wire)` | Actual new native integer index |
 | `cfg.setSection(id, index, patch, target_wire)` | Selected SectionInfo after update |
 | `cfg.removeSection(id, index, target_wire)` | Boolean; false if absent, true after verified removal |
-| `cfg.getLimits()` | Defensive common + configurator capacities |
+| `cfg.getLimits()` | Defensive common effective resource policy |
 
 ## Device and schema records
 
@@ -39,7 +39,7 @@ in inventory with a reason. Inspection never creates native control behavior.
 CapabilitySet: `api_version=1`, `behavior?`, `settings` field-name map,
 `observations` field-name map, `sections={supported, fields, limits}`, `reason?`.
 Each FieldSchema describes `kind`, `readable`, `writable`, `clearable`, optional
-`min/max/max_bytes/max_items`, enum `values`, nested `fields/required`,
+native `min/max`, enum `values`, nested `fields/required`,
 `additional_fields=false`, array `items`, union `alternatives`,
 `prototype_registry`, `constraints`, `unavailable_reason`. Selector objects also
 expose operation `variants={operation={fields,required}}`. Respect current flags
@@ -97,7 +97,9 @@ retains explicit recovery and faults further writes through that configurator.
 A newly created behavior can be reset to defaults, not deleted; shared-group
 creation and third-party notifications are not global rollback.
 
-Last successful write wins, not a lock or compare-and-set. Stop, cable loss or
+Preparation may wait between ticks. A changed target configuration or shared
+section detected before commit refuses with E_BUSY; reread before retrying.
+There is no public future, partial result or persistent writer lock. Stop, cable loss or
 configurator removal does not undo applied native settings. Player edits remain
 until a new explicit write. Reading/reconnecting does not periodically enforce an
 old desired configuration.
@@ -116,11 +118,11 @@ instead of replacing them with defaults. Nonmanual sections are read-only,
 including removal. Removing missing index returns false, not an invented section.
 
 Filters are LogisticFilter records, **not** logic Signal arrays: explicit `index`
-1–128, optional `value` signal/quality/comparator, signed min, optional unsigned
+1–65535 (native uint16), optional `value` signal/quality/comparator, signed min, optional unsigned
 max/minimum_delivery_count and registered import_from location. Sparse slots are
 represented by a dense list of explicit indexes. Duplicate indexes/identities
 refuse. Nonzero min needs an exact quality filter. Readback normalizes item import
-default to registered nauvis; multiplier preserves native float32 precision.
+default from the item prototype; multiplier preserves native float32 precision.
 
 Shared filter writes always raise E_SHARED_SCOPE. Explicit `group=""` detaches
 only the selected section, preserves effective filters, then permits optional local
@@ -130,11 +132,11 @@ Section failure recovery does not overwrite a protected nonmanual suffix.
 
 ## Bounds, programs and troubleshooting
 
-Initial limits: target_nodes=256 connector vertices, target_edges=512,
-configuration_bytes=16384, configuration_nodes=4096, patch_fields=32,
-sections=32, section_filters=128. Common return/callback/allocation bounds also
-apply; maxima cannot necessarily be combined in one callback. Pending/limit
-errors are not an empty target inventory. Active service needs configurator power;
+There are no separate target-node, edge, section, filter, array or string-count
+ceilings in configurator schemas. Native constraints and configured shared work
+and retained-memory admission still apply. Native updates are indivisible;
+insufficient commit resources must refuse before changing fields. Pending/resource
+errors are not an empty or partial target inventory. Active service needs configurator power;
 getLimits still works if reachable and unpowered.
 
 Run [configurator-program](../examples.md#configurator-program) with one inserter
