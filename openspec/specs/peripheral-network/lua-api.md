@@ -1,5 +1,7 @@
 # Peripheral discovery Lua API v1
 
+Integration note: the intended `setMonitorSyncGroup(members [, group_key])` and `getMonitorSyncGroup([group_key])` bridge is specified in the repository's `docs/monitor-resource-policy-checkpoint.md`. This branch's internal provider supports it, but the public facade still has legacy arities; named public calls are not yet available.
+
 Normative companion to [spec.md](spec.md). Shared types/errors: [common.md](../../api/common.md).
 
 ## Discovery and calls

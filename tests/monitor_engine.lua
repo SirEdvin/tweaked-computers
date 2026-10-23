@@ -105,7 +105,8 @@ function M.run()
     model.scale(m,4,4,nop,i/2); w,h=model.size(4,4,i/2); assert(m.width==w and m.height==h)
     assert(m.x==2 and m.y==1 and m.blink and m.palette[1][1]==0x12/255)
   end
-  atomic(m,'E_RANGE',function() model.scale(m,1,1,nop,1.1) end)
+  model.scale(m,1,1,nop,1.1); assert(m.scale==1.1)
+  atomic(m,'E_RANGE',function() model.scale(m,1,1,nop,0) end)
   atomic(m,'E_BUSY',function() model.calls.clear(m,function() error({code='E_BUSY'},0) end) end)
   model.scale(m,6,6,nop,0.5); assert(m.width*m.height==model.limits.cells)
   local spent=0

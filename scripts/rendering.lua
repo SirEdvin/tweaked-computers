@@ -100,6 +100,7 @@ M.matches=buffered.matches
 M.select=buffered.select
 M.status=buffered.status
 M.release=buffered.release
+M.revoke=buffered.revoke
 M.changed=buffered.changed
 M.regroup=buffered.regroup
 scheduler.register_phase('render','monitor-world',M.tick)

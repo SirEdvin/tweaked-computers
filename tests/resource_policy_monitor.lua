@@ -7,24 +7,29 @@ local monitor=require('scripts.services.monitor')
 local model=require('scripts.monitor-model')
 local renderer=require('scripts.rendering')
 local defs=require('scripts.device-definitions')
+local contract=require('tests.monitor_policy_contract')
 local M={}; local loaded=false
 local function nop() end
 local function group(id) return monitor.resolve(registry.record(id)) end
 function M.run()
+  contract.geometry()
   local function build(kind,x)
     local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,0},force='player'})
     return assert(lifecycle.build(body))
   end
   local c,a,b=build('computer',-3),build('monitor',0),build('monitor',10)
+  local tiles=contract.build(c)
   assert(lifecycle.connector(c,'network','red').connect_to(lifecycle.connector(a,'network','red')))
   for _=1,20 do monitor.reconcile(game.tick,nop); if not registry.get().monitors.job then break end end
   assert(group(a.id) and group(b.id))
-  storage.tc_monitor_hold={phase='bootstrap',computer=c.id,monitor=a.id,other=b.id,origin=game.tick}
+  contract.decrease(tiles)
+  storage.tc_monitor_hold={phase='bootstrap',computer=c.id,monitor=a.id,other=b.id,origin=game.tick,tiles=tiles}
 end
 function M.on_load()
   local f=storage.tc_monitor_hold
   if f.phase=='frozen' then
     local c=registry.computer(f.computer); local g=group(f.monitor)
+    contract.check(c,f.groups)
     assert(c.invocation==f.invocation and g.render==f.front and g.model.revision==f.revision)
     assert(registry.get().ledger.total==f.spent and c.state.prefix)
     local hold=assert(g.invocation_holds[c.id..'/program'])
@@ -57,7 +62,27 @@ function M.on_tick(event)
     if not c.state.prefix then return end
     assert(c.invocation and g.render==f.front and g.model.cells[1][1]==65)
     local hold=assert(g.invocation_holds[c.id..'/program']); assert(hold.invocation==c.invocation)
+    f.groups=contract.select(c,f.tiles)
     assert(registry.get().monitors.presentation.lanes[g.id].waiting_invocation)
+    local target=group(f.tiles[6]); f.commit_front=target.render
+    model.calls.setCursorPos(target.model,nop,1,1); model.calls.write(target.model,nop,'Z'); renderer.participate(target)
+    f.commit_allowance=settings.global['tc-render-commit-work'].value
+    contract.setting('tc-render-commit-work',1); f.phase='commit-blocked'
+  elseif f.phase=='commit-blocked' then
+    assert(g.render==f.front and group(f.tiles[6]).render==f.commit_front)
+    local status=renderer.status(c,nop,nil,'left')
+    if status.status~='blocked' then return end
+    assert(status.diagnostic.code=='E_CAPACITY' and status.diagnostic.setting=='tc-render-commit-work'
+      and status.diagnostic.requested>status.diagnostic.limit and status.diagnostic.recoverable)
+    local lane=registry.get().monitors.presentation.lanes[c.monitor_sync_groups.left.key]
+    assert(lane.job.ready and not lane.job.complete)
+    f.commit_job=lane.job
+    contract.setting('tc-render-commit-work',f.commit_allowance); f.phase='commit-resume'
+  elseif f.phase=='commit-resume' then
+    assert(g.render==f.front)
+    local target=group(f.tiles[6]); if target.render==f.commit_front then return end
+    assert(target.render.snapshot.cells[1][1]==90 and f.commit_job.complete)
+    log('TC_CONTRACT monitor-policy-actionable-atomic-blockage-and-resume-without-producer-replay')
     model.calls.setCursorPos(other.model,nop,1,1); model.calls.write(other.model,nop,'N'); renderer.participate(other)
     f.phase='unrelated'
   elseif f.phase=='unrelated' then
@@ -70,6 +95,7 @@ function M.on_tick(event)
     assert(c.status=='stopped' and c.invocation==nil and c.state.prefix)
     assert(g.render.snapshot.cells[1][1]==65 and g.render.snapshot.revision==f.revision)
     assert(next(g.invocation_holds)==nil,'Stop retained an invocation publication hold')
+    assert(not c.monitor_sync and next(c.monitor_sync_groups)==nil,'Stop retained a named synchronization group')
     f.phase='done'; log('TC_CONTRACT invocation-holds-survive-cold-unrelated-front-progress-and-stop-release'); log('TC_COLD_OK')
   end
 end

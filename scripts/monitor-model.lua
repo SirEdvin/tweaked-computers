@@ -3,7 +3,7 @@ local errors=require('scripts.runtime.errors')
 local M={limits={width_tiles=6,height_tiles=6,cells=10584,write_bytes=16384,
   render_latency_ticks=256,tiles=256,aggregate_cells=80000,render_cells_per_tick=1024,
   peripheral_call_bytes=65536,peripheral_call_entries=4096,
-  sync_group_refs=8,sync_group_members=4,sync_group_cells=10584,sync_groups_per_run=1,
+  sync_group_cells=10584,
   render_snapshot_cells=80000,render_staging_cells=10584,render_retired_cells=10584,
   render_staging_frames=256,render_retired_frames=256,render_commit_objects=42352,
   render_commit_work=160000,render_object_limit=203872,render_retained_cells=362336}}
@@ -28,7 +28,15 @@ local function string_arg(s)
   if #s>M.limits.write_bytes then errors.raise('E_LIMIT','monitor write byte limit') end
 end
 function M.size(w,h,scale)
-  return math.max(1,math.floor((64*w-4)/(6*scale))),math.max(1,math.floor((64*h-4)/(9*scale)))
+  if type(scale)~='number' then errors.raise('E_ARGUMENT','numeric scale required') end
+  if not errors.finite(scale) or scale<=0 or not errors.finite(9*scale) then
+    errors.raise('E_RANGE','positive finite representable scale required')
+  end
+  local width=math.max(1,math.floor((64*w-4)/(6*scale)))
+  local height=math.max(1,math.floor((64*h-4)/(9*scale)))
+  if not errors.integer(width,1,MAX) or not errors.integer(height,1,MAX)
+    or not errors.integer(width*height,1,MAX) then errors.raise('E_RANGE','unrepresentable monitor geometry') end
+  return width,height
 end
 local function blank(m) return {32,m.fg,m.bg} end
 local function full_damage(m)
@@ -89,6 +97,7 @@ function M.new(w,h,inherit)
     for i,p in ipairs(palette) do m.palette[i]={math.floor(p/65536)/255,math.floor(p/256)%256/255,p%256/255} end
   end
   m.width,m.height=M.size(w,h,m.scale)
+  if m.width*m.height>M.limits.cells then errors.raise('E_CAPACITY','monitor storage admission requires shared host ownership') end
   if inherit and inherit.width==m.width and inherit.height==m.height then
     m.cells={}; for i,c in ipairs(inherit.cells) do m.cells[i]={c[1],c[2],c[3]} end
     full_damage(m)
@@ -98,6 +107,7 @@ end
 function M.resize(m,w,h)
   local x,y=M.size(w,h,m.scale)
   if x==m.width and y==m.height then return false end
+  if x*y>M.limits.cells then errors.raise('E_CAPACITY','monitor storage admission requires shared host ownership') end
   local oldw,oldh=m.width,m.height; m.width=x; m.height=y; clear(m); m.revision=m.revision+1
   return true,oldw,oldh
 end
@@ -200,9 +210,10 @@ for _,name in ipairs({'getTextColor','setTextColor','getBackgroundColor','setBac
 end
 M.calls=calls
 function M.scale(m,w,h,s,scale)
-  if type(scale)~='number' then errors.raise('E_ARGUMENT','numeric scale required') end
-  if not errors.integer(scale*2,1,10) then errors.raise('E_RANGE','half-step scale 0.5..5 required') end
-  local width,height=M.size(w,h,scale); s(width*height*3+5)
+  local width,height=M.size(w,h,scale)
+  -- Keep the existing safety envelope until shared host lifetime admission lands.
+  if width*height>M.limits.cells then errors.raise('E_CAPACITY','monitor storage admission requires shared host ownership') end
+  s(width*height*3+5)
   local oldw,oldh=m.width,m.height; m.scale=scale
   if width~=oldw or height~=oldh then m.width=width; m.height=height; clear(m) end
   m.revision=m.revision+1; return width~=oldw or height~=oldh,oldw,oldh

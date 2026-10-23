@@ -1,5 +1,7 @@
 # Buffered monitor Lua API contract
 
+Integration note: the repository's `docs/monitor-resource-policy-checkpoint.md` documents internal named groups, invocation holds and actionable configured commit blockage. Public optional-key wiring and actual shared host lifetime accounting remain pending; the historical capacities below have not all been removed.
+
 Normative API version 1 companion to [monitor-display](spec.md), the [terminal methods](lua-api.md) and [peripheral-network](../peripheral-network/spec.md). Buffering is available in the current candidate, not older 0.1.4 archives. Retained receipts identify the executed examples and evidence boundaries.
 
 ## Compatibility and automatic buffering
