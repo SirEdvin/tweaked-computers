@@ -112,6 +112,11 @@ getTick() -> simulation tick, not wall-clock time.
 
 getLimits() -> defensive limit snapshot.
 
+getResourceStatus() -> defensive policy-v2 status for this computer.
+Includes execution state, measured resource use, dropped_events and last_refusal.
+Missing measurements are unavailable, not zero. Loss counts survive Stop/Run,
+Console reset and cold reload; warnings may be evicted without losing counters.
+
 getState(key) -> copied Data/nil. Missing state is nil.
 
 setState(key, value) -> no values. Replace the retained Data value at key.

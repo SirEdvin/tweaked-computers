@@ -24,6 +24,7 @@ belong to this program, never to the [live Console](../console.md).
 | `computer.setLabel(label?)` | none | String of at most 64 bytes; omitted/nil clears; empty/duplicate labels allowed |
 | `computer.getTick()` | Tick | Current synchronized simulation tick |
 | `computer.getLimits()` | copied map | All [common limits](limits.md) |
+| `computer.getResourceStatus()` | copied map | Policy version, execution state, measured resource usage, retained event-loss counters and last recorded resource refusal |
 | `computer.getState(key)` | copied Data or one nil | Key: nonempty string of at most 64 bytes |
 | `computer.setState(key, value)` | none | Atomically validate/copy nonnil Data; false and empty strings are values |
 | `computer.deleteState(key)` | boolean | True only if present and removed |
@@ -52,6 +53,26 @@ Console displays tabs as spaces without changing stored bytes. No chat output is
 produced. `computer.log(text)` remains the exact one-string API. Complete formatting
 and retention admission precede append/eviction; earlier output survives later errors.
 See [base helpers and protected errors](language.md#printing-raw-helpers-and-error-transformation).
+
+## Resource status
+
+`computer.getResourceStatus()` takes no arguments and returns one defensive
+snapshot for this computer in programs and Console. It has `policy_version=2`,
+`state`, `resources`, `dropped_events` and an optional `last_refusal`.
+State distinguishes `running`, `waiting`, `idle`, `resource_refused`, `stopped`
+and `faulted`; waiting does not mean that a callback has finished.
+
+Each reported resource contains `used`, `limit`, `unit`, `scope`, `setting` and
+`over_limit`. Missing measurements are unavailable, not zero usage. Counters are
+deterministic accounting units, not a measurement of the Lua heap or client FPS.
+The workspace can show this host snapshot without waiting for the guest to call
+the method.
+
+`dropped_events.total` survives Stop/Run, Console reset and cold reload. It
+saturates rather than wrapping, with `saturated=true`, and may include
+`last_tick`, `last_kind` and `last_reason`. These counters remain available after
+their rate-limited warning has been evicted from the log. Reading the snapshot
+does not clear counters or change accepted events.
 
 ## General events
 

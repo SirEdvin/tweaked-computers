@@ -37,6 +37,7 @@ Save commits source only; Run/Apply validates and activates a saved revision. Re
 | `computer.setLabel(label)` | no values | Bounded string; nil clears; duplicate labels allowed |
 | `computer.getTick()` | `Tick` | Current synchronized simulation tick |
 | `computer.getLimits()` | `Limits` | Effective versioned capacities from the shared contract |
+| `computer.getResourceStatus()` | defensive plain table | Policy version 2, execution state, available measured resources, persistent event-loss counters and optional last recoverable refusal; no arguments |
 | `computer.getState(key)` | `Data` or nil | String key; defensive copy of a present value |
 | `computer.setState(key, value)` | no values | Nonnil Data, validated/copied before atomic replacement |
 | `computer.deleteState(key)` | boolean | True only if a present key was removed |

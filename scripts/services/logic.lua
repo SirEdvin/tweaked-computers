@@ -71,13 +71,13 @@ local function status(rec)
   end
   return result
 end
-local function native_read(rec,input,spend,job)
+local function native_read(rec,input,spend,job,tick)
   selection(input); job=job or {}
   if not job.native then
     local connected=status(rec); spend(connected[input] and 32 or 16)
     local c=lifecycle.connector(rec,'input',input)
     job.native=connected[input] and (c.owner.get_signals(c.wire_connector_id) or {}) or {}
-    job.connected=connected; job.result={}; job.cursor=1; job.sort={}; job.tick=game.tick
+    job.connected=connected; job.result={}; job.cursor=1; job.sort={}; job.tick=tick or game.tick
   end
   while job.cursor<=#job.native do
     local entry=job.native[job.cursor]
@@ -98,7 +98,7 @@ function M.inspect(rec,tick,spend)
   return {tick=tick,red=red,green=green,connected=connected,output=canonical(rec.output_bank or {},spend)}
 end
 function M.inspect_input(rec,input,tick,spend,job)
-  local values,connected=native_read(rec,input,spend,job)
+  local values,connected=native_read(rec,input,spend,job,tick)
   return {tick=job and job.tick or tick,values=values,connected=connected[input]}
 end
 function M.inspect_output(rec,spend,job) return canonical(rec.output_bank or {},spend,job) end

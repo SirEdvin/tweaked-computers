@@ -115,7 +115,7 @@ function alarm(event)
   assert(speaker, "Connect a powered vanilla programmable speaker on red")
   local accepted = speaker.playSound("utility/wire_connect_pole", 0.5)
   computer.setState("accepted", accepted)
-  if not accepted then computer.log("Speaker busy; the next timer will retry") end
+  -- Submission success is not proof that a listener heard the sound.
 end
 ```
 
@@ -267,16 +267,7 @@ return {
             local searcher = peripheral.find("recipe_searcher", "red")
             assert(searcher, "Connect a Recipe Searcher with a red Network wire")
 
-            local limits = searcher.getLimits()
-            assert(limits.recipe_search_results == 50)
-
-            local ok, recipes = pcall(searcher.findRecipes, "item", "iron-plate")
-            if not ok then
-                if type(recipes) ~= "table" or recipes.code ~= "E_LIMIT" then
-                    error(recipes)
-                end
-                recipes = searcher.findRecipes("item", "iron-plate", "smelting")
-            end
+            local recipes = searcher.findRecipes("item", "iron-plate", "smelting")
             for _, recipe in ipairs(recipes) do
                 computer.log(recipe.name .. " / " .. recipe.category
                     .. " / seconds=" .. tostring(recipe.energy)

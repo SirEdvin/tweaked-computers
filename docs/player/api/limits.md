@@ -136,6 +136,26 @@ is needed; ordinary synchronized admission resets counters only on a new tick.
 | `owned_children` | 8 |
 | `maintenance_work_per_tick` | 200000 |
 | `host_hooks` | 16 |
+| `runtime_memory_bytes` | 8388608 |
+| `host_memory_bytes` | 134217728 |
+| `draft_storage_bytes` | 1048576 |
+| `pending_work_bytes` | 1048576 |
+| `host_stack_depth` | 32 |
+| `render_commit_work` | 160000 |
+| `event_drop_warning_interval` | 600 |
+| `speaker_sound_page_size` | 50 |
+| `monitor_width_tiles` | 6 |
+| `monitor_height_tiles` | 6 |
+| `kv_keys` | 128 |
+| `kv_bytes` | 16384 |
+| `kv_key_bytes` | 256 |
+| `kv_value_bytes` | 8192 |
+| `kv_hash_fields` | 128 |
+| `kv_hash_bytes` | 8192 |
+| `kv_total_hash_fields` | 256 |
+| `kv_command_arguments` | 128 |
+| `kv_command_bytes` | 65536 |
+| `kv_snapshot_bytes` | 65536 |
 
 Device-specific limits: [monitor](monitor.md#bounds-example-and-troubleshooting),
 [KV](kv.md#atomicity-errors-and-capacities), [logic](logic.md#bounds-and-use),

@@ -169,6 +169,9 @@ function M.run()
     local function spend() end
     local first=model.read(r,100,spend,s); s.snapshot=first
     assert(first.details.red_tick==100 and first.details.red and not first.details.green and first.details.output_tick==100)
+    local job={}
+    assert(logic.inspect_input(r,'red',101,spend,job).tick==101)
+    assert(logic.inspect_input(r,'red',102,spend,job).tick==101,'resumed observation changed its acquisition tick')
     local admission=scheduler.maintenance({scheduler={last_tick=-1},ledger={tick=115,total=0}},115)
     local input=logic.inspect_input
     logic.inspect_input=function(rec,wire,tick,paid) paid(1000000000); return input(rec,wire,tick,paid) end

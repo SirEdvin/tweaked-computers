@@ -37,14 +37,17 @@ local function submit(source)
     assert(input.text=='','Console ingress refused: '..tostring(gui.content.console.shell_status.caption))
   end)
 end
-local function copy(v)
+local function copy(v,seen)
   if type(v)~='table' then return v end
-  local out={}; for k,x in pairs(v) do out[k]=copy(x) end; return out
+  seen=seen or {}; if seen[v] then return seen[v] end
+  local out={}; seen[v]=out
+  for k,x in pairs(v) do out[k]=copy(x,seen) end; return out
 end
-local function equal(a,b)
+local function equal(a,b,seen)
   if type(a)~=type(b) then return false end
   if type(a)~='table' then return a==b end
-  for k,v in pairs(a) do if not equal(v,b[k]) then return false end end
+  seen=seen or {}; if seen[a] then return seen[a]==b end; seen[a]=b
+  for k,v in pairs(a) do if not equal(v,b[k],seen) then return false end end
   for k in pairs(b) do if a[k]==nil then return false end end
   return true
 end
