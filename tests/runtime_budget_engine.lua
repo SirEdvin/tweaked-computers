@@ -40,9 +40,20 @@ local function computer(body)
 end
 local function run(body)
   local root=fresh(); local rec=computer(body)
-  assert(scheduler.dispatch(rec,game.tick),'callback indefinitely deferred')
-  assert(rec.status=='running',rec.diagnostic and rec.diagnostic.message)
-  return rec,root.ledger.machines[rec.id]
+  local peak={compile=0,work=0,allocations=0}
+  -- Explicit clocks test per-slice bounds, not production latency. Actual
+  -- production ticks and separate-process persistence are exercised below.
+  for offset=0,31 do
+    assert(scheduler.dispatch(rec,game.tick+offset),'callback indefinitely deferred')
+    assert(rec.status=='running',rec.diagnostic and rec.diagnostic.message)
+    local machine=root.ledger.machines[rec.id]
+    for _,kind in ipairs({'compile','work','allocations'}) do
+      assert(machine[kind]<=limits[keys[kind]],'slice exceeded configured '..kind)
+      peak[kind]=math.max(peak[kind],machine[kind])
+    end
+    if not rec.invocation then return rec,peak end
+  end
+  error('finite budget fixture did not finish')
 end
 local function restored_defaults()
   for kind,value in pairs(defaults) do change(kind,value) end
@@ -83,8 +94,9 @@ local function maintenance_contracts(report)
   local rec=computer('computer.setState("untouched",true)')
   change('host',200001)
   assert(admission.guest_ceiling(root.ledger,t)==0)
-  local total=root.ledger.total; local queued=rec.queue[1]
-  assert(not scheduler.dispatch(rec,t) and rec.queue[1]==queued and rec.status=='running')
+  local total=root.ledger.total; local pending=rec.invocation
+  assert(pending and pending.pending_start)
+  assert(not scheduler.dispatch(rec,t) and rec.invocation==pending and pending.pending_start and rec.status=='running')
   assert(root.ledger.total==total and rec.last_dispatch_tick==nil)
   -- Table-backed registration isolates scheduler entry -> authentic sampler
   -- refusal. Native subscription/output cleanup is covered by logic_engine.
@@ -209,23 +221,29 @@ function M.run()
   assert(ok,diagnostic and diagnostic.message)
   restored_defaults()
   report('guest-limits-reflect-live-settings-and-remain-defensive')
-  for _,body in ipairs({
-    'xpcall(function() while true do end end,function(e) computer.setState("unsafe",true) end)',
-    'xpcall(function() error("x") end,function(e) while true do end end)',
-    'pcall(function() xpcall(function() error("x") end,function(e) error("again") end) end)',
-    'xpcall(function() error("x") end,function(e) while true do local t={} end end)',
-    'xpcall(function() error("x") end,function(e) computer.stop() end)'
+  for _,case in ipairs({
+    {'xpcall(function() while true do end end,function(e) computer.setState("unsafe",true) end)','wait'},
+    {'xpcall(function() error("x") end,function(e) while true do end end)','wait'},
+    {'pcall(function() xpcall(function() error("x") end,function(e) error("again") end) end)','complete'},
+    {'xpcall(function() error("x") end,function(e) while true do local t={} end end)','wait'},
+    {'xpcall(function() error("x") end,function(e) computer.stop() end)','stop'}
   }) do
     fresh()
-    local bad=computer(body..'; computer.setState("unsafe",true)')
+    local bad=computer(case[1]..'; computer.setState("unsafe",true)')
     local healthy=computer('local t=rawset({},"ready",false); assert(rawget(t,"ready")==false); computer.setState("healthy",true)')
     assert(scheduler.dispatch(bad,game.tick))
-    assert(bad.status~='running' and bad.state.unsafe==nil)
+    if case[2]=='wait' then
+      assert(bad.status=='running' and bad.invocation and bad.state.unsafe==nil,'private suspension escaped protection')
+    elseif case[2]=='stop' then
+      assert(bad.status=='stopped' and not bad.invocation and bad.state.unsafe==nil)
+    else
+      assert(bad.status=='running' and not bad.invocation and bad.state.unsafe,'ordinary handler error poisoned protected execution')
+    end
     assert(scheduler.dispatch(healthy,game.tick) and healthy.status=='running' and healthy.state.healthy)
     local spent=runtime.context(bad,game.tick).machine.work
     assert(not scheduler.dispatch(bad,game.tick) and runtime.context(bad,game.tick).machine.work==spent)
   end
-  report('expanded-globals-production-fatal-isolation-and-healthy-neighbors')
+  report('expanded-globals-private-suspension-stop-and-healthy-neighbors')
   maintenance_contracts(report)
   change('maintenance',400000)
   rec=select(1,run('local t=computer.getLimits(); assert(t.maintenance_work_per_tick==400000); t.maintenance_work_per_tick=1; assert(computer.getLimits().maintenance_work_per_tick==400000)'))

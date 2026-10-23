@@ -14,13 +14,17 @@ function M.new(context, services, shell, durable)
   local function string_charge(items,value)
     if type(value)=='string' then items[#items+1]={value,#value+32} end
   end
-  local function table_charges(items,t,keys,changed,values)
-    G.host_work(#keys*12+4,#keys*4+4)
-    items[#items+1]={t,192+48*#keys}
+  local function table_charges(items,t,keys,changed,values,added)
+    local count=#keys+(added and #added or 0)
+    G.host_work(count*12+4,count*4+4)
+    items[#items+1]={t,192+48*count}
     for _,k in ipairs(keys) do
       local v=t[k]
       if changed and changed[k]~=nil then v=values[k] end
       string_charge(items,k); string_charge(items,v)
+    end
+    if added then
+      for _,k in ipairs(added) do string_charge(items,k); string_charge(items,values and values[k] or t[k]) end
     end
   end
   local function retained(value)
@@ -44,15 +48,16 @@ function M.new(context, services, shell, durable)
   local callable = setmetatable({}, {__mode='k'})
   local handle_arguments = setmetatable({}, {__mode='k'}) -- Host-only opt-in, not Data.
   local bindings=setmetatable({},{__mode='k'})
+  local binding_methods=setmetatable({},{__mode='k'})
   local symbol_values,symbol_names={},{}
   function G.symbol(value) return symbol_names[value] end
   function G.resolve_symbol(name) return symbol_values[name] end
   function G.encoded_type(value)
     if not durable or type(value)~='table' then return end
     if durable.functions and durable.functions[value] then return 'function' end
-    local binding=durable.bindings[value]
+    local binding=durable.bindings and durable.bindings[value]
     if binding then return binding.method and 'function' or 'table' end
-    local path=durable.symbols[value]
+    local path=durable.symbols and durable.symbols[value]
     if path then return type(symbol_values[path]) end
   end
   local restore_binding
@@ -81,8 +86,21 @@ function M.new(context, services, shell, durable)
       call_checkpoint.prepared=checkpoint_codec.prepare(result)
     end
   end
-  function G.bind_value(value,descriptor) bindings[value]=descriptor end
-  function G.binding(value) return bindings[value] end
+  function G.bind_value(value,descriptor,method)
+    if method then G.host_work(2,2) end
+    bindings[value]=descriptor; binding_methods[value]=method
+  end
+  function G.binding(value)
+    local descriptor=bindings[value]
+    local method=binding_methods[value]
+    if method then
+      local parent=assert(bindings[descriptor],'missing facade binding')
+      G.host_work(#parent.name+#method+64,#parent.name+#method+64)
+      descriptor={name=parent.name,wire=parent.wire,generation=parent.generation,kind=parent.kind,method=method,facade=descriptor}
+      bindings[value]=descriptor; binding_methods[value]=nil
+    end
+    return descriptor
+  end
   function G.is_callable(value) return callable[value]~=nil end
   function G.binding_resolver(fn) assert(not restore_binding); restore_binding=fn end
   function G.restore_binding(descriptor,facade) return assert(restore_binding,'binding provider unavailable')(descriptor,facade) end
@@ -271,8 +289,26 @@ function M.new(context, services, shell, durable)
     for i=1,actual do G.scalar(values[i]) end
     return values
   end
-  local function changed_keys(t,updates)
+  local function changed_keys(t,updates,final)
     local old=owned[t].keys
+    G.host_work(#updates+1,final and 0 or #updates+1)
+    if not final then
+      final={}; for _,update in ipairs(updates) do final[update[1]]=update[2] end
+    end
+    local unchanged,removed=true,false
+    for k,present in pairs(final) do
+      if (t[k]~=nil)~=present then unchanged=false; if not present then removed=true end end
+    end
+    if unchanged then return old end
+    if not removed then
+      G.host_work(#updates*2+2,#updates*2+2)
+      local added,seen={},{}
+      for _,update in ipairs(updates) do
+        local k=update[1]
+        if final[k] and t[k]==nil and not seen[k] then added[#added+1]=k; seen[k]=true end
+      end
+      return old,added
+    end
     G.host_work(#old+#updates+1,#old+#updates+1)
     local present,keys={},{}
     for _,k in ipairs(old) do present[k]=true end
@@ -284,15 +320,20 @@ function M.new(context, services, shell, durable)
     end
     return keys
   end
-  function G.assignment_check(n,targets,values)
+  local function publish_keys(t,keys,added)
+    if added then for _,k in ipairs(added) do keys[#keys+1]=k end end
+    owned[t].keys=keys
+  end
+  function G.assignment_check(n,targets,values,single_t,single_k,single_v)
     G.spend(n*3+1); allocate(n)
     local staged={}
     -- Native Lua 5.2 publishes multiple assignments right-to-left. Match that
     -- order for duplicate/aliased targets or preflight can undercount growth.
     for i=n,1,-1 do
-      local pair=targets[i]
-      if pair then
-        local t,k,v=pair[1],pair[2],values[i]
+      local pair=targets and targets[i]
+      if pair or not targets then
+        local t,k,v=single_t,single_k,single_v
+        if pair then t,k,v=pair[1],pair[2],values[i] end
         plain(t); key(k)
         if not staged[t] then staged[t]={count=inventory(t),keys={},updates={},values=heap and {}} end
         local state=staged[t]
@@ -306,21 +347,25 @@ function M.new(context, services, shell, durable)
       end
     end
     if durable then
-      for t,state in pairs(staged) do state.next_keys=changed_keys(t,state.updates) end
+      for t,state in pairs(staged) do state.next_keys,state.added=changed_keys(t,state.updates,state.keys) end
       if heap then
         local items={}
-        for t,state in pairs(staged) do table_charges(items,t,state.next_keys,state.keys,state.values) end
+        for t,state in pairs(staged) do table_charges(items,t,state.next_keys,state.keys,state.values,state.added) end
         memory.acquire_all(heap,items)
       end
-      for t,state in pairs(staged) do owned[t].keys=state.next_keys end
+      for t,state in pairs(staged) do publish_keys(t,state.next_keys,state.added) end
     end
     -- Publication is statically emitted native writes after complete preflight.
   end
-  function G.new(count, factory)
+  function G.assignment_one(t,k,v)
+    G.scalar(v)
+    G.assignment_check(1,nil,nil,t,k,v)
+  end
+  function G.new(count, factory, ...)
     integer(count,0,limits.table_entries); G.spend(count+1); allocate(count+1)
     if depth>=limits.callback_depth then fatal('callback call depth exhausted') end
     depth=depth+1
-    local ok,t=pcall(factory)
+    local ok,t=pcall(factory,...)
     depth=depth-1
     G.check()
     if not ok then error(t,0) end
@@ -560,10 +605,8 @@ function M.new(context, services, shell, durable)
     local t,k,v=...
     plain(t); G.scalar(v)
     if v~=nil then retained(k); retained(v) end
-    local targets=G.assignment_targets(1); targets[1]={t,k}
-    local values=G.assignment_values(1,v)
     prepare_return(env.rawset,t)
-    G.assignment_check(1,targets,values)
+    G.assignment_one(t,k,v)
     rawset(t,k,v)
     return t
   end
@@ -717,14 +760,15 @@ function M.new(context, services, shell, durable)
     retained(value)
     if n>=limits.table_entries then errors.raise('E_LIMIT','table full') end
     G.spend(n-pos+3); allocate(1)
-    local keys=durable and changed_keys(t,{{n+1,pos<=n or value~=nil},{pos,value~=nil}})
+    local keys,added
+    if durable then keys,added=changed_keys(t,{{n+1,pos<=n or value~=nil},{pos,value~=nil}}) end
     prepare_return(tab.insert)
     if heap then
-      local items={}; table_charges(items,t,keys); string_charge(items,value)
+      local items={}; table_charges(items,t,keys,nil,nil,added); string_charge(items,value)
       memory.acquire_all(heap,items)
     end
     table.insert(t,pos,value)
-    if keys then owned[t].keys=keys end
+    if keys then publish_keys(t,keys,added) end
   end
   tab.remove=function(t,pos)
     local n=dense(t); if pos==nil then pos=n end; integer(pos,0,n+1)
@@ -761,18 +805,18 @@ function M.new(context, services, shell, durable)
     G.spend(n)
     for i=1,n do if t[i]==nil then count=count+1 end end
     if count>limits.table_entries then errors.raise('E_LIMIT','sort publication exceeds table capacity') end
-    local keys
+    local keys,added
     if durable then
       local updates={}; for i=1,n do updates[i]={i,true} end
-      keys=changed_keys(t,updates)
+      keys,added=changed_keys(t,updates)
     end
     prepare_return(tab.sort)
     if heap then
-      local items={}; table_charges(items,t,keys)
+      local items={}; table_charges(items,t,keys,nil,nil,added)
       memory.acquire_all(heap,items)
     end
     for i=1,n do t[i]=staged[i] end
-    if keys then owned[t].keys=keys end
+    if keys then publish_keys(t,keys,added) end
   end
   env.math=G.namespace(mathlib,'math function')
   env.string=G.namespace(str,'string function')

@@ -231,12 +231,36 @@ function M.run()
   game=original_game; if not ok then error(err,0) end
   monitor.deliver(job,display,c,game.tick,nop,player)
   assert(#c.queue==1 and c.queue[1].event.x==1 and #c.queue[1].event.wires==2 and c.queue[1].event.wire=='red')
+  local entries=limits.event_queue_entries; limits.event_queue_entries=1
+  local first=c.queue[1]
+  assert(monitor.deliver(job,display,c,game.tick,nop,player))
+  assert(c.status=='running' and #c.queue==1 and c.queue[1]==first and c.dropped_events.total==1)
+  assert(c.dropped_events.last_kind=='monitor_touch')
+  limits.event_queue_entries=entries
   registry.get().monitors.touches={}; c.queue={}; c.queue_bytes=0
   guest(c,"local m=peripheral.find('monitor','red'); m.setTextScale(2)")
   monitor.notifications(game.tick,nop); assert(#c.queue==1 and c.queue[1].event.reason=='scale')
   guest(c,"local m=peripheral.find('monitor','red'); m.setTextScale(3)")
   monitor.notifications(game.tick,nop)
   assert(#c.queue==1 and c.queue[1].event.width==display.model.width and c.queue[1].event.height==display.model.height)
+  local queued,event,queue_bytes=c.queue[1],c.queue[1].event,c.queue_bytes
+  local bytes=limits.event_queue_bytes
+  guest(c,"local m=peripheral.find('monitor','red'); m.setTextScale(2)")
+  local resize=assert(registry.get().monitors.resizes[display.id])
+  resize.payload.reason=resize.payload.reason..'!' -- One byte of additional delivery storage.
+  limits.event_queue_bytes=queue_bytes
+  monitor.notifications(game.tick,nop)
+  assert(c.status=='running' and #c.queue==1 and c.queue[1]==queued and queued.event==event and c.queue_bytes==queue_bytes)
+  assert(c.dropped_events.total==2 and c.dropped_events.last_kind=='monitor_resize' and c.dropped_events.last_reason=='event_queue_bytes')
+  assert(registry.get().monitors.resizes[display.id]==nil,'dropped resize retried')
+  monitor.notifications(game.tick,nop); assert(c.dropped_events.total==2)
+  guest(c,"local m=peripheral.find('monitor','red'); m.setTextScale(3)")
+  limits.event_queue_bytes=1
+  monitor.notifications(game.tick,nop)
+  assert(c.status=='running' and c.queue[1]==queued and queued.event==event and c.queue_bytes==queue_bytes)
+  assert(c.dropped_events.total==3 and registry.get().monitors.resizes[display.id]==nil)
+  limits.event_queue_bytes=bytes
+  report('monitor-touch-and-coalesced-resize-drop-newest-without-retiring-or-retrying')
   guest(c,"local m=peripheral.find('monitor','red'); m.setTextScale(2)"); monitor.notifications(game.tick,nop)
   c.queue={}; c.queue_bytes=0
   report('mock-world-activation-with-authentic-deduplicated-channel-events-and-resize')

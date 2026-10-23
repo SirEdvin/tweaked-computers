@@ -97,7 +97,10 @@ function M.activate(id,tick,expected_revision)
   rec.run_id=rec.id..'/run-'..string.format('%.0f',rec.run_generation)
   rec.active={source=plan.source,revision=rec.saved_revision,api_version=1,compiler_version=limits.compiler_version,storage_version=limits.storage_version,handlers=plan.handlers}
   rec.status='running'; rec.diagnostic=nil; rec.candidate_diagnostic=nil
-  if plan.handlers.start then M.enqueue(rec,'start',{name='start'},tick) end
+  if plan.handlers.start then
+    local event={name='start',tick=tick,computer_id=rec.id,run_id=rec.run_id,sequence=registry.sequence()}
+    rec.invocation={run_id=rec.run_id,pending_start=true,item={handler='start',event=event,bytes=0},checkpoint={}}
+  end
   return rec.run_id
 end
 function M.check_active(rec)
@@ -128,12 +131,32 @@ function M.unsubscribe(rec,id,spend)
   if spend then spend(#id+1) end
   local exists=rec.subscriptions[id]~=nil; rec.subscriptions[id]=nil; return exists
 end
+local function drop_event(rec,kind,tick,reason)
+  local drops=rec.dropped_events
+  if not drops then drops={total=0,saturated=false}; rec.dropped_events=drops end
+  if drops.total<MAX then drops.total=drops.total+1 end
+  if drops.total==MAX then drops.saturated=true end
+  drops.last_tick=tick; drops.last_kind=kind; drops.last_reason=reason
+  return false,'overflow'
+end
+local function event_copy(payload,spend)
+  local ok,copied,stats=pcall(data.copy,payload,spend,limits.event_queue_bytes)
+  if ok then return copied,stats end
+  if type(copied)=='table' and copied.code=='E_CAPACITY' and copied.field=='data_bytes' then return nil end
+  error(copied,0)
+end
 function M.prepare_event(rec,name,payload,tick,spend,metadata)
   if rec.status~='running' then return false,'inactive' end
   handler(rec,name)
+  if type(payload)~='table' or getmetatable(payload)~=nil or type(payload.name)~='string' or #payload.name==0 then
+    errors.raise('E_ARGUMENT','named event payload required')
+  end
   if not rec.powered and payload.name~='timer' and payload.name~='start' then return false,'unpowered' end
-  local event,stats=data.copy(payload,spend,limits.event_queue_bytes)
-  if type(event)~='table' or type(event.name)~='string' then errors.raise('E_ARGUMENT','named event payload required') end
+  local event,stats=event_copy(payload,spend)
+  if not event then
+    -- Preparation can be abandoned/retried; only publication records a loss.
+    return {handler=name,event={name=payload.name,run_id=rec.run_id},overflow='event_queue_bytes'}
+  end
   if stats.nodes+7>limits.data_nodes then errors.raise('E_LIMIT','event leaves no room for envelope metadata') end
   -- Host overrides all authoritative envelope fields, never trusts injected ones.
   event.tick=tick; event.computer_id=rec.id; event.run_id=rec.run_id
@@ -143,11 +166,10 @@ end
 -- Immediate trusted publication of an owned, prepaid prepare_event result.
 function M.publish_event(rec,item,tick)
   if rec.status~='running' or item.event.run_id~=rec.run_id then return false,'inactive' end
+  if item.overflow then return drop_event(rec,item.event.name,tick,item.overflow) end
   local bytes=item.bytes
-  if #rec.queue>=limits.event_queue_entries or rec.queue_bytes+bytes>limits.event_queue_bytes then
-    M.fault(rec,errors.new('E_CAPACITY','event queue overflow; run stopped and owned outputs cleared'),tick)
-    return false,'overflow'
-  end
+  if #rec.queue>=limits.event_queue_entries then return drop_event(rec,item.event.name,tick,'event_queue_entries') end
+  if rec.queue_bytes+bytes>limits.event_queue_bytes then return drop_event(rec,item.event.name,tick,'event_queue_bytes') end
   item.event.sequence=registry.sequence()
   rec.queue[#rec.queue+1]=item
   rec.queue_bytes=rec.queue_bytes+bytes
@@ -166,15 +188,26 @@ function M.emit(id,event_name,payload,tick,spend)
   local subscriptions={}
   for _,sub in pairs(rec.subscriptions) do if sub.event_name==event_name then subscriptions[#subscriptions+1]=sub end end
   table.sort(subscriptions,function(a,b) return a.sequence<b.sequence end)
+  if #subscriptions==0 then return true end
 
   -- Do not alias caller payload or a subscription's event copy.
-  local copied,stats=data.copy(payload or {},spend,limits.event_queue_bytes); copied.name=event_name
+  local copied,stats=event_copy(payload or {},spend)
+  if not copied then
+    for _=1,#subscriptions do drop_event(rec,event_name,tick,'event_queue_bytes') end
+    return false
+  end
+  copied.name=event_name
   -- Reserve every delivery before publication; deferral cannot deliver a prefix.
   if spend then spend(#subscriptions*(stats.bytes+stats.nodes*2+#event_name+32)) end
+  local accepted=true
   for _,sub in ipairs(subscriptions) do
-    if not M.enqueue(rec,sub.handler,copied,tick,nil) then return false end
+    local delivered,reason=M.enqueue(rec,sub.handler,copied,tick,nil)
+    if not delivered then
+      accepted=false
+      if reason~='overflow' then return false end
+    end
   end
-  return true
+  return accepted
 end
 function M.set_power(id,powered,tick,spend)
   root()

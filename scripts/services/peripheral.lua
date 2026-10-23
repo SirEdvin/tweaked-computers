@@ -157,10 +157,11 @@ function M.services(computer,tick,guard,execution)
     end
     if rec.kind=='speaker' and (method=='playNote' or method=='playSound') then guard.prepare_boolean_result() end
     if rec.kind=='radar' and method=='transmit' then guard.prepare_empty_result() end
-    if rec.kind=='monitor' and method:sub(1,3)~='get' and method:sub(1,2)~='is' then
+    local hold=bindings[rec.kind].hold
+    if hold and method:sub(1,3)~='get' and method:sub(1,2)~='is' then
       guard.prepare_empty_result(); guard.host_work(12,12)
       fn(computer,rec,wire,tick,spend,...)
-      bindings[rec.kind].hold(rec,computer,execution)
+      hold(rec,computer,execution)
       return
     end
     if bindings[rec.kind].with_principal then
@@ -180,8 +181,7 @@ function M.services(computer,tick,guard,execution)
     local proxy=guard.namespace(methods,'peripheral method')
     if guard.shell_enabled or guard.continuation_enabled then
       for key,fn in pairs(methods) do
-        guard.host_work(#name+#key+64,#name+#key+64)
-        guard.bind_value(fn,{name=name,wire=wire,generation=generation,kind=rec.kind,method=key,facade=proxy})
+        guard.bind_value(fn,proxy,key)
       end
       guard.host_work(#name+64,#name+64)
       guard.bind_value(proxy,{name=name,wire=wire,generation=generation,kind=rec.kind})

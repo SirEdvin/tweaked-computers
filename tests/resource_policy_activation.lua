@@ -3,6 +3,7 @@ local registry=require('scripts.registry')
 local runtime=require('scripts.runtime.computer')
 local scheduler=require('scripts.scheduler')
 local compiler=require('scripts.runtime.compiler')
+local continuation=require('scripts.runtime.continuation')
 local admission=require('scripts.runtime.admission')
 local model=require('scripts.ui.editor-model')
 local editor_contract=require('tests.editor_contract')
@@ -30,18 +31,24 @@ function M.run()
     'function start() local t={value=1}; computer.setState("unsafe",true) end',
     'function start() local function helper() return 1 end; computer.setState("unsafe",helper()) end',
     'return {api_version=1,handlers={start=function() local f=function() return 1 end; computer.setState("unsafe",f()) end}}',
+    'function start(...) local t={value=1}; computer.setState("unsafe",true) end',
+    'function start() local function helper(...) return ... end; computer.setState("unsafe",helper()) end',
+    'return {api_version=1,handlers={start=function() local f=function(...) return ... end; computer.setState("unsafe",f()) end}}',
   }) do
     model.edit(player,session.token,candidate)
     local message,problem=model.action(player,session.token,'validate',game.tick)
     assert(message and not problem and rec.state.unsafe==nil and rec.run_id==before.run)
   end
+  -- Exercise preparation refusal independently of which grammar is now lowered.
+  -- A fresh source key ensures a warmed successful proof cannot mask injection.
+  local lower=continuation.lower
+  continuation.lower=function(main,reject) reject(main,'fixture continuation preparation refusal','E_UNSUPPORTED') end
   for _,candidate in ipairs({
     'function start(...) local t={value=1}; computer.setState("unsafe",true) end',
     'function start() local function helper(...) return ... end; computer.setState("unsafe",helper()) end',
     'return {api_version=1,handlers={start=function() local f=function(...) return ... end; computer.setState("unsafe",f()) end}}',
   }) do
-    -- These are valid supported front-end programs, but the current early
-    -- continuation lowerer explicitly does not implement their constructs yet.
+    candidate=candidate..'\n-- preparation refusal fixture'
     local native,e=compiler.compile(candidate,admission.context(admission.new(),'candidate-grammar',game.tick))
     assert(native,e and e.message)
     model.edit(player,session.token,candidate)
@@ -58,6 +65,7 @@ function M.run()
     assert(rec.state==before.state and rec.state.accepted and rec.state.unsafe==nil)
     assert(registry.get().ledger==ledger and ledger.total>spent,'candidate preparation reset or skipped paid work')
   end
+  continuation.lower=lower
   log('TC_CONTRACT continuation-preparation-before-active-generation-retirement')
 end
 return M

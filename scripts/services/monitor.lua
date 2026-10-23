@@ -303,25 +303,27 @@ function M.deliver(job,g,computer,tick,spend,player)
     -- A later geometry commit may precede callback dispatch. Coalesce already
     -- queued resize snapshots so getSize agrees with the delivered dimensions.
     spend(#computer.queue*4+1)
-    local staged={}; local difference=0
+    local staged={}; local difference=0; local overflow=false
     for _,item in ipairs(computer.queue) do
       if item.event.name==name and item.event.peripheral==g.id then
         local next_payload={}; for k,v in pairs(payload) do next_payload[k]=v end
         next_payload.name=name; next_payload.old_width=item.event.old_width; next_payload.old_height=item.event.old_height
-        local event,stats=data.copy(next_payload,spend,limits.event_queue_bytes)
-        local bytes=stats.bytes+128+#computer.id+#computer.run_id
-        difference=difference+bytes-item.bytes
-        event.tick=item.event.tick; event.sequence=item.event.sequence
-        event.computer_id=computer.id; event.run_id=computer.run_id
-        staged[#staged+1]={item=item,event=event,bytes=bytes}
+        local prepared=assert(runtime.prepare_event(computer,item.handler,next_payload,tick,spend))
+        if prepared.overflow then overflow=true else difference=difference+prepared.bytes-item.bytes end
+        prepared.event.tick=item.event.tick; prepared.event.sequence=item.event.sequence
+        staged[#staged+1]={item=item,prepared=prepared}
       end
     end
     if #staged>0 then
-      if computer.queue_bytes+difference>limits.event_queue_bytes then
-        runtime.fault(computer,errors.new('E_CAPACITY','resize queue overflow; run stopped'),tick); return true
-      end
       spend(#staged*4+1)
-      for _,entry in ipairs(staged) do entry.item.event=entry.event; entry.item.bytes=entry.bytes end
+      if overflow or difference>0 and computer.queue_bytes+difference>limits.event_queue_bytes then
+        for _,entry in ipairs(staged) do
+          entry.prepared.overflow='event_queue_bytes'
+          runtime.publish_event(computer,entry.prepared,tick)
+        end
+        return true
+      end
+      for _,entry in ipairs(staged) do entry.item.event=entry.prepared.event; entry.item.bytes=entry.prepared.bytes end
       computer.queue_bytes=computer.queue_bytes+difference; return true
     end
   end

@@ -77,6 +77,7 @@ local function emit(main,mode,expression)
   end
   local nodes, nesting, generated, temp = 0, 0, 0, 0
   local exports
+  local variadic=false
   local expr, body, statement, func
   local function visit(n)
     parsing.enter(1)
@@ -106,7 +107,9 @@ local function emit(main,mode,expression)
     for i,p in ipairs(n.params) do names[i] = identifier(p.name,p) end
     if #names > limits.tuple_entries then reject(n, 'parameter width exceeded', 'E_LIMIT') end
     if n.is_vararg then names[#names+1] = '...' end
-    local result = 'function('..table.concat(names, ',')..') __tc.enter('..coordinates(n)..','..#n.params..'); '..body(n)..' end'
+    local previous=variadic; variadic=n.is_vararg
+    local contents=body(n); variadic=previous
+    local result = 'function('..table.concat(names, ',')..') __tc.enter('..coordinates(n)..','..#n.params..'); '..contents..' end'
     return leave(result)
   end
   function expr(n)
@@ -141,7 +144,7 @@ local function emit(main,mode,expression)
         elseif f.type == 'rec' or f.type == 'record' then out[i] = '['..expr(f.key)..']='..expr(f.value)
         else reject(n, 'unsupported constructor field: '..tostring(f.type)) end
       end
-      s = '__tc.new('..#n.fields..',function() return {'..table.concat(out,',')..'} end)'
+      s = '__tc.new('..#n.fields..',function('..(variadic and '...' or '')..') return {'..table.concat(out,',')..'} end'..(variadic and ',...' or '')..')'
     elseif k == 'unop' then
       if n.op == 'not' then s = '(not __tc.scalar('..expr(n.ex)..'))'
       elseif n.op == '-' then s = '(-__tc.number('..expr(n.ex)..'))'

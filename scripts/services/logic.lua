@@ -326,11 +326,13 @@ function M.sample(tick,spend)
           if d.initial or resync or #changes>0 or pc.red~=connected.red or pc.green~=connected.green then
             local payload={name='signal_changed',subscription_id=sub.id,peripheral=r.id,wire=d.wire,input=d.input,sample_tick=tick,
               initial=d.initial,resync=resync,previous=previous,current=current,changes=changes,previous_connected=pc,connected=connected}
-            -- Prepay complete bounded event copying before queue/baseline changes.
-            local copied,stats=data.copy(payload,spend,limits.event_queue_bytes)
-            spend(stats.bytes+stats.nodes+128)
-            if runtime.enqueue(c,sub.handler,copied,tick,nil) then
-              d.previous=current; d.connected=connected; d.initial=false; d.resync=false
+            local item=runtime.prepare_event(c,sub.handler,payload,tick,spend)
+            if not item then return end
+            spend(16) -- Publication/loss metadata and the observation commit.
+            local accepted,reason=runtime.publish_event(c,item,tick)
+            if accepted or reason=='overflow' then
+              d.previous=current; d.connected=connected; d.resync=not accepted
+              if accepted then d.initial=false end
             end
           end
         end)

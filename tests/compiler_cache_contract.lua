@@ -6,11 +6,13 @@ local M={}
 local source='return {api_version=1,handlers={start=function(e) local t={1,2,3}; for i,v in ipairs(t) do assert(i==v) end end}}'
 local serial=0
 local function evict()
-  for i=1,9 do
-    serial=serial+1
-    local text='return {api_version=1,handlers={start=function(e) local n='..serial..' end}}'
-    assert(compiler.compile(text,admission.context(admission.new(),'evict',0)))
-  end
+  local allowance=limits.compiler_cache_bytes
+  limits.compiler_cache_bytes=1
+  serial=serial+1
+  local text='return {api_version=1,handlers={start=function(e) local n='..serial..' end}}'
+  local ok,plan,problem=pcall(compiler.compile,text,admission.context(admission.new(),'evict',0))
+  limits.compiler_cache_bytes=allowance
+  assert(ok and plan,problem and problem.message or 'cache eviction probe failed')
 end
 local function context(remaining,shared)
   local ctx=admission.context(admission.new(),'comparison',0)

@@ -8,14 +8,14 @@ local ownership=require('scripts.runtime.ownership')
 local checkpoint_validation=require('scripts.runtime.checkpoint-validation')
 local memory=require('scripts.runtime.memory')
 local limits=require('scripts.runtime.limits')
-local M={version=5}
+local M={version=9}
 local function quote(s) return string.format('%q',s) end
 local checkpoint_fields={version=true,source=true,handler=true,frame=true,symbols=true,intern=true,bindings=true,
   owned=true,owned_order=true,symbols_order=true,symbol_roots=true,bindings_order=true,collection=true,validation=true,preparation=true,memory_bytes=true,memory_owner=true,
   wait_tick=true,event_initialized=true,shell_root=true,result=true,result_printed=true,value_graph=true,completed=true,
   tuple_capacities=true,tuple_control=true,functions=true,functions_order=true,root=true,exports=true}
 local function frame_bytes(executable)
-  return 18*192+27*48+16*(2*executable.locals+2*executable.slots+#executable.symbols+#executable.strings+executable.call_count)
+  return 20*192+35*48+16*(2*executable.locals+2*executable.slots+#executable.symbols+#executable.strings+executable.call_count)
     +80*executable.call_count+96+288+384
 end
 local function validate(checkpoint,executable,tick,spend,deep,owner)
@@ -46,6 +46,14 @@ local function validate(checkpoint,executable,tick,spend,deep,owner)
     or not errors.integer(checkpoint.tuple_control,2,9007199254740991))
     or checkpoint.memory_owner==nil and (checkpoint.tuple_capacities~=nil or checkpoint.tuple_control~=nil) then refuse('invalid tuple workspace') end
   if frame.pending~=nil and (type(frame.pending)~='table' or getmetatable(frame.pending) or frame.pending.block~=frame.pc) then refuse('invalid pending primitive') end
+  if frame.bridge~=nil then
+    local bridge=frame.bridge
+    if type(bridge)~='table' or getmetatable(bridge)
+      or checkpoint.symbols[bridge.symbol]~='pcall' and checkpoint.symbols[bridge.symbol]~='xpcall'
+      or not errors.integer(bridge.line,1,9007199254740991) or not errors.integer(bridge.column,1,9007199254740991) then
+      refuse('invalid protected-call bridge')
+    end
+  end
   if deep then checkpoint_validation.advance(checkpoint,executable,spend,owner,frame_bytes(executable)) end
 end
 
@@ -107,6 +115,9 @@ function M.lower(main,reject,position,mode)
     elseif k=='string' then literals[n.value]=true; return output(quote(n.value))
     elseif k=='boolean' then return output(tostring(n.value))
     elseif k=='nil' then return output('nil')
+    elseif k=='vararg' then
+      calls[out]=true
+      return output('r.varargs('..out..')',nil,true)
     elseif k=='local_ref' or k=='upval_ref' then
       local ref,id=register(n)
       return output(ref,{'l'..id})
@@ -162,7 +173,7 @@ function M.lower(main,reject,position,mode)
           evaluations[#evaluations+1]={number=array,out=key,node=field.value}
         else evaluations[#evaluations+1]={node=field.key,out=key} end
         evaluations[#evaluations+1]={node=field.value,out=value_slot}
-        if field.type=='list' and i==#n.fields and field.value.node_type=='call' and not field.value.force_single_result then
+        if field.type=='list' and i==#n.fields and (field.value.node_type=='call' or field.value.node_type=='vararg') and not field.value.force_single_result then
           tail='f.tuples['..value_slot..']'; uses[#uses+1]='t'..value_slot
         else
           fields[#fields+1]='{'..value(key)..','..value(value_slot)..'}'
@@ -182,22 +193,26 @@ function M.lower(main,reject,position,mode)
       local pc=expressions(n.args,function(tuple,uses)
         uses[#uses+1]='s'..callee
         local pc=reserve()
-        define(pc,n,'return r.invoke('..out..','..value(callee)..','..tuple..','..nextpc..')',
+        define(pc,n,'return r.invoke('..out..','..value(callee)..','..nextpc..(tuple~='' and ','..tuple or '')..')',
           {nextpc},uses,{'s'..out,'t'..out})
         return pc
-      end)
+      end,true)
       return expression(n.ex,callee,pc)
     end
     reject(n,'continuation slice does not yet lower '..tostring(k),'E_UNSUPPORTED')
   end
-  function expressions(list,consume)
+  function expressions(list,consume,spread)
     local outputs,values={},{}
     for i=1,#list do outputs[i]=slot(); values[i]=value(outputs[i]) end
     local last=list[#list]
-    local tail=last and last.node_type=='call' and not last.force_single_result
+    local tail=last and (last.node_type=='call' or last.node_type=='vararg') and not last.force_single_result
     if tail then values[#values]=nil end
     local tuple='r.list({n='..#values..(#values>0 and ','..table.concat(values,',') or '')..'},'..
       (tail and 'f.tuples['..outputs[#outputs]..']' or 'nil')..')'
+    if spread then
+      if tail then values[#values+1]='r.arguments(f.tuples['..outputs[#outputs]..'])' end
+      tuple=table.concat(values,',')
+    end
     local uses={}
     for i=1,#list do uses[i]=(tail and i==#list and 't' or 's')..outputs[i] end
     local pc=consume(tuple,uses)
@@ -233,11 +248,20 @@ function M.lower(main,reject,position,mode)
           nextpc,{'s'..out},{'l'..locals[lhs.reference_def]})
         return expression(n.rhs[1],out,pc)
       end
-      local targets,defs,evaluations,target_uses,new_cells={},{},{},{},{}
+      if #n.lhs==1 and lhs.node_type=='index' and not lhs.src_ex_did_not_exist and n.rhs and #n.rhs==1 then
+        local object,key,out=slot(),slot(),slot()
+        local pc=block(n,'r.assign_one('..value(object)..','..value(key)..','..value(out)..')',
+          nextpc,{'s'..object,'s'..key,'s'..out})
+        pc=expression(n.rhs[1],out,pc)
+        pc=expression(lhs.suffix,key,pc)
+        return expression(lhs.ex,object,pc)
+      end
+      local targets,defs,evaluations,target_uses,new_cells,refs={},{},{},{},{},{}
       for i,lhs in ipairs(n.lhs) do
         if lhs.node_type=='local_ref' or lhs.node_type=='upval_ref' then
           local _,id=register(lhs)
           targets[i]='{slot='..id..(captured[id] and ',cell=true' or '')..'}'
+          if lhs.node_type=='local_ref' and not captured[id] then refs[#refs+1]='f.locals['..id..']' end
           defs[#defs+1]='l'..id
           if captured[id] then
             if k=='localstat' then new_cells[#new_cells+1]=id else target_uses[#target_uses+1]='l'..id end
@@ -253,6 +277,9 @@ function M.lower(main,reject,position,mode)
       end
       local pc=expressions(n.rhs or {},function(tuple,uses)
         for _,ref in ipairs(target_uses) do uses[#uses+1]=ref end
+        if #refs==#n.lhs then
+          return block(n,table.concat(refs,',')..'=r.bind('..#refs..','..tuple..')',nextpc,uses,defs)
+        end
         return block(n,(#new_cells>0 and 'r.new_cells({'..table.concat(new_cells,',')..'}); ' or '')..
           'r.assign({'..table.concat(targets,',')..'},'..tuple..')',nextpc,uses,defs)
       end)
@@ -271,16 +298,18 @@ function M.lower(main,reject,position,mode)
       calls[out]=true
       local head=reserve()
       local loop=body(n,head,nextpc)
-      local targets,defs,new_cells={},{'s'..control},{}
+      local targets,defs,new_cells,refs={},{'s'..control},{},{}
       for i,ref in ipairs(n.name_list) do
         local _,id=register(ref); targets[i]='{slot='..id..(captured[id] and ',cell=true' or '')..'}'
+        if not captured[id] then refs[#refs+1]='f.locals['..id..']' end
         defs[#defs+1]='l'..id
         if captured[id] then new_cells[#new_cells+1]=id end
       end
       local test=block(n,'if f.tuples['..out..'][1]~=nil then '..(#new_cells>0 and 'r.new_cells({'..table.concat(new_cells,',')..'}); ' or '')..
-        'r.assign({'..table.concat(targets,',')..'},f.tuples['..out..']); '..value(control)..'=f.tuples['..out..'][1]; return '..loop..' end',
+        (#new_cells==0 and table.concat(refs,',')..'=r.bind('..#refs..',f.tuples['..out..']); '
+          or 'r.assign({'..table.concat(targets,',')..'},f.tuples['..out..']); ')..value(control)..'=f.tuples['..out..'][1]; return '..loop..' end',
         nextpc,{'t'..out},defs,loop)
-      define(head,n,'return r.invoke('..out..','..value(iterator)..',{n=2,'..value(state)..','..value(control)..'},'..test..')',
+      define(head,n,'return r.invoke('..out..','..value(iterator)..','..test..','..value(state)..','..value(control)..')',
         {test},{'s'..iterator,'s'..state,'s'..control},{'t'..out})
       return expressions(n.exp_list,function(tuple,uses)
         return block(n,'local t='..tuple..'; '..value(iterator)..','..value(state)..','..value(control)..'=t[1],t[2],t[3]',
@@ -325,7 +354,6 @@ function M.lower(main,reject,position,mode)
   end
   function lower_function(fn)
     if proto_ids[fn] then local id=proto_ids[fn]; return id,protos[id].captures end
-    if fn.is_vararg and not (mode=='shell' and fn==main) then reject(fn,'durable varargs are not yet lowered','E_UNSUPPORTED') end
     local id=#protos+1; proto_ids[fn]=id
     local proto={captures={}}; protos[id]=proto
     for _,upval in ipairs(fn.upvals or {}) do
@@ -341,6 +369,7 @@ function M.lower(main,reject,position,mode)
     local entry=body(fn,0)
     if #params>0 then entry=block(fn,'r.parameters({'..table.concat(params,',')..'},{'..table.concat(new_cells,',')..'})',entry,nil,defs)
     else entry=block(fn,'f.args=nil',entry) end
+    if fn.is_vararg and not (mode=='shell' and fn==main) then entry=block(fn,'r.init_varargs('..#params..')',entry) end
     proto.entry=entry
     return id,proto.captures
   end
@@ -518,7 +547,26 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     return r.encode(guard.global(name))
   end
   local encoded,decoded={},{}
+  local method_tokens
   local function binding_token(descriptor)
+    local methods
+    if descriptor.facade then
+      if not method_tokens then
+        local index={}
+        guard.host_work(1,1)
+        for _,token in ipairs(checkpoint.bindings_order) do
+          local binding=checkpoint.bindings[token]
+          guard.host_work(2,2)
+          if binding and binding.facade then
+            index[binding.facade]=index[binding.facade] or {}
+            index[binding.facade][binding.method]=token
+          end
+        end
+        method_tokens=index
+      end
+      methods=method_tokens[descriptor.facade]
+      if methods and methods[descriptor.method] then return methods[descriptor.method] end
+    end
     guard.host_work(12,12)
     local token={}
     if memory_owner then
@@ -532,6 +580,10 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     end
     checkpoint.bindings[token]=descriptor
     checkpoint.bindings_order[#checkpoint.bindings_order+1]=token
+    if descriptor.facade then
+      methods=methods or {}; methods[descriptor.method]=token
+      method_tokens[descriptor.facade]=methods
+    end
     return token
   end
   function r.encode(v)
@@ -589,18 +641,24 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
       return result
     end)
   end
+  function r.bind(count,values)
+    for i=1,values.n do guard.scalar(r.decode(values[i])) end
+    return guard.bind(count,table.unpack(values,1,values.n))
+  end
+  function r.assign_one(t,k,v)
+    guard.assignment_one(t,k,v)
+    t[k]=v
+  end
   function r.assign(targets,values)
     local count=#targets
     local checked=guard.assignment_targets(count)
-    local decoded={n=values.n}
-    for i=1,values.n do decoded[i]=r.decode(values[i]) end
-    guard.assignment_values(count,table.unpack(decoded,1,decoded.n))
+    guard.assignment_values(count,table.unpack(values,1,values.n))
     for i,target in ipairs(targets) do
       if target.name then checked[i]={checkpoint.shell_root,target.name}
       elseif target.cell then checked[i]={f.cells[target.slot],'value'}
-      elseif target[1] then checked[i]={r.decode(target[1]),r.decode(target[2])} end
+      elseif target[1] then checked[i]={target[1],target[2]} end
     end
-    guard.assignment_check(count,checked,decoded)
+    guard.assignment_check(count,checked,values)
     -- Lua 5.2 publishes duplicate/aliased assignment targets right-to-left.
     for i=count,1,-1 do
       local target=targets[i]
@@ -663,6 +721,22 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     admit_tuple(tuple,0)
     if f.parent then f.results=tuple else checkpoint.result=tuple end
   end
+  function r.init_varargs(parameters)
+    if f.varargs then return end
+    local args=f.args or {n=0}
+    local count=math.max(0,args.n-parameters)
+    guard.host_work(count*2+1,count+1)
+    admit_tuple({n=count},0)
+    local values={n=count}
+    for i=1,count do values[i]=args[parameters+i] end
+    f.varargs=values
+  end
+  function r.varargs(out)
+    local values=assert(f.varargs,'missing variadic frame')
+    admit_tuple(values,out)
+    f.tuples[out]=values
+    return values[1]
+  end
   local codec={}
   function codec.encode(tuple,values)
     admit_tuple(tuple,call_output,not values)
@@ -697,7 +771,7 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     guard.call_checkpoint(f.pending,codec)
     local args=table.pack(...)
     local path=checkpoint.symbols[symbol]
-    local raw=path=='type' or path=='rawequal' or path=='rawget' or path=='rawset' or path=='rawlen'
+    local raw=path=='type' or path=='error' or path=='assert' or path=='rawequal' or path=='rawget' or path=='rawset' or path=='rawlen'
       or path=='next' or path=='pairs' or path=='ipairs' or path=='@ipairs-next' or path and path:sub(1,6)=='table.'
     if not raw then for i=1,args.n do args[i]=r.decode(args[i]) end end
     local fn=r.decode(symbol)
@@ -714,29 +788,52 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     f.tuples[out]=tuple; f.slots[out]=tuple[1]
     return nextpc
   end
-  function r.invoke(out,symbol,args,nextpc)
+  function r.invoke(out,symbol,nextpc,...)
     f.pending=f.pending or {block=f.pc}
     local pending=f.pending
     pending.output=out
     if pending.guest_result then return deliver(out,pending.guest_result,nextpc) end
-    if checkpoint.symbols[symbol]=='pcall' then
+    local protection=checkpoint.symbols[symbol]
+    if protection=='pcall' or protection=='xpcall' then
       if not pending.protection then
-        guard.host_work(args.n+4,args.n+4)
-        local target=args[1]; local passed={n=math.max(0,args.n-1)}
-        for i=1,passed.n do passed[i]=args[i+1] end
+        local count=select('#',...)
+        guard.host_work(count+4,count+4)
+        local target,handler=...
+        local offset=protection=='xpcall' and 2 or 1
+        if offset==2 and (not checkpoint.functions[target] and not guard.is_callable(r.decode(target))
+          or not checkpoint.functions[handler] and not guard.is_callable(r.decode(handler))) then
+          errors.raise('E_ARGUMENT','approved function and message handler required')
+        end
+        local passed={n=math.max(0,count-offset),select(offset+1,...)}
         pending.protection=true; pending.target=target; pending.args=passed
+        if offset==2 then pending.handler=handler end
       end
-      symbol,args=pending.target,pending.args
+      symbol=pending.target
     end
     local descriptor=checkpoint.functions[symbol]
-    if descriptor then
-      guard.host_work(args.n+#executable.protos[descriptor.proto].captures+8,args.n+8)
-      if f.depth>=limits.callback_depth then
-        errors.refuse('call_depth','tc-host-stack-depth',f.depth,1,limits.callback_depth,'experimental call depth exhausted; depth policy wiring is incomplete')
+    local path=checkpoint.symbols[symbol]
+    local bridge=path=='pcall' or path=='xpcall'
+    local handler_depth=pending.handler_depth or 0
+    if not errors.integer(handler_depth,0,9007199254740991) then errors.raise('E_UNSUPPORTED','invalid retained message-handler depth') end
+    local depth=f.depth+handler_depth
+    if (descriptor or bridge or pending.handling) and depth>=limits.callback_depth then
+      -- A handler that exhausted its own depth cannot handle that refusal again.
+      if pending.handling then pending.handler=nil end
+      errors.refuse('call_depth','tc-host-stack-depth',depth,1,limits.callback_depth,'experimental call depth exhausted; depth policy wiring is incomplete')
+    end
+    if descriptor or bridge then
+      local captures=descriptor and executable.protos[descriptor.proto].captures or {}
+      local count=pending.protection and pending.args.n or select('#',...)
+      if not pending.protection then guard.host_work(count+1,count+1) end
+      guard.host_work(count+#captures+8,count+8)
+      local args=pending.protection and pending.args or {n=count,...}
+      local child={pc=descriptor and executable.protos[descriptor.proto].entry or f.pc,locals={},slots={},tuples={},cells={},args=args,
+        parent=f,depth=depth+1,return_out=out}
+      for _,id in ipairs(captures) do child.cells[id]=assert(descriptor.cells[id],'missing captured cell') end
+      if bridge then
+        local location=guard.diagnostic('')
+        child.bridge={symbol=symbol,line=location.line,column=location.column}
       end
-      local child={pc=executable.protos[descriptor.proto].entry,locals={},slots={},tuples={},cells={},args=args,
-        parent=f,depth=f.depth+1,return_out=out}
-      for _,id in ipairs(executable.protos[descriptor.proto].captures) do child.cells[id]=assert(descriptor.cells[id],'missing captured cell') end
       if memory_owner then
         local capacities={}; for site in pairs(executable.calls) do capacities[site]=1 end
         child.tuple_capacities=capacities; child.tuple_control=2
@@ -745,9 +842,12 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
       checkpoint.frame=child
       return transfer
     end
-    local value=r.call(out,symbol,r.arguments(args))
+    local value
+    if pending.protection then value=r.call(out,symbol,r.arguments(pending.args))
+    else value=r.call(out,symbol,...) end
     local result=f.tuples[out]
-    if pending.protection then
+    if pending.handling then return deliver(out,{n=2,false,result[1]},nextpc)
+    elseif pending.protection then
       local protected={n=result.n+1,true}
       for i=1,result.n do protected[i+1]=result[i] end
       return deliver(out,protected,nextpc)
@@ -759,7 +859,8 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     local child=f; local parent=assert(child.parent)
     local result=child.results or {n=0}
     guard.host_work(result.n+4,result.n+4)
-    if parent.pending.protection then
+    if parent.pending.handling then result={n=2,false,result[1]}
+    elseif parent.pending.protection then
       local protected={n=result.n+1,true}
       for i=1,result.n do protected[i+1]=result[i] end
       result=protected
@@ -783,11 +884,20 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   local function advance_failure()
     guard.host_work(4,4)
     if f.pending and f.pending.protection then
-      local tuple={n=2,false,f.failure.value}
-      admit_tuple(tuple,f.pending.output)
-      f.pending.guest_result=tuple; f.failure=nil
+      local pending=f.pending
+      if pending.handler then
+        if pending.handling then pending.handler_depth=(pending.handler_depth or 0)+1 end
+        pending.target=pending.handler; pending.args={n=1,f.failure.value}; pending.handling=true
+        pending.call_result=nil; pending.service_result=nil; pending.prepared=nil
+      else
+        local tuple={n=2,false,f.failure.value}
+        admit_tuple(tuple,pending.output)
+        pending.guest_result=tuple
+      end
+      f.failure=nil
     elseif f.parent then
       f.parent.failure=f.failure; checkpoint.frame=f.parent
+      if memory_owner then memory.release(memory_owner,f) end
     else uncaught=f.failure.diagnostic; error(f.failure.value,0) end
   end
   local value_guard=setmetatable({
@@ -799,6 +909,10 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     end,
     binding=function(v) return checkpoint.bindings[v] end,
   },{__index=guard}) -- Ephemeral host adapter, never saved or exposed.
+  local function run_bridge()
+    guard.step(f.bridge.line,f.bridge.column)
+    return r.invoke(f.return_out,f.bridge.symbol,0,r.arguments(f.args))
+  end
   local progressed=false
   local ok,result=pcall(function()
     guard.initialize()
@@ -824,6 +938,13 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
       if f.failure then advance_failure()
       elseif f.pc==0 then
         if f.parent then complete_child() else break end
+      elseif f.bridge then
+        local ran,nextpc=pcall(run_bridge)
+        if not ran then unwind(nextpc)
+        elseif nextpc~=transfer then
+          f.results=f.tuples[f.return_out]; f.args=nil; f.pending=nil; f.pc=0
+          guard.call_checkpoint(nil); progressed=true
+        end
       else
       local fn=executable.blocks[f.pc]
       if not fn then errors.raise('E_UNSUPPORTED','invalid continuation block; retained') end

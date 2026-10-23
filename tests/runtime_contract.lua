@@ -370,6 +370,9 @@ function sample() end
     assert(not pcall(rawget,t) and not pcall(rawset,t,'x') and not pcall(rawlen) and not pcall(rawequal,nil))
     assert(not pcall(rawset,t,nil,1) and not pcall(rawset,t,0/0,1))
     local function tuple_fn(...) return ... end
+    local function construct(...) return {false,...},function() return {} end end
+    local constructed,plain=construct(nil,7,nil)
+    assert(constructed[1]==false and constructed[2]==nil and constructed[3]==7 and rawlen(plain())==0)
     local results=table.pack(xpcall(tuple_fn,function() error('unexpected handler') end,false,nil,3,nil))
     assert(results.n==5 and results[1] and results[2]==false and results[3]==nil and results[4]==3 and results[5]==nil)
     assert(select('#',xpcall(function() end,tuple_fn))==1)

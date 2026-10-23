@@ -104,6 +104,10 @@ jobs:
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/computer-cold" --mode both \
             --fixture tests.computer_cold --cold
+          for fixture in resource_policy_events resource_policy_functions; do
+            python tools/smoke.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold
+          done
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/runtime-budgets" --mode both \
             --fixture tests.runtime_budget_engine --production-context --cold

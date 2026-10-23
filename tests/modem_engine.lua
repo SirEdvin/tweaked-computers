@@ -168,13 +168,16 @@ local function failures(c,r,d,s)
   assert(#d.queue==before); old.destroy()
   call(c,r,'transmit',42,17,false); assert(#d.queue==before+1 and d.queue[#d.queue].event.message==false)
   clear(d)
-  -- One overflowing receiver faults, without a retryable sender failure.
+  -- One receiver loses this delivery without retiring or forcing sender retry.
   local healthy=build('computer',d.body.surface,1000,-6); connect(healthy,s,'red'); subscribe(healthy)
   for _=1,limits.event_queue_entries do assert(runtime.enqueue(d,'received',{name='modem_message'},game.tick)) end
-  call(c,r,'transmit',42,17,'overflow'); assert(d.status=='faulted' and d.diagnostic.code=='E_CAPACITY' and #d.queue==0)
+  local first,subscriptions=d.queue[1],d.subscriptions
+  call(c,r,'transmit',42,17,'overflow')
+  assert(d.status=='running' and #d.queue==limits.event_queue_entries and d.queue[1]==first and d.subscriptions==subscriptions)
+  assert(d.dropped_events.total==1 and d.dropped_events.last_kind=='modem_message')
   assert(healthy.status=='running' and #healthy.queue==1 and healthy.queue[1].event.message=='overflow')
   lifecycle.remove(healthy.id,'fixture-cleanup',true)
-  subscribe(d)
+  clear(d)
   report('invalid-payload-no-prefix-incomplete-proof-false-and-recipient-overflow')
 end
 local function duplicates(c,r,d,s)

@@ -296,9 +296,18 @@ function M.on_tick(event)
     guest(c,[[local io=peripheral.find('logic_handler','red'); io.setOutput({{signal={type='virtual',name='signal-A'},count=1}})
       io.subscribe({input='red',initial=true},'changed')]])
     for i=1,limits.event_queue_entries do assert(runtime.enqueue(c,'changed',{name='fixture_queue_pressure'},event.tick)) end
+    local owner,bank,first=io.output_owner,io.output_bank,c.queue[1]
     logic.sample(event.tick,nop)
-    assert(c.status=='faulted' and c.diagnostic.code=='E_CAPACITY' and not io.output_owner)
-    report('full-notification-queue-faults-and-clears-output')
+    assert(c.status=='running' and io.output_owner==owner and io.output_bank==bank and c.queue[1]==first)
+    assert(c.dropped_events.total==1 and c.dropped_events.last_kind=='signal_changed')
+    local sub; for _,value in pairs(c.subscriptions) do if value.event_name=='signal_changed' then sub=value end end
+    assert(sub and sub.details.resync)
+    local removed=table.remove(c.queue,1); c.queue_bytes=c.queue_bytes-removed.bytes
+    logic.sample(event.tick,nop)
+    assert(c.queue[#c.queue].event.resync and not sub.details.resync and c.dropped_events.total==1)
+    assert(io.output_owner==owner and io.output_bank==bank)
+    report('full-notification-queue-preserves-output-and-resynchronizes-next-delivery')
+    assert(runtime.retire(c,'stopped','fixture-next-case'))
     c.status='running'; c.run_id=c.id..'/maintenance-pressure'
     guest(c,[[local io=peripheral.find('logic_handler','red'); io.setOutput({{signal={type='virtual',name='signal-A'},count=1}})
       io.subscribe({input='red',initial=true},'changed')]])

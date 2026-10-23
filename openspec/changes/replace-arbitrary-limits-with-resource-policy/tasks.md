@@ -4,7 +4,7 @@ Planning only. Every checkbox remains unfinished until real implementation and i
 
 ## 1. Baseline and executable contract fixtures
 
-- [ ] 1.1 Record the actual implementation base, overlapping signal-read work and a source-site disposition for every `limit-policy.md` row; verify the inventory covers constants, hard-coded/structural guards, generated schemas, serialized validators and advertised values without changing unrelated work.
+- [x] 1.1 Record the actual implementation base, overlapping signal-read work and a source-site disposition for every `limit-policy.md` row; verify the inventory covers constants, hard-coded/structural guards, generated schemas, serialized validators and advertised values without changing unrelated work.
 - [x] 1.2 Extend `tests/runtime_contract.lua`, `tests/computer_contract.lua` and `tests/computer_cold.lua` with desired suspension, recoverable-capacity and exactly-once side-effect cases; verify they fail for the current fatal/non-resumable behavior and preserve existing language/trust-boundary assertions.
 - [x] 1.3 Capture a matched packaged baseline for current finite controller, Console and monitor workloads using the repository smoke/animation/maintenance harnesses; preserve source/archive hashes and complete output, and verify observer overhead is separated from timed runs. Add a short acceptance matrix documenting changed semantics versus unchanged regression gates.
 
@@ -20,11 +20,11 @@ Planning only. Every checkbox remains unfinished until real implementation and i
 - [x] 3.1 Extend the compiler's accepted-source lowering with explicit frames, block positions and a host trampoline for straight-line code, locals and loops; verify a finite loop spans multiple actual ticks, an infinite loop remains stoppable, and completed primitive effects occur once using both descriptor and declaration sources.
 - [x] 3.2 Persist and validate the slice's continuation graph, active source identity and paid progress; verify a separate-process cold load halfway through a KV-writing loop resumes at the next step with unchanged locals, queue order and run generation, and executes nothing in `on_load`.
 - [x] 3.3 Wire the slice into program and Console scheduling with separate non-reentrant lanes and shared credits; verify a suspended program does not starve a finite neighbor or Console controls and that a suspended command preserves its staged environment. Document continuation storage and cancellation boundaries.
-- [ ] 3.4 Compare the slice against the recorded baseline for work, retained growth, tick time and input-to-effect latency; preserve the evidence and verify the architecture can meet original controller/monitor gates before widening language/service coverage. A failed gate requires design review, not a hidden native/fatal fallback.
+- [x] 3.4 Compare the slice against the recorded baseline for work, retained growth, tick time and input-to-effect latency; preserve the evidence and verify the architecture can meet original controller/monitor gates before widening language/service coverage. A failed gate requires design review, not a hidden native/fatal fallback.
 
 ## 4. Complete language and compiler continuity
 
-- [ ] 4.1 Lower calls/returns, nil-containing tuples, multiple assignment, nested functions, lexical/upvalue cells and recursive calls into checkpoint-safe state; verify existing source/runtime tests plus cold resumes in nested calls preserve evaluation order and alias identity.
+- [x] 4.1 Lower calls/returns, nil-containing tuples, multiple assignment, nested functions, lexical/upvalue cells and recursive calls into checkpoint-safe state; verify existing source/runtime tests plus cold resumes in nested calls preserve evaluation order and alias identity.
 - [ ] 4.2 Implement protected-call continuation/unwinding and typed recoverable depth/memory refusal; verify nested `pcall`/`xpcall`, errors in handlers, caught resource refusal, uncaught invocation-only refusal, private suspension and explicit Stop, retaining original source locations.
 - [ ] 4.3 Convert input-dependent guest library operations and iterators to bounded resumable operations where native calls cannot safely span a slice; verify concatenation, formatting, sorting/comparators, unpack/return arity, table mutation and iteration across cold reload without arbitrary tuple/table/string ceilings or hidden unmetered work.
 - [ ] 4.4 Make tokenizer/parser/emission/reconstruction progress resumable while reusing Phobos grammar and validation; remove source/token/node/handler/name quotas and preserve necessary native/host-depth checks. Verify large-source validation spans ticks, invalid source preserves the active run and cache warmth cannot change success/accounting.
@@ -32,8 +32,8 @@ Planning only. Every checkbox remains unfinished until real implementation and i
 
 ## 5. Event admission, loss diagnostics and non-event backpressure
 
-- [ ] 5.1 Replace `computer.publish_event` overflow faults with drop-newest entry/byte admission and durable counters; verify at-capacity, one-byte-over, oversized-single-event, multiple-handler and same-tick cases preserve queue order, registrations, state and outputs.
-- [ ] 5.2 Audit timer, logic, topology, monitor, modem and power producers for preparation/refusal paths; verify each dropped delivery is counted once, one-shot timers retire, recurring deadlines advance, initial start cannot disappear and independent fail-safe cleanup still executes.
+- [x] 5.1 Replace `computer.publish_event` overflow faults with drop-newest entry/byte admission and durable counters; verify at-capacity, one-byte-over, oversized-single-event, multiple-handler and same-tick cases preserve queue order, registrations, state and outputs.
+- [x] 5.2 Audit timer, logic, topology, monitor, modem and power producers for preparation/refusal paths; verify each dropped delivery is counted once, one-shot timers retire, recurring deadlines advance, initial start cannot disappear and independent fail-safe cleanup still executes.
 - [ ] 5.3 Add `computer.getResourceStatus()` and host-backed workspace pressure/loss display plus rate-limited warnings; verify counter persistence across Stop/Run/reset/cold reload, warning eviction, native integer saturation and operation under full queues without recursively enqueueing warnings.
 - [ ] 5.4 Implement explicit non-event admission/backpressure for Console ingress, activation jobs and pending host operations; verify no accepted command/write is silently dropped, refused new input remains editable, and cancellation/reset/replacement releases only the correct owner's resources. Update queue/event API and player recovery documentation.
 

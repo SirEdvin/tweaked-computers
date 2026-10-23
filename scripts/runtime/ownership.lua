@@ -4,8 +4,8 @@ local memory=require('scripts.runtime.memory')
 local M={}
 local binding_fields={'name','wire','generation','kind','method','facade'}
 local resource_fields={'code','message','resource','setting','used','requested','limit','recoverable','line','column'}
-local frame_fields={'locals','slots','tuples','cells','args','results','pending','parent','event','failure'}
-local pending_fields={'call_result','service_result','prepared','guest_result','target','args'}
+local frame_fields={'locals','slots','tuples','cells','args','varargs','results','pending','parent','event','failure','bridge'}
+local pending_fields={'call_result','service_result','prepared','guest_result','target','handler','args'}
 local function push(gc,value,kind,count)
   gc.queue[#gc.queue+1]={value=value,kind=kind,cursor=1,count=count}
 end
@@ -65,11 +65,13 @@ function M.advance(checkpoint,spend,memory_owner)
           if field=='locals' or field=='cells' then kind,count='range',gc.locals
           elseif field=='slots' then kind,count='range',gc.slots
           elseif field=='tuples' then kind,count='tuples',gc.slots
-          elseif field=='args' or field=='results' then kind='tuple'
+          elseif field=='args' or field=='varargs' or field=='results' then kind='tuple'
           elseif field=='parent' then kind='frame'
           elseif field=='pending' then kind='pending'
           elseif field=='failure' then kind='failure' end
-          if value[field]~=nil and (field~='event' or checkpoint.event_initialized) then push(gc,value[field],kind,count) end
+          if field=='bridge' then
+            if value.bridge then push(gc,value.bridge.symbol) end
+          elseif value[field]~=nil and (field~='event' or checkpoint.event_initialized) then push(gc,value[field],kind,count) end
           job.cursor=job.cursor+1; done=false
         end
       end
@@ -78,7 +80,7 @@ function M.advance(checkpoint,spend,memory_owner)
       if field then
         if field=='prepared' then
           if value.prepared then push(gc,value.prepared.called,'tuple'); push(gc,value.prepared.values,'tuple') end
-        elseif field=='target' then push(gc,value[field])
+        elseif field=='target' or field=='handler' then push(gc,value[field])
         else push(gc,value[field],'tuple') end
         job.cursor=job.cursor+1; done=false
       end

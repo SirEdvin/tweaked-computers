@@ -76,6 +76,69 @@ local function mutations()
   assert(next(account.values)==nil and account.reserved==0)
   log('TC_CONTRACT actual-sandbox-multi-target-insert-remove-sort-decrease-and-atomic-refusal')
 end
+local function lazy_bindings()
+  local g,account,owner,checkpoint,ctx=guard()
+  local fn=g.service(function() return true end)
+  local facade=g.namespace({probe=fn},'lazy binding fixture')
+  local descriptor={name='fixture-1',wire='red',generation=1,kind='heap-test'}
+  g.bind_value(facade,descriptor)
+  g.bind_value(fn,facade,'probe')
+  local before=ctx.machine.allocations
+  assert(g.binding(facade)==descriptor and ctx.machine.allocations==before)
+  local method=g.binding(fn)
+  assert(method.facade==facade and method.method=='probe' and method.name==descriptor.name
+    and method.wire==descriptor.wire and method.generation==descriptor.generation and method.kind==descriptor.kind,
+    'captured method has no resolved binding descriptor')
+  assert(ctx.machine.allocations>before,'binding materialization was uncharged')
+  local spent=ctx.machine.allocations
+  assert(g.binding(fn)==method and ctx.machine.allocations==spent,'binding lookup repeated descriptor allocation')
+  memory.close(owner,function() end)
+  log('TC_CONTRACT method-descriptor-materializes-once-at-binding-boundary')
+end
+local function stable_keys()
+  local g,account,owner,checkpoint,ctx=guard()
+  local a=g.new(2,function() return {1,2} end)
+  local b=g.new(1,function() return {kept=true} end)
+  local keys=checkpoint.owned[a].keys
+  local function assign(targets,values)
+    g.assignment_check(#targets,targets,values)
+    for i=#targets,1,-1 do targets[i][1][targets[i][2]]=values[i] end
+  end
+  assign({{a,1},{a,1}},{3,nil})
+  assert(a[1]==3 and checkpoint.owned[a].keys==keys,'unchanged membership rebuilt ownership keys')
+  assign({{a,'absent'},{a,'absent'}},{nil,4})
+  assert(a.absent==nil and checkpoint.owned[a].keys==keys,'temporary duplicate-target growth changed final membership')
+  local rawset=g.global('rawset')
+  g.call(rawset,a,2,false)
+  assert(a[2]==false and checkpoint.owned[a].keys==keys,'rawset replacement rebuilt ownership keys')
+  local before,count=account.used,owner.count
+  local keys_b=checkpoint.owned[b].keys
+  memory.configure(account,before)
+  local ok,e=pcall(assign,{{a,1},{b,'kept'}},{5,'new retained payload'})
+  assert(not ok and errors.resource_diagnostic(e),'same-membership replacement bypassed retained admission')
+  assert(a[1]==3 and b.kept==true and checkpoint.owned[a].keys==keys and checkpoint.owned[b].keys==keys_b)
+  same(account,before,count,owner)
+  memory.configure(account,1000000)
+  assign({{a,1},{b,'kept'}},{5,'new retained payload'})
+  assert(a[1]==5 and b.kept=='new retained payload' and owner.values['new retained payload'])
+  assert(checkpoint.owned[a].keys==keys and checkpoint.owned[b].keys==keys_b)
+  assign({{a,3},{a,3},{a,4}},{false,nil,'appended value'})
+  assert(a[3]==false and a[4]=='appended value' and checkpoint.owned[a].keys==keys and #keys==4,
+    'append-only growth copied existing ownership keys')
+  assert(account.values[a].bytes==192+48*4 and owner.values['appended value'])
+  assign({{a,3},{a,4}},{})
+  keys=checkpoint.owned[a].keys
+  assign({{a,1}},{})
+  assert(a[1]==nil and checkpoint.owned[a].keys~=keys and #checkpoint.owned[a].keys==1)
+  local allocations=ctx.machine.allocations
+  local keys=checkpoint.owned[a].keys
+  for _=1,20 do g.call(rawset,a,2,false) end
+  log('TC_KEY_REUSE allocations='..(ctx.machine.allocations-allocations))
+  assert(checkpoint.owned[a].keys==keys)
+  memory.close(owner,function() end)
+  assert(next(account.values)==nil and account.reserved==0)
+  log('TC_CONTRACT unchanged-membership-duplicate-targets-rawset-and-retained-refusal')
+end
 local function copies()
   local g,account,owner,checkpoint=guard()
   local first=g.snapshot({left='shared',right='shared'})
@@ -228,7 +291,7 @@ local function binding_shell()
   }}
   local shell={values=graph,output=function() error('unexpected shell output') end}
   local f={probes=0,wraps=0,effects=0}
-  local plan,e=compiler.compile('probe(); assert(rawequal(p.probe,probe))',ctx,'shell'); assert(plan,e and e.message)
+  local plan,e=compiler.compile('assert(probe==p.probe and rawequal(p.probe,probe)); probe(); assert(rawequal(p.probe,probe))',ctx,'shell'); assert(plan,e and e.message)
   local checkpoint={}
   local ok,e=compiler.run(plan,'command',nil,function(g) return services(f,g) end,ctx,checkpoint,shell)
   assert(ok,e and e.message)
@@ -242,7 +305,7 @@ local function binding_shell()
   log('TC_CONTRACT shell-graph-binding-restoration-shares-accounted-parent-and-method-identities')
 end
 function M.run()
-  frames(); bulk(); mutations(); copies(); growth(); binding_refusal(); binding_shell()
+  lazy_bindings(); stable_keys(); frames(); bulk(); mutations(); copies(); growth(); binding_refusal(); binding_shell()
   for _,kind in ipairs({'rawset','insert','remove','sort'}) do
     local ok,cost=metered(kind,limits.callback_work); assert(ok)
     for available=0,cost-1 do assert(not metered(kind,available),'short heap allowance published a mutation') end

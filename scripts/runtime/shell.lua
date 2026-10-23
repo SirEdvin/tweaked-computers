@@ -151,6 +151,7 @@ function M.dispatch(rec,tick)
   if not started then
     log(rec,item.id,'player '..item.player,item.source,tick)
     s.invocation={item=item,checkpoint={}}
+    s.diagnostic=nil
   end
   local ok,problem,control=M.evaluate(rec,item.source,tick,item.id,s.invocation.checkpoint)
   if control=='wait' then s.status='Waiting #'..item.id; return true end

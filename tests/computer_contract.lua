@@ -145,16 +145,19 @@ function M.run()
   root=fresh(); rec=computer(source('computer.setState("kept",true)',',event=function(e) end'))
   scheduler.tick(0)
   for i=1,limits.event_queue_entries do assert(runtime.enqueue(rec,'event',{name='timer'},1)) end
+  local first,queued_bytes,cleanups=rec.queue[1],rec.queue_bytes,#cleanup_calls
   assert(not runtime.enqueue(rec,'event',{name='timer'},1))
-  assert(rec.status=='faulted' and rec.state.kept and #rec.queue==0 and next(rec.timers)==nil)
-  assert(cleanup_calls[#cleanup_calls].reason=='fault')
-  report('visible-queue-overflow-with-host-cleanup')
+  assert(rec.status=='running' and rec.state.kept and #rec.queue==limits.event_queue_entries)
+  assert(rec.queue[1]==first and rec.queue_bytes==queued_bytes and #cleanup_calls==cleanups)
+  assert(rec.dropped_events.total==1 and rec.dropped_events.last_reason=='event_queue_entries')
+  report('queue-overflow-drops-newest-without-run-or-output-cleanup')
   root=fresh()
   local bad=computer(source('pcall(function() while true do end end); computer.setState("unsafe",true)'))
   local good=computer(source('computer.setState("healthy",true)'))
-  scheduler.tick(0); assert(bad.status=='faulted' and bad.diagnostic.code=='E_BUDGET' and bad.state.unsafe==nil)
+  scheduler.tick(0); assert(bad.status=='running' and bad.invocation and bad.diagnostic==nil and bad.state.unsafe==nil)
   assert(good.state.healthy and good.status=='running')
   local totalspent=root.ledger.total; scheduler.tick(0); assert(root.ledger.total==totalspent)
+  assert(runtime.stop(bad.id) and bad.status=='stopped' and bad.state.unsafe==nil and root.ledger.total==totalspent)
   report('production-scheduler-malicious-neighbor-and-once-per-tick')
   root=fresh(); local peers={}
   for i=1,4 do peers[i]=computer(source('computer.setState("calls",(computer.getState("calls") or 0)+1)',',again=function(e) computer.setState("calls",computer.getState("calls")+1) end'),i) end
@@ -308,7 +311,8 @@ end
   assert(rec.active==nil and next(rec.state)==nil and #rec.logs==0,'Validate executed source')
   local validated=root.ledger.total
   local run=assert(runtime.activate(rec.id,0,1))
-  assert(root.ledger.total>validated and rec.run_generation==1 and #rec.queue==1 and next(rec.state)==nil)
+  assert(root.ledger.total>validated and rec.run_generation==1 and #rec.queue==0 and next(rec.state)==nil)
+  assert(rec.invocation and rec.invocation.pending_start and rec.invocation.item.handler=='start')
   local keys={source=true,revision=true,api_version=true,compiler_version=true,storage_version=true,handlers=true}
   local fields=0; for k in pairs(rec.active) do assert(keys[k],'active shape expanded'); fields=fields+1 end
   assert(fields==6 and rec.active.source==plain and rec.active.revision==1

@@ -110,7 +110,8 @@ function M.advance_timers(rec,tick,spend)
     else
       local event={name='timer',timer_id=timer.id,scheduled_tick=timer.deadline,
         interval_ticks=timer.interval,missed=missed,payload=timer.payload}
-      if not runtime.enqueue(rec,timer.handler,event,tick,spend,{timer_id=timer.id}) then return end
+      local accepted,reason=runtime.enqueue(rec,timer.handler,event,tick,spend,{timer_id=timer.id})
+      if not accepted and reason~='overflow' then return end
     end
     if timer.interval then timer.deadline=deadline else rec.timers[timer.id]=nil end
   end
@@ -151,6 +152,9 @@ local function dispatch_program(rec,tick)
     table.remove(rec.queue,1); rec.queue_bytes=rec.queue_bytes-item.bytes
     item.event.tick=tick
     rec.invocation={run_id=rec.run_id,item=item,checkpoint={}}
+  end
+  if rec.invocation.pending_start then
+    item.event.tick=tick; rec.invocation.pending_start=nil
   end
   local ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,function(guard) return runtime.services(rec,tick,guard) end,ctx,rec.invocation.checkpoint)
   if control=='wait' then return true end

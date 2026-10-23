@@ -7,7 +7,7 @@ function M.copy(value, spend, ceiling)
   local function charge(n)
     if spend then spend(n) end
     stats.bytes=stats.bytes+n
-    if stats.bytes>(ceiling or limits.state_bytes) then errors.raise('E_CAPACITY','Data byte capacity exceeded') end
+    if stats.bytes>(ceiling or limits.state_bytes) then errors.raise('E_CAPACITY','Data byte capacity exceeded','data_bytes') end
   end
   local function visit(v,depth)
     if spend then spend(1) end
