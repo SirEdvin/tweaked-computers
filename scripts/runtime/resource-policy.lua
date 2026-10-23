@@ -14,12 +14,14 @@ local function refusal(value)
   local out={}; for _,key in ipairs(refusal_fields) do out[key]=value[key] end
   return out
 end
-function M.limits()
+function M.limits(selected)
   local out={policy_version=2,resources={},tuning={}}
   for _,d in ipairs(budgets.definitions) do
-    local entry={limit=limits[d.key],unit=d.unit,scope=d.scope,setting=d.name}
-    if d.kind=='tuning' then entry.kind='tuning'; out.tuning[d.key]=entry
-    else entry.behavior=d.behavior; out.resources[d.key]=entry end
+    if not selected or selected[d.key] then
+      local entry={limit=limits[d.key],unit=d.unit,scope=d.scope,setting=d.name}
+      if d.kind=='tuning' then entry.kind='tuning'; out.tuning[d.key]=entry
+      else entry.behavior=d.behavior; out.resources[d.key]=entry end
+    end
   end
   return out
 end

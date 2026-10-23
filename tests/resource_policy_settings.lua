@@ -5,6 +5,7 @@ local registry=require('scripts.registry')
 local admission=require('scripts.runtime.admission')
 local scheduler=require('scripts.scheduler')
 local policy=require('scripts.runtime.resource-policy')
+local speaker=require('scripts.services.speaker')
 local M={}
 local loaded=false
 local expected={
@@ -31,6 +32,15 @@ local function unchanged(f)
   local root=registry.get()
   local exposed=policy.limits()
   assert(exposed.policy_version==2)
+  local speaker_policy=speaker.methods.getLimits()
+  assert(speaker_policy.policy_version==2 and speaker_policy.callback_work==nil)
+  assert(speaker_policy.tuning.speaker_sound_page_size.limit==f.values.speaker_sound_page_size)
+  for _,key in ipairs({'callback_work','callback_allocations','host_work_per_tick','runtime_memory_bytes',
+    'host_memory_bytes','pending_work_bytes','host_stack_depth'}) do
+    local entry=assert(speaker_policy.resources[key])
+    for field,value in pairs(exposed.resources[key]) do assert(entry[field]==value,'stale speaker policy: '..key) end
+  end
+  assert(speaker_policy.resources.kv_keys==nil and speaker_policy.resources.monitor_width_tiles==nil)
   assert(root.ledger==f.ledger and root.ledger.tick==f.tick and root.ledger.total==f.total,'policy refresh renewed retained work')
   assert(root.ledger.machines[f.id]==f.machine and f.machine.work==123)
   for _,definition in ipairs(budgets.definitions) do

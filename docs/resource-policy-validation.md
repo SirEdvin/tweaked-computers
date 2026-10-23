@@ -4,6 +4,41 @@ This is an **unfinished implementation checkpoint**, not a release candidate or 
 
 The [source-site disposition inventory](resource-policy-inventory.md) maps every policy-manifest audit row and shared limit constant to its implementation paths and required treatment. Inventory coverage is not proof that those limits have been removed.
 
+## Speaker policy-v2 introspection (not full speaker acceptance)
+
+Speaker `getLimits()` now uses the shared descriptor registry and returns
+`policy_version=2`, applicable `resources`, and `tuning.speaker_sound_page_size`.
+It no longer copies flat legacy limits or advertises unrelated device settings.
+The player/API companion and generated example guidance describe the breaking
+shape and remove the old count-quota/false-admission workflow.
+
+Evidence: `/home/siredvin/artifacts/tweaked-computers/resource-policy-speaker-policy-v2/`.
+Verified archive SHA-256:
+`d46d78d082c7abb5e2ae0ccccefddc12d6500406dd7258de8bab29ddba151414`.
+
+- A guest-level regression fails against the old provider and passes after the
+  fix, checking metadata, defensive nested snapshots and argument validation.
+- The expanded `speaker_admission` fixture also uses real wired computer/speaker
+  entities and the production peripheral dispatcher to check powered/unpowered
+  introspection, shared descriptor agreement and the non-introspection power
+  guard. These checks do not replace the explicitly doubled audio-boundary tests.
+- `speaker_admission`, `resource_policy_settings` and `runtime_budget_engine`
+  pass in both content modes on the exact archive: six native cases and twelve
+  clean cold phases. Settings tests verify speaker descriptors after native live
+  changes and cold reload without renewing same-tick credits.
+- Package, animation-wrapper, settings, planning-example, generated-catalogue,
+  OpenSpec, strict MkDocs and player-documentation checks pass. An initial package
+  check caught a link to an unbundled evidence page; its failure is retained, and
+  the companion now explicitly names the repository-only report without a broken
+  bundled link.
+
+The full `speaker_engine` fixture still fails on this archive at its legacy
+non-durable guest invocation (`tests/speaker_engine.lua:43`); its quota-based
+assertions and production integration still need migration. No full task is
+marked complete by this scoped correction: progress remains 11/47. Audible
+playback, connected multiplayer, complete resource ownership and the other
+feature acceptance gates are not established by these passes.
+
 ## Speaker outcome admission correction (not full speaker acceptance)
 
 The real continuation/memory guard exposed a retained-growth defect in the speaker

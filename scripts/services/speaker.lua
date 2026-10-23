@@ -2,9 +2,12 @@
 local peripheral=require('scripts.services.peripheral')
 local speaker=require('scripts.speaker')
 local audio=require('scripts.speaker-audio')
-local common=require('scripts.runtime.limits')
+local policy=require('scripts.runtime.resource-policy')
 local errors=require('scripts.runtime.errors')
 local M={methods={}}
+local policy_keys={callback_work=true,callback_allocations=true,host_work_per_tick=true,
+  runtime_memory_bytes=true,host_memory_bytes=true,pending_work_bytes=true,host_stack_depth=true,
+  speaker_sound_page_size=true}
 local function arity(n,min,max)
   if n<min or n>(max or min) then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end
 end
@@ -20,9 +23,7 @@ local function volume(v)
 end
 function M.methods.getLimits(c,r,w,t,spend,guard,...)
   arity(select('#',...),0)
-  local result={}; for k,v in pairs(common) do result[k]=v end
-  result.speaker_sound_page_size=common.speaker_sound_page_size or 50
-  return result
+  return policy.limits(policy_keys)
 end
 function M.methods.getInstruments(c,r,w,t,spend,guard,...)
   arity(select('#',...),0)

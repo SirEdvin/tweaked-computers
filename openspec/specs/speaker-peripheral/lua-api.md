@@ -6,7 +6,7 @@ This is the normative API companion to [the speaker capability](spec.md) for the
 
 Peripheral type: `speaker`. The supported carrier is the vanilla entity named `programmable-speaker`, not every prototype of that entity type. Use `peripheral.find("speaker", "red")`, `wrap(name, wire)` or `call(name, wire, method, ...)`; the wire is always explicitly `"red"` or `"green"`.
 
-The exact public method set is `getInstruments`, `getLimits`, `getNotes`, `getSounds`, `playNote`, `playSound`. All calls are synchronous, non-yielding dot calls. There is no speaker subscription, audio queue, completion event or special global speaker library. Existing attach/detach events use `peripheral_type="speaker"`.
+The exact public method set is `getInstruments`, `getLimits`, `getNotes`, `getSounds`, `playNote`, `playSound`. Calls retain sequential dot-call semantics, but resource pressure may suspend the private continuation before a call returns. There is no speaker subscription, application audio queue, completion event or special global speaker library. Existing attach/detach events use `peripheral_type="speaker"`. Resource-policy implementation and acceptance remain tracked in the repository's `docs/resource-policy-validation.md` (not bundled); this contract is not a claim that all gates have passed.
 
 | Signature | Exact returns |
 | --- | --- |
@@ -15,14 +15,14 @@ The exact public method set is `getInstruments`, `getLimits`, `getNotes`, `getSo
 | `speaker.getInstruments()` | Exactly one complete dense string array |
 | `speaker.getNotes(instrument)` | Exactly one complete dense `NoteInfo[]` |
 | `speaker.getSounds([prefix [, after]])` | Exactly one `SoundPage` |
-| `speaker.getLimits()` | Exactly one defensive map of common and speaker-specific limits |
+| `speaker.getLimits()` | Exactly one defensive policy-v2 table with `resources` and `tuning` maps |
 
 `playNote` accepts one, two or three arguments; `playSound` one or two; `getNotes` exactly one; `getSounds` zero, one or two; the other methods zero. Explicit nil in an optional position is the same as omission. Extra arguments, colon-call receivers and option tables are rejected, not ignored.
 
 ## Notes
 
 - `instrument` is an exact case-sensitive instrument name from `getInstruments`, for example `piano`, `drum-kit` or `alarms`. Localized display text and Minecraft instrument aliases are not accepted.
-- `volume` is a finite number in `[0,1]`, default `1`. It multiplies the sample's defined volume; the client mixer and native attenuation still apply. Zero is a valid silent submission and consumes the normal playback allowance.
+- `volume` is a finite number in `[0,1]`, default `1`. It multiplies the sample's defined volume; the client mixer and native attenuation still apply. Zero is a valid silent submission and consumes normal work credits.
 - `pitch` is a finite integer from `0` through the selected instrument's note count minus one, default `0`. It is the zero-based Factorio note index. It is not a frequency, MIDI number or universally meaningful semitone offset, and there is no fixed CC:Tweaked `0..24` range.
 - `getInstruments()` returns unique names in ascending bytewise order.
 - `getNotes(instrument)` returns records in native note order. Each record has exactly `pitch:integer` and `name:string`. Its `pitch` can be passed directly to `playNote`; the surrounding Lua result array remains one-based.
@@ -33,7 +33,7 @@ The notes service uses Factorio's existing instrument sample definitions indepen
 
 ## Sound paths
 
-`playSound(path [, volume])` requests an engine-valid `SoundPath` at the speaker's location. Volume has the same range and default as `playNote`. `path` must be an exact nonempty string within `speaker_path_bytes`; whitespace, case and punctuation are never normalized.
+`playSound(path [, volume])` requests an engine-valid `SoundPath` at the speaker's location. Volume has the same range and default as `playNote`. `path` must be an exact nonempty string; whitespace, case and punctuation are never normalized. No independent mod path-length ceiling applies.
 
 Accepted path families are those supported by Factorio 2.0.77, including named sound prototypes and valid `utility/`, `ambient/`, `entity-*`, `tile-*` and `item-*` sound paths. Native validation is the final authority: a plausible prefix or a name in an old catalogue is not enough. A valid path added by another mod can be played directly even when absent from discovery. Paths are sound identifiers, not permission to read arbitrary files or fetch URLs. Passing a raw game/mod filename is not an alternate audio loader.
 
@@ -48,7 +48,7 @@ There is no speed/pitch argument, duration argument, looping flag, caller-chosen
 
 There is no `total` or approximate count. An empty result is `{sounds={}}`, with `next` absent. A full page with no remaining match also omits `next`. In a fixed catalogue, continuation never duplicates a returned path or skips an eligible path.
 
-`prefix` defaults to the empty string and is a literal case-sensitive prefix, not a Lua pattern or glob. `after` defaults to the empty string and is an exclusive bytewise lower bound. Both can be empty and obey `speaker_path_bytes`; a supplied lower-bound key need not exist or share the prefix. The next page is the earliest matching valid paths lexically greater than `after`. Changing filters begins a different traversal; there is no hidden cursor authority or expiration.
+`prefix` defaults to the empty string and is a literal case-sensitive prefix, not a Lua pattern or glob. `after` defaults to the empty string and is an exclusive bytewise lower bound. Both can be empty without an independent mod length ceiling; a supplied lower-bound key need not exist or share the prefix. The next page is the earliest matching valid paths lexically greater than `after`. Changing filters begins a different traversal; there is no hidden cursor authority or expiration. Page size is configurable tuning: a suspended call retains its accepted page size, and changing it does not invalidate the lexical cursor.
 
 Discovery indexes the following candidates visible at this mod's `data-final-fixes` capture point:
 
@@ -58,15 +58,15 @@ Discovery indexes the following candidates visible at this mod's `data-final-fix
 
 Candidate entries are deduplicated and sorted. Runtime-invalid candidates are not returned. With the supported base-only and Space Age mod sets, paging the catalogue covers all valid candidates from these families. Third-party additions after this mod's capture point are not promised discoverable; direct `playSound` still validates them. Removing a prototype can invalidate an old returned path. Treat a changed mod configuration as a new catalogue and restart traversal if a complete new inventory is required.
 
-A missing, oversized, incompatible or malformed catalogue returns a typed error, not an undocumented curated subset. Budget exhaustion during a page returns no partial page or fabricated terminal marker. Catalogue failure does not by itself disable direct validation/playback of sound paths or unrelated peripherals.
+A missing, incompatible or malformed catalogue returns a typed error, not an undocumented curated subset. Catalogue/instrument/note counts are not capacity ceilings. Aggregate resource refusal returns no successful prefix; ordinary work exhaustion suspends page preparation without returning a partial page or fabricated terminal marker. Catalogue failure does not by itself disable direct validation/playback of sound paths or unrelated peripherals.
 
 ## Admission, timing and audibility
 
-Both playback methods return `true` only when the host has admitted the request and submitted it to the engine. `false` means a speaker, computer or world playback allowance was already exhausted; no audio was submitted or queued by that refused call. Other failures are errors, not false. The return value never depends on a particular player's position, mute setting, rendered audio or whether a client exists.
+Both playback methods return `true` only when the host has admitted the request and submitted it to the engine. They do not return false because an old note/sound/submission-count quota was reached. Work exhaustion suspends before submission; hard-resource/native refusal raises a recoverable typed error. The return value never depends on a particular player's position, mute setting, rendered audio or whether a client exists.
 
-Each tick has separate physical-speaker note and sound allowances plus combined per-computer and world submission allowances. Two wrappers/colors/computers share a speaker's allowance. One computer's saved program and all Console calls share its combined allowance. A world allowance covers all computers, forces and surfaces. All successful submissions, including zero-volume ones, count once against their applicable allowances, regardless of listener count.
+Calls share the applicable computer and world resource budgets, including program and Console work on the same computer. There are no separate physical-speaker note/sound or computer/world submission-count quotas. Wrapper recreation, wire-color changes and different speakers do not renew the applicable work credits.
 
-Validation and all possible work admission occur before audio dispatch. Invalid calls consume no playback quota, although already spent validation/work credits remain spent. Allowance refusal consumes no additional playback quota. Once dispatch is attempted, its allowance remains consumed even if native dispatch raises an error; do not automatically retry an uncertain external audio effect. No callback restart, exception handler, wrapper recreation, disconnect/reconnect, program Apply or same-tick reload renews existing identity allowances. New entities get new identity-local state, but surviving computer/world allowances are not reset by replacement.
+Validation, outcome-record storage and result admission occur before audio dispatch. Already spent validation/work credits remain spent after refusal. Once dispatch is attempted, the same call cannot automatically retry an uncertain external audio effect, including after native failure or cold reload. Only an unsubmitted continuation may resume after admission and live authority revalidation. Stop cancels unsubmitted work without recalling previously submitted sound. Same-tick reload must not renew computer/world work credits.
 
 Use named timers for later notes. The API does not buffer a song, guarantee sample-accurate timing or report when a note finishes. Simulation scheduling and client audio rendering are different clocks. Native mixer/aggregation limits can drop or combine accepted sounds; `true` is not proof of audible delivery or an exact simultaneous-voice count.
 
@@ -77,44 +77,45 @@ Audio is positional on the speaker's current surface, not force-filtered. The en
 - `getLimits` works whenever the exact peripheral remains reachable, including when unpowered. Every other method requires live availability, matching existing peripheral conventions.
 - The speaker must retain positive native electrical energy and must not be script-disabled, frozen or marked for deconstruction. A false circuit playback condition alone is not an API outage. Unavailable service reports `E_UNPOWERED`; discovery and same-color relay remain intact.
 - Every call reproves exact identity, force, surface and selected wire. Stale wrappers cannot control replacements; coordinates and labels remain descriptive only.
-- Native circuit playback is independent and does not consume the API admission counters. Native GUI and Configurator edits remain available. No API call changes alerts, circuit settings, native volume, playback mode, wires, power buffers or energy consumption.
+- Native circuit playback is independent of API work accounting. Native GUI and Configurator edits remain available. No API call changes alerts, circuit settings, native volume, playback mode, wires, power buffers or energy consumption.
 - Stop, disconnect, outage and destruction prevent subsequent unauthorized submissions but do not promise cancellation of samples already dispatched. Reload and late joining do not replay old submissions. The feature persists admission/identity data only, not audio queues or client playback state.
 - Standard program facades are callback-local and cannot be stored as Data. Store the peripheral name and wire, then wrap again. Existing Console symbolic bindings remain supported with the same live checks; they add no background playback loop.
 
 ## Limits
 
-`getLimits()` returns the current common limits plus the fields below. These are explicit initial bounded defaults, not measured throughput claims. Release acceptance must validate them under unchanged common budgets; changing these contract defaults requires a documented revision, not silently raising production budgets to make a test pass.
+`getLimits()` returns `{policy_version=2, resources={...}, tuning={...}}`. This is
+a breaking introspection change; method inventory and other result shapes are
+unchanged. Each resource entry contains `limit`, `unit`, `scope`, `setting` and
+`behavior`. The applicable entries are `callback_work`, `callback_allocations`,
+`host_work_per_tick`, `runtime_memory_bytes`, `host_memory_bytes`,
+`pending_work_bytes` and `host_stack_depth`; these refer to shared owner budgets,
+not per-speaker quotas. Defaults and live values come from the resource-policy
+settings registry, not duplicated speaker constants.
 
-| Field | Initial value | Meaning |
-| --- | --- | --- |
-| `speaker_path_bytes` | 256 | Maximum UTF-8 bytes in sound paths and discovery prefix/lower-bound strings |
-| `speaker_instruments` | 64 | Maximum complete instrument inventory |
-| `speaker_notes_per_instrument` | 128 | Maximum complete note inventory for one instrument |
-| `speaker_sound_page_size` | 50 | Maximum valid sound paths in one page |
-| `speaker_sound_catalog_entries` | 32768 | Maximum unique captured candidate paths before runtime validation; overflow is explicit, never truncation |
-| `speaker_notes_per_tick` | 8 | Note submissions per physical speaker per simulation tick |
-| `speaker_sounds_per_tick` | 1 | Sound-effect submissions per physical speaker per simulation tick |
-| `speaker_computer_submissions_per_tick` | 16 | Combined note/effect submissions per computer identity per tick |
-| `speaker_world_submissions_per_tick` | 64 | Combined note/effect submissions across the world per tick |
-
-Instrument and note names also fit `speaker_path_bytes`. Common tuple/table/node/string/snapshot-byte and work/allocation bounds remain effective. Being below a count ceiling does not guarantee enough remaining callback or shared work to complete a call. Catalogue generation overflow marks that catalogue unavailable; it must not stop unrelated vanilla gameplay or silently corrupt the source speaker prototype.
+`tuning.speaker_sound_page_size` has `limit` (default 50), `unit="records"`,
+`scope="page"`, `setting="tc-speaker-sound-page-size"` and `kind="tuning"`.
+Read the maximum page length as `s.getLimits().tuning.speaker_sound_page_size.limit`.
+There is no top-level page-size field or advertised path, catalogue, instrument,
+note, submission-count, generic table-entry or network-node quota. Unrelated KV
+and monitor settings are omitted. Editing any returned entry cannot alter the
+host policy. Available resource headroom is not a measured throughput promise.
 
 ## Errors
 
-Use existing plain `{code,message,field?}` errors; message text is not stable API. Existing peripheral authority/availability precedence and fatal runtime budget controls are unchanged.
+Use existing plain `{code,message,field?}` errors; message text is not stable API. Resource errors additionally identify the resource, setting, usage, requested growth and effective limit. Existing peripheral authority/availability precedence is unchanged. Private work suspension and Stop are not guest-catchable errors.
 
 | Condition | Result |
 | --- | --- |
-| Playback rate allowance exhausted after valid arguments | `false`, no dispatch |
+| Ordinary work slice exhausted before submission | Private suspension, no dispatch until resumed admission |
 | Wrong arity/type, colon call, empty required name/path, or nonfinite number rejected by the existing Data boundary | `E_ARGUMENT` |
 | Unknown instrument, invalid sound path, finite out-of-range volume or invalid finite numeric pitch | `E_RANGE` |
-| Excessive string/inventory/catalogue/result bounds | `E_LIMIT`, no successful prefix |
+| Aggregate retained-resource capacity exhausted | Recoverable resource error, no successful prefix or submission |
 | Malformed/ambiguous or unavailable catalogue representation | `E_UNSUPPORTED` |
 | Native electrical or operational availability lost | `E_UNPOWERED` except for `getLimits` |
 | Bound entity/path/force/surface is no longer authorized | Existing `E_UNREACHABLE` behavior |
 | Incomplete or oversized physical proof/adoption | Existing `E_NETWORK_PENDING`, `E_LIMIT` or `E_CAPACITY` as applicable |
 | Native sound validation/dispatch fails unexpectedly | `E_ENGINE`; no fabricated success and no automatic replay |
-| Callback/shared work or allocation exhausted | Existing fatal `E_BUDGET`, not a retryable false |
+| Indivisible native operation cannot fit a fresh configured slice | Recoverable resource refusal, not a retryable false |
 
 Unsupported methods such as `stop` and `playAudio` are absent, not stubs returning success. Unknown addressed methods follow the ordinary peripheral dispatch error contract.
 
@@ -144,10 +145,9 @@ end
 function chime(event)
   local speaker = peripheral.wrap(computer.getState("speaker"), "red")
   if speaker then
-    local accepted = speaker.playNote("piano", 0.25, 0)
-    if not accepted then computer.log("Speaker busy this tick") end
+    assert(speaker.playNote("piano", 0.25, 0))
   end
 end
 ```
 
-A separate maintained discovery example must store `SoundPage.next` as plain state and fetch at most one page per scheduled callback; never busy-loop through an unknown catalogue or retry playback in the same tick. Acceptance includes the powered path, explicit stop of the example program, power/disconnect errors, actual audible output and the absence of startup replay after cold reload.
+The maintained discovery example stores `SoundPage.next` as plain state and fetches one page per scheduled callback. Do not replay a successful or uncertain native submission on an assumed quota timeout. Acceptance includes the powered path, explicit stop of the example program, power/disconnect errors, actual audible output and the absence of startup replay after cold reload; the validation report distinguishes completed checks from these remaining gates.

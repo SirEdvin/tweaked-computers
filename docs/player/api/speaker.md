@@ -36,7 +36,17 @@ Runtime-invalid paths are omitted. A private saved scan cursor retains a partial
 
 ### getLimits()
 
-Returns current resource policy and `speaker_sound_page_size` (default 50). Removed instrument, note, path, catalogue and per-tick submission ceilings are not advertised. It remains callable without electrical power when the exact speaker is physically reachable.
+Returns a defensive table with `policy_version=2`, `resources` and `tuning`.
+Read the page size as `speaker.getLimits().tuning.speaker_sound_page_size.limit`
+(default 50), not as a top-level field. Resource entries identify the effective
+`limit`, `unit`, `scope`, `setting` and exhaustion `behavior`; tuning entries use
+`kind="tuning"` instead of an exhaustion behavior. The speaker reports shared
+callback work/allocation, host work, runtime/host memory, pending-work storage and
+host-stack depth settings, not unrelated KV or monitor settings. This is a
+breaking introspection change; the other method result shapes are unchanged.
+Removed instrument, note, path, catalogue and per-tick submission ceilings are
+not advertised. It remains callable without electrical power when the exact
+speaker is physically reachable.
 
 ## Admission, power and audible output
 

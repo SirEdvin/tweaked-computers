@@ -10,7 +10,55 @@ local memory=require('scripts.runtime.memory')
 local limits=require('scripts.runtime.limits')
 local harness=require('tests.radio_test_guard')
 local catalogue_contract=require('tests.speaker_catalogue_contract')
+local lifecycle=require('scripts.lifecycle')
+local radar=require('scripts.radar')
+local runtime=require('scripts.runtime.computer')
+local policy=require('scripts.runtime.resource-policy')
+local defs=require('scripts.device-definitions')
 local M={}; local loaded=false
+local function native_policy()
+  local body=assert(game.surfaces[1].create_entity{name=defs.devices.computer.entity_name,position={0,0},force='player'})
+  lifecycle.on_built{entity=body}; local computer=assert(registry.by_entity(body))
+  lifecycle.power_entity(computer).energy=1000000; computer.powered=true
+  local sound=assert(game.surfaces[1].create_entity{name='programmable-speaker',position={6,0},force='player'})
+  local wire=defines.wire_connector_id.circuit_red
+  assert(body.get_wire_connector(wire,true).connect_to(sound.get_wire_connector(wire,true),false))
+  for _=1,#registry.get().order+3 do radar.tick(game.tick,function() end) end
+  assert(registry.by_entity(sound))
+  local source=[[function start(event)
+    local s=peripheral.find('speaker','red'); assert(s)
+    local p=s.getLimits(); assert(p.policy_version==2)
+    local common=computer.getLimits()
+    for key,value in pairs(p.resources) do
+      local expected=common.resources[key]; assert(expected)
+      for field,item in pairs(value) do assert(item==expected[field]) end
+    end
+    assert(p.tuning.speaker_sound_page_size.limit==50)
+    p.resources.callback_work.limit=1
+    assert(s.getLimits().resources.callback_work.limit==common.resources.callback_work.limit)
+    local ok,e=pcall(s.getLimits,1); assert(not ok and e.code=='E_ARGUMENT')
+    if not event.powered then
+      ok,e=pcall(s.getInstruments); assert(not ok and e.code=='E_UNPOWERED')
+    end
+  end]]
+  local plan,e=compiler.compile(source); assert(plan,e and e.message)
+  computer.active={source=source,revision=0,api_version=1,compiler_version=limits.compiler_version,storage_version=1,handlers=plan.handlers}
+  computer.status='running'; computer.run_id=computer.id..'/speaker-policy'
+  local ledger=admission.new()
+  for _,powered in ipairs({true,false}) do
+    sound.energy=powered and 1000000 or 0
+    local invocation={checkpoint={}}
+    local ctx=admission.context(ledger,computer.id,game.tick)
+    local owner=policy.attach(computer,invocation,ctx)
+    local ok,problem,control=compiler.run(plan,'start',{powered=powered},function(g)
+      return runtime.services(computer,game.tick,g)
+    end,ctx,invocation.checkpoint)
+    assert(ok,serpent.line{problem=problem,control=control})
+    memory.close(owner,function() end)
+  end
+  runtime.stop(computer.id)
+  log('TC_CONTRACT native-powered-and-unpowered-speaker-policy-v2')
+end
 local function real_guard_submission(record)
   local native=record.body.surface.play_sound
   for _,fail in ipairs({false,true}) do
@@ -27,11 +75,25 @@ local function real_guard_submission(record)
         and pending.result_kind=='boolean' and pending.prepared~=nil
       if fail then error('injected native failure') end
     end
-    local source='function start() local ok,value=pcall(computer.submit); computer.result(ok,value) end'
+    local source=[[function start()
+      local policy=computer.limits()
+      assert(policy.policy_version==2,'speaker limits must use policy version 2')
+      assert(policy.callback_work==nil and policy.table_entries==nil and policy.speaker_notes_per_tick==nil)
+      assert(policy.resources.callback_work.setting=='tc-callback-work' and policy.resources.callback_work.behavior=='defer')
+      assert(policy.resources.runtime_memory_bytes.unit=='bytes' and policy.resources.runtime_memory_bytes.behavior=='reject')
+      local page=policy.tuning.speaker_sound_page_size
+      assert(page.kind=='tuning' and page.setting=='tc-speaker-sound-page-size' and page.limit==50)
+      assert(policy.resources.kv_keys==nil and policy.tuning.monitor_width_tiles==nil)
+      policy.resources.callback_work.limit=1; page.limit=1
+      assert(computer.limits().resources.callback_work.limit==500000 and computer.limits().tuning.speaker_sound_page_size.limit==50)
+      local ok,e=pcall(computer.limits,1); assert(not ok and e.code=='E_ARGUMENT')
+      local ok,value=pcall(computer.submit); computer.result(ok,value)
+    end]]
     local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
     local observed
     local ok,problem=compiler.run(plan,'start',nil,function(g)
       return {computer={
+        limits=function(...) return speaker.methods.getLimits(nil,record,'red',game.tick,g.spend,g,...) end,
         submit=function() return speaker.methods.playSound({id='speaker-real-guard'},record,'red',game.tick,g.spend,g,'utility/wire_connect_pole',0) end,
         result=function(success,value) g.prepare_empty_result(); observed={success=success,value=value} end,
       }}
@@ -47,6 +109,7 @@ local function real_guard_submission(record)
 end
 function M.run()
   registry.initialize()
+  native_policy()
   local requests={}; local current; local fail=false
   local record={id='speaker-fixture',body={position={x=3,y=7},surface={play_sound=function(request)
     requests[#requests+1]=request
@@ -89,7 +152,7 @@ function M.run()
     log('TC_CONTRACT complete-configurable-pages-and-invalid-native-candidates')
     real_guard_submission(record)
     log('TC_CONTRACT real-continuation-guard-prepays-complete-speaker-result-and-job')
-    log('TC_CONTRACT_TOTAL 5')
+    log('TC_CONTRACT_TOTAL 6')
   end)
   peripheral.authority,carrier.available=authority,available
   assert(ok,serpent.line(problem))
