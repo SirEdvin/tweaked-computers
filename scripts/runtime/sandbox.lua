@@ -2,6 +2,8 @@ local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local memory = require('scripts.runtime.memory')
+local private_jobs = require('scripts.runtime.private-jobs')
+local MAX = 9007199254740991
 local M = {}
 
 function M.new(context, services, shell, durable)
@@ -117,6 +119,37 @@ function M.new(context, services, shell, durable)
   function G.check() if poison then error(sentinel,0) end end
   function G.stop_requested() return poison=='stopped' end
   function G.work_suspended() return poison~=nil and poison~='stopped' end
+  function G.suspend() G.check(); fatal('private work suspension') end
+  function G.job(name,initial)
+    assert(type(name)=='string' and type(initial)=='function','invalid private job')
+    local pending=assert(call_checkpoint,'private job requires a durable call')
+    if pending.jobs and pending.jobs[name] then return pending.jobs[name] end
+    G.host_work(4,4)
+    local value=initial()
+    assert(type(value)=='table' and not getmetatable(value),'private job requires a plain record')
+    private_jobs.admit(durable,heap,value,G.spend)
+    pending.jobs=pending.jobs or {}; pending.jobs[name]=value
+    return value
+  end
+  -- Library cursors reserve retained capacity before appending or publishing.
+  function G.job_resize(value,bytes)
+    if heap then memory.acquire(heap,value,bytes) end
+  end
+  function G.atomic(work,allocations)
+    allocations=allocations or 0
+    local allowance=math.min(limits.callback_work,admission.guest_ceiling(context.ledger,context.tick))
+    if work>allowance then
+      errors.refuse('atomic_work','tc-callback-work',0,work,allowance,'indivisible native operation exceeds the work allowance')
+    end
+    if allocations>limits.callback_allocations then
+      errors.refuse('atomic_allocations','tc-callback-allocations',0,allocations,limits.callback_allocations,'indivisible native allocation exceeds the allocation allowance')
+    end
+    local shared=admission.guest_ceiling(context.ledger,context.tick)
+    if work+allocations>shared then
+      errors.refuse('atomic_host_work','tc-host-work-per-tick',0,work+allocations,shared,'indivisible native operation exceeds the shared work allowance')
+    end
+    G.host_work(work,allocations)
+  end
   function G.spend(n)
     G.check()
     if not admission.reserve(context,'work',n or 1) then fatal() end
@@ -174,6 +207,7 @@ function M.new(context, services, shell, durable)
     if type(t) ~= 'table' or not owned[t] or protected[t] or getmetatable(t) ~= nil then fail('guest-owned plain table required') end
     return t
   end
+  G.plain=plain
   local function key(k)
     local typ = type(k)
     if typ == 'nil' or (typ=='number' and k~=k) then fail('invalid table key') end
@@ -324,6 +358,21 @@ function M.new(context, services, shell, durable)
     if added then for _,k in ipairs(added) do keys[#keys+1]=k end end
     owned[t].keys=keys
   end
+  function G.publish_sequence(t,values,n,clear)
+    plain(t)
+    G.atomic(n*6+4,n*3+4)
+    local updates,changed={},{}
+    for i=1,n do updates[i]={i,values[i]~=nil}; changed[i]=values[i]~=nil end
+    if clear then updates[#updates+1]={clear,false}; changed[clear]=false end
+    local keys,added=changed_keys(t,updates,changed)
+    if heap then
+      local items={}; table_charges(items,t,keys,changed,values,added)
+      memory.acquire_all(heap,items)
+    end
+    for i=1,n do t[i]=values[i] end
+    if clear then t[clear]=nil end
+    publish_keys(t,keys,added)
+  end
   function G.assignment_check(n,targets,values,single_t,single_k,single_v)
     G.spend(n*3+1); allocate(n)
     local staged={}
@@ -457,16 +506,19 @@ function M.new(context, services, shell, durable)
     end
     prepare_checkpoint({n=1,false})
     service.boolean_result=true
+    if call_checkpoint then call_checkpoint.result_kind='boolean' end
   end
   function G.prepare_empty_result()
     local service=assert(service_frames[#service_frames],'empty admission requires a trusted service')
     if service.empty_result then return end
     if not prepare_return(service.wrapper) then prepare_checkpoint({n=0}) end
     service.empty_result=true
+    if call_checkpoint then call_checkpoint.result_kind='empty' end
   end
   function G.prepare_result(...)
     local service=assert(service_frames[#service_frames],'result admission requires a trusted service')
-    assert(not service.prepared_result and not service.empty_result and not service.boolean_result,'duplicate result admission')
+    if service.prepared_result then return table.unpack(service.prepared_result,1,service.prepared_result.n) end
+    assert(not service.empty_result and not service.boolean_result,'inconsistent result admission')
     local result=table.pack(...)
     if result.n>limits.tuple_entries then fatal('service result width exceeded') end
     for i=1,result.n do
@@ -474,6 +526,7 @@ function M.new(context, services, shell, durable)
     end
     if not prepare_return(service.wrapper,table.unpack(result,1,result.n)) then prepare_checkpoint(result) end
     service.prepared_result=result
+    if call_checkpoint then call_checkpoint.result_kind='tuple' end
     return table.unpack(result,1,result.n)
   end
   function G.service(fn)
@@ -481,13 +534,30 @@ function M.new(context, services, shell, durable)
     wrapper=function(...)
       G.spend(1) -- Must precede trusted service's authority/admission/effect boundary.
       local n=select('#',...); integer(n,0,limits.tuple_entries)
-      local args=table.pack(...)
-      for i=1,n do
-        if not (handle_arguments[fn]==i and type(args[i])=='table' and protected[args[i]]) then
-          args[i]=G.snapshot(args[i])
+      local args=call_checkpoint and call_checkpoint.service_args and checkpoint_codec.decode(call_checkpoint.service_args)
+      if not args then
+        args=table.pack(...)
+        for i=1,n do
+          if not (handle_arguments[fn]==i and type(args[i])=='table' and protected[args[i]]) then
+            args[i]=G.snapshot(args[i])
+          end
         end
+        if call_checkpoint and checkpoint_codec then call_checkpoint.service_args=checkpoint_codec.encode(args,true) end
       end
       local frame={wrapper=wrapper}
+      if call_checkpoint and call_checkpoint.result_kind then
+        local kind=call_checkpoint.result_kind
+        local prepared=assert(call_checkpoint.prepared,'missing durable result admission')
+        if kind=='tuple' then frame.prepared_result=checkpoint_codec.decode(prepared.values)
+        elseif kind=='boolean' then frame.boolean_result=true
+        elseif kind=='empty' then frame.empty_result=true
+        else errors.raise('E_UNSUPPORTED','invalid durable result admission') end
+        local caller=call_frames[#call_frames]
+        if caller and caller.fn==wrapper then
+          if kind=='boolean' then caller.boolean_result=true
+          else caller.prepared_return=frame.prepared_result or {n=0} end
+        end
+      end
       local called=call_checkpoint and restored_result(call_checkpoint.service_result)
       if not called then
         service_frames[#service_frames+1]=frame
@@ -553,6 +623,7 @@ function M.new(context, services, shell, durable)
     if type(v)~='string' and type(v)~='number' then return nil end
     return tonumber(v)
   end
+  G.describe=env.tostring
   env.assert=function(value,...) G.spend(1); if not value then error(select(1,...) or 'assertion failed!',0) end; return value,... end
   env.error=function(value) G.spend(1); error(value,0) end
   env.pcall=function(fn,...)

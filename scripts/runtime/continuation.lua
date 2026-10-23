@@ -8,6 +8,7 @@ local ownership=require('scripts.runtime.ownership')
 local checkpoint_validation=require('scripts.runtime.checkpoint-validation')
 local memory=require('scripts.runtime.memory')
 local limits=require('scripts.runtime.limits')
+local library_jobs=require('scripts.runtime.library-jobs')
 local M={version=9}
 local function quote(s) return string.format('%q',s) end
 local checkpoint_fields={version=true,source=true,handler=true,frame=true,symbols=true,intern=true,bindings=true,
@@ -52,6 +53,14 @@ local function validate(checkpoint,executable,tick,spend,deep,owner)
       or checkpoint.symbols[bridge.symbol]~='pcall' and checkpoint.symbols[bridge.symbol]~='xpcall'
       or not errors.integer(bridge.line,1,9007199254740991) or not errors.integer(bridge.column,1,9007199254740991) then
       refuse('invalid protected-call bridge')
+    end
+  end
+  if frame.library~=nil then
+    local library=frame.library
+    if type(library)~='table' or getmetatable(library) or not library_jobs.supports(library.name)
+      or type(library.job)~='table' or getmetatable(library.job)
+      or not errors.integer(library.line,1,9007199254740991) or not errors.integer(library.column,1,9007199254740991) then
+      refuse('invalid library continuation')
     end
   end
   if deep then checkpoint_validation.advance(checkpoint,executable,spend,owner,frame_bytes(executable)) end
@@ -160,8 +169,12 @@ function M.lower(main,reject,position,mode)
       else reject(n,'unsupported continuation unary operator','E_UNSUPPORTED') end
       return expression(n.ex,a,output('('..operand..')',{'s'..a}))
     elseif k=='concat' then
+      calls[out]=true
       return expressions(n.exp_list,function(tuple,uses)
-        return output('r.encode(r.guard.concat(r.arguments('..tuple..')))',uses)
+        local pc=reserve()
+        define(pc,n,'return r.invoke('..out..',r.symbol("@concat"),'..nextpc..',r.arguments('..tuple..'))',
+          {nextpc},uses,{'s'..out,'t'..out})
+        return pc
       end)
     elseif k=='constructor' then
       local fields,uses,evaluations={}, {},{}
@@ -813,26 +826,24 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     local descriptor=checkpoint.functions[symbol]
     local path=checkpoint.symbols[symbol]
     local bridge=path=='pcall' or path=='xpcall'
-    local handler_depth=pending.handler_depth or 0
-    if not errors.integer(handler_depth,0,9007199254740991) then errors.raise('E_UNSUPPORTED','invalid retained message-handler depth') end
-    local depth=f.depth+handler_depth
-    if (descriptor or bridge or pending.handling) and depth>=limits.callback_depth then
-      -- A handler that exhausted its own depth cannot handle that refusal again.
-      if pending.handling then pending.handler=nil end
-      errors.refuse('call_depth','tc-host-stack-depth',depth,1,limits.callback_depth,'experimental call depth exhausted; depth policy wiring is incomplete')
-    end
-    if descriptor or bridge then
+    local library=library_jobs.supports(path)
+    if descriptor or bridge or library then
       local captures=descriptor and executable.protos[descriptor.proto].captures or {}
       local count=pending.protection and pending.args.n or select('#',...)
       if not pending.protection then guard.host_work(count+1,count+1) end
       guard.host_work(count+#captures+8,count+8)
       local args=pending.protection and pending.args or {n=count,...}
       local child={pc=descriptor and executable.protos[descriptor.proto].entry or f.pc,locals={},slots={},tuples={},cells={},args=args,
-        parent=f,depth=depth+1,return_out=out}
+        parent=f,depth=f.depth+1,return_out=out}
       for _,id in ipairs(captures) do child.cells[id]=assert(descriptor.cells[id],'missing captured cell') end
       if bridge then
         local location=guard.diagnostic('')
         child.bridge={symbol=symbol,line=location.line,column=location.column}
+      end
+      if library then
+        local location=guard.diagnostic('')
+        child.library={name=path,line=location.line,column=location.column,job={}}
+        guard.job_resize(child.library.job,2048)
       end
       if memory_owner then
         local capacities={}; for site in pairs(executable.calls) do capacities[site]=1 end
@@ -889,6 +900,7 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
         if pending.handling then pending.handler_depth=(pending.handler_depth or 0)+1 end
         pending.target=pending.handler; pending.args={n=1,f.failure.value}; pending.handling=true
         pending.call_result=nil; pending.service_result=nil; pending.prepared=nil
+        pending.jobs=nil; pending.service_args=nil; pending.result_kind=nil
       else
         local tuple={n=2,false,f.failure.value}
         admit_tuple(tuple,pending.output)
@@ -912,6 +924,34 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   local function run_bridge()
     guard.step(f.bridge.line,f.bridge.column)
     return r.invoke(f.return_out,f.bridge.symbol,0,r.arguments(f.args))
+  end
+  local function run_library()
+    local state=f.library
+    guard.step(state.line,state.column)
+    local function prepare(result)
+      if state.result then return state.result end
+      admit_tuple(result,f.return_out)
+      for i=1,result.n do result[i]=r.encode(result[i]) end
+      local child=f
+      f=assert(child.parent)
+      local ok,problem=pcall(admit_tuple,result,child.return_out)
+      f=child
+      if not ok then error(problem,0) end
+      state.result=result
+      return result
+    end
+    local function compare(symbol,args)
+      local nextpc=r.invoke(f.return_out,symbol,1,r.arguments(args))
+      if nextpc==transfer then return end
+      local result=f.tuples[f.return_out]
+      f.pending=nil; guard.call_checkpoint(nil)
+      return result
+    end
+    local result=library_jobs.advance(state.name,guard,state.job,f.args,compare,prepare)
+    if not result then return transfer end
+    result=prepare(result)
+    f.results=result; f.args=nil; f.pending=nil; f.pc=0
+    guard.call_checkpoint(nil)
   end
   local progressed=false
   local ok,result=pcall(function()
@@ -937,7 +977,12 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
       f=checkpoint.frame
       if f.failure then advance_failure()
       elseif f.pc==0 then
-        if f.parent then complete_child() else break end
+        if not f.parent then break end
+        local ran,problem=pcall(complete_child)
+        if not ran then unwind(problem) end
+      elseif f.library then
+        local ran,problem=pcall(run_library)
+        if not ran then unwind(problem) end
       elseif f.bridge then
         local ran,nextpc=pcall(run_bridge)
         if not ran then unwind(nextpc)
