@@ -100,12 +100,19 @@ local function maintenance_contracts(report)
   assert(not scheduler.dispatch(rec,t) and rec.invocation==pending and pending.pending_start and rec.status=='running')
   assert(root.ledger.total==total and rec.last_dispatch_tick==nil)
   -- Table-backed registration isolates scheduler entry -> authentic sampler
-  -- refusal. Native subscription/output cleanup is covered by logic_engine.
-  rec.subscriptions.pressure={event_name='signal_changed'}
+  -- deferral. Native subscription/output cleanup is covered by logic_engine.
+  local observation={input='red',previous={},connected={red=true,green=false},resync=false}
+  local subscription={event_name='signal_changed',details=observation}
+  rec.subscriptions.pressure=subscription
   scheduler.tick(t)
-  assert(rec.status=='faulted' and rec.diagnostic.code=='E_BUSY',
-    'scheduler entry deferral silently skipped fail-closed signal sampling')
+  assert(rec.status=='running' and rec.invocation==pending and rec.subscriptions.pressure==subscription
+    and subscription.details==observation and observation.resync,
+    'scheduler entry deferral lost the run/baseline or skipped resynchronization')
   assert(root.scheduler.maintenance_spent==300001 and root.ledger.total==total)
+  subscription.details=nil
+  scheduler.tick(t)
+  assert(rec.status=='faulted' and rec.diagnostic.code=='E_ARGUMENT',
+    'malformed retained subscription escaped controlled refusal under pressure')
   report('maintenance-live-increase-decrease-and-captured-spend-preserve-credits')
 
   change('host',600001); change('maintenance',300000)
@@ -159,6 +166,15 @@ local function maintenance_contracts(report)
   assert(not ok,'larger maintenance widened whole-render admission')
   restored_defaults()
   report('maintenance-setting-preserves-render-reservations-and-baseline-service')
+  for _,invalid in ipairs({false,{},'red'}) do
+    fresh()
+    local bad=computer('computer.setState("unexpected",true)')
+    bad.subscriptions.pressure={event_name='signal_changed',details=invalid}
+    scheduler.tick(t)
+    assert(bad.status=='faulted' and bad.diagnostic.code=='E_ARGUMENT' and bad.state.unexpected==nil,
+      'funded sampler accepted malformed retained subscription details')
+  end
+  report('malformed-retained-input-refused-before-callback-dispatch')
 end
 function M.run()
   local total=0
@@ -213,9 +229,9 @@ function M.run()
   assert(rec.state.small and rec.status=='running')
   change('host',defaults.host)
   report('small-shared-ceiling-does-not-starve-small-callback')
-  rec=select(1,run('local t=computer.getLimits(); assert(t.compile_work==1250000 and t.callback_work==500000 and t.callback_allocations==81920 and t.host_work_per_tick==5000000); t.callback_work=1; assert(computer.getLimits().callback_work==500000)'))
+  rec=select(1,run('local t=computer.getLimits(); assert(t.policy_version==2); local r=t.resources; assert(r.compile_work.limit==1250000 and r.callback_work.limit==500000 and r.callback_allocations.limit==81920 and r.host_work_per_tick.limit==5000000); assert(r.callback_work.unit=="work_units" and r.callback_work.scope=="computer/tick" and r.callback_work.setting=="tc-callback-work" and r.callback_work.behavior=="defer"); r.callback_work.limit=1; assert(computer.getLimits().resources.callback_work.limit==500000)'))
   change('work',600000)
-  local plan,e=compiler.compile(source('assert(computer.getLimits().callback_work==600000)'),admission.context(admission.new(),'live-readback',game.tick))
+  local plan,e=compiler.compile(source('assert(computer.getLimits().resources.callback_work.limit==600000)'),admission.context(admission.new(),'live-readback',game.tick))
   assert(plan,e and e.message)
   local context=admission.context(admission.new(),'live-readback',game.tick)
   local ok,diagnostic=compiler.run(plan,'start',{},function(guard) return runtime.services(rec,game.tick,guard) end,context)
@@ -247,7 +263,7 @@ function M.run()
   report('expanded-globals-private-suspension-stop-and-healthy-neighbors')
   maintenance_contracts(report)
   change('maintenance',400000)
-  rec=select(1,run('local t=computer.getLimits(); assert(t.maintenance_work_per_tick==400000); t.maintenance_work_per_tick=1; assert(computer.getLimits().maintenance_work_per_tick==400000)'))
+  rec=select(1,run('local t=computer.getLimits(); assert(t.resources.maintenance_work_per_tick.limit==400000); t.resources.maintenance_work_per_tick.limit=1; assert(computer.getLimits().resources.maintenance_work_per_tick.limit==400000)'))
   restored_defaults()
   report('guest-maintenance-limit-live-readback-is-defensive')
   -- Freeze genuinely spent credits and non-default map settings for a cold load.

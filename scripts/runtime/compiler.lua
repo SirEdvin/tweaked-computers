@@ -424,6 +424,7 @@ function M.prepare(source,context,mode)
   end)
   parsing.finish()
   if not ok then return nil,type(generated)=='table' and generated or errors.new('E_PROGRAM',tostring(generated)) end
+  if lowering and lowering.factory then return executable,nil,lowering.factory end
   local loaded,factory,problem=pcall(load,generated,'@continuation','t',{})
   if not loaded or not factory then
     local message=loaded and problem or factory
@@ -432,8 +433,9 @@ function M.prepare(source,context,mode)
     return nil,e
   end
   if retained and charges and not charges.overflow then
+    -- Native code has an additional conservative cache weight, not a heap-byte measurement.
     retain(cache_key,{plan=retained.plan,charges=retained.charges,
-      continuation={generated=generated,charges=charges},bytes=retained.bytes+#generated+proof_bytes(charges)+64})
+      continuation={generated=generated,charges=charges,factory=factory},bytes=retained.bytes+#generated*8+proof_bytes(charges)+64})
   end
   return executable,nil,factory
 end

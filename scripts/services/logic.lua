@@ -220,10 +220,15 @@ method('getOutput',0,function(c,r,w,t,spend,guard) return canonical(r.output_ban
 method('setOutput',1,output)
 method('clearOutput',0,function(c,r,w,t,spend) output(c,r,w,t,spend,{}) end)
 method('subscribe',2,subscribe)
+local function details(sub)
+  local value=sub.details
+  if type(value)=='table' and getmetatable(value)==nil then return value end
+end
 method('unsubscribe',1,function(c,r,w,t,spend,guard,id)
   if type(id)~='string' then errors.raise('E_ARGUMENT','subscription ID required') end
   local sub=c.subscriptions[id]
-  if sub and (sub.event_name~='signal_changed' or sub.details.peripheral~=r.id or sub.details.wire~=w) then errors.raise('E_ARGUMENT','subscription belongs to another binding') end
+  local d=sub and details(sub)
+  if sub and (sub.event_name~='signal_changed' or not d or d.peripheral~=r.id or d.wire~=w) then errors.raise('E_ARGUMENT','subscription belongs to another binding') end
   spend(#c.queue*2+1)
   local existed=runtime.unsubscribe(c,id,spend); remove_queued(c,id,function() end); return existed
 end)
@@ -235,7 +240,8 @@ end)
 function M.revoke(c,name,wire)
   local removed={}
   for id,sub in pairs(c.subscriptions) do
-    if sub.event_name=='signal_changed' and sub.details.peripheral==name and sub.details.wire==wire then
+    local d=details(sub)
+    if sub.event_name=='signal_changed' and d and d.peripheral==name and d.wire==wire then
       removed[id]=true; c.subscriptions[id]=nil
     end
   end
@@ -248,6 +254,14 @@ end
 local function discard(c,sub)
   remove_queued(c,sub.id,function() end); sub.details.resync=true; sub.details.pending=nil
 end
+local function retained_input(c,sub,tick)
+  local d=details(sub)
+  if not d or d.input~='red' and d.input~='green' then
+    runtime.fault(c,errors.new('E_ARGUMENT','retained logic subscription requires explicit red or green input; update source and restart'),tick)
+    return
+  end
+  return d
+end
 function M.sample(tick,spend)
   local root=registry.get()
   local admitted=scheduler.try_maintenance(function() spend(limits.registry_entries+limits.aggregate_subscriptions+1) end)
@@ -257,7 +271,11 @@ function M.sample(tick,spend)
       local c=root.computers[id]
       if c and c.status=='running' then
         for _,sub in pairs(c.subscriptions) do
-          if sub.event_name=='signal_changed' then sub.details.resync=true end
+          if sub.event_name=='signal_changed' then
+            local d=retained_input(c,sub,tick)
+            if not d then break end
+            d.resync=true
+          end
         end
       end
     end
@@ -269,13 +287,9 @@ function M.sample(tick,spend)
     if c and c.status=='running' then
       for _,sub in pairs(c.subscriptions) do
         if sub.event_name=='signal_changed' then
-          local d=sub.details
-          if d.input~='red' and d.input~='green' then
-            -- Validate retained registrations before any queued callback dispatch.
-            -- Never translate legacy combined input or replay its pending effects.
-            runtime.fault(c,errors.new('E_ARGUMENT','retained logic subscription requires explicit red or green input; update source and restart'),tick)
-            break
-          end
+          -- Validate even when sampling must defer; malformed saves never index native values.
+          local d=retained_input(c,sub,tick)
+          if not d then break end
           local needs=devices[d.peripheral] or {}; devices[d.peripheral]=needs
           subscriptions[#subscriptions+1]={computer=c,sub=sub}
           needs[d.input]=true

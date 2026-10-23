@@ -231,17 +231,32 @@ local function scalar_results()
     assert(string.sub('abcdef',2,-2)=='bcde')
     assert(string.lower('AbC')=='abc' and string.upper('AbC')=='ABC' and string.reverse('AbC')=='CbA')
     local ok,value=pcall(string.sub,'abcdef',2,3); assert(ok and value=='bc')
+    local left='left'; assert(left..'-'..'right'=='left-right')
+    local half=string.rep('x',128); assert(#(half..half)==256 and #(half..half..'x')==257)
+    assert(left..''..''..''..''..''..''..''..''==left)
+    assert(left..12=='left12')
+    local ok=pcall(function() return left..false end); assert(not ok)
     assert(string.char()=='' and string.char(0)==string.sub('x\0',2))
     assert(string.char(65,66)=='AB')
     local ok=pcall(string.char,256); assert(not ok)
+    local ok,value,extra=pcall(tonumber,'not-a-number'); assert(ok and value==nil and extra==nil)
     computer.finished()
   end]]
   local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
   local acquire_all=memory.acquire_all; local redundant=0
   local advance=library_jobs.advance; local small_transforms=0
   library_jobs.advance=function(name,g,job,args,...)
-    if (name=='string.sub' or name=='string.lower' or name=='string.upper' or name=='string.reverse')
-      and type(args[1])=='string' and #args[1]<=256 then small_transforms=small_transforms+1 end
+    local bounded=(name=='string.sub' or name=='string.lower' or name=='string.upper' or name=='string.reverse')
+      and type(args[1])=='string' and #args[1]<=256
+    if name=='@concat' and args.n<=8 then
+      local bytes=0
+      for i=1,args.n do
+        if type(args[i])~='string' then bytes=257; break end
+        bytes=bytes+#args[i]
+      end
+      bounded=bytes<=256
+    end
+    if bounded then small_transforms=small_transforms+1 end
     return advance(name,g,job,args,...)
   end
   memory.acquire_all=function(o,items,...)
@@ -252,8 +267,32 @@ local function scalar_results()
     end
     return acquire_all(o,items,...)
   end
-  local effects=0
+  local effects,scalar_transfers,scalar_copies=0,0,0
+  local codecs={}
   local function services(g)
+    local checkpoint=g.call_checkpoint
+    g.call_checkpoint=function(p,codec)
+      if codec and not codecs[codec] then
+        codecs[codec]=true
+        for _,name in ipairs({'encode','decode'}) do
+          local transfer=codec[name]
+          codec[name]=function(tuple,...)
+            local primitive=true
+            for i=1,tuple.n do
+              local kind=type(tuple[i])
+              if kind=='table' or kind=='function' then primitive=false; break end
+            end
+            local result=transfer(tuple,...)
+            if primitive then
+              scalar_transfers=scalar_transfers+1
+              if result~=tuple then scalar_copies=scalar_copies+1 end
+            end
+            return result
+          end
+        end
+      end
+      return checkpoint(p,codec)
+    end
     return {computer={finished=function() g.prepare_empty_result(); effects=effects+1 end}}
   end
   local called,ok,diagnostic=pcall(compiler.run,plan,'start',nil,services,ctx,{})
@@ -262,6 +301,7 @@ local function scalar_results()
   assert(called and ok,diagnostic and diagnostic.message or tostring(ok))
   assert(small_transforms==0,'bounded native transforms allocated library continuation frames')
   assert(effects==1 and redundant==0,'scalar tuples rebuilt already-admitted frame storage')
+  assert(scalar_transfers>0 and scalar_copies==0,'primitive-only transfer tuples were defensively copied')
   memory.close(owner,function() end)
   assert(next(account.values)==nil and next(account.owners)==nil)
   log('TC_CONTRACT scalar-tuple-storage-reuse-and-bounded-character-results')

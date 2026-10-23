@@ -760,15 +760,28 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     return values[1]
   end
   local codec={}
+  local function primitive_tuple(tuple)
+    guard.atomic(tuple.n+1,0)
+    for i=1,tuple.n do
+      local kind=type(tuple[i])
+      if kind~='nil' and kind~='boolean' and kind~='number' and kind~='string' then return false end
+    end
+    return true
+  end
   function codec.encode(tuple,values)
-    guard.atomic(tuple.n*2+1,tuple.n+1)
+    local primitive=primitive_tuple(tuple)
     admit_tuple(tuple,call_output,not values)
+    -- These private tuple carriers never escape to guests; immutable scalars
+    -- require no translation or defensive copy, including nil-bearing tuples.
+    if primitive then return tuple end
+    guard.atomic(tuple.n,tuple.n+1)
     local result={n=tuple.n}
     for i=1,tuple.n do result[i]=r.encode(tuple[i]) end
     return result
   end
   function codec.decode(tuple)
-    guard.atomic(tuple.n*2+1,tuple.n+1)
+    if primitive_tuple(tuple) then return tuple end
+    guard.atomic(tuple.n,tuple.n+1)
     local result={n=tuple.n}
     for i=1,tuple.n do result[i]=r.decode(tuple[i]) end
     return result
@@ -844,6 +857,17 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     local bounded_copy=type(first)=='string' and #first<=256 and
       (path=='string.sub' and count<=3 or count==1 and
         (path=='string.lower' or path=='string.upper' or path=='string.reverse'))
+    if path=='@concat' and count<=8 then
+      guard.spend(count+1)
+      local bytes=0
+      for i=1,count do
+        local value
+        if pending.protection then value=pending.args[i] else value=select(i,...) end
+        if type(value)~='string' then bytes=257; break end
+        bytes=bytes+#value
+      end
+      bounded_copy=bytes<=256
+    end
     -- Small native atoms use the existing guarded call, not a library frame.
     local library=library_jobs.supports(path) and not (path=='string.char' and count<=1 or bounded_copy)
     if descriptor or bridge or library then

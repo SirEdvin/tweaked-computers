@@ -10,7 +10,7 @@ Planning only. Every checkbox remains unfinished until real implementation and i
 
 ## 2. Configurable policy and resource ownership
 
-- [ ] 2.1 Extend `scripts/runtime/budget-settings.lua`, `settings.lua`, effective limit introspection and locale for the settings in `limit-policy.md`; verify `tests/runtime_budget_engine.lua` exercises native setting changes, documented defaults/units, derived values and same-tick no-credit-renewal in base and Space Age.
+- [x] 2.1 Extend `scripts/runtime/budget-settings.lua`, `settings.lua`, effective limit introspection and locale for the settings in `limit-policy.md`; verify `tests/runtime_budget_engine.lua` exercises native setting changes, documented defaults/units, derived values and same-tick no-credit-renewal in base and Space Age.
 - [ ] 2.2 Implement aggregate live/retained ownership accounting alongside `admission.lua`, `data.lua`, sandbox and shell graph paths; verify alias/cycle accounting, repeated cross-tick growth, copy peaks, reclamation and metadata overhead with focused contract fixtures, without per-string/table/node count gates.
 - [ ] 2.3 Add recoverable resource diagnostics and reserved control/cleanup opportunity; verify full-memory paths can report status, delete data, reject growth atomically and Stop without renewing guest credits. Update runtime/player safety documentation with hard-resource versus soft-work behavior.
 - [ ] 2.4 Make retained-state validators distinguish malformed data from valid data above newly lowered settings; verify lower/save/reload/read/delete/raise scenarios for application state, shell graphs, drafts, pending work and queues without data eviction or schema rejection.

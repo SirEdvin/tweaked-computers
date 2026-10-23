@@ -485,6 +485,17 @@ function M.new(context, services, shell, durable)
     if type(v)=='string' then string_value(v); return #v end
     plain(v); inventory(v); return #v
   end
+  local function string_copy(bytes,native,...)
+    if not heap then return native(...) end
+    local reserved=heap.reserved
+    -- Payload plus immutable-string record/link; unused peak credit is returned.
+    memory.reserve(heap,bytes+32+256)
+    local ok,value=pcall(native,...)
+    if ok then memory.acquire(heap,value,#value+32) end
+    memory.unreserve(heap,heap.reserved-reserved)
+    if not ok then error(value,0) end
+    return value
+  end
   function G.concat(...)
     local n=select('#',...); integer(n,0,limits.tuple_entries)
     local pieces,bytes={},0
@@ -497,8 +508,10 @@ function M.new(context, services, shell, durable)
       pieces[i]=v
     end
     G.spend(bytes*2+1); allocate(bytes)
-    return table.concat(pieces)
+    return string_copy(bytes,table.concat,pieces)
   end
+  callable[G.concat]='concatenation'
+  symbol_values['@concat']=G.concat; symbol_names[G.concat]='@concat'
   local function copy(v,seen,level,stats)
     G.spend(1)
     if level>limits.data_depth then errors.raise('E_LIMIT','Data nesting exceeded') end
@@ -787,17 +800,6 @@ function M.new(context, services, shell, durable)
     end
   end
   local str={}
-  local function string_copy(bytes,native,...)
-    if not heap then return native(...) end
-    local reserved=heap.reserved
-    -- Payload plus immutable-string record/link; unused peak credit is returned.
-    memory.reserve(heap,bytes+32+256)
-    local ok,value=pcall(native,...)
-    if ok then memory.acquire(heap,value,#value+32) end
-    memory.unreserve(heap,heap.reserved-reserved)
-    if not ok then error(value,0) end
-    return value
-  end
   str.len=function(s) G.spend(1); return #string_value(s) end
   local function slice(s,i,j)
     string_value(s); local len=#s

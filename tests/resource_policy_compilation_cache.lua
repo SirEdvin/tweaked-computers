@@ -27,7 +27,22 @@ function M.run()
     for i=1,#a.effects do assert(a.effects[i]==b.effects[i]) end
   end
   local ok,e=pcall(function()
+    local native_source='function start() local x="private native cache"; assert(x~=nil) end'
+    local a=admission.context(admission.new(),'native-cold',0)
+    local b=admission.context(admission.new(),'native-warm',0)
+    local plan,problem,first=compiler.prepare(native_source,a)
+    assert(plan and first,problem and problem.message)
+    local second_plan,second_problem,second=compiler.prepare(native_source,b)
+    assert(second_plan and second,second_problem and second_problem.message)
+    assert(first==second,'warm reconstruction reloaded unchanged trusted native blocks')
+    assert(a.machine.compile==b.machine.compile and a.ledger.total==b.ledger.total)
+    local original=first(); local modified=second(); modified.entries.start=nil
+    assert(original.entries.start and first().entries.start,'caller mutated cached executable data')
     limits.compiler_cache_bytes=1
+    local c=admission.context(admission.new(),'native-evicted',0)
+    local evicted_plan,evicted_problem,evicted_factory=compiler.prepare(native_source,c)
+    assert(evicted_plan and evicted_factory and evicted_factory~=first,evicted_problem and evicted_problem.message)
+    assert(a.machine.compile==c.machine.compile and a.ledger.total==c.ledger.total)
     local evicted=slice(); assert(evicted.control=='wait' and #evicted.effects==1)
     limits.compiler_cache_bytes=saved_cache
     local cold=slice(); local warm=slice()

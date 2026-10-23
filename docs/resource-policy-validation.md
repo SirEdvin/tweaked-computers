@@ -4,7 +4,54 @@ This is an **unfinished implementation checkpoint**, not a release candidate or 
 
 The [source-site disposition inventory](resource-policy-inventory.md) maps every policy-manifest audit row and shared limit constant to its implementation paths and required treatment. Inventory coverage is not proof that those limits have been removed.
 
-## Consolidated checkpoint: `f571405` (not acceptance)
+## Direct integration checkpoint (2026-10-24; not acceptance)
+
+The integrated change has **11 of 47 tasks complete**. Task 2.1 now has native
+policy-v2 introspection, settings/default/unit and same-tick accounting coverage.
+This does not complete owner enrollment, durable compilation or feature acceptance.
+
+Evidence: `/home/siredvin/artifacts/tweaked-computers/resource-policy-direct-checkpoint-2026-10-24/`.
+The bundle retains exact archives, source differences, failed attempts, diagnostic
+archives and a machine-checked `verification-index.json`:
+
+- `scalar-transfer` archive SHA-256:
+  `f5065f67a972739a2141655a19aeb92701cb55009f7a20b7a06639aee76793a4`.
+  Heap/function fixtures pass in base and Space Age with cold reload. Compilation
+  cache, compiler cache contract, compiler cursor trust, runtime and computer
+  contracts pass in both modes without cold reload. Bounded concatenation uses
+  prepaid native results; primitive-only private tuples avoid defensive copies;
+  the private trusted native factory cache preserves charged reconstruction and
+  isolated executable tables. None enables the quarantined durable compiler.
+- `settings-integration` archive SHA-256:
+  `70d1b4ba34ad051dc8e70cb43320f2200cae17a66392f5e57ceb62505707fd4d`.
+  Settings, runtime-budget and logic fixtures pass in both modes with cold reload.
+  The production difference from the scalar-transfer candidate is `logic.lua`:
+  malformed retained subscription details now produce controlled refusal, rather
+  than a nil-index host crash, including when sampling lacks maintenance credit.
+  Valid work deferral preserves the run and baseline and marks resynchronization.
+- The fixture totals above are **20 native cases and 20 clean cold process
+  phases**, excluding charts. Every cold phase exits zero with acknowledged
+  console `/quit`, no SIGINT and no forced kill.
+- The unchanged four-wall chart passes in both modes on the scalar-transfer
+  archive, including cold phases and at least 360 publication intervals per mode
+  with maximum two-tick gap. The unchanged **mixed-layout chart still fails**.
+  No budgets, workloads or chart assertions were weakened; tasks 3.4 and 9.5
+  remain open. These are headless publication results, not GPU/FPS evidence.
+
+The initial logic invocation used unsupported `--production-context`; its harness
+failure is retained separately from the successful `logic-engine-supported` cold
+run. Earlier settings/budget failures and the instrumented chart diagnostic are
+also preserved, not counted as acceptance.
+
+Draft PR #35 is an integration checkpoint, not a merge-ready delivery. The existing
+`a75d17b` CI failure in `speaker_engine` is retained in the bundle. Production
+Configurator calls still lack `guard.commit_configuration`; durable compiler
+execution remains fail-closed pending trust/allocation validation. Complete owner
+accounting, remaining integration, upgrade, full-client UI/audio/render and
+connected multiplayer acceptance are unfinished. Historical passes below do not
+establish those gates for this candidate.
+
+## Consolidated checkpoint: `f571405` (historical, not acceptance)
 
 The current integration branch is `feature/resource-policy-completion`. Lane
 commits and foundation/UI work were collected at `1a33bd4`; `258b4c7` fixes
@@ -58,14 +105,15 @@ approval with no required changes. Both reviews were bounded source/evidence
 reviews, not new engine runs or approval of the incomplete feature. The chart
 regression and quarantined compiler remain open.
 
-## Settings registration checkpoint (partial task 2.1)
+## Settings registration checkpoint (historical partial task 2.1)
 
 Evidence: `/home/siredvin/artifacts/tweaked-computers/resource-policy-settings-aa769238bb43/`.
 The tested package SHA-256 is `aa769238bb431f339c43730962cdbc40d9a0e42b2004a92a59b82f49e93402e2`.
 The settings registry contains every approved setting, with localized descriptions,
 resource units/scopes, positive ranges and monitor axes capped at six. This is
 registration and refresh acceptance, **not proof of every owner's enforcement or
-the completed policy-v2 introspection contract**; task 2.1 remains open.
+the completed policy-v2 introspection contract**; task 2.1 remained open at this
+checkpoint. The direct integration checkpoint above supersedes that task status.
 
 - `tests.resource_policy_settings` passes in base and Space Age in production
   context. It exercises every registered maximum through native settings,

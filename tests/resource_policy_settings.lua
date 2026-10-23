@@ -4,6 +4,7 @@ local limits=require('scripts.runtime.limits')
 local registry=require('scripts.registry')
 local admission=require('scripts.runtime.admission')
 local scheduler=require('scripts.scheduler')
+local policy=require('scripts.runtime.resource-policy')
 local M={}
 local loaded=false
 local expected={
@@ -28,6 +29,8 @@ local function change(definition,value)
 end
 local function unchanged(f)
   local root=registry.get()
+  local exposed=policy.limits()
+  assert(exposed.policy_version==2)
   assert(root.ledger==f.ledger and root.ledger.tick==f.tick and root.ledger.total==f.total,'policy refresh renewed retained work')
   assert(root.ledger.machines[f.id]==f.machine and f.machine.work==123)
   for _,definition in ipairs(budgets.definitions) do
@@ -35,6 +38,10 @@ local function unchanged(f)
     local value=f.values[definition.key]
     if definition.key=='maintenance_work_per_tick' then value=math.min(value,f.values.host_work_per_tick-1) end
     assert(limits[definition.key]==value,'effective setting lost: '..definition.key)
+    local domain=definition.kind=='tuning' and exposed.tuning or exposed.resources
+    local entry=assert(domain[definition.key],'missing policy introspection: '..definition.key)
+    assert(entry.limit==value and entry.unit==definition.unit and entry.scope==definition.scope
+      and entry.setting==definition.name and entry.behavior==definition.behavior)
   end
 end
 function M.run()
