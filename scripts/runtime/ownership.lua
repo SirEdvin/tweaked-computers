@@ -4,10 +4,10 @@ local memory=require('scripts.runtime.memory')
 local M={}
 local binding_fields={'name','wire','generation','kind','method','facade'}
 local resource_fields={'code','message','resource','setting','used','requested','limit','recoverable','line','column'}
-local frame_fields={'locals','slots','tuples','cells','args','varargs','results','pending','parent','event','failure','bridge'}
-local pending_fields={'call_result','service_result','prepared','guest_result','target','handler','args'}
+local frame_fields={'locals','slots','tuples','cells','args','varargs','results','pending','parent','event','failure','bridge','library'}
+local pending_fields={'call_result','service_result','prepared','guest_result','target','handler','args','service_args','jobs'}
 local function push(gc,value,kind,count)
-  gc.queue[#gc.queue+1]={value=value,kind=kind,cursor=1,count=count}
+  if value~=nil then gc.queue[#gc.queue+1]={value=value,kind=kind,cursor=1,count=count} end
 end
 function M.begin(checkpoint,executable,retry)
   local f=checkpoint.frame
@@ -26,10 +26,9 @@ function M.begin(checkpoint,executable,retry)
   push(gc,checkpoint.event_initialized and f.event or nil)
   push(gc,checkpoint.shell_root)
   push(gc,checkpoint.result,'tuple')
-  if f.pending then
-    push(gc,f.pending.call_result,'tuple'); push(gc,f.pending.service_result,'tuple')
-    local prepared=f.pending.prepared
-    if prepared then push(gc,prepared.called,'tuple'); push(gc,prepared.values,'tuple') end
+  if not checkpoint.root then
+    if f.pending then push(gc,f.pending,'pending') end
+    if f.library then push(gc,f.library,'private') end
   end
   checkpoint.collection=gc
 end
@@ -68,7 +67,8 @@ function M.advance(checkpoint,spend,memory_owner)
           elseif field=='args' or field=='varargs' or field=='results' then kind='tuple'
           elseif field=='parent' then kind='frame'
           elseif field=='pending' then kind='pending'
-          elseif field=='failure' then kind='failure' end
+          elseif field=='failure' then kind='failure'
+          elseif field=='library' then kind='private' end
           if field=='bridge' then
             if value.bridge then push(gc,value.bridge.symbol) end
           elseif value[field]~=nil and (field~='event' or checkpoint.event_initialized) then push(gc,value[field],kind,count) end
@@ -76,13 +76,41 @@ function M.advance(checkpoint,spend,memory_owner)
         end
       end
     elseif job.kind=='pending' then
+      if type(value)~='table' or getmetatable(value) then malformed() end
+      if value.result_kind~=nil and value.result_kind~='tuple' and value.result_kind~='boolean' and value.result_kind~='empty' then malformed() end
+      gc.records[value]=true
       local field=pending_fields[job.cursor]
       if field then
         if field=='prepared' then
-          if value.prepared then push(gc,value.prepared.called,'tuple'); push(gc,value.prepared.values,'tuple') end
+          if value.prepared~=nil then
+            local prepared=value.prepared
+            if type(prepared)~='table' or getmetatable(prepared) then malformed() end
+            gc.records[prepared]=true
+            push(gc,prepared.called,'tuple'); push(gc,prepared.values,'tuple')
+          end
+        elseif field=='jobs' then
+          if value.jobs~=nil then
+            if type(value.jobs)~='table' or getmetatable(value.jobs) then malformed() end
+            push(gc,value.jobs,'private')
+          end
         elseif field=='target' or field=='handler' then push(gc,value[field])
         else push(gc,value[field],'tuple') end
         job.cursor=job.cursor+1; done=false
+      end
+    elseif job.kind=='private' then
+      if type(value)~='table' then scalar(value)
+      elseif getmetatable(value) then malformed()
+      elseif checkpoint.owned[value] or checkpoint.symbols[value] or checkpoint.bindings[value]
+        or checkpoint.functions and checkpoint.functions[value] then
+        push(gc,value) -- Encoded tokens are guest edges, not empty private records.
+      elseif job.cursor~=1 or not gc.records[value] then
+        if job.cursor==1 then gc.records[value]=true; gc.bytes=gc.bytes+192 end
+        if job.key~=nil and rawget(value,job.key)==nil then malformed() end
+        local key,child=next(value,job.key)
+        if key~=nil then
+          push(gc,key,'private'); push(gc,child,'private')
+          gc.bytes=gc.bytes+48; job.key=key; job.cursor=job.cursor+1; done=false
+        end
       end
     elseif job.kind=='failure' then
       push(gc,value.value); push(gc,value.diagnostic,'resource')
