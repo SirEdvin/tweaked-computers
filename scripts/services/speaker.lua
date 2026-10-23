@@ -39,7 +39,8 @@ function M.methods.getSounds(c,r,w,t,spend,guard,...)
   return audio.sounds(prefix==nil and '' or text(prefix,true),after==nil and '' or text(after,true),spend,guard)
 end
 local function submit(c,r,w,spend,guard,path,vol)
-  local job=guard.job('speaker-submit',function() return {attempted=false} end)
+  -- Admit both outcome fields before playback; native failure must not grow the job.
+  local job=guard.job('speaker-submit',function() return {attempted=false,failed=false} end)
   if job.attempted then
     if job.failed then errors.raise('E_ENGINE','native sound submission failed; not retried') end
     return true

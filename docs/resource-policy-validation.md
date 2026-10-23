@@ -4,6 +4,30 @@ This is an **unfinished implementation checkpoint**, not a release candidate or 
 
 The [source-site disposition inventory](resource-policy-inventory.md) maps every policy-manifest audit row and shared limit constant to its implementation paths and required treatment. Inventory coverage is not proof that those limits have been removed.
 
+## Speaker outcome admission correction (not full speaker acceptance)
+
+The real continuation/memory guard exposed a retained-growth defect in the speaker
+submission record: `failed` was added only after the irreversible native call.
+Both outcome fields are now initialized and admitted before playback. The native
+regression fails before the fix and passes for successful and failed submissions
+afterward, including exact job storage and prepared boolean-result checks.
+
+Evidence: `/home/siredvin/artifacts/tweaked-computers/resource-policy-speaker-outcome-admission/`.
+Cold candidate SHA-256:
+`d5e9684e226afe7a684bb04fcd283011c800224b5985aa9f344eeac40c10b61d`.
+`tests.speaker_admission` passes in base and Space Age with four clean cold process
+phases. The fixture freezes before submission, after success and after failure
+but before result delivery. It verifies unchanged saved progress on load,
+exactly-once submission/result delivery, refusal after authority revocation and
+complete owner release. CI now runs this fixture with `--cold`.
+
+Compilation, continuation, memory admission and result delivery use production
+code; audio and authority endpoints are explicitly doubled, and suspension is
+injected at the exact boundary. This is not native audibility, complete production
+network integration, work-exhaustion coverage or full task 8.3 acceptance. The
+older `speaker_engine` contract migration, other owner coverage and the remaining
+feature gates are still open; the overall progress remains 11/47.
+
 ## Direct integration checkpoint (2026-10-24; not acceptance)
 
 The integrated change has **11 of 47 tasks complete**. Task 2.1 now has native

@@ -81,7 +81,7 @@ jobs:
               --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold "${data[@]}"
           done
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
-            --output "$RUNNER_TEMP/tc-ci/speaker-admission" --mode both --fixture tests.speaker_admission
+            --output "$RUNNER_TEMP/tc-ci/speaker-admission" --mode both --fixture tests.speaker_admission --cold
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/speaker" --mode both --fixture tests.speaker_engine \
             --data-fixture tests.speaker_data --final-data-fixture tests.speaker_data_final \
