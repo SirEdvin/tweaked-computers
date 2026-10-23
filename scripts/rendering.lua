@@ -95,6 +95,7 @@ buffered.install{clear_cell=clear_cell,destroy=destroy,cell=render_cell,cursor=c
 M.tick=buffered.tick
 M.bind=buffered.bind
 M.participate=buffered.participate
+M.hold=buffered.hold
 M.matches=buffered.matches
 M.select=buffered.select
 M.status=buffered.status

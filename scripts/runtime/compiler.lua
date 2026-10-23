@@ -440,8 +440,17 @@ function M.run(plan, name, event, services, context, checkpoint, shell)
   end
   if checkpoint then
     if checkpoint.wait_tick==context.tick then return false,nil,'wait' end
+    local spent_compile,spent_world=context.machine.compile,context.ledger.total
     local executable,diagnostic,factory=M.prepare(plan.source,context,plan.mode)
-    if not executable then return false,diagnostic end
+    if not executable then
+      if diagnostic.code=='E_BUDGET' then
+        if spent_compile>0 or spent_world>0 then checkpoint.wait_tick=context.tick; return false,nil,'wait' end
+        diagnostic.message='source reconstruction cannot fit a fresh configured compile/host slice; active source retained'
+        diagnostic.recoverable=true
+        return false,diagnostic,'resource'
+      end
+      return false,diagnostic
+    end
     return continuation.run(executable.source,factory,name,event,services,context,checkpoint,shell)
   end
   -- Revalidate or replay the private exact-source proof every dispatch, retaining

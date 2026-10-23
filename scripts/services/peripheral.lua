@@ -157,6 +157,12 @@ function M.services(computer,tick,guard,execution)
     end
     if rec.kind=='speaker' and (method=='playNote' or method=='playSound') then guard.prepare_boolean_result() end
     if rec.kind=='radar' and method=='transmit' then guard.prepare_empty_result() end
+    if rec.kind=='monitor' and method:sub(1,3)~='get' and method:sub(1,2)~='is' then
+      guard.prepare_empty_result(); guard.host_work(12,12)
+      fn(computer,rec,wire,tick,spend,...)
+      bindings[rec.kind].hold(rec,computer,execution)
+      return
+    end
     if bindings[rec.kind].with_principal then
       if bindings[rec.kind].with_guard then return fn(computer,rec,wire,tick,spend,execution,guard,...) end
       return fn(computer,rec,wire,tick,spend,execution,...)
@@ -194,6 +200,7 @@ function M.services(computer,tick,guard,execution)
   method('getNames',1,function(wire) return sorted(inventory(wire),spend) end)
   method('setMonitorSyncGroup',1,function(members)
     if not monitor_sync then errors.raise('E_UNSUPPORTED','monitor provider unavailable') end
+    guard.prepare_empty_result()
     return monitor_sync.set(computer,tick,spend,members,execution)
   end)
   method('getMonitorSyncGroup',0,function()

@@ -151,6 +151,10 @@ local function frame_storage(account,checkpoint)
       count=count+1; strings[checkpoint.symbols[value]]=true
     else assert(type(value)=='string' and account.values[value]); strings[value]=true end
   end
+  for _,token in ipairs(checkpoint.functions_order) do
+    local bytes=assert(account.values[token]).bytes+256
+    payload=payload+bytes; shared=shared+bytes; count=count+1
+  end
   for value in pairs(strings) do payload=payload+#value+32+256; shared=shared+128; count=count+1 end
   return payload,count,shared
 end

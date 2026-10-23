@@ -31,6 +31,15 @@ function M.run()
     'function start() local function helper() return 1 end; computer.setState("unsafe",helper()) end',
     'return {api_version=1,handlers={start=function() local f=function() return 1 end; computer.setState("unsafe",f()) end}}',
   }) do
+    model.edit(player,session.token,candidate)
+    local message,problem=model.action(player,session.token,'validate',game.tick)
+    assert(message and not problem and rec.state.unsafe==nil and rec.run_id==before.run)
+  end
+  for _,candidate in ipairs({
+    'function start(...) local t={value=1}; computer.setState("unsafe",true) end',
+    'function start() local function helper(...) return ... end; computer.setState("unsafe",helper()) end',
+    'return {api_version=1,handlers={start=function() local f=function(...) return ... end; computer.setState("unsafe",f()) end}}',
+  }) do
     -- These are valid supported front-end programs, but the current early
     -- continuation lowerer explicitly does not implement their constructs yet.
     local native,e=compiler.compile(candidate,admission.context(admission.new(),'candidate-grammar',game.tick))

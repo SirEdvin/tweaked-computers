@@ -44,6 +44,17 @@ function M.new(context, services, shell, durable)
   local callable = setmetatable({}, {__mode='k'})
   local handle_arguments = setmetatable({}, {__mode='k'}) -- Host-only opt-in, not Data.
   local bindings=setmetatable({},{__mode='k'})
+  local symbol_values,symbol_names={},{}
+  function G.symbol(value) return symbol_names[value] end
+  function G.resolve_symbol(name) return symbol_values[name] end
+  function G.encoded_type(value)
+    if not durable or type(value)~='table' then return end
+    if durable.functions and durable.functions[value] then return 'function' end
+    local binding=durable.bindings[value]
+    if binding then return binding.method and 'function' or 'table' end
+    local path=durable.symbols[value]
+    if path then return type(symbol_values[path]) end
+  end
   local restore_binding
   local call_frames,service_frames={},{}
   local call_checkpoint,checkpoint_codec
@@ -149,7 +160,7 @@ function M.new(context, services, shell, durable)
     local typ = type(k)
     if typ == 'nil' or (typ=='number' and k~=k) then fail('invalid table key') end
     if typ=='string' then string_value(k); G.spend(#k+1)
-    elseif typ=='table' then if not owned[k] and not protected[k] then fail('untrusted key') end
+    elseif typ=='table' then if not owned[k] and not protected[k] and not G.encoded_type(k) then fail('untrusted key') end
     elseif typ=='function' then if not callable[k] then fail('untrusted key') end
     elseif typ~='number' and typ~='boolean' then fail('invalid key type') end
   end
@@ -157,7 +168,7 @@ function M.new(context, services, shell, durable)
     G.spend(1)
     local typ=type(v)
     if typ=='string' then string_value(v); G.spend(#v)
-    elseif typ=='table' then if not owned[v] and not protected[v] then fail('untrusted value') end
+    elseif typ=='table' then if not owned[v] and not protected[v] and not G.encoded_type(v) then fail('untrusted value') end
     elseif typ=='function' then if not callable[v] then fail('untrusted function') end
     elseif typ~='number' and typ~='boolean' and typ~='nil' then fail('untrusted value') end
     return v
@@ -347,7 +358,7 @@ function M.new(context, services, shell, durable)
     if typ=='number' then if not errors.finite(v) then fail('Data number must be finite') end; stats.bytes=stats.bytes+8; return v end
     if typ=='boolean' then stats.bytes=stats.bytes+1; return v end
     if typ=='string' then string_value(v); stats.bytes=stats.bytes+#v; G.spend(#v); allocate(#v); return v end
-    if typ~='table' or getmetatable(v)~=nil or protected[v] then fail('plain Data required') end
+    if typ~='table' or getmetatable(v)~=nil or protected[v] or G.encoded_type(v) then fail('plain Data required') end
     if seen[v] then fail('cyclic Data is not persistable') end
     seen[v]=true
     allocate(1)
@@ -452,6 +463,11 @@ function M.new(context, services, shell, durable)
           end
         end
         if called[1] and frame.empty_result and called.n~=1 then errors.raise('E_ENGINE','trusted empty service contract violated') end
+        if called[1] and not (frame.prepared_result or frame.boolean_result or frame.empty_result) then
+          for i=2,called.n do
+            if not (type(called[i])=='table' and protected[called[i]]) then called[i]=G.snapshot(called[i]) end
+          end
+        end
         if call_checkpoint and called[1] then
           call_checkpoint.service_result=checkpoint_result(called,(frame.prepared_result or frame.boolean_result or frame.empty_result) and call_checkpoint.prepared)
         end
@@ -461,11 +477,6 @@ function M.new(context, services, shell, durable)
       if result.n>limits.tuple_entries then fatal('service result width exceeded') end
       local prepared=call_checkpoint and call_checkpoint.prepared
       local prepaid=prepared and call_checkpoint.service_result==prepared.called
-      if not (frame.prepared_result or frame.empty_result or frame.boolean_result or prepaid) then
-        for i=1,result.n do
-          if not (type(result[i])=='table' and protected[result[i]]) then result[i]=G.snapshot(result[i]) end
-        end
-      end
       if prepaid then
         local frame=call_frames[#call_frames]
         if frame and frame.fn==wrapper then frame.prepared_return=result end
@@ -480,10 +491,10 @@ function M.new(context, services, shell, durable)
   local service_map = type(services)=='function' and services(G) or services or {}
   assert(type(service_map)=='table', 'trusted services must be a method map')
   local env={}
-  env.type=function(v) G.spend(1); return type(v) end
+  env.type=function(v) G.spend(1); return G.encoded_type(v) or type(v) end
   env.tostring=function(v)
     G.spend(1)
-    local typ=type(v)
+    local typ=G.encoded_type(v) or type(v)
     if typ=='table' then return protected[v] and 'API handle' or 'table' end
     if typ=='function' then return callable[v] or 'guest function' end
     if typ~='nil' and typ~='boolean' and typ~='number' and typ~='string' then fail('untrusted value') end
@@ -587,6 +598,7 @@ function M.new(context, services, shell, durable)
     return nil -- Lua 5.2 iterator termination has one nil result, not zero.
   end
   callable[ipairs_next]='iterator'
+  symbol_values['@ipairs-next']=ipairs_next; symbol_names[ipairs_next]='@ipairs-next'
   env.ipairs=function(t) plain(t); G.spend(1); return ipairs_next,t,0 end
 
   local mathlib={pi=math.pi}
@@ -806,6 +818,19 @@ function M.new(context, services, shell, durable)
   end
   for name,v in pairs(env) do if type(v)=='function' then callable[v]=name end end
   callable[tab.unpack]='table function' -- One identity/description for both aliases.
+  for name,value in pairs(env) do
+    if type(value)=='table' or type(value)=='function' then
+      symbol_values[name]=value; symbol_names[value]=symbol_names[value] or name
+      if protected[value] then
+        for member,entry in pairs(protected[value]) do
+          if type(entry)=='function' then
+            local path=name..'.'..member
+            symbol_values[path]=entry; symbol_names[entry]=symbol_names[entry] or path
+          end
+        end
+      end
+    end
+  end
   function G.reserved_global(name) return env[name]~=nil end
   function G.global(name)
     G.spend(1)

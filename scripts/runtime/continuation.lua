@@ -7,14 +7,15 @@ local shell_values=require('scripts.runtime.shell-values')
 local ownership=require('scripts.runtime.ownership')
 local checkpoint_validation=require('scripts.runtime.checkpoint-validation')
 local memory=require('scripts.runtime.memory')
-local M={version=4}
+local limits=require('scripts.runtime.limits')
+local M={version=5}
 local function quote(s) return string.format('%q',s) end
 local checkpoint_fields={version=true,source=true,handler=true,frame=true,symbols=true,intern=true,bindings=true,
   owned=true,owned_order=true,symbols_order=true,symbol_roots=true,bindings_order=true,collection=true,validation=true,preparation=true,memory_bytes=true,memory_owner=true,
   wait_tick=true,event_initialized=true,shell_root=true,result=true,result_printed=true,value_graph=true,completed=true,
-  tuple_capacities=true,tuple_control=true}
+  tuple_capacities=true,tuple_control=true,functions=true,functions_order=true,root=true,exports=true}
 local function frame_bytes(executable)
-  return 14*192+21*48+16*(executable.locals+2*executable.slots+#executable.symbols+#executable.strings+executable.call_count)
+  return 18*192+27*48+16*(2*executable.locals+2*executable.slots+#executable.symbols+#executable.strings+executable.call_count)
     +80*executable.call_count+96+288+384
 end
 local function validate(checkpoint,executable,tick,spend,deep,owner)
@@ -24,6 +25,8 @@ local function validate(checkpoint,executable,tick,spend,deep,owner)
   local frame=checkpoint.frame
   if type(frame)~='table' or not errors.integer(frame.pc,0,#executable.blocks)
     or type(frame.locals)~='table' or type(frame.slots)~='table' or type(frame.tuples)~='table'
+    or type(frame.cells)~='table' or type(checkpoint.functions)~='table' or type(checkpoint.functions_order)~='table'
+    or type(checkpoint.root)~='table' or type(checkpoint.exports)~='table'
     or type(checkpoint.symbols)~='table' or type(checkpoint.intern)~='table'
     or type(checkpoint.bindings)~='table' or type(checkpoint.owned)~='table'
     or checkpoint.wait_tick~=nil and not errors.integer(checkpoint.wait_tick,0,tick) then refuse('invalid checkpoint header') end
@@ -51,6 +54,7 @@ end
 function M.lower(main,reject,position,mode)
   local blocks,flow,locals,local_count,slots={},{},{},0,0
   local symbol_paths,literals,calls={},{},{}
+  local protos,proto_ids,captured={},{},{}
   local function static_path(node)
     local parts,bytes={},0
     while node and node.node_type=='index' and node.suffix.node_type=='string' do
@@ -66,13 +70,16 @@ function M.lower(main,reject,position,mode)
       node=node.ex
     end
   end
-  local expression,statement,body,expressions
+  local expression,statement,body,expressions,lower_function
   local function slot() slots=slots+1; return slots end
   local function register(ref)
     local def=ref.reference_def
-    if not def or def.def_type~='local' then reject(ref,'continuation slice requires local values','E_UNSUPPORTED') end
+    while def and def.def_type=='upval' do def=def.parent_def end
+    if not def or def.def_type~='local' then reject(ref,'invalid lexical reference','E_UNSUPPORTED') end
     if not locals[def] then local_count=local_count+1; locals[def]=local_count end
-    return 'f.locals['..locals[def]..']'
+    local id=locals[def]
+    if #def.child_defs>0 then captured[id]=true end
+    return captured[id] and 'f.cells['..id..'].value' or 'f.locals['..id..']',id
   end
   local function value(i) return 'f.slots['..i..']' end
   local function block(n,code,nextpc,uses,defs,branch)
@@ -100,9 +107,14 @@ function M.lower(main,reject,position,mode)
     elseif k=='string' then literals[n.value]=true; return output(quote(n.value))
     elseif k=='boolean' then return output(tostring(n.value))
     elseif k=='nil' then return output('nil')
-    elseif k=='local_ref' then
-      local ref=register(n)
-      return output(ref,{'l'..locals[n.reference_def]})
+    elseif k=='local_ref' or k=='upval_ref' then
+      local ref,id=register(n)
+      return output(ref,{'l'..id})
+    elseif k=='func_proto' then
+      local id,captures=lower_function(n.func_def)
+      local uses,ids={},{}
+      for i,ref in ipairs(captures) do uses[i]='l'..ref; ids[i]=ref end
+      return output('r.closure('..id..',{'..table.concat(ids,',')..'})',uses)
     elseif k=='index' then
       local path=static_path(n)
       if path then symbol_paths[path]=true end
@@ -136,12 +148,43 @@ function M.lower(main,reject,position,mode)
       elseif n.op=='#' then operand='r.guard.length('..operand..')'
       else reject(n,'unsupported continuation unary operator','E_UNSUPPORTED') end
       return expression(n.ex,a,output('('..operand..')',{'s'..a}))
+    elseif k=='concat' then
+      return expressions(n.exp_list,function(tuple,uses)
+        return output('r.encode(r.guard.concat(r.arguments('..tuple..')))',uses)
+      end)
+    elseif k=='constructor' then
+      local fields,uses,evaluations={}, {},{}
+      local array,tail=0
+      for i,field in ipairs(n.fields) do
+        local key,value_slot=slot(),slot()
+        if field.type=='list' then
+          array=array+1
+          evaluations[#evaluations+1]={number=array,out=key,node=field.value}
+        else evaluations[#evaluations+1]={node=field.key,out=key} end
+        evaluations[#evaluations+1]={node=field.value,out=value_slot}
+        if field.type=='list' and i==#n.fields and field.value.node_type=='call' and not field.value.force_single_result then
+          tail='f.tuples['..value_slot..']'; uses[#uses+1]='t'..value_slot
+        else
+          fields[#fields+1]='{'..value(key)..','..value(value_slot)..'}'
+          uses[#uses+1]='s'..key; uses[#uses+1]='s'..value_slot
+        end
+      end
+      local pc=output('r.construct({'..table.concat(fields,',')..'},'..(tail or 'nil')..','..array..')',uses)
+      for i=#evaluations,1,-1 do
+        local item=evaluations[i]
+        if item.number then pc=block(item.node,value(item.out)..'='..item.number,pc,nil,{'s'..item.out})
+        else pc=expression(item.node,item.out,pc) end
+      end
+      return pc
     elseif k=='call' then
       local callee=slot()
       calls[out]=true
       local pc=expressions(n.args,function(tuple,uses)
         uses[#uses+1]='s'..callee
-        return output('r.call('..out..','..value(callee)..',r.arguments('..tuple..'))',uses,true)
+        local pc=reserve()
+        define(pc,n,'return r.invoke('..out..','..value(callee)..','..tuple..','..nextpc..')',
+          {nextpc},uses,{'s'..out,'t'..out})
+        return pc
       end)
       return expression(n.ex,callee,pc)
     end
@@ -172,43 +215,86 @@ function M.lower(main,reject,position,mode)
     local k=n.node_type
     if k=='empty' then return nextpc
     elseif k=='call' then return expression(n,slot(),nextpc)
+    elseif k=='localfunc' then
+      local _,id=register(n.name)
+      local out=slot()
+      local assign=block(n,'r.assign({{slot='..id..(captured[id] and ',cell=true' or '')..'}}, {n=1,'..value(out)..'})',nextpc,{'s'..out,captured[id] and 'l'..id or nil},{'l'..id})
+      local create=expression({node_type='func_proto',func_def=n.func_def},out,assign)
+      return captured[id] and block(n,'r.new_cells({'..id..'})',create,nil,{'l'..id}) or create
+    elseif k=='funcstat' then
+      return statement({node_type='assignment',lhs={n.name},rhs={{node_type='func_proto',func_def=n.func_def}}},nextpc,breakpc)
     elseif k=='localstat' or k=='assignment' then
       local lhs=n.lhs[1]
-      if #n.lhs==1 and lhs.node_type=='local_ref' and n.rhs and #n.rhs==1 then
+      local first_id
+      if lhs.node_type=='local_ref' or lhs.node_type=='upval_ref' then local _; _,first_id=register(lhs) end
+      if #n.lhs==1 and lhs.node_type=='local_ref' and not captured[first_id] and n.rhs and #n.rhs==1 then
         local ref=register(lhs); local out=slot()
         local pc=block(n,'r.guard.scalar(r.decode('..value(out)..')); '..ref..'=r.guard.bind(1,'..value(out)..')',
           nextpc,{'s'..out},{'l'..locals[lhs.reference_def]})
         return expression(n.rhs[1],out,pc)
       end
-      local targets,defs={},{}
+      local targets,defs,evaluations,target_uses,new_cells={},{},{},{},{}
       for i,lhs in ipairs(n.lhs) do
-        if lhs.node_type=='local_ref' then
-          register(lhs)
-          targets[i]='{slot='..locals[lhs.reference_def]..'}'
-          defs[#defs+1]='l'..locals[lhs.reference_def]
+        if lhs.node_type=='local_ref' or lhs.node_type=='upval_ref' then
+          local _,id=register(lhs)
+          targets[i]='{slot='..id..(captured[id] and ',cell=true' or '')..'}'
+          defs[#defs+1]='l'..id
+          if captured[id] then
+            if k=='localstat' then new_cells[#new_cells+1]=id else target_uses[#target_uses+1]='l'..id end
+          end
         elseif mode=='shell' and lhs.node_type=='index' and lhs.src_ex_did_not_exist then
           targets[i]='{name='..quote(lhs.suffix.value)..'}'
-        else reject(lhs,'continuation slice requires local or shell-global assignment','E_UNSUPPORTED') end
+        elseif lhs.node_type=='index' and not lhs.src_ex_did_not_exist then
+          local object,key=slot(),slot()
+          targets[i]='{'..value(object)..','..value(key)..'}'
+          evaluations[#evaluations+1]={lhs.ex,object}; evaluations[#evaluations+1]={lhs.suffix,key}
+          target_uses[#target_uses+1]='s'..object; target_uses[#target_uses+1]='s'..key
+        else reject(lhs,'global assignment is forbidden','E_UNSUPPORTED') end
       end
-      return expressions(n.rhs or {},function(tuple,uses)
-        return block(n,'r.assign({'..table.concat(targets,',')..'},'..tuple..')',nextpc,uses,defs)
+      local pc=expressions(n.rhs or {},function(tuple,uses)
+        for _,ref in ipairs(target_uses) do uses[#uses+1]=ref end
+        return block(n,(#new_cells>0 and 'r.new_cells({'..table.concat(new_cells,',')..'}); ' or '')..
+          'r.assign({'..table.concat(targets,',')..'},'..tuple..')',nextpc,uses,defs)
       end)
+      for i=#evaluations,1,-1 do pc=expression(evaluations[i][1],evaluations[i][2],pc) end
+      return pc
     elseif k=='dostat' then return body(n,nextpc,breakpc)
     elseif k=='breakstat' then return block(n,'',assert(breakpc))
     elseif k=='retstat' and #n.exp_list==0 then return block(n,'',0)
-    elseif k=='retstat' and mode=='shell' then
+    elseif k=='retstat' then
       calls[0]=true
       return expressions(n.exp_list,function(tuple,uses)
         return block(n,'r.finish('..tuple..')',0,uses)
       end)
+    elseif k=='forlist' then
+      local iterator,state,control,out=slot(),slot(),slot(),slot()
+      calls[out]=true
+      local head=reserve()
+      local loop=body(n,head,nextpc)
+      local targets,defs,new_cells={},{'s'..control},{}
+      for i,ref in ipairs(n.name_list) do
+        local _,id=register(ref); targets[i]='{slot='..id..(captured[id] and ',cell=true' or '')..'}'
+        defs[#defs+1]='l'..id
+        if captured[id] then new_cells[#new_cells+1]=id end
+      end
+      local test=block(n,'if f.tuples['..out..'][1]~=nil then '..(#new_cells>0 and 'r.new_cells({'..table.concat(new_cells,',')..'}); ' or '')..
+        'r.assign({'..table.concat(targets,',')..'},f.tuples['..out..']); '..value(control)..'=f.tuples['..out..'][1]; return '..loop..' end',
+        nextpc,{'t'..out},defs,loop)
+      define(head,n,'return r.invoke('..out..','..value(iterator)..',{n=2,'..value(state)..','..value(control)..'},'..test..')',
+        {test},{'s'..iterator,'s'..state,'s'..control},{'t'..out})
+      return expressions(n.exp_list,function(tuple,uses)
+        return block(n,'local t='..tuple..'; '..value(iterator)..','..value(state)..','..value(control)..'=t[1],t[2],t[3]',
+          head,uses,{'s'..iterator,'s'..state,'s'..control})
+      end)
     elseif k=='fornum' then
       local index,limit,step=slot(),slot(),slot()
-      local localvar=register(n.var)
+      local localvar,var_id=register(n.var)
       local head=reserve()
       local advance=block(n,value(index)..'='..value(index)..'+'..value(step),head,{'s'..index,'s'..step},{'s'..index})
       local loop=body(n,advance,nextpc)
       local controls={'s'..index,'s'..limit,'s'..step}
-      define(head,n,'if ('..value(step)..'>0 and '..value(index)..'<='..value(limit)..') or ('..value(step)..'<=0 and '..value(index)..'>='..value(limit)..') then '..localvar..'='..value(index)..'; return '..loop..' end; return '..nextpc,
+      define(head,n,'if ('..value(step)..'>0 and '..value(index)..'<='..value(limit)..') or ('..value(step)..'<=0 and '..value(index)..'>='..value(limit)..') then '..
+        (captured[var_id] and 'r.new_cells({'..var_id..'}); r.assign({{slot='..var_id..',cell=true}},{n=1,'..value(index)..'});' or localvar..'='..value(index)..';')..' return '..loop..' end; return '..nextpc,
         {loop,nextpc},controls,{'l'..locals[n.var.reference_def]})
       local convert=block(n,'local a,b,c=r.guard.number('..value(index)..'),r.guard.number('..value(limit)..'),r.guard.number('..value(step)..'); '..value(index)..','..value(limit)..','..value(step)..'=a,b,c',head,controls,controls)
       local pc=n.step and expression(n.step,step,convert) or block(n,value(step)..'=1',convert,nil,{'s'..step})
@@ -237,7 +323,29 @@ function M.lower(main,reject,position,mode)
     end
     reject(n,'continuation slice does not yet lower '..tostring(k),'E_UNSUPPORTED')
   end
-  local handlers,entries={},{ }
+  function lower_function(fn)
+    if proto_ids[fn] then local id=proto_ids[fn]; return id,protos[id].captures end
+    if fn.is_vararg and not (mode=='shell' and fn==main) then reject(fn,'durable varargs are not yet lowered','E_UNSUPPORTED') end
+    local id=#protos+1; proto_ids[fn]=id
+    local proto={captures={}}; protos[id]=proto
+    for _,upval in ipairs(fn.upvals or {}) do
+      if upval.name~='_ENV' then
+        local _,ref=register({reference_def=upval}); proto.captures[#proto.captures+1]=ref
+      end
+    end
+    local params,defs,new_cells={},{},{}
+    for i,param in ipairs(fn.params or {}) do
+      local _,ref=register(param); params[i]=ref; defs[#defs+1]='l'..ref
+      if captured[ref] then new_cells[#new_cells+1]=ref end
+    end
+    local entry=body(fn,0)
+    if #params>0 then entry=block(fn,'r.parameters({'..table.concat(params,',')..'},{'..table.concat(new_cells,',')..'})',entry,nil,defs)
+    else entry=block(fn,'f.args=nil',entry) end
+    proto.entry=entry
+    return id,proto.captures
+  end
+  local handlers,entries,helpers={},{},{}
+  local exports={}
   local first=main.body.first
   while first and first.node_type=='empty' do first=first.next end
   if mode=='shell' then handlers.command=main
@@ -252,17 +360,28 @@ function M.lower(main,reject,position,mode)
     local n=first
     while n do
       if n.node_type=='funcstat' then handlers[n.name.suffix.value]=n.func_def
-      elseif n.node_type~='empty' then reject(n,'continuation slice does not yet lower local helper declarations','E_UNSUPPORTED') end
+      elseif n.node_type=='localfunc' then helpers[#helpers+1]=n
+      elseif n.node_type~='empty' then reject(n,'unsupported declaration','E_UNSUPPORTED') end
       n=n.next
     end
   end
   local names={}; for name in pairs(handlers) do names[#names+1]=name end; table.sort(names)
   for _,name in ipairs(names) do
     local fn=handlers[name]
-    if mode~='shell' and (fn.is_vararg or fn.params and #fn.params>1) then reject(fn,'continuation slice accepts one event parameter','E_UNSUPPORTED') end
-    local parameter=fn.params and fn.params[1] and register(fn.params[1])
-    local entry=body(fn,0)
-    if parameter then entry=block(fn,parameter..'=f.event',entry,nil,{'l'..locals[fn.params[1].reference_def]}) end
+    local id=lower_function(fn)
+    if mode~='shell' and first.node_type~='retstat' then exports[#exports+1]='['..quote(name)..']='..id end
+  end
+  local exports_text='{'..table.concat(exports,',')..'}'
+  for _,name in ipairs(names) do
+    local entry=protos[proto_ids[handlers[name]]].entry
+    if #exports>0 then
+      local uses={}
+      for _,handler in ipairs(names) do
+        for _,ref in ipairs(protos[proto_ids[handlers[handler]]].captures) do uses[#uses+1]='l'..ref end
+      end
+      entry=block(handlers[name],'r.init_exports('..exports_text..')',entry,uses)
+    end
+    for i=#helpers,1,-1 do entry=statement(helpers[i],entry) end
     entries[#entries+1]='['..quote(name)..']='..entry
   end
   local live,definitions={},{}
@@ -271,18 +390,28 @@ function M.lower(main,reject,position,mode)
     for _,ref in ipairs(node.uses) do live[i][ref]=true end
     for _,ref in ipairs(node.defs) do definitions[i][ref]=true end
   end
-  local changed
-  repeat
-    changed=false
-    for i,node in ipairs(flow) do
-      for _,successor in ipairs(node.next) do
-        for ref in pairs(live[successor] or {}) do
-          parsing.enter(1)
-          if not definitions[i][ref] and not live[i][ref] then live[i][ref]=true; changed=true end
-        end
+  local predecessors,queue,head={},{},1
+  for i,node in ipairs(flow) do
+    for _,successor in ipairs(node.next) do
+      parsing.enter(1)
+      if successor~=0 then
+        predecessors[successor]=predecessors[successor] or {}
+        predecessors[successor][#predecessors[successor]+1]=i
       end
     end
-  until not changed
+    for _,ref in ipairs(node.uses) do queue[#queue+1]={i,ref} end
+  end
+  -- Propagate each new liveness fact once, rather than rescan every loop's CFG.
+  while queue[head] do
+    local fact=queue[head]; queue[head]=false; head=head+1
+    for _,predecessor in ipairs(predecessors[fact[1]] or {}) do
+      parsing.enter(1)
+      local ref=fact[2]
+      if not definitions[predecessor][ref] and not live[predecessor][ref] then
+        live[predecessor][ref]=true; queue[#queue+1]={predecessor,ref}
+      end
+    end
+  end
   local cleanups={}
   local fields={s='slots',t='tuples',l='locals'}
   for i,node in ipairs(flow) do
@@ -297,7 +426,8 @@ function M.lower(main,reject,position,mode)
       for _,ref in ipairs(ordered) do
         parsing.enter(1)
         if not (live[successor] or {})[ref] then
-          cleanup[#cleanup+1]='f.'..fields[ref:sub(1,1)]..'['..ref:sub(2)..']=nil'
+          local kind,id=ref:sub(1,1),tonumber(ref:sub(2))
+          cleanup[#cleanup+1]='f.'..(kind=='l' and captured[id] and 'cells' or fields[kind])..'['..id..']=nil'
         end
       end
       maximum=math.max(maximum,#cleanup)
@@ -316,7 +446,9 @@ function M.lower(main,reject,position,mode)
   local outputs={}; for out in pairs(calls) do outputs[#outputs+1]=out end
   table.sort(outputs,function(a,b) parsing.enter(1); return a<b end)
   for i,out in ipairs(outputs) do outputs[i]='['..out..']=true' end
-  return 'return {blocks={'..table.concat(blocks,',\n')..'},cleanup={'..table.concat(cleanups,',')..'},entries={'..table.concat(entries,',')..'},symbols='..quoted_set(symbol_paths)..',strings='..quoted_set(literals)..',calls={'..table.concat(outputs,',')..'},call_count='..#outputs..',slots='..slots..',locals='..local_count..'}'
+  local functions={}
+  for i,proto in ipairs(protos) do functions[i]='{entry='..proto.entry..',captures={'..table.concat(proto.captures,',')..'}}' end
+  return 'return {blocks={'..table.concat(blocks,',\n')..'},cleanup={'..table.concat(cleanups,',')..'},entries={'..table.concat(entries,',')..'},protos={'..table.concat(functions,',')..'},symbols='..quoted_set(symbol_paths)..',strings='..quoted_set(literals)..',calls={'..table.concat(outputs,',')..'},call_count='..#outputs..',slots='..slots..',locals='..local_count..'}'
 end
 
 function M.run(source,factory,name,event,services,context,checkpoint,shell)
@@ -357,7 +489,8 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
       end
     end
     checkpoint.version=M.version; checkpoint.source=source; checkpoint.handler=name
-    checkpoint.frame={pc=executable.entries[name],locals={},slots={},tuples={},event=event}
+    checkpoint.frame={pc=executable.entries[name],locals={},slots={},tuples={},cells={},event=event,depth=1}
+    checkpoint.root=checkpoint.frame; checkpoint.functions={}; checkpoint.functions_order={}; checkpoint.exports={}
     checkpoint.symbols=symbols; checkpoint.intern=intern; checkpoint.bindings={}; checkpoint.owned={}
     checkpoint.owned_order={}; checkpoint.symbols_order=order; checkpoint.bindings_order={}; checkpoint.symbol_roots=roots
     if memory_owner then
@@ -381,7 +514,8 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   end
   function r.global(name)
     if shell and not guard.reserved_global(name) then return guard.get(checkpoint.shell_root,name) end
-    return r.symbol(name)
+    if checkpoint.exports[name] then return checkpoint.exports[name] end
+    return r.encode(guard.global(name))
   end
   local encoded,decoded={},{}
   local function binding_token(descriptor)
@@ -403,7 +537,10 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   function r.encode(v)
     if memory_owner and type(v)=='string' then memory.acquire(memory_owner,v,#v+32) end
     if type(v)~='table' and type(v)~='function' then return v end
+    if checkpoint.symbols[v] or checkpoint.bindings[v] or checkpoint.functions[v] then return v end
     if encoded[v] then return encoded[v] end
+    local path=guard.symbol(v)
+    if path then return r.symbol(path) end
     local binding=guard.binding(v)
     if not binding then
       if guard.is_plain(v) then return v end
@@ -420,7 +557,8 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     if type(v)~='table' then return v end
     local path=checkpoint.symbols[v]
     if path then
-      local resolved
+      local resolved=guard.resolve_symbol(path)
+      if resolved~=nil then return resolved end
       for part in path:gmatch('[^.]+') do
         if resolved==nil then resolved=guard.global(part) else resolved=guard.get(resolved,part) end
       end
@@ -442,6 +580,15 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     return prefix
   end
   function r.arguments(tuple) return table.unpack(tuple,1,tuple.n) end
+  function r.construct(fields,tail,start)
+    local count=#fields+(tail and tail.n or 0)
+    return guard.new(count,function()
+      local result={}
+      for _,pair in ipairs(fields) do result[pair[1]]=pair[2] end
+      if tail then for i=1,tail.n do result[start+i-1]=tail[i] end end
+      return result
+    end)
+  end
   function r.assign(targets,values)
     local count=#targets
     local checked=guard.assignment_targets(count)
@@ -449,39 +596,73 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     for i=1,values.n do decoded[i]=r.decode(values[i]) end
     guard.assignment_values(count,table.unpack(decoded,1,decoded.n))
     for i,target in ipairs(targets) do
-      if target.name then checked[i]={checkpoint.shell_root,target.name} end
+      if target.name then checked[i]={checkpoint.shell_root,target.name}
+      elseif target.cell then checked[i]={f.cells[target.slot],'value'}
+      elseif target[1] then checked[i]={r.decode(target[1]),r.decode(target[2])} end
     end
     guard.assignment_check(count,checked,decoded)
     -- Lua 5.2 publishes duplicate/aliased assignment targets right-to-left.
     for i=count,1,-1 do
       local target=targets[i]
       if target.name then checkpoint.shell_root[target.name]=values[i]
+      elseif target.cell then f.cells[target.slot].value=values[i]
+      elseif target[1] then target[1][target[2]]=values[i]
       else f.locals[target.slot]=values[i] end
     end
+  end
+  function r.new_cells(ids)
+    guard.host_work(#ids*3+1,#ids*3+1)
+    local cells={}
+    for i,id in ipairs(ids) do cells[i]=guard.new(0,function() return {} end) end
+    for i,id in ipairs(ids) do f.cells[id]=cells[i] end
+  end
+  function r.parameters(ids,cells)
+    local targets={}
+    local is_cell={}; for _,id in ipairs(cells) do is_cell[id]=true end
+    for i,id in ipairs(ids) do targets[i]={slot=id,cell=is_cell[id]} end
+    r.new_cells(cells); r.assign(targets,f.args or {n=0}); f.args=nil
+  end
+  function r.closure(proto,ids)
+    assert(executable.protos[proto],'invalid compiled function')
+    guard.host_work(#ids*4+4,#ids*3+4)
+    local token,descriptor={}, {proto=proto,cells={}}
+    for _,id in ipairs(ids) do descriptor.cells[id]=assert(f.cells[id],'missing lexical cell') end
+    if memory_owner then memory.acquire(memory_owner,token,3*192+2*48+48*#ids+16) end
+    checkpoint.functions[token]=descriptor; checkpoint.functions_order[#checkpoint.functions_order+1]=token
+    return token
+  end
+  function r.init_exports(exports)
+    local values={}
+    for name,proto in pairs(exports) do values[name]=r.closure(proto,executable.protos[proto].captures) end
+    checkpoint.exports=values
   end
   local call_output
   local function admit_tuple(tuple,out,called)
     if not memory_owner then return end
     guard.host_work(tuple.n*6+2,tuple.n*3+2)
     local width=tuple.n-(called and 1 or 0)
-    local previous=checkpoint.tuple_capacities[out]
+    local carrier=f==checkpoint.root and checkpoint or f
+    local previous=carrier.tuple_capacities[out]
     if not errors.integer(previous,1,9007199254740991) or width<0 then
       errors.raise('E_UNSUPPORTED','invalid tuple capacity; continuation retained')
     end
-    local control=math.max(checkpoint.tuple_control,width+1)
-    local node=memory_owner.values[checkpoint]
+    local control=math.max(carrier.tuple_control,width+1)
+    local node=memory_owner.values[carrier]
     if not node then errors.raise('E_UNSUPPORTED','missing frame allocation; continuation retained') end
     -- Frame reservations survive limit decreases without retaining dead tuple identities.
-    local bytes=node.record.bytes+16*(math.max(0,width-previous)+control-checkpoint.tuple_control)
-    local items={{checkpoint,bytes}}
+    local bytes=node.record.bytes+16*(math.max(0,width-previous)+control-carrier.tuple_control)
+    local items={{carrier,bytes}}
     for i=1,tuple.n do
       local value=tuple[i]
       if type(value)=='string' then items[#items+1]={value,#value+32} end
     end
     memory.acquire_all(memory_owner,items)
-    checkpoint.tuple_capacities[out]=math.max(previous,width); checkpoint.tuple_control=control
+    carrier.tuple_capacities[out]=math.max(previous,width); carrier.tuple_control=control
   end
-  function r.finish(tuple) admit_tuple(tuple,0); checkpoint.result=tuple end
+  function r.finish(tuple)
+    admit_tuple(tuple,0)
+    if f.parent then f.results=tuple else checkpoint.result=tuple end
+  end
   local codec={}
   function codec.encode(tuple,values)
     admit_tuple(tuple,call_output,not values)
@@ -501,24 +682,24 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     return {called=called,values=values}
   end
   function r.get(object,key)
-    local path=checkpoint.symbols[object]
-    if path then
-      if type(key)~='string' or key:find('.',1,true) then errors.raise('E_ARGUMENT','invalid namespace member') end
-      return r.symbol(path..'.'..key)
-    end
+    if guard.is_plain(object) then return r.encode(guard.get(object,key)) end
     return r.encode(guard.get(r.decode(object),r.decode(key)))
   end
-  local owned_before,symbols_before,bindings_before,memory_before
+  local owned_before,symbols_before,bindings_before,functions_before,memory_before
   function r.call(out,symbol,...)
     call_output=out
     f.tuples[out]=nil -- The overwritten call site's old cache is dead before preparing its replacement.
     owned_before=#checkpoint.owned_order; symbols_before=#checkpoint.symbols_order; bindings_before=#checkpoint.bindings_order
+    functions_before=#checkpoint.functions_order
     memory_before=memory_owner and memory_owner.count
     f.pending=f.pending or {block=f.pc}
     assert(f.pending.block==f.pc,'mismatched pending call')
     guard.call_checkpoint(f.pending,codec)
     local args=table.pack(...)
-    for i=1,args.n do args[i]=r.decode(args[i]) end
+    local path=checkpoint.symbols[symbol]
+    local raw=path=='type' or path=='rawequal' or path=='rawget' or path=='rawset' or path=='rawlen'
+      or path=='next' or path=='pairs' or path=='ipairs' or path=='@ipairs-next' or path and path:sub(1,6)=='table.'
+    if not raw then for i=1,args.n do args[i]=r.decode(args[i]) end end
     local fn=r.decode(symbol)
     if not guard.is_callable(fn) then errors.raise('E_ARGUMENT','approved callable required') end
     local result=table.pack(guard.call(fn,table.unpack(args,1,args.n)))
@@ -526,6 +707,88 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     result=prepared and f.pending.call_result==prepared.called and prepared.values or codec.encode(result,true)
     f.tuples[out]=result
     return result[1]
+  end
+  local transfer={}
+  local function deliver(out,tuple,nextpc)
+    admit_tuple(tuple,out)
+    f.tuples[out]=tuple; f.slots[out]=tuple[1]
+    return nextpc
+  end
+  function r.invoke(out,symbol,args,nextpc)
+    f.pending=f.pending or {block=f.pc}
+    local pending=f.pending
+    pending.output=out
+    if pending.guest_result then return deliver(out,pending.guest_result,nextpc) end
+    if checkpoint.symbols[symbol]=='pcall' then
+      if not pending.protection then
+        guard.host_work(args.n+4,args.n+4)
+        local target=args[1]; local passed={n=math.max(0,args.n-1)}
+        for i=1,passed.n do passed[i]=args[i+1] end
+        pending.protection=true; pending.target=target; pending.args=passed
+      end
+      symbol,args=pending.target,pending.args
+    end
+    local descriptor=checkpoint.functions[symbol]
+    if descriptor then
+      guard.host_work(args.n+#executable.protos[descriptor.proto].captures+8,args.n+8)
+      if f.depth>=limits.callback_depth then
+        errors.refuse('call_depth','tc-host-stack-depth',f.depth,1,limits.callback_depth,'experimental call depth exhausted; depth policy wiring is incomplete')
+      end
+      local child={pc=executable.protos[descriptor.proto].entry,locals={},slots={},tuples={},cells={},args=args,
+        parent=f,depth=f.depth+1,return_out=out}
+      for _,id in ipairs(executable.protos[descriptor.proto].captures) do child.cells[id]=assert(descriptor.cells[id],'missing captured cell') end
+      if memory_owner then
+        local capacities={}; for site in pairs(executable.calls) do capacities[site]=1 end
+        child.tuple_capacities=capacities; child.tuple_control=2
+        memory.acquire(memory_owner,child,frame_bytes(executable))
+      end
+      checkpoint.frame=child
+      return transfer
+    end
+    local value=r.call(out,symbol,r.arguments(args))
+    local result=f.tuples[out]
+    if pending.protection then
+      local protected={n=result.n+1,true}
+      for i=1,result.n do protected[i+1]=result[i] end
+      return deliver(out,protected,nextpc)
+    end
+    f.slots[out]=value
+    return nextpc
+  end
+  local function complete_child()
+    local child=f; local parent=assert(child.parent)
+    local result=child.results or {n=0}
+    guard.host_work(result.n+4,result.n+4)
+    if parent.pending.protection then
+      local protected={n=result.n+1,true}
+      for i=1,result.n do protected[i+1]=result[i] end
+      result=protected
+    end
+    f=parent
+    local admitted,problem=pcall(admit_tuple,result,child.return_out)
+    f=child
+    if not admitted then error(problem,0) end
+    parent.pending.guest_result=result; checkpoint.frame=parent
+    if memory_owner then memory.release(memory_owner,child) end
+  end
+  local function unwind(problem)
+    guard.check()
+    if not f.failure then
+      local diagnostic=guard.diagnostic(problem)
+      if type(problem)=='table' and not guard.is_plain(problem) and not guard.encoded_type(problem) then problem=guard.snapshot(problem) end
+      f.failure={value=r.encode(problem),diagnostic=diagnostic}
+    end
+  end
+  local uncaught
+  local function advance_failure()
+    guard.host_work(4,4)
+    if f.pending and f.pending.protection then
+      local tuple={n=2,false,f.failure.value}
+      admit_tuple(tuple,f.pending.output)
+      f.pending.guest_result=tuple; f.failure=nil
+    elseif f.parent then
+      f.parent.failure=f.failure; checkpoint.frame=f.parent
+    else uncaught=f.failure.diagnostic; error(f.failure.value,0) end
   end
   local value_guard=setmetatable({
     restore_binding=function(d,parent)
@@ -548,21 +811,32 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     end
     owned_before=#checkpoint.owned_order; symbols_before=#checkpoint.symbols_order; bindings_before=#checkpoint.bindings_order
     memory_before=memory_owner and memory_owner.count
+    functions_before=#checkpoint.functions_order
     if not checkpoint.event_initialized then
-      f.event=guard.snapshot(event); checkpoint.event_initialized=true
+      f.event=guard.snapshot(event); f.args={n=1,f.event}; checkpoint.event_initialized=true
     end
     if shell then
       if not checkpoint.shell_root then checkpoint.shell_root=shell_values.decode(shell.values,value_guard) end
       shell.root=checkpoint.shell_root
     end
-    while f.pc~=0 do
+    while true do
+      f=checkpoint.frame
+      if f.failure then advance_failure()
+      elseif f.pc==0 then
+        if f.parent then complete_child() else break end
+      else
       local fn=executable.blocks[f.pc]
       if not fn then errors.raise('E_UNSUPPORTED','invalid continuation block; retained') end
       local previous=f.pc
-      f.pc=fn(f,r)
-      executable.cleanup[previous][f.pc](f)
-      f.pending=nil; guard.call_checkpoint(nil)
-      progressed=true
+      local ran,nextpc=pcall(fn,f,r)
+      if not ran then unwind(nextpc)
+      elseif nextpc~=transfer then
+        f.pc=nextpc
+        executable.cleanup[previous][f.pc](f)
+        f.pending=nil; guard.call_checkpoint(nil)
+        progressed=true
+      end
+      end
     end
     if shell then
       if not checkpoint.result_printed then
@@ -573,11 +847,11 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     end
   end)
   if not ok then
-    local diagnostic=guard.diagnostic(result)
+    local diagnostic=uncaught or guard.diagnostic(result)
     if guard.work_suspended() then
       -- Keep paid preparation only while a failed attempt publishes no retained staging.
       local staged=owned_before and (#checkpoint.owned_order>owned_before or #checkpoint.symbols_order>symbols_before
-        or #checkpoint.bindings_order>bindings_before or memory_owner and memory_owner.count>memory_before)
+        or #checkpoint.bindings_order>bindings_before or functions_before and #checkpoint.functions_order>functions_before or memory_owner and memory_owner.count>memory_before)
       if checkpoint.preparation~='execute' or progressed or staged then
         if progressed or staged or checkpoint.preparation==nil then checkpoint.preparation='validate' end
         if not checkpoint.collection then ownership.begin(checkpoint,executable,staged) end

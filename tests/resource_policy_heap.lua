@@ -20,13 +20,13 @@ local function forms(body)
 end
 function M.run()
   for _,body in ipairs({
-    'local t=table.pack(type)',
-    'local t=table.pack(math)',
-    'local t=table.pack(); rawset(t,"f",type)',
-    'local t=table.pack(); rawset(t,type,true)',
-    'local t=table.pack(); rawset(t,"namespace",math)',
-    'local t=table.pack(); rawset(t,"n",nil); table.insert(t,type)',
-    'local t=table.pack(); rawset(t,"n",nil); table.insert(t,math)',
+    'local t=table.pack(type); assert(t[1](1)=="number" and t[1]==type)',
+    'local t=table.pack(math); assert(t[1].floor(1.5)==1)',
+    'local t=table.pack(); rawset(t,"f",type); assert(t.f(1)=="number")',
+    'local t=table.pack(); rawset(t,type,true); assert(rawget(t,type)==true)',
+    'local t=table.pack(); rawset(t,"namespace",math); assert(t.namespace.floor(1.5)==1)',
+    'local t=table.pack(); rawset(t,"n",nil); table.insert(t,type); assert(t[1](1)=="number")',
+    'local t=table.pack(); rawset(t,"n",nil); table.insert(t,math); assert(t[1].floor(1.5)==1)',
   }) do
     for _,source in ipairs(forms(body..'; computer.finished()')) do
       local ctx=admission.context(admission.new(),'native-container-regression',0)
@@ -35,17 +35,23 @@ function M.run()
       local ran,diagnostic=compiler.run(plan,'start',{}, {computer={finished=function() effects=effects+1 end}},ctx)
       assert(ran and effects==1,diagnostic and diagnostic.message)
     end
-    for _,source in ipairs(forms(body..'; local n=0; while n<300000 do n=n+1 end; computer.finished()')) do
-      local ctx=admission.context(admission.new(),'saved-container-rejection',0)
+    for _,source in ipairs(forms(body..'; local n=0; while n<300000 do n=n+1 end; assert(type(t)=="table"); computer.finished()')) do
+      local ledger=admission.new(); local ctx=admission.context(ledger,'saved-container-encoding',0)
       local plan,problem=compiler.compile(source,ctx); assert(plan,problem and problem.message)
       local checkpoint,effects={},0
-      local ran,diagnostic=compiler.run(plan,'start',{}, {computer={finished=function() effects=effects+1 end}},ctx,checkpoint)
+      local services={computer={finished=function() effects=effects+1 end}}
+      local ran,diagnostic,control=compiler.run(plan,'start',{},services,ctx,checkpoint)
       plain(checkpoint)
-      assert(not ran and diagnostic and diagnostic.code=='E_UNSUPPORTED' and effects==0,
-        'unencoded native container was not refused before suspension')
+      assert(not ran and control=='wait' and effects==0,diagnostic and diagnostic.message)
+      for tick=1,100 do
+        ran,diagnostic,control=compiler.run(plan,'start',{},services,admission.context(ledger,'saved-container-encoding',tick),checkpoint)
+        plain(checkpoint); assert(ran or control=='wait',diagnostic and diagnostic.message)
+        if ran then break end
+      end
+      assert(ran and effects==1,'symbolic container failed or replayed an effect')
     end
   end
-  log('TC_CONTRACT durable-container-rejects-unencoded-native-values-without-breaking-direct-runtime')
+  log('TC_CONTRACT durable-container-encodes-symbolic-values-without-native-functions-or-proxies')
   for _,source in ipairs(forms([[local t=table.pack(); rawset(t,type,nil); rawset(t,math,nil)
     local f=type; local m=math; local n=0; while n<300000 do n=n+1 end
     assert(f(1)=='number' and m.floor(1.5)==1); computer.finished()]])) do

@@ -149,6 +149,24 @@ function M.participate(g)
     if lane then lane.participation[g.id]=true end
   end
 end
+function M.hold(g,c,execution)
+  local owner=principal.selection(c,execution)
+  local invocation=owner and owner.invocation
+  if not invocation then return end
+  g.invocation_holds=g.invocation_holds or {}
+  g.invocation_holds[c.id..'/'..execution.kind]={computer=c.id,kind=execution.kind,id=execution.id,invocation=invocation}
+end
+local function unfinished(g,spend)
+  local waiting=false
+  for key,hold in pairs(g.invocation_holds or {}) do
+    spend(4)
+    local c=registry.computer(hold.computer)
+    local owner=c and principal.selection(c,hold)
+    if c and principal.live(c,hold) and owner and owner.invocation==hold.invocation then waiting=true
+    else g.invocation_holds[key]=nil end
+  end
+  return waiting
+end
 function M.changed(g)
   local s=registry.get().monitors; local p=s and s.presentation
   if not p or p.version~=1 then return end
@@ -267,8 +285,10 @@ local function qualify(s,lane,spend,proofs)
 end
 local function seal(s,p,lane,spend,total)
   local eligible=true; local changed=false
+  lane.waiting_invocation=nil
   for _,ref in ipairs(lane.members) do
     local g=s.groups[ref.name]
+    if unfinished(g,spend) then lane.waiting_invocation=true; eligible=false end
     if lane.owner and not lane.participation[g.id] then eligible=false end
     if not lane.last or lane.last[g.id]~=g.model.revision or lane.last_epoch and lane.last_epoch[g.id]~=(g.write_epoch or 0)
       or not g.render and not lane.job and not lane.pending then changed=true end

@@ -262,7 +262,7 @@ methods.setTextScale=function(c,g,wire,tick,spend,...)
   presentation.participate(g)
 end
 methods.getLimits=function(c,g,wire,tick,spend,...) return (data.copy(model.limits,spend)) end
-peripheral.register_type('monitor',{methods=methods,resolve=M.resolve,available=M.available,callback_stable=true,
+peripheral.register_type('monitor',{methods=methods,resolve=M.resolve,available=M.available,callback_stable=true,hold=presentation.hold,
   describe=function(g,wire,info)
     info.powered=M.available(g,function() end); info.footprint={width=g.world_width,height=g.world_height}
     info.position={x=g.left+g.world_width/2,y=g.top+g.world_height/2}; return info
