@@ -3,6 +3,7 @@ local memory=require('scripts.runtime.memory')
 local sandbox=require('scripts.runtime.sandbox')
 local admission=require('scripts.runtime.admission')
 local compiler=require('scripts.runtime.compiler')
+local library_jobs=require('scripts.runtime.library-jobs')
 local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
 local M={}; local loaded=false
@@ -138,6 +139,89 @@ local function stable_keys()
   memory.close(owner,function() end)
   assert(next(account.values)==nil and account.reserved==0)
   log('TC_CONTRACT unchanged-membership-duplicate-targets-rawset-and-retained-refusal')
+end
+local function single_replacement()
+  local function cost(width)
+    local g,account,owner,checkpoint,ctx=guard()
+    local value=g.new(width,function()
+      local result={}; for i=1,width do result[i]=false end; return result
+    end)
+    local keys=checkpoint.owned[value].keys
+    local work,allocations=ctx.machine.work,ctx.machine.allocations
+    g.assignment_one(value,width,true); value[width]=true
+    local spent,allocated=ctx.machine.work-work,ctx.machine.allocations-allocations
+    assert(checkpoint.owned[value].keys==keys and #keys==width)
+    local used,count=account.used,owner.count
+    memory.configure(account,used)
+    local ok,e=pcall(g.assignment_one,value,width,'unadmitted replacement')
+    assert(not ok and errors.resource_diagnostic(e) and value[width]==true)
+    same(account,used,count,owner)
+    memory.configure(account,1)
+    g.assignment_one(value,width,false); value[width]=false
+    assert(checkpoint.owned[value].keys==keys)
+    same(account,used,count,owner)
+    memory.close(owner,function() end)
+    return spent,allocated
+  end
+  local small_work,small_allocations=cost(4)
+  local large_work,large_allocations=cost(1024)
+  assert(large_work==small_work and large_allocations==small_allocations,
+    'single replacement rescanned unchanged table ownership')
+  log('TC_CONTRACT single-replacement-constant-shape-cost-and-atomic-retained-refusal')
+end
+local function scalar_results()
+  local account=memory.new(1000000,256); local owner=memory.owner(account)
+  local ctx=admission.context(admission.new(),'scalar-results',0); ctx.memory_owner=owner
+  local source=[[function start()
+    for i=1,100 do assert(math.abs(-i)==i and string.char(65)=='A') end
+    assert(string.char()=='' and string.char(0)==string.sub('x\0',2))
+    assert(string.char(65,66)=='AB')
+    local ok=pcall(string.char,256); assert(not ok)
+    computer.finished()
+  end]]
+  local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
+  local acquire_all=memory.acquire_all; local redundant=0
+  memory.acquire_all=function(o,items,...)
+    for _,item in ipairs(items) do
+      local value=item[1]
+      if type(value)=='table' and value.tuple_capacities and o.values[value]
+        and o.values[value].record.bytes==item[2] then redundant=redundant+1 end
+    end
+    return acquire_all(o,items,...)
+  end
+  local effects=0
+  local function services(g)
+    return {computer={finished=function() g.prepare_empty_result(); effects=effects+1 end}}
+  end
+  local called,ok,diagnostic=pcall(compiler.run,plan,'start',nil,services,ctx,{})
+  memory.acquire_all=acquire_all
+  assert(called and ok,diagnostic and diagnostic.message or tostring(ok))
+  assert(effects==1 and redundant==0,'scalar tuples rebuilt already-admitted frame storage')
+  memory.close(owner,function() end)
+  assert(next(account.values)==nil and next(account.owners)==nil)
+  log('TC_CONTRACT scalar-tuple-storage-reuse-and-bounded-character-results')
+end
+local function bounded_transforms()
+  for _,name in ipairs({'sub','lower','upper','reverse'}) do
+    for _,width in ipairs({0,256,257}) do
+      local g,account,owner,checkpoint,ctx=guard()
+      local text=string.rep('aB',math.ceil(width/2)):sub(1,width)
+      local job,args={},{n=1,text}
+      if name=='sub' then args={n=3,text,1,width} end
+      local result=library_jobs.advance('string.'..name,g,job,args)
+      local expected=name=='sub' and text or string[name](text)
+      assert(result.n==1 and result[1]==expected)
+      if width<=256 then
+        local work,allocations,used=ctx.machine.work,ctx.machine.allocations,account.used
+        assert(library_jobs.advance('string.'..name,g,job,args)==result)
+        assert(ctx.machine.work==work and ctx.machine.allocations==allocations and account.used==used,
+          'completed native transform repeated paid copy before result delivery')
+      end
+      memory.close(owner,function() end)
+      assert(next(account.values)==nil and next(account.owners)==nil)
+    end
+  end
+  log('TC_CONTRACT bounded-native-transform-boundary-and-paid-result-reuse')
 end
 local function copies()
   local g,account,owner,checkpoint=guard()
@@ -305,7 +389,7 @@ local function binding_shell()
   log('TC_CONTRACT shell-graph-binding-restoration-shares-accounted-parent-and-method-identities')
 end
 function M.run()
-  lazy_bindings(); stable_keys(); frames(); bulk(); mutations(); copies(); growth(); binding_refusal(); binding_shell()
+  single_replacement(); scalar_results(); bounded_transforms(); lazy_bindings(); stable_keys(); frames(); bulk(); mutations(); copies(); growth(); binding_refusal(); binding_shell()
   for _,kind in ipairs({'rawset','insert','remove','sort'}) do
     local ok,cost=metered(kind,limits.callback_work); assert(ok)
     for available=0,cost-1 do assert(not metered(kind,available),'short heap allowance published a mutation') end

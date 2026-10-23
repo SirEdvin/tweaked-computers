@@ -401,6 +401,22 @@ function M.new(context, services, shell, durable)
   end
   function G.assignment_check(n,targets,values,single_t,single_k,single_v)
     G.spend(n*3+1); allocate(n)
+    if durable and n==1 then
+      local pair=targets and targets[1]
+      if pair or not targets then
+        local t,k,v=single_t,single_k,single_v
+        if pair then t,k,v=pair[1],pair[2],values[1] end
+        plain(t); key(k)
+        if t[k]~=nil and v~=nil then
+          -- Membership and table storage are unchanged; admit only the new payload.
+          if heap then
+            G.host_work(16,8)
+            local items={}; string_charge(items,v); memory.acquire_all(heap,items)
+          end
+          return
+        end
+      end
+    end
     local staged={}
     -- Native Lua 5.2 publishes multiple assignments right-to-left. Match that
     -- order for duplicate/aliased targets or preflight can undercount growth.

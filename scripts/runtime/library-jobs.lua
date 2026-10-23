@@ -187,6 +187,7 @@ local function mutate(g,j,args,call,prepare,remove)
   return result
 end
 local function transform(g,j,args,call,prepare,name)
+  if j.result then return j.result end
   local source=args[1]
   if type(source)~='string' then fail('string required') end
   if not j.phase then
@@ -199,6 +200,17 @@ local function transform(g,j,args,call,prepare,name)
       first=first<0 and math.max(#source+math.ceil(first)+1,1) or math.max(math.floor(first),1)
       last=last<0 and #source+math.ceil(last)+1 or math.floor(last)
       last=math.min(last,#source)
+    end
+    local count=math.max(0,last-first+1)
+    -- One bounded native copy needs neither a chunk vector nor a second join.
+    if name~='byte' and count<=256 then
+      g.atomic(count*2+2,count+2)
+      keep(g,j,count,0)
+      local value
+      if name=='sub' then value=string.sub(source,first,last)
+      else value=string[name](source) end
+      j.result={n=1,value}
+      return j.result
     end
     keep(g,j,0,0); j.parts={}; j.bytes=0; j.index=first; j.last=last; j.first=first
     j.values={n=math.max(0,last-first+1)}; j.phase='copy'

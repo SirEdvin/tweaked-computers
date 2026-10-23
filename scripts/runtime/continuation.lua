@@ -710,7 +710,7 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   local call_output
   local function admit_tuple(tuple,out,called)
     if not memory_owner then return end
-    guard.host_work(tuple.n*6+2,tuple.n*3+2)
+    guard.host_work(tuple.n+2,0)
     local width=tuple.n-(called and 1 or 0)
     local carrier=f==checkpoint.root and checkpoint or f
     local previous=carrier.tuple_capacities[out]
@@ -722,13 +722,22 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     if not node then errors.raise('E_UNSUPPORTED','missing frame allocation; continuation retained') end
     -- Frame reservations survive limit decreases without retaining dead tuple identities.
     local bytes=node.record.bytes+16*(math.max(0,width-previous)+control-carrier.tuple_control)
-    local items={{carrier,bytes}}
+    local strings=0
     for i=1,tuple.n do
       local value=tuple[i]
-      if type(value)=='string' then items[#items+1]={value,#value+32} end
+      if type(value)=='string' and not memory_owner.values[value] then strings=strings+1 end
     end
-    memory.acquire_all(memory_owner,items)
-    carrier.tuple_capacities[out]=math.max(previous,width); carrier.tuple_control=control
+    if bytes~=node.record.bytes or strings>0 then
+      guard.host_work(tuple.n+strings*6+4,strings*3+4)
+      local items={}
+      if bytes~=node.record.bytes then items[1]={carrier,bytes} end
+      for i=1,tuple.n do
+        local value=tuple[i]
+        if type(value)=='string' and not memory_owner.values[value] then items[#items+1]={value,#value+32} end
+      end
+      memory.acquire_all(memory_owner,items)
+      carrier.tuple_capacities[out]=math.max(previous,width); carrier.tuple_control=control
+    end
   end
   function r.finish(tuple)
     admit_tuple(tuple,0)
@@ -829,10 +838,11 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     local descriptor=checkpoint.functions[symbol]
     local path=checkpoint.symbols[symbol]
     local bridge=path=='pcall' or path=='xpcall'
-    local library=library_jobs.supports(path)
+    local count=pending.protection and pending.args.n or select('#',...)
+    -- A zero/single-byte constructor has no input-dependent traversal to suspend.
+    local library=library_jobs.supports(path) and not (path=='string.char' and count<=1)
     if descriptor or bridge or library then
       local captures=descriptor and executable.protos[descriptor.proto].captures or {}
-      local count=pending.protection and pending.args.n or select('#',...)
       if not pending.protection then guard.host_work(count+1,count+1) end
       guard.host_work(count+#captures+8,count+8)
       local args=pending.protection and pending.args or {n=count,...}
