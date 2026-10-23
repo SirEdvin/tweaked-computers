@@ -113,12 +113,17 @@ local function metered(kind,available)
   return ok,cost
 end
 local function growth()
-  local account=memory.new(12000,256); local owner=memory.owner(account)
+  local account=memory.new(1000000,256); local owner=memory.owner(account)
   local ledger=admission.new(); local ctx=admission.context(ledger,'real-heap-growth',0); ctx.memory_owner=owner
   local source='function start() local root=table.pack(); local node=root; while true do assert(rawget(root,"n")==0); local child=table.pack(); rawset(node,"next",child); node=child end end'
   local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
   local checkpoint={}; local waited=false; local refused=false
-  for tick=1,100 do
+  ctx=admission.context(ledger,'real-heap-growth',1); ctx.memory_owner=owner
+  assert(admission.reserve(ctx,'work',limits.callback_work-1))
+  local ok,e,control=compiler.run(plan,'start',{}, {},ctx,checkpoint)
+  assert(not ok and control=='wait',e and e.message)
+  memory.configure(account,account.used+4096) -- Isolate guest growth from the source-derived initial footprint.
+  for tick=2,101 do
     ctx=admission.context(ledger,'real-heap-growth',tick); ctx.memory_owner=owner
     assert(admission.reserve(ctx,'work',limits.callback_work-1024))
     local ok,diagnostic,control=compiler.run(plan,'start',{}, {},ctx,checkpoint)
@@ -159,7 +164,7 @@ local function frames()
   local before=account.used
   ctx=admission.context(ledger,'frame-admission-other',2); ctx.memory_owner=other
   assert(compiler.run(plan,'start',nil,services,ctx,second))
-  assert(effects==2 and account.used-before==account.values[checkpoint].bytes+512,
+  assert(effects==2 and account.used-before==account.values[checkpoint].bytes+512+#checkpoint.symbol_roots*(192+2*48+16+256+128),
     'shared source/handler payloads were charged twice across frames')
   memory.close(owner,function() end)
   assert(other.values[source] and other.values.start and other.values[second] and not account.values[checkpoint])
@@ -178,15 +183,21 @@ local function binding_refusal()
   local reference,ctx=setup('binding-reference')
   assert(compiler.run(reference.plan,'start',nil,function(g) return services(reference,g) end,ctx,reference.checkpoint))
   local bytes=reference.account.values[reference.checkpoint].bytes
+  local symbol_bytes,symbol_count=0,0
+  for _,token in ipairs(reference.checkpoint.symbol_roots) do
+    local path=reference.checkpoint.symbols[token]
+    assert(reference.owner.values[token] and reference.owner.values[path],'source symbols bypass retained admission')
+    symbol_bytes=symbol_bytes+192+2*48+16+256+#path+32+256; symbol_count=symbol_count+2
+  end
   memory.close(reference.owner,function() end)
   local f; f,ctx=setup('binding-refusal')
-  local admitted=f.account.used+3*256+bytes+#source+32+#'start'+32
+  local admitted=f.account.used+3*256+bytes+#source+32+#'start'+32+symbol_bytes
   memory.configure(f.account,admitted+2*192+6*48+16+48+256)
   local ok,e,control=compiler.run(f.plan,'start',nil,function(g) return services(f,g) end,ctx,f.checkpoint)
   assert(not ok and control=='resource' and e.recoverable and f.wraps==0 and f.effects==0
     and #f.checkpoint.bindings_order==0 and next(f.checkpoint.bindings)==nil,
     'binding refusal published an effect or partial descriptor')
-  same(f.account,admitted,3,f.owner)
+  same(f.account,admitted,3+symbol_count,f.owner)
   memory.configure(f.account,1000000)
   ctx=admission.context(f.ledger,'binding-refusal',1); ctx.memory_owner=f.owner
   assert(compiler.run(f.plan,'start',nil,function(g) return services(f,g) end,ctx,f.checkpoint))
@@ -228,10 +239,11 @@ function M.run()
   local ledger=admission.new(); local ctx=admission.context(ledger,'heap-cold',0); ctx.memory_owner=owner
   local source=[[function start()
     local p=peripheral.wrap(); local probe=p.probe; probe()
+    local key=string.char(102,108,111,111,114); local floor=math[key]
     local root=table.pack(); local child=table.pack('kept')
     rawset(root,'self',root); rawset(root,'child',child)
     local n=0; while n<300000 do n=n+1 end
-    assert(rawequal(root,rawget(root,'self'))); assert(rawget(child,1)=='kept')
+    assert(rawequal(root,rawget(root,'self'))); assert(rawget(child,1)=='kept'); assert(floor(1.5)==1)
     rawset(root,'child',nil); probe(); computer.finished()
   end]]
   local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
@@ -280,6 +292,10 @@ function M.on_tick(event)
       if d.method then assert(f.owner.values[d.method] and f.owner.values[d.facade]) end
     end
     assert(count==2 and f.probes==1,'binding facade/method alias or effect prefix missing')
+    assert(f.owner.values[f.checkpoint.intern['math.floor']] and f.owner.values['math.floor'])
+    for _,token in ipairs(f.checkpoint.symbol_roots) do
+      assert(f.owner.values[token] and f.owner.values[f.checkpoint.symbols[token]])
+    end
     for value in pairs(f.checkpoint.owned) do if value.self==value then f.root=value; f.child=value.child end end
     assert(f.root and f.child and f.child[1]=='kept' and f.owner.values[f.root] and f.owner.values[f.child])
     memory.configure(f.account,1)

@@ -13,6 +13,7 @@ function M.begin(checkpoint,executable)
     phase='mark',cursor=1,order={}}
   gc.records[checkpoint]=true
   if checkpoint.source then push(gc,checkpoint.source); push(gc,checkpoint.handler) end
+  if checkpoint.symbol_roots then push(gc,checkpoint.symbol_roots,'range',#checkpoint.symbol_roots) end
   push(gc,f.locals,'range',executable.locals)
   push(gc,f.slots,'range',executable.slots)
   push(gc,f.tuples,'tuples',executable.slots)
@@ -85,7 +86,7 @@ function M.advance(checkpoint,spend,memory_owner)
           gc.bytes=gc.bytes+192+48*#owned.keys
           push(gc,value,'edges')
           if owned.resource then push(gc,owned.resource,'resource') end
-        elseif symbol then gc.bytes=gc.bytes+112; push(gc,symbol)
+        elseif symbol then gc.bytes=gc.bytes+192+2*48+16; push(gc,symbol)
         elseif binding then gc.bytes=gc.bytes+2*192+6*48+16+48; push(gc,value,'binding')
         else malformed() end
       end

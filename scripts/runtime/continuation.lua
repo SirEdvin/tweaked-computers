@@ -10,7 +10,7 @@ local memory=require('scripts.runtime.memory')
 local M={version=2}
 local function quote(s) return string.format('%q',s) end
 local checkpoint_fields={version=true,source=true,handler=true,frame=true,symbols=true,intern=true,bindings=true,
-  owned=true,owned_order=true,symbols_order=true,bindings_order=true,collection=true,validation=true,memory_bytes=true,memory_owner=true,
+  owned=true,owned_order=true,symbols_order=true,symbol_roots=true,bindings_order=true,collection=true,validation=true,memory_bytes=true,memory_owner=true,
   wait_tick=true,event_initialized=true,shell_root=true,result=true,result_printed=true,value_graph=true,completed=true}
 local function validate(checkpoint,executable,tick,spend)
   local function refuse(message) errors.raise('E_UNSUPPORTED',message..'; continuation retained') end
@@ -29,6 +29,7 @@ local function validate(checkpoint,executable,tick,spend)
     if type(checkpoint[name])~='table' or getmetatable(checkpoint[name]) then refuse('invalid ownership order') end
   end
   if checkpoint.collection~=nil and (type(checkpoint.collection)~='table' or getmetatable(checkpoint.collection)) then refuse('invalid collection cursor') end
+  if checkpoint.symbol_roots~=nil and (type(checkpoint.symbol_roots)~='table' or getmetatable(checkpoint.symbol_roots)) then refuse('invalid source symbol roots') end
   if frame.pending~=nil and (type(frame.pending)~='table' or getmetatable(frame.pending) or frame.pending.block~=frame.pc) then refuse('invalid pending primitive') end
   checkpoint_validation.advance(checkpoint,executable,spend)
 end
@@ -37,6 +38,22 @@ end
 -- Unsupported slice syntax is explicit, never executed by a native fallback.
 function M.lower(main,reject,position,mode)
   local blocks,flow,locals,local_count,slots={},{},{},0,0
+  local symbol_paths={}
+  local function static_path(node)
+    local parts,bytes={},0
+    while node and node.node_type=='index' and node.suffix.node_type=='string' do
+      local key=node.suffix.value
+      parsing.enter(#key+1)
+      if key:find('.',1,true) then return end
+      parts[#parts+1]=key; bytes=bytes+#key+1
+      if node.src_ex_did_not_exist then
+        parsing.enter(bytes+#parts+1)
+        for i=1,#parts/2 do parts[i],parts[#parts-i+1]=parts[#parts-i+1],parts[i] end
+        return table.concat(parts,'.')
+      end
+      node=node.ex
+    end
+  end
   local expression,statement,body,expressions
   local function slot() slots=slots+1; return slots end
   local function register(ref)
@@ -75,6 +92,8 @@ function M.lower(main,reject,position,mode)
       local ref=register(n)
       return output(ref,{'l'..locals[n.reference_def]})
     elseif k=='index' then
+      local path=static_path(n)
+      if path then symbol_paths[path]=true end
       if n.src_ex_did_not_exist then
         return output('r.global('..quote(n.suffix.value)..')')
       end
@@ -267,7 +286,10 @@ function M.lower(main,reject,position,mode)
     local b=blocks[i]
     blocks[i]='function(f,r) r.guard.step('..b.line..','..b.column..'); r.guard.spend('..maximum..'); '..b.code..' end'
   end
-  return 'return {blocks={'..table.concat(blocks,',\n')..'},cleanup={'..table.concat(cleanups,',')..'},entries={'..table.concat(entries,',')..'},slots='..slots..',locals='..local_count..'}'
+  local paths={}; for path in pairs(symbol_paths) do paths[#paths+1]=path end
+  table.sort(paths,function(a,b) parsing.enter(#a+#b+1); return a<b end)
+  for i,path in ipairs(paths) do paths[i]=quote(path) end
+  return 'return {blocks={'..table.concat(blocks,',\n')..'},cleanup={'..table.concat(cleanups,',')..'},entries={'..table.concat(entries,',')..'},symbols={'..table.concat(paths,',')..'},slots='..slots..',locals='..local_count..'}'
 end
 
 function M.run(source,factory,name,event,services,context,checkpoint,shell)
@@ -285,11 +307,19 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   local executable=factory()
   if checkpoint.version==nil then
     if not executable.entries[name] then return false,errors.new('E_NOT_FOUND','handler not declared') end
+    local symbols,intern,order={},{},{}
+    local roots
     if memory_owner then
-      -- Twelve initial containers, seventeen header entries and static value ranges.
-      local bytes=12*192+17*48+16*(executable.locals+2*executable.slots)
-      local admitted,problem=pcall(memory.acquire_all,memory_owner,
-        {{checkpoint,bytes},{source,#source+32},{name,#name+32}})
+      roots={}
+      -- Source symbols are part of the accepted frame, not new growth after a decrease.
+      local bytes=13*192+18*48+16*(executable.locals+2*executable.slots+#executable.symbols)
+      local items={{checkpoint,bytes},{source,#source+32},{name,#name+32}}
+      for i,path in ipairs(executable.symbols) do
+        local token={}
+        symbols[token]=path; intern[path]=token; order[i]=token; roots[i]=token
+        items[#items+1]={token,192+2*48+16}; items[#items+1]={path,#path+32}
+      end
+      local admitted,problem=pcall(memory.acquire_all,memory_owner,items)
       if not admitted then
         local diagnostic=errors.resource_diagnostic(problem)
         return false,diagnostic or errors.new('E_ENGINE','continuation storage admission failed'),diagnostic and 'resource' or nil
@@ -297,8 +327,8 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     end
     checkpoint.version=M.version; checkpoint.source=source; checkpoint.handler=name
     checkpoint.frame={pc=executable.entries[name],locals={},slots={},tuples={},event=event}
-    checkpoint.symbols={}; checkpoint.intern={}; checkpoint.bindings={}; checkpoint.owned={}
-    checkpoint.owned_order={}; checkpoint.symbols_order={}; checkpoint.bindings_order={}
+    checkpoint.symbols=symbols; checkpoint.intern=intern; checkpoint.bindings={}; checkpoint.owned={}
+    checkpoint.owned_order={}; checkpoint.symbols_order=order; checkpoint.bindings_order={}; checkpoint.symbol_roots=roots
     if memory_owner then checkpoint.memory_owner=memory_owner.id end
   end
   local f=checkpoint.frame
@@ -308,7 +338,10 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
   function r.symbol(path)
     local symbol=symbol_cache[path]
     if not symbol then
-      symbol={}; checkpoint.symbols[symbol]=path; symbol_cache[path]=symbol
+      guard.host_work(4,4)
+      symbol={}
+      if memory_owner then memory.acquire_all(memory_owner,{{symbol,192+2*48+16},{path,#path+32}}) end
+      checkpoint.symbols[symbol]=path; symbol_cache[path]=symbol
       checkpoint.symbols_order[#checkpoint.symbols_order+1]=symbol
     end
     return symbol

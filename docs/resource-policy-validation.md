@@ -217,6 +217,14 @@ The focused fixture refuses a result whose token alone fits but complete descrip
 
 Dynamic tuples, standalone strings and namespace symbols, collector/validator/compiler/service/result/control workspace, temporary peaks, Console lifetime transfers and universal settings/migration integration remain required. This does not complete task 2.2 or the original monitor/performance gate; progress remains **5/47** and the branch remains unpublished.
 
+## Source-symbol lifetime checkpoint
+
+Evidence: `resume-symbol-memory-01/`. Namespace/global tokens and their interned path strings now have retained admission. The existing parser/lowerer collects deterministic static source paths; a host-supplied owner prepays their tokens, strings and root-vector metadata together with initial frame admission. That source-owned pool stays rooted for the invocation lifetime, so a method first used after a settings decrease does not require fresh metadata growth. Computed paths still use atomic table/string admission before either symbol index changes. Source paths do not become executable authority: normal global/member resolution and service checks remain in force.
+
+A diagnostic red package preserves every previous production payload and adds only `tests.resource_policy_symbols` plus its manifest hash; it actually fails on the missing source-symbol pool. The focused test covers both source forms, a computed `math.floor` alias, collection, unchanged same-tick credits, a lowered one-byte account and first use of a prepaid later method. The separate native cold heap/binding fixture now retains the computed method across its real separate-process reload as well. The growth fixture grants a fixed 4,096-byte guest-growth allowance **after** initial source metadata admission, rather than conflating the source-derived footprint with guest growth. No production allowance or acceptance deadline is raised.
+
+This remains unfinished owner-path integration. Initial preparation is still monolithic like the existing compiler and needs task 4.4's durable cursors; temporary peaks, dynamic tuple/standalone-string/control/result workspace, Console lifetime transfers and universal live setting/migration integration remain open. The optional private symbol-root field is not a shipped migration claim. Overall acceptance remains **5/47**.
+
 ## Still required
 
 The source-site disposition audit is not complete. Settings/resources, recoverable capacity handling, non-lossy settings decreases, all language/library/service continuations, event diagnostics, native inventories/UI, complete migration and engine matrix, actual rendering/audio and connected multiplayer remain mandatory. No production budget increase or weaker test gate is authorized by this checkpoint.
