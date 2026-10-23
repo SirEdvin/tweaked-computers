@@ -85,6 +85,49 @@ function M.acquire(owner,value,bytes,sponsor)
   owner.tail=node; owner.values[value]=node; owner.count=owner.count+1
   record.owners=record.owners+1; account.used=account.used+delta
 end
+-- Multi-object publication must not partially charge its table/string graph.
+function M.acquire_all(owner,items,sponsor)
+  active(owner)
+  local funding=sponsor or owner
+  active(funding)
+  assert(funding.account==owner.account and (not sponsor or not funding.closing),'inactive or foreign memory sponsor')
+  local account=owner.account
+  local seen,changes,positive,negative={},{},0,0
+  for _,item in ipairs(items) do
+    local value,bytes=item[1],item[2]
+    integer(bytes)
+    assert(type(value)=='string' or type(value)=='table' and getmetatable(value)==nil,'plain accounted object or string required')
+    if seen[value]~=nil then assert(seen[value]==bytes,'duplicate object charge mismatch')
+    else
+      seen[value]=bytes
+      local node=owner.values[value]
+      local record=account.values[value]
+      local delta
+      if node then
+        assert(type(value)=='table' or bytes==record.bytes,'immutable string charge changed')
+        delta=bytes-record.bytes
+      else
+        assert(not record or record.bytes==bytes,'shared object charge mismatch')
+        delta=LINK+(record and 0 or RECORD+bytes)
+      end
+      if delta>0 then positive=positive+delta; integer(positive)
+      else negative=negative+delta end
+      changes[#changes+1]={value=value,bytes=bytes,delta=delta}
+    end
+  end
+  if positive>0 then assert(not owner.closing,'memory owner is closing') end
+  capacity(account,math.max(0,positive-math.min(funding.reserved,positive)+negative))
+  -- Shrink first, then consume the prepaid/headroom proof without yielding.
+  for _,change in ipairs(changes) do
+    if change.delta<=0 then M.acquire(owner,change.value,change.bytes,sponsor) end
+  end
+  -- The complete proof also covers replacement while still grandfathered over-limit.
+  local prepaid=math.max(0,positive-funding.reserved)
+  funding.reserved=funding.reserved+prepaid; account.reserved=account.reserved+prepaid
+  for _,change in ipairs(changes) do
+    if change.delta>0 then M.acquire(owner,change.value,change.bytes,sponsor) end
+  end
+end
 function M.release(owner,value)
   active(owner)
   local node=owner.values[value]

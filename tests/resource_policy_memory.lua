@@ -31,6 +31,26 @@ local function refusal(fn,account,requested)
   assert(account.used==used and account.reserved==reserved,'refusal mutated the lifetime ledger')
 end
 function M.run()
+  local heap_account=memory.new(1000000,256)
+  local heap_owner=memory.owner(heap_account)
+  local heap_context=admission.context(admission.new(),'retained-guest-heap',0)
+  heap_context.memory_owner=heap_owner
+  local durable={owned={},owned_order={}}
+  local guard=sandbox.new(heap_context,{},nil,durable)
+  guard.initialize()
+  local object=guard.new(2,function() return {key='retained',alias='retained'} end)
+  assert(heap_owner.values[object] and heap_owner.values['retained'] and heap_owner.values.key
+    and heap_owner.values.alias,'sandbox retained a guest table/string without lifetime admission')
+  local rawset=guard.global('rawset')
+  local used,reserved,count=heap_account.used,heap_account.reserved,heap_owner.count
+  local keys=durable.owned[object].keys
+  memory.configure(heap_account,used+48)
+  local ok,problem=pcall(guard.call,rawset,object,'growth','new string')
+  assert(not ok and errors.resource_diagnostic(problem),'guest growth bypassed aggregate retained capacity')
+  assert(object.growth==nil and durable.owned[object].keys==keys and heap_owner.count==count
+    and heap_account.used==used and heap_account.reserved==reserved,'refused guest growth changed data or accounting')
+  log('TC_CONTRACT sandbox-retained-table-and-string-admission-precedes-raw-publication')
+  memory.close(heap_owner,function() end)
   local account=memory.new(1000000,256)
   local baseline=account.used
   local program,shell=memory.owner(account),memory.owner(account)

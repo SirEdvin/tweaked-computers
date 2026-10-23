@@ -1,6 +1,7 @@
 local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
+local memory = require('scripts.runtime.memory')
 local M = {}
 
 function M.new(context, services, shell, durable)
@@ -8,6 +9,20 @@ function M.new(context, services, shell, durable)
   local poison, line, column, depth = nil, 1, 1, 0
   local owned = durable and durable.owned or setmetatable({}, {__mode='k'})
   local protected = setmetatable({}, {__mode='k'})
+  -- shortcut: table payloads only; finish frame/temporary accounting before production wiring.
+  local heap=durable and context.memory_owner
+  local function string_charge(items,value)
+    if type(value)=='string' then items[#items+1]={value,#value+32} end
+  end
+  local function table_charges(items,t,keys,changed,values)
+    G.host_work(#keys*12+4,#keys*4+4)
+    items[#items+1]={t,192+48*#keys}
+    for _,k in ipairs(keys) do
+      local v=t[k]
+      if changed and changed[k]~=nil then v=values[k] end
+      string_charge(items,k); string_charge(items,v)
+    end
+  end
   local function retained(value)
     if durable and (type(value)=='function' or type(value)=='table' and protected[value]) then
       errors.raise('E_UNSUPPORTED','continuation containers require encoded callable/API values')
@@ -17,6 +32,10 @@ function M.new(context, services, shell, durable)
     if durable then
       local keys={}
       for k,v in pairs(t) do G.host_work(1,1); retained(k); retained(v); keys[#keys+1]=k end
+      if heap then
+        local items={}; table_charges(items,t,keys)
+        memory.acquire_all(heap,items)
+      end
       if not owned[t] then durable.owned_order[#durable.owned_order+1]=t end
       owned[t]={keys=keys}
     else owned[t]=true end
@@ -264,18 +283,24 @@ function M.new(context, services, shell, durable)
       if pair then
         local t,k,v=pair[1],pair[2],values[i]
         plain(t); key(k)
-        if not staged[t] then staged[t]={count=inventory(t),keys={},updates={}} end
+        if not staged[t] then staged[t]={count=inventory(t),keys={},updates={},values=heap and {}} end
         local state=staged[t]
         local present=state.keys[k]
         if present==nil then present=t[k]~=nil end
         if (v~=nil)~=present then state.count=state.count+(v~=nil and 1 or -1) end
         state.keys[k]=v~=nil
+        if heap then state.values[k]=v end
         if durable then state.updates[#state.updates+1]={k,v~=nil} end
         if state.count>limits.table_entries then errors.raise('E_LIMIT','table growth exceeded') end
       end
     end
     if durable then
       for t,state in pairs(staged) do state.next_keys=changed_keys(t,state.updates) end
+      if heap then
+        local items={}
+        for t,state in pairs(staged) do table_charges(items,t,state.next_keys,state.keys,state.values) end
+        memory.acquire_all(heap,items)
+      end
       for t,state in pairs(staged) do owned[t].keys=state.next_keys end
     end
     -- Publication is statically emitted native writes after complete preflight.
@@ -682,6 +707,10 @@ function M.new(context, services, shell, durable)
     G.spend(n-pos+3); allocate(1)
     local keys=durable and changed_keys(t,{{n+1,pos<=n or value~=nil},{pos,value~=nil}})
     prepare_return(tab.insert)
+    if heap then
+      local items={}; table_charges(items,t,keys); string_charge(items,value)
+      memory.acquire_all(heap,items)
+    end
     table.insert(t,pos,value)
     if keys then owned[t].keys=keys end
   end
@@ -695,6 +724,10 @@ function M.new(context, services, shell, durable)
     local keys=durable and changed_keys(t,{{math.max(pos,n),false}})
     local removed=t[pos]
     prepare_return(tab.remove,removed)
+    if heap then
+      local items={}; table_charges(items,t,keys)
+      memory.acquire_all(heap,items)
+    end
     for i=pos,n-1 do t[i]=t[i+1] end
     t[math.max(pos,n)]=nil
     if keys then owned[t].keys=keys end
@@ -722,6 +755,10 @@ function M.new(context, services, shell, durable)
       keys=changed_keys(t,updates)
     end
     prepare_return(tab.sort)
+    if heap then
+      local items={}; table_charges(items,t,keys)
+      memory.acquire_all(heap,items)
+    end
     for i=1,n do t[i]=staged[i] end
     if keys then owned[t].keys=keys end
   end
