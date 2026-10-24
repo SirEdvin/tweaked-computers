@@ -3,6 +3,7 @@ local admission = require('scripts.runtime.admission')
 local limits = require('scripts.runtime.limits')
 local examples = require('examples.planning-programs')
 local sandbox = require('scripts.runtime.sandbox')
+local errors = require('scripts.runtime.errors')
 local M = {}
 local function source(body)
   return 'return {api_version=1, handlers={start=function(event) '..body..' end}}'
@@ -10,6 +11,27 @@ end
 function M.run(report_total)
   local tests=0
   local function report(name) tests=tests+1; if log then log('TC_CONTRACT '..name) end end
+  local integers=table.pack(nil,false,true,'1',{},function() end,-math.huge,math.huge,0/0,
+    -9007199254740992,-9007199254740991,-2147483648,-1,-0.5,-0.0,0,0.5,1,
+    2147483647,4294967295,9007199254740990,9007199254740991,9007199254740992,1e308,-1e308,1e-308)
+  for i=1,integers.n do
+    local value=integers[i]
+    for _,range in ipairs({{0,9007199254740991},{-9007199254740991,9007199254740991},
+      {-2147483648,2147483647},{1,4294967295},{0,0},{1,0},{-math.huge,math.huge},{0/0,1},{0,0/0}}) do
+      local expected=errors.finite(value) and value%1==0 and value>=range[1] and value<=range[2]
+      assert(errors.integer(value,range[1],range[2])==expected,'integer domain changed at case '..i)
+    end
+    for _,kind in ipairs({'work','compile','allocations'}) do
+      local ctx=admission.context(admission.new(),'integer-domain',0)
+      local valid=errors.finite(value) and value%1==0 and value>=0 and value<=9007199254740991
+      assert(pcall(admission.reserve,ctx,kind,value)==valid,'invalid reservation validation at case '..i)
+      if not valid then assert(ctx.machine[kind]==0 and ctx.ledger.total==0,'invalid amount changed admission') end
+    end
+  end
+  assert(not errors.integer(math.huge,-math.huge,math.huge))
+  assert(not errors.integer(-math.huge,-math.huge,math.huge))
+  assert(not errors.integer(0/0,-math.huge,math.huge))
+  report('integer-domains-and-invalid-admission-atomicity')
   local function compiled(body, id, ledger, tick)
     local ctx=admission.context(ledger or admission.new(),id or 'candidate',tick or 0)
     local plan,e=compiler.compile(source(body),ctx)
