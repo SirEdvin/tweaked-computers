@@ -4,6 +4,28 @@ This is an **unfinished implementation checkpoint**, not a release candidate or 
 
 The [source-site disposition inventory](resource-policy-inventory.md) maps every policy-manifest audit row and shared limit constant to its implementation paths and required treatment. Inventory coverage is not proof that those limits have been removed.
 
+## Workspace ownership fixture correction
+
+The previously retained `editor_workspace` failure at the foreign-close case
+was an invalid GUI double, not evidence of a native missing-tags failure: the
+ad-hoc element bypassed the existing GUI factory and omitted `tags`. The case
+now uses that factory and checks both a foreign root and its child with empty,
+cross-player recovery and forged same-player recovery tags. Closing either
+must leave the construction-in-progress workspace, session and foreign widgets
+untouched. Production ownership checks are unchanged.
+
+The complete workspace fixture passes all 28 contract groups in both base and
+Space Age. CI runs this same fixture before the separately failing legacy
+integration step; it is moved, not skipped or replaced with a smaller fixture.
+Evidence, including the original failure, is preserved at
+`/home/siredvin/artifacts/tweaked-computers/resource-policy-workspace-ownership/`.
+These are packaged engine runs with table-mocked GUI/player objects, not native
+keyboard, rendering, focus or connected multiplayer acceptance. A separate
+`editor_contract` probe still fails at its Console truncation assertion; that
+failure is preserved rather than counted as a pass. No additional OpenSpec task
+is complete: the overall checklist remains **13/47**, with Configurator
+result/recovery admission and the other implementation gates still open.
+
 ## Event-loss warning checkpoint
 
 Event publication now marks a pending warning without logging or enqueueing

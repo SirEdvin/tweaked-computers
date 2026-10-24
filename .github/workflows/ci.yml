@@ -95,6 +95,15 @@ jobs:
             python tools/smoke.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold
           done
+      - name: Check workspace event ownership contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
+          engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/gui-workspace" --mode both \
+            --fixture tests.editor_workspace --data-fixture tests.candidate_data
       - name: Check packaged sandbox and cold factory integration
         shell: bash
         run: |
@@ -169,9 +178,6 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/peripheral-inspectors" --mode both \
             --fixture tests.peripheral_inspector_engine --production-context --cold \
             --data-fixture tests.recipe_searcher_data
-          python tools/smoke.py --factorio "$engine" --archive "$archive" \
-            --output "$RUNNER_TEMP/tc-ci/gui-workspace" --mode both \
-            --fixture tests.editor_workspace --data-fixture tests.candidate_data
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/rotation-guards" --mode both \
             --fixture tests.rotation_engine --data-fixture tests.candidate_data

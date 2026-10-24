@@ -179,11 +179,25 @@ function M.run()
       assert(not c.status.caption:find(' | base ',1,true),'revision trackers are presentation, not safety')
     end)
     group('workspace-foreign-close-during-shell-construction-is-ignored',function()
-      local pane=f.content; f.content=nil
-      local ok,e=pcall(editor.on_closed,{player_index=a.index,element={valid=true,parent=a.gui.screen}})
-      f.content=pane
-      assert(ok,e)
-      assert(f.valid and a.opened==f and model.session(a.index))
+      -- Use the GUI factory: native elements always expose a tags table. A
+      -- hand-written {valid,parent} double fails before testing root ownership.
+      local foreign=a.gui.screen.add{type='frame',name='foreign-close-fixture'}
+      local child=foreign.add{type='label',name='foreign-child',caption='foreign'}
+      local session=model.session(a.index)
+      for _,tags in ipairs({{},
+        {input_recovery=true,player=b.index,id=rec.id},
+        {input_recovery=true,player=a.index,id=rec.id}}) do
+        foreign.tags=tags
+        for _,element in ipairs({foreign,child}) do
+          local pane=f.content; f.content=nil
+          local ok,e=pcall(editor.on_closed,{player_index=a.index,element=element})
+          f.content=pane
+          assert(ok,e)
+          assert(f.valid and a.opened==f and model.session(a.index)==session)
+          assert(foreign.valid and child.valid,'foreign close must not mutate either window')
+        end
+      end
+      foreign.destroy()
     end)
     group('workspace-starter-validate-save-activation-separate',function()
       click(c.message.template); assert(c.source.text==help.template and rec.saved_source=='' and not rec.active)
