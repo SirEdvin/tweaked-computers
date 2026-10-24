@@ -1,11 +1,10 @@
 -- Target-local constant section operations. Shared contents are never written.
 local catalog=require('scripts.configuration.catalog')
 local validation=require('scripts.configuration.validation')
-local adapters=require('scripts.configuration.adapters')
 local data=require('scripts.runtime.data')
 local errors=require('scripts.runtime.errors')
+local limits=require('scripts.runtime.limits')
 local M={}
-local limits=adapters.limits
 local function nop() end
 local function control(item,create)
   if item.protected then errors.raise('E_READ_ONLY','owned device protected') end
@@ -21,7 +20,6 @@ local function type_name(value)
 end
 local function read(section,spend)
   spend(128)
-  if section.filters_count>limits.section_filters then errors.raise('E_LIMIT','native section filter capacity exceeds supported envelope') end
   spend(section.filters_count*64)
   local filters={}
   for i=1,section.filters_count do
@@ -43,13 +41,32 @@ end
 function M.get(item,spend)
   local cb=control(item,false); local result={}
   if cb then
-    if cb.sections_count>limits.sections then errors.raise('E_LIMIT','native section capacity exceeds supported envelope') end
     for i=1,cb.sections_count do result[#result+1]=read(assert(cb.get_section(i)),spend) end
   end
-  return (data.copy(result,spend,limits.configuration_bytes))
+  return (data.copy(result,spend,limits.host_memory_bytes))
 end
-local function fields(value,spend,patch)
-  value=data.copy(value,spend,limits.configuration_bytes)
+local function group_snapshot(item,name,spend)
+  if not name or name=='' then return nil end
+  spend(#name+128)
+  local group=item.entity.force.get_logistic_group(name,defines.logistic_group_type.with_trash)
+  local filters={}
+  if group then
+    spend(#group.filters*64+#group.members*8)
+    for i,value in ipairs(group.filters) do
+      local normal=validation.normal(catalog.section_fields.filters.items,value)
+      normal.index=i; filters[i]=normal
+    end
+  end
+  -- Native members are observation-only LuaObjects, never part of a saved plan.
+  return (data.copy(filters,spend,limits.host_memory_bytes))
+end
+local function fields(value,spend,patch,cursor)
+  cursor=cursor or {}
+  if not cursor.request then
+    local copy=data.copy(value,spend,limits.host_memory_bytes)
+    spend(1); cursor.request=copy; cursor.validated={}; cursor.seen={}; cursor.identities={}; cursor.filter_index=0
+  end
+  value=cursor.request
   if type(value)~='table' then errors.raise('E_ARGUMENT','section object required') end
   local set=value
   if patch then
@@ -63,14 +80,18 @@ local function fields(value,spend,patch)
   for name,v in pairs(set) do
     local schema=catalog.section_fields[name]
     if not schema then errors.raise('E_ARGUMENT','unknown section field',tostring(name)) end
-    validation.validate(schema,v,name)
+    if not cursor.validated[name] then
+      if not cursor.validation then spend(1); cursor.validation=validation.begin(schema,v,name) end
+      validation.resume(cursor.validation,spend)
+      cursor.validated[name]=true; cursor.validation=nil
+    end
   end
   if set.filters then
-    local seen={}
-    local identities={}
-    for _,v in ipairs(set.filters) do
+    local seen=cursor.seen
+    local identities=cursor.identities
+    for filter_index=cursor.filter_index+1,#set.filters do
+      local v=set.filters[filter_index]
       if seen[v.index] then errors.raise('E_ARGUMENT','duplicate filter index','filters') end
-      seen[v.index]=true
       local normal=validation.normal(catalog.section_fields.filters.items,validation.native(catalog.section_fields.filters.items,v))
       if normal.value then
         local pieces={}; local bytes=0
@@ -81,6 +102,7 @@ local function fields(value,spend,patch)
         if identities[key] then errors.raise('E_ARGUMENT','duplicate native filter identity','filters') end
         identities[key]=true
       end
+      seen[v.index]=true; cursor.filter_index=filter_index
     end
   end
   return set,value
@@ -121,30 +143,47 @@ local function verify(section,values,before)
 end
 local function guard(item,origin)
   if origin.configuration_recovery and origin.configuration_recovery[item.id] then errors.raise('E_ENGINE','target adapter faulted; retained recovery requires host attention') end
-  local n=0; for _ in pairs(origin.configuration_recovery or {}) do n=n+1 end
-  if n>=limits.target_nodes then errors.raise('E_CAPACITY','adapter recovery inventory full') end
 end
-local function failure(item,origin,before,request,restore)
+local function failure(item,origin,before,request,restore,cause)
   local restored=pcall(restore)
   if not restored then
     origin.configuration_recovery=origin.configuration_recovery or {}
     origin.configuration_recovery[item.id]={device=item.id,before=before,patch=request,tick=game.tick,
       behavior='LuaConstantCombinatorControlBehavior',reason='section failure; target-local restoration failed'}
   end
-  errors.raise('E_ENGINE',restored and 'section update failed; target-local settings restored' or 'section update failed; target-local recovery retained')
+  local message=restored and 'section update failed; target-local settings restored' or 'section update failed; target-local recovery retained'
+  errors.raise('E_ENGINE',message..'; '..tostring(type(cause)=='table' and (cause.message or cause.code) or cause))
 end
-function M.set(item,origin,i,patch,spend)
+function M.prepare_set(item,origin,i,patch,spend,cursor)
   index(i); guard(item,origin)
-  local values,request=fields(patch,spend,true)
+  local values,request=fields(patch,spend,true,cursor)
   local before_all=M.get(item,spend); local before=before_all[i]
   if not before then errors.raise('E_NOT_FOUND','section does not exist') end
   if not before.is_manual then errors.raise('E_READ_ONLY','nonmanual section protected') end
   local final_group=values.group
   if final_group==nil then final_group=before.group end
   if values.filters~=nil and final_group~='' then errors.raise('E_SHARED_SCOPE','shared filter writes refused; explicitly detach first') end
+  local incoming=values.group~=before.group and group_snapshot(item,values.group,spend) or nil
   -- Reserve bounded setter + readback + restoration including saved effective filters.
-  local _,stats=data.copy({before=before_all,request=request},spend,limits.configuration_bytes)
-  spend(stats.bytes*3+stats.nodes*4+(#before.filters+#(values.filters or {}))*64+1024)
+  local _,stats=data.copy({before=before_all,request=request,incoming=incoming},spend,limits.host_memory_bytes)
+  return {id=item.id,operation='set',index=i,values=values,request=request,before=before_all,
+    incoming=incoming,work=stats.bytes*3+stats.nodes*4+(#before.filters+#(values.filters or {})+#(incoming or {}))*64+1024}
+end
+local function revalidate(item,origin,plan,spend)
+  guard(item,origin)
+  if item.id~=plan.id then errors.raise('E_UNREACHABLE','prepared section target identity changed') end
+  local current=M.get(item,spend)
+  if not validation.equal(current,plan.before) then errors.raise('E_BUSY','target sections changed while preparing; retry with current sections') end
+  if plan.incoming and not validation.equal(group_snapshot(item,plan.values.group,spend),plan.incoming) then
+    errors.raise('E_BUSY','shared group changed while preparing; retry with current group')
+  end
+  spend(plan.work)
+end
+function M.set(item,origin,i,patch,spend,prepared)
+  local plan=prepared or M.prepare_set(item,origin,i,patch,spend)
+  revalidate(item,origin,plan,spend)
+  local values,request,before_all=plan.values,plan.request,plan.before
+  local before=before_all[i]
   local section=assert(control(item,false).get_section(i))
   local ok,result=pcall(function()
     write(section,values,before); verify(section,values,before)
@@ -157,17 +196,25 @@ function M.set(item,origin,i,patch,spend)
     if before.group=='' then filters_native(section,before.filters) end
     section.multiplier=before.multiplier; section.active=before.active
     if not validation.equal(M.get(item,nop),before_all) then error('section restoration differs') end
-  end)
+  end,result)
 end
-function M.add(item,origin,definition,spend)
+function M.prepare_add(item,origin,definition,spend,cursor)
   guard(item,origin)
-  local values,request=fields(definition,spend,false)
+  local values,request=fields(definition,spend,false,cursor)
   local before=M.get(item,spend)
-  if #before>=limits.sections then errors.raise('E_CAPACITY','section limit exceeded') end
+
   if (values.group or '')~='' and values.filters~=nil then errors.raise('E_SHARED_SCOPE','group assignment cannot write shared contents') end
-  local _,stats=data.copy({before=before,request=request},spend,limits.configuration_bytes)
+  local incoming=group_snapshot(item,values.group,spend)
+  local _,stats=data.copy({before=before,request=request,incoming=incoming},spend,limits.host_memory_bytes)
   local cb=control(item,false); local absent=not cb
-  spend(stats.bytes*3+stats.nodes*4+#(values.filters or {})*64+1024+(absent and 16384 or 0))
+  return {id=item.id,operation='add',values=values,request=request,before=before,
+    incoming=incoming,work=stats.bytes*3+stats.nodes*4+(#(values.filters or {})+#(incoming or {}))*64+1024+(absent and 16384 or 0)}
+end
+function M.add(item,origin,definition,spend,prepared)
+  local plan=prepared or M.prepare_add(item,origin,definition,spend)
+  revalidate(item,origin,plan,spend)
+  local values,request,before=plan.values,plan.request,plan.before
+  local cb=control(item,false); local absent=not cb
   local section
   local ok,result=pcall(function()
     cb=cb or control(item,true)
@@ -188,15 +235,21 @@ function M.add(item,origin,definition,spend)
   failure(item,origin,before,request,function()
     if section and section.valid then assert(cb.remove_section(section.index)) end
     if not validation.equal(M.get(item,nop),before) then error('add restoration differs') end
-  end)
+  end,result)
 end
-function M.remove(item,origin,i,spend)
+function M.prepare_remove(item,origin,i,spend)
   index(i); guard(item,origin)
-  local before=M.get(item,spend); if not before[i] then return false end
-  if not before[i].is_manual then errors.raise('E_READ_ONLY','nonmanual section protected') end
-  local _,stats=data.copy(before,spend,limits.configuration_bytes)
+  local before=M.get(item,spend)
+  if before[i] and not before[i].is_manual then errors.raise('E_READ_ONLY','nonmanual section protected') end
+  local _,stats=data.copy(before,spend,limits.host_memory_bytes)
   local filter_count=0; for _,s in ipairs(before) do filter_count=filter_count+s.filters_count end
-  spend(stats.bytes*3+stats.nodes*4+filter_count*64+#before*128+1024)
+  return {id=item.id,operation='remove',index=i,request={remove=i},before=before,
+    work=stats.bytes*3+stats.nodes*4+filter_count*64+#before*128+1024}
+end
+function M.remove(item,origin,i,spend,prepared)
+  local plan=prepared or M.prepare_remove(item,origin,i,spend)
+  revalidate(item,origin,plan,spend)
+  local before=plan.before; if not before[i] then return false end
   local cb=control(item,false)
   local ok,result=pcall(function()
     assert(cb.remove_section(i),'engine refused section removal')
@@ -204,7 +257,7 @@ function M.remove(item,origin,i,spend)
     local expected={}
     for n,v in ipairs(before) do
       if n~=i then
-        local copy=data.copy(v,nop,limits.configuration_bytes)
+        local copy=data.copy(v,nop,limits.host_memory_bytes)
         if n>i then copy.index=copy.index-1 end
         expected[#expected+1]=copy
       end
@@ -223,6 +276,12 @@ function M.remove(item,origin,i,spend)
       write(section,{active=old.active,multiplier=old.multiplier,filters=old.group=='' and old.filters or nil})
     end
     assert(validation.equal(M.get(item,nop),before),'remove restoration differs')
-  end)
+  end,result)
+end
+function M.commit(item,origin,plan,spend)
+  if plan.operation=='set' then return M.set(item,origin,plan.index,nil,spend,plan) end
+  if plan.operation=='add' then return M.add(item,origin,nil,spend,plan) end
+  assert(plan.operation=='remove','unknown prepared section operation')
+  return M.remove(item,origin,plan.index,spend,plan)
 end
 return M

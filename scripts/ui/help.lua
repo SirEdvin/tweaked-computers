@@ -112,6 +112,11 @@ getTick() -> simulation tick, not wall-clock time.
 
 getLimits() -> defensive limit snapshot.
 
+getResourceStatus() -> defensive policy-v2 status for this computer.
+Includes execution state, measured resource use, dropped_events and last_refusal.
+Missing measurements are unavailable, not zero. Loss counts survive Stop/Run,
+Console reset and cold reload; warnings may be evicted without losing counters.
+
 getState(key) -> copied Data/nil. Missing state is nil.
 
 setState(key, value) -> no values. Replace the retained Data value at key.
@@ -135,8 +140,13 @@ every(interval_ticks, handler_name, payload?) -> timer ID
 
 cancelTimer(ID) -> boolean, including already queued timer notifications.
 
+Registration/cancellation admit their ID/boolean result before changing state.
+Result-storage refusal preserves existing registrations and queued events.
+Once committed, a paused call resumes its saved result without repeating the effect.
+
 Timer event: timer_id, scheduled_tick, interval_ticks?, missed, payload?.
-Recurring overdue intervals coalesce. Callbacks finish or fault; they never yield.
+Recurring overdue intervals coalesce. Handlers may pause across ticks or reload;
+paid progress and completed effects are retained.
 
 Data: finite numbers, booleans, strings, dense arrays or string-keyed maps;
 no mixed keys, nil entries, cycles, functions, metatables or native objects.
@@ -246,16 +256,18 @@ Native radar: unchanged scanning, circuits, power, GUI and mining; no adapter it
 find("modem", wire); numeric channels are not red/green discovery colors.
 Shared radio guidance: all methods except getLimits require an active, electrically
 supplied radar. Discovery wire and numeric radio channel are independent.
-Channels 0..65535; 128 shared open channels per physical radar, across all callers.
+Channels 0..9007199254740991; shared host-memory admission, no channel-count cap.
 closeAll affects other computers too. Stop does not close the shared channels.
 computer.on("modem_message", "received") registers a saved named handler.
 Event: peripheral (receiver), wire/wires, channel, replyChannel, message, distance?,
 sent_tick; nil payload is an absent message, false is preserved. Same-radar echo
 is excluded. Both-color paths deduplicate; two receiving radars remain distinct.
-Whole-send proof/copies/fanout are admitted before publication; overflow faults
-the recipient, not a retryable partial sender error. No ACK/retry/offline mailbox.
-Payloads: bounded Data plus explicit third-argument nil. Check getLimits for
-finite payload/candidate/delivery/rate caps; Console and programs share credits.
+Whole-send proof/copies/fanout are admitted before publication. Work can pause;
+cold reload continues the unfinished suffix without replay. Queue overflow drops
+the newest delivery and counts the loss, without retiring the receiving run.
+Unavailable prepared destinations with a surviving computer record count a loss.
+No ACK/retry/offline mailbox. Payloads are Data plus explicit third-argument nil.
+getLimits describes work/memory/queue resources, not candidate/delivery/rate caps.
 Same-force/same-surface unlimited-distance radio. Space Age advanced endpoints
 at BOTH ends allow cross-surface traffic, including travelling platforms.
 Advanced: 5x5, 1.5x native art, 1MW; six-pack research excludes military/planet packs.
@@ -263,8 +275,9 @@ Hidden native radar links and received names never grant remote device authority
 No rednet, callRemote, remote inventory or pullEvent. Channels/queues survive cold
 load without replay; replacement/clone and force/surface changes clear channels.
 
-open(channel) -> no values. Integer channel 0..65535; idempotent. At most 128
-shared open channels per physical radar across colors, computers and Console.
+open(channel) -> no values. Integer channel 0..9007199254740991; idempotent.
+Channels are shared across colors, computers and Console. Memory refusal leaves
+the set unchanged; reads and closing channels do not require retained growth.
 
 
 isOpen(channel) -> boolean. Validates the channel and reads the physical radar's
@@ -280,14 +293,16 @@ caller. Does not recall messages; stopping a program alone does not close channe
 
 
 transmit(channel, replyChannel, payload) -> no values. Both channels are integers
-0..65535; the explicit third argument accepts bounded Data or nil. Sending need
+0..9007199254740991; the explicit third argument accepts Data or nil. Sending need
 not open either channel. Whole-send admission precedes publication; no ACK/retry.
 
 
 isWireless() -> true. This is radio transport, never remote discovery authority.
 
 
-getLimits() -> copied common/modem payload, candidate, delivery and rate caps.
+getLimits() -> defensive policy_version=2 record: resources, empty tuning,
+channel_min=0 and channel_max=9007199254740991. Resource descriptors contain
+limit, unit, scope, setting and behavior; removed count capacities are absent.
 Available on a reachable unpowered radar; it does not open channels or send traffic.
 
 LOGIC HANDLER
@@ -335,8 +350,11 @@ unsubscribe(subscription_id) -> boolean. Removes this run/binding's registration
 and its queued samples; false when absent, not authority to remove another binding.
 
 
-getLimits() -> copied common/logic ceilings, including while reachable unpowered.
-Includes 64 slots/filter signals and one-tick sampling; shared admission still applies.
+getLimits() -> {policy_version=2,resources={...},tuning={},sample_interval_ticks=1},
+also while reachable unpowered. Resources describe callback/host/maintenance work,
+runtime/host/pending memory, host depth and event queue entries/bytes; each includes
+limit, unit, scope, setting and behavior. Former flat slot/filter/shape caps are absent.
+One-tick sampling is nominal cadence, not a promise under pressure. Copies are defensive.
 
 KV DATABASE
 Shared storage guidance: values/fields/keys are byte strings, including empty/NUL.
@@ -509,14 +527,15 @@ The in-game Find iron plate recipes tutorial includes research, wiring and runna
 
 findRecipes("item"/"fluid", exact_product_name, exact_category?) -> one complete array.
 Includes locked, hidden, recycling, modded and surface-restricted direct producers.
-Primary and additional categories match. Filter before the fixed 50-result limit;
-51 raises E_LIMIT, never truncation/pagination. Results sort by recipe name.
+Primary and additional categories match. There is no fixed 50-result ceiling;
+work may pause and retained capacity may refuse, never truncate. Results sort by name.
 Records include ingredients/products, ranges/probabilities, energy in seconds,
 categories, visibility, surface bounds and current force enabled state (not feasibility).
 
 
-getLimits() -> copied common/recipe-searcher limits, including while unpowered.
-recipe_search_results=50; common work/result/allocation limits still apply.
+getLimits() -> {policy_version=2,resources={...},tuning={}}, also while unpowered.
+Read resources.callback_work.limit; each resource has unit, scope, setting and behavior.
+No recipe result-count ceiling or unrelated device limits are advertised.
 
 CONFIGURATOR
 Shared configuration guidance: NETWORK and TARGETS colors are separate arguments
@@ -536,6 +555,8 @@ replaced identity. Same coordinates do not authorize a replacement body.
 
 getCapabilities(id, target_wire) -> copied typed CapabilitySet of current settings,
 observations and sections. Inspect writable/clearable flags and unavailable reasons.
+Schemas retain native types/ranges and prototype validation, not fixed string/array
+capacities. Section filter indexes use native 1..65535; resource admission still applies.
 
 
 getConfiguration(id, target_wire) -> copied {values={...},unset={...},observations={...}}.
@@ -565,8 +586,11 @@ removeSection(id, index, target_wire) -> boolean, false if absent, true after ve
 removal. Nonmanual sections refuse. Native 1-based indexes can shift afterward.
 
 
-getLimits() -> copied common/configurator capacities, including reachable unpowered.
-Target graph, patch, section, filter and result budgets apply independently.
+getLimits() -> {policy_version=2,resources={...},tuning={}}, also while reachable
+unpowered. Resources describe callback work/allocation, shared host work,
+runtime/host/pending memory and host depth: limit, unit, scope, setting, behavior.
+Tuning is empty. Former flat graph/patch/section/filter/shape limits are absent.
+Returned nested maps are independent copies; target reads still require power.
 
 COMBINED EXAMPLE
 Choose Examples for complete, small tutorials with setup, runnable code, execution

@@ -95,10 +95,12 @@ buffered.install{clear_cell=clear_cell,destroy=destroy,cell=render_cell,cursor=c
 M.tick=buffered.tick
 M.bind=buffered.bind
 M.participate=buffered.participate
+M.hold=buffered.hold
 M.matches=buffered.matches
 M.select=buffered.select
 M.status=buffered.status
 M.release=buffered.release
+M.revoke=buffered.revoke
 M.changed=buffered.changed
 M.regroup=buffered.regroup
 scheduler.register_phase('render','monitor-world',M.tick)

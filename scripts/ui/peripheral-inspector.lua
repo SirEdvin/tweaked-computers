@@ -140,10 +140,18 @@ local function prepare(s,spend)
   elseif snapshot.kind=='monitor' then
     view.geometry=d; view.signature=d.name..'/'..d.width_tiles..'/'..d.height_tiles..'/'..d.tiles..'/'..d.columns..'/'..d.rows..'/'..d.scale
   elseif snapshot.kind=='logic' then
-    view.signals=d; local parts={}
+    s.signal_pages=s.signal_pages or {}
+    view.signals={connected=d.connected,errors=d.errors,counts={},pages={}}; local parts={}
     for _,wire in ipairs({'red','green','output'}) do
-      parts[#parts+1]=wire..tostring(d.connected[wire])..'/'..tostring(d.errors and d.errors[wire])..'/'..tostring(d[wire]~=nil)
-      for _,e in ipairs(d[wire] or {}) do
+      local entries=d[wire]; local count=entries and #entries or 0
+      local selected=math.max(1,math.min(s.signal_pages[wire] or 1,math.ceil(count/24)))
+      s.signal_pages[wire]=selected
+      view.signals.counts[wire]=count; view.signals.pages[wire]=selected
+      view.signals[wire..'_tick']=d[wire..'_tick']
+      if entries then view.signals[wire]={} end
+      parts[#parts+1]=wire..tostring(d.connected[wire])..'/'..tostring(d.errors and d.errors[wire])..'/'..selected..'/'..count
+      for i=(selected-1)*24+1,math.min(selected*24,count) do
+        local e=entries[i]; view.signals[wire][#view.signals[wire]+1]=e
         spend(#e.signal.name+#e.signal.quality+32)
         parts[#parts+1]=e.signal.type..'/'..e.signal.name..'/'..e.signal.quality..'/'..e.count
       end
@@ -153,7 +161,7 @@ local function prepare(s,spend)
   view.signature=view.kind..'\0'..tostring(s.narrow)..'\0'..view.signature
   return view
 end
-local function slots(parent,wire,entries,connected,tick,err)
+local function slots(parent,wire,entries,connected,tick,err,count,selected)
   local tray=parent[wire..'_slots']
   if not tray then
     label(parent,tr(wire))
@@ -163,8 +171,11 @@ local function slots(parent,wire,entries,connected,tick,err)
     tray.add{type='table',name='signal_grid',column_count=6,style='slot_table'}
   end
   local status=parent[wire..'_status']
-  status.visible=err~=nil or not entries or #entries==0
-  status.caption=err and tr('signal-unavailable',err) or tr(not entries and 'pending' or connected==false and 'disconnected' or 'no-signals')
+  status.visible=true
+  if entries then
+    status.caption=(err and ('Stale ('..err..') / ') or connected==false and 'Disconnected / ' or '')
+      ..(count or #entries)..' signals'
+  else status.caption=err and ('Unavailable ('..err..') / no sample') or tr('pending') end
   tray.style.width=260; tray.style.height=math.max(40,math.min(148,math.ceil(#(entries or {})/6)*36+4))
   local grid=tray.signal_grid
   for i,e in ipairs(entries or {}) do
@@ -184,6 +195,11 @@ local function slots(parent,wire,entries,connected,tick,err)
   end
   local children=grid.children
   for i=#children,#(entries or {})+1,-1 do children[i].destroy() end
+  count=count or #(entries or {}); selected=selected or 1
+  local pages=math.max(1,math.ceil(count/24)); local controls=parent[wire..'_page']
+  if not controls then page(parent,wire..'_page',selected,pages); controls=parent[wire..'_page'] end
+  controls.visible=pages>1; controls.previous.enabled=selected>1; controls.next_page.enabled=selected<pages
+  controls.page_label.caption=tr('page',selected,pages)
 end
 draw_logic=function(p,s,d)
   p.tooltip=tr('logic-help')
@@ -197,9 +213,10 @@ draw_logic=function(p,s,d)
     output.style.minimal_width=280; label(output,tr('outputs'))
   end
   local input=both.inputs
-  slots(input,'red',d.red,d.connected.red,d.red_tick,d.errors and d.errors.red)
-  slots(input,'green',d.green,d.connected.green,d.green_tick,d.errors and d.errors.green)
-  slots(both.outputs,'output',d.output,true,d.output_tick)
+  for _,wire in ipairs({'red','green','output'}) do
+    slots(wire=='output' and both.outputs or input,wire,d[wire],wire=='output' or d.connected[wire],
+      d[wire..'_tick'],d.errors and d.errors[wire],d.counts and d.counts[wire],d.pages and d.pages[wire])
+  end
 end
 draw_pending=function(f,s,rec,powered)
   local p=f.details; p.clear(); s.drawn=nil
@@ -331,6 +348,16 @@ function M.on_click(event)
   -- A candidate may be admitted before its GUI construction fits the ledger.
   -- Old row indices must not select data from that not-yet-presented snapshot.
   if s.redraw then return end
+  if rec.kind=='logic' and f.details.logic_regions then
+    local regions=f.details.logic_regions
+    for _,wire in ipairs({'red','green','output'}) do
+      local controls=(wire=='output' and regions.outputs or regions.inputs)[wire..'_page']
+      if controls and (e==controls.previous or e==controls.next_page) and e.enabled then
+        s.signal_pages[wire]=s.signal_pages[wire]+(e==controls.previous and -1 or 1)
+        s.redraw=true; return
+      end
+    end
+  end
   local groups=f.details.groups_page
   if rec.kind=='configurator' and groups and (e==groups.previous or e==groups.next_page) and e.enabled then
     s.page=math.max(1,s.page+(e==groups.previous and -1 or 1)); s.redraw=true; return
@@ -406,9 +433,12 @@ function M.tick(tick)
           end
           if s.redraw and s.snapshot then
             local view=prepare(s,spend)
-            -- Bound native construction including worst-case slot rows and KV
-            -- chunks; no partial query is published as a complete inventory.
-            spend(12000+(view.groups and #view.groups*160 or 0))
+            -- Charge the complete native inventory, not a fixed slot ceiling.
+            local rows=view.groups and #view.groups or 0
+            if view.signals then
+              for _,wire in ipairs({'red','green','output'}) do rows=rows+#(view.signals[wire] or {}) end
+            end
+            spend(12000+rows*160)
             draw(f,s,view); s.redraw=false
 
             if f.identity.api_name.text~=s.snapshot.name then f.identity.api_name.text=s.snapshot.name end

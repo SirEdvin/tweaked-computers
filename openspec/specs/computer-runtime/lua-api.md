@@ -37,6 +37,7 @@ Save commits source only; Run/Apply validates and activates a saved revision. Re
 | `computer.setLabel(label)` | no values | Bounded string; nil clears; duplicate labels allowed |
 | `computer.getTick()` | `Tick` | Current synchronized simulation tick |
 | `computer.getLimits()` | `Limits` | Effective versioned capacities from the shared contract |
+| `computer.getResourceStatus()` | defensive plain table | Policy version 2, execution state, available measured resources, persistent event-loss counters and optional last recoverable refusal; no arguments |
 | `computer.getState(key)` | `Data` or nil | String key; defensive copy of a present value |
 | `computer.setState(key, value)` | no values | Nonnil Data, validated/copied before atomic replacement |
 | `computer.deleteState(key)` | boolean | True only if a present key was removed |
@@ -59,6 +60,13 @@ Logic input subscriptions are created by the logic-handler API, not by `computer
 `power_restored` carries `outage_start_tick` and `restored_tick`. It is delivered once to retained registrations after actual power restoration, not cold load. No callback executes at power loss. General subscriptions are not automatically restricted to the peripheral that happened to exist at registration: they receive matching currently authorized devices and channel-qualified attach/detach transitions.
 
 ## Timers
+
+Guest registration and cancellation prepare their returned ID or boolean before
+publishing changes. Refused return-value admission consumes no identity sequence
+and leaves existing subscriptions, timers and accepted queued events unchanged.
+After a committed effect, suspension or cold reload delivers its saved result
+without repeating registration or cancellation. This return-value guarantee does
+not replace the still-required aggregate retained registration ownership.
 
 ```text
 computer.after(delay_ticks, handler_name, payload?) -> TimerId

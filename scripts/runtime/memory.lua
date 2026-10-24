@@ -1,0 +1,198 @@
+-- Private lifetime ledger. Callers must reserve preparation peaks before effects.
+local errors=require('scripts.runtime.errors')
+local M={}
+local MAX=9007199254740991
+local ACCOUNT,OWNER,RECORD,LINK=256,128,128,128
+local function integer(value) assert(errors.integer(value,0,MAX),'invalid memory accounting') end
+local function capacity(account,amount)
+  integer(amount)
+  if amount>0 and amount>account.limit-account.used-account.reserved then
+    local resource=account.resource or 'runtime_memory'
+    local setting=resource=='host_memory' and 'tc-host-memory-bytes' or 'tc-runtime-memory-bytes'
+    errors.refuse(resource,setting,account.used+account.reserved,amount,account.limit,
+      'memory growth refused; release retained values or raise '..setting)
+  end
+end
+local function active(owner)
+  assert(type(owner)=='table' and not owner.closed and owner.account.version==1
+    and owner.account.owners[owner.id]==owner,'inactive memory owner')
+end
+local function growth(owner,amount,sponsor)
+  if sponsor then
+    active(sponsor)
+    assert(sponsor.account==owner.account and not sponsor.closing,'inactive or foreign memory sponsor')
+  end
+  if amount<=0 then return end
+  assert(not owner.closing,'memory owner is closing')
+  local funding=sponsor or owner
+  local prepaid=math.min(funding.reserved,amount)
+  capacity(owner.account,amount-prepaid)
+  funding.reserved=funding.reserved-prepaid
+  owner.account.reserved=owner.account.reserved-prepaid
+end
+function M.new(limit,control,resource)
+  integer(limit); integer(control)
+  assert(resource==nil or resource=='runtime_memory' or resource=='host_memory','invalid memory domain')
+  assert(limit>0,'positive memory allowance required')
+  local account={version=1,limit=limit,used=0,reserved=0,control_reserved=control,
+    owners={},values={},next_id=1,resource=resource}
+  capacity(account,ACCOUNT); account.used=ACCOUNT
+  capacity(account,control); account.used=account.used+control
+  return account
+end
+function M.configure(account,limit)
+  assert(account.version==1); integer(limit); assert(limit>0,'positive memory allowance required')
+  account.limit=limit -- Admission changes, never retained validity or spent reservations.
+end
+function M.owner(account,reserved)
+  assert(account.version==1 and errors.integer(account.next_id,1,MAX-1),'invalid memory owner identity')
+  if reserved==nil then reserved=0 end; integer(reserved)
+  capacity(account,reserved)
+  capacity(account,OWNER+reserved)
+  local owner={id=account.next_id,account=account,values={},reserved=reserved,count=0}
+  account.next_id=account.next_id+1; account.owners[owner.id]=owner; account.used=account.used+OWNER
+  account.reserved=account.reserved+reserved
+  return owner
+end
+function M.reserve(owner,bytes)
+  active(owner); assert(not owner.closing,'memory owner is closing'); integer(bytes)
+  capacity(owner.account,bytes)
+  owner.reserved=owner.reserved+bytes; owner.account.reserved=owner.account.reserved+bytes
+end
+function M.unreserve(owner,bytes)
+  active(owner); bytes=bytes or owner.reserved; integer(bytes)
+  assert(bytes<=owner.reserved,'memory reservation underflow')
+  owner.reserved=owner.reserved-bytes; owner.account.reserved=owner.account.reserved-bytes
+end
+function M.resize(owner,value,bytes,sponsor)
+  active(owner); integer(bytes)
+  local node=assert(owner.values[value],'unowned memory value')
+  local record=node.record
+  assert(type(value)=='table' or bytes==record.bytes,'immutable string charge changed')
+  local delta=bytes-record.bytes
+  growth(owner,delta,sponsor)
+  record.bytes=bytes; owner.account.used=owner.account.used+delta
+end
+function M.acquire(owner,value,bytes,sponsor)
+  active(owner); integer(bytes)
+  assert(type(value)=='string' or type(value)=='table' and getmetatable(value)==nil,'plain accounted object or string required')
+  if owner.values[value] then return M.resize(owner,value,bytes,sponsor) end
+  local account=owner.account
+  local record=account.values[value]
+  assert(not record or record.bytes==bytes,'shared object charge mismatch')
+  local delta=LINK+(record and 0 or RECORD+bytes)
+  growth(owner,delta,sponsor)
+  if not record then record={bytes=bytes,owners=0}; account.values[value]=record end
+  local node={value=value,record=record,previous=owner.tail}
+  if owner.tail then owner.tail.next=node else owner.head=node end
+  owner.tail=node; owner.values[value]=node; owner.count=owner.count+1
+  record.owners=record.owners+1; account.used=account.used+delta
+end
+-- Multi-object publication must not partially charge its table/string graph.
+function M.acquire_all(owner,items,sponsor)
+  active(owner)
+  local funding=sponsor or owner
+  active(funding)
+  assert(funding.account==owner.account and (not sponsor or not funding.closing),'inactive or foreign memory sponsor')
+  local account=owner.account
+  local seen,changes,positive,negative={},{},0,0
+  for _,item in ipairs(items) do
+    local value,bytes=item[1],item[2]
+    integer(bytes)
+    assert(type(value)=='string' or type(value)=='table' and getmetatable(value)==nil,'plain accounted object or string required')
+    if seen[value]~=nil then assert(seen[value]==bytes,'duplicate object charge mismatch')
+    else
+      seen[value]=bytes
+      local node=owner.values[value]
+      local record=account.values[value]
+      local delta
+      if node then
+        assert(type(value)=='table' or bytes==record.bytes,'immutable string charge changed')
+        delta=bytes-record.bytes
+      else
+        assert(not record or record.bytes==bytes,'shared object charge mismatch')
+        delta=LINK+(record and 0 or RECORD+bytes)
+      end
+      if delta>0 then positive=positive+delta; integer(positive)
+      else negative=negative+delta end
+      changes[#changes+1]={value=value,bytes=bytes,delta=delta}
+    end
+  end
+  if positive>0 then assert(not owner.closing,'memory owner is closing') end
+  capacity(account,math.max(0,positive-math.min(funding.reserved,positive)+negative))
+  -- Shrink first, then consume the prepaid/headroom proof without yielding.
+  for _,change in ipairs(changes) do
+    if change.delta<=0 then M.acquire(owner,change.value,change.bytes,sponsor) end
+  end
+  -- The complete proof also covers replacement while still grandfathered over-limit.
+  local prepaid=math.max(0,positive-funding.reserved)
+  funding.reserved=funding.reserved+prepaid; account.reserved=account.reserved+prepaid
+  for _,change in ipairs(changes) do
+    if change.delta>0 then M.acquire(owner,change.value,change.bytes,sponsor) end
+  end
+end
+function M.release(owner,value)
+  active(owner)
+  local node=owner.values[value]
+  if not node then return false end
+  local record=node.record; local account=owner.account
+  if node.previous then node.previous.next=node.next else owner.head=node.next end
+  if node.next then node.next.previous=node.previous else owner.tail=node.previous end
+  owner.values[value]=nil; owner.count=owner.count-1
+  record.owners=record.owners-1
+  local released=LINK
+  if record.owners==0 then account.values[value]=nil; released=released+RECORD+record.bytes end
+  account.used=account.used-released
+  node.value=nil; node.record=nil; node.previous=nil; node.next=nil
+  return true
+end
+-- Only bounded error unwinding can spend this prepaid reserve, never guest growth.
+function M.control(owner,fn,...)
+  if not owner then return fn(...) end
+  active(owner)
+  local account=owner.account
+  local credit=account.control_reserved
+  account.control_reserved=0; account.used=account.used-credit
+  owner.reserved=owner.reserved+credit; account.reserved=account.reserved+credit
+  local before=owner.reserved
+  local result=table.pack(pcall(fn,...))
+  local consumed=math.min(credit,math.max(0,before-owner.reserved))
+  local remaining=credit-consumed
+  M.unreserve(owner,remaining)
+  account.control_reserved=remaining; account.used=account.used+remaining
+  owner.control_used=(owner.control_used or 0)+consumed
+  if not result[1] then error(result[2],0) end
+  return table.unpack(result,2,result.n)
+end
+-- Retirement is constant-time; maintenance pays each ledger unlink later.
+function M.retire(owner)
+  if not owner or owner.closed or owner.closing then return end
+  owner.closing=true
+  local account=owner.account
+  owner.next_closing=account.closing; account.closing=owner
+end
+function M.collect(account,spend)
+  while account.closing do
+    local owner=account.closing
+    M.close(owner,spend)
+    account.closing=owner.next_closing; owner.next_closing=nil
+  end
+end
+-- The linked owner list is also the durable cleanup cursor; no tombstone vector.
+function M.close(owner,spend)
+  active(owner)
+  if not owner.closing then spend(1); owner.closing=true end
+  while owner.head do
+    spend(1)
+    M.release(owner,owner.head.value)
+  end
+  spend(1)
+  M.unreserve(owner)
+  local account=owner.account
+  local control=owner.control_used or 0
+  account.control_reserved=account.control_reserved+control
+  account.used=account.used+control
+  owner.control_used=nil
+  account.owners[owner.id]=nil; account.used=account.used-OWNER; owner.closed=true
+end
+return M

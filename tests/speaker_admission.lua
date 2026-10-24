@@ -1,85 +1,262 @@
--- Host dispatch/ledger boundary fixture. Stub sinks prove requests, NOT audibility
--- or physical authority; tests.speaker_engine and real clients cover those.
+-- Explicit native sink/guard doubles; headless success is not audibility proof.
 local registry=require('scripts.registry')
 local speaker=require('scripts.services.speaker')
+local carrier=require('scripts.speaker')
+local peripheral=require('scripts.services.peripheral')
 local admission=require('scripts.runtime.admission')
 local sandbox=require('scripts.runtime.sandbox')
+local compiler=require('scripts.runtime.compiler')
+local memory=require('scripts.runtime.memory')
 local limits=require('scripts.runtime.limits')
+local harness=require('tests.radio_test_guard')
 local catalogue_contract=require('tests.speaker_catalogue_contract')
-local M={}
-local function nop() end
-local function error_is(code,fn)
-  local ok,e=pcall(fn); assert(not ok and type(e)=='table' and e.code==code,serpent.line(e))
+local lifecycle=require('scripts.lifecycle')
+local radar=require('scripts.radar')
+local runtime=require('scripts.runtime.computer')
+local policy=require('scripts.runtime.resource-policy')
+local defs=require('scripts.device-definitions')
+local M={}; local loaded=false
+local function native_policy()
+  local body=assert(game.surfaces[1].create_entity{name=defs.devices.computer.entity_name,position={0,0},force='player'})
+  lifecycle.on_built{entity=body}; local computer=assert(registry.by_entity(body))
+  lifecycle.power_entity(computer).energy=1000000; computer.powered=true
+  local sound=assert(game.surfaces[1].create_entity{name='programmable-speaker',position={6,0},force='player'})
+  local wire=defines.wire_connector_id.circuit_red
+  assert(body.get_wire_connector(wire,true).connect_to(sound.get_wire_connector(wire,true),false))
+  for _=1,#registry.get().order+3 do radar.tick(game.tick,function() end) end
+  assert(registry.by_entity(sound))
+  local source=[[function start(event)
+    local s=peripheral.find('speaker','red'); assert(s)
+    local p=s.getLimits(); assert(p.policy_version==2)
+    local common=computer.getLimits()
+    for key,value in pairs(p.resources) do
+      local expected=common.resources[key]; assert(expected)
+      for field,item in pairs(value) do assert(item==expected[field]) end
+    end
+    assert(p.tuning.speaker_sound_page_size.limit==50)
+    p.resources.callback_work.limit=1
+    assert(s.getLimits().resources.callback_work.limit==common.resources.callback_work.limit)
+    local ok,e=pcall(s.getLimits,1); assert(not ok and e.code=='E_ARGUMENT')
+    if not event.powered then
+      ok,e=pcall(s.getInstruments); assert(not ok and e.code=='E_UNPOWERED')
+    else
+      local names=s.getInstruments(); assert(#names>0)
+      for i=2,#names do assert(names[i-1]<names[i]) end
+      local notes=s.getNotes('piano'); assert(notes[1].pitch==0 and notes[1].name=='F3')
+      notes[1].name='changed'; assert(s.getNotes('piano')[1].name=='F3')
+      local page=s.getSounds('utility/'); assert(#page.sounds>0 and #page.sounds<=50)
+      assert(#s.getSounds(string.rep('x',257)).sounds==0)
+      for i=1,9 do assert(s.playNote('piano',0,0)) end
+      assert(s.playSound('utility/wire_connect_pole',0))
+      assert(s.playSound('utility/wire_connect_pole',0))
+    end
+  end]]
+  local plan,e=compiler.compile(source); assert(plan,e and e.message)
+  computer.active={source=source,revision=0,api_version=1,compiler_version=limits.compiler_version,storage_version=1,handlers=plan.handlers}
+  computer.status='running'; computer.run_id=computer.id..'/speaker-policy'
+  local ledger=admission.new()
+  for _,powered in ipairs({true,false}) do
+    sound.energy=powered and 1000000 or 0
+    local invocation={checkpoint={}}
+    local ctx=admission.context(ledger,computer.id,game.tick)
+    local owner=policy.attach(computer,invocation,ctx)
+    local ok,problem,control=compiler.run(plan,'start',{powered=powered},function(g)
+      return runtime.services(computer,game.tick,g)
+    end,ctx,invocation.checkpoint)
+    assert(ok,serpent.line{problem=problem,control=control})
+    memory.close(owner,function() end)
+  end
+  runtime.stop(computer.id)
+  log('TC_CONTRACT native-powered-unpowered-policy-catalogue-and-sequential-submissions')
+end
+local function real_guard_submission(record)
+  local native=record.body.surface.play_sound
+  for _,fail in ipairs({false,true}) do
+    local account=memory.new(1000000,256)
+    local owner=memory.owner(account)
+    local ctx=admission.context(admission.new(),'speaker-real-guard',game.tick); ctx.memory_owner=owner
+    local checkpoint={}; local calls=0; local prepaid=false
+    record.body.surface.play_sound=function()
+      calls=calls+1
+      local pending=checkpoint.frame.pending
+      local job=pending and pending.jobs and pending.jobs['speaker-submit']
+      local retained=job and account.values[job]
+      prepaid=job and job.attempted and job.failed==false and retained and retained.bytes==192+48*2
+        and pending.result_kind=='boolean' and pending.prepared~=nil
+      if fail then error('injected native failure') end
+    end
+    local source=[[function start()
+      local policy=computer.limits()
+      assert(policy.policy_version==2,'speaker limits must use policy version 2')
+      assert(policy.callback_work==nil and policy.table_entries==nil and policy.speaker_notes_per_tick==nil)
+      assert(policy.resources.callback_work.setting=='tc-callback-work' and policy.resources.callback_work.behavior=='defer')
+      assert(policy.resources.runtime_memory_bytes.unit=='bytes' and policy.resources.runtime_memory_bytes.behavior=='reject')
+      local page=policy.tuning.speaker_sound_page_size
+      assert(page.kind=='tuning' and page.setting=='tc-speaker-sound-page-size' and page.limit==50)
+      assert(policy.resources.kv_keys==nil and policy.tuning.monitor_width_tiles==nil)
+      policy.resources.callback_work.limit=1; page.limit=1
+      assert(computer.limits().resources.callback_work.limit==500000 and computer.limits().tuning.speaker_sound_page_size.limit==50)
+      local ok,e=pcall(computer.limits,1); assert(not ok and e.code=='E_ARGUMENT')
+      local ok,value=pcall(computer.submit); computer.result(ok,value)
+    end]]
+    local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
+    local observed
+    local ok,problem=compiler.run(plan,'start',nil,function(g)
+      return {computer={
+        limits=function(...) return speaker.methods.getLimits(nil,record,'red',game.tick,g.spend,g,...) end,
+        submit=function() return speaker.methods.playSound({id='speaker-real-guard'},record,'red',game.tick,g.spend,g,'utility/wire_connect_pole',0) end,
+        result=function(success,value) g.prepare_empty_result(); observed={success=success,value=value} end,
+      }}
+    end,ctx,checkpoint)
+    assert(ok,problem and problem.message)
+    assert(calls==1 and observed and observed.success==not fail)
+    assert(fail and observed.value.code=='E_ENGINE' or not fail and observed.value==true)
+    assert(prepaid,'speaker submission metadata grew after the irreversible boundary')
+    memory.close(owner,function() end)
+    assert(account.reserved==0 and next(account.values)==nil and next(account.owners)==nil)
+  end
+  record.body.surface.play_sound=native
 end
 function M.run()
   registry.initialize()
-  local requests={}; local groups=0
-  local function report(s) groups=groups+1; log('TC_CONTRACT '..s) end
-  local function record(id,fail)
-    return {id=id,body={position={x=3,y=7},surface={play_sound=function(request)
-      requests[#requests+1]=request
-      assert(request.position.x==3 and request.position.y==7 and request.override_sound_type=='game-effect')
-      assert(request.volume_modifier>=0 and request.volume_modifier<=1)
-      if fail then error('fixture native failure') end
-    end}}}
+  native_policy()
+  local requests={}; local current; local fail=false
+  local record={id='speaker-fixture',body={position={x=3,y=7},surface={play_sound=function(request)
+    requests[#requests+1]=request
+    assert(request.position.x==3 and request.position.y==7 and request.override_sound_type=='game-effect')
+    if fail then error('injected native failure') end
+  end}}}
+  local authority,available=peripheral.authority,carrier.available
+  peripheral.authority=function() return record end; carrier.available=function() return true end
+  local ok,problem=pcall(function()
+    local function call(method,...)
+      local guard=harness.new(current)
+      return speaker.methods[method]({id='computer-fixture'},record,'red',game.tick,guard.spend,guard,...)
+    end
+    for _=1,65 do current={}; assert(call('playNote','piano',0,0)) end
+    for _=1,17 do current={}; assert(call('playSound','utility/wire_connect_pole',0)) end
+    assert(#requests==82)
+    current={}; assert(call('playSound','utility/wire_connect_pole',0))
+    assert(call('playSound','utility/wire_connect_pole',0) and #requests==83)
+    log('TC_CONTRACT removed-speaker-computer-world-counts-and-attempted-call-idempotence')
+    current={}; fail=true
+    local success,e=pcall(call,'playSound','utility/wire_connect_pole',0)
+    assert(not success and e.code=='E_ENGINE' and #requests==84)
+    success,e=pcall(call,'playSound','utility/wire_connect_pole',0)
+    assert(not success and e.code=='E_ENGINE' and #requests==84)
+    fail=false
+    log('TC_CONTRACT native-failure-is-not-replayed')
+    for _,which in ipairs({'work','allocations'}) do
+      local ctx=admission.context(admission.new(),'prepared-boolean-'..which,game.tick)
+      local g=sandbox.new(ctx,{}); local entered=0
+      local fn=g.service(function()
+        g.prepare_boolean_result(); entered=entered+1; current={}
+        return call('playSound','utility/wire_connect_pole',0)
+      end)
+      if which=='work' then ctx.machine.work=limits.callback_work-5
+      else ctx.machine.allocations=limits.callback_allocations-2 end
+      local before=#requests; assert(not pcall(g.call,fn)); assert(entered==0 and #requests==before)
+    end
+    log('TC_CONTRACT insufficient-prepaid-result-submits-nothing')
+    catalogue_contract.run()
+    log('TC_CONTRACT complete-configurable-pages-and-invalid-native-candidates')
+    real_guard_submission(record)
+    log('TC_CONTRACT real-continuation-guard-prepays-complete-speaker-result-and-job')
+    log('TC_CONTRACT_TOTAL 6')
+  end)
+  peripheral.authority,carrier.available=authority,available
+  assert(ok,serpent.line(problem))
+  local source='function start() local ok,value=pcall(computer.submit); computer.result(ok,value) end'
+  local plan,e=compiler.compile(source); assert(plan,e and e.message)
+  storage.speaker_admission_cold={phase='arm',cases={}}
+  for _,cut in ipairs({'before','after','failed','revoked','work'}) do
+    local account=memory.new(1000000,256)
+    storage.speaker_admission_cold.cases[#storage.speaker_admission_cold.cases+1]={
+      cut=cut,plan=plan,checkpoint={},ledger=admission.new(),account=account,owner=memory.owner(account),calls=0,deliveries=0}
   end
-  local function call(c,r,t,method,...) return speaker.methods[method]({id=c},r,'red',t,nop,...) end
-  local a,b=record('speaker-a'),record('speaker-b')
-  for _=1,8 do assert(call('computer-a',a,0,'playNote','piano',0,0)) end
-  assert(call('computer-a',a,0,'playSound','utility/wire_connect_pole',0))
-  local count=#requests
-  assert(not call('computer-b',a,0,'playNote','piano',1,0))
-  assert(not call('computer-b',a,0,'playSound','utility/wire_connect_pole',1))
-  assert(#requests==count)
-  for _=1,7 do assert(call('computer-a',b,0,'playNote','piano',1,0)) end
-  assert(registry.get().speaker_audio.computers['computer-a']==16)
-  assert(not call('computer-a',b,0,'playNote','piano',1,0))
-  assert(call('computer-b',b,0,'playNote','piano',1,0))
-  assert(call('computer-b',b,0,'playSound','utility/wire_connect_pole',1))
-  report('separate-speaker-note-effect-shared-computer-and-zero-volume-quotas')
-  local serial=0
-  while registry.get().speaker_audio.total<64 do
-    serial=serial+1; local r=record('speaker-world-'..serial)
-    for _=1,8 do
-      if registry.get().speaker_audio.total<64 then assert(call('computer-world-'..serial,r,0,'playNote','piano',1,0)) end
+end
+local function cold_step(f,tick,arming)
+  -- Only the native sink and authority are doubles; compilation, guards, retained
+  -- admission, suspension and result delivery use their production implementations.
+  local record={id='speaker-cold-fixture',body={position={x=3,y=7},surface={play_sound=function()
+    f.calls=f.calls+1
+    if f.cut=='failed' then error('injected native failure') end
+  end}}}
+  local authority,available=peripheral.authority,carrier.available
+  peripheral.authority=function() if arming or f.cut~='revoked' then return record end end
+  carrier.available=function() return true end
+  local ctx=admission.context(f.ledger,'speaker-cold-'..f.cut,tick); ctx.memory_owner=f.owner
+  local called,ok,e,control=pcall(compiler.run,f.plan,'start',nil,function(g)
+    local prepare=g.prepare_boolean_result
+    g.prepare_boolean_result=function()
+      prepare()
+      if arming and (f.cut=='before' or f.cut=='revoked') then g.suspend() end
+      if arming and f.cut=='work' then
+        assert(admission.reserve(ctx,'work',limits.callback_work-ctx.machine.work))
+      end
+    end
+    return {computer={
+      submit=function()
+        local success,value=pcall(speaker.methods.playSound,{id='speaker-cold-'..f.cut},record,'red',tick,g.spend,g,'utility/wire_connect_pole',0)
+        if arming then g.suspend() end -- Freeze before the caller receives either native outcome.
+        if not success then error(value,0) end
+        return value
+      end,
+      result=function(success,value)
+        g.prepare_empty_result(); f.deliveries=f.deliveries+1
+        f.success=success; f.value=value
+      end,
+    }}
+  end,ctx,f.checkpoint)
+  peripheral.authority,carrier.available=authority,available
+  assert(called,tostring(ok))
+  return ok,e,control
+end
+function M.on_load()
+  local state=storage.speaker_admission_cold
+  if state.phase=='frozen' then
+    for _,f in ipairs(state.cases) do
+      assert(f.checkpoint.frame==f.frame and f.frame.pending==f.pending and f.frame.pc==f.pc)
+      assert(f.calls==f.saved_calls and f.deliveries==0 and f.ledger.total==f.spent)
+    end
+    loaded=true; log('TC_SPEAKER_ADMISSION_ON_LOAD_UNCHANGED')
+  end
+end
+function M.on_tick(event)
+  local state=storage.speaker_admission_cold
+  if state.phase=='done' or state.phase=='frozen' and not loaded then return end
+  if loaded then loaded=false; state.phase='resume' end
+  local arming=state.phase=='arm'; local done=true
+  for _,f in ipairs(state.cases) do
+    if not f.done then
+      local ok,e,control=cold_step(f,event.tick,arming)
+      assert(ok or control=='wait',e and e.message)
+      if arming then
+        assert(not ok and f.deliveries==0)
+        f.frame=f.checkpoint.frame; f.pending=f.frame.pending; f.pc=f.frame.pc
+        local job=f.pending.jobs['speaker-submit']
+        local submitted=f.cut=='after' or f.cut=='failed'
+        assert(job.attempted==submitted and job.failed==(f.cut=='failed'))
+        assert(f.calls==(submitted and 1 or 0) and f.pending.prepared and f.pending.result_kind=='boolean')
+        assert(f.account.values[job].bytes==192+48*2)
+        if f.cut=='work' then assert(f.ledger.machines['speaker-cold-work'].work==limits.callback_work) end
+        f.saved_calls=f.calls; f.spent=f.ledger.total
+      elseif ok then
+        assert(f.deliveries==1 and f.calls==(f.cut=='revoked' and 0 or 1),'speaker replayed or lost submission/delivery')
+        if f.cut=='failed' or f.cut=='revoked' then
+          assert(not f.success and f.value.code==(f.cut=='failed' and 'E_ENGINE' or 'E_UNREACHABLE'))
+        else assert(f.success and f.value==true) end
+        memory.close(f.owner,function() end)
+        assert(f.account.reserved==0 and next(f.account.values)==nil and next(f.account.owners)==nil)
+        f.done=true
+      else done=false end
     end
   end
-  local full=registry.get().speaker_audio; count=#requests
-  assert(full.total==64 and count==64)
-  assert(not call('fresh-computer',record('fresh-speaker'),0,'playSound','utility/wire_connect_pole',1))
-  error_is('E_RANGE',function() call('fresh-computer',a,0,'playSound','invalid-path') end)
-  error_is('E_RANGE',function() call('fresh-computer',a,0,'playNote','piano',2,0) end)
-  assert(#requests==count and full.total==64)
-  assert(call('computer-a',a,1,'playSound','utility/wire_connect_pole',0))
-  assert(registry.get().speaker_audio.total==1 and registry.get().speaker_audio.tick==1)
-  report('world-64-no-refused-prefix-validation-before-rate-and-genuine-clock-renewal')
-  local failing=record('native-error',true)
-  error_is('E_ENGINE',function() call('error-computer',failing,2,'playSound','utility/wire_connect_pole',0) end)
-  assert(registry.get().speaker_audio.total==1)
-  count=#requests
-  assert(not call('error-computer',failing,2,'playSound','utility/wire_connect_pole',0))
-  assert(#requests==count)
-  report('native-error-retains-allowance-without-automatic-replay')
-  local original=registry.get().speaker_audio
-  registry.get().speaker_audio={version=999,tick=2}
-  error_is('E_UNSUPPORTED',function() call('error-computer',a,3,'playSound','utility/wire_connect_pole',0) end)
-  assert(registry.get().speaker_audio.version==999)
-  registry.get().speaker_audio=original
-  report('unknown-admission-state-is-inert-and-not-reset')
-  for _,which in ipairs({'work','allocations'}) do
-    local ctx=admission.context(admission.new(),'prepared-boolean-'..which,3)
-    local g=sandbox.new(ctx,{}); local entered=0
-    local fn=g.service(function()
-      g.prepare_boolean_result(); entered=entered+1
-      return call('prepared',record('prepared'),3,'playSound','utility/wire_connect_pole',0)
-    end)
-    if which=='work' then ctx.machine.work=limits.callback_work-5
-    else ctx.machine.allocations=limits.callback_allocations-2 end
-    count=#requests; assert(not pcall(g.call,fn)); assert(entered==0 and #requests==count)
+  if arming then
+    state.phase='frozen'; state.tick=event.tick
+    game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED'); return
   end
-  report('insufficient-immediate-return-work-or-allocation-produces-zero-dispatches')
-  catalogue_contract.run()
-  report('bounded-catalogue-invalid-candidates-exact-full-pagination-and-failures')
-  log('TC_CONTRACT_TOTAL '..groups)
+  assert(event.tick-state.tick<30,'speaker cold continuation deadline')
+  if done then state.phase='done'; log('TC_CONTRACT real-speaker-guard-cold-before-after-failure-revocation-and-work-exhaustion'); log('TC_COLD_OK') end
 end
 return M

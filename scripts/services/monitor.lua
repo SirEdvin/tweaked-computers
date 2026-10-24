@@ -27,7 +27,10 @@ function M.resolve(tile)
   local state=root()
   if state and state.version~=1 then errors.raise('E_UNSUPPORTED','unsupported retained monitor state; data preserved') end
   if state and state.presentation and state.presentation.version~=1 then errors.raise('E_UNSUPPORTED','unsupported retained presentation; data preserved') end
-  if state and state.job then errors.raise('E_NETWORK_PENDING','monitor regrouping is not yet committed') end
+  if state and state.job then
+    if state.job.diagnostic then error(state.job.diagnostic,0) end
+    errors.raise('E_NETWORK_PENDING','monitor regrouping is not yet committed')
+  end
   return state and state.groups[state.membership[tile.id]] or nil
 end
 function M.inspect(tile,tick,spend)
@@ -35,11 +38,11 @@ function M.inspect(tile,tick,spend)
   local g=M.resolve(tile)
   if not g then errors.raise('E_NETWORK_PENDING','monitor group unavailable') end
   if type(g.id)~='string' or #g.id>limits.identifier_bytes or type(g.members)~='table'
-    or not errors.integer(g.width_tiles,1,model.limits.width_tiles)
-    or not errors.integer(g.height_tiles,1,model.limits.height_tiles)
+    or not errors.integer(g.width_tiles,1,6)
+    or not errors.integer(g.height_tiles,1,6)
     or type(g.model)~='table' or not errors.integer(g.model.width,1,model.limits.cells)
     or not errors.integer(g.model.height,1,model.limits.cells)
-    or type(g.model.scale)~='number' or not errors.integer(g.model.scale*2,1,10) then
+    or not errors.finite(g.model.scale) or g.model.scale<=0 then
     errors.raise('E_UNSUPPORTED','monitor geometry unsupported; data preserved')
   end
   spend(#g.members+16)
@@ -78,7 +81,8 @@ local function before(a,b)
   return a.id<b.id
 end
 local function partition_job(tiles)
-  return {input=tiles,buckets={},ordered={},used={},rectangles={},stage='index',cursor=1,sort_index=2}
+  return {input=tiles,buckets={},ordered={},used={},rectangles={},stage='index',cursor=1,sort_index=2,
+    width=limits.monitor_width_tiles,height=limits.monitor_height_tiles}
 end
 -- A shifted insertion-sort item is rooted separately while ordering is deferred.
 local function partition_step(p,spend)
@@ -113,10 +117,12 @@ local function partition_step(p,spend)
         p.input=nil; p.buckets=nil; p.ordered=nil; p.used=nil; p.stage='done'; return true
       end
       if not p.used[r.id] then
-        spend(model.limits.width_tiles*model.limits.height_tiles*8+8)
+        local rotated=r.direction==4 or r.direction==12
+        local width,height=rotated and (p.height or 6) or (p.width or 6),rotated and (p.width or 6) or (p.height or 6)
+        spend(width*height*8+8)
         local bucket=p.buckets[scope(r)]; local x,y=r.position.x,r.position.y
-        local bw,bh,area=1,1,1; local maxwidth=model.limits.width_tiles
-        for h=1,model.limits.height_tiles do
+        local bw,bh,area=1,1,1; local maxwidth=width
+        for h=1,height do
           local width=0
           for w=1,maxwidth do
             local t=bucket[key(x+w-1,y+h-1)]
@@ -208,6 +214,11 @@ function M.reconcile(tick,spend)
         local changed=not survivor or not same_members(g.members,survivor.members) or g.direction~=survivor.direction
           or g.left~=survivor.left or g.top~=survivor.top
         local w,h=model.size(g.width_tiles,g.height_tiles,settings and settings.scale or 1)
+        if w*h>model.limits.cells then
+          job.diagnostic=errors.new('E_CAPACITY','monitor storage admission requires shared host ownership; retained models preserved')
+          return
+        end
+        job.diagnostic=nil
         spend(w*h*3+#g.members*16+128)
         if not changed then g=survivor else
           g.anchor=survivor and survivor.anchor or g.members[1]
@@ -261,8 +272,13 @@ methods.setTextScale=function(c,g,wire,tick,spend,...)
   if changed then queue_resize(g,w,h,'scale',recipients()) end
   presentation.participate(g)
 end
-methods.getLimits=function(c,g,wire,tick,spend,...) return (data.copy(model.limits,spend)) end
-peripheral.register_type('monitor',{methods=methods,resolve=M.resolve,available=M.available,callback_stable=true,
+methods.getLimits=function(c,g,wire,tick,spend,...)
+  local result=data.copy(model.limits,spend)
+  result.width_tiles=limits.monitor_width_tiles; result.height_tiles=limits.monitor_height_tiles
+  result.render_commit_work=limits.render_commit_work
+  return result
+end
+peripheral.register_type('monitor',{methods=methods,resolve=M.resolve,available=M.available,callback_stable=true,hold=presentation.hold,
   describe=function(g,wire,info)
     info.powered=M.available(g,function() end); info.footprint={width=g.world_width,height=g.world_height}
     info.position={x=g.left+g.world_width/2,y=g.top+g.world_height/2}; return info
@@ -274,10 +290,7 @@ peripheral.register_revocation('monitor-sync',function(c,name,wire,reason,execut
   if reason=='unavailable' then return end -- Temporary incomplete proof is not detach.
 
   for _,p in ipairs({principal.program(c),principal.shell(c)}) do
-    local owner=principal.selection(c,p); local selection=owner and owner.monitor_sync
-    if selection and (not execution or execution.kind==p.kind and execution.id==p.id) then for _,ref in ipairs(selection.members) do
-      if ref.name==name and ref.wire==wire then presentation.release(c,errors.new('E_UNREACHABLE','selected monitor path revoked'),p); break end
-    end end
+    if not execution or execution.kind==p.kind and execution.id==p.id then presentation.revoke(c,name,wire,p) end
   end
 end)
 -- One computer/subscription delivery regardless of paths, tiles or colors.
@@ -303,25 +316,27 @@ function M.deliver(job,g,computer,tick,spend,player)
     -- A later geometry commit may precede callback dispatch. Coalesce already
     -- queued resize snapshots so getSize agrees with the delivered dimensions.
     spend(#computer.queue*4+1)
-    local staged={}; local difference=0
+    local staged={}; local difference=0; local overflow=false
     for _,item in ipairs(computer.queue) do
       if item.event.name==name and item.event.peripheral==g.id then
         local next_payload={}; for k,v in pairs(payload) do next_payload[k]=v end
         next_payload.name=name; next_payload.old_width=item.event.old_width; next_payload.old_height=item.event.old_height
-        local event,stats=data.copy(next_payload,spend,limits.event_queue_bytes)
-        local bytes=stats.bytes+128+#computer.id+#computer.run_id
-        difference=difference+bytes-item.bytes
-        event.tick=item.event.tick; event.sequence=item.event.sequence
-        event.computer_id=computer.id; event.run_id=computer.run_id
-        staged[#staged+1]={item=item,event=event,bytes=bytes}
+        local prepared=assert(runtime.prepare_event(computer,item.handler,next_payload,tick,spend))
+        if prepared.overflow then overflow=true else difference=difference+prepared.bytes-item.bytes end
+        prepared.event.tick=item.event.tick; prepared.event.sequence=item.event.sequence
+        staged[#staged+1]={item=item,prepared=prepared}
       end
     end
     if #staged>0 then
-      if computer.queue_bytes+difference>limits.event_queue_bytes then
-        runtime.fault(computer,errors.new('E_CAPACITY','resize queue overflow; run stopped'),tick); return true
-      end
       spend(#staged*4+1)
-      for _,entry in ipairs(staged) do entry.item.event=entry.event; entry.item.bytes=entry.bytes end
+      if overflow or difference>0 and computer.queue_bytes+difference>limits.event_queue_bytes then
+        for _,entry in ipairs(staged) do
+          entry.prepared.overflow='event_queue_bytes'
+          runtime.publish_event(computer,entry.prepared,tick)
+        end
+        return true
+      end
+      for _,entry in ipairs(staged) do entry.item.event=entry.prepared.event; entry.item.bytes=entry.prepared.bytes end
       computer.queue_bytes=computer.queue_bytes+difference; return true
     end
   end

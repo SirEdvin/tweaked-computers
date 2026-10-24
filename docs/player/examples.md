@@ -102,7 +102,7 @@ end
 
 ## speaker-alarm
 
-Connect a powered vanilla programmable-speaker to a computer Network on red. Plays one positional effect every 120 ticks. False admission waits for the next timer, never a same-tick retry. Stop prevents future calls, not cancellation of an already submitted sample.
+Connect a powered vanilla programmable-speaker to a computer Network on red. Requests one positional effect every 120 ticks. Work pressure suspends before submission instead of returning false for a note-count quota; do not retry an uncertain native effect. Stop prevents future calls, not cancellation of an already submitted sample.
 
 ```lua
 function start(event)
@@ -115,13 +115,13 @@ function alarm(event)
   assert(speaker, "Connect a powered vanilla programmable speaker on red")
   local accepted = speaker.playSound("utility/wire_connect_pole", 0.5)
   computer.setState("accepted", accepted)
-  if not accepted then computer.log("Speaker busy; the next timer will retry") end
+  -- Submission success is not proof that a listener heard the sound.
 end
 ```
 
 ## speaker-melody
 
-Connect a powered vanilla programmable-speaker on red. Discovers zero-based piano indices and requests one note every 30 ticks; advances only after admission. This is simulation scheduling, not sample-accurate sequencing. Disconnect/power errors fault the program; reconnect and Run again.
+Connect a powered vanilla programmable-speaker on red. Discovers zero-based piano indices and requests one note every 30 ticks; advances only after submission. Work pressure may delay the call. This is simulation scheduling, not sample-accurate sequencing. Disconnect/power loss reports an error; reconnect and Run again.
 
 ```lua
 function start(event)
@@ -140,9 +140,8 @@ function note(event)
   assert(speaker, "Speaker disconnected; reconnect and Run again")
   local step = computer.getState("step")
   local pitches = computer.getState("pitches")
-  if speaker.playNote("piano", 0.35, pitches[step]) then
-    computer.setState("step", step % #pitches + 1)
-  end
+  assert(speaker.playNote("piano", 0.35, pitches[step]))
+  computer.setState("step", step % #pitches + 1)
 end
 ```
 
@@ -267,16 +266,7 @@ return {
             local searcher = peripheral.find("recipe_searcher", "red")
             assert(searcher, "Connect a Recipe Searcher with a red Network wire")
 
-            local limits = searcher.getLimits()
-            assert(limits.recipe_search_results == 50)
-
-            local ok, recipes = pcall(searcher.findRecipes, "item", "iron-plate")
-            if not ok then
-                if type(recipes) ~= "table" or recipes.code ~= "E_LIMIT" then
-                    error(recipes)
-                end
-                recipes = searcher.findRecipes("item", "iron-plate", "smelting")
-            end
+            local recipes = searcher.findRecipes("item", "iron-plate", "smelting")
             for _, recipe in ipairs(recipes) do
                 computer.log(recipe.name .. " / " .. recipe.category
                     .. " / seconds=" .. tostring(recipe.energy)

@@ -13,7 +13,15 @@ Obtain `cfg` with `peripheral.find("configurator", computer_network_wire)`. Ever
 | `cfg.getCapabilities(device_id, target_wire)` | CapabilitySet | Current typed configuration schema and applicability |
 | `cfg.getConfiguration(device_id, target_wire)` | ConfigurationSnapshot | Current normalized values, unset fields and read-only observations |
 | `cfg.setConfiguration(device_id, patch, target_wire)` | ConfigurationSnapshot | Validate the whole patch before mutation; read back the exact device afterward |
-| `cfg.getLimits()` | table | `target_nodes`, `target_edges`, `configuration_bytes`, `configuration_nodes`, `patch_fields`, `sections`, `section_filters`, plus common caps |
+| `cfg.getLimits()` | ResourcePolicy | Defensive `{policy_version=2, resources={...}, tuning={}}`, including while reachable and unpowered |
+
+The resource map selects `callback_work`, `callback_allocations`,
+`host_work_per_tick`, `runtime_memory_bytes`, `host_memory_bytes`,
+`pending_work_bytes` and `host_stack_depth` from the shared policy registry.
+Descriptors contain `limit`, `unit`, `scope`, `setting` and `behavior`; tuning
+is empty. Legacy flat common/configurator limits and unrelated device settings
+are absent. Calls take no arguments (including explicit nil), return one
+independent nested snapshot, and still require current physical authority.
 
 A complete network includes same-force real devices reached through ordinary same-color wire relays. Do not change color, cross surfaces, infer reachability from matching signal values, follow ghosts, jump between a combinator's isolated connectors or traverse radio-like signal transport as if it were a physical wire. Actual native-connected wire connectors of a device are followed; an entity's mere presence does not authorize every isolated connector it owns. Internal helper entities belonging to this mod are hidden from the device inventory; a public mod body can be described as protected/nonconfigurable instead of exposing its children.
 

@@ -145,16 +145,19 @@ function M.run()
   root=fresh(); rec=computer(source('computer.setState("kept",true)',',event=function(e) end'))
   scheduler.tick(0)
   for i=1,limits.event_queue_entries do assert(runtime.enqueue(rec,'event',{name='timer'},1)) end
+  local first,queued_bytes,cleanups=rec.queue[1],rec.queue_bytes,#cleanup_calls
   assert(not runtime.enqueue(rec,'event',{name='timer'},1))
-  assert(rec.status=='faulted' and rec.state.kept and #rec.queue==0 and next(rec.timers)==nil)
-  assert(cleanup_calls[#cleanup_calls].reason=='fault')
-  report('visible-queue-overflow-with-host-cleanup')
+  assert(rec.status=='running' and rec.state.kept and #rec.queue==limits.event_queue_entries)
+  assert(rec.queue[1]==first and rec.queue_bytes==queued_bytes and #cleanup_calls==cleanups)
+  assert(rec.dropped_events.total==1 and rec.dropped_events.last_reason=='event_queue_entries')
+  report('queue-overflow-drops-newest-without-run-or-output-cleanup')
   root=fresh()
   local bad=computer(source('pcall(function() while true do end end); computer.setState("unsafe",true)'))
   local good=computer(source('computer.setState("healthy",true)'))
-  scheduler.tick(0); assert(bad.status=='faulted' and bad.diagnostic.code=='E_BUDGET' and bad.state.unsafe==nil)
+  scheduler.tick(0); assert(bad.status=='running' and bad.invocation and bad.diagnostic==nil and bad.state.unsafe==nil)
   assert(good.state.healthy and good.status=='running')
   local totalspent=root.ledger.total; scheduler.tick(0); assert(root.ledger.total==totalspent)
+  assert(runtime.stop(bad.id) and bad.status=='stopped' and bad.state.unsafe==nil and root.ledger.total==totalspent)
   report('production-scheduler-malicious-neighbor-and-once-per-tick')
   root=fresh(); local peers={}
   for i=1,4 do peers[i]=computer(source('computer.setState("calls",(computer.getState("calls") or 0)+1)',',again=function(e) computer.setState("calls",computer.getState("calls")+1) end'),i) end
@@ -308,7 +311,8 @@ end
   assert(rec.active==nil and next(rec.state)==nil and #rec.logs==0,'Validate executed source')
   local validated=root.ledger.total
   local run=assert(runtime.activate(rec.id,0,1))
-  assert(root.ledger.total>validated and rec.run_generation==1 and #rec.queue==1 and next(rec.state)==nil)
+  assert(root.ledger.total>validated and rec.run_generation==1 and #rec.queue==0 and next(rec.state)==nil)
+  assert(rec.invocation and rec.invocation.pending_start and rec.invocation.item.handler=='start')
   local keys={source=true,revision=true,api_version=true,compiler_version=true,storage_version=true,handlers=true}
   local fields=0; for k in pairs(rec.active) do assert(keys[k],'active shape expanded'); fields=fields+1 end
   assert(fields==6 and rec.active.source==plain and rec.active.revision==1
@@ -430,5 +434,61 @@ end
   report('new-reserved-active-source-reconstruction-retains-source-state-and-ABI')
   log('TC_CONTRACT_TOTAL '..total)
   return total
+end
+-- Desired resource-policy scheduler semantics; opt in before replacing old assertions.
+function M.resource_policy()
+  for _,text in ipairs({source('computer.setState("prefix",true); while true do end'),
+    'function start() computer.setState("prefix",true); while true do end end'}) do
+  fresh()
+  local rec=computer(text)
+  local peer=computer(source('computer.setState("healthy",true)'))
+  scheduler.tick(1)
+  assert(rec.status=='running' and rec.state.prefix,'work pressure retired the active run')
+  assert(peer.state.healthy and peer.status=='running','suspended lane starved its neighbor')
+  local generation,active=rec.run_generation,rec.active
+  scheduler.tick(2)
+  assert(rec.status=='running' and rec.run_generation==generation and rec.active==active)
+  assert(runtime.stop(rec.id) and rec.status=='stopped' and rec.state.prefix,'host Stop lost accepted state')
+  end
+end
+function M.resource_capacity()
+  for _,caught in ipairs({false,true}) do
+    fresh()
+    local body=[[
+      computer.setState('kept',true)
+      local s=string.rep('x',16000)
+      for n=1,4 do computer.setState(tostring(n),s) end
+    ]]
+    if caught then
+      body=body..[[
+        local ok,e=pcall(computer.setState,'5',s)
+        assert(not ok and e.recoverable and e.resource=='state_bytes')
+        assert(e.setting=='tc-state-bytes' and e.limit==65536 and e.used+e.requested>e.limit)
+        assert(computer.getState('5')==nil and computer.getState('1')==s)
+        ok,e=pcall(computer.setState,'oversized',{s,s})
+        assert(not ok and e.recoverable and e.resource=='state_bytes' and computer.getState('oversized')==nil)
+        assert(computer.deleteState('1'))
+        computer.setState('recovered',true)
+      ]]
+    else body=body.." computer.setState('5',s); computer.setState('unreachable',true)" end
+    local rec=computer(source(body))
+    local run,active=rec.run_id,rec.active
+    for tick=1,100 do
+      scheduler.tick(tick)
+      if not rec.invocation and #rec.queue==0 then break end
+    end
+    assert(not rec.invocation and #rec.queue==0,'state-capacity invocation did not finish')
+    assert(rec.status=='running' and rec.state.kept and rec.run_id==run and rec.active==active,
+      'capacity refusal must not retire the active run: '..serpent.line(rec.diagnostic))
+    assert(rec.state['5']==nil and not rec.state.unreachable,'refused state write partially committed')
+    if caught then assert(rec.state.recovered and rec.state['1']==nil)
+    else
+      assert(rec.diagnostic and rec.diagnostic.recoverable,'capacity refusal lacks recovery metadata')
+      assert(rec.diagnostic.resource=='state_bytes' and rec.diagnostic.setting=='tc-state-bytes')
+      assert(rec.state['1']==string.rep('x',16000))
+    end
+    assert(runtime.stop(rec.id) and rec.status=='stopped' and rec.state.kept)
+  end
+  log('TC_CONTRACT caught-and-uncaught-state-capacity-preserve-data-and-run')
 end
 return M

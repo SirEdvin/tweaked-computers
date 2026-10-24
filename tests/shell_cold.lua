@@ -15,14 +15,22 @@ local defs=require('scripts.device-definitions')
 local M={}
 local loaded=false
 local player,gui
-local function clone(v)
+local function clone(v,seen)
   if type(v)~='table' then return v end
-  local result={}; for k,x in pairs(v) do result[k]=clone(x) end; return result
+  seen=seen or {}
+  if seen[v] then return seen[v] end
+  local result={}; seen[v]=result
+  for k,x in pairs(v) do result[k]=clone(x,seen) end
+  return result
 end
-local function equal(a,b)
+local function equal(a,b,forward,reverse)
   if type(a)~=type(b) then return false end
   if type(a)~='table' then return a==b end
-  for k,v in pairs(a) do if not equal(v,b[k]) then return false end end
+  forward=forward or {}; reverse=reverse or {}
+  if forward[a] then return forward[a]==b end
+  if reverse[b] then return false end
+  forward[a]=b; reverse[b]=a
+  for k,v in pairs(a) do if not equal(v,b[k],forward,reverse) then return false end end
   for k in pairs(b) do if a[k]==nil then return false end end
   return true
 end
@@ -65,6 +73,14 @@ local function submit(text)
 end
 local function tick(event) with_player(function() scheduler.tick(event.tick) end) end
 function M.run()
+  -- Runtime owners point back through their account; preserve cycles and aliases
+  -- rather than recursively expanding them or dropping ownership from the check.
+  local shared={value=false}; local graph={shared,shared}; graph.self=graph
+  local copied=clone(graph)
+  assert(copied~=graph and copied.self==copied and copied[1]==copied[2] and equal(graph,copied))
+  copied[2]={value=false}; assert(not equal(graph,copied) and not equal(copied,graph))
+  copied=clone(graph); copied[1].value=true; assert(not equal(graph,copied))
+  log('TC_CONTRACT cold-snapshot-preserves-cycles-and-rejects-value-or-alias-changes')
   local surface=game.surfaces[1]
   local function build(kind,x,y)
     return assert(lifecycle.build(assert(surface.create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})))

@@ -2,6 +2,7 @@
 local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
+local memory = require('scripts.runtime.memory')
 local M = {}
 local cleanup = {} -- Ephemeral host hooks, registered during control parsing.
 function M.initialize()
@@ -28,9 +29,10 @@ local function writable()
   if not M.supported(root) then errors.raise('E_UNSUPPORTED','unsupported storage schema; source/data retained') end
   return root
 end
-function M.sequence()
+function M.sequence(prepare)
   local root=writable(); local n=root.next_sequence
   if not errors.integer(n,1,9007199254740990) then errors.raise('E_CAPACITY','identity sequence exhausted') end
+  if prepare then prepare(n) end -- Refused result storage must not consume an identity.
   root.next_sequence=n+1; return n
 end
 function M.record(id)
@@ -136,6 +138,9 @@ function M.remove(id,reason)
   if not M.cleanup(rec,rec.run_id,reason or 'removed') then
     rec.status='faulted'; rec.diagnostic=errors.new('E_ENGINE','cleanup failed; entity/data retained for recovery')
     return false
+  end
+  if rec.host_channels then
+    memory.release(root.host_memory_owner,rec.host_channels); rec.host_channels=nil
   end
   rec.status='removed'; rec.queue={}; rec.timers={}; rec.subscriptions={}
   for unit,binding in pairs(root.entities) do if binding.id==id then root.entities[unit]=nil end end

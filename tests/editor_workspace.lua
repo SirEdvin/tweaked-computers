@@ -17,6 +17,7 @@ local help=require('scripts.ui.help')
 local help_contract=require('tests.help_contract')
 local defs=require('scripts.device-definitions')
 local compiler=require('scripts.runtime.compiler')
+local resources=require('scripts.ui.resource-status')
 local real_inspector=require('scripts.ui.network-inspector')
 local inspection_override -- Explicit host-inventory doubles for otherwise unreachable error cases.
 editor.register_inspector(function(...)
@@ -178,11 +179,25 @@ function M.run()
       assert(not c.status.caption:find(' | base ',1,true),'revision trackers are presentation, not safety')
     end)
     group('workspace-foreign-close-during-shell-construction-is-ignored',function()
-      local pane=f.content; f.content=nil
-      local ok,e=pcall(editor.on_closed,{player_index=a.index,element={valid=true,parent=a.gui.screen}})
-      f.content=pane
-      assert(ok,e)
-      assert(f.valid and a.opened==f and model.session(a.index))
+      -- Use the GUI factory: native elements always expose a tags table. A
+      -- hand-written {valid,parent} double fails before testing root ownership.
+      local foreign=a.gui.screen.add{type='frame',name='foreign-close-fixture'}
+      local child=foreign.add{type='label',name='foreign-child',caption='foreign'}
+      local session=model.session(a.index)
+      for _,tags in ipairs({{},
+        {input_recovery=true,player=b.index,id=rec.id},
+        {input_recovery=true,player=a.index,id=rec.id}}) do
+        foreign.tags=tags
+        for _,element in ipairs({foreign,child}) do
+          local pane=f.content; f.content=nil
+          local ok,e=pcall(editor.on_closed,{player_index=a.index,element=element})
+          f.content=pane
+          assert(ok,e)
+          assert(f.valid and a.opened==f and model.session(a.index)==session)
+          assert(foreign.valid and child.valid,'foreign close must not mutate either window')
+        end
+      end
+      foreign.destroy()
     end)
     group('workspace-starter-validate-save-activation-separate',function()
       click(c.message.template); assert(c.source.text==help.template and rec.saved_source=='' and not rec.active)
@@ -299,6 +314,43 @@ function M.run()
       tick=tick+1; editor.refresh(a,nil,tick)
       assert(s.inventory.items and #s.inventory.items==1 and s.inventory.items[1].name==db.id)
     end)
+    group('workspace-resource-samples-do-not-reset-source-or-diagnostic-selection',function()
+      -- Explicit presentation double; persistence and busy-lane counters need integrated native gates.
+      local read=resources.read
+      local previous=rec.diagnostic
+      local console_bytes=limits.console_bytes
+      local status={state='waiting',resources={memory={used=10,limit=20,unit='bytes',scope='computer',setting='tc-runtime-memory-bytes',over_limit=false}},
+        wait={resource='work',setting='tc-callback-work',resumable=true,since_tick=tick},dropped_events={total=17,saturated=false},
+        last_refusal={code='E_CAPACITY',message=string.rep('complete ',100)..'END',resource='memory',setting='tc-runtime-memory-bytes',used=20,requested=1,limit=20,recoverable=true}}
+      resources.read=function() return status end
+      local passed,problem=pcall(function()
+        tab(f,2); local output=f.content.console; local source=c.source
+        output.follow.state=false; editor.on_checked{player_index=a.index,element=output.follow,tick=tick}
+        editor.refresh(a,nil,tick)
+        assert(f.title.status.caption:find('waiting',1,true) and f.title.status.caption:find('17',1,true))
+        assert(output.detail.text:find(status.last_refusal.message,1,true) and output.detail.text:find('recoverable',1,true))
+        output.detail.select_all(); source.select_all()
+        local writes=output.detail.text_writes; local source_writes=source.text_writes; local scrolls=output.output.scrolls
+        status.resources.memory.used=11; status.dropped_events.total=18
+        editor.refresh(a,nil,tick+15)
+        assert(output.detail.text_writes==writes and output.detail.selection)
+        assert(source.text_writes==source_writes and source.selection and output.output.scrolls==scrolls)
+        assert(f.title.status.caption:find('18',1,true))
+        status.state='resource_refused'; status.wait=nil; editor.refresh(a,nil,tick+30)
+        assert(f.title.status.caption:find('recoverable',1,true) and not f.title.status.caption:find('fault',1,true))
+        rec.diagnostic={code='E_PROGRAM',message=string.rep('native-shaped diagnostic ',50)..'END'}
+        editor.refresh(a,nil,tick+45)
+        assert(output.detail.text:find(rec.diagnostic.message,1,true))
+        limits.console_bytes=limits.maintenance_work_per_tick*2
+        status.dropped_events.total=19
+        local at=math.ceil((registry.get().scheduler.last_tick+tick+1)/15)*15
+        tick=at; game.tick=at
+        editor.tick(at,scheduler.maintenance(registry.get(),at))
+        assert(f.title.status.caption:find('19',1,true),'large Console admission must not block host status')
+      end)
+      resources.read=read; rec.diagnostic=previous; limits.console_bytes=console_bytes
+      assert(passed,problem)
+    end)
     group('workspace-reference-complete-categories-search-select-no-overwrite',function()
       tab(f,4); local r=f.content.reference; local s=model.session(a.index)
       assert(#s.reference_entries==#help.topics and #r.topics.items==#help.topics)
@@ -324,7 +376,7 @@ function M.run()
       local kept=r.reference_text.children[1]; kept.select_all(); tab(f,1); tab(f,4)
       assert(r.reference_text.children[1]==kept and kept.selection,'unchanged navigation must retain native widgets/selection')
       r.filters.search.text=string.rep('s',129); editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
-      assert(r.filters.search.text=='KV DATABASE' and s.search=='KV DATABASE')
+      assert(r.filters.search.text==string.rep('s',129) and s.search==string.rep('s',129))
       select(r.filters.category,6); r.filters.search.text='Starter controller'
       editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(#s.reference_entries==1 and not r.actions)

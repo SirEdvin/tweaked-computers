@@ -33,7 +33,7 @@ for _,kind in ipairs({'computer','kv','monitor','logic','configurator'}) do
 end
 assert(equal(old.effects,expected))
 log('TC_RECIPE_DATA_OK geometry-power-crafting-independent-research')
-local names={'tc-rs-overlap','tc-rs-empty','tc-rs-fifty','tc-rs-fiftyone','tc-rs-single51','tc-rs-complex','tc-rs-large'}
+local names={'tc-rs-overlap','tc-rs-empty','tc-rs-fifty','tc-rs-fiftyone','tc-rs-single51','tc-rs-complex','tc-rs-large','tc-rs-wide'}
 for _,name in ipairs(names) do
   data:extend{{type='item',name=name,icon='__base__/graphics/icons/iron-plate.png',icon_size=64,stack_size=100,auto_recycle=false}}
 end
@@ -72,4 +72,9 @@ for i=1,600 do
   large.results[i]={type='item',name='tc-rs-large',amount_min=1,amount_max=i,probability=i/1000,
     ignored_by_stats=1,ignored_by_productivity=1}
 end
-data:extend{item,fluid,input,hidden,complex,large}
+local wide=producer('tc-rs-wide','tc-rs-wide'); wide.results={}
+for i=1,1100 do
+  wide.results[i]={type='item',name='tc-rs-wide',amount_min=1,amount_max=i,probability=i/2000,
+    ignored_by_stats=1,ignored_by_productivity=1}
+end
+data:extend{item,fluid,input,hidden,complex,large,wide}

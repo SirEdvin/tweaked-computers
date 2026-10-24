@@ -110,7 +110,7 @@ No writable root settings on this base behavior; derived families list their inh
 
 | Setting | Type | Clearable | Restriction |
 | --- | --- | --- | --- |
-| `messages` | dense array ≤128 of [DisplayPanelMessageDefinition](schemas.md#schema-displaypanelmessagedefinition) | no | Current native applicability |
+| `messages` | dense array of [DisplayPanelMessageDefinition](schemas.md#schema-displaypanelmessagedefinition) | no | Current native applicability |
 
 ## Furnace
 

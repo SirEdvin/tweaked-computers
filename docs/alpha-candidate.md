@@ -45,7 +45,7 @@ not the unfinished client performance gate.
 | Compilation | default work 1,250,000, live Map setting; active/saved source kept separately |
 | Shared actual tick | default 5,000,000 total-envelope units; default 200,000 reserved maintenance; both live Map settings, no extra guest pool |
 | Active admission | 64 computers, 128 sampled logic handlers, 1,024 subscriptions, 128 owned banks |
-| State | 65,536 accounted bytes, 256 entries, 4,096 Data nodes, Data depth 16 |
+| State | default 65,536 accounted bytes, 256 entries, Data depth 16; no separate total-node ceiling |
 | Queue/timers | 128 queue entries / 65,536 accounted bytes; 64 timers and 64 subscriptions per computer |
 | Discovery | 256 connector nodes / 512 edges; explicit complete-result refusal |
 | Monitor | 4×4 tile rectangle, 4,704 cells at scale 0.5; aggregate 80,000 cells / 256 tiles; write 16,384 bytes |

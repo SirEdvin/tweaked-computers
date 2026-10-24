@@ -62,6 +62,11 @@ function M.run()
     end
     local function execute(text,expect,p,gui)
       submit(text,p,gui); dispatch()
+      local deadline=tick+300
+      while rec.shell.invocation do
+        assert(tick<deadline,'finite Console command did not complete: '..text)
+        tick=tick+1; dispatch()
+      end
       local d=rec.shell.diagnostic
       assert((d==nil)==(expect~=false),text..': '..(d and d.message or 'unexpected success'))
       return d
@@ -241,9 +246,11 @@ function M.run()
       local seq=registry.get().next_sequence; editor.on_confirmed{player_index=a.index,element=input,tick=tick}
       assert(registry.get().next_sequence==seq)
       input.text='draft'; editor.on_text{player_index=a.index,element=input,tick=tick}
-      for _,bad in ipairs({'one\ntwo',string.rep('x',limits.shell_source_bytes+1)}) do
-        input.text=bad; editor.on_text{player_index=a.index,element=input,tick=tick}; assert(input.text=='draft')
-      end
+      input.text='one\ntwo'; editor.on_text{player_index=a.index,element=input,tick=tick}
+      assert(input.text=='one\ntwo' and model.session(a.index).shell_draft=='draft')
+      input.text=string.rep('x',limits.shell_source_bytes+1)
+      editor.on_text{player_index=a.index,element=input,tick=tick}
+      assert(model.session(a.index).shell_draft==input.text,'draft storage is not the legacy runtime command gate')
       submit('x=6'); local count=#rec.shell.pending
       editor.on_click{player_index=a.index,element=f.content.console.prompt.execute,tick=tick}
       assert(#rec.shell.pending==count); dispatch()
@@ -269,22 +276,33 @@ function M.run()
       tick=tick+1; assert(execute('peripheral.setMonitorSyncGroup({{name="'..screen.id..'",wire="red"}})',false).code=='E_BUSY')
       assert(rec.monitor_sync==selection,'shell conflict changed program selection')
     end)
-    group('loop-failure-same-tick-credits-and-program-serviceability',function()
-      execute('while true do end',false)
-      assert(rec.shell.diagnostic.code=='E_BUDGET' and rec.status=='running')
-      local ctx=runtime.context(rec,tick); local spent=ctx.machine.work
-      assert(runtime.context(rec,tick).machine.work==spent)
-      tick=tick+1; execute('assert(x==8)')
+    group('loop-suspension-same-tick-credits-and-program-serviceability',function()
       for _,text in ipairs({
+        'x=999; while true do end',
         'xpcall(function() while true do end end,function(e) computer.setState("unsafe_handler",true) end)',
-        'xpcall(function() error("x") end,function(e) while true do end end)',
-        'pcall(function() xpcall(function() error("x") end,function(e) error("again") end) end)'
+        'xpcall(function() error("x") end,function(e) while true do end end)'
       }) do
-        local graph=rec.shell.values
-        tick=tick+1; assert(execute(text,false).code=='E_BUDGET')
-        assert(rec.status=='running' and rec.shell.values==graph and not rec.state.unsafe_handler)
-        tick=tick+1; execute('assert(x==8)')
+        local graph,run,selection=rec.shell.values,rec.run_id,rec.monitor_sync
+        tick=tick+1; submit(text); dispatch()
+        local invocation=assert(rec.shell.invocation,'unending command was discarded')
+        for _=1,3 do
+          assert(rec.shell.invocation==invocation and rec.shell.diagnostic==nil,'work suspension became a command fault')
+          assert(rec.status=='running' and rec.run_id==run and rec.monitor_sync==selection)
+          assert(rec.shell.values==graph and not rec.state.unsafe_handler,'suspension committed staged values or reached a message handler')
+          local ctx=runtime.context(rec,tick); local spent=ctx.machine.work
+          assert(runtime.context(rec,tick).machine.work==spent)
+          tick=tick+1; dispatch()
+        end
+        assert(shell.reset(rec,'fixture explicit Reset Shell') and rec.shell==nil)
+        assert(rec.status=='running' and rec.run_id==run and rec.monitor_sync==selection)
+        tick=tick+1; execute('x=8')
       end
+    end)
+    group('repeated-message-handler-errors-refuse-recoverably',function()
+      local run,selection=rec.run_id,rec.monitor_sync
+      execute('local protected,ok,e=pcall(function() return xpcall(function() error("x") end,function(e) error("again") end) end); assert(protected and not ok and e.recoverable and e.resource=="call_depth"); assert(x==8)')
+      assert(not rec.shell.invocation and not rec.shell.diagnostic)
+      assert(rec.status=='running' and rec.run_id==run and rec.monitor_sync==selection)
     end)
     group('failed-activation-and-automatic-fault-retain-values',function()
       local graph=rec.shell.values; local old=rec.saved_source; local session=rec.shell
@@ -349,7 +367,10 @@ function M.run()
       local input=f.content.console.prompt.command; input.text='x=1'
       editor.on_text{player_index=a.index,element=input,tick=tick}
       editor.on_confirmed{player_index=a.index,element=input,tick=tick}
-      assert(not rec.shell and input.text=='x=1' and f.content.console.shell_status.caption:find('E_CAPACITY',1,true))
+      assert(not rec.shell and input.text=='x=1' and f.content.console.detail.text:find('E_CAPACITY',1,true))
+      local refusal=f.content.console.detail.text
+      editor.refresh(a,nil,tick+15)
+      assert(f.content.console.detail.text==refusal and input.text=='x=1','refusal must remain selectable after refresh')
       for _,c in ipairs(placeholders) do c.shell=nil end
     end)
     group('transport-excludes-shell-without-changing-original-identity',function()

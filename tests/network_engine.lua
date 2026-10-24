@@ -175,23 +175,21 @@ function M.run()
     local ok,e=pcall(m.getLimits); assert(not ok and e.code=='E_UNREACHABLE')
     assert(peripheral.getType(n,'red')==nil and peripheral.find('monitor','red')~=nil)]])
   report('synthetic-monitor-group-real-wire-no-implicit-member-bridge')
-  -- Exact unchanged production node cap, real wire chain; no truncated success.
+  -- Beyond the former node/edge/find caps, with a real wire chain.
   local bounded=game.create_surface('tc05-bounded',{width=2048,height=32}); local chain={}
-  for i=1,limits.network_nodes+1 do
-    chain[i]=build(bounded,i>1 and i<=limits.tuple_entries+2 and 'kv' or 'computer',i*3,0)
+  for i=1,300 do
+    chain[i]=build(bounded,i>1 and i<=130 and 'kv' or 'computer',i*3,0)
     if i>1 then connect(chain[i-1],chain[i],'red') end
   end
-  error_is('E_LIMIT',function() inventory(chain[1],'red') end)
-  disconnect(chain[#chain-1],chain[#chain],'red')
   local complete=inventory(chain[1],'red'); local n=0; for _ in pairs(complete) do n=n+1 end
-  assert(n==limits.tuple_entries+1)
+  assert(n==129)
   chain[1].status='running'; chain[1].run_id=chain[1].id..'/fixture'
-  guest(chain[1],[[local ok,e=pcall(peripheral.find,'kv_database','red'); assert(not ok and e.code=='E_LIMIT')
+  guest(chain[1],[[assert(select('#',peripheral.find('kv_database','red'))==129)
     assert(#peripheral.getNames('red')==129)]])
-  error_is('E_LIMIT',function() graph.real_edges(connector(c,'red'),nop,0) end)
+  assert(#graph.real_edges(connector(c,'red'),nop,0)>0)
   error_is('E_NETWORK_PENDING',function() peripheral.inventory(c,'red',function() error({code='E_NETWORK_PENDING',message='fixture work refusal'},0) end) end)
   for _,rec in ipairs(chain) do assert(lifecycle.remove(rec.id,'fixture-cleanup',true)) end
-  report('real-maximum-node-complete-result-and-over-limit-refusal')
+  report('real-300-node-complete-result-and-129-facade-tuple')
   -- Reconciliation baseline is silent; later transition detaches first, sorted.
   c.active={source='',api_version=1,compiler_version=limits.compiler_version,storage_version=1,handlers={changed=true}}
   runtime.subscribe(c,'peripheral_attach','changed'); runtime.subscribe(c,'peripheral_detach','changed')
@@ -208,6 +206,17 @@ function M.run()
   assert(c.queue[1].event.peripheral<c.queue[2].event.peripheral and c.queue[1].event.wire=='red')
   connect(c,db,'red'); peripheral.reconcile_one(c,'red',game.tick,nop)
   assert(#c.queue==4 and c.queue[3].event.name=='peripheral_attach' and c.queue[4].event.name=='peripheral_attach')
+  local entries=limits.event_queue_entries; limits.event_queue_entries=#c.queue
+  local first,bytes=c.queue[1],c.queue_bytes
+  output(io,c,'red'); disconnect(c,db,'red'); peripheral.reconcile_one(c,'red',game.tick,nop)
+  assert(c.status=='running' and #c.queue==4 and c.queue[1]==first and c.queue_bytes==bytes)
+  assert(not io.output_owner and io.children.output.get_control_behavior().sections_count==0,'dropped detach suppressed fail-safe output cleanup')
+  assert(c.dropped_events.total==2 and c.dropped_events.last_kind=='peripheral_detach')
+  peripheral.reconcile_one(c,'red',game.tick,nop); assert(c.dropped_events.total==2,'dropped topology delivery retried')
+  connect(c,db,'red'); peripheral.reconcile_one(c,'red',game.tick,nop)
+  assert(c.dropped_events.total==4 and c.dropped_events.last_kind=='peripheral_attach' and c.queue[1]==first)
+  limits.event_queue_entries=entries
+  report('topology-drop-once-preserves-FIFO-and-independent-native-output-cleanup')
   c.queue={}; c.queue_bytes=0
   report('silent-baseline-and-deterministic-detach-before-attach-events')
   output(io,c,'red'); disconnect(c,db,'red'); connect(c,io,'red')

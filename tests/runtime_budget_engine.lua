@@ -40,9 +40,20 @@ local function computer(body)
 end
 local function run(body)
   local root=fresh(); local rec=computer(body)
-  assert(scheduler.dispatch(rec,game.tick),'callback indefinitely deferred')
-  assert(rec.status=='running',rec.diagnostic and rec.diagnostic.message)
-  return rec,root.ledger.machines[rec.id]
+  local peak={compile=0,work=0,allocations=0}
+  -- Explicit clocks test per-slice bounds, not production latency. Actual
+  -- production ticks and separate-process persistence are exercised below.
+  for offset=0,31 do
+    assert(scheduler.dispatch(rec,game.tick+offset),'callback indefinitely deferred')
+    assert(rec.status=='running',rec.diagnostic and rec.diagnostic.message)
+    local machine=root.ledger.machines[rec.id]
+    for _,kind in ipairs({'compile','work','allocations'}) do
+      assert(machine[kind]<=limits[keys[kind]],'slice exceeded configured '..kind)
+      peak[kind]=math.max(peak[kind],machine[kind])
+    end
+    if not rec.invocation then return rec,peak end
+  end
+  error('finite budget fixture did not finish')
 end
 local function restored_defaults()
   for kind,value in pairs(defaults) do change(kind,value) end
@@ -64,9 +75,10 @@ local function frozen()
 end
 local function maintenance_contracts(report)
   local definitions=budgets.definitions
-  local definition=definitions[#definitions]
-  assert(definition.name==names.maintenance and definition.minimum_value==200000
-    and definition.maximum_value==100000000 and definition.default_value==200000)
+  local definition
+  for _,candidate in ipairs(definitions) do if candidate.name==names.maintenance then definition=candidate end end
+  assert(definition and definition.minimum_value==1
+    and definition.maximum_value==9007199254740991 and definition.default_value==200000)
   local root=fresh(); local t=game.tick
   local spend=scheduler.maintenance(root,t,true)
   spend(25000)
@@ -83,16 +95,24 @@ local function maintenance_contracts(report)
   local rec=computer('computer.setState("untouched",true)')
   change('host',200001)
   assert(admission.guest_ceiling(root.ledger,t)==0)
-  local total=root.ledger.total; local queued=rec.queue[1]
-  assert(not scheduler.dispatch(rec,t) and rec.queue[1]==queued and rec.status=='running')
+  local total=root.ledger.total; local pending=rec.invocation
+  assert(pending and pending.pending_start)
+  assert(not scheduler.dispatch(rec,t) and rec.invocation==pending and pending.pending_start and rec.status=='running')
   assert(root.ledger.total==total and rec.last_dispatch_tick==nil)
   -- Table-backed registration isolates scheduler entry -> authentic sampler
-  -- refusal. Native subscription/output cleanup is covered by logic_engine.
-  rec.subscriptions.pressure={event_name='signal_changed'}
+  -- deferral. Native subscription/output cleanup is covered by logic_engine.
+  local observation={input='red',previous={},connected={red=true,green=false},resync=false}
+  local subscription={event_name='signal_changed',details=observation}
+  rec.subscriptions.pressure=subscription
   scheduler.tick(t)
-  assert(rec.status=='faulted' and rec.diagnostic.code=='E_BUSY',
-    'scheduler entry deferral silently skipped fail-closed signal sampling')
+  assert(rec.status=='running' and rec.invocation==pending and rec.subscriptions.pressure==subscription
+    and subscription.details==observation and observation.resync,
+    'scheduler entry deferral lost the run/baseline or skipped resynchronization')
   assert(root.scheduler.maintenance_spent==300001 and root.ledger.total==total)
+  subscription.details=nil
+  scheduler.tick(t)
+  assert(rec.status=='faulted' and rec.diagnostic.code=='E_ARGUMENT',
+    'malformed retained subscription escaped controlled refusal under pressure')
   report('maintenance-live-increase-decrease-and-captured-spend-preserve-credits')
 
   change('host',600001); change('maintenance',300000)
@@ -146,6 +166,15 @@ local function maintenance_contracts(report)
   assert(not ok,'larger maintenance widened whole-render admission')
   restored_defaults()
   report('maintenance-setting-preserves-render-reservations-and-baseline-service')
+  for _,invalid in ipairs({false,{},'red'}) do
+    fresh()
+    local bad=computer('computer.setState("unexpected",true)')
+    bad.subscriptions.pressure={event_name='signal_changed',details=invalid}
+    scheduler.tick(t)
+    assert(bad.status=='faulted' and bad.diagnostic.code=='E_ARGUMENT' and bad.state.unexpected==nil,
+      'funded sampler accepted malformed retained subscription details')
+  end
+  report('malformed-retained-input-refused-before-callback-dispatch')
 end
 function M.run()
   local total=0
@@ -200,35 +229,41 @@ function M.run()
   assert(rec.state.small and rec.status=='running')
   change('host',defaults.host)
   report('small-shared-ceiling-does-not-starve-small-callback')
-  rec=select(1,run('local t=computer.getLimits(); assert(t.compile_work==1250000 and t.callback_work==500000 and t.callback_allocations==81920 and t.host_work_per_tick==5000000); t.callback_work=1; assert(computer.getLimits().callback_work==500000)'))
+  rec=select(1,run('local t=computer.getLimits(); assert(t.policy_version==2); local r=t.resources; assert(r.compile_work.limit==1250000 and r.callback_work.limit==500000 and r.callback_allocations.limit==81920 and r.host_work_per_tick.limit==5000000); assert(r.callback_work.unit=="work_units" and r.callback_work.scope=="computer/tick" and r.callback_work.setting=="tc-callback-work" and r.callback_work.behavior=="defer"); r.callback_work.limit=1; assert(computer.getLimits().resources.callback_work.limit==500000)'))
   change('work',600000)
-  local plan,e=compiler.compile(source('assert(computer.getLimits().callback_work==600000)'),admission.context(admission.new(),'live-readback',game.tick))
+  local plan,e=compiler.compile(source('assert(computer.getLimits().resources.callback_work.limit==600000)'),admission.context(admission.new(),'live-readback',game.tick))
   assert(plan,e and e.message)
   local context=admission.context(admission.new(),'live-readback',game.tick)
   local ok,diagnostic=compiler.run(plan,'start',{},function(guard) return runtime.services(rec,game.tick,guard) end,context)
   assert(ok,diagnostic and diagnostic.message)
   restored_defaults()
   report('guest-limits-reflect-live-settings-and-remain-defensive')
-  for _,body in ipairs({
-    'xpcall(function() while true do end end,function(e) computer.setState("unsafe",true) end)',
-    'xpcall(function() error("x") end,function(e) while true do end end)',
-    'pcall(function() xpcall(function() error("x") end,function(e) error("again") end) end)',
-    'xpcall(function() error("x") end,function(e) while true do local t={} end end)',
-    'xpcall(function() error("x") end,function(e) computer.stop() end)'
+  for _,case in ipairs({
+    {'xpcall(function() while true do end end,function(e) computer.setState("unsafe",true) end)','wait'},
+    {'xpcall(function() error("x") end,function(e) while true do end end)','wait'},
+    {'pcall(function() xpcall(function() error("x") end,function(e) error("again") end) end)','complete'},
+    {'xpcall(function() error("x") end,function(e) while true do local t={} end end)','wait'},
+    {'xpcall(function() error("x") end,function(e) computer.stop() end)','stop'}
   }) do
     fresh()
-    local bad=computer(body..'; computer.setState("unsafe",true)')
+    local bad=computer(case[1]..'; computer.setState("unsafe",true)')
     local healthy=computer('local t=rawset({},"ready",false); assert(rawget(t,"ready")==false); computer.setState("healthy",true)')
     assert(scheduler.dispatch(bad,game.tick))
-    assert(bad.status~='running' and bad.state.unsafe==nil)
+    if case[2]=='wait' then
+      assert(bad.status=='running' and bad.invocation and bad.state.unsafe==nil,'private suspension escaped protection')
+    elseif case[2]=='stop' then
+      assert(bad.status=='stopped' and not bad.invocation and bad.state.unsafe==nil)
+    else
+      assert(bad.status=='running' and not bad.invocation and bad.state.unsafe,'ordinary handler error poisoned protected execution')
+    end
     assert(scheduler.dispatch(healthy,game.tick) and healthy.status=='running' and healthy.state.healthy)
     local spent=runtime.context(bad,game.tick).machine.work
     assert(not scheduler.dispatch(bad,game.tick) and runtime.context(bad,game.tick).machine.work==spent)
   end
-  report('expanded-globals-production-fatal-isolation-and-healthy-neighbors')
+  report('expanded-globals-private-suspension-stop-and-healthy-neighbors')
   maintenance_contracts(report)
   change('maintenance',400000)
-  rec=select(1,run('local t=computer.getLimits(); assert(t.maintenance_work_per_tick==400000); t.maintenance_work_per_tick=1; assert(computer.getLimits().maintenance_work_per_tick==400000)'))
+  rec=select(1,run('local t=computer.getLimits(); assert(t.resources.maintenance_work_per_tick.limit==400000); t.resources.maintenance_work_per_tick.limit=1; assert(computer.getLimits().resources.maintenance_work_per_tick.limit==400000)'))
   restored_defaults()
   report('guest-maintenance-limit-live-readback-is-defensive')
   -- Freeze genuinely spent credits and non-default map settings for a cold load.

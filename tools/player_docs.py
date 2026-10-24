@@ -21,8 +21,8 @@ EXAMPLES = {
     'reference-recipe': 'The in-game Find iron plate recipes tutorial connects one powered Recipe Searcher on red and prints actual smelting matches. This supplementary copy uses the exact same source.',
     'reference-factory': 'The in-game Small factory dashboard tutorial includes the exact four-peripheral and chest/inserter setup, red discovery/INPUT and green TARGETS/OUTPUT separation. It teaches one inserter, a three-second KV hash and a two-line monitor; use its complete in-game setup.',
     'reference-writer': 'Computer 1 of the self-contained Two-computer shared data tutorial. Run this writer on the shared red database before running shared-telemetry on computer 2 with the shared red and a different physical green database.',
-    'speaker-alarm': 'Connect a powered vanilla programmable-speaker to a computer Network on red. Plays one positional effect every 120 ticks. False admission waits for the next timer, never a same-tick retry. Stop prevents future calls, not cancellation of an already submitted sample.',
-    'speaker-melody': 'Connect a powered vanilla programmable-speaker on red. Discovers zero-based piano indices and requests one note every 30 ticks; advances only after admission. This is simulation scheduling, not sample-accurate sequencing. Disconnect/power errors fault the program; reconnect and Run again.',
+    'speaker-alarm': 'Connect a powered vanilla programmable-speaker to a computer Network on red. Requests one positional effect every 120 ticks. Work pressure suspends before submission instead of returning false for a note-count quota; do not retry an uncertain native effect. Stop prevents future calls, not cancellation of an already submitted sample.',
+    'speaker-melody': 'Connect a powered vanilla programmable-speaker on red. Discovers zero-based piano indices and requests one note every 30 ticks; advances only after submission. Work pressure may delay the call. This is simulation scheduling, not sample-accurate sequencing. Disconnect/power loss reports an error; reconnect and Run again.',
     'speaker-catalogue': 'Connect a powered vanilla programmable-speaker on red. Fetches at most one page per callback and stores the last page and cumulative count as plain state. Completes without a busy loop. The bounded Console history is not a complete catalogue export; inspect last_page while paging or reuse the continuation pattern with your own storage.',
     'modem-sender': 'Wire one powered computer to one native radar on red. Run modem-receiver on a different computer/radar on the same force and surface first. Sends on numeric channel 200 every 60 ticks and receives explicit replies on 201; these numbers are not wire colors.',
     'modem-receiver': 'Wire a second powered computer to its own radar on red, without connecting the two discovery graphs. Start this receiver before modem-sender. Shares channel 200 on the physical radar, registers a named handler and replies explicitly; no ACK/retry guarantee or remote peripheral authority.',
@@ -80,14 +80,14 @@ def generated():
             if t in catalog['concepts'] and t not in ('boolean', 'float', 'int32', 'uint32', 'string', 'nil', 'table'):
                 return '[' + t + '](schemas.md#schema-' + t.lower() + ')'
             return {'int32': 'integer −2147483648…2147483647', 'uint32': 'integer 0…4294967295',
-                    'float': 'finite number', 'string': 'string ≤256 bytes, no NUL', 'table': 'bounded plain table'}.get(t, t)
+                    'float': 'finite float32 number', 'string': 'string (native field rules)', 'table': 'plain table'}.get(t, t)
         kind = t['complex_type']
         if kind == 'literal':
             return '`' + str(t['value']) + '`'
         if kind == 'type':
             return typename(t['value'])
         if kind == 'array':
-            return 'dense array ≤128 of ' + typename(t['value'])
+            return 'dense array of ' + typename(t['value'])
         if kind == 'union':
             return ' or '.join(typename(x) for x in t['options'])
         if kind == 'table':
@@ -133,9 +133,10 @@ def generated():
     schemas = ['# Configurator nested types and enums', '',
                'This is the player-readable schema companion to [supported settings](settings.md).',
                'Fields marked optional may be omitted; required fields must be present.',
-               'Unknown fields are refused. Arrays are dense and at most 128 items. Strings',
-               'are at most 256 bytes and cannot contain NUL. Numbers are finite; guest integer',
-               'bounds remain exact. Prototype identities use installed names, never objects.', '',
+               'Unknown fields are refused. Arrays are dense; strings and arrays have no',
+               'independent mod size ceiling. Native field rules and configured resource',
+               'admission still apply. Numbers are finite and retain their native ranges.',
+               'Prototype identities use installed names, never objects.', '',
                'SignalID/SignalIDBase require explicit type and name; quality defaults normal',
                'where supported. Conditional fulfilled is read-only and excluded. Quality/location',
                'object unions normalize to registered name strings. Selector fields must belong',
@@ -164,7 +165,7 @@ def generated():
             for f in variant['parameters']:
                 schemas += ['| `' + f['name'] + '` | ' + typename(f['type']) + ' | ' + ('no' if f['optional'] else 'yes') + ' |']
         if name == 'LogisticFilter':
-            schemas += ['', 'Section filters additionally require `index`: integer 1–128. The list is dense',
+            schemas += ['', 'Section filters additionally require `index`: integer 1–65535 (native uint16). The list is dense',
                         'but indexes can be sparse. Duplicate indexes/identities refuse; nonzero min',
                         'requires explicit exact quality. max must not be below min.']
         schemas += ['']
@@ -186,7 +187,8 @@ def generated():
                 '  signal quality uses quality_source_signal instead of static source.',
                 '- SignalFilter/QualityCondition readback includes normal and comparator = defaults.',
                 '  BlueprintQualityID defaults name normal. Ordinary signal quality defaults normal.',
-                '- LogisticFilter min defaults 0; registered nauvis is the default item import location.',
+                '- LogisticFilter min defaults 0; an omitted item import location uses that item',
+                '  prototype\'s `default_import_location`, when present, not a universal planet.',
                 '  Section multiplier readback preserves native float32 precision.',
                 '- Native enum values are strings, not defines ordinals. Speaker instrument/note',
                 '  IDs are zero-based and validated against the actual target catalogue.', '',
@@ -211,7 +213,7 @@ def generated():
                   'reserved inside host_work_per_tick, never added on top. These alpha limits are',
                   'provisional safety ceilings, not simultaneous maximum-world guarantees.', '',
                   '## Live mod settings', '',
-                  'Open **Settings → Mod settings → Map** to change the five runtime-global',
+                  'Open **Settings → Mod settings → Map** to change the runtime-global',
                   'budgets below while playing. They apply to every player and computer in the',
                   'save, without restarting the map. The table lists defaults; computer.getLimits()',
                   'returns the current effective values in a defensive copy.', '',
@@ -221,6 +223,7 @@ def generated():
                   '| Execution work per computer per tick (`tc-callback-work`) | `callback_work` | 500000 | 1–100000000 |',
                   '| Guest allocations per computer per tick (`tc-callback-allocations`) | `callback_allocations` | 81920 | 1–100000000 |',
                   '| Shared host work per tick (`tc-host-work-per-tick`) | `host_work_per_tick` | 5000000 | 200001–1000000000 |',
+                  '| Disposable compiler cache bytes (`tc-compiler-cache-bytes`) | `compiler_cache_bytes` | 8388608 | 1–1000000000 |',
                   '| World maintenance work per tick (`tc-maintenance-work-per-tick`) | `maintenance_work_per_tick` | 200000 | 200000–100000000 requested |', '',
                   'Compilation, execution and allocation defaults are five times the original',
                   'allowances. The shared host default is also five times larger so it can admit',
@@ -235,6 +238,14 @@ def generated():
                   'compilation credits. Higher budgets may reduce UPS; these are not speed or',
                   'frame-rate controls. Source, state, depth, monitor and other structural caps',
                   'remain unchanged.', '',
+                  '### Disposable compiler cache', '',
+                  '`compiler_cache_bytes` bounds shared retained plans, generated continuation text',
+                  'and deterministic charge traces, including metadata. These are accounting bytes,',
+                  'not measured Lua heap bytes. There is no separate plan-count or trace-count cap.',
+                  'Capacity pressure evicts the cache as a batch; an oversized proof is simply rebuilt.',
+                  'The cache is private and disposable: cold, warm and evicted proofs charge the same',
+                  'accepted work prefixes, so cache warmth cannot change progress or renew credits.',
+                  'Reducing cache retention does not invalidate saved source or suspended invocations.', '',
                   '### Maintenance and shared headroom', '',
                   'The effective maintenance ceiling is `min(requested maintenance, host_work_per_tick - 1)`.',
                   'The requested setting is preserved, so raising host work can make more of it',
@@ -263,7 +274,12 @@ def generated():
                   'is needed; ordinary synchronized admission resets counters only on a new tick.', '',
                   '## Default common limits', '',
                   '| Key | Default value |', '| --- | ---: |']
-    limit_page += ['| `' + k + '` | ' + v + ' |' for k, v in limits]
+    for key, value in limits:
+        note = (' (constructor, non-owned/non-durable and Console graph fallback; '
+                'not owned table growth or byte-bounded Data copies)') if key == 'table_entries' else ''
+        if key == 'string_bytes':
+            note = ' (non-owned/non-durable and Console graph fallback; not byte-bounded Data or memory-owned durable strings)'
+        limit_page.append(f'| `{key}`{note} | {value} |')
     limit_page += ['', 'Device-specific limits: [monitor](monitor.md#bounds-example-and-troubleshooting),',
                    '[KV](kv.md#atomicity-errors-and-capacities), [logic](logic.md#bounds-and-use),',
                    '[configurator](configurator.md#bounds-programs-and-troubleshooting),',

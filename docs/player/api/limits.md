@@ -9,7 +9,7 @@ provisional safety ceilings, not simultaneous maximum-world guarantees.
 
 ## Live mod settings
 
-Open **Settings → Mod settings → Map** to change the five runtime-global
+Open **Settings → Mod settings → Map** to change the runtime-global
 budgets below while playing. They apply to every player and computer in the
 save, without restarting the map. The table lists defaults; computer.getLimits()
 returns the current effective values in a defensive copy.
@@ -20,6 +20,7 @@ returns the current effective values in a defensive copy.
 | Execution work per computer per tick (`tc-callback-work`) | `callback_work` | 500000 | 1–100000000 |
 | Guest allocations per computer per tick (`tc-callback-allocations`) | `callback_allocations` | 81920 | 1–100000000 |
 | Shared host work per tick (`tc-host-work-per-tick`) | `host_work_per_tick` | 5000000 | 200001–1000000000 |
+| Disposable compiler cache bytes (`tc-compiler-cache-bytes`) | `compiler_cache_bytes` | 8388608 | 1–1000000000 |
 | World maintenance work per tick (`tc-maintenance-work-per-tick`) | `maintenance_work_per_tick` | 200000 | 200000–100000000 requested |
 
 Compilation, execution and allocation defaults are five times the original
@@ -36,6 +37,16 @@ Run to restart. Validate, Run validation and callback reconstruction share
 compilation credits. Higher budgets may reduce UPS; these are not speed or
 frame-rate controls. Source, state, depth, monitor and other structural caps
 remain unchanged.
+
+### Disposable compiler cache
+
+`compiler_cache_bytes` bounds shared retained plans, generated continuation text
+and deterministic charge traces, including metadata. These are accounting bytes,
+not measured Lua heap bytes. There is no separate plan-count or trace-count cap.
+Capacity pressure evicts the cache as a batch; an oversized proof is simply rebuilt.
+The cache is private and disposable: cold, warm and evicted proofs charge the same
+accepted work prefixes, so cache warmth cannot change progress or renew credits.
+Reducing cache retention does not invalidate saved source or suspended invocations.
 
 ### Maintenance and shared headroom
 
@@ -87,16 +98,16 @@ is needed; ordinary synchronized admission resets counters only on a new tick.
 | `callback_allocations` | 81920 |
 | `compile_work` | 1250000 |
 | `host_work_per_tick` | 5000000 |
+| `compiler_cache_bytes` | 8388608 |
 | `active_computers` | 64 |
 | `active_logic_handlers` | 128 |
 | `aggregate_subscriptions` | 1024 |
 | `aggregate_owned_outputs` | 128 |
 | `state_bytes` | 65536 |
 | `state_entries` | 256 |
-| `data_nodes` | 4096 |
 | `data_depth` | 16 |
-| `string_bytes` | 16384 |
-| `table_entries` | 1024 |
+| `string_bytes` (non-owned/non-durable and Console graph fallback; not byte-bounded Data or memory-owned durable strings) | 16384 |
+| `table_entries` (constructor, non-owned/non-durable and Console graph fallback; not owned table growth or byte-bounded Data copies) | 1024 |
 | `event_queue_entries` | 128 |
 | `event_queue_bytes` | 65536 |
 | `timers` | 64 |
@@ -124,6 +135,26 @@ is needed; ordinary synchronized admission resets counters only on a new tick.
 | `owned_children` | 8 |
 | `maintenance_work_per_tick` | 200000 |
 | `host_hooks` | 16 |
+| `runtime_memory_bytes` | 8388608 |
+| `host_memory_bytes` | 134217728 |
+| `draft_storage_bytes` | 1048576 |
+| `pending_work_bytes` | 1048576 |
+| `host_stack_depth` | 32 |
+| `render_commit_work` | 160000 |
+| `event_drop_warning_interval` | 600 |
+| `speaker_sound_page_size` | 50 |
+| `monitor_width_tiles` | 6 |
+| `monitor_height_tiles` | 6 |
+| `kv_keys` | 128 |
+| `kv_bytes` | 16384 |
+| `kv_key_bytes` | 256 |
+| `kv_value_bytes` | 8192 |
+| `kv_hash_fields` | 128 |
+| `kv_hash_bytes` | 8192 |
+| `kv_total_hash_fields` | 256 |
+| `kv_command_arguments` | 128 |
+| `kv_command_bytes` | 65536 |
+| `kv_snapshot_bytes` | 65536 |
 
 Device-specific limits: [monitor](monitor.md#bounds-example-and-troubleshooting),
 [KV](kv.md#atomicity-errors-and-capacities), [logic](logic.md#bounds-and-use),

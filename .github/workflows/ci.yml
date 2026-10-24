@@ -50,6 +50,7 @@ jobs:
           python tools/test_monitor_animation.py
           python tools/planning_examples.py --check
           python tools/configuration_catalog.py --check
+          python tools/test_configuration_resource_contracts.py
           python -m mkdocs build --strict --site-dir "$RUNNER_TEMP/tc-ci/site"
           python tools/player_docs.py --check --site "$RUNNER_TEMP/tc-ci/site" \
             --report "$RUNNER_TEMP/tc-ci/reports/player-docs.json"
@@ -68,6 +69,96 @@ jobs:
           tar -xf "$RUNNER_TEMP/tc-ci/factorio.tar.xz" -C "$RUNNER_TEMP/tc-ci"
           "$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio" --version \
             > "$RUNNER_TEMP/tc-ci/reports/engine-version.txt"
+      - name: Check protected-call refusal and state recovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
+          engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
+          for fixture in resource_policy_capacity resource_policy_runtime resource_policy_computer resource_policy_language_control resource_policy_scalar_locals; do
+            python tools/smoke.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture"
+          done
+          for fixture in resource_policy_refusal resource_policy_memory resource_policy_heap_memory resource_policy_functions resource_policy_long_strings resource_policy_results; do
+            python tools/smoke.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold
+          done
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/resource-policy-strings" --mode both \
+            --fixture tests.resource_policy_strings
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/resource-policy-state" --mode both \
+            --fixture tests.resource_policy_state --production-context --cold
+      - name: Check event loss and throttled warning persistence
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
+          engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
+          for fixture in resource_policy_events resource_policy_warnings; do
+            python tools/smoke.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold
+          done
+      - name: Check Recipe Searcher resource policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
+          engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/recipe-policy" --mode both \
+            --fixture tests.recipe_searcher_policy
+          for fixture in resource_policy_data resource_policy_data_copy; do
+            python tools/smoke.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" \
+              --data-fixture tests.recipe_searcher_data --cold
+          done
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/recipe-searcher" --mode both \
+            --fixture tests.recipe_searcher_engine --data-fixture tests.recipe_searcher_data \
+            --production-context --cold --upgrade-fixture
+      - name: Check Configurator policy, schemas and cold native readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
+          engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
+          for fixture in configurator_policy configurator_large_engine configurator_resource_engine; do
+            python tools/smoke.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold
+          done
+      - name: Check Logic policy and cold native reads
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
+          python tools/smoke.py --factorio "$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/logic-policy-reads" --mode both \
+            --fixture tests.logic_policy_reads --data-fixture tests.inventory_data --cold
+      - name: Check modem policy and cold prepared broadcasts
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
+          for fixture in modem_policy modem_broadcast; do
+            python tools/smoke.py --factorio "$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold
+          done
+      - name: Check editor contracts and cold workspace recovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
+          engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/editor-contract" --mode both \
+            --fixture tests.editor_contract
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/gui-workspace" --mode both \
+            --fixture tests.editor_workspace --data-fixture tests.candidate_data
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/gui-cold" --mode both \
+            --fixture tests.editor_cold --cold
       - name: Check packaged sandbox and cold factory integration
         shell: bash
         run: |
@@ -81,7 +172,10 @@ jobs:
               --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold "${data[@]}"
           done
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
-            --output "$RUNNER_TEMP/tc-ci/speaker-admission" --mode both --fixture tests.speaker_admission
+            --output "$RUNNER_TEMP/tc-ci/speaker-admission" --mode both --fixture tests.speaker_admission --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/speaker-resource" --mode both \
+            --fixture tests.speaker_resource_engine --data-fixture tests.speaker_resource_data --production-context --cold
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/speaker" --mode both --fixture tests.speaker_engine \
             --data-fixture tests.speaker_data --final-data-fixture tests.speaker_data_final \
@@ -122,6 +216,9 @@ jobs:
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/logic" --mode both \
             --fixture tests.logic_engine --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/logic-policy-filters" --mode both \
+            --fixture tests.logic_policy --data-fixture tests.inventory_data --cold
           for layout in four-walls mixed; do
             python tools/monitor_animation.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/animation-$layout" --mode both --layout "$layout"
@@ -133,21 +230,12 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/speaker-competition" --mode both \
             --layout four-walls --with-speaker
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
-            --output "$RUNNER_TEMP/tc-ci/editor-contract" --mode both \
-            --fixture tests.editor_contract
-          python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/peripheral-inspectors" --mode both \
             --fixture tests.peripheral_inspector_engine --production-context --cold \
             --data-fixture tests.recipe_searcher_data
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
-            --output "$RUNNER_TEMP/tc-ci/gui-workspace" --mode both \
-            --fixture tests.editor_workspace --data-fixture tests.candidate_data
-          python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/rotation-guards" --mode both \
             --fixture tests.rotation_engine --data-fixture tests.candidate_data
-          python tools/smoke.py --factorio "$engine" --archive "$archive" \
-            --output "$RUNNER_TEMP/tc-ci/gui-cold" --mode both \
-            --fixture tests.editor_cold --cold
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/reference-tutorials" --mode both \
             --fixture tests.reference_tutorials_engine --production-context --cold
@@ -162,10 +250,6 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/lifecycle" --mode both \
             --fixture tests.lifecycle_engine --data-fixture tests.candidate_data \
             --production-context --cold
-          python tools/smoke.py --factorio "$engine" --archive "$archive" \
-            --output "$RUNNER_TEMP/tc-ci/recipe-searcher" --mode both \
-            --fixture tests.recipe_searcher_engine --data-fixture tests.recipe_searcher_data \
-            --production-context --cold --upgrade-fixture
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/device-art" --mode both \
             --fixture tests.art_engine --data-fixture tests.art_data

@@ -127,13 +127,13 @@ function M.run()
   rec.database=kv.import{version=1,entries={}}
   for i=1,128 do command(rec,'set',0,tostring(i),''); command(rec,'expire',0,tostring(i),1) end
   old=rec.database; err('E_CAPACITY',function() command(rec,'set',0,'129','') end); assert(rec.database==old)
-  kv.reclaim(rec,60,nop); assert(#rec.database.order==120 and command(rec,'exists',60,'100')==0)
+  kv.reclaim(rec,60,nop); assert(#rec.database.order==0 and command(rec,'exists',60,'100')==0)
   while #rec.database.order>0 do kv.reclaim(rec,60,nop) end
   assert(rec.database.bytes==0 and rec.database.fields==0)
   for _,k in ipairs({'a','b'}) do for i=1,128 do command(rec,'hset',0,k,tostring(i),'') end end
   old=rec.database; err('E_CAPACITY',function() command(rec,'hset',0,'c','field','') end); assert(rec.database==old)
   err('E_CAPACITY',function() command(rec,'hset',0,'a','extra','') end)
-  report('key-and-field-capacity-and-bounded-eight-key-reclamation')
+  report('key-and-field-capacity-and-work-driven-reclamation')
   local snap=kv.snapshot(rec,0); local restored=kv.import(snap)
   assert(restored.bytes==rec.database.bytes and restored.fields==256)
   snap.entries[1].fields[1].value='mutated'; assert(command(rec,'hget',0,'a','1')=='')

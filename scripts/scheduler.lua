@@ -7,6 +7,7 @@ local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local budgets = require('scripts.runtime.budget-settings')
 local shell = require('scripts.runtime.shell')
+local policy = require('scripts.runtime.resource-policy')
 local M = {}
 local hooks={lifecycle={},sample={},notifications={},render={}}
 local refusal={} -- Host-only ephemeral maintenance deferral identity.
@@ -66,13 +67,13 @@ function M.maintenance(root,tick,for_render)
   root.ledger.maintenance=s
   return function(n)
     assert(s.maintenance_tick==tick,'stale maintenance admission')
-    assert(errors.integer(n,0,1000000000),'invalid maintenance cost')
+    assert(errors.integer(n,0,9007199254740991),'invalid maintenance cost')
     -- Read live ceilings even for an already captured spend callback. A setting
     -- increase cannot reclaim guest credits already spent under the old split.
     local guest_spent=root.ledger.tick==tick and root.ledger.total or 0
     local ceiling=math.min(limits.maintenance_work_per_tick-(for_render and 0 or s.render_reserved_work),
       limits.host_work_per_tick-guest_spent)
-    if s.maintenance_spent+n>ceiling then error(refusal,0) end
+    if n>ceiling-s.maintenance_spent then error(refusal,0) end
     s.maintenance_spent=s.maintenance_spent+n
   end
 end
@@ -110,13 +111,14 @@ function M.advance_timers(rec,tick,spend)
     else
       local event={name='timer',timer_id=timer.id,scheduled_tick=timer.deadline,
         interval_ticks=timer.interval,missed=missed,payload=timer.payload}
-      if not runtime.enqueue(rec,timer.handler,event,tick,spend,{timer_id=timer.id}) then return end
+      local accepted,reason=runtime.enqueue(rec,timer.handler,event,tick,spend,{timer_id=timer.id})
+      if not accepted and reason~='overflow' then return end
     end
     if timer.interval then timer.deadline=deadline else rec.timers[timer.id]=nil end
   end
 end
 local function dispatch_program(rec,tick)
-  if rec.status~='running' or not rec.powered or #rec.queue==0 or rec.last_dispatch_tick==tick then return false end
+  if rec.status~='running' or not rec.powered or (#rec.queue==0 and not rec.invocation) or rec.last_dispatch_tick==tick then return false end
   -- Physical sampling can defer under maintenance pressure. Never dispatch from
   -- an old positive power observation; standalone runtime fixtures have no tag.
   if rec.physical_version and (rec.physical_error or rec.power_checked_tick~=tick) then return false end
@@ -141,17 +143,34 @@ local function dispatch_program(rec,tick)
     runtime.fault(rec,errors.new('E_UNSUPPORTED','malformed admission record; source/state/credits retained'),tick)
     return false
   end
-  local item=rec.queue[1]
-  if monitor_refresh and item.event.name=='monitor_resize' then
+  local item=rec.invocation and rec.invocation.item or rec.queue[1]
+  if not rec.invocation and monitor_refresh and item.event.name=='monitor_resize' then
     if not admission.reserve(ctx,'work',8) then return false end
     monitor_refresh(item.event)
   end
   rec.last_dispatch_tick=tick
-  table.remove(rec.queue,1); rec.queue_bytes=rec.queue_bytes-item.bytes
-  item.event.tick=tick
-  local ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,function(guard) return runtime.services(rec,tick,guard) end,ctx)
+  if not rec.invocation then
+    table.remove(rec.queue,1); rec.queue_bytes=rec.queue_bytes-item.bytes
+    item.event.tick=tick
+    rec.invocation={run_id=rec.run_id,item=item,checkpoint={}}
+  end
+  if rec.invocation.pending_start then
+    item.event.tick=tick; rec.invocation.pending_start=nil
+  end
+  local attached,problem=pcall(policy.attach,rec,rec.invocation,ctx)
+  local ok,diagnostic,control
+  if attached then
+    ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,function(guard) return runtime.services(rec,tick,guard) end,ctx,rec.invocation.checkpoint)
+  else
+    diagnostic=errors.resource_diagnostic(problem) or errors.new('E_UNSUPPORTED','runtime ownership unavailable; source retained')
+    control=diagnostic.recoverable and 'resource' or nil
+  end
+  if control=='wait' then return true end
+  policy.release(rec.invocation)
+  rec.invocation=nil
   if not ok then
     if control=='stop' then runtime.retire(rec,'stopped','stop')
+    elseif control=='resource' then runtime.resource_refused(rec,diagnostic,tick)
     else runtime.fault(rec,diagnostic,tick) end
   end
   return true
@@ -166,7 +185,7 @@ function M.dispatch(rec,tick)
   if maximum==0 then return false end
   if root.ledger.tick==tick and root.ledger.total+maximum>admission.guest_ceiling(root.ledger,tick) then return false end
   local pending=shell.waiting(rec)
-  local program=rec.status=='running' and #rec.queue>0
+  local program=rec.status=='running' and (#rec.queue>0 or rec.invocation~=nil)
   if pending and (not program or rec.next_work_class~='program') then
     local dispatched=shell.dispatch(rec,tick)
     if dispatched then rec.next_work_class='program' end
@@ -180,7 +199,7 @@ function M.tick(tick)
   local root=registry.get()
   if not registry.supported(root) then return end -- Unknown storage stays inert.
   local ledger=root.ledger
-  if type(ledger)~='table' or ledger.version~=1 or not errors.integer(ledger.total,0,1000000000)
+  if type(ledger)~='table' or ledger.version~=1 or not errors.integer(ledger.total,0,9007199254740991)
     or not errors.integer(ledger.tick,-1,9007199254740991) or tick<ledger.tick
     or not render_state_valid(root.scheduler,tick)
     or ledger.maintenance~=nil and ledger.maintenance~=root.scheduler then
@@ -203,6 +222,7 @@ function M.tick(tick)
   end
   root.scheduler.last_tick=tick
   phase('lifecycle',tick,spend)
+  M.try_maintenance(function() policy.reconcile(root,spend) end)
   phase('sample',tick,spend)
   phase('notifications',tick,spend)
   -- Advance clocks before callback dispatch; the cursor also rotates maintenance
@@ -216,11 +236,13 @@ function M.tick(tick)
     local i=(maintenance_start+offset-1)%n+1
     local rec=root.computers[root.order[i]]
     M.try_maintenance(function()
+      if rec then policy.collect_runtime(rec,spend) end
       if rec and rec.status=='running' then
         if not runtime.check_active(rec) then runtime.fault(rec,errors.new('E_UNSUPPORTED','unsupported retained computer/source header; source/state retained'),tick)
         else M.advance_timers(rec,tick,spend) end
       end
     end)
+    M.try_maintenance(function() if rec then runtime.warn_event_drops(rec,tick,spend) end end)
   end
   root.scheduler.maintenance_cursor=maintenance_start%n+1
   for offset=0,n-1 do

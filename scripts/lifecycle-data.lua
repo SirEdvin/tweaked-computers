@@ -3,10 +3,9 @@ local registry=require('scripts.registry')
 local lifecycle=require('scripts.lifecycle')
 local runtime=require('scripts.runtime.computer')
 local limits=require('scripts.runtime.limits')
-local data=require('scripts.runtime.data')
 local errors=require('scripts.runtime.errors')
 local model=require('scripts.monitor-model')
-local M={computer_snapshot_bytes=131072}
+local M={}
 local MAX=9007199254740991
 local function fail(message) errors.raise('E_ARGUMENT',message) end
 local function shape(t,allowed,max)
@@ -14,31 +13,63 @@ local function shape(t,allowed,max)
   local n=0
   for k in pairs(t) do n=n+1; if n>max or not allowed[k] then fail('unknown lifecycle snapshot field') end end
 end
-local function text(s,max) if type(s)~='string' or #s>max then fail('bounded source/label required') end; return s end
+local function text(s) if type(s)~='string' then fail('source/label string required') end; return s end
 local function integer(n) if not errors.integer(n,0,MAX) then fail('invalid retained revision/version') end; return n end
 
 local function active_copy(a)
   if a==nil then return nil end
   shape(a,{source=true,revision=true,api_version=true,compiler_version=true,storage_version=true,handlers=true},6)
-  local result={source=text(a.source,limits.source_bytes),revision=integer(a.revision),
+  local result={source=text(a.source),revision=integer(a.revision),
     api_version=integer(a.api_version),compiler_version=integer(a.compiler_version),storage_version=integer(a.storage_version),handlers={}}
   if type(a.handlers)~='table' or getmetatable(a.handlers)~=nil then fail('plain retained handler inventory required') end
-  local n=0
   for name,v in pairs(a.handlers) do
-    n=n+1; if n>limits.handler_names or type(name)~='string' or #name==0 or #name>limits.identifier_bytes or v~=true then fail('invalid retained handler inventory') end
+    if type(name)~='string' or #name==0 or v~=true then fail('invalid retained handler inventory') end
     result.handlers[name]=true
   end
   return result
+end
+-- Material transport checks Data shape iteratively, not new-write quotas.
+local function material_data(value)
+  local root,seen,stats={},{},{bytes=0,nodes=0}
+  local stack={{value=value,parent=root,key=1}}
+  while #stack>0 do
+    local item=table.remove(stack); local v=item.value
+    if item.exit then seen[v]=nil
+    else
+      stats.nodes=stats.nodes+1
+      local typ=type(v)
+      if typ=='string' then stats.bytes=stats.bytes+#v+8; item.parent[item.key]=v
+      elseif typ=='boolean' then stats.bytes=stats.bytes+1; item.parent[item.key]=v
+      elseif typ=='number' and errors.finite(v) then stats.bytes=stats.bytes+8; item.parent[item.key]=v
+      elseif typ=='table' and getmetatable(v)==nil then
+        if seen[v] then fail('cyclic material Data') end
+        seen[v]=true; stats.bytes=stats.bytes+16
+        local copy={}; item.parent[item.key]=copy
+        stack[#stack+1]={value=v,exit=true}
+        local kind,count,maximum=nil,0,0
+        for k,x in pairs(v) do
+          local kt=type(k); count=count+1
+          if kt=='string' then stats.bytes=stats.bytes+#k+8
+          elseif kt=='number' and errors.integer(k,1,MAX) then
+            stats.bytes=stats.bytes+8; maximum=math.max(maximum,k)
+          else fail('Data keys must be strings or dense indexes') end
+          if kind and kind~=kt then fail('Data arrays and maps cannot mix') end
+          kind=kt; stack[#stack+1]={value=x,parent=copy,key=k}
+        end
+        if kind=='number' and maximum~=count then fail('Data array must be dense') end
+      else fail('plain finite nonnil Data required') end
+    end
+  end
+  return root[1],stats
 end
 local function state_copy(state)
   if type(state)~='table' or getmetatable(state)~=nil then fail('plain computer state map required') end
   local out,sizes,node_sizes={}, {}, {}; local bytes,nodes,count=16,1,0
   for k,v in pairs(state) do
-    data.key(k); count=count+1
-    if count>limits.state_entries then errors.raise('E_CAPACITY','state entry capacity exceeded') end
-    local copy,stats=data.copy(v)
+    if type(k)~='string' or #k==0 then fail('nonempty state key required') end
+    count=count+1
+    local copy,stats=material_data(v)
     local size=stats.bytes+#k+16; bytes=bytes+size; nodes=nodes+stats.nodes
-    if bytes>limits.state_bytes or nodes>limits.data_nodes then errors.raise('E_CAPACITY','state aggregate capacity exceeded') end
     out[k]=copy; sizes[k]=size; node_sizes[k]=stats.nodes
   end
   return out,bytes,nodes,count,sizes,node_sizes
@@ -46,15 +77,12 @@ end
 function M.import_computer(s,settings_only)
   shape(s,{version=true,saved_source=true,saved_revision=true,active=true,state=true,label=true},6)
   if s.version~=1 then errors.raise('E_UNSUPPORTED','unsupported computer item; original data retained') end
-  local c={saved_source=text(s.saved_source,limits.source_bytes),saved_revision=integer(s.saved_revision),label=s.label and text(s.label,limits.identifier_bytes) or nil}
-  if s.label~=nil then c.label=text(s.label,limits.identifier_bytes) end
+  local c={saved_source=text(s.saved_source),saved_revision=integer(s.saved_revision)}
+  if s.label~=nil then c.label=text(s.label) end
   if not settings_only then
     c.active=active_copy(s.active)
     c.state,c.state_bytes,c.state_nodes,c.state_entries,c.state_sizes,c.state_node_sizes=state_copy(s.state)
   elseif s.active~=nil or s.state~=nil then fail('blueprint/settings must not carry state or active execution') end
-  -- Content ceilings leave a separate fixed reservation for keys/headers/labels.
-  local bytes=#c.saved_source+(c.active and #c.active.source or 0)+(c.state_bytes or 16)+limits.state_entries*80+8192
-  if bytes>M.computer_snapshot_bytes then errors.raise('E_CAPACITY','computer snapshot metadata reservation exceeded') end
   return c
 end
 function M.computer_snapshot(rec,settings_only)
@@ -90,10 +118,21 @@ function M.monitor_snapshot(rec)
   local palette={}; for i=1,16 do local p=m.palette[i]; palette[i]={p[1],p[2],p[3]} end
   return M.import_monitor{version=1,scale=m.scale,fg=m.fg,bg=m.bg,blink=m.blink,palette=palette}
 end
+local function monitor_size(w,h,scale)
+  if not errors.finite(scale) or scale<=0 then fail('positive finite monitor scale required') end
+  -- Native MapPosition is signed 24.8; reject cells outside its coordinate domain.
+  if not errors.finite(9*scale) or 9*scale/64>2^23-1/256 then fail('unrepresentable native monitor geometry') end
+  local width,height=model.size(w,h,scale)
+  if not errors.integer(width,1,MAX) or not errors.integer(height,1,MAX)
+    or not errors.integer(width*height,1,MAX) then fail('unrepresentable monitor dimensions') end
+  if width*height>model.limits.cells then errors.raise('E_CAPACITY','monitor storage admission requires shared host ownership') end
+  return width,height
+end
 function M.import_monitor(s)
   shape(s,{version=true,scale=true,fg=true,bg=true,blink=true,palette=true},6)
   if s.version~=1 then errors.raise('E_UNSUPPORTED','unsupported monitor item settings') end
-  if type(s.scale)~='number' or not errors.integer(s.scale*2,1,10) or not errors.integer(s.fg,0,15)
+  monitor_size(1,1,s.scale)
+  if not errors.integer(s.fg,0,15)
     or not errors.integer(s.bg,0,15) or type(s.blink)~='boolean' then fail('invalid monitor settings') end
   if type(s.palette)~='table' or getmetatable(s.palette)~=nil then fail('plain palette required') end
   local n=0; local palette={}
@@ -105,11 +144,23 @@ function M.import_monitor(s)
   end
   return {version=1,scale=s.scale,fg=s.fg,bg=s.bg,blink=s.blink,palette=palette}
 end
+local function monitor_settings(settings,w,h,previous)
+  local width,height=monitor_size(w,h,settings.scale)
+  local inherit={x=previous and previous.x or 1,y=previous and previous.y or 1,
+    scale=settings.scale,fg=settings.fg,bg=settings.bg,blink=settings.blink,palette=settings.palette}
+  local m
+  if previous and previous.width==width and previous.height==height then
+    m={}; for k,v in pairs(previous) do m[k]=v end
+    for k,v in pairs(inherit) do m[k]=v end
+  else m=model.new(w,h,inherit) end
+  m.revision=previous and previous.revision+2 or m.revision
+  model.invalidate(m)
+  return m
+end
 function M.restore_monitor(rec,s)
   local settings=M.import_monitor(s)
-  local m=model.new(1,1); m.scale=settings.scale; m.fg=settings.fg; m.bg=settings.bg; m.blink=settings.blink; m.palette=settings.palette
   -- No obsolete group buffer or cursor travels with a tile.
-  rec.monitor_settings=m
+  rec.monitor_settings=monitor_settings(settings,1,1)
 end
 function M.settings(rec)
   if rec.kind=='computer' then return {version=1,kind=rec.kind,computer=M.computer_snapshot(rec,true)} end
@@ -122,14 +173,12 @@ function M.apply_settings(rec,s)
   if rec.kind=='computer' then M.restore_computer(rec,s.computer,true)
   elseif rec.kind=='monitor' then
     local settings=M.import_monitor(s.monitor)
-    M.restore_monitor(rec,settings)
     local root=registry.get(); local state=root.monitors; local g=state and state.groups[state.membership[rec.id]]
-    if g then
-      local m=g.model
-      model.scale(m,g.width_tiles,g.height_tiles,function() end,settings.scale)
-      m.fg=settings.fg; m.bg=settings.bg; m.blink=settings.blink; m.palette=settings.palette; m.revision=m.revision+1
-      model.invalidate(m)
-    end
+    local tile=monitor_settings(settings,1,1)
+    local replacement=g and monitor_settings(settings,g.width_tiles,g.height_tiles,g.model)
+    -- Preflight the whole group before publishing either settings or palette.
+    rec.monitor_settings=tile
+    if g then g.model=replacement end
   elseif s.computer~=nil or s.monitor~=nil then fail('unexpected family settings') end
 end
 function M.initialize_existing()

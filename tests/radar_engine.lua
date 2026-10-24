@@ -8,6 +8,7 @@ local defs=require('scripts.device-definitions')
 local limits=require('scripts.runtime.limits')
 local blueprints=require('scripts.blueprints')
 local modem=require('scripts.services.modem')
+local radio_guard=require('tests.radio_test_guard')
 local speaker=require('scripts.speaker')
 local M={}; local loaded=false
 local function nop() end
@@ -55,7 +56,7 @@ function M.run()
   local _,path=peripheral.authority(c,db.id,'red',nop)
   assert(#path==3 and graph.validate_witness(c,'red',path,nop))
   report('native-identity-idempotent-no-helpers-and-physical-relay')
-  a.energy=1000000; modem.methods.open(c,rec,'red',game.tick,nop,7)
+  a.energy=1000000; radio_guard.call(modem,c,rec,'open',7)
   local selection=game.create_inventory(1); selection[1].set_stack{name='blueprint',count=1}
   local bp=selection[1]
   local mapping=bp.create_blueprint{surface=a.surface,force='player',area={{-1,-1},{15,3}}}

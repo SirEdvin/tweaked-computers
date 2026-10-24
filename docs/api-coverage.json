@@ -6,7 +6,7 @@
   "export_fixture": "tests/api_inventory.lua",
   "execution_fixture": "tests/integration_engine.lua",
   "public_namespaces": {
-    "computer": ["getID", "getLabel", "setLabel", "getTick", "getLimits", "getState", "setState", "deleteState", "log", "stop", "on", "off", "after", "every", "cancelTimer"],
+    "computer": ["getID", "getLabel", "setLabel", "getTick", "getLimits", "getResourceStatus", "getState", "setState", "deleteState", "log", "stop", "on", "off", "after", "every", "cancelTimer"],
     "peripheral": ["getNames", "isPresent", "getType", "getMethods", "describe", "wrap", "call", "find", "getName", "getWire", "setMonitorSyncGroup", "getMonitorSyncGroup"],
     "colors": ["white", "orange", "magenta", "lightBlue", "yellow", "lime", "pink", "gray", "grey", "lightGray", "lightGrey", "cyan", "purple", "blue", "brown", "green", "red", "black"],
     "colours": "same immutable namespace as colors"

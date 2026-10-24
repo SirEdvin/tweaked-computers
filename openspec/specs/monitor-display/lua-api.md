@@ -1,5 +1,7 @@
 # Monitor Lua API v1
 
+Integration note: the approved resource-policy amendment is only partially wired in this branch. The repository's `docs/monitor-resource-policy-checkpoint.md` records effective axis/scale behavior, retained safety gates, missing item-settings validation and exact integration interfaces; do not treat the partial implementation as release acceptance.
+
 Normative companion to [spec.md](spec.md). Obtain with `peripheral.wrap(name, wire)` or `peripheral.find("monitor", wire)`. All calls below use dot syntax and the shared errors/authority rules in [common.md](../../api/common.md).
 
 The complete [buffering and synchronization API](buffering-api.md) is also normative: automatic fixed snapshots, checked group selection/status, actual-geometry capacities, lifecycle ownership and admission extend the unchanged terminal signatures below. [World interaction compatibility](../../api/device-experience.md) preserves native feedback, bezel sockets and touch coordinates.

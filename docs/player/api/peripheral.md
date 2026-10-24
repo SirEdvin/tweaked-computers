@@ -36,8 +36,8 @@ or `"both"`. Names/types are strings, and calls use dots with strict arity.
 Types: `monitor`, `kv_database`, `logic_handler`, `configurator`,
 [`recipe_searcher`](recipe-searcher.md), [`modem`](modem.md), [`speaker`](speaker.md). Unknown string
 types yield zero find matches. `local m = peripheral.find("monitor", "red")`
-selects the first; `{peripheral.find("monitor", "red")}` collects all. More than
-128 results fails before creating a partial tuple: enumerate names and wrap.
+selects the first; `{peripheral.find("monitor", "red")}` collects all. There is
+no peripheral-specific result-count ceiling; shared result-memory admission applies.
 
 `PeripheralInfo` contains `name`, `type`, optional `label`, `powered:boolean`,
 `position={x:number,y:number}`, `surface={index:integer,name:string}`,
@@ -111,9 +111,10 @@ fails `E_UNREACHABLE`; fresh absent lookups return false/nil only after a **comp
 search. Pending/incomplete search fails `E_NETWORK_PENDING`/`E_LIMIT`, never a
 successful empty prefix. Retry on a later tick, not in a busy loop.
 
-A search reaches at most 256 physical nodes including source, examines at most
-512 directed adjacency entries (ignored external edges count too), and cannot
-return a partial inventory. Notification maintenance attempts three channel
+A search prepares the complete physical component with persisted ID/edge cursors,
+then revalidates its graph live before publication. There is no node/edge-count
+ceiling or successful prefix. Ignored external edges still consume work.
+Notification maintenance attempts three channel
 inventories per tick fairly; the queried 60-tick topology ceiling is provisional,
 not a guarantee under arbitrary world load. Shared calls use synchronized order,
 not exclusive locks or callback-wide transactions.

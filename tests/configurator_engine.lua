@@ -182,9 +182,10 @@ function M.run()
   local complete=targets.inventory(big,'red',nop); local count=0; for _ in pairs(complete) do count=count+1 end
   assert(count==255)
   local extra=create('small-electric-pole',{256,40}); assert(previous.connect_to(connector(extra,'red')))
-  error_is('E_LIMIT',function() targets.inventory(big,'red',nop) end)
+  local expanded=targets.inventory(big,'red',nop); local expanded_count=0; for _ in pairs(expanded) do expanded_count=expanded_count+1 end
+  assert(expanded_count==256 and expanded[targets.identity(extra)])
   extra.destroy(); for _,p in ipairs(chain) do p.destroy() end; lifecycle.remove(big.id,'fixture-cleanup',true)
-  report('real-maximum-connector-inventory-and-complete-result-overflow-refusal')
+  report('real-target-inventory-beyond-former-connector-ceiling')
   log('TC_CONTRACT_TOTAL '..f().groups)
 end
 function M.on_load()

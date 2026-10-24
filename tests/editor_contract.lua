@@ -81,11 +81,19 @@ local function gui(parent,spec)
       style_values.minimal_height=h; style_values.maximal_height=h; style_values.minimal_width=w; style_values.maximal_width=w
     else style_values[key]=value end
   end})
-  local e={valid=true,parent=parent,children={},type=spec.type,name=spec.name or '',style=style,tags=spec.tags or {},
+  local e={valid=true,parent=parent,children={},type=spec.type,_name=spec.name or '',direction=spec.direction,style=style,tags=spec.tags or {},
     _text=spec.text or '',text_writes=0,caption=spec.caption,visible=spec.visible~=false,enabled=true,
     items=spec.items or {},selected_index=spec.selected_index or 0,state=spec.state,sprite=spec.sprite,tabs={}}
-  setmetatable(e,{__index=function(t,k) if k=='text' then return rawget(t,'_text') end end,
-    __newindex=function(t,k,v) if k=='text' then rawset(t,'_text',v); t.text_writes=t.text_writes+1 else rawset(t,k,v) end end})
+  setmetatable(e,{__index=function(t,k)
+    if k=='text' then return rawget(t,'_text') elseif k=='name' then return rawget(t,'_name') end
+  end,__newindex=function(t,k,v)
+    if k=='text' then rawset(t,'_text',v); t.text_writes=t.text_writes+1
+    elseif k=='name' then
+      assert(type(v)=='string' and (not parent or not parent[v] or parent[v]==t),'duplicate GUI name')
+      if parent and parent[t.name]==t then parent[t.name]=nil end
+      rawset(t,'_name',v); if parent and v~='' then parent[v]=t end
+    else rawset(t,k,v) end
+  end})
   function e.add(child)
     local c=gui(e,child)
     table.insert(e.children,child.index or (#e.children+1),c); e[c.name]=c; return c
@@ -214,7 +222,9 @@ function M.run()
     a.can_reach_entity=function() return false end
     refused(function() model.action(a,sa.token,'stop',tick) end,'E_UNREACHABLE'); a.can_reach_entity=function() return true end
     local previous=da.source
-    refused(function() model.edit(a,sa.token,string.rep('x',limits.source_bytes+1)) end,'E_LIMIT')
+    local allowance=limits.draft_storage_bytes; limits.draft_storage_bytes=model.retention(a.index).used
+    refused(function() model.edit(a,sa.token,string.rep('x',#previous+1)) end,'E_CAPACITY')
+    limits.draft_storage_bytes=allowance
     assert(da.source==previous)
     local fresh=model.open(a,rec.id)
     refused(function() model.edit(a,sa.token,'stale') end,'E_UNREACHABLE'); sa=fresh
@@ -223,10 +233,11 @@ function M.run()
     refused(function() model.action(a,sa.token,'save',tick) end,'E_UNREACHABLE')
     registry.get().entities[unit]=binding; assert(rec.saved_source==previous)
   end)
-  group('editor-eight-drafts-no-eviction-removed-recovery',function()
+  group('editor-more-than-eight-drafts-byte-admission-no-eviction-removed-recovery',function()
     local p=M.player(1003,rec.body); local ids={}
-    for i=1,8 do local other=make(i*3); ids[i]=other.id; local s=model.open(p,other.id); model.edit(p,s.token,source(i)) end
-    local extra=make(30)
+    for i=1,10 do local other=make(i*3); ids[i]=other.id; local s=model.open(p,other.id); model.edit(p,s.token,source(i)) end
+    local extra=make(33)
+    local allowance=limits.draft_storage_bytes; limits.draft_storage_bytes=model.retention(p.index).used
     refused(function() model.open(p,extra.id) end,'E_CAPACITY')
     local s,bag=model.open_recovery(p.index)
     assert(model.recovery_action(p.index,s.token,'review',ids[1])); assert(bag.documents[ids[1]].source==source(1))
@@ -235,6 +246,7 @@ function M.run()
     assert(bag.documents[ids[1]])
     model.recovery_action(p.index,s.token,'forget'); model.recovery_action(p.index,s.token,'confirm-forget')
     assert(not bag.documents[ids[1]]); assert(model.open(p,extra.id))
+    limits.draft_storage_bytes=allowance
   end)
   group('editor-removed-body-replacement-never-retargets-draft',function()
     local old=make(36); local p=M.player(1004,old.body)
@@ -280,7 +292,18 @@ function M.run()
       edit(a,f,source(29)); local saved=rec.saved_source
       click(a,f.title.close); assert(not f.valid and rec.saved_source==saved and rec.status=='running')
       assert(editor.open(a,rec.id)); f=a.gui.screen[editor.frame_name]; assert(f.content.editor.source.text==source(29))
-      edit(a,f,string.rep('x',limits.source_bytes+1)); assert(f.content.editor.source.text==source(29))
+      local allowance=limits.draft_storage_bytes; limits.draft_storage_bytes=model.retention(a.index).used
+      local rejected=string.rep('x',#source(29)+1)
+      edit(a,f,rejected); assert(f.content.editor.source.text==rejected and model.session(a.index).unretained)
+      click(a,f.content.editor.actions.save); assert(rec.saved_source==saved)
+      local token=model.session(a.index).token
+      click(a,f.title.close); assert(f.valid and f.content.editor.source.text==rejected)
+      assert(f.tags.input_recovery and not model.session(a.index))
+      limits.draft_storage_bytes=allowance; edit(a,f,source(29))
+      click(a,f.content.editor.actions.save); assert(rec.saved_source==saved and not model.session(a.index))
+      click(a,f.title.close); assert(not f.valid)
+      assert(editor.open(a,rec.id)); f=a.gui.screen[editor.frame_name]
+      assert(model.session(a.index).token~=token and f.content.editor.source.text==source(29))
       f.content.selected_tab_index=5; editor.on_tab{player_index=a.index,element=f.content,tick=tick}
       f.content.maintenance.recovery.selected_index=1; editor.refresh(a); assert(f.content.maintenance.recovery.selected_index==1)
       for i=1,limits.console_entries+4 do runtime.log(rec,'[font=anything]'..i,tick) end
@@ -308,13 +331,19 @@ function M.run()
   end)
   game=real_game
   if not ok then error(e,0) end
-  group('editor-malicious-active-source-faults-healthy-peer-continues',function()
+  group('editor-runaway-source-waits-healthy-peer-continues-and-stop-cancels',function()
     local bad=make(40); local good=make(45)
-    runtime.save(bad.id,'return {api_version=1,handlers={start=function(e) pcall(function() while true do end end) end}}',0)
+    runtime.save(bad.id,'return {api_version=1,handlers={start=function(e) pcall(function() while true do end end); computer.setState("unsafe",true) end}}',0)
     runtime.save(good.id,source(31),0)
     assert(runtime.activate(bad.id,tick)); assert(runtime.activate(good.id,tick))
-    assert(scheduler.dispatch(bad,tick+1)); assert(bad.status=='faulted' and bad.diagnostic.code=='E_BUDGET')
+    assert(scheduler.dispatch(bad,tick+1))
+    assert(bad.status=='running' and bad.invocation and not bad.diagnostic and not bad.state.unsafe)
+    local spent=runtime.context(bad,tick+1).machine.work
+    assert(not scheduler.dispatch(bad,tick+1) and runtime.context(bad,tick+1).machine.work==spent)
     assert(scheduler.dispatch(good,tick+1)); assert(good.state.value==31 and good.status=='running')
+    local saved=bad.saved_source
+    assert(runtime.stop(bad.id) and bad.status=='stopped' and not bad.invocation)
+    assert(bad.saved_source==saved and not bad.state.unsafe and good.state.value==31)
   end)
   group('editor-starter-validate-save-run-print-once-and-timer',function()
     local c=make(48); local p=M.player(1010,c.body)

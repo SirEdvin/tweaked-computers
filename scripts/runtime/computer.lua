@@ -5,6 +5,7 @@ local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
 local data = require('scripts.runtime.data')
 local principal = require('scripts.runtime.principal')
+local policy = require('scripts.runtime.resource-policy')
 local M = {}
 local providers = {}
 local shell_lifecycle
@@ -15,10 +16,11 @@ local function root() local r=registry.get(); if not registry.supported(r) then 
 local function arity(n,min,max) if n<min or n>(max or min) then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end end
 local function count(t) local n=0; for _ in pairs(t) do n=n+1 end; return n end
 function M.context(rec,tick) return admission.context(root().ledger,rec.id,tick) end
-function M.log(rec,text,tick,spend)
+function M.log(rec,text,tick,spend,prepare)
   if type(text)~='string' then errors.raise('E_ARGUMENT','log requires a string') end
   if #text>limits.console_bytes then errors.raise('E_LIMIT','log entry too large') end
   if spend then spend(#text+(#rec.logs)^2+1) end
+  if prepare then prepare() end
   while #rec.logs>=limits.console_entries or rec.log_bytes+#text>limits.console_bytes do
     local old=table.remove(rec.logs,1); rec.log_bytes=rec.log_bytes-#old.text
     rec.log_truncated=true
@@ -28,6 +30,8 @@ end
 function M.retire(rec,status,reason)
   local cleaned=registry.cleanup(rec,rec.run_id,reason or status)
   rec.queue={}; rec.queue_bytes=0; rec.timers={}; rec.subscriptions={}
+  policy.release(rec.invocation)
+  rec.invocation=nil
   rec.status=cleaned and status or 'faulted'
   if not cleaned then rec.diagnostic=errors.new('E_ENGINE','host teardown failed; cleanup recovery retained') end
   return cleaned
@@ -41,13 +45,22 @@ function M.fault(rec,diagnostic,tick)
   diagnostic.source_revision=rec.active and rec.active.revision or nil
   diagnostic.run_id=rec.run_id
   rec.diagnostic=diagnostic
-  M.log(rec,(diagnostic.code or 'E_PROGRAM')..': '..(diagnostic.message or 'program failed'):sub(1,512),tick)
+  local text=(diagnostic.code or 'E_PROGRAM')..': '..(diagnostic.message or 'program failed'):sub(1,512)
+  if #text<=limits.console_bytes then M.log(rec,text,tick) else rec.log_truncated=true end
 end
 function M.stop(id)
   root(); local rec=registry.computer(id)
   local ok=M.retire(rec,'stopped','stop')
   if shell_lifecycle then ok=shell_lifecycle(rec,'stop') and ok end
   return ok
+end
+function M.resource_refused(rec,diagnostic,tick)
+  local owned={}; for key,value in pairs(diagnostic) do owned[key]=value end
+  owned.source_revision=rec.active and rec.active.revision or nil; owned.run_id=rec.run_id
+  rec.diagnostic=owned
+  rec.resource_refusal=owned
+  local text=owned.code..': '..owned.message
+  if #text<=limits.console_bytes then M.log(rec,text,tick) else rec.log_truncated=true end
 end
 function M.reset_state(id)
   root()
@@ -67,7 +80,9 @@ function M.save(id,source,expected_revision)
 end
 function M.validate(id,tick)
   local rec=registry.computer(id)
-  return compiler.compile(rec.saved_source,M.context(rec,tick))
+  local plan,diagnostic=compiler.prepare(rec.saved_source,M.context(rec,tick))
+  if not plan then return nil,diagnostic end
+  return plan
 end
 function M.activate(id,tick,expected_revision)
   local r=root(); local rec=registry.computer(id)
@@ -86,7 +101,10 @@ function M.activate(id,tick,expected_revision)
   rec.run_id=rec.id..'/run-'..string.format('%.0f',rec.run_generation)
   rec.active={source=plan.source,revision=rec.saved_revision,api_version=1,compiler_version=limits.compiler_version,storage_version=limits.storage_version,handlers=plan.handlers}
   rec.status='running'; rec.diagnostic=nil; rec.candidate_diagnostic=nil
-  if plan.handlers.start then M.enqueue(rec,'start',{name='start'},tick) end
+  if plan.handlers.start then
+    local event={name='start',tick=tick,computer_id=rec.id,run_id=rec.run_id,sequence=registry.sequence()}
+    rec.invocation={run_id=rec.run_id,pending_start=true,item={handler='start',event=event,bytes=0},checkpoint={}}
+  end
   return rec.run_id
 end
 function M.check_active(rec)
@@ -97,7 +115,7 @@ local function handler(rec,name)
   if type(name)~='string' or not M.check_active(rec) or rec.active.handlers[name]~=true then errors.raise('E_ARGUMENT','declared handler name required') end
   return name
 end
-function M.subscribe(rec,event_name,handler_name,details,spend)
+function M.subscribe(rec,event_name,handler_name,details,spend,prepare)
   -- Trusted providers may register their own documented event kinds here;
   -- computer.on below separately restricts the guest general-event surface.
   handler(rec,handler_name)
@@ -107,36 +125,77 @@ function M.subscribe(rec,event_name,handler_name,details,spend)
   if details~=nil then copied=data.copy(details,spend) end
   local total=0; for _,c in pairs(root().computers) do total=total+count(c.subscriptions) end
   if count(rec.subscriptions)>=limits.subscriptions or total>=limits.aggregate_subscriptions then errors.raise('E_CAPACITY','subscription capacity reached') end
-  local seq=registry.sequence(); local id=rec.run_id..'/sub-'..string.format('%.0f',seq)
+  local id
+  local seq=registry.sequence(function(n)
+    id=rec.run_id..'/sub-'..string.format('%d',n)
+    if prepare then prepare(id) end
+  end)
   rec.subscriptions[id]={id=id,event_name=event_name,handler=handler_name,sequence=seq,details=copied}
   return id
 end
-function M.unsubscribe(rec,id,spend)
+function M.unsubscribe(rec,id,spend,prepare)
   local prefix=rec.run_id..'/sub-'
   if type(id)~='string' or #id>128 or id:sub(1,#prefix)~=prefix then errors.raise('E_ARGUMENT','ID belongs to another computer/run') end
   if spend then spend(#id+1) end
-  local exists=rec.subscriptions[id]~=nil; rec.subscriptions[id]=nil; return exists
+  local exists=rec.subscriptions[id]~=nil
+  if prepare then prepare(exists) end
+  rec.subscriptions[id]=nil; return exists
+end
+local function drop_event(rec,kind,tick,reason)
+  local drops=rec.dropped_events
+  if not drops then drops={total=0,saturated=false}; rec.dropped_events=drops end
+  if drops.total<MAX then drops.total=drops.total+1 end
+  if drops.total==MAX then drops.saturated=true end
+  drops.last_tick=tick; drops.last_kind=kind; drops.last_reason=reason
+  drops.warning_pending=true
+  return false,'overflow'
+end
+-- Maintenance owns warning work. Event publication only records bounded control
+-- state, so full queues cannot recurse and an unpaid warning cannot lose a drop.
+function M.warn_event_drops(rec,tick,spend)
+  local drops=rec.dropped_events
+  if not drops or drops.total==0 or drops.warning_pending==false then return end
+  if drops.warning_tick and tick-drops.warning_tick<limits.event_drop_warning_interval then return end
+  spend(128) -- Bounded formatting; cumulative safe integers have at most 16 digits.
+  local text='Dropped events (cumulative): '..string.format('%d',drops.total)..(drops.saturated and ' (saturated)' or '')
+  if #text>limits.console_bytes then return end -- Retain pending status under a tiny live limit.
+  M.log(rec,text,tick,spend)
+  drops.warning_tick=tick; drops.warning_pending=false
+end
+local function event_copy(payload,spend)
+  local ok,copied,stats=pcall(data.copy,payload,spend,limits.event_queue_bytes)
+  if ok then return copied,stats end
+  if type(copied)=='table' and copied.code=='E_CAPACITY' and copied.field=='data_bytes' then return nil end
+  error(copied,0)
 end
 function M.prepare_event(rec,name,payload,tick,spend,metadata)
   if rec.status~='running' then return false,'inactive' end
   handler(rec,name)
+  if type(payload)~='table' or getmetatable(payload)~=nil or type(payload.name)~='string' or #payload.name==0 then
+    errors.raise('E_ARGUMENT','named event payload required')
+  end
   if not rec.powered and payload.name~='timer' and payload.name~='start' then return false,'unpowered' end
-  local event,stats=data.copy(payload,spend,limits.event_queue_bytes)
-  if type(event)~='table' or type(event.name)~='string' then errors.raise('E_ARGUMENT','named event payload required') end
-  if stats.nodes+7>limits.data_nodes then errors.raise('E_LIMIT','event leaves no room for envelope metadata') end
+  local event,stats=event_copy(payload,spend)
+  if not event then
+    -- Preparation can be abandoned/retried; only publication records a loss.
+    return {handler=name,event={name=payload.name,run_id=rec.run_id},overflow='event_queue_bytes'}
+  end
   -- Host overrides all authoritative envelope fields, never trusts injected ones.
   event.tick=tick; event.computer_id=rec.id; event.run_id=rec.run_id
   local bytes=stats.bytes+128+#rec.id+#rec.run_id
   return {handler=name,event=event,bytes=bytes,timer_id=metadata and metadata.timer_id}
 end
+function M.discard_event(rec,item,tick,reason)
+  -- A previously admitted destination lost authority before publication.
+  drop_event(rec,item.event.name,tick,reason)
+end
 -- Immediate trusted publication of an owned, prepaid prepare_event result.
 function M.publish_event(rec,item,tick)
   if rec.status~='running' or item.event.run_id~=rec.run_id then return false,'inactive' end
+  if item.overflow then return drop_event(rec,item.event.name,tick,item.overflow) end
   local bytes=item.bytes
-  if #rec.queue>=limits.event_queue_entries or rec.queue_bytes+bytes>limits.event_queue_bytes then
-    M.fault(rec,errors.new('E_CAPACITY','event queue overflow; run stopped and owned outputs cleared'),tick)
-    return false,'overflow'
-  end
+  if #rec.queue>=limits.event_queue_entries then return drop_event(rec,item.event.name,tick,'event_queue_entries') end
+  if rec.queue_bytes+bytes>limits.event_queue_bytes then return drop_event(rec,item.event.name,tick,'event_queue_bytes') end
   item.event.sequence=registry.sequence()
   rec.queue[#rec.queue+1]=item
   rec.queue_bytes=rec.queue_bytes+bytes
@@ -155,15 +214,26 @@ function M.emit(id,event_name,payload,tick,spend)
   local subscriptions={}
   for _,sub in pairs(rec.subscriptions) do if sub.event_name==event_name then subscriptions[#subscriptions+1]=sub end end
   table.sort(subscriptions,function(a,b) return a.sequence<b.sequence end)
+  if #subscriptions==0 then return true end
 
   -- Do not alias caller payload or a subscription's event copy.
-  local copied,stats=data.copy(payload or {},spend,limits.event_queue_bytes); copied.name=event_name
+  local copied,stats=event_copy(payload or {},spend)
+  if not copied then
+    for _=1,#subscriptions do drop_event(rec,event_name,tick,'event_queue_bytes') end
+    return false
+  end
+  copied.name=event_name
   -- Reserve every delivery before publication; deferral cannot deliver a prefix.
   if spend then spend(#subscriptions*(stats.bytes+stats.nodes*2+#event_name+32)) end
+  local accepted=true
   for _,sub in ipairs(subscriptions) do
-    if not M.enqueue(rec,sub.handler,copied,tick,nil) then return false end
+    local delivered,reason=M.enqueue(rec,sub.handler,copied,tick,nil)
+    if not delivered then
+      accepted=false
+      if reason~='overflow' then return false end
+    end
   end
-  return true
+  return accepted
 end
 function M.set_power(id,powered,tick,spend)
   root()
@@ -200,6 +270,7 @@ function M.services(rec,tick,guard,execution)
     guard.check()
     principal.check(rec,execution)
   end
+  guard.host_resize=function(key,bytes) current(); return policy.host_resize(key,bytes,spend) end
   local api={}
   local function method(name,min,max,fn)
     api[name]=function(...)
@@ -211,41 +282,52 @@ function M.services(rec,tick,guard,execution)
   method('getLabel',0,0,function() return rec.label end)
   method('setLabel',0,1,function(label)
     if label~=nil and (type(label)~='string' or #label>limits.identifier_bytes) then errors.raise('E_ARGUMENT','bounded label or nil required') end
-    spend(label and #label+1 or 1); rec.label=label
+    spend(label and #label+1 or 1)
+    guard.prepare_empty_result(); rec.label=label
   end)
   method('getTick',0,0,function() return tick end)
-  method('getLimits',0,0,function() return (data.copy(limits,spend)) end)
+  method('getLimits',0,0,function() return (data.copy(policy.limits(),spend)) end)
+  method('getResourceStatus',0,0,function() return (data.copy(policy.status(rec,tick),spend)) end)
   method('getState',1,1,function(key)
     data.key(key); spend(#key+1)
-    if rec.state[key]~=nil then return (data.copy(rec.state[key],spend)) end
+    if rec.state[key]~=nil then return (data.copy(rec.state[key],spend,math.max(limits.state_bytes,rec.state_sizes[key] or 0))) end
     return nil
   end)
   method('setState',2,2,function(key,value)
     data.key(key); spend(#key+1)
-    local copied,stats=data.copy(value,spend)
-    local old=rec.state_sizes[key] or 0; local size=stats.bytes+#key+16
+    local old=rec.state_sizes[key] or 0; local overhead=#key+16
+    local room=math.max(limits.state_bytes,rec.state_bytes)-rec.state_bytes+old
+    local function refuse(bytes)
+      errors.refuse('state_bytes','tc-state-bytes',rec.state_bytes,math.max(0,bytes-old+overhead),
+        limits.state_bytes,'state growth exceeds configured storage; delete data or raise tc-state-bytes')
+    end
+    -- Accepted over-limit state may shrink; refuse growth before publication.
+    if overhead>room then refuse(0) end
+    local copied,stats=data.copy(value,spend,room-overhead,refuse)
+    local size=stats.bytes+overhead
     local entries=rec.state_entries+(rec.state[key]==nil and 1 or 0)
     local nodes=rec.state_nodes-(rec.state_node_sizes[key] or 0)+stats.nodes
-    if entries>limits.state_entries or rec.state_bytes-old+size>limits.state_bytes or nodes>limits.data_nodes then errors.raise('E_CAPACITY','state capacity exceeded') end
+    guard.prepare_empty_result()
     rec.state[key]=copied; rec.state_sizes[key]=size; rec.state_entries=entries; rec.state_bytes=rec.state_bytes-old+size
     rec.state_nodes=nodes; rec.state_node_sizes[key]=stats.nodes
   end)
   method('deleteState',1,1,function(key)
     data.key(key); spend(#key+1)
+    guard.prepare_result(rec.state[key]~=nil)
     if rec.state[key]==nil then return false end
     rec.state[key]=nil; rec.state_bytes=rec.state_bytes-rec.state_sizes[key]; rec.state_sizes[key]=nil; rec.state_entries=rec.state_entries-1
     rec.state_nodes=rec.state_nodes-rec.state_node_sizes[key]; rec.state_node_sizes[key]=nil
     return true
   end)
-  method('log',1,1,function(text) M.log(rec,text,tick,spend) end)
+  method('log',1,1,function(text) M.log(rec,text,tick,spend,guard.prepare_empty_result) end)
   method('on',2,2,function(event_name,handler_name)
     if not general[event_name] then errors.raise('E_ARGUMENT','unsupported general event name') end
-    return M.subscribe(rec,event_name,handler_name,nil,spend)
+    return M.subscribe(rec,event_name,handler_name,nil,spend,guard.prepare_result)
   end)
   local function owned_id(id,kind)
     if type(id)~='string' or #id>128 or id:sub(1,#rec.run_id+#kind+2)~=rec.run_id..'/'..kind..'-' then errors.raise('E_ARGUMENT','ID belongs to another computer/run') end
   end
-  method('off',1,1,function(id) return M.unsubscribe(rec,id,spend) end)
+  method('off',1,1,function(id) return M.unsubscribe(rec,id,spend,guard.prepare_result) end)
   local function timer(delay,name,payload,recurring)
     if not errors.integer(delay,1,MAX-tick) then errors.raise('E_RANGE','positive safe integer duration required') end
     handler(rec,name); spend(limits.timers+#rec.queue+1)
@@ -255,9 +337,12 @@ function M.services(rec,tick,guard,execution)
     local copied,size
     if payload~=nil then
       copied,size=data.copy(payload,spend,limits.event_queue_bytes-512)
-      if size.nodes+10>limits.data_nodes then errors.raise('E_LIMIT','timer payload leaves no room for event metadata') end
     end
-    local seq=registry.sequence(); local id=rec.run_id..'/timer-'..string.format('%.0f',seq)
+    local id
+    local seq=registry.sequence(function(n)
+      id=rec.run_id..'/timer-'..string.format('%d',n)
+      guard.prepare_result(id)
+    end)
     rec.timers[id]={id=id,handler=name,deadline=tick+delay,interval=recurring and delay or nil,payload=copied,payload_bytes=size and size.bytes or 0,sequence=seq}
     return id
   end
@@ -265,12 +350,13 @@ function M.services(rec,tick,guard,execution)
   method('every',2,3,function(delay,name,payload) return timer(delay,name,payload,true) end)
   method('cancelTimer',1,1,function(id)
     owned_id(id,'timer'); spend(#id+#rec.queue*2+limits.timers+1)
-    local exists=rec.timers[id]~=nil; rec.timers[id]=nil
+    local exists=rec.timers[id]~=nil
     local retained={}; local bytes=0
     for _,item in ipairs(rec.queue) do
       if item.timer_id==id then exists=true else retained[#retained+1]=item; bytes=bytes+item.bytes end
     end
-    rec.queue=retained; rec.queue_bytes=bytes; return exists
+    guard.prepare_result(exists)
+    rec.timers[id]=nil; rec.queue=retained; rec.queue_bytes=bytes; return exists
   end)
   local map={computer=api,peripheral={}}
   local names={}; for name in pairs(providers) do names[#names+1]=name end; table.sort(names)

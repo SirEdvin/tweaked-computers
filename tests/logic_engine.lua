@@ -113,7 +113,7 @@ function M.run()
     ok,e=pcall(io.setOutput,{{signal={type='item',name='iron-plate'},count=2147483648}}); assert(not ok and e.code=='E_RANGE')
     ok,e=pcall(io.readSignals,'blue'); assert(not ok and e.code=='E_ARGUMENT')
     ok,e=pcall(io.clearOutput,io); assert(not ok and e.code=='E_ARGUMENT')
-    assert(io.getLimits().sample_interval_ticks==1 and io.getLimits().signal_slots==64)]])
+    assert(io.getLimits().sample_interval_ticks==1 and io.getLimits().signal_slots==nil)]])
   report('native-sections-canonical-copy-duplicate-domain-and-arity-refusals')
   guest(b,[[peripheral.find('logic_handler','red').setOutput({{signal={type='virtual',name='signal-A'},count=7}})]])
   local newer=io.output_owner; runtime.stop(c.id); assert(io.output_owner==newer and io.output_bank[1].count==7)
@@ -296,16 +296,29 @@ function M.on_tick(event)
     guest(c,[[local io=peripheral.find('logic_handler','red'); io.setOutput({{signal={type='virtual',name='signal-A'},count=1}})
       io.subscribe({input='red',initial=true},'changed')]])
     for i=1,limits.event_queue_entries do assert(runtime.enqueue(c,'changed',{name='fixture_queue_pressure'},event.tick)) end
+    local owner,bank,first=io.output_owner,io.output_bank,c.queue[1]
     logic.sample(event.tick,nop)
-    assert(c.status=='faulted' and c.diagnostic.code=='E_CAPACITY' and not io.output_owner)
-    report('full-notification-queue-faults-and-clears-output')
+    assert(c.status=='running' and io.output_owner==owner and io.output_bank==bank and c.queue[1]==first)
+    assert(c.dropped_events.total==1 and c.dropped_events.last_kind=='signal_changed')
+    local sub; for _,value in pairs(c.subscriptions) do if value.event_name=='signal_changed' then sub=value end end
+    assert(sub and sub.details.resync)
+    local removed=table.remove(c.queue,1); c.queue_bytes=c.queue_bytes-removed.bytes
+    logic.sample(event.tick,nop)
+    assert(c.queue[#c.queue].event.resync and not sub.details.resync and c.dropped_events.total==1)
+    assert(io.output_owner==owner and io.output_bank==bank)
+    report('full-notification-queue-preserves-output-and-resynchronizes-next-delivery')
+    assert(runtime.retire(c,'stopped','fixture-next-case'))
     c.status='running'; c.run_id=c.id..'/maintenance-pressure'
     guest(c,[[local io=peripheral.find('logic_handler','red'); io.setOutput({{signal={type='virtual',name='signal-A'},count=1}})
       io.subscribe({input='red',initial=true},'changed')]])
     local root=registry.get(); root.scheduler.maintenance_tick=event.tick; root.scheduler.maintenance_spent=limits.maintenance_work_per_tick
     logic.sample(event.tick,scheduler.maintenance(root,event.tick))
-    assert(c.status=='faulted' and c.diagnostic.code=='E_BUSY' and not io.output_owner)
-    report('exhausted-sampling-admission-is-visible-fail-closed')
+    assert(c.status=='running' and io.output_owner)
+    local pending; for _,sub in pairs(c.subscriptions) do if sub.event_name=='signal_changed' then pending=sub end end
+    assert(pending and pending.details.initial and pending.details.resync)
+    logic.sample(event.tick+1,nop)
+    assert(c.queue[#c.queue].event.resync and not pending.details.initial)
+    report('exhausted-sampling-admission-retains-run-baseline-and-resyncs')
     f().phase='done'; log('TC_COLD_OK')
   end
 end

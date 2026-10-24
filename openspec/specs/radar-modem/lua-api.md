@@ -18,11 +18,11 @@ Only vanilla prototype `radar` and, when Space Age is active, `tc-interplanetary
 | `closeAll()` | zero values | Clear all channels on this radar, including those opened by another authorized computer. |
 | `transmit(channel, replyChannel, payload)` | zero values | Broadcast a defensively copied payload; neither channel needs to be open locally. There is no delivery count or acknowledgement. |
 | `isWireless()` | boolean | Always true for either tier. |
-| `getLimits()` | copied limits record | Read the effective finite transport envelope and common data limits; available even while the radar is unpowered. |
+| `getLimits()` | copied policy record | Read effective resource descriptors and the safe-integer channel domain; available even while the radar is unpowered. |
 
 All methods enforce exact arity and reject colon calls. `transmit` requires three arguments; explicit nil is legal in the third argument, but omitting it is an arity error. `open`, `close` and `transmit` do not return success booleans or subscription identifiers.
 
-A channel is a finite integer in the inclusive range 0–65535. Wrong Lua types/arity produce `E_ARGUMENT`; numeric values outside the channel domain, including fractional and non-finite numbers, produce `E_RANGE`. More than 128 distinct open channels produces `E_CAPACITY` without changing the set. Reopening at capacity succeeds.
+A channel is a finite integer in the inclusive range 0–9007199254740991. Wrong Lua types/arity produce `E_ARGUMENT`; numeric values outside the channel domain, including fractional and non-finite numbers, produce `E_RANGE`. There is no independent open-channel count ceiling. New channels require retained host-memory admission; a recoverable `E_CAPACITY` preserves the previous shared set. Reopening and reducing the set remain available without new retained growth.
 
 Other methods follow the ordinary reachable-peripheral policy: live identity and selected-wire proof on every call; `E_UNREACHABLE` for an invalid binding, `E_NETWORK_PENDING` for incomplete proof, and `E_UNPOWERED` for an inactive or electrically unavailable target. As with existing peripherals, only `getLimits` and generic discovery metadata remain accessible while unpowered; even `isOpen` and `isWireless` require an available target.
 
@@ -40,7 +40,7 @@ Both tiers accept and retain the same channel domain and capacity. Channels are 
 
 The third argument accepts the shared `Data` contract, plus explicit nil at the top level. Nil is not added to persistent Data or nested collections. False, zero and empty strings remain distinct payloads. A nil message is represented by an absent `message` field in the event.
 
-Validate the entire value and declared bytes/nodes/depth/entry limits before any packet effect. Do not serialize functions, peripheral facades, host LuaObjects, cycles, mixed-key maps, sparse arrays, metatables or non-finite values; do not silently strip unsupported content to imitate permissive serialization. Use the shared `E_ARGUMENT`/`E_LIMIT` data-validation errors.
+Validate the entire value and admit copying, retained plan storage and host-stack use before any packet effect. Do not serialize functions, peripheral facades, host LuaObjects, cycles, mixed-key maps, sparse arrays, metatables or non-finite values; do not silently strip unsupported content to imitate permissive serialization. Shared Data validation and recoverable resource diagnostics apply; removed payload-shape counts are not a separate modem allowance.
 
 Each recipient handler receives an independent plain snapshot. Validation/copy work and event metadata count toward admission, including the copies required by multiple handler registrations. A maximum accepted payload must fit a complete event in an empty recipient queue; payload bytes alone are not the event size.
 
@@ -78,31 +78,37 @@ At the accepted transmission, select powered/active receiving radars whose chann
 
 Only running, powered computers with a matching handler and a freshly proved local path to the receiver are destinations. A receiver with no eligible computer produces no event. No recipients is a successful no-op, not a discovery failure. Native hidden radar links are never local path evidence.
 
-Prepare and charge the complete relevant candidate/delivery plan before publishing its first event. An incomplete relevant graph, fan-out limit, copy failure or throughput refusal has no packet effects; no successful recipient prefix is returned. Unrelated forces and, for ordinary transmitters, other surfaces are not relevant routing candidates. Resource-exhaustion faults still follow the runtime's non-catchable budget rules.
+Prepare and charge the complete relevant candidate/delivery plan before publishing its first event. Preparation may pause across ticks; a copy, authority or retained-capacity refusal before acceptance has no packet effects. Unrelated forces and, for ordinary transmitters, other surfaces are not relevant routing candidates. After acceptance, the saved cursor resumes the unfinished suffix without replaying processed destinations. Work deferral is private, not a guest retry request; there is no independent candidate, delivery or per-tick transmission count ceiling.
 
 After successful preparation, publish in sorted computer ID, receiving radar ID and subscription sequence order. Local red/green paths are deduplicated before this sort. The existing FIFO scheduler controls callback dispatch, so callbacks never run reentrantly; no minimum one-tick delay is promised. Every accepted transmission is independent even if its payload equals a previous message.
 
-Recipient queue overflow follows the existing runtime policy: visibly fault that recipient and retire its run, skip its remaining prepared deliveries, and continue other recipients deterministically. This is not a retryable sender error after partial publication. Preparation must ensure payloads and host-work reservations cannot fail partway through publication. These are datagrams without acknowledgements/retries, not an all-recipients delivery guarantee.
+Recipient queue overflow drops the newest delivery and increments that physical computer's persistent loss diagnostics, preserving its run and accepted queue. Current run, handler, radar, power, channel and local authority are rechecked before each publication. An unavailable prepared destination with a surviving computer record increments its loss diagnostics once with reason `modem_destination_unavailable`. Other destinations continue; the sender receives no acknowledgement, count or retryable partial-send error. Complete retirement/sender-cancellation loss attribution remains an implementation gate, not a verified guarantee of this checkpoint.
 
 A packet already queued is an accepted data snapshot: closing a channel, detaching or removing the receiving radar later does not recall it. Subsequent calls still need live authority. Stop, fault, computer removal, force/surface retirement and computer power-loss handling retain their existing cancellation/transient-event rules. No traffic missed during unavailability is replayed.
 
 ## Persistence and identity
 
-Ordinary cold saves retain the radar identity and channel set, the computer's registrations and queue, and transport rate-limit accounting. Load reconstructs no guest work and never re-transmits. Modem open state is not included in mined items, blueprints, clones or pasted settings. New placement starts with an empty set and a new identity. Radar force/surface reassignment clears channels and invalidates previous bindings; later ordinary same-scope reconnection does not itself reset channels.
+Ordinary cold saves retain the radar identity and channel set, the computer's registrations and queue, and prepared broadcast progress with spent resource credits. Load executes no guest work and never re-transmits a completed prefix. Modem open state is not included in mined items, blueprints, clones or pasted settings. New placement starts with an empty set and a new identity. Radar force/surface reassignment clears channels and invalidates previous bindings; later ordinary same-scope reconnection does not itself reset channels.
 
 ## Queryable limits
 
-The limits record includes:
+The defensive record has `policy_version=2`, `channel_min=0`,
+`channel_max=9007199254740991`, `resources` and an empty `tuning` map.
+Each resource descriptor contains `limit`, `unit`, `scope`, `setting` and `behavior`,
+matching the corresponding descriptor from `computer.getLimits()`:
 
-- `channel_min = 0`, `channel_max = 65535`, `open_channels = 128`.
-- `message_bytes`, `message_nodes`, `message_depth`: effective positive payload ceilings, no greater than the common data/event envelope permits.
-- `routing_candidates`, `deliveries_per_transmit`: finite positive recipient-planning limits; deliveries count handler events, not just radars.
-- `transmits_per_computer_tick`, `transmits_per_tick`: finite positive per-computer and aggregate accepted-transmission ceilings, shared by both wire colors, saved programs and Console access.
+- `callback_work`, `callback_allocations`, `host_work_per_tick`, `maintenance_work_per_tick`.
+- `runtime_memory_bytes`, `host_memory_bytes`, `pending_work_bytes`, `host_stack_depth`.
+- `event_queue_entries`, `event_queue_bytes`.
 
-Zero is allowed only for the documented channel minimum. Unlimited communication range is a semantic rule, not infinity in a numeric limit field. Tier comes from `peripheral.describe`, not another wire namespace or implicit surface search.
-
-Numerical resource ceilings other than channel-domain/open-channel compatibility are frozen after real-engine envelope measurement. Documentation and `getLimits` must agree before release; no existing global budget may be raised merely to pass the new workload.
+There are no flat common-limit fields or `open_channels`, `message_bytes`,
+`message_nodes`, `message_depth`, `routing_candidates`, `deliveries_per_transmit`,
+`transmits_per_computer_tick` or `transmits_per_tick` capacities. Mutating this
+record, including its nested maps, changes no setting. Unlimited communication
+range is a semantic rule, not infinity in a numeric field. Tier comes from
+`peripheral.describe`. Resource settings are not a promise that every workload
+fits a slice; no production budget may be raised merely to pass a gate.
 
 ## Required cases
 
-Exact signatures and return arity; boundary channels; capacity/idempotency; shared computers/colors/Console calls; same-radar self-echo exclusion; two receiving radars; same-surface distances; closed channels; wrong/allied force; mixed tiers both directions; different ordinary surfaces; advanced planet/platform/in-flight routes; nil/false/invalid/oversized data; receiver-copy isolation; both-wire deduplication; multi-handler order; detach before versus after admission; incomplete proof with no prefix; fan-out/rate refusal; receiver overflow; power cycle and no replay; same-tick cold credits; save with queued events; removal/replacement/clone/force change; native hidden-wire exclusion.
+Exact signatures and return arity; safe-integer channels; resource capacity/idempotency; shared computers/colors/Console calls; same-radar self-echo exclusion; two receiving radars; same-surface distances; closed channels; wrong/allied force; mixed tiers both directions; different ordinary surfaces; advanced planet/platform/in-flight routes; nil/false/invalid/oversized data; receiver-copy isolation; both-wire deduplication; multi-handler order; detach before versus after admission; incomplete proof with no prefix; former fan-out/rate boundary crossings; observable receiver overflow/unavailability; power cycle and no replay; same-tick cold credits; reload within a prepared delivery prefix; removal/replacement/clone/force change; native hidden-wire exclusion. See the implementation evidence for passing subsets and outstanding gates.

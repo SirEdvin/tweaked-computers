@@ -2,9 +2,10 @@
 
 This is the player-readable schema companion to [supported settings](settings.md).
 Fields marked optional may be omitted; required fields must be present.
-Unknown fields are refused. Arrays are dense and at most 128 items. Strings
-are at most 256 bytes and cannot contain NUL. Numbers are finite; guest integer
-bounds remain exact. Prototype identities use installed names, never objects.
+Unknown fields are refused. Arrays are dense; strings and arrays have no
+independent mod size ceiling. Native field rules and configured resource
+admission still apply. Numbers are finite and retain their native ranges.
+Prototype identities use installed names, never objects.
 
 SignalID/SignalIDBase require explicit type and name; quality defaults normal
 where supported. Conditional fulfilled is read-only and excluded. Quality/location
@@ -38,7 +39,7 @@ to the selected operation; default select. See [normalization](#normalization).
 
 | Field | Type | Required |
 | --- | --- | --- |
-| `name` | string ≤256 bytes, no NUL | no |
+| `name` | string (native field rules) | no |
 
 <a id="schema-circuitconditiondefinition"></a>
 
@@ -97,8 +98,8 @@ to the selected operation; default select. See [normalization](#normalization).
 
 | Field | Type | Required |
 | --- | --- | --- |
-| `conditions` | dense array ≤128 of [DeciderCombinatorCondition](schemas.md#schema-decidercombinatorcondition) | yes |
-| `outputs` | dense array ≤128 of [DeciderCombinatorOutput](schemas.md#schema-decidercombinatoroutput) | yes |
+| `conditions` | dense array of [DeciderCombinatorCondition](schemas.md#schema-decidercombinatorcondition) | yes |
+| `outputs` | dense array of [DeciderCombinatorOutput](schemas.md#schema-decidercombinatoroutput) | yes |
 
 <a id="schema-displaypanelmessagedefinition"></a>
 
@@ -108,7 +109,7 @@ to the selected operation; default select. See [normalization](#normalization).
 | --- | --- | --- |
 | `condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes |
 | `icon` | [SignalID](schemas.md#schema-signalid) | yes |
-| `text` | string ≤256 bytes, no NUL | yes |
+| `text` | string (native field rules) | yes |
 
 <a id="schema-itemcounttype"></a>
 
@@ -128,7 +129,7 @@ integer 0…4294967295
 | `minimum_delivery_count` | [ItemCountType](schemas.md#schema-itemcounttype) | no |
 | `value` | [SignalFilter](schemas.md#schema-signalfilter) | no |
 
-Section filters additionally require `index`: integer 1–128. The list is dense
+Section filters additionally require `index`: integer 1–65535 (native uint16). The list is dense
 but indexes can be sparse. Duplicate indexes/identities refuse; nonzero min
 requires explicit exact quality. max must not be below min.
 
@@ -147,7 +148,7 @@ requires explicit exact quality. max must not be below min.
 
 ## QualityCondition
 
-{`comparator?`: [ComparatorString](schemas.md#schema-comparatorstring); `quality?`: string ≤256 bytes, no NUL} or string ≤256 bytes, no NUL
+{`comparator?`: [ComparatorString](schemas.md#schema-comparatorstring); `quality?`: string (native field rules)} or string (native field rules)
 
 <a id="schema-qualityid"></a>
 
@@ -208,7 +209,7 @@ For operation **select** only:
 
 ## SignalFilter
 
-{`comparator?`: [ComparatorString](schemas.md#schema-comparatorstring); `name`: string ≤256 bytes, no NUL; `quality?`: registered quality name string; `type?`: [SignalIDType](schemas.md#schema-signalidtype)} or string ≤256 bytes, no NUL
+{`comparator?`: [ComparatorString](schemas.md#schema-comparatorstring); `name`: string (native field rules); `quality?`: registered quality name string; `type?`: [SignalIDType](schemas.md#schema-signalidtype)} or string (native field rules)
 
 <a id="schema-signalid"></a>
 
@@ -216,7 +217,7 @@ For operation **select** only:
 
 | Field | Type | Required |
 | --- | --- | --- |
-| `name` | string ≤256 bytes, no NUL | yes |
+| `name` | string (native field rules) | yes |
 | `quality` | registered quality name string | no |
 | `type` | [SignalIDType](schemas.md#schema-signalidtype) | yes |
 
@@ -226,7 +227,7 @@ For operation **select** only:
 
 | Field | Type | Required |
 | --- | --- | --- |
-| `name` | string ≤256 bytes, no NUL | yes |
+| `name` | string (native field rules) | yes |
 | `type` | [SignalIDType](schemas.md#schema-signalidtype) | yes |
 
 <a id="schema-signalidtype"></a>
@@ -251,7 +252,7 @@ boolean
 
 ## float
 
-finite number
+finite float32 number
 
 <a id="schema-int32"></a>
 
@@ -269,13 +270,13 @@ Absence only, never a stored Data value or implicit clear patch.
 
 ## string
 
-string ≤256 bytes, no NUL
+string (native field rules)
 
 <a id="schema-table"></a>
 
 ## table
 
-bounded plain table
+plain table
 
 <a id="schema-uint32"></a>
 
@@ -302,7 +303,8 @@ integer 0…4294967295
   signal quality uses quality_source_signal instead of static source.
 - SignalFilter/QualityCondition readback includes normal and comparator = defaults.
   BlueprintQualityID defaults name normal. Ordinary signal quality defaults normal.
-- LogisticFilter min defaults 0; registered nauvis is the default item import location.
+- LogisticFilter min defaults 0; an omitted item import location uses that item
+  prototype's `default_import_location`, when present, not a universal planet.
   Section multiplier readback preserves native float32 precision.
 - Native enum values are strings, not defines ordinals. Speaker instrument/note
   IDs are zero-based and validated against the actual target catalogue.

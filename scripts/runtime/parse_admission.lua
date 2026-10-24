@@ -11,7 +11,7 @@ function M.enter(cost)
     errors.raise('E_BUDGET', 'source compilation work exhausted')
   end
   if trace then
-    if #trace<32768 then
+    if (#trace+1)*16+64<=limits.compiler_cache_bytes then
       trace[#trace+1]=cost; trace.total=(trace.total or 0)+cost
     else trace.overflow=true; trace=nil end
   end
@@ -19,7 +19,9 @@ end
 function M.push()
   M.enter()
   depth = depth + 1
-  if depth > limits.source_nesting then errors.raise('E_LIMIT', 'source nesting exceeds compiler limit') end
+  if depth > limits.host_stack_depth then
+    errors.refuse('host_stack_depth','tc-host-stack-depth',depth-1,1,limits.host_stack_depth,'compiler host depth exceeded')
+  end
 end
 function M.pop() depth = depth - 1 end
 return M

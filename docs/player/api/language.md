@@ -200,7 +200,10 @@ particular formatted result would be shorter. No patterns or Unicode processing.
 | `table.remove(t, position?)` | One removed value or one nil; default final position |
 | `table.sort(t, less?)` | None; staged dense-sequence sort, default primitive <; optional guest comparator |
 
-Table helpers require guest-owned plain tables and bounded inventory (1,024 entries).
+Table helpers require guest-owned plain tables. Memory-owned durable tables can
+grow, iterate and copy beyond 1,024 entries under work and retained-memory admission.
+The old width fallback remains for non-owned/non-durable tables, literal constructor
+admission and persisted Console graph validation; this is not unlimited-table support.
 Pack may contain nil holes plus n, so do not store it as Data without conversion.
 Sort failure does not publish a partially sorted target, but comparator effects on
 other guest/API state are not a callback-wide transaction. Never depend on hash
@@ -248,6 +251,18 @@ rename it and explicitly Save/Run. Noncolliding old sources retain API 1/compile
 storage 1, without startup replay. A colliding old Console root reports named
 `E_UNSUPPORTED` before command effects and retains its graph. Confirm Reset Shell
 only when ready to discard scratch values; nested fields are unaffected.
+
+### Resource-owned strings
+
+Memory-owned durable execution and byte-bounded Data copies accept strings and
+nested map keys beyond the former 16,384-byte boundary. Length, scalar validation,
+comparison, copying and library results still use their existing work and retained
+memory accounting. State, event and timer payloads retain their aggregate byte
+allowances; this does not widen the separate state-key identifier domain.
+An indivisible copy step that cannot fit a full allocation slice refuses with
+recoverable `E_CAPACITY` rather than retrying forever. A paid step whose result
+publication defers keeps its progress. Non-owned/non-durable helper and persisted
+Console graph fallbacks remain; this is not an unlimited-string promise.
 
 ## Excluded features
 

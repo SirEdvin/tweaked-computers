@@ -8,6 +8,7 @@ local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
 local data=require('scripts.runtime.data')
 local principal=require('scripts.runtime.principal')
+local work=require('scripts.services.inventory-work')
 local M={}
 local types={kv='kv_database',monitor='monitor',logic='logic_handler',configurator='configurator',recipe_searcher='recipe_searcher',radar='modem',speaker='speaker'}
 local bindings={}; local revocations={}
@@ -49,15 +50,41 @@ local function sorted(map,spend)
   if spend then spend(#names+1) end
   table.sort(names,function(a,b) if spend then spend(#a+#b+1) end; return a<b end); return names
 end
-function M.inventory(computer,wire,spend)
-  local members,parents=network.discover(computer,wire,spend)
-  local inventory={}
-  for _,member in ipairs(members) do
+function M.inventory(computer,wire,spend,job)
+  job=job or {}; job.graph=job.graph or {}; job.inventory=job.inventory or {}; job.cursor=job.cursor or 1
+  local ok,members,parents=pcall(network.discover,computer,wire,spend,job.graph)
+  if not ok then
+    if type(members)=='table' and members.code=='E_NETWORK_PENDING' then for k in pairs(job) do job[k]=nil end end
+    error(members,0)
+  end
+  local inventory=job.inventory
+  while job.cursor<=#members do
     spend(4)
+    local member=members[job.cursor]
     local rec=resolved(member)
     if rec and network.same_scope(rec.body,computer) and rec.force_index==computer.force_index
       and rec.surface_index==computer.surface_index and not inventory[rec.id] then
       inventory[rec.id]={name=rec.id,type=types[rec.kind],generation=rec.generation,member=member.id}
+    end
+    job.cursor=job.cursor+1
+  end
+  spend(#members*4+1)
+  local verified={}
+  for _,member in ipairs(members) do
+    local rec=resolved(member)
+    if rec and network.same_scope(rec.body,computer) and rec.force_index==computer.force_index and rec.surface_index==computer.surface_index then
+      local item=inventory[rec.id]
+      if not item or item.generation~=rec.generation then
+        for k in pairs(job) do job[k]=nil end
+        errors.raise('E_NETWORK_PENDING','logical peripheral identity changed during traversal')
+      end
+      verified[rec.id]=true
+    end
+  end
+  for name in pairs(inventory) do
+    if not verified[name] then
+      for k in pairs(job) do job[k]=nil end
+      errors.raise('E_NETWORK_PENDING','logical peripheral identity changed during traversal')
     end
   end
   return inventory,parents
@@ -95,7 +122,7 @@ function M.revoke(computer,name,wire,reason,execution)
   end
 end
 local function check_name(name)
-  if type(name)~='string' or #name==0 or #name>limits.identifier_bytes then errors.raise('E_ARGUMENT','bounded peripheral name required') end
+  if type(name)~='string' or #name==0 then errors.raise('E_ARGUMENT','peripheral name required') end
 end
 function M.services(computer,tick,guard,execution)
   execution=execution or principal.program(computer)
@@ -114,6 +141,18 @@ function M.services(computer,tick,guard,execution)
   end
   local function inventory(wire)
     network.wire(wire)
+    if guard.job then
+      local job=work.job(guard,'peripheral-inventory-'..wire)
+      local ok,values=pcall(M.inventory,computer,wire,spend,job)
+      if not ok then
+        if type(values)=='table' and values.code=='E_NETWORK_PENDING' then
+          for k in pairs(job) do job[k]=nil end
+          guard.suspend()
+        end
+        error(values,0)
+      end
+      return values
+    end
     local proof=inventories[wire]
     if proof then
       if guard.replay_work then guard.replay_work(proof.charges)
@@ -157,7 +196,18 @@ function M.services(computer,tick,guard,execution)
     end
     if rec.kind=='speaker' and (method=='playNote' or method=='playSound') then guard.prepare_boolean_result() end
     if rec.kind=='radar' and method=='transmit' then guard.prepare_empty_result() end
-    if bindings[rec.kind].with_principal then return fn(computer,rec,wire,tick,spend,execution,...) end
+    local hold=bindings[rec.kind].hold
+    if hold and method:sub(1,3)~='get' and method:sub(1,2)~='is' then
+      guard.prepare_empty_result(); guard.host_work(12,12)
+      fn(computer,rec,wire,tick,spend,...)
+      hold(rec,computer,execution)
+      return
+    end
+    if bindings[rec.kind].with_principal then
+      if bindings[rec.kind].with_guard then return fn(computer,rec,wire,tick,spend,execution,guard,...) end
+      return fn(computer,rec,wire,tick,spend,execution,...)
+    end
+    if bindings[rec.kind].with_guard then return fn(computer,rec,wire,tick,spend,guard,...) end
     return fn(computer,rec,wire,tick,spend,...)
   end
   local function facade(rec,wire)
@@ -168,10 +218,9 @@ function M.services(computer,tick,guard,execution)
 
     end
     local proxy=guard.namespace(methods,'peripheral method')
-    if guard.shell_enabled then
+    if guard.shell_enabled or guard.continuation_enabled then
       for key,fn in pairs(methods) do
-        guard.host_work(#name+#key+64,#name+#key+64)
-        guard.bind_value(fn,{name=name,wire=wire,generation=generation,kind=rec.kind,method=key,facade=proxy})
+        guard.bind_value(fn,proxy,key)
       end
       guard.host_work(#name+64,#name+64)
       guard.bind_value(proxy,{name=name,wire=wire,generation=generation,kind=rec.kind})
@@ -180,22 +229,24 @@ function M.services(computer,tick,guard,execution)
     return proxy
   end
   local api={}
-  local function method(name,n,fn)
+  local function method(name,n,fn,maximum)
     api[name]=function(...)
       current()
-      if select('#',...)~=n then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end
+      local count=select('#',...)
+      if count<n or count>(maximum or n) then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end
       return fn(...)
     end
   end
-  method('getNames',1,function(wire) return sorted(inventory(wire),spend) end)
-  method('setMonitorSyncGroup',1,function(members)
+  method('getNames',1,function(wire) return work.names(inventory(wire),work.job(guard,'peripheral-names'),spend) end)
+  method('setMonitorSyncGroup',1,function(members,key)
     if not monitor_sync then errors.raise('E_UNSUPPORTED','monitor provider unavailable') end
-    return monitor_sync.set(computer,tick,spend,members,execution)
-  end)
-  method('getMonitorSyncGroup',0,function()
+    guard.prepare_empty_result()
+    return monitor_sync.set(computer,tick,spend,members,execution,key)
+  end,2)
+  method('getMonitorSyncGroup',0,function(key)
     if not monitor_sync then errors.raise('E_UNSUPPORTED','monitor provider unavailable') end
-    return monitor_sync.get(computer,spend,execution)
-  end)
+    return monitor_sync.get(computer,spend,execution,key)
+  end,1)
   method('isPresent',2,function(name,wire) return lookup(name,wire)~=nil end)
   method('getType',2,function(name,wire) local rec=lookup(name,wire); return rec and types[rec.kind] or nil end)
   method('getMethods',2,function(name,wire) local rec=lookup(name,wire); if rec then return sorted(bindings[rec.kind].methods,spend) end; return nil end)
@@ -215,14 +266,19 @@ function M.services(computer,tick,guard,execution)
   method('wrap',2,function(name,wire) local rec=lookup(name,wire); if rec then return facade(rec,wire) end; return nil end)
   api.call=function(name,wire,method_name,...)
     current()
-    if type(method_name)~='string' or #method_name>limits.identifier_bytes then errors.raise('E_ARGUMENT','method name required') end
+    if type(method_name)~='string' then errors.raise('E_ARGUMENT','method name required') end
     return invoke(name,wire,nil,method_name,...)
   end
   method('find',2,function(type_name,wire)
-    if type(type_name)~='string' or #type_name>limits.identifier_bytes then errors.raise('E_ARGUMENT','peripheral type required') end
-    local values=inventory(wire); local matches={}
-    for _,name in ipairs(sorted(values,spend)) do if values[name].type==type_name then matches[#matches+1]=name end end
-    if #matches>limits.tuple_entries then errors.raise('E_LIMIT','find result exceeds tuple limit; use getNames and wrap') end
+    if type(type_name)~='string' then errors.raise('E_ARGUMENT','peripheral type required') end
+    local values=inventory(wire); local job=work.job(guard,'peripheral-find')
+    job.sort=job.sort or {}; job.matches=job.matches or {}; job.cursor=job.cursor or 1
+    local names=work.names(values,job.sort,spend); local matches=job.matches
+    while job.cursor<=#names do
+      spend(4); local name=names[job.cursor]
+      if values[name].type==type_name then matches[#matches+1]=name end
+      job.cursor=job.cursor+1
+    end
     local result={}; for _,name in ipairs(matches) do result[#result+1]=facade(assert(target(values,name)),wire) end
     return table.unpack(result,1,#result)
   end)
@@ -234,8 +290,8 @@ function M.services(computer,tick,guard,execution)
     end)
     guard.accept_handle(api[key],1)
   end
-  if guard.shell_enabled then guard.binding_resolver(function(d,parent)
-    if type(d)~='table' or type(d.name)~='string' or #d.name==0 or #d.name>limits.identifier_bytes
+  if guard.shell_enabled or guard.continuation_enabled then guard.binding_resolver(function(d,parent)
+    if type(d)~='table' or type(d.name)~='string' or #d.name==0
       or not bindings[d.kind] or not errors.integer(d.generation,1,9007199254740991)
       or (d.wire~='red' and d.wire~='green') then errors.raise('E_ARGUMENT','invalid retained peripheral identity') end
     spend(#d.name+32)
@@ -269,35 +325,38 @@ function M.reconcile_one(computer,wire,tick,spend)
   computer.network_views=computer.network_views or {}
   local view=computer.network_views[wire]
   if not view or view.run_id~=computer.run_id then
-    -- Baseline changes on a new run are not attachment snapshots.
-    local ok,result=pcall(M.inventory,computer,wire,spend)
-    if not ok then
-      if type(result)=='table' and result.code then
-        computer.network_views[wire]={run_id=computer.run_id,inventory={},diagnostic=result}; return
-      end
-      error(result,0)
-    end
-    computer.network_views[wire]={run_id=computer.run_id,inventory=result,tick=tick}; return
+    view={run_id=computer.run_id,inventory={},baseline=true}
+    computer.network_views[wire]=view
   end
   if not view.job then
-    local ok,next_inventory=pcall(M.inventory,computer,wire,spend)
-    local failure
+    view.prepare=view.prepare or {inventory={},old_sort={},new_sort={},changes={},old_cursor=1,new_cursor=1}
+    local prep=view.prepare
+    local ok,next_inventory=pcall(M.inventory,computer,wire,spend,prep.inventory)
     if not ok then
       if type(next_inventory)~='table' or not next_inventory.code then error(next_inventory,0) end
-      failure=next_inventory; next_inventory={}
+      view.diagnostic=next_inventory; view.prepare=nil; return
     end
-    local changes={}
-    for _,name in ipairs(sorted(view.inventory,spend)) do
+    if view.baseline then
+      view.inventory=next_inventory; view.baseline=nil; view.prepare=nil; view.tick=tick; view.diagnostic=nil; return
+    end
+    local changes=prep.changes
+    local old_names=work.names(view.inventory,prep.old_sort,spend)
+    while prep.old_cursor<=#old_names do
+      spend(4); local name=old_names[prep.old_cursor]
       local old=view.inventory[name]; local new=next_inventory[name]
       if not new or new.generation~=old.generation then
-        changes[#changes+1]={event='peripheral_detach',item=old,reason=failure and (failure.code=='E_LIMIT' and 'limit' or 'unavailable') or reason(computer,old)}
+        changes[#changes+1]={event='peripheral_detach',item=old,reason=reason(computer,old)}
       end
+      prep.old_cursor=prep.old_cursor+1
     end
-    for _,name in ipairs(sorted(next_inventory,spend)) do
+    local new_names=work.names(next_inventory,prep.new_sort,spend)
+    while prep.new_cursor<=#new_names do
+      spend(4); local name=new_names[prep.new_cursor]
       local old=view.inventory[name]; local new=next_inventory[name]
       if not old or old.generation~=new.generation then changes[#changes+1]={event='peripheral_attach',item=new} end
+      prep.new_cursor=prep.new_cursor+1
     end
-    view.job={inventory=next_inventory,changes=changes,cursor=1,diagnostic=failure}
+    view.job={inventory=next_inventory,changes=changes,cursor=1}; view.prepare=nil
   end
   local job=view.job
   while job.cursor<=#job.changes do
@@ -335,11 +394,14 @@ function M.reconcile(tick,spend)
     cursor=cursor%size+1; root.scheduler.network_cursor=cursor
   end
 end
-function M.authority(computer,name,wire,spend)
-  local inventory,parents=M.inventory(computer,wire,spend)
+function M.authority(computer,name,wire,spend,job)
+  job=job or {}; job.inventory=job.inventory or {}; job.witness=job.witness or {}
+  local inventory,parents=M.inventory(computer,wire,spend,job.inventory)
   local rec,item=target(inventory,name)
   if not rec then return nil end
-  return rec,network.witness(computer,registry.record(item.member),parents,spend)
+  local path=network.witness(computer,registry.record(item.member),parents,spend,job.witness)
+  if not network.validate_witness(computer,wire,path,spend) then errors.raise('E_NETWORK_PENDING','physical witness changed') end
+  return rec,path
 end
 function M.check_outputs(tick,spend)
   local root=registry.get()

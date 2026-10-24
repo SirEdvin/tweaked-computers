@@ -47,6 +47,22 @@ end
 
 local newline_chars = util.invert{"\n", "\r"}
 
+-- Single-character probes keep lexical scans suspendible in the trusted transform.
+local function scan(str, index, pattern)
+  while str:sub(index,index):match(pattern) do
+    admission.enter()
+    index=index+1
+  end
+  return index
+end
+
+local function block_open(str,index)
+  if str:sub(index,index)~="[" then return end
+  local stop=scan(str,index+1,"^=$")
+  if str:sub(stop,stop)~="[" then return end
+  return index,stop,str:sub(index+1,stop-1)
+end
+
 local function consume_newline(str, index, state, current_char)
 
   admission.enter()
@@ -166,17 +182,12 @@ local function read_string(str,index,quote,state)
       goto matching
     elseif next_char == "z" then
       --skip z and whitespace
-      local _,skip = str:find("^z%s*",i)
-      local j = i + 1
-      i = skip + 1
-      -- figure out the right line and line_offset
-      while true do
+      i=i+1
+      while str:sub(i,i):match("%s") do
         admission.enter()
-        local newline_index, newline_char = str:match("^[^%S\r\n]*()([\r\n])", j)
-        if not newline_index then
-          break
-        end
-        j = consume_newline(str, newline_index, state, newline_char)
+        local char=str:sub(i,i)
+        if newline_chars[char] then i=consume_newline(str,i,state,char)
+        else i=i+1 end
       end
       goto matching
     elseif escape_sequence_lut[next_char] then
@@ -221,7 +232,7 @@ local function read_string(str,index,quote,state)
   end
 end
 
-local block_string_open_bracket_pattern = "^%[(=*)%["
+
 
 ---@param str string
 ---@param index integer
@@ -230,7 +241,7 @@ local block_string_open_bracket_pattern = "^%[(=*)%["
 ---@return Token
 local function read_block_string(str,index,state)
   admission.enter()
-  local _,open_end,pad = str:find(block_string_open_bracket_pattern,index)
+  local _,open_end,pad = block_open(str,index)
   if not pad then
     local token = new_token("invalid",index,state.line,index - state.line_offset)
     token.value = "["
@@ -257,13 +268,15 @@ local function read_block_string(str,index,state)
   end
 
   local parts = {""}
-  local close_pattern = "^%]"..pad.."%]()"
   while true do
     admission.enter()
-    local part, stopped_at, stop_char = str:match("^([^\r\n%]]*)()(.?)", next_index)
+    local stopped_at=scan(str,next_index,"^[^\r\n%]]$")
+    local part,stop_char=str:sub(next_index,stopped_at-1),str:sub(stopped_at,stopped_at)
     parts[#parts+1] = part
     if stop_char == "]" then
-      local bracket_end = str:match(close_pattern, stopped_at)
+      local stop=scan(str,stopped_at+1,"^=$")
+      local bracket_end
+      if stop-stopped_at-1==#pad and str:sub(stop,stop)=="]" then bracket_end=stop+1 end
       if bracket_end then
         local token = new_token("string", index, token_line, token_col)
         token.value = table.concat(parts)
@@ -309,14 +322,15 @@ local function read_number(str, index, state)
     exponent = "[Pp]"
     index = index + 2
   end
-  local pattern = "^[%x.]*"..exponent.."[+-]?()"
   while true do
     admission.enter()
-    local next_index = str:match(pattern, index)
-    if not next_index then break end
-    index = next_index
+    local char=str:sub(index,index)
+    if char:match(exponent) then
+      index=index+1
+      if str:sub(index,index):match("[+-]") then index=index+1 end
+    elseif char:match("[%x.]") then index=index+1
+    else break end
   end
-  index = str:match("^[%x.]*()", index) -- always matches, because of `*` instead of `+`
 
   local src_value = str:sub(start_index, index - 1)
   local value = tonumber(src_value)
@@ -400,7 +414,9 @@ local function next_token(state,index)
   end
 
   if next_char:match("%s") then
-    local value, line_end, newline = str:match("([^%S\r\n]*)()([\r\n]?)", index)
+    local line_end=scan(str,index,"^[^%S\r\n]$")
+    local value,newline=str:sub(index,line_end-1),str:sub(line_end,line_end)
+    if not newline_chars[newline] then newline="" end
     local token = new_token("blank", index, state.line, index - state.line_offset)
     if newline ~= "" then -- ends with newline?
       token.value = value.."\n"
@@ -421,7 +437,7 @@ local function next_token(state,index)
     end
   elseif next_char == "-" then
     if str:sub(index+1,index+1) == "-" then
-      if str:find(block_string_open_bracket_pattern, index + 2) then
+      if block_open(str, index + 2) then
         --[[
           read block string, build a token from that
         ]]
@@ -436,7 +452,8 @@ local function next_token(state,index)
         end
         return next_index,token
       else
-        local _,token_end,text = str:find("^([^\r\n]*)",index+2)
+        local token_end=scan(str,index+2,"^[^\r\n]$")-1
+        local text=str:sub(index+2,token_end)
         local token = new_token("comment",index,state.line,index - state.line_offset)
         token.value = text
         return token_end+1,token
@@ -476,8 +493,9 @@ local function next_token(state,index)
     return read_number(str, index, state)
   else
     -- try to match keywords/identifiers
-    local match_start,match_end,ident = str:find("^([_%a][_%w]*)",index)
-    if match_start == index then
+    if next_char:match("^[_%a]$") then
+      local match_end=scan(str,index+1,"^[_%w]$")-1
+      local ident=str:sub(index,match_end)
       local token = new_token(
         keywords[ident] and ident or "ident",
         index,state.line,index - state.line_offset
@@ -527,7 +545,8 @@ local function tokenize(str, source, options)
   -- does the same thing as skipcomment in lauxlib.c
   if str:find("^#", index) then -- first line is a comment (Unix exec. file)?
     -- read first line and skip parsing it
-    local comment, stop = str:match("([^\n]+)()", index)
+    local stop=scan(str,index or 1,"^[^\n]$")
+    local comment=str:sub(index or 1,stop-1)
     state.shebang_line = comment
     state.line_offset = stop - 1
     index = stop

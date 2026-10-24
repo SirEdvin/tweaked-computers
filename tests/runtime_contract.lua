@@ -3,6 +3,7 @@ local admission = require('scripts.runtime.admission')
 local limits = require('scripts.runtime.limits')
 local examples = require('examples.planning-programs')
 local sandbox = require('scripts.runtime.sandbox')
+local errors = require('scripts.runtime.errors')
 local M = {}
 local function source(body)
   return 'return {api_version=1, handlers={start=function(event) '..body..' end}}'
@@ -10,6 +11,27 @@ end
 function M.run(report_total)
   local tests=0
   local function report(name) tests=tests+1; if log then log('TC_CONTRACT '..name) end end
+  local integers=table.pack(nil,false,true,'1',{},function() end,-math.huge,math.huge,0/0,
+    -9007199254740992,-9007199254740991,-2147483648,-1,-0.5,-0.0,0,0.5,1,
+    2147483647,4294967295,9007199254740990,9007199254740991,9007199254740992,1e308,-1e308,1e-308)
+  for i=1,integers.n do
+    local value=integers[i]
+    for _,range in ipairs({{0,9007199254740991},{-9007199254740991,9007199254740991},
+      {-2147483648,2147483647},{1,4294967295},{0,0},{1,0},{-math.huge,math.huge},{0/0,1},{0,0/0}}) do
+      local expected=errors.finite(value) and value%1==0 and value>=range[1] and value<=range[2]
+      assert(errors.integer(value,range[1],range[2])==expected,'integer domain changed at case '..i)
+    end
+    for _,kind in ipairs({'work','compile','allocations'}) do
+      local ctx=admission.context(admission.new(),'integer-domain',0)
+      local valid=errors.finite(value) and value%1==0 and value>=0 and value<=9007199254740991
+      assert(pcall(admission.reserve,ctx,kind,value)==valid,'invalid reservation validation at case '..i)
+      if not valid then assert(ctx.machine[kind]==0 and ctx.ledger.total==0,'invalid amount changed admission') end
+    end
+  end
+  assert(not errors.integer(math.huge,-math.huge,math.huge))
+  assert(not errors.integer(-math.huge,-math.huge,math.huge))
+  assert(not errors.integer(0/0,-math.huge,math.huge))
+  report('integer-domains-and-invalid-admission-atomicity')
   local function compiled(body, id, ledger, tick)
     local ctx=admission.context(ledger or admission.new(),id or 'candidate',tick or 0)
     local plan,e=compiler.compile(source(body),ctx)
@@ -60,7 +82,8 @@ function M.run(report_total)
   local plan,e=compiler.compile(source('local ='),ctx)
   assert(not plan and e.line and e.column); report('source-diagnostic')
   plan,e=compiler.compile(source('local x='..string.rep('not ',128)..'true'),admission.context(admission.new(),'depth',0))
-  assert(not plan and e.code=='E_LIMIT'); report('parser-depth')
+  assert(not plan and e.code=='E_CAPACITY' and e.recoverable and e.resource=='host_stack_depth'
+    and e.setting=='tc-host-stack-depth' and e.limit==limits.host_stack_depth); report('parser-depth')
   -- Shared admission survives reentry on the same tick and admits a healthy peer.
   local ledger=admission.new()
   plan,ctx=compiled('while true do end','malicious',ledger,10)
@@ -269,7 +292,9 @@ end
     refused('function '..name..'() end')
     refused('local function '..name..'() end; function start() end')
   end
-  refused('function '..string.rep('x',limits.identifier_bytes+1)..'() end')
+  local long_name=string.rep('x',limits.identifier_bytes+1)
+  success,diagnostic=document('function '..long_name..'() end',long_name)
+  assert(success,diagnostic and diagnostic.message)
   report('declaration-reserved-public-and-private-identifiers')
   local declarations={}
   for i=1,limits.handler_names do declarations[i]='function f'..i..'() end' end
@@ -278,7 +303,8 @@ end
   assert(success,diagnostic and diagnostic.message)
   local export_count=0; for _ in pairs(candidate.handlers) do export_count=export_count+1 end
   assert(export_count==limits.handler_names)
-  refused(maximum..'\nfunction overflow() end','E_LIMIT','handler count')
+  success,diagnostic=document(maximum..'\nfunction overflow() end','overflow')
+  assert(success,diagnostic and diagnostic.message)
   report('declaration-maximum-export-inventory')
   declarations={}
   for i=1,limits.handler_names do
@@ -370,6 +396,9 @@ function sample() end
     assert(not pcall(rawget,t) and not pcall(rawset,t,'x') and not pcall(rawlen) and not pcall(rawequal,nil))
     assert(not pcall(rawset,t,nil,1) and not pcall(rawset,t,0/0,1))
     local function tuple_fn(...) return ... end
+    local function construct(...) return {false,...},function() return {} end end
+    local constructed,plain=construct(nil,7,nil)
+    assert(constructed[1]==false and constructed[2]==nil and constructed[3]==7 and rawlen(plain())==0)
     local results=table.pack(xpcall(tuple_fn,function() error('unexpected handler') end,false,nil,3,nil))
     assert(results.n==5 and results[1] and results[2]==false and results[3]==nil and results[4]==3 and results[5]==nil)
     assert(select('#',xpcall(function() end,tuple_fn))==1)
@@ -513,11 +542,91 @@ function sample() end
   local print_args={}; for i=1,limits.tuple_entries do print_args[i]='""' end
   assert(run_case('print-maximum-tuple','print('..table.concat(print_args,',')..')',true)==1)
   print_args[#print_args+1]='""'
-  refused(source('print('..table.concat(print_args,',')..')'),'E_LIMIT')
-  report('print-overwide-tuple-refused-before-execution')
+  assert(compiler.compile(source('print('..table.concat(print_args,',')..')'),
+    admission.context(admission.new(),'print-former-tuple-boundary',0)))
+  report('print-former-tuple-boundary-not-a-source-restriction')
   if report_total~=false then
     if log then log('TC_CONTRACT_TOTAL '..tests) else print('TC_CONTRACT_TOTAL '..tests) end
   end
   return tests
+end
+-- Opt-in desired-contract checks, kept separate until the continuation gate.
+function M.resource_policy()
+  for _,text in ipairs({source([[
+    computer.log('before'); local n=0
+    while n<300000 do n=n+1 end
+    computer.log(tostring(n))
+  ]]), [[function start()
+    computer.log('before'); local n=0
+    while n<300000 do n=n+1 end
+    computer.log(tostring(n))
+  end]],source([[
+    computer.log('before'); local n=0
+    for i=1,300000 do n=n+1 end
+    computer.log(tostring(n))
+  ]]), [[function start()
+    computer.log('before'); local n=0
+    for i=1,300000 do n=n+1 end
+    computer.log(tostring(n))
+  end]]}) do
+    local ledger=admission.new()
+    local plan=assert(compiler.compile(text,admission.context(ledger,'continuity',0)))
+    local checkpoint,effects={},{}
+    local function services()
+      return {computer={log=function(value) effects[#effects+1]=value end}}
+    end
+    local ok,problem,control=compiler.run(plan,'start',{},services,admission.context(ledger,'continuity',1),checkpoint)
+    assert(not ok and control=='wait','slice must suspend, not fail: '..(problem and problem.message or tostring(control)))
+    assert(#effects==1 and effects[1]=='before','completed prefix must execute once')
+    local first_work=ledger.total
+    ok,problem,control=compiler.run(plan,'start',{},services,admission.context(ledger,'continuity',1),checkpoint)
+    assert(not ok and control=='wait' and ledger.total==first_work and #effects==1,'same-tick retry renewed work or replayed prefix')
+    local tick=2
+    repeat
+      ok,problem,control=compiler.run(plan,'start',{},services,admission.context(ledger,'continuity',tick),checkpoint)
+      assert(ok or control=='wait',problem and problem.message)
+      tick=tick+1; assert(tick<200,'finite continuation made no progress')
+    until ok
+    assert(#effects==2 and effects[2]=='300000','locals lost or completed effect replayed')
+  end
+  -- Force exhaustion after the service effect but before guarded return delivery.
+  local ledger=admission.new()
+  local plan=assert(compiler.compile(source("computer.log('before'); computer.log('after')"),admission.context(ledger,'return-boundary',0)))
+  local checkpoint,effects={},{}
+  local context=admission.context(ledger,'return-boundary',1)
+  local function provider(g)
+    return {computer={log=function(text)
+      g.prepare_empty_result()
+      effects[#effects+1]=text
+      if text=='before' then assert(admission.reserve(context,'work',limits.callback_work-context.machine.work)) end
+    end}}
+  end
+  local ok,problem,control=compiler.run(plan,'start',{},provider,context,checkpoint)
+  assert(not ok and control=='wait' and #effects==1,problem and problem.message)
+  context=admission.context(ledger,'return-boundary',2)
+  ok,problem,control=compiler.run(plan,'start',{},provider,context,checkpoint)
+  assert(ok and #effects==2 and effects[1]=='before' and effects[2]=='after',problem and problem.message)
+  local plan=assert(compiler.compile(source('while true do end'),admission.context(admission.new(),'invalid-checkpoint-compile',0)))
+  for _,damage in ipairs({'pc','function','header','validation','validation-identity','validation-field','tuple','ownership-order','pending','preparation','preparation-conflict','tuple-capacities','tuple-control'}) do
+    local state={}; local ledger=admission.new()
+    local waiting,_,control=compiler.run(plan,'start',{}, {},admission.context(ledger,'invalid-checkpoint',1),state)
+    assert(not waiting and control=='wait')
+    if damage=='pc' then state.frame.pc=999999
+    elseif damage=='function' then state.frame.slots[1]=function() end
+    elseif damage=='validation' then state.validation=false
+    elseif damage=='validation-identity' then state.validation={version=2,root={},queue={},head=1,seen={}}
+    elseif damage=='validation-field' then state.validation={version=2,root=state,queue={},head=1,seen={},foreign=function() end}
+    elseif damage=='tuple' then state.frame.tuples[1]={n=-1}
+    elseif damage=='ownership-order' then state.owned_order=false
+    elseif damage=='pending' then state.frame.pending=false
+    elseif damage=='preparation' then state.preparation='foreign'
+    elseif damage=='preparation-conflict' then state.preparation='execute'
+    elseif damage=='tuple-capacities' then state.tuple_capacities=false
+    elseif damage=='tuple-control' then state.tuple_control=-1
+    else state.version=999 end
+    local passed,diagnostic=compiler.run(plan,'start',{}, {},admission.context(ledger,'invalid-checkpoint',2),state)
+    assert(not passed and diagnostic.code=='E_UNSUPPORTED','malformed checkpoint executed or reset')
+    assert(damage~='pc' or state.frame.pc==999999,'invalid checkpoint repaired silently')
+  end
 end
 return M

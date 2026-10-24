@@ -25,9 +25,9 @@ local duplicate=raw{{name='duplicate',notes={{name='zero',sound=source}}},{name=
 local out=generator.generate(duplicate)
 assert(byname(out,'tc-speaker-audio').data.instrument_error=='E_UNSUPPORTED' and not byname(out,'tc-speaker-note-1-1'))
 local many={}; for i=1,65 do many[i]={name='instrument-'..i,notes={{name='zero',sound=source}}} end
-assert(byname(generator.generate(raw(many)),'tc-speaker-audio').data.instrument_error)
+assert(byname(generator.generate(raw(many)),'tc-speaker-audio').data.instruments==65)
 local notes={}; for i=1,129 do notes[i]={name='note-'..i,sound=source} end
-assert(byname(generator.generate(raw{{name='too-many-notes',notes=notes}}),'tc-speaker-audio').data.instrument_error=='E_LIMIT')
+assert(#byname(generator.generate(raw{{name='many-notes',notes=notes}}),'tc-speaker-instrument-1').data.notes==129)
 out=generator.generate(raw{{name='duplicate-notes',notes={{name='zero',sound=source},{name='zero',sound=source}}}})
 assert(byname(out,'tc-speaker-audio').data.instrument_error=='E_UNSUPPORTED')
 local named={}; for i=1,151 do named[string.format('fixture-%03d',i)]={type='sound'} end
@@ -42,10 +42,10 @@ end
 for i,path in ipairs(all) do assert(path==string.format('fixture-%03d',i)) end
 named[string.rep('x',257)]={type='sound'}
 h=byname(generator.generate(raw({{name='a',notes={{name='zero',sound=source}}}},named)),'tc-speaker-audio').data
-assert(h.sound_error=='E_LIMIT' and h.sound_count==0 and h.sound_chunks==0)
+assert(not h.sound_error and h.sound_count==158 and h.sound_chunks==4)
 local huge={}; for i=1,32769 do huge['oversized-'..i]={type='sound'} end
 h=byname(generator.generate(raw({{name='a',notes={{name='zero',sound=source}}}},huge)),'tc-speaker-audio').data
-assert(h.sound_error=='E_LIMIT' and h.sound_count==0 and h.sound_chunks==0)
+assert(not h.sound_error and h.sound_count==32775 and h.sound_chunks==656)
 assert(serpent.block(native)==original,'catalogue generator mutated native instrument source')
 local unsupported=table.deepcopy(native); unsupported.name='tc-fixture-unsupported-speaker'; data:extend{unsupported}
 local installed={}

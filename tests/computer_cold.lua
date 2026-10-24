@@ -73,7 +73,7 @@ local function retained(rec)
   local result={}
   for _,key in ipairs({'active','saved_source','saved_revision','run_id','run_generation','status',
     'state','state_sizes','state_bytes','state_nodes','state_node_sizes','state_entries',
-    'logs','log_bytes','queue','queue_bytes','timers','subscriptions','last_dispatch_tick'}) do
+    'logs','log_bytes','queue','queue_bytes','timers','subscriptions','last_dispatch_tick','invocation'}) do
     result[key]=clone(rec[key])
   end
   result.body_unit=rec.body.unit_number
@@ -265,6 +265,58 @@ function M.on_tick(event)
       fixture.phase='done'
       log('TC_COLD_OK retained-source no-startup-replay once-only FIFO same-tick-ledger data-only')
     end
+  end
+end
+-- Separate-process desired gate. The original cold fixture remains unchanged.
+function M.resource_policy_run()
+  storage.tweaked_computers=nil; registry.initialize()
+  local rec=registry.register('computer',assert(game.surfaces[1].create_entity{
+    name='constant-combinator',position={0,0},force='player'}))
+  runtime.save(rec.id,[[function start()
+    computer.setState('prefix',(computer.getState('prefix') or 0)+1)
+    local n=0
+    while n<300000 do n=n+1 end
+    computer.setState('result',n)
+  end]],0)
+  assert(runtime.activate(rec.id,game.tick))
+  storage.tc_resource_slice={id=rec.id,phase='armed'}
+end
+function M.resource_policy_load()
+  loaded=true
+  local f=storage.tc_resource_slice
+  if f.phase=='frozen' then
+    assert(equal(retained(registry.computer(f.id)),f.expected),'on_load changed retained execution')
+    assert(equal(registry.get().ledger,f.ledger),'on_load renewed credits')
+  end
+end
+function M.resource_policy_tick(event)
+  local f=storage.tc_resource_slice
+  if f.phase=='done' then return end
+  if f.phase=='frozen' then
+    if not loaded then return end
+    local rec=registry.computer(f.id)
+    assert(equal(retained(rec),f.expected) and equal(registry.get().ledger,f.ledger))
+    assert(rec.run_id==f.run_id and rec.run_generation==1 and rec.state.prefix==1)
+    loaded=false; f.phase='resuming'
+  elseif f.phase=='armed' then
+    loaded=false
+    scheduler.tick(event.tick)
+    local rec=registry.computer(f.id)
+    assert(rec.status=='running' and rec.state.prefix==1 and not rec.state.result,'must save an unfinished, healthy invocation')
+    f.expected=retained(rec); f.ledger=clone(registry.get().ledger); f.run_id=rec.run_id
+    f.phase='frozen'; f.freeze_tick=event.tick
+    scalar_graph(registry.get(),{})
+    game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
+    return
+  end
+  scheduler.tick(event.tick)
+  local rec=registry.computer(f.id)
+  assert(rec.status=='running',rec.diagnostic and rec.diagnostic.message)
+  assert(rec.state.prefix==1 and rec.run_id==f.run_id,'completed prefix or startup replayed')
+  assert(event.tick-f.freeze_tick<200,'finite cold continuation stalled')
+  if rec.state.result then
+    assert(rec.state.result==300000,'loop local changed across cold reload')
+    f.phase='done'; log('TC_COLD_OK exact-progress once-only-prefix')
   end
 end
 return M

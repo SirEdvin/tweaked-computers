@@ -30,18 +30,18 @@ EXPANSION = {'AgriculturalTower', 'AsteroidCollector', 'SpacePlatformHub'}
 
 def generate():
     catalog = json.loads(SOURCE.read_text())
-    def schema(t):
+    def schema(t) -> dict:
         if isinstance(t, str):
             if t in ('boolean', 'string', 'float', 'int32', 'uint32'):
-                s = {'kind': {'float':'number','int32':'integer','uint32':'integer'}.get(t,t)}
-                if t == 'string': s['max_bytes'] = 256
+                s: dict = {'kind': {'float':'number','int32':'integer','uint32':'integer'}.get(t,t)}
+                if t == 'float': s.update(min=-3.4028234663852886e38,max=3.4028234663852886e38)
                 if t == 'int32': s.update(min=-2147483648,max=2147483647)
                 if t == 'uint32': s.update(min=0,max=4294967295)
                 return s
             if t.startswith('defines.'):
                 return {'kind':'enum','values':catalog['enum_values'][t], 'native_enum':t}
             if t in ('QualityID','SpaceLocationID'):
-                return {'kind':'string','max_bytes':256,'prototype_registry':'quality' if t=='QualityID' else 'space_location'}
+                return {'kind':'string','prototype_registry':'quality' if t=='QualityID' else 'space_location'}
             if t in catalog['concepts']:
                 s = schema(catalog['concepts'][t]['type']); s['concept'] = t
                 if t in ('SignalID','SignalIDBase'):
@@ -55,7 +55,7 @@ def generate():
         kind = t['complex_type']
         if kind == 'type': return schema(t['value'])
         if kind == 'literal': return {'kind':'enum','values':[t['value']]}
-        if kind == 'array': return {'kind':'array','items':schema(t['value']),'max_items':128}
+        if kind == 'array': return {'kind':'array','items':schema(t['value'])}
         if kind == 'union':
             if all(isinstance(x,dict) and x.get('complex_type')=='literal' for x in t['options']):
                 return {'kind':'enum','values':[x['value'] for x in t['options']]}
@@ -71,9 +71,9 @@ def generate():
             if variants: s.update(variants=variants,constraints=['operation_variant'])
             return s
         if kind == 'builtin':
-            return {'kind':'map','max_items':128,'constraints':['explicit_adapter_required']}
+            return {'kind':'map','constraints':['explicit_adapter_required']}
         raise ValueError('unaccounted grammar '+kind)
-    def decorate(s):
+    def decorate(s: dict) -> dict:
         s.setdefault('readable', True)
         s.setdefault('writable', True)
         s.setdefault('clearable', False)
@@ -119,7 +119,8 @@ def generate():
         'active':schema('boolean'), 'group':schema('string'), 'multiplier':schema('float'),
         'filters':schema({'complex_type':'array','value':'LogisticFilter'})},'required':[], 'additional_fields':False})['fields']
     # Native filter arrays use explicit slot indexes in addition to LogisticFilter.
-    section_fields['filters']['items']['fields']['index'] = decorate({'kind':'integer','min':1,'max':128})
+    # LogisticFilterIndex is uint16 in the pinned API, not a mod slot ceiling.
+    section_fields['filters']['items']['fields']['index'] = decorate({'kind':'integer','min':1,'max':65535})
     section_fields['filters']['items']['required'] = ['index']
     result = {'source_sha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'schemas':schemas,
         'section_fields':section_fields, 'fixtures':{'Lua'+k+'ControlBehavior':v for k,v in NATIVE.items()},

@@ -39,7 +39,7 @@ BaseEvent = {
 }
 ```
 
-`Data` means a finite boolean/number/string, dense 1-based array of Data, or string-keyed map of Data. Arrays and maps cannot mix key kinds; cycles, metatables, functions, threads and LuaObjects are prohibited. No explicit nil element exists inside Data. Limits bound total bytes, nodes, nesting, key lengths and entries, not just one dimension. Persistent state stores nonnil Data; use the separate deletion method to remove a key. An empty table is an empty map unless a specific schema calls for an array.
+`Data` means a finite boolean/number/string, dense 1-based array of Data, or string-keyed map of Data. Arrays and maps cannot mix key kinds; cycles, metatables, functions, threads and LuaObjects are prohibited. No explicit nil element exists inside Data. Byte-bounded host copies and memory-owned durable snapshots have no separate total-node, per-table entry or per-string byte ceiling; numeric indexes remain positive safe integers and arrays must be dense. Aggregate byte/memory admission, indivisible copy-step admission and nesting checks still apply. State-key identifiers, constructor widths, non-owned/non-durable paths and Console graph fallbacks are not yet removed by the resource-policy implementation. Persistent state stores nonnil Data; use the separate deletion method to remove a key. An empty table is an empty map unless a specific schema calls for an array.
 
 The radar-modem transport additionally accepts explicit top-level nil as the required third `transmit` argument; the resulting event omits `message`. This is a transport-only exception, not an expansion of persistent Data or nested collection values.
 
@@ -92,7 +92,7 @@ Discovery remains physical while a relay device is unpowered; actual service cal
 source_bytes, generated_source_bytes, source_nodes, source_nesting,
 callback_work, callback_depth, callback_allocations, compile_work, host_work_per_tick,
 active_computers, active_logic_handlers, aggregate_subscriptions, aggregate_owned_outputs,
-state_bytes, state_entries, data_nodes, data_depth, string_bytes,
+state_bytes, state_entries, data_depth, string_bytes,
 event_queue_entries, event_queue_bytes, timers, subscriptions,
 network_nodes, network_edges, topology_latency_ticks,
 peripheral_call_bytes, peripheral_call_entries,
