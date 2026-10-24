@@ -28,7 +28,18 @@ return {
   complete dense recipe array, possibly empty. Exactly two or three arguments;
   an explicit nil category means no filter.
 - `getLimits()` takes no arguments and returns a defensive snapshot of current
-  common resource limits; there is no recipe result-count setting.
+  applicable resource limits, including while reachable but unpowered.
+
+The introspection shape is now `{policy_version=2, resources={...}, tuning={}}`.
+This replaces the old flat map: read `limits.resources.callback_work.limit`, not
+`limits.callback_work`. Each resource descriptor contains `limit`, `unit`,
+`scope`, `setting` and exhaustion `behavior`. Recipe Searcher exposes
+`callback_work`, `callback_allocations`, `host_work_per_tick`,
+`runtime_memory_bytes`, `host_memory_bytes`, `pending_work_bytes` and
+`host_stack_depth`. These are the existing computer/shared resource settings,
+not new per-searcher quotas. Its `tuning` map is empty; there is no recipe page
+size or result-count setting. Removed fields such as `recipe_search_results`,
+`table_entries` and `network_nodes`, and unrelated device settings, are absent.
 
 Type is exactly `"item"` or `"fluid"`; names are exact, case-sensitive installed
 prototype IDs in that namespace. Category is an optional exact installed recipe

@@ -1,9 +1,11 @@
 -- Complete catalogue snapshots; only plain metadata/names survive a slice.
 local errors=require('scripts.runtime.errors')
-local limits=require('scripts.runtime.limits')
+local policy=require('scripts.runtime.resource-policy')
 local peripheral=require('scripts.services.peripheral')
 local work=require('scripts.services.inventory-work')
 local M={}
+local policy_keys={callback_work=true,callback_allocations=true,host_work_per_tick=true,
+  runtime_memory_bytes=true,host_memory_bytes=true,pending_work_bytes=true,host_stack_depth=true}
 local function fail(message) errors.raise('E_UNSUPPORTED',message) end
 local function native(fn,...)
   local ok,value=pcall(fn,...)
@@ -90,9 +92,7 @@ end
 local methods={}
 function methods.getLimits(_,_,_,_,spend,...)
   if select('#',...)~=0 then errors.raise('E_ARGUMENT','getLimits expects no arguments') end
-  local result={}
-  for k,v in pairs(limits) do spend(#k+1); result[k]=v end
-  return result
+  return policy.limits(policy_keys)
 end
 -- Host callers may pass a job explicitly; the public binding supplies guard.job.
 function M.find(computer,spend,job,product_type,product_name,category)

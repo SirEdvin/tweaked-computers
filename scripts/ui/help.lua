@@ -514,14 +514,15 @@ The in-game Find iron plate recipes tutorial includes research, wiring and runna
 
 findRecipes("item"/"fluid", exact_product_name, exact_category?) -> one complete array.
 Includes locked, hidden, recycling, modded and surface-restricted direct producers.
-Primary and additional categories match. Filter before the fixed 50-result limit;
-51 raises E_LIMIT, never truncation/pagination. Results sort by recipe name.
+Primary and additional categories match. There is no fixed 50-result ceiling;
+work may pause and retained capacity may refuse, never truncate. Results sort by name.
 Records include ingredients/products, ranges/probabilities, energy in seconds,
 categories, visibility, surface bounds and current force enabled state (not feasibility).
 
 
-getLimits() -> copied common/recipe-searcher limits, including while unpowered.
-recipe_search_results=50; common work/result/allocation limits still apply.
+getLimits() -> {policy_version=2,resources={...},tuning={}}, also while unpowered.
+Read resources.callback_work.limit; each resource has unit, scope, setting and behavior.
+No recipe result-count ceiling or unrelated device limits are advertised.
 
 CONFIGURATOR
 Shared configuration guidance: NETWORK and TARGETS colors are separate arguments

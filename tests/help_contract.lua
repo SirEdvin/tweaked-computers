@@ -76,6 +76,9 @@ function M.run()
   assert(mon:find('monitor_touch',1,true) and mon:find('monitor_resize',1,true))
   assert(help.text:find('modem_message',1,true) and help.text:find('signal_changed',1,true))
   assert(help.text:find('xpcall',1,true) and help.text:find('Reset Shell',1,true))
+  local recipe=help.topics[help.peripheral_topic('recipe_searcher')].text
+  assert(recipe:find('policy_version=2',1,true) and recipe:find('resources.callback_work.limit',1,true))
+  assert(not recipe:find('recipe_search_results=50',1,true) and not recipe:find('51 raises E_LIMIT',1,true))
   log('TC_HELP_METHOD_TOTAL '..total..' families='..family_count)
 end
 return M

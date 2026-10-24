@@ -13,7 +13,7 @@ The exact public method set is `findRecipes`, `getLimits`. Both are synchronous,
 | Signature | Exact returns |
 | --- | --- |
 | `searcher.findRecipes(product_type, product_name [, category])` | Exactly one dense `RecipeInfo[]`, possibly empty |
-| `searcher.getLimits()` | Exactly one defensive map of current common limits plus `recipe_search_results=50` |
+| `searcher.getLimits()` | Exactly one defensive policy-v2 snapshot: `resources` contains applicable computer/shared descriptors; `tuning` is empty. No `recipe_search_results` or flat common-limit fields. |
 
 `findRecipes` accepts exactly two or three arguments; an explicitly nil third argument is equivalent to omission. `getLimits` accepts zero arguments. Extra arguments, a colon-supplied receiver or a table in place of the product type are invalid. There are no option tables, flag filters, cursors, pagination tokens or separate detail calls.
 
@@ -137,7 +137,8 @@ return {
             assert(searcher, "Connect a Recipe Searcher with a red Network wire")
 
             local limits = searcher.getLimits()
-            assert(limits.recipe_search_results == 50)
+            assert(limits.policy_version == 2)
+            assert(limits.resources.callback_work.setting == "tc-callback-work")
 
             local ok, recipes = pcall(searcher.findRecipes, "item", "iron-plate")
             if not ok then

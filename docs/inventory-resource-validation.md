@@ -51,8 +51,29 @@ projection cursors. Public return signatures are unchanged.
   `logic.inspect_output` and `peripheral.inventory`. No UI files were changed.
   Configurator callers retain the existing network primitive signatures;
   `network.real_edges` accepts but no longer enforces the old remaining count.
-  The UI-owned in-game help still needs its old signal/graph/50-result prose
-  updated (including `scripts/ui/help.lua`'s `recipe_search_results=50`).
+  The UI-owned in-game help still needs its old signal/graph prose updated;
+  the Recipe Searcher section now describes resource policy rather than 50 results.
+
+## Recipe Searcher limits checkpoint
+
+`getLimits()` now reuses the shared policy-v2 registry, selecting only applicable
+work/allocation/host-work, runtime/host/pending-memory and host-depth descriptors.
+The returned nested maps are defensive, and remain available on a reachable
+unpowered searcher. Removed shape/count limits and unrelated device settings
+are absent. Player/API documentation and in-game Reference describe the breaking
+introspection shape; query result shapes and production budgets are unchanged.
+
+`tests.recipe_searcher_policy` executes compiled guest code through real wired
+devices and the production continuation/memory guard in base and Space Age.
+It checks both colors, powered/unpowered access, exact descriptor fields against
+computer introspection, defensive nested mutations, return/argument arity and a
+small native recipe query. Its explicit fixture cleanup is not lifecycle or
+cold-job ownership acceptance. The complete legacy query fixture and shared
+large-result/temporary ownership gates remain necessary; task 7.4 stays open.
+
+Exact archive, local summaries, original regression failure and CI receipts for
+this checkpoint are preserved outside git at
+`/home/siredvin/artifacts/tweaked-computers/resource-policy-recipe-limits/`.
 
 ## Focused native regression
 

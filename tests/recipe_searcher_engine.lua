@@ -66,8 +66,9 @@ local cases={
     refused('E_RANGE',s.findRecipes,'item','TC-RS-OVERLAP')
     refused('E_RANGE',s.findRecipes,'fluid','tc-rs-empty')
     refused('E_RANGE',s.findRecipes,'item','iron-plate','tc-missing-category')
-    local l=s.getLimits(); assert(l.recipe_search_results==nil and l.callback_work==500000)
-    l.callback_work=1; assert(s.getLimits().callback_work==500000)
+    local l=s.getLimits(); assert(l.policy_version==2 and l.recipe_search_results==nil and l.callback_work==nil)
+    assert(l.resources.callback_work.limit==computer.getLimits().resources.callback_work.limit)
+    l.resources.callback_work.limit=1; assert(s.getLimits().resources.callback_work.limit==computer.getLimits().resources.callback_work.limit)
   ]]},
   {'exact-fifty-complete-sorted',[[
     local a=s.findRecipes('item','tc-rs-fifty'); assert(#a==50)
@@ -218,7 +219,7 @@ function M.on_tick(event)
     report('native-cardinal-clone-one-drop-and-helper-cleanup')
     assert(peripheral.inventory(c,'red',nop)[x.relay] and peripheral.inventory(c,'green',nop)[s.id])
     lifecycle.power_entity(s).energy=0; s.powered=false
-    guest(c,prefix..[[assert(s.getLimits().recipe_search_results==nil); refused('E_UNPOWERED',s.findRecipes,'item','iron-plate')]])
+    guest(c,prefix..[[assert(s.getLimits().policy_version==2 and s.getLimits().recipe_search_results==nil); refused('E_UNPOWERED',s.findRecipes,'item','iron-plate')]])
     assert(peripheral.inventory(c,'red',nop)[x.relay],'unpowered relay lost discovery')
     lifecycle.power_entity(s).energy=1000; s.powered=true
     guest(c,prefix..[[assert(#s.findRecipes('item','tc-rs-fifty')==50)]])

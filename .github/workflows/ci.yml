@@ -95,6 +95,15 @@ jobs:
             python tools/smoke.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold
           done
+      - name: Check Recipe Searcher resource policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
+          engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/recipe-policy" --mode both \
+            --fixture tests.recipe_searcher_policy
       - name: Check editor contracts and cold workspace recovery
         shell: bash
         run: |
