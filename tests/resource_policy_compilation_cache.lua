@@ -9,7 +9,7 @@ local M={}
 function M.run()
   registry.initialize()
   local saved_cache,saved_compile,saved_host=limits.compiler_cache_bytes,limits.compile_work,limits.host_memory_bytes
-  local native_load=load
+  local native_load,native_reserve=load,memory.reserve
   local source=[[function start()
     computer.log('cache-prefix'); local n=0
     while n<300000 do n=n+1 end
@@ -32,17 +32,58 @@ function M.run()
     for i=1,#a.effects do assert(a.effects[i]==b.effects[i]) end
   end
   local ok,e=pcall(function()
+    local account=policy.host_account(function() end)
+    local used,reserved=account.used,account.reserved
+    local bytes
+    _G.load=function(...)
+      bytes=account.reserved-reserved
+      return native_load(...)
+    end
     local native_source='function start() local x="private native cache"; assert(x~=nil) end'
     local a=admission.context(admission.new(),'native-cold',0)
     local b=admission.context(admission.new(),'native-warm',0)
+    local requests={}
+    memory.reserve=function(owner,amount)
+      assert(owner.account==account)
+      requests[#requests+1]={used=account.used+account.reserved,amount=amount,work=a.machine.compile}
+      return native_reserve(owner,amount)
+    end
     local plan,problem,first=compiler.prepare(native_source,a)
+    _G.load,memory.reserve=native_load,native_reserve
     assert(plan and first,problem and problem.message)
+    assert(bytes>#plan.generated*8,'lowering workspace was not admitted before native loading')
+    assert(#requests>2 and requests[1].amount==2*192+2*48*#first().blocks
+      and requests[#requests].amount==#plan.generated*8,'workspace probe missed its real allocation boundaries')
     local second_plan,second_problem,second=compiler.prepare(native_source,b)
     assert(second_plan and second,second_problem and second_problem.message)
     assert(first==second,'warm reconstruction reloaded unchanged trusted native blocks')
     assert(a.machine.compile==b.machine.compile and a.ledger.total==b.ledger.total)
     local original=first(); local modified=second(); modified.entries.start=nil
     assert(original.entries.start and first().entries.start,'caller mutated cached executable data')
+    -- Refuse inside lowering, including when work and memory would both run out.
+    for _,index in ipairs({1,math.floor(#requests/2),#requests-1}) do
+      local step=requests[index]
+      for _,short_work in ipairs({false,true}) do
+        assert(compiler.prepare(native_source,admission.context(admission.new(),'warm-lowering',0)))
+        limits.host_memory_bytes=step.used+step.amount-1
+        limits.compile_work=short_work and step.work-1 or saved_compile
+        _G.load=function() error('refused lowering reached native loading') end
+        local warm=admission.context(admission.new(),'lowering-warm',0)
+        local refused,reason=compiler.prepare(native_source,warm)
+        assert(not refused and reason.recoverable and reason.resource==(short_work and 'compile_work' or 'host_memory'))
+        limits.compiler_cache_bytes=1
+        local cold=admission.context(admission.new(),'lowering-cold',0)
+        local denied,problem=compiler.prepare(native_source,cold)
+        assert(not denied)
+        for _,field in ipairs({'code','resource','setting','used','requested','limit'}) do
+          assert(problem[field]==reason[field],'lowering refusal changed with cache warmth: '..field)
+        end
+        assert(warm.machine.compile==cold.machine.compile and warm.ledger.total==cold.ledger.total)
+        assert(account.used==used and account.reserved==reserved,'lowering refusal leaked workspace')
+        _G.load=native_load
+        limits.host_memory_bytes=saved_host; limits.compile_work=saved_compile; limits.compiler_cache_bytes=saved_cache
+      end
+    end
     -- One source key may change backend/mode; a foreign proof must never replay.
     local legacy=assert(compiler.compile(native_source,admission.context(admission.new(),'legacy-variant',0)))
     assert(legacy.generated~=plan.generated)
@@ -63,8 +104,6 @@ function M.run()
     assert(evicted_plan and evicted_factory and evicted_factory~=replacement,
       evicted_problem and evicted_problem.message or 'refused source prevented cache-limit reconciliation')
     assert(a.machine.compile==c.machine.compile and a.ledger.total==c.ledger.total)
-    local account=policy.host_account(function() end)
-    local used,reserved=account.used,account.reserved
     local blocked_source='function start() local x=0; '..string.rep('x=x+1; ',3000)..' end'
     limits.host_memory_bytes=used+reserved
     local blocked_context=admission.context(admission.new(),'frontend-memory-full',0)
@@ -82,7 +121,6 @@ function M.run()
     limits.compile_work=saved_compile
     assert(not partial and exhausted.recoverable and exhausted.resource=='compile_work')
     assert(account.used==used and account.reserved==reserved,'frontend work refusal leaked workspace')
-    local bytes=#plan.generated*8 -- Existing native-artifact accounting weight, not measured heap bytes.
     local loads=0
     _G.load=function(...)
       loads=loads+1
@@ -137,7 +175,7 @@ function M.run()
     limits.compiler_cache_bytes=saved_cache; limits.compile_work=saved_compile
     local full=slice(); equal(cold,full)
   end)
-  _G.load=native_load
+  _G.load,memory.reserve=native_load,native_reserve
   limits.compiler_cache_bytes=saved_cache; limits.compile_work=saved_compile; limits.host_memory_bytes=saved_host
   assert(ok,type(e)=='table' and e.message or tostring(e))
   log('TC_CONTRACT continuation-cache-warm-cold-evicted-and-partial-admission-equal')

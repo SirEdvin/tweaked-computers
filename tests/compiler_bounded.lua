@@ -96,7 +96,9 @@ function M.on_tick(event)
     end
     limits.compile_work=f.compile
     f.host_memory=limits.host_memory_bytes
-    limits.host_memory_bytes=1
+    local account=registry.get().host_memory
+    f.pressure_limit=account.used+account.reserved+128+2*192-1
+    limits.host_memory_bytes=f.pressure_limit
     f.phase='memory-refuse'
   elseif f.phase=='memory-refuse' then
     scheduler.dispatch(rec,event.tick); scheduler.dispatch(console,event.tick)
@@ -104,6 +106,7 @@ function M.on_tick(event)
     assert(f.program.checkpoint.frame.pc==f.program_pc and f.command.checkpoint.frame.pc==f.command_pc)
     for _,e in ipairs({rec.resource_refusal,console.resource_refusal}) do
       assert(e.code=='E_CAPACITY' and e.recoverable and e.resource=='host_memory' and e.setting=='tc-host-memory-bytes')
+      assert(e.requested>=2*192,'memory fixture refused before reaching lowering')
     end
     local run,e=runtime.activate(rec.id,event.tick)
     assert(not run and e.recoverable and e.resource=='host_memory')
@@ -125,7 +128,7 @@ function M.on_tick(event)
     assert(f.program.checkpoint.frame.pc==f.program_pc and f.command.checkpoint.frame.pc==f.command_pc)
     limits.compile_work=f.compile
     if f.native_memory then
-      limits.host_memory_bytes=1
+      limits.host_memory_bytes=f.pressure_limit
       assert(compiler.blocked(f.program) and compiler.blocked(f.command),'cold memory refusal lost its hold')
       limits.host_memory_bytes=f.host_memory
     end

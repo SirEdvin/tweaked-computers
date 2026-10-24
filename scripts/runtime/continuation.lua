@@ -429,53 +429,77 @@ function M.lower(main,reject,position,mode)
     for i=#helpers,1,-1 do entry=statement(helpers[i],entry) end
     entries[#entries+1]='['..quote(name)..']='..entry
   end
+  -- Temporary graph tables use the same 192-byte/48-byte-field weights as private jobs.
+  parsing.allocate(2*192+2*48*#flow)
   local live,definitions={},{}
   for i,node in ipairs(flow) do
+    parsing.allocate(2*192)
     live[i]={}; definitions[i]={}
-    for _,ref in ipairs(node.uses) do live[i][ref]=true end
-    for _,ref in ipairs(node.defs) do definitions[i][ref]=true end
+    for _,ref in ipairs(node.uses) do
+      if not live[i][ref] then parsing.allocate(48); live[i][ref]=true end
+    end
+    for _,ref in ipairs(node.defs) do
+      if not definitions[i][ref] then parsing.allocate(48); definitions[i][ref]=true end
+    end
   end
+  parsing.allocate(2*192)
   local predecessors,queue,head={},{},1
   for i,node in ipairs(flow) do
     for _,successor in ipairs(node.next) do
       parsing.enter(1)
       if successor~=0 then
-        predecessors[successor]=predecessors[successor] or {}
+        if not predecessors[successor] then
+          parsing.allocate(192+48); predecessors[successor]={}
+        end
+        parsing.allocate(48)
         predecessors[successor][#predecessors[successor]+1]=i
       end
     end
-    for _,ref in ipairs(node.uses) do queue[#queue+1]={i,ref} end
+    for _,ref in ipairs(node.uses) do
+      parsing.allocate(192+3*48); queue[#queue+1]={i,ref}
+    end
   end
   -- Propagate each new liveness fact once, rather than rescan every loop's CFG.
   while queue[head] do
     local fact=queue[head]; queue[head]=false; head=head+1
-    for _,predecessor in ipairs(predecessors[fact[1]] or {}) do
-      parsing.enter(1)
-      local ref=fact[2]
-      if not definitions[predecessor][ref] and not live[predecessor][ref] then
-        live[predecessor][ref]=true; queue[#queue+1]={predecessor,ref}
+    local previous=predecessors[fact[1]]
+    if previous then
+      for _,predecessor in ipairs(previous) do
+        parsing.enter(1)
+        local ref=fact[2]
+        if not definitions[predecessor][ref] and not live[predecessor][ref] then
+          parsing.allocate(192+4*48)
+          live[predecessor][ref]=true; queue[#queue+1]={predecessor,ref}
+        end
       end
     end
   end
+  parsing.allocate(2*192+48*(#flow+3))
   local cleanups={}
   local fields={s='slots',t='tuples',l='locals'}
   for i,node in ipairs(flow) do
+    parsing.allocate(3*192)
     local transitions,maximum={},0
     local candidates={}
-    for ref in pairs(live[i]) do candidates[ref]=true end
-    for ref in pairs(definitions[i]) do candidates[ref]=true end
-    local ordered={}; for ref in pairs(candidates) do ordered[#ordered+1]=ref end
+    for ref in pairs(live[i]) do parsing.allocate(48); candidates[ref]=true end
+    for ref in pairs(definitions[i]) do
+      if not candidates[ref] then parsing.allocate(48); candidates[ref]=true end
+    end
+    local ordered={}; for ref in pairs(candidates) do parsing.allocate(48); ordered[#ordered+1]=ref end
     table.sort(ordered,function(a,b) parsing.enter(1); return a<b end)
     for _,successor in ipairs(node.next) do
+      parsing.allocate(192)
       local cleanup={}
       for _,ref in ipairs(ordered) do
         parsing.enter(1)
-        if not (live[successor] or {})[ref] then
+        if not live[successor] or not live[successor][ref] then
           local kind,id=ref:sub(1,1),tonumber(ref:sub(2))
+          parsing.allocate(48)
           cleanup[#cleanup+1]='f.'..(kind=='l' and captured[id] and 'cells' or fields[kind])..'['..id..']=nil'
         end
       end
       maximum=math.max(maximum,#cleanup)
+      parsing.allocate(48)
       transitions[#transitions+1]='['..successor..']=function(f) '..table.concat(cleanup,';')..' end'
     end
     cleanups[i]='{'..table.concat(transitions,',')..'}'

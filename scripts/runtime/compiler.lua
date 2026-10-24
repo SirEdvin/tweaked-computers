@@ -371,6 +371,7 @@ local function compile(source, context, mode, durable)
     if registry.get()~=nil then account=policy.host_account(noop)
     else account=memory.new(limits.host_memory_bytes,0,'host_memory') end
     workspace=memory.owner(account)
+    parsing.attach(workspace)
     local retained=cache[source]
     if retained and (retained.plan.mode~=mode or retained.durable~=durable
       or retained.depth~=limits.host_stack_depth) then retained=nil end

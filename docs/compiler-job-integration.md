@@ -50,6 +50,20 @@ the same setting, without initializing world storage. Malformed existing storage
 does not select that fallback. These are deterministic accounting units, not a
 calibrated measurement of native heap usage or complete frontend allocation.
 
+The lowering pass also reserves its liveness/cleanup table workspace before
+growing it: live/definition sets, predecessor lists, propagation records and
+cleanup-index containers use the existing private-graph weights (192 per table,
+48 per field). Reservations conservatively remain until the synchronous pass
+ends, including records that become garbage earlier. This is a temporary arena,
+not a per-tick credit or a new node/count quota. Unneeded empty fallback tables
+are no longer allocated while traversing terminal edges.
+
+The private cache proof interleaves work charges and byte reservations. A warm
+pass batches them only when both complete allowances fit; otherwise it replays
+their original order, preserving the first refusal and paid work prefix when
+both resources are short. Work-only legacy proofs keep their existing replay
+path. Neither the saved-frame ABI nor generated handler behavior changes.
+
 ## Source retention
 
 Saved source and active source/handler metadata have separate owners on the
@@ -79,10 +93,15 @@ separate-process recovery without repeating the completed prefix.
 
 `tests.compiler_native_memory --cold` adds lowered host-memory refusal to those
 same program/Console lanes, preserving the original work-refusal cold case.
+Its memory case permits the compiler owner but refuses inside lowering, then
+cold-resumes the unchanged program and command without repeating their prefix.
 `tests.resource_policy_compilation_cache` checks equal warm/cold memory refusals,
 one-byte-short admission, full-host refusal before parsing, release on parser,
 work and native-loader failures, and retry after either raising the setting or
 releasing other host ownership.
+It additionally checks early, middle and late lowering reservations with memory
+pressure alone and competing work pressure, including exact diagnostic fields
+and release of every temporary reservation.
 
 `tests.resource_policy_sources --cold` covers shared source payloads, atomic Save
 and activation refusal, grandfathered replacement, ownership across native cold
@@ -115,7 +134,8 @@ production budget was raised to fit these observations.
 
 This is not completion of the full resource-policy change or task 4.4. Console
 ingress and other downstream storage guards still need reconciliation. Compiler
-temporary allocation coverage and measured native headroom remain incomplete;
-the native-load reservation does not establish them. Full migration and host-domain
+temporary allocation coverage (tokenizer/parser, initial lowering, emitted strings
+and proof metadata) and measured native headroom remain incomplete; liveness-table
+and native-load reservations do not establish them. Full migration and host-domain
 enrollment also remain open. Resolve these before claiming complete resource
 safety; do not restore the deleted compiler machine to solve them.
