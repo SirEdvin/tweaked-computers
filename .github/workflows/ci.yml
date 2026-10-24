@@ -135,6 +135,15 @@ jobs:
           python tools/smoke.py --factorio "$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/logic-policy-reads" --mode both \
             --fixture tests.logic_policy_reads --data-fixture tests.inventory_data --cold
+      - name: Check modem policy and cold prepared broadcasts
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
+          for fixture in modem_policy modem_broadcast; do
+            python tools/smoke.py --factorio "$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold
+          done
       - name: Check editor contracts and cold workspace recovery
         shell: bash
         run: |

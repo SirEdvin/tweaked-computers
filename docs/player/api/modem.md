@@ -104,6 +104,13 @@ recipient event queue govern resource use. The full event envelope, not only
 payload bytes, must fit the recipient queue. `getLimits()` reports effective
 resource policy plus `channel_min=0` and `channel_max=9007199254740991`.
 
+Its defensive record has `policy_version=2`, `resources` and an empty `tuning`
+map. Each resource gives its `limit`, `unit`, `scope`, `setting` and `behavior`.
+The resources are callback work/allocations, host and maintenance work per tick,
+runtime/host/pending memory, host-stack depth, and event-queue entries/bytes.
+Nested edits do not change settings. Old flat common fields and modem count/rate
+capacities are absent.
+
 The service prepares independent payload copies and a complete delivery plan
 before publishing its first event. Work pressure pauses the same private call;
 there is no public future or sender retry loop. Its saved delivery cursor advances
@@ -111,8 +118,12 @@ after each publication, including an overflowing receiver's single drop. Cold
 reload resumes the undelivered suffix rather than replaying the prefix. Memory
 refusal during preparation leaves receivers unchanged. Current receiver run,
 subscription, power, channel, force, surface, tier and physical wire authority
-are checked again immediately before each event; unavailable recipients are
-skipped. Losing the sender cancels the remaining suffix, never recalls its prefix.
+are checked again immediately before each event. A now-unavailable prepared
+destination with a surviving computer record records one persistent loss with
+reason `modem_destination_unavailable`. Losing the sender cancels the remaining
+suffix, never recalls its prefix. Complete loss attribution for removed computers
+and sender cancellation is still an implementation gate,
+not proven by the current cold-broadcast fixture.
 
 The packaged competition scene combines four 6×6 charts, one maximum-size
 transmission to eight handler registrations every 15 ticks, and a live logic

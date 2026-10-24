@@ -185,6 +185,10 @@ function M.prepare_event(rec,name,payload,tick,spend,metadata)
   local bytes=stats.bytes+128+#rec.id+#rec.run_id
   return {handler=name,event=event,bytes=bytes,timer_id=metadata and metadata.timer_id}
 end
+function M.discard_event(rec,item,tick,reason)
+  -- A previously admitted destination lost authority before publication.
+  drop_event(rec,item.event.name,tick,reason)
+end
 -- Immediate trusted publication of an owned, prepaid prepare_event result.
 function M.publish_event(rec,item,tick)
   if rec.status~='running' or item.event.run_id~=rec.run_id then return false,'inactive' end

@@ -4,6 +4,35 @@ This is an **unfinished implementation checkpoint**, not a release candidate or 
 
 The [source-site disposition inventory](resource-policy-inventory.md) maps every policy-manifest audit row and shared limit constant to its implementation paths and required treatment. Inventory coverage is not proof that those limits have been removed.
 
+## Modem policy and scheduled broadcast checkpoint
+
+`modem.getLimits()` uses defensive policy-v2 resource descriptors and the inclusive
+safe-integer channel domain, rather than exposing the shared flat constants.
+API/player/Reference text no longer advertises removed modem count/rate capacities
+or receiver-overflow faults. No production budget or native authority rule changes.
+
+`tests.modem_policy` uses actual wired radars, two saved programs, the scheduler
+and runtime/host memory guards. It checks 132 shared channels, both wire colors,
+safe-integer boundaries, idempotency, invalid arguments, unpowered introspection,
+Stop preservation, cold ownership identity and closing/releasing the set.
+`tests.modem_broadcast` uses three native receiving radars with four guest-created
+registrations each. A full twelve-event broadcast checks independent 4,097-byte
+payloads; a second broadcast freezes after four publications using test-only private
+work suspension. Separate-process reload retains that prefix/run/plan and resumes
+the suffix after one receiving radar loses power. Eight events are delivered once,
+and four unavailable destinations are recorded once in the surviving receiving
+computer's persistent loss diagnostics through the existing event-drop path.
+The sender still receives zero values, not an acknowledgement or retry request.
+
+These are real scheduled service calls, not `radio_test_guard` doubles; only the
+cold boundary is injected. They do not establish complete temporary/aggregate
+ownership, large-candidate admission, removed-computer/sender-cancellation loss
+attribution, all force/surface/platform cases or connected multiplayer. Tasks 8.1
+and 8.2 remain open. The existing guard-double radio and legacy integrated modem
+fixtures remain separate gates, not substitutes for this native regression.
+Evidence is kept outside git at
+`/home/siredvin/artifacts/tweaked-computers/resource-policy-modem-broadcast/`.
+
 ## Registration result admission checkpoint
 
 Computer `on/off/after/every/cancelTimer` and Logic `subscribe/unsubscribe` now

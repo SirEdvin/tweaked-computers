@@ -7,7 +7,11 @@ local radar=require('scripts.radar')
 local data=require('scripts.runtime.data')
 local errors=require('scripts.runtime.errors')
 local common=require('scripts.runtime.limits')
+local policy=require('scripts.runtime.resource-policy')
 local M={methods={}}
+local policy_keys={callback_work=true,callback_allocations=true,host_work_per_tick=true,maintenance_work_per_tick=true,
+  runtime_memory_bytes=true,host_memory_bytes=true,pending_work_bytes=true,host_stack_depth=true,
+  event_queue_entries=true,event_queue_bytes=true}
 local MAX=9007199254740991
 local function arity(n,want) if n~=want then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end end
 local function channel(value)
@@ -22,7 +26,7 @@ local function channels(rec,s,count,guard)
 end
 function M.methods.getLimits(c,r,w,t,spend,guard,...)
   arity(select('#',...),0)
-  local result={}; for k,v in pairs(common) do result[k]=v end
+  local result=policy.limits(policy_keys)
   result.channel_min=0; result.channel_max=MAX
   return result
 end
@@ -194,6 +198,9 @@ function M.methods.transmit(c,r,w,t,spend,guard,...)
       if not errors.integer(root.next_sequence,1,MAX-1) then errors.raise('E_CAPACITY','modem event sequence exhausted') end
       -- Metadata remains the prepared receive-time route; authority above is live.
       runtime.publish_event(computer,delivery.item,game.tick)
+    else
+      local destination=registry.record(delivery.computer)
+      if destination then runtime.discard_event(destination,delivery.item,game.tick,'modem_destination_unavailable') end
     end
     job.cursor=job.cursor+1
   end

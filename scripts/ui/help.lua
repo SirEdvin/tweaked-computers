@@ -256,16 +256,18 @@ Native radar: unchanged scanning, circuits, power, GUI and mining; no adapter it
 find("modem", wire); numeric channels are not red/green discovery colors.
 Shared radio guidance: all methods except getLimits require an active, electrically
 supplied radar. Discovery wire and numeric radio channel are independent.
-Channels 0..65535; 128 shared open channels per physical radar, across all callers.
+Channels 0..9007199254740991; shared host-memory admission, no channel-count cap.
 closeAll affects other computers too. Stop does not close the shared channels.
 computer.on("modem_message", "received") registers a saved named handler.
 Event: peripheral (receiver), wire/wires, channel, replyChannel, message, distance?,
 sent_tick; nil payload is an absent message, false is preserved. Same-radar echo
 is excluded. Both-color paths deduplicate; two receiving radars remain distinct.
-Whole-send proof/copies/fanout are admitted before publication; overflow faults
-the recipient, not a retryable partial sender error. No ACK/retry/offline mailbox.
-Payloads: bounded Data plus explicit third-argument nil. Check getLimits for
-finite payload/candidate/delivery/rate caps; Console and programs share credits.
+Whole-send proof/copies/fanout are admitted before publication. Work can pause;
+cold reload continues the unfinished suffix without replay. Queue overflow drops
+the newest delivery and counts the loss, without retiring the receiving run.
+Unavailable prepared destinations with a surviving computer record count a loss.
+No ACK/retry/offline mailbox. Payloads are Data plus explicit third-argument nil.
+getLimits describes work/memory/queue resources, not candidate/delivery/rate caps.
 Same-force/same-surface unlimited-distance radio. Space Age advanced endpoints
 at BOTH ends allow cross-surface traffic, including travelling platforms.
 Advanced: 5x5, 1.5x native art, 1MW; six-pack research excludes military/planet packs.
@@ -273,8 +275,9 @@ Hidden native radar links and received names never grant remote device authority
 No rednet, callRemote, remote inventory or pullEvent. Channels/queues survive cold
 load without replay; replacement/clone and force/surface changes clear channels.
 
-open(channel) -> no values. Integer channel 0..65535; idempotent. At most 128
-shared open channels per physical radar across colors, computers and Console.
+open(channel) -> no values. Integer channel 0..9007199254740991; idempotent.
+Channels are shared across colors, computers and Console. Memory refusal leaves
+the set unchanged; reads and closing channels do not require retained growth.
 
 
 isOpen(channel) -> boolean. Validates the channel and reads the physical radar's
@@ -290,14 +293,16 @@ caller. Does not recall messages; stopping a program alone does not close channe
 
 
 transmit(channel, replyChannel, payload) -> no values. Both channels are integers
-0..65535; the explicit third argument accepts bounded Data or nil. Sending need
+0..9007199254740991; the explicit third argument accepts Data or nil. Sending need
 not open either channel. Whole-send admission precedes publication; no ACK/retry.
 
 
 isWireless() -> true. This is radio transport, never remote discovery authority.
 
 
-getLimits() -> copied common/modem payload, candidate, delivery and rate caps.
+getLimits() -> defensive policy_version=2 record: resources, empty tuning,
+channel_min=0 and channel_max=9007199254740991. Resource descriptors contain
+limit, unit, scope, setting and behavior; removed count capacities are absent.
 Available on a reachable unpowered radar; it does not open channels or send traffic.
 
 LOGIC HANDLER
