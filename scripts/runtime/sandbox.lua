@@ -283,13 +283,15 @@ function M.new(context, services, shell, durable)
     prepare_checkpoint(result)
     return true
   end
-  function G.call(fn,...)
+  local function call(unpacked,fn,...)
     G.check()
     if type(fn)~='function' then fail('callable function required') end
     -- Top-level handlers are compiler-generated; nested values are guarded closures.
     local n=select('#',...)
     if n>limits.tuple_entries then fatal('argument width exceeded') end
-    G.spend(n+1); allocate(n+1)
+    -- The continuation prepays its scan and can forward undecoded arguments
+    -- directly. Only the call frame exists then, not an argument vector.
+    G.spend(unpacked and 1 or n+1); allocate(unpacked and 1 or n+1)
     if depth>=limits.host_stack_depth then G.refuse_depth(depth) end
     local caller_line,caller_column=line,column
     depth=depth+1
@@ -319,6 +321,8 @@ function M.new(context, services, shell, durable)
     line,column=caller_line,caller_column
     return table.unpack(result,2,result.n)
   end
+  function G.call(fn,...) return call(false,fn,...) end
+  function G.call_unpacked(fn,...) return call(true,fn,...) end
   function G.iter(fn,state,control)
     if type(fn)~='function' then fail('iterator function required') end
     G.spend(3); allocate(1)
@@ -412,7 +416,7 @@ function M.new(context, services, shell, durable)
         plain(t); key(k)
         if t[k]~=nil and v~=nil then
           -- Membership and table storage are unchanged; admit only the new payload.
-          if heap then
+          if heap and type(v)=='string' and not heap.values[v] then
             G.host_work(16,8)
             local items={}; string_charge(items,v); memory.acquire_all(heap,items)
           end
@@ -422,11 +426,17 @@ function M.new(context, services, shell, durable)
           local keys=owned[t].keys
           local count=#keys+1
           if not heap and count>limits.table_entries then errors.raise('E_LIMIT','table growth exceeded') end
-          G.host_work(24,12)
-          if heap then
-            local items={{t,192+48*count}}
-            string_charge(items,k); string_charge(items,v)
-            memory.acquire_all(heap,items)
+          if heap and (type(k)~='string' or heap.values[k]) and (type(v)~='string' or heap.values[v]) then
+            -- Only this table grows; no multi-object transaction or payload vectors.
+            G.host_work(6,2)
+            memory.resize(heap,t,192+48*count)
+          else
+            G.host_work(24,12)
+            if heap then
+              local items={{t,192+48*count}}
+              string_charge(items,k); string_charge(items,v)
+              memory.acquire_all(heap,items)
+            end
           end
           -- Only the new entry changes ownership; publish after the complete proof.
           keys[count]=k

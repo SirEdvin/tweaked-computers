@@ -10,9 +10,9 @@ local function guard_before_publication(body,marker)
   local checkpoint,seen={},0; local original=sandbox.new
   sandbox.new=function(...)
     local g=original(...); local scalar=g.scalar
-    g.scalar=function(value)
+    g.scalar=function(value,...)
       if value==marker then seen=seen+1; errors.raise('E_ARGUMENT','local scalar guard marker') end
-      return scalar(value)
+      return scalar(value,...)
     end
     return g
   end
@@ -37,10 +37,24 @@ local function sample(count,descriptor,multiple,indexed,native)
   assert(ok and effects==1,e and e.message or control)
   return ctx.machine.allocations,ctx.machine.work
 end
+local function binding_work(length,count,descriptor)
+  local body='local text='..string.format('%q',string.rep('x',length))..'; local n=0; while n<'..count..
+    ' do local value=text; n=n+1 end'
+  local source=descriptor and 'return {api_version=1,handlers={start=function() '..body..' end}}'
+    or 'function start() '..body..' end'
+  local ctx=admission.context(admission.new(),'string-local',0)
+  local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
+  local ok,e,control=compiler.run(plan,'start',nil,{},ctx,{})
+  assert(ok,e and e.message or control)
+  return ctx.machine.work
+end
 function M.run()
   guard_before_publication('local value=1',1)
   guard_before_publication('local first,second=1,2',2)
   for _,descriptor in ipairs({false,true}) do
+    local short=binding_work(8,100,descriptor)-binding_work(8,0,descriptor)
+    local long=binding_work(2048,100,descriptor)-binding_work(2048,0,descriptor)
+    assert(long==short,'scalar local binding scanned immutable string payloads')
     local base_alloc,base_work=sample(0,descriptor)
     local alloc,work=sample(1000,descriptor)
     log('TC_SCALAR_LOCAL descriptor='..tostring(descriptor)..' allocation_delta='..(alloc-base_alloc)..' work_delta='..(work-base_work))
@@ -53,7 +67,7 @@ function M.run()
     assert(indexed_alloc-indexed_base==2000,'single indexed updates allocated discarded target vectors: '..(indexed_alloc-indexed_base))
     local call_base=sample(2,descriptor,false,false,true)
     local call_alloc=sample(1002,descriptor,false,false,true)
-    assert(call_alloc-call_base==5000,'host calls allocated duplicate argument vectors: '..(call_alloc-call_base))
+    assert(call_alloc-call_base==4000,'host calls allocated duplicate argument vectors: '..(call_alloc-call_base))
   end
   log('TC_CONTRACT both-source-scalar-local-loops-retain-one-binding-allocation-per-update')
   local ledger=admission.new(); local ctx=admission.context(ledger,'local-old-ABI',0)

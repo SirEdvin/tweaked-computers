@@ -173,6 +173,7 @@ local function single_replacement()
     local work,allocations=ctx.machine.work,ctx.machine.allocations
     g.assignment_one(value,width,true); value[width]=true
     local spent,allocated=ctx.machine.work-work,ctx.machine.allocations-allocations
+    assert(allocated==1,'unchanged scalar slot built a redundant retained-admission batch')
     assert(checkpoint.owned[value].keys==keys and #keys==width)
     local used,count=account.used,owner.count
     memory.configure(account,used)
@@ -182,6 +183,14 @@ local function single_replacement()
     memory.configure(account,1)
     g.assignment_one(value,width,false); value[width]=false
     assert(checkpoint.owned[value].keys==keys)
+    same(account,used,count,owner)
+    memory.configure(account,1000000)
+    local retained=g.new(1,function() return {'already retained'} end)
+    used,count=account.used,owner.count
+    memory.configure(account,1)
+    allocations=ctx.machine.allocations
+    g.assignment_one(value,width,retained[1]); value[width]=retained[1]
+    assert(ctx.machine.allocations-allocations==1,'retained string replacement rebuilt its admission batch')
     same(account,used,count,owner)
     memory.close(owner,function() end)
     return spent,allocated
@@ -208,6 +217,7 @@ local function single_insertion()
     local work,allocations=ctx.machine.work,ctx.machine.allocations
     g.assignment_one(value,width+1,false); value[width+1]=false
     local spent,allocated=ctx.machine.work-work,ctx.machine.allocations-allocations
+    assert(allocated==3,'scalar insertion built a redundant multi-object admission batch')
     assert(checkpoint.owned[value].keys==keys and #keys==width+1 and keys[width+1]==width+1)
     assert(account.values[value].bytes==192+48*(width+1))
     used,count=account.used,owner.count

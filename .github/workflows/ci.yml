@@ -75,7 +75,7 @@ jobs:
           set -euo pipefail
           archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
           engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
-          for fixture in resource_policy_capacity resource_policy_runtime resource_policy_computer resource_policy_language_control; do
+          for fixture in resource_policy_capacity resource_policy_runtime resource_policy_computer resource_policy_language_control resource_policy_scalar_locals; do
             python tools/smoke.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture"
           done

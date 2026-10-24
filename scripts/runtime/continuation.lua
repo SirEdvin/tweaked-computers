@@ -257,7 +257,7 @@ function M.lower(main,reject,position,mode)
       if lhs.node_type=='local_ref' or lhs.node_type=='upval_ref' then local _; _,first_id=register(lhs) end
       if #n.lhs==1 and lhs.node_type=='local_ref' and not captured[first_id] and n.rhs and #n.rhs==1 then
         local ref=register(lhs); local out=slot()
-        local pc=block(n,'r.guard.scalar(r.decode('..value(out)..')); '..ref..'=r.guard.bind(1,'..value(out)..')',
+        local pc=block(n,'r.guard.scalar(r.decode('..value(out)..'),true); '..ref..'=r.guard.bind(1,'..value(out)..')',
           nextpc,{'s'..out},{'l'..locals[lhs.reference_def]})
         return expression(n.rhs[1],out,pc)
       end
@@ -807,14 +807,24 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     f.pending=f.pending or {block=f.pc}
     assert(f.pending.block==f.pc,'mismatched pending call')
     guard.call_checkpoint(f.pending,codec)
-    local args=table.pack(...)
     local path=checkpoint.symbols[symbol]
     local raw=path=='type' or path=='error' or path=='assert' or path=='rawequal' or path=='rawget' or path=='rawset' or path=='rawlen'
       or path=='next' or path=='pairs' or path=='ipairs' or path=='@ipairs-next' or path and path:sub(1,6)=='table.'
-    if not raw then for i=1,args.n do args[i]=r.decode(args[i]) end end
+    local count=select('#',...)
+    guard.atomic(count,0)
+    local direct=true
+    if not raw then
+      for i=1,count do if type(select(i,...))=='table' then direct=false; break end end
+    end
     local fn=r.decode(symbol)
     if not guard.is_callable(fn) then errors.raise('E_ARGUMENT','approved callable required') end
-    local result=table.pack(guard.call(fn,table.unpack(args,1,args.n)))
+    local result
+    if direct then result=table.pack(guard.call_unpacked(fn,...))
+    else
+      local args=table.pack(...)
+      for i=1,count do args[i]=r.decode(args[i]) end
+      result=table.pack(guard.call(fn,table.unpack(args,1,count)))
+    end
     local prepared=f.pending.prepared
     result=prepared and f.pending.call_result==prepared.called and prepared.values or codec.encode(result,true)
     f.tuples[out]=result
