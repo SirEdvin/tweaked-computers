@@ -19,11 +19,26 @@ Space Age. CI runs this same fixture before the separately failing legacy
 integration step; it is moved, not skipped or replaced with a smaller fixture.
 Evidence, including the original failure, is preserved at
 `/home/siredvin/artifacts/tweaked-computers/resource-policy-workspace-ownership/`.
+The later `editor_contract` Console assertion was using a parked recovery-only
+frame after its execution session had correctly been retired. The fixture now
+verifies that hidden Save remains inert, closes the retained recovery frame and
+explicitly opens a fresh session before checking live Console retention. Its
+runaway-program case now checks the approved suspension contract rather than
+the superseded fatal-budget expectation: protected suspension cannot reach the
+following effect or renew same-tick credits, a healthy peer progresses, and Stop
+cancels the continuation while preserving source.
+
+All 14 editor contract groups pass in both modes; the dependent `editor_cold`
+fixture also passes separate-process save/reload with dirty/saved/active source
+divergence, spent credits and no startup or timer replay. The unchanged complete
+workspace fixture still passes in both modes. CI runs all three fixtures before
+legacy integration without dropping their assertions or changing production code.
+Their exact archives, original/intermediate failures and clean shutdown receipts
+are preserved at
+`/home/siredvin/artifacts/tweaked-computers/resource-policy-editor-contracts/`.
 These are packaged engine runs with table-mocked GUI/player objects, not native
-keyboard, rendering, focus or connected multiplayer acceptance. A separate
-`editor_contract` probe still fails at its Console truncation assertion; that
-failure is preserved rather than counted as a pass. No additional OpenSpec task
-is complete: the overall checklist remains **13/47**, with Configurator
+keyboard, rendering, focus or connected multiplayer acceptance. No additional
+OpenSpec task is complete: the checklist remains **13/47**, with Configurator
 result/recovery admission and the other implementation gates still open.
 
 ## Event-loss warning checkpoint

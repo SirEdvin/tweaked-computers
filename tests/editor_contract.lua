@@ -296,8 +296,14 @@ function M.run()
       local rejected=string.rep('x',#source(29)+1)
       edit(a,f,rejected); assert(f.content.editor.source.text==rejected and model.session(a.index).unretained)
       click(a,f.content.editor.actions.save); assert(rec.saved_source==saved)
+      local token=model.session(a.index).token
       click(a,f.title.close); assert(f.valid and f.content.editor.source.text==rejected)
+      assert(f.tags.input_recovery and not model.session(a.index))
       limits.draft_storage_bytes=allowance; edit(a,f,source(29))
+      click(a,f.content.editor.actions.save); assert(rec.saved_source==saved and not model.session(a.index))
+      click(a,f.title.close); assert(not f.valid)
+      assert(editor.open(a,rec.id)); f=a.gui.screen[editor.frame_name]
+      assert(model.session(a.index).token~=token and f.content.editor.source.text==source(29))
       f.content.selected_tab_index=5; editor.on_tab{player_index=a.index,element=f.content,tick=tick}
       f.content.maintenance.recovery.selected_index=1; editor.refresh(a); assert(f.content.maintenance.recovery.selected_index==1)
       for i=1,limits.console_entries+4 do runtime.log(rec,'[font=anything]'..i,tick) end
@@ -325,13 +331,19 @@ function M.run()
   end)
   game=real_game
   if not ok then error(e,0) end
-  group('editor-malicious-active-source-faults-healthy-peer-continues',function()
+  group('editor-runaway-source-waits-healthy-peer-continues-and-stop-cancels',function()
     local bad=make(40); local good=make(45)
-    runtime.save(bad.id,'return {api_version=1,handlers={start=function(e) pcall(function() while true do end end) end}}',0)
+    runtime.save(bad.id,'return {api_version=1,handlers={start=function(e) pcall(function() while true do end end); computer.setState("unsafe",true) end}}',0)
     runtime.save(good.id,source(31),0)
     assert(runtime.activate(bad.id,tick)); assert(runtime.activate(good.id,tick))
-    assert(scheduler.dispatch(bad,tick+1)); assert(bad.status=='faulted' and bad.diagnostic.code=='E_BUDGET')
+    assert(scheduler.dispatch(bad,tick+1))
+    assert(bad.status=='running' and bad.invocation and not bad.diagnostic and not bad.state.unsafe)
+    local spent=runtime.context(bad,tick+1).machine.work
+    assert(not scheduler.dispatch(bad,tick+1) and runtime.context(bad,tick+1).machine.work==spent)
     assert(scheduler.dispatch(good,tick+1)); assert(good.state.value==31 and good.status=='running')
+    local saved=bad.saved_source
+    assert(runtime.stop(bad.id) and bad.status=='stopped' and not bad.invocation)
+    assert(bad.saved_source==saved and not bad.state.unsafe and good.state.value==31)
   end)
   group('editor-starter-validate-save-run-print-once-and-timer',function()
     local c=make(48); local p=M.player(1010,c.body)
