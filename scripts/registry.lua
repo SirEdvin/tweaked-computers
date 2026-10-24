@@ -142,6 +142,7 @@ function M.remove(id,reason)
   if rec.host_channels then
     memory.release(root.host_memory_owner,rec.host_channels); rec.host_channels=nil
   end
+  memory.retire(rec.saved_source_memory); memory.retire(rec.active_source_memory)
   rec.status='removed'; rec.queue={}; rec.timers={}; rec.subscriptions={}
   for unit,binding in pairs(root.entities) do if binding.id==id then root.entities[unit]=nil end end
   root.computers[id]=nil; root.devices[id]=nil

@@ -7,11 +7,23 @@ local parsing = require('scripts.runtime.parse_admission')
 local errors = require('scripts.runtime.errors')
 local sandbox = require('scripts.runtime.sandbox')
 local continuation = require('scripts.runtime.continuation')
-local compiler_machine = require('scripts.runtime.compiler-machine')
+local policy = require('scripts.runtime.resource-policy')
+local memory = require('scripts.runtime.memory')
+local registry = require('scripts.registry')
+
 local M = {}
+local function noop() end
+local function native_bytes(generated) return #generated*8 end
+local function load_native(owner,generated,durable,retained)
+  -- Reuse the cache's deterministic artifact weight; heap calibration is separate.
+  memory.reserve(owner,native_bytes(generated))
+  if retained then return retained.factory end
+  return load(generated,durable and '@continuation' or '@computer','t',{})
+end
 -- Host-only, bounded, exact-source validation cache. No caller-owned plan or
 -- executable closure is trusted. Replay every original charge, in order, so
 -- warm/cold peers retain identical admission and partial-refusal behavior.
+-- Keep the last variant per source; do not copy source into composite keys.
 local cache,cache_bytes={},0
 local function prune_cache()
   if cache_bytes>limits.compiler_cache_bytes then cache,cache_bytes={},0 end
@@ -70,36 +82,47 @@ local function shell_name(name,node,write)
   if forbidden[name] or write and (globals[name] or name=='print') then reject(node,'unavailable shell global: '..name) end
   return name
 end
-local function emit(main,mode,expression)
+local function emit(main,mode,expression,validation_only)
+  -- The durable backend needs this validation, not a second generated program.
+  local function join(parts,separator)
+    if validation_only then return '' end
+    return table.concat(parts,separator)
+  end
+  local function quote(value)
+    if validation_only then return '' end
+    return string.format('%q',value)
+  end
   local function coordinates(node)
+    if validation_only then return '' end
     local l,c=position(node)
     if expression and l==1 then c=math.max(1,c-7) end
     return l..','..c
   end
-  local nodes, nesting, generated, temp = 0, 0, 0, 0
+  local nodes, nesting, temp = 0, 0, 0
   local exports
   local variadic=false
   local expr, body, statement, func
   local function visit(n)
     parsing.enter(1)
     nodes, nesting = nodes + 1, nesting + 1
-    if nesting > (limits.host_stack_depth or limits.callback_depth) then reject(n, 'compiler host depth exceeded', 'E_CAPACITY') end
+    if nesting > limits.host_stack_depth then
+      errors.refuse('host_stack_depth','tc-host-stack-depth',nesting-1,1,limits.host_stack_depth,'compiler host depth exceeded')
+    end
   end
   local function leave(text)
     nesting = nesting - 1
     return text
   end
   local function text(s)
+    if validation_only then return '' end
     parsing.enter(#s)
-    generated = generated + #s
-
     return s
   end
   local function list(xs)
 
-    local out = {}
-    for i,n in ipairs(xs) do out[i] = expr(n) end
-    return table.concat(out, ',')
+    local out = not validation_only and {}
+    for i,n in ipairs(xs) do local value=expr(n); if out then out[i]=value end end
+    return join(out, ',')
   end
   function func(n)
     visit(n)
@@ -110,7 +133,8 @@ local function emit(main,mode,expression)
     if n.is_vararg then names[#names+1] = '...' end
     local previous=variadic; variadic=n.is_vararg
     local contents=body(n); variadic=previous
-    local result = 'function('..table.concat(names, ',')..') __tc.enter('..coordinates(n)..','..#n.params..'); '..contents..' end'
+    if validation_only then return leave('') end
+    local result = 'function('..join(names, ',')..') __tc.enter('..coordinates(n)..','..#n.params..'); '..contents..' end'
     return leave(result)
   end
   function expr(n)
@@ -119,7 +143,7 @@ local function emit(main,mode,expression)
     if k == 'number' then
       if not errors.finite(n.value) then reject(n, 'nonfinite numeric literal') end
       s = n.src_value or tostring(n.value)
-    elseif k == 'string' then s = string.format('%q', n.value)
+    elseif k == 'string' then s = quote(n.value)
     elseif k == 'nil' then s = 'nil'
     elseif k == 'boolean' then s = tostring(n.value)
     elseif k == 'local_ref' or k == 'upval_ref' then s = identifier(n.name,n)
@@ -130,8 +154,8 @@ local function emit(main,mode,expression)
         if mode=='shell' then shell_name(name,n.suffix,false)
         elseif not globals[name] and not (exports and exports[name]) then reject(n.suffix, 'unavailable global: '..name) end
         if exports and exports[name] then
-          s = '__tc.get(__tc_functions,'..string.format('%q',name)..')'
-        else s = '__tc.global('..string.format('%q',name)..')' end
+          s = '__tc.get(__tc_functions,'..quote(name)..')'
+        else s = '__tc.global('..quote(name)..')' end
       else s = '__tc.get('..expr(n.ex)..','..expr(n.suffix)..')' end
     elseif k == 'call' then
       if n.is_selfcall then reject(n, 'colon calls are not supported') end
@@ -145,7 +169,7 @@ local function emit(main,mode,expression)
         elseif f.type == 'rec' or f.type == 'record' then out[i] = '['..expr(f.key)..']='..expr(f.value)
         else reject(n, 'unsupported constructor field: '..tostring(f.type)) end
       end
-      s = '__tc.new('..#n.fields..',function('..(variadic and '...' or '')..') return {'..table.concat(out,',')..'} end'..(variadic and ',...' or '')..')'
+      s = '__tc.new('..#n.fields..',function('..(variadic and '...' or '')..') return {'..join(out,',')..'} end'..(variadic and ',...' or '')..')'
     elseif k == 'unop' then
       if n.op == 'not' then s = '(not __tc.scalar('..expr(n.ex)..'))'
       elseif n.op == '-' then s = '(-__tc.number('..expr(n.ex)..'))'
@@ -167,9 +191,9 @@ local function emit(main,mode,expression)
     return leave(text(s))
   end
   function body(scope)
-    local out, stat = {}, scope.body.first
-    while stat do out[#out+1] = statement(stat); stat = stat.next end
-    return table.concat(out, '\n')
+    local out, stat = not validation_only and {}, scope.body.first
+    while stat do local value=statement(stat); if out then out[#out+1]=value end; stat = stat.next end
+    return join(out, '\n')
   end
   function statement(n)
     visit(n)
@@ -178,7 +202,7 @@ local function emit(main,mode,expression)
     elseif k == 'localstat' then
       local names = {}; for i,p in ipairs(n.lhs) do names[i] = identifier(p.name,p) end
 
-      s = 'local '..table.concat(names,',')..' = __tc.bind('..#names..(n.rhs and #n.rhs > 0 and ','..list(n.rhs) or '')..');'
+      s = 'local '..join(names,',')..' = __tc.bind('..#names..(n.rhs and #n.rhs > 0 and ','..list(n.rhs) or '')..');'
     elseif k == 'localfunc' then
       local name = identifier(n.name.name,n.name)
       s = 'local '..name..'; '..name..'=__tc.closure('..func(n.func_def)..');'
@@ -197,7 +221,7 @@ local function emit(main,mode,expression)
         elseif mode=='shell' and global(lhs) then
           local name=shell_name(lhs.suffix.value,lhs.suffix,true)
           indexed=indexed+1
-          out[#out+1]=prefix..'targets['..i..']={__tc.shell_root(),'..string.format('%q',name)..'};'
+          out[#out+1]=prefix..'targets['..i..']={__tc.shell_root(),'..quote(name)..'};'
           targets[i]=prefix..'targets['..i..'][1]['..prefix..'targets['..i..'][2]]'
         elseif lhs.node_type == 'index' and not global(lhs) then
           indexed=indexed+1
@@ -215,8 +239,8 @@ local function emit(main,mode,expression)
       out[#out+1]='end'
       if indexed==0 then
         -- Plain lexical writes need no heap staging or private native locals.
-        s=table.concat(targets,',')..'=__tc.move('..count..rhs..');'
-      else s = table.concat(out, '\n') end
+        s=join(targets,',')..'=__tc.move('..count..rhs..');'
+      else s = join(out, '\n') end
     elseif k == 'call' then s = expr(n)..';'
     elseif k == 'retstat' then s = 'do return __tc.values('..list(n.exp_list)..') end'
     elseif k == 'breakstat' then s = 'do break end'
@@ -228,18 +252,18 @@ local function emit(main,mode,expression)
     elseif k == 'forlist' then
       local names = {}; for i,p in ipairs(n.name_list) do names[i] = identifier(p.name,p) end
 
-      s = 'for '..table.concat(names,',')..' in __tc.iter('..list(n.exp_list)..') do __tc.loop('..coordinates(n.for_token)..','..#names..'); '..body(n)..' end'
+      s = 'for '..join(names,',')..' in __tc.iter('..list(n.exp_list)..') do __tc.loop('..coordinates(n.for_token)..','..#names..'); '..body(n)..' end'
     elseif k == 'ifstat' then
       local out = {}
       for i,b in ipairs(n.ifs) do out[#out+1] = (i == 1 and 'if ' or 'elseif ')..expr(b.condition)..' then '..body(b) end
       if n.elseblock then out[#out+1] = 'else '..body(n.elseblock) end
-      out[#out+1] = 'end'; s = table.concat(out,'\n')
+      out[#out+1] = 'end'; s = join(out,'\n')
     else reject(n,'unsupported statement: '..tostring(k)) end
     return leave(text('__tc.step('..coordinates(n)..'); '..s))
   end
   if mode=='shell' then
     local output='return function() '..body(main)..' end'
-    parsing.enter(#output)
+    if not validation_only then parsing.enter(#output) end
 
     return output,{},nodes
   end
@@ -284,13 +308,13 @@ local function emit(main,mode,expression)
       if stat.node_type=='funcstat' then
         visit(stat)
         local name=stat.name.suffix.value
-        out[#out+1]=leave(text('__tc_functions['..string.format('%q',name)..']=__tc.closure('..func(stat.func_def)..');'))
+        out[#out+1]=leave(text('__tc_functions['..quote(name)..']=__tc.closure('..func(stat.func_def)..');'))
       else out[#out+1]=statement(stat) end
       stat=stat.next
     end
     out[#out+1]=text('return __tc_functions')
-    local output=table.concat(out,'\n')
-    parsing.enter(#output)
+    local output=join(out,'\n')
+    if not validation_only then parsing.enter(#output) end
 
     return output,names,nodes
   end
@@ -322,32 +346,40 @@ local function emit(main,mode,expression)
     local name = identifier(f.key.value, f.key)
     if not name:match('^[a-zA-Z_][a-zA-Z_0-9]*$') or names[name] then reject(f.key,'invalid or duplicate handler name') end
     names[name] = true
-    handlers[#handlers+1] = '['..string.format('%q',name)..']='..func(f.value.func_def)
+    handlers[#handlers+1] = '['..quote(name)..']='..func(f.value.func_def)
 
   end
-  local output = 'return {'..table.concat(handlers,',\n')..'}'
+  local output = 'return {'..join(handlers,',\n')..'}'
 
-  parsing.enter(#output)
+  if not validation_only then parsing.enter(#output) end
   return output, names, nodes
 end
 
-function M.compile(source, context, mode)
+local function compile(source, context, mode, durable)
   if mode~=nil and mode~='shell' then return nil,errors.new('E_ARGUMENT','unknown compiler mode') end
   if type(source) ~= 'string' then return nil, errors.new('E_ARGUMENT','source must be a string') end
 
-  local cache_key=(mode or 'program')..'\0'..source
-  prune_cache()
-  local retained=cache[cache_key]; local charges=not retained and {} or nil
+  local charges
   local expression_source=false
-  parsing.begin(context,charges)
+  local factory,workspace
+  prune_cache() -- Constant-time disposal must also honor decreases on refused input.
+  parsing.begin(context)
   local ok, plan = pcall(function()
+    -- Admission precedes source hashing/copying, including on warm peers.
+    parsing.enter(#source * 2 + 1)
+    local account
+    if registry.get()~=nil then account=policy.host_account(noop)
+    else account=memory.new(limits.host_memory_bytes,0,'host_memory') end
+    workspace=memory.owner(account)
+    local retained=cache[source]
+    if retained and (retained.plan.mode~=mode or retained.durable~=durable
+      or retained.depth~=limits.host_stack_depth) then retained=nil end
     if retained then
-      if context and not admission.replay_compile(context,retained.charges) then
-        errors.raise('E_BUDGET','source compilation work exhausted')
-      end
+      parsing.replay(retained.charges)
+      factory=load_native(workspace,retained.plan.generated,durable,retained)
       return plan_copy(retained.plan)
     end
-    parsing.enter(#source * 2 + 1)
+    charges={}; parsing.record(charges)
     -- The bounded pinned tokenizer also validates identifiers before AST parsing.
     local iter,state,index = tokenize(source,'@computer')
     local count = 0
@@ -374,9 +406,16 @@ function M.compile(source, context, mode)
       error(e,0)
     end
     expression_source=expression==true
-    local generated,names,nodes = emit(main,mode,expression)
+    local generated,names,nodes = emit(main,mode,expression,durable)
+    if durable then
+      -- Reuse the validated AST. Loading the discarded whole-handler wrapper
+      -- would impose its native local-register limit on our durable-cell backend.
+      generated=continuation.lower(main,reject,position,mode)
+      parsing.enter(#generated)
+    end
     -- Native load here is only syntax verification of bounded, emitted text; no candidate code runs.
-    local factory, diagnostic = load(generated,'@computer','t',{})
+    local diagnostic
+    factory, diagnostic = load_native(workspace,generated,durable)
     if not factory then
       -- Native syntax/resource refusal belongs to the source document, not a
       -- generated-wrapper line. Runtime body probes retain precise positions.
@@ -386,58 +425,43 @@ function M.compile(source, context, mode)
       generated=generated, handlers=names, nodes=nodes,mode=mode}
   end)
   parsing.finish()
+  if workspace then memory.close(workspace,noop) end
   if not ok then
     if type(plan) ~= 'table' then plan = errors.new('E_PROGRAM',tostring(plan)) end
     if expression_source and plan.line==1 and type(plan.column)=='number' then plan.column=math.max(1,plan.column-7) end
     return nil,plan
   end
   if charges and not charges.overflow then
-    local bytes=256+#cache_key+#plan.source+#plan.generated+proof_bytes(charges)
+    local bytes=256+#plan.source+#plan.generated+proof_bytes(charges)
     for name in pairs(plan.handlers) do bytes=bytes+#name+48 end
-    retain(cache_key,{plan=plan_copy(plan),charges=charges,bytes=bytes})
+    if durable then bytes=bytes+native_bytes(plan.generated) end
+    retain(source,{plan=plan_copy(plan),charges=charges,bytes=bytes,factory=durable and factory or nil,
+      durable=durable,depth=limits.host_stack_depth})
   end
-  return plan
+  return plan,nil,durable and factory or nil
 end
 
-function M.prepare(source,context,mode)
-  local executable,diagnostic=M.compile(source,context,mode)
-  if not executable then return nil,diagnostic end
-  local cache_key=(mode or 'program')..'\0'..source
-  local retained=cache[cache_key]
-  local lowering=retained and retained.continuation
-  local charges=not lowering and {} or nil
-  parsing.begin(context,charges)
-  local ok,generated=pcall(function()
-    if lowering then
-      if not admission.replay_compile(context,lowering.charges) then errors.raise('E_BUDGET','source compilation work exhausted') end
-      return lowering.generated
-    end
-    local main,diagnostics
-    if mode=='shell' then
-      main,diagnostics=parse('return '..source,'@computer')
-      if #diagnostics>0 then main,diagnostics=parse(source,'@computer') end
-    else main,diagnostics=parse(source,'@computer') end
-    if #diagnostics>0 then reject(main,'invalid continuation source') end
-    local output=continuation.lower(main,reject,position,mode)
-    parsing.enter(#output)
-    return output
-  end)
-  parsing.finish()
-  if not ok then return nil,type(generated)=='table' and generated or errors.new('E_PROGRAM',tostring(generated)) end
-  if lowering and lowering.factory then return executable,nil,lowering.factory end
-  local loaded,factory,problem=pcall(load,generated,'@continuation','t',{})
-  if not loaded or not factory then
-    local message=loaded and problem or factory
-    local e=errors.new('E_PROGRAM','generated continuation: '..(type(message)=='string' and message:gsub('continuation:%d+: ','') or 'native compilation refused'))
-    e.line=1; e.column=1
-    return nil,e
+function M.compile(source,context,mode) return compile(source,context,mode,false) end
+function M.prepare(source,context,mode) return compile(source,context,mode,true) end
+
+-- A refusal is a retained request status, not a saved compiler execution cursor.
+-- Retry only when its relevant policy changes; cold peers make the same choice.
+function M.hold(request,diagnostic)
+  local root=registry.get(); local account=root and root.host_memory
+  request.compilation={work=limits.compile_work,host=limits.host_work_per_tick,
+    maintenance=limits.maintenance_work_per_tick,depth=limits.host_stack_depth,
+    memory=limits.host_memory_bytes,used=account and account.used+account.reserved,diagnostic=diagnostic}
+end
+function M.blocked(request)
+  local b=request and request.compilation
+  if not (b and b.work==limits.compile_work and b.host==limits.host_work_per_tick
+    and b.maintenance==limits.maintenance_work_per_tick and b.depth==limits.host_stack_depth
+    and b.memory==limits.host_memory_bytes) then return false end
+  if b.diagnostic.resource=='host_memory' then
+    local root=registry.get(); local account=root and root.host_memory
+    return account and b.used and account.used+account.reserved>=b.used
   end
-  if retained and charges and not charges.overflow then
-    -- Native code has an additional conservative cache weight, not a heap-byte measurement.
-    retain(cache_key,{plan=retained.plan,charges=retained.charges,
-      continuation={generated=generated,charges=charges,factory=factory},bytes=retained.bytes+#generated*8+proof_bytes(charges)+64})
-  end
-  return executable,nil,factory
+  return true
 end
 
 function M.run(plan, name, event, services, context, checkpoint, shell)
@@ -449,11 +473,13 @@ function M.run(plan, name, event, services, context, checkpoint, shell)
     local spent_compile,spent_world=context.machine.compile,context.ledger.total
     local executable,diagnostic,factory=M.prepare(plan.source,context,plan.mode)
     if not executable then
-      if diagnostic.code=='E_BUDGET' then
-        if spent_compile>0 or spent_world>0 then checkpoint.wait_tick=context.tick; return false,nil,'wait' end
-        diagnostic.message='source reconstruction cannot fit a fresh configured compile/host slice; active source retained'
-        diagnostic.recoverable=true
-        return false,diagnostic,'resource'
+      if diagnostic.recoverable then
+        if diagnostic.resource=='compile_work' and spent_compile>0
+          or diagnostic.resource=='host_work_per_tick' and spent_world>0 then
+          checkpoint.wait_tick=context.tick; return false,nil,'wait'
+        end
+        -- Reconstruction refusal must preserve the saved frame and its owner.
+        return false,diagnostic,'compile_refused'
       end
       return false,diagnostic
     end
@@ -485,11 +511,11 @@ function M.run(plan, name, event, services, context, checkpoint, shell)
 end
 -- A cursor belongs to one private candidate/reconstruction owner, never guest Data.
 function M.new_job(source,mode)
-  return compiler_machine.new(source,mode)
+  return {source=source,mode=mode,phase='bootstrap',steps=0,work=0}
 end
 -- Saved compiler locals/text have no source-bound proof or complete allocation ledger.
 local function unavailable()
-  local diagnostic=errors.new('E_UNSUPPORTED','durable compiler trust and allocation validation unavailable; source retained')
+  local diagnostic=errors.new('E_UNSUPPORTED','obsolete compiler cursor; compile retained source with the bounded frontend')
   diagnostic.recoverable=true
   return nil,diagnostic
 end

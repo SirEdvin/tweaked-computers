@@ -183,7 +183,7 @@ function M.run()
     assert(settings.global[names[kind]],'missing runtime-global budget setting: '..names[kind])
     assert(settings.global[names[kind]].value==value and limits[keys[kind]]==value,'incorrect fivefold default')
   end
-  assert(limits.maintenance_work_per_tick==200000 and limits.source_bytes==16384 and limits.state_bytes==65536)
+  assert(limits.maintenance_work_per_tick==200000 and limits.source_bytes==nil and limits.state_bytes==65536)
   report('budget-fivefold-defaults-and-unchanged-structural-caps')
   for _,case in ipairs({{'compile',250000},{'work',100000},{'allocations',16384}}) do
     local kind,old=case[1],case[2]

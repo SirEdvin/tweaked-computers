@@ -114,8 +114,8 @@ tab, focus, Console follow, red/green channel, reference category/topic, search
 (maximum 128 bytes) and topic indexes (the finite shipped help inventory).
 Peripherals retains at most one channel's complete `network_nodes` descriptor
 snapshot or a diagnostic. It stores generated opaque IDs, fixed type names and
-power booleans, not arbitrary guest labels. Recovery/revision previews are bounded
-by `source_bytes`, and identity/source bytes are rechecked before replacement or
+power booleans, not arbitrary guest labels. Recovery/revision previews use the
+player's aggregate draft storage, and identity/source bytes are rechecked before replacement or
 confirmed deletion. Changing a recovery selection invalidates its review/confirmation.
 Older pending forget records without the new reviewed-byte marker safely refuse.
 The open document cannot be forgotten.
@@ -172,7 +172,7 @@ buttons or draft-mutation handlers. The empty-only starter remains in Editor.
 | reset / confirm-reset / cancel-reset | Maintenance stopped-only application-state section; run-generation confirmation |
 | open_recovery / recovery_action | Independent viewer without an accessible computer; review/select/native copy and confirmed forget only |
 | close / native Escape | Title / close event; retain draft, do not stop |
-| text edit | Mounted Editor source; exact session/identity and source byte limit |
+| text edit | Mounted Editor source; exact session/identity and aggregate draft storage |
 | inspect / wire selection | Peripherals; one explicit color and timestamped complete/deferred result |
 | follow / show-location | Console; live output without automatic scrolling when Follow is off / explicit matching-source navigation |
 | tab / focus / search / category / topic | Bounded host presentation only; same ownership checks |

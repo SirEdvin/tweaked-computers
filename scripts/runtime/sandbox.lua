@@ -157,6 +157,25 @@ function M.new(context, services, shell, durable)
     end
     if heap then memory.acquire(heap,value,bytes) end
   end
+  function G.job_admit(value,items)
+    assert(durable,'private graph admission requires durable ownership')
+    private_jobs.admit(durable,heap,value,G.spend,items)
+  end
+  function G.job_release(value)
+    if heap then memory.release(heap,value) end
+  end
+  function G.try_job_work(value,bytes,work)
+    G.check()
+    if heap then
+      local node=heap.values[value]
+      if not node or heap.closed or heap.closing then return false end
+      local room=heap.reserved+math.max(0,heap.account.limit-heap.account.used-heap.account.reserved)
+      if bytes-node.record.bytes>room then return false end
+    end
+    if not admission.reserve(context,'work',work) then return false end
+    G.job_resize(value,bytes)
+    return true
+  end
   function G.atomic(work,allocations)
     allocations=allocations or 0
     local allowance=math.min(limits.callback_work,admission.guest_ceiling(context.ledger,context.tick))
@@ -197,6 +216,15 @@ function M.new(context, services, shell, durable)
     -- Adjacent compiler-owned charges have no observable operation between them.
     -- A refused combined proof spends nothing; preserve the original paid prefix.
     if not admission.reserve(context,'work',1+cleanup) then G.spend(1); G.spend(cleanup) end
+  end
+  function G.operands_step(source_line,source_column,cleanup,a,b,numeric)
+    line=source_line or line; column=source_column or column
+    G.check()
+    -- Numeric validation has two fixed, effect-free charges; refusal follows the original prefix.
+    if type(a)=='number' and type(b)=='number' and admission.reserve(context,'work',3+cleanup) then return a,b end
+    G.step(source_line,source_column,cleanup)
+    local validate=numeric and G.number or G.scalar
+    return validate(a),validate(b)
   end
   function G.enter(source_line,source_column,parameters)
     G.step(source_line,source_column); G.spend(parameters); allocate(parameters)

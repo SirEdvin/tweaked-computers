@@ -318,14 +318,15 @@ function M.on_tick(event)
     local child=lifecycle.endpoint(writer,'network'); writer.active.compiler_version=99
     assert(writer.body.die()); assert(not registry.record(writer.id) and not child.valid and not output.output_owner and output.children.output.get_control_behavior().sections_count==0)
     log('TC_NATIVE_DESTRUCTION_OUTPUT_CLEANUP_OK malformed-source-independent')
-    -- Maximum accepted source+state item, mined by an actual construction robot.
+    -- Beyond the former source ceiling, mined by an actual construction robot.
     local r=registry.record(x.computer)
     lifecycle.power_entity(r).energy=defs.devices.computer.watts/30; lifecycle.sample_power(r,event.tick,nop)
-    x.expected_active=source..string.rep(' ',limits.source_bytes-#source)
+    x.source_size=20000
+    x.expected_active=source..string.rep(' ',x.source_size-#source)
     runtime.save(r.id,x.expected_active,r.saved_revision); assert(runtime.activate(r.id,event.tick))
     assert(scheduler.dispatch(r,event.tick)); fixture_state(r)
-    runtime.save(r.id,saved..string.rep(' ',limits.source_bytes-#saved),r.saved_revision)
-    assert(#r.saved_source==limits.source_bytes)
+    runtime.save(r.id,saved..string.rep(' ',x.source_size-#saved),r.saved_revision)
+    assert(#r.saved_source==x.source_size)
     x.robot_id=r.id; x.original_id=x.original_id or next(registry.get().player_drafts[1].documents)
     local surf=r.body.surface
     x.roboport=assert(surf.create_entity{name='roboport',position={8,18},force='player'})
@@ -363,7 +364,7 @@ function M.on_tick(event)
     x.monitor_inventory=game.create_inventory(2)
     assert(x.monitor_inventory[1].transfer_stack(plain) and x.monitor_inventory[2].transfer_stack(tagged))
     log('TC_NATIVE_MONITOR_ROBOT_COUNTS_OK fresh=49 built=1 mined-tagged=1')
-    assert(inventory.get_item_count('tc-computer')==1 and stack.tags.tc_computer.state.k1 and #stack.tags.tc_computer.saved_source==limits.source_bytes)
+    assert(inventory.get_item_count('tc-computer')==1 and stack.tags.tc_computer.state.k1 and #stack.tags.tc_computer.saved_source==x.source_size)
     local r=replace({[1]=stack},4,12)
     assert(r.state_bytes==65536 and r.status=='stopped' and r.active.source==x.expected_active and next(r.timers)==nil)
     x.robot_id=r.id; x.alias=r; x.state_alias=r.state; x.active_alias=r.active

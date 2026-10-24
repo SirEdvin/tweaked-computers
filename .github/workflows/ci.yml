@@ -75,11 +75,11 @@ jobs:
           set -euo pipefail
           archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
           engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
-          for fixture in resource_policy_capacity resource_policy_runtime resource_policy_computer resource_policy_language_control resource_policy_scalar_locals; do
+          for fixture in resource_policy_capacity resource_policy_runtime resource_policy_computer resource_policy_language_control resource_policy_scalar_locals resource_policy_discovery; do
             python tools/smoke.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture"
           done
-          for fixture in resource_policy_refusal resource_policy_memory resource_policy_heap_memory resource_policy_functions resource_policy_long_strings resource_policy_results; do
+          for fixture in resource_policy_refusal resource_policy_memory resource_policy_heap_memory resource_policy_functions resource_policy_long_strings resource_policy_results resource_policy_discovery_cold; do
             python tools/smoke.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold
           done
@@ -204,6 +204,15 @@ jobs:
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/compiler-cache" --mode both \
             --fixture tests.compiler_cache_contract
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/compiler-bounded" --mode both \
+            --fixture tests.compiler_bounded --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/compiler-native-memory" --mode both \
+            --fixture tests.compiler_native_memory --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/source-storage" --mode both \
+            --fixture tests.resource_policy_sources --cold
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/shell-contract" --mode both \
             --fixture tests.shell_contract

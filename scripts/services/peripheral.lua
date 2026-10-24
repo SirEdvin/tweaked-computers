@@ -50,21 +50,31 @@ local function sorted(map,spend)
   if spend then spend(#names+1) end
   table.sort(names,function(a,b) if spend then spend(#a+#b+1) end; return a<b end); return names
 end
-function M.inventory(computer,wire,spend,job)
-  job=job or {}; job.graph=job.graph or {}; job.inventory=job.inventory or {}; job.cursor=job.cursor or 1
-  local ok,members,parents=pcall(network.discover,computer,wire,spend,job.graph)
+function M.inventory(computer,wire,spend,job,guard)
+  job=job or {}
+  if not job.graph then
+    local state={graph={},inventory={},cursor=1}
+    if guard then guard.job_admit(state,{{job,192+48*3}}) end
+    job.graph=state.graph; job.inventory=state.inventory; job.cursor=state.cursor
+    if guard then guard.job_release(state) end
+  end
+  local ok,members,parents=pcall(network.discover,computer,wire,spend,job.graph,guard)
   if not ok then
     if type(members)=='table' and members.code=='E_NETWORK_PENDING' then for k in pairs(job) do job[k]=nil end end
     error(members,0)
   end
   local inventory=job.inventory
+  -- Reserve the complete map's slots before publishing any resolved member.
+  if guard then guard.job_resize(inventory,192+48*#members) end
   while job.cursor<=#members do
     spend(4)
     local member=members[job.cursor]
     local rec=resolved(member)
     if rec and network.same_scope(rec.body,computer) and rec.force_index==computer.force_index
       and rec.surface_index==computer.surface_index and not inventory[rec.id] then
-      inventory[rec.id]={name=rec.id,type=types[rec.kind],generation=rec.generation,member=member.id}
+      local item={name=rec.id,type=types[rec.kind],generation=rec.generation,member=member.id}
+      if guard then guard.job_admit(item,{{rec.id,#rec.id+32}}) end
+      inventory[rec.id]=item
     end
     job.cursor=job.cursor+1
   end
@@ -143,13 +153,32 @@ function M.services(computer,tick,guard,execution)
     network.wire(wire)
     if guard.job then
       local job=work.job(guard,'peripheral-inventory-'..wire)
-      local ok,values=pcall(M.inventory,computer,wire,spend,job)
+      local fresh=next(job)==nil
+      local proof=inventories[wire]
+      if fresh and proof and guard.try_job_work(job,192+48*3,proof.total) then
+        job.graph=proof.job.graph; job.inventory=proof.job.inventory; job.cursor=proof.job.cursor
+        return job.inventory
+      end
+      local total=0
+      local function charge(n) spend(n); total=total+n end
+      local ok,values=pcall(M.inventory,computer,wire,fresh and charge or spend,job,guard)
       if not ok then
         if type(values)=='table' and values.code=='E_NETWORK_PENDING' then
           for k in pairs(job) do job[k]=nil end
           guard.suspend()
         end
         error(values,0)
+      end
+      if fresh then
+        -- Cache only complete proofs within this non-yielding callback; all graph
+        -- objects already belong to its owner. Cache metadata is optional growth.
+        local cached={job=false,total=total}
+        local count=(inventories.red and 1 or 0)+(inventories.green and 1 or 0)+(proof and 0 or 1)
+        local admitted,problem=pcall(guard.job_admit,cached,{{inventories,192+48*count}})
+        if admitted then
+          cached.job=job; inventories[wire]=cached
+          if proof then guard.job_release(proof) end
+        elseif not errors.resource_diagnostic(problem) then error(problem,0) end
       end
       return values
     end
@@ -185,7 +214,13 @@ function M.services(computer,tick,guard,execution)
     if not fn then errors.raise('E_ARGUMENT','unknown peripheral method') end
     -- Only the reviewed monitor provider promises not to alter physical state.
     -- Unknown/test/other providers invalidate proofs even if they later throw.
-    if not bindings[rec.kind].callback_stable then inventories={}; availability={}; authorized=false end
+    if not bindings[rec.kind].callback_stable then
+      if guard.job_release then
+        for _,proof in pairs(inventories) do guard.job_release(proof) end
+        guard.job_release(inventories)
+      end
+      inventories={}; availability={}; authorized=false
+    end
     if method=='getLimits' and select('#',...)~=0 then errors.raise('E_ARGUMENT','getLimits expects no arguments') end
     -- Logical providers prove all current members themselves. Their cached
     -- aggregate powered flag can lag paid topology maintenance after restoration.

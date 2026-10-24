@@ -36,10 +36,14 @@ end
 local function neighbor(connection,origin,wire)
   return connection.origin~=defines.wire_origin.radars and M.discovery_vertex(connection.target,origin,wire) or nil
 end
-local function reset(job,origin,wire)
+local function reset(job,origin,wire,guard)
+  local state={origin=origin.id,wire=wire,queue={origin.id},seen={[origin.id]=true},
+    parents={},members={},graph={},cursor=1,cost=16,edge=1}
+  -- The tenth root slot is the traversal edge cursor, absent between vertices.
+  if guard then guard.job_admit(state,{{job,192+48*10}}) end
   for k in pairs(job) do job[k]=nil end
-  job.origin=origin.id; job.wire=wire; job.queue={origin.id}; job.seen={[origin.id]=true}
-  job.parents={}; job.members={}; job.graph={}; job.cursor=1; job.cost=16
+  for k,v in pairs(state) do job[k]=v end
+  if guard then guard.job_release(state) end
 end
 -- One final live pass is prepaid before consulting native objects. Saved graph
 -- preparation is never itself authority after a yield, reload or cable edit.
@@ -62,17 +66,26 @@ function M.validate_graph(origin,wire,job,spend)
 end
 -- The optional job contains only IDs, scalars and tables; old host callers keep
 -- the same return values. No member/prefix escapes before final revalidation.
-function M.discover(origin,wire,spend,job)
+function M.discover(origin,wire,spend,job,guard)
   M.wire(wire); spend=spend or function() end; job=job or {}
-  if not job.queue then spend(16); reset(job,origin,wire) end
+  if not job.queue then spend(16); reset(job,origin,wire,guard) end
   assert(job.origin==origin.id and job.wire==wire,'graph job binding mismatch')
   while job.cursor<=#job.queue do
     local id=job.queue[job.cursor]
     local rec,c=vertex(origin,wire,id)
-    if not rec then reset(job,origin,wire); errors.raise('E_NETWORK_PENDING','physical topology changed during traversal') end
+    if not rec then reset(job,origin,wire,guard); errors.raise('E_NETWORK_PENDING','physical topology changed during traversal') end
     if not job.graph[id] then
       spend(8)
-      job.graph[id]={generation=rec.generation,neighbors={},count=0,physical_count=c.real_connection_count}
+      local node={generation=rec.generation,neighbors={},count=0,physical_count=c.real_connection_count}
+      if guard then
+        local items={{job.graph,192+48*job.cursor}}
+        if rec.kind~='computer' then
+          items[#items+1]={job.members,192+48*(#job.members+1)}
+          items[#items+1]={rec.id,#rec.id+32}
+        end
+        guard.job_admit(node,items)
+      end
+      job.graph[id]=node
       job.cost=job.cost+8+c.real_connection_count*4
       job.edge=1
       if rec.kind~='computer' then job.members[#job.members+1]=rec.id end
@@ -83,6 +96,16 @@ function M.discover(origin,wire,spend,job)
       spend(4)
       local other=neighbor(connections[job.edge],origin,wire)
       if other then
+        if guard and (not saved.neighbors[other.id] or not job.seen[other.id]) then
+          local items={}
+          if not saved.neighbors[other.id] then items[#items+1]={saved.neighbors,192+48*(saved.count+1)} end
+          if not job.seen[other.id] then
+            items[#items+1]={job.queue,192+48*(#job.queue+1)}
+            items[#items+1]={job.seen,192+48*(#job.queue+1)}
+            items[#items+1]={job.parents,192+48*#job.queue}
+          end
+          guard.job_admit(other.id,items)
+        end
         if not saved.neighbors[other.id] then saved.neighbors[other.id]=true; saved.count=saved.count+1 end
         if not job.seen[other.id] then
           job.seen[other.id]=true; job.parents[other.id]=id; job.queue[#job.queue+1]=other.id
@@ -93,7 +116,7 @@ function M.discover(origin,wire,spend,job)
     job.cursor=job.cursor+1; job.edge=nil
   end
   if not M.validate_graph(origin,wire,job,spend) then
-    reset(job,origin,wire); errors.raise('E_NETWORK_PENDING','physical topology changed during traversal')
+    reset(job,origin,wire,guard); errors.raise('E_NETWORK_PENDING','physical topology changed during traversal')
   end
   spend(#job.members+1)
   local members={}; for _,id in ipairs(job.members) do members[#members+1]=registry.record(id) end

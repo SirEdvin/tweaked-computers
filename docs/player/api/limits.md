@@ -35,8 +35,17 @@ lowering it below already-spent credits refuses further charged operations
 until a later tick or another increase. Existing faulted programs still require
 Run to restart. Validate, Run validation and callback reconstruction share
 compilation credits. Higher budgets may reduce UPS; these are not speed or
-frame-rate controls. Source, state, depth, monitor and other structural caps
-remain unchanged.
+frame-rate controls. Remaining state, depth, monitor and other structural
+guards still apply.
+
+The compiler has no separate token, AST-node, export-count or generated-text
+quota. These obsolete fields are absent from getLimits(). Actual host recursion
+uses host_stack_depth; compilation work and native backend checks remain.
+Saved and active source share host_memory_bytes with distinct lifetime owners;
+drafts use draft_storage_bytes. There is no independent saved-source byte cap.
+A refused Save leaves the revision and old run unchanged. Lowered settings
+retain accepted source; non-growing replacements remain possible. Stop retains
+the active source for recovery. Removal releases its world-owned source storage.
 
 ### Disposable compiler cache
 
@@ -85,12 +94,6 @@ is needed; ordinary synchronized admission resets counters only on a new tick.
 | `api_version` | 1 |
 | `compiler_version` | 2 |
 | `storage_version` | 1 |
-| `source_bytes` | 16384 |
-| `generated_source_bytes` | 131072 |
-| `source_nodes` | 4096 |
-| `source_tokens` | 4096 |
-| `source_nesting` | 48 |
-| `handler_names` | 64 |
 | `identifier_bytes` | 64 |
 | `tuple_entries` | 128 |
 | `callback_work` | 500000 |

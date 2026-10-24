@@ -78,7 +78,7 @@ function M.run()
   assert(owner.count==0 and next(account.values)==nil)
   limits.host_memory_bytes=before
   policy.host_account(spend)
-  f.host_base=account.used
+
   local body=game.surfaces[1].create_entity{name='constant-combinator',position={0,0},force=game.forces.player}
   local rec=registry.register('computer',body); f.computer=rec.id
   local source=[[function start()
@@ -97,6 +97,8 @@ function M.run()
   end]]
   runtime.save(rec.id,source,0)
   local run,problem=runtime.activate(rec.id,0); assert(run,problem and problem.message)
+  assert(rec.saved_source_memory.account==account and rec.active_source_memory.account==account)
+  f.host_base=account.used -- Sources remain owned after Stop; radio cleanup must not free them.
   runtime.resource_refused(rec,f.refusal,0)
   f.account=memory.new(limits.runtime_memory_bytes,256); f.owner=memory.owner(f.account)
   snapshots(rec,0)

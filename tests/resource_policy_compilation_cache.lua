@@ -2,9 +2,14 @@
 local compiler=require('scripts.runtime.compiler')
 local admission=require('scripts.runtime.admission')
 local limits=require('scripts.runtime.limits')
+local policy=require('scripts.runtime.resource-policy')
+local memory=require('scripts.runtime.memory')
+local registry=require('scripts.registry')
 local M={}
 function M.run()
-  local saved_cache,saved_compile=limits.compiler_cache_bytes,limits.compile_work
+  registry.initialize()
+  local saved_cache,saved_compile,saved_host=limits.compiler_cache_bytes,limits.compile_work,limits.host_memory_bytes
+  local native_load=load
   local source=[[function start()
     computer.log('cache-prefix'); local n=0
     while n<300000 do n=n+1 end
@@ -38,11 +43,88 @@ function M.run()
     assert(a.machine.compile==b.machine.compile and a.ledger.total==b.ledger.total)
     local original=first(); local modified=second(); modified.entries.start=nil
     assert(original.entries.start and first().entries.start,'caller mutated cached executable data')
+    -- One source key may change backend/mode; a foreign proof must never replay.
+    local legacy=assert(compiler.compile(native_source,admission.context(admission.new(),'legacy-variant',0)))
+    assert(legacy.generated~=plan.generated)
+    local shell,problem,shell_factory=compiler.prepare(native_source,admission.context(admission.new(),'shell-variant',0),'shell')
+    assert(shell and shell_factory and shell.mode=='shell' and shell_factory().entries.command,problem and problem.message)
+    local changed=admission.context(admission.new(),'program-variant',0)
+    local replaced,problem,replacement=compiler.prepare(native_source,changed)
+    assert(replaced and replacement and replacement~=first and replacement().entries.start,problem and problem.message)
+    assert(changed.machine.compile==a.machine.compile and changed.ledger.total==a.ledger.total)
     limits.compiler_cache_bytes=1
+    local denied=admission.context(admission.new(),'evict-without-source-credit',0)
+    denied.machine.compile=limits.compile_work
+    local refused,diagnostic=compiler.prepare(native_source,denied)
+    assert(not refused and diagnostic.recoverable and diagnostic.resource=='compile_work')
+    limits.compiler_cache_bytes=saved_cache
     local c=admission.context(admission.new(),'native-evicted',0)
     local evicted_plan,evicted_problem,evicted_factory=compiler.prepare(native_source,c)
-    assert(evicted_plan and evicted_factory and evicted_factory~=first,evicted_problem and evicted_problem.message)
+    assert(evicted_plan and evicted_factory and evicted_factory~=replacement,
+      evicted_problem and evicted_problem.message or 'refused source prevented cache-limit reconciliation')
     assert(a.machine.compile==c.machine.compile and a.ledger.total==c.ledger.total)
+    local account=policy.host_account(function() end)
+    local used,reserved=account.used,account.reserved
+    local blocked_source='function start() local x=0; '..string.rep('x=x+1; ',3000)..' end'
+    limits.host_memory_bytes=used+reserved
+    local blocked_context=admission.context(admission.new(),'frontend-memory-full',0)
+    local denied,reason=compiler.prepare(blocked_source,blocked_context)
+    assert(not denied and reason.recoverable and reason.resource=='host_memory',
+      'full host memory entered the frontend instead of refusing before parsing')
+    assert(blocked_context.machine.compile==#blocked_source*2+1,'full host memory traversed the source')
+    assert(account.used==used and account.reserved==reserved,'frontend refusal leaked workspace')
+    limits.host_memory_bytes=saved_host
+    local invalid,syntax=compiler.prepare('function broken(',admission.context(admission.new(),'frontend-syntax',0))
+    assert(not invalid and syntax.code=='E_PROGRAM')
+    assert(account.used==used and account.reserved==reserved,'parser error leaked workspace')
+    limits.compile_work=#native_source*2+2
+    local partial,exhausted=compiler.prepare(native_source,admission.context(admission.new(),'frontend-work',0))
+    limits.compile_work=saved_compile
+    assert(not partial and exhausted.recoverable and exhausted.resource=='compile_work')
+    assert(account.used==used and account.reserved==reserved,'frontend work refusal leaked workspace')
+    local bytes=#plan.generated*8 -- Existing native-artifact accounting weight, not measured heap bytes.
+    local loads=0
+    _G.load=function(...)
+      loads=loads+1
+      assert(account.used==used+128 and account.reserved==reserved+bytes,'native load ran without admitted workspace')
+      return native_load(...)
+    end
+    limits.host_memory_bytes=used+reserved+128+bytes-1
+    local warm=admission.context(admission.new(),'native-memory-warm',0)
+    local refused,reason=compiler.prepare(native_source,warm)
+    assert(not refused and reason.recoverable and reason.resource=='host_memory' and reason.setting=='tc-host-memory-bytes',
+      'warm native preparation bypassed host memory admission')
+    local request={}; compiler.hold(request,reason)
+    assert(compiler.blocked(request),'unchanged native memory refusal retried')
+    limits.compiler_cache_bytes=1
+    local cold=admission.context(admission.new(),'native-memory-cold',0)
+    local denied,problem=compiler.prepare(native_source,cold)
+    assert(not denied and problem.code==reason.code and problem.used==reason.used and problem.requested==reason.requested)
+    assert(warm.machine.compile==cold.machine.compile and warm.ledger.total==cold.ledger.total)
+    assert(loads==0 and account.used==used and account.reserved==reserved,'refused native load changed ownership')
+    limits.host_memory_bytes=used+reserved+128+bytes
+    assert(not compiler.blocked(request),'raised native memory allowance did not unblock reconstruction')
+    local fitting,problem=compiler.prepare(native_source,admission.context(admission.new(),'native-memory-fit',0))
+    assert(fitting and loads==1,problem and problem.message)
+    assert(account.used==used and account.reserved==reserved,'successful native load leaked workspace')
+    _G.load=function() error('injected native loader failure') end
+    local failed,problem=compiler.prepare(native_source,admission.context(admission.new(),'native-memory-failure',0))
+    assert(not failed and problem.message:find('injected native loader failure',1,true))
+    assert(account.used==used and account.reserved==reserved,'failed native load leaked workspace')
+    _G.load=native_load
+    limits.host_memory_bytes=saved_host
+    memory.configure(account,saved_host)
+    local pressure=memory.owner(account,bytes)
+    limits.host_memory_bytes=account.used+account.reserved+128+bytes-1
+    local refused,reason=compiler.prepare(native_source,admission.context(admission.new(),'native-memory-pressure',0))
+    assert(not refused and reason.resource=='host_memory')
+    compiler.hold(request,reason); assert(compiler.blocked(request))
+    memory.close(pressure,function() end)
+    assert(not compiler.blocked(request),'released host memory did not unblock reconstruction')
+    assert(compiler.prepare(native_source,admission.context(admission.new(),'native-memory-released',0)))
+    limits.host_memory_bytes=saved_host
+    memory.configure(account,saved_host)
+    limits.compiler_cache_bytes=1
     local evicted=slice(); assert(evicted.control=='wait' and #evicted.effects==1)
     limits.compiler_cache_bytes=saved_cache
     local cold=slice(); local warm=slice()
@@ -55,7 +137,8 @@ function M.run()
     limits.compiler_cache_bytes=saved_cache; limits.compile_work=saved_compile
     local full=slice(); equal(cold,full)
   end)
-  limits.compiler_cache_bytes=saved_cache; limits.compile_work=saved_compile
+  _G.load=native_load
+  limits.compiler_cache_bytes=saved_cache; limits.compile_work=saved_compile; limits.host_memory_bytes=saved_host
   assert(ok,type(e)=='table' and e.message or tostring(e))
   log('TC_CONTRACT continuation-cache-warm-cold-evicted-and-partial-admission-equal')
 end

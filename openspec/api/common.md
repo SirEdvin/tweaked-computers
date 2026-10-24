@@ -89,7 +89,7 @@ Discovery remains physical while a relay device is unpowered; actual service cal
 `computer.getLimits()` returns a defensive table of effective integer ceilings. The release manifest records the same values. At least these keys are present:
 
 ```text
-source_bytes, generated_source_bytes, source_nodes, source_nesting,
+host_memory_bytes, host_stack_depth,
 callback_work, callback_depth, callback_allocations, compile_work, host_work_per_tick,
 active_computers, active_logic_handlers, aggregate_subscriptions, aggregate_owned_outputs,
 state_bytes, state_entries, data_depth, string_bytes,

@@ -159,6 +159,9 @@ function M.lower(main,reject,position,mode)
         left='r.guard.scalar('..left..')'; right='r.guard.scalar('..right..')'
       else reject(n,'unsupported continuation operator','E_UNSUPPORTED') end
       local pc=output('('..left..' '..n.op..' '..right..')',{'s'..a,'s'..b})
+      parsing.enter(8)
+      blocks[pc].operands={left=a,right=b,op=n.op,output=out,nextpc=nextpc,
+        numeric=n.op=='+' or n.op=='-' or n.op=='*' or n.op=='/' or n.op=='%' or n.op=='^'}
       pc=expression(n.right,b,pc)
       return expression(n.left,a,pc)
     elseif k=='unop' then
@@ -477,7 +480,12 @@ function M.lower(main,reject,position,mode)
     end
     cleanups[i]='{'..table.concat(transitions,',')..'}'
     local b=blocks[i]
-    blocks[i]='function(f,r) r.guard.step('..b.line..','..b.column..','..maximum..'); '..b.code..' end'
+    if b.operands then
+      local o=b.operands
+      blocks[i]='function(f,r) local a,b=r.guard.operands_step('..b.line..','..b.column..','..maximum..',f.slots['..o.left..'],f.slots['..o.right..'],'..tostring(o.numeric)..'); f.slots['..o.output..']=(a '..o.op..' b); return '..o.nextpc..' end'
+    else
+      blocks[i]='function(f,r) r.guard.step('..b.line..','..b.column..','..maximum..'); '..b.code..' end'
+    end
   end
   local function quoted_set(values)
     local ordered={}; for value in pairs(values) do ordered[#ordered+1]=value end

@@ -54,15 +54,16 @@ local function replay(ctx,kind,ceiling,charges)
   local available=math.min(ceiling-ctx.machine[kind],
     M.guest_ceiling(ctx.ledger,ctx.tick)-ctx.ledger.total)
   local accepted=charges.total
+  local refused
   if accepted>available then
     accepted=0
     for _,cost in ipairs(charges) do
-      if accepted+cost>available then break end
+      if accepted+cost>available then refused=cost; break end
       accepted=accepted+cost
     end
   end
   ctx.machine[kind]=ctx.machine[kind]+accepted; ctx.ledger.total=ctx.ledger.total+accepted
-  return charges.total<=available
+  return charges.total<=available,refused
 end
 function M.replay_compile(ctx,charges) return replay(ctx,'compile',limits.compile_work,charges) end
 function M.replay_work(ctx,charges) return replay(ctx,'work',limits.callback_work,charges) end

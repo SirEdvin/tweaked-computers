@@ -5,6 +5,8 @@ local runtime=require('scripts.runtime.computer')
 local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
 local model=require('scripts.monitor-model')
+local policy=require('scripts.runtime.resource-policy')
+local memory=require('scripts.runtime.memory')
 local M={}
 local MAX=9007199254740991
 local function fail(message) errors.raise('E_ARGUMENT',message) end
@@ -95,7 +97,18 @@ end
 function M.restore_computer(rec,s,settings_only)
   local c=M.import_computer(s,settings_only)
   if settings_only and rec.saved_revision==MAX then errors.raise('E_CAPACITY','destination source revision exhausted') end
-  if not runtime.retire(rec,'stopped','settings_copy') then errors.raise('E_ENGINE','old run cleanup failed; data retained') end
+  local saved,active
+  local ok,problem=pcall(function()
+    saved=policy.source_owner(c.saved_source,not settings_only)
+    if c.active then active=policy.source_owner(c.active,not settings_only) end
+  end)
+  if not ok then memory.retire(saved); memory.retire(active); error(problem,0) end
+  if not runtime.retire(rec,'stopped','settings_copy') then
+    memory.retire(saved); memory.retire(active)
+    errors.raise('E_ENGINE','old run cleanup failed; data retained')
+  end
+  memory.retire(rec.saved_source_memory); memory.retire(rec.active_source_memory)
+  rec.saved_source_memory=saved; rec.active_source_memory=active
   rec.saved_source=c.saved_source; rec.saved_revision=settings_only and rec.saved_revision+1 or c.saved_revision
   rec.label=c.label; rec.active=c.active
   if not settings_only then

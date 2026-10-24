@@ -87,7 +87,7 @@ function M.evaluate(rec,source,tick,command,checkpoint)
       invocation={checkpoint=checkpoint,memory_owner=rec.runtime_memory and rec.runtime_memory.owners[checkpoint.memory_owner]}
     end
     local function finish(ok,diagnostic,control)
-      if direct and control~='wait' then policy.release(invocation) end
+      if direct and control~='wait' and control~='compile_refused' then policy.release(invocation) end
       return ok,diagnostic,control
     end
     local attached,problem=pcall(policy.attach,rec,invocation,ctx)
@@ -117,7 +117,7 @@ function M.evaluate(rec,source,tick,command,checkpoint)
       end
       memory.retire(s.values_owner)
       s.values_owner=owner; s.values=checkpoint.value_graph
-    elseif control~='wait' and control~='resource' and checkpoint.frame and not principal.cleanup(rec,execution,'shell_failure') then
+    elseif control~='wait' and control~='resource' and control~='compile_refused' and checkpoint.frame and not principal.cleanup(rec,execution,'shell_failure') then
       diagnostic=errors.new('E_ENGINE','shell resource cleanup failed; committed values retained')
     end
     return finish(ok,diagnostic,control)
@@ -187,8 +187,17 @@ function M.dispatch(rec,tick)
     s.invocation={item=item,checkpoint={}}
     s.diagnostic=nil
   end
+  if compiler.blocked(s.invocation) then return true end
+  s.invocation.compilation=nil
   local ok,problem,control=M.evaluate(rec,item.source,tick,item.id,s.invocation.checkpoint)
   if control=='wait' then s.status='Waiting #'..item.id; return true end
+  if control=='compile_refused' then
+    compiler.hold(s.invocation,problem)
+    s.status='Compilation refused #'..item.id..'; command retained'
+    s.diagnostic=problem
+    runtime.resource_refused(rec,problem,tick)
+    return true
+  end
   policy.release(s.invocation)
   s.invocation=nil
   s.status=(ok and 'Completed #' or 'Failed #')..item.id

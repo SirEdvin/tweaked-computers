@@ -11,7 +11,7 @@ Exported functions SHALL be ordinary invocation-scoped callable values within th
 #### Scenario: Forward references and mutual calls
 - **WHEN** one exported function references another exported function declared later in the document
 - **THEN** it resolves that function regardless of declaration order
-- **AND** direct or mutual recursion remains subject to the existing call-depth and work ceilings.
+- **AND** direct or mutual recursion remains subject to work, retained-frame memory and any necessary host-stack protection, not an arbitrary logical-frame count.
 
 #### Scenario: Function values preserve ordinary call behavior
 - **WHEN** a callback captures an exported function in a local variable or temporary table and calls it directly or through `pcall`
@@ -60,3 +60,22 @@ Both source forms SHALL obey configurable resource-policy rather than arbitrary 
 - **WHEN** the same declaration-form source is validated or reconstructed with identical remaining credits using a warm or cold compiler cache
 - **THEN** success, refusal and accepted charge prefixes agree
 - **AND** mutated caller-owned generated text or handler inventories never become trusted executable input.
+
+## ADDED Requirements
+
+### Requirement: Bounded non-resumable compilation
+Both source forms SHALL compile and reconstruct in bounded non-resumable passes using enforced work, memory and necessary host-stack/native constraints, without independent source/token/handler quotas. Requests MAY wait before a pass. Over-budget passes SHALL refuse recoverably, preserving source and the previous run. Partial compiler execution and saved generated text SHALL NOT become executable authority.
+
+#### Scenario: Large source within resources
+- **WHEN** source exceeds an old source/token/handler count but its compilation fits the configured resource allowance
+- **THEN** it compiles without the old count refusal and activates only after revision and authority checks.
+
+#### Scenario: Compilation is too expensive
+- **WHEN** validation or emission exhausts the compilation pass allowance
+- **THEN** it returns a source-attributed recoverable resource diagnostic without replacing the active program or deleting the requested source
+- **AND** it promises neither persisted parser progress nor eventual compilation without a suitable allowance.
+
+#### Scenario: Save with an uncompiled request
+- **WHEN** a save contains a queued compilation request or obsolete partial compiler-machine state
+- **THEN** the exact source/revision and request outcome remain recoverable; partial compiler state is not resumed or trusted
+- **AND** reconstruction uses validated source, executes no guest effects and leaves existing durable handler frames unchanged.

@@ -10,6 +10,14 @@ import build
 
 
 class PackageInventoryTests(unittest.TestCase):
+    def test_obsolete_compiler_machine_is_not_shipped(self):
+        runtime = build.ROOT / 'scripts/runtime'
+        self.assertFalse(any((runtime / 'compiler-generated').glob('*')))
+        for name in ('compiler-machine.lua', 'compiler-artifact.lua', 'compiler-build.lua',
+                     'compiler-pipeline.lua', 'compiler-primitives.lua'):
+            self.assertFalse((runtime / name).exists(), name)
+        self.assertFalse((build.ROOT / 'tools/compiler_build.py').exists())
+
     def test_console_companion_matches_live_follow_contract(self):
         companion = (build.ROOT / 'openspec/specs/console-shell/lua-api.md').read_text()
         spec = (build.ROOT / 'openspec/specs/console-shell/spec.md').read_text()

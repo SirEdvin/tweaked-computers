@@ -146,6 +146,24 @@ function M.release(owner,value)
   node.value=nil; node.record=nil; node.previous=nil; node.next=nil
   return true
 end
+-- Immutable replacement can release its old payload in the same atomic step.
+function M.replace_string(owner,old,value)
+  active(owner)
+  assert(type(old)=='string' and type(value)=='string','source strings required')
+  local previous=assert(owner.values[old],'unowned replaced string')
+  if old==value then return end
+  local account=owner.account; local record=account.values[value]
+  assert(not record or record.bytes==#value+32,'shared string charge mismatch')
+  local added=owner.values[value] and 0 or LINK+(record and 0 or RECORD+#value+32)
+  local released=LINK+(previous.record.owners==1 and RECORD+previous.record.bytes or 0)
+  assert(not owner.closing,'memory owner is closing')
+  capacity(account,math.max(0,added-released-owner.reserved))
+  M.release(owner,old)
+  -- Preserve the complete replacement proof when still grandfathered over-limit.
+  local prepaid=math.max(0,added-owner.reserved)
+  owner.reserved=owner.reserved+prepaid; account.reserved=account.reserved+prepaid
+  M.acquire(owner,value,#value+32)
+end
 -- Only bounded error unwinding can spend this prepaid reserve, never guest growth.
 function M.control(owner,fn,...)
   if not owner then return fn(...) end

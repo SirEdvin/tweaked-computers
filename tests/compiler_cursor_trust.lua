@@ -1,6 +1,6 @@
 -- Quarantine acceptance, NOT a validator or durable compiler completion gate.
 local compiler=require('scripts.runtime.compiler')
-local machine=require('scripts.runtime.compiler-machine')
+local machine={version=1,build='obsolete-prototype'}
 local admission=require('scripts.runtime.admission')
 local M={}
 local function refused(call,...)

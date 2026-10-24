@@ -157,6 +157,8 @@ local function dispatch_program(rec,tick)
   if rec.invocation.pending_start then
     item.event.tick=tick; rec.invocation.pending_start=nil
   end
+  if compiler.blocked(rec.invocation) then return true end
+  rec.invocation.compilation=nil
   local attached,problem=pcall(policy.attach,rec,rec.invocation,ctx)
   local ok,diagnostic,control
   if attached then
@@ -166,6 +168,11 @@ local function dispatch_program(rec,tick)
     control=diagnostic.recoverable and 'resource' or nil
   end
   if control=='wait' then return true end
+  if control=='compile_refused' then
+    compiler.hold(rec.invocation,diagnostic)
+    runtime.resource_refused(rec,diagnostic,tick)
+    return true
+  end
   policy.release(rec.invocation)
   rec.invocation=nil
   if not ok then

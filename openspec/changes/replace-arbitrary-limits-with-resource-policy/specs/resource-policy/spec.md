@@ -30,15 +30,20 @@ Every retained mod-imposed resource ceiling and KV-specific limit SHALL have a l
 - **AND** no protected operation relies on an unconfigurable duplicate ceiling.
 
 ### Requirement: Work pressure preserves progress
-Execution, compilation and resumable host-work exhaustion SHALL defer progress fairly to later simulation ticks without restarting the operation, faulting its computer or clearing outputs solely for pressure. Accepted work SHALL not be silently dropped. Work that is indivisible and cannot fit an entire configured tick SHALL receive an actionable recoverable refusal rather than wait forever.
+Execution and resumable host-work exhaustion SHALL defer progress fairly without restarting completed work, faulting the computer or clearing outputs. Compilation SHALL instead use a bounded non-resumable pass with recoverable refusal. Requests MAY wait before compilation begins. Accepted work SHALL NOT be silently dropped. Impossible indivisible runtime work SHALL refuse recoverably rather than wait forever.
 
 #### Scenario: Large finite job under a small budget
-- **WHEN** an operation needs several ticks of admitted work
+- **WHEN** a resumable handler or host service needs several ticks of admitted work
 - **THEN** it retains paid progress, eventually completes under stable resources and does not starve unrelated computers, UI, cleanup or rendering.
 
 #### Scenario: Unending guest loop
 - **WHEN** a handler never finishes
 - **THEN** it receives only its fair bounded slices, remains visibly waiting/running, and can be stopped without executing further guest instructions.
+
+#### Scenario: Compilation does not fit
+- **WHEN** a source cannot compile within the configured work or memory allowance
+- **THEN** the request receives a recoverable diagnostic with setting guidance, preserving source and the previous active run
+- **AND** it retains no partial compiler execution and does not silently retry an impossible pass forever.
 
 ### Requirement: Hard-resource refusal is recoverable
 Memory, storage and necessary depth ceilings SHALL refuse unsafe growth before mutation with a catchable typed error. Existing data SHALL remain accessible for reading, deletion, export or capacity reduction. An uncaught resource refusal SHALL end the current invocation with a visible diagnostic, not retire its run, delete registrations or clear owned output merely because of capacity.
@@ -49,7 +54,7 @@ Memory, storage and necessary depth ceilings SHALL refuse unsafe growth before m
 - **AND** a subsequent deletion or smaller write can succeed without restarting the computer.
 
 #### Scenario: Protected recursion refusal
-- **WHEN** a call would exceed configured safe depth
+- **WHEN** a host call or error-handler re-entry would exceed a justified configured safety depth
 - **THEN** it refuses before entering that frame and unwinds to the nearest applicable protected call
 - **AND** error handling remains metered, so repeated catches do not bypass work fairness.
 
@@ -79,3 +84,23 @@ Accounting SHALL cover guest-owned reachable data, suspended frames, temporary h
 #### Scenario: Release resources under pressure
 - **WHEN** state is deleted, a continuation ends or a pending job is canceled
 - **THEN** its exclusive retained resources become reusable without resetting unrelated spent work or double-freeing shared data.
+
+### Requirement: No duplicate container capacities
+Event queues and Console history SHALL each use accounted-byte capacity including nonzero entry metadata, without an independent entry-count ceiling. Resource subaccounts SHALL NOT create additional quotas without a distinct protected resource or lifetime. Native/API invariants and the explicit KV/monitor exceptions remain binding.
+
+#### Scenario: Many small entries
+- **WHEN** queue events or Console entries exceed their former count ceiling while fitting accounted-byte capacity
+- **THEN** count alone does not reject or evict them, and empty entries still consume metadata capacity
+- **AND** byte exhaustion uses the existing drop-newest or visible oldest-log-eviction behavior respectively.
+
+### Requirement: Checks protect explicit boundaries and invariants
+Validation SHALL protect guest/host boundaries, restored state, native/API invariants, live authority and data integrity. Suspension alone SHALL NOT require full revalidation of unchanged private state. Saved validation flags SHALL NOT authorize execution. Iterative traversal SHALL NOT impose a depth ceiling without a remaining host-stack or native/API constraint.
+
+#### Scenario: Resume private admitted state
+- **WHEN** trusted execution suspends with unchanged admitted private data
+- **THEN** it can reuse that state without duplicate full shape validation or copying, while mutations and effects retain necessary admission and authority checks
+- **AND** cold load or late joining still validates restored state without cache-dependent accounting or behavior.
+
+#### Scenario: Deep iterative data
+- **WHEN** valid data exceeds the former depth ceiling and every downstream consumer handles it iteratively within resources and native constraints
+- **THEN** it succeeds without a depth refusal; any remaining recursive host path retains its justified protection.

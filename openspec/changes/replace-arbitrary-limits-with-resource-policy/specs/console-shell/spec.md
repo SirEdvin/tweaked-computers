@@ -85,6 +85,11 @@ Shell input, retained values, pending submissions, compilation, execution, seria
 - **THEN** each is considered at most once in its admitted order after reload, with execution-time authority rechecked
 - **AND** commands invalidated by reset, closed authorization or removal are canceled visibly; power loss pauses an already-started continuation until authority is revalidated, never replays it.
 
+#### Scenario: Command compilation refuses
+- **WHEN** a queued command cannot compile within a bounded pass
+- **THEN** it receives a recoverable diagnostic, its source remains available, and subsequent admitted commands can proceed without a partial compiler cursor or automatic retry loop
+- **AND** committed shell values and the saved program remain unchanged; a command that already began execution still has durable continuation semantics.
+
 ### Requirement: New helpers preserve shell retention boundaries
 Successful commands using the expanded globals SHALL retain only values already supported by the shell graph contract. Raw mutation SHALL preserve supported aliases and cycles without granting private access. Built-in functions, user closures, library namespaces and reference-valued keys SHALL remain forbidden as retained values. A failed command SHALL leave the previous committed graph intact while retaining earlier completed output and external effects.
 

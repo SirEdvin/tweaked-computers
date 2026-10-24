@@ -49,6 +49,13 @@ local function observed(text,ctx,mode)
   return plan,problem,table.concat(prefix,','),used_replay
 end
 function M.run()
+  -- Source-derived cache keys must not be constructed before source admission.
+  local format=string.format; local formats=0
+  string.format=function(...) formats=formats+1; return format(...) end
+  local ok,plan,problem=pcall(compiler.prepare,'--'..string.rep('x',100000),context(0))
+  string.format=format
+  assert(ok and not plan and problem.recoverable and problem.resource=='compile_work')
+  assert(formats==0,'compiler constructed its cache key before source admission')
   local count=0
   for _,available in ipairs({0,1,2,#source*2,#source*2+1,500,1000,2000,limits.compile_work}) do
     assert(compiler.compile(source,admission.context(admission.new(),'warm-up',0)))
@@ -104,7 +111,7 @@ function sample(a,b,n) assert(a==false and b==nil); return increment(n) end
       assert(compiler.compile(declaration,admission.context(admission.new(),'declaration-warm',0)))
       local warm=context(shared and limits.compile_work or available,shared and available or nil)
       local a,ae,ap,replayed=observed(declaration,warm)
-      assert(replayed,'warm declaration proof was not cached')
+      assert(replayed==(available>=#declaration*2+1),'cache lookup did not follow source admission')
       evict()
       local cold=context(shared and limits.compile_work or available,shared and available or nil)
       local b,be,bp,cached=observed(declaration,cold)

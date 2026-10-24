@@ -86,8 +86,57 @@ local function paired_steps()
   end
   log('TC_CONTRACT paired-block-admission-preserves-refusal-prefix-location-and-private-suspension')
 end
+local function paired_operands()
+  local cases=0
+  local values={{2,3},{0/0,math.huge},{'2',3},{'xx',3},{2,'xx'},{true,false},{nil,2},{'longer','string'}}
+  local function scalar(value)
+    if type(value)=='number' and value~=value then return 'nan' end
+    return value
+  end
+  for _,cleanup in ipairs({0,1,4,20}) do
+    for available=-1,cleanup+12 do
+      for _,kind in ipairs({'callback','aggregate','maintenance'}) do
+        for _,numeric in ipairs({false,true}) do
+          for _,inputs in ipairs(values) do
+            for _,poisoned in ipairs({false,true}) do
+              local function sample(paired)
+                local ctx=admission.context(admission.new(),'operand-pair',1)
+                if kind=='callback' then ctx.machine.work=limits.callback_work-available
+                elseif kind=='aggregate' then ctx.ledger.total=admission.guest_ceiling(ctx.ledger,ctx.tick)-available
+                else ctx.ledger.maintenance={maintenance_tick=ctx.tick,maintenance_spent=limits.host_work_per_tick-available} end
+                local g=sandbox.new(ctx,{},nil,{owned={},owned_order={}})
+                if poisoned then assert(not pcall(g.suspend)); assert(g.work_suspended()) end
+                local reserve,calls=admission.reserve,0
+                admission.reserve=function(...) calls=calls+1; return reserve(...) end
+                local ok,a,b=pcall(function()
+                  if paired and g.operands_step then return g.operands_step(42,7,cleanup,inputs[1],inputs[2],numeric) end
+                  g.step(42,7,cleanup)
+                  local validate=numeric and g.number or g.scalar
+                  return validate(inputs[1]),validate(inputs[2])
+                end)
+                admission.reserve=reserve
+                local diagnostic=not ok and g.diagnostic(a) or {}
+                return {ok=ok,a=ok and scalar(a),b=ok and scalar(b),work=ctx.machine.work,total=ctx.ledger.total,
+                  code=diagnostic.code,message=diagnostic.message,line=diagnostic.line,column=diagnostic.column},calls
+              end
+              local old=sample(false)
+              local new,calls=sample(true)
+              for key,value in pairs(old) do assert(new[key]==value,'operand proof changed '..key) end
+              for key,value in pairs(new) do assert(old[key]==value,'operand proof added '..key) end
+              if new.ok and type(inputs[1])=='number' and type(inputs[2])=='number' then assert(calls==1,'numeric operands were not coalesced') end
+              if poisoned then assert(calls==0,'poisoned guard attempted admission') end
+              cases=cases+1
+            end
+          end
+        end
+      end
+    end
+  end
+  log('TC_CONTRACT operands-preserve-paid-prefixes-types-string-scans-location-and-poison cases='..cases)
+end
 function M.run()
   paired_steps()
+  paired_operands()
   guard_before_publication('local value=1',1)
   guard_before_publication('local first,second=1,2',2)
   for _,descriptor in ipairs({false,true}) do

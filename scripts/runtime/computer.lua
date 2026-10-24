@@ -6,6 +6,7 @@ local errors = require('scripts.runtime.errors')
 local data = require('scripts.runtime.data')
 local principal = require('scripts.runtime.principal')
 local policy = require('scripts.runtime.resource-policy')
+local memory = require('scripts.runtime.memory')
 local M = {}
 local providers = {}
 local shell_lifecycle
@@ -72,9 +73,9 @@ end
 function M.save(id,source,expected_revision)
   root(); local rec=registry.computer(id)
   if type(source)~='string' then errors.raise('E_ARGUMENT','source must be a string') end
-  if #source>limits.source_bytes then errors.raise('E_LIMIT','source byte limit exceeded') end
   if not errors.integer(expected_revision,0,MAX) or expected_revision~=rec.saved_revision then errors.raise('E_BUSY','source revision conflict; retain draft and review current source') end
   if rec.saved_revision==MAX then errors.raise('E_CAPACITY','source revision exhausted') end
+  policy.save_source(rec,source)
   rec.saved_source=source; rec.saved_revision=rec.saved_revision+1
   return rec.saved_revision
 end
@@ -94,12 +95,16 @@ function M.activate(id,tick,expected_revision)
   if not errors.integer(rec.run_generation,0,MAX-1) then return nil,errors.new('E_CAPACITY','run generation exhausted') end
   local plan,e=M.validate(id,tick)
   if not plan then rec.candidate_diagnostic=e; return nil,e end
+  local active_source={source=plan.source,revision=rec.saved_revision,api_version=1,compiler_version=limits.compiler_version,storage_version=limits.storage_version,handlers=plan.handlers}
+  local admitted,owner=pcall(policy.source_owner,active_source)
+  if not admitted then rec.candidate_diagnostic=owner; return nil,owner end
   -- Validation is finished before the previous generation is retired.
-  if not M.retire(rec,'stopped','activation') then return nil,rec.diagnostic end
-  if shell_lifecycle and not shell_lifecycle(rec,'activation') then return nil,errors.new('E_ENGINE','shell cleanup failed; session retained') end
+  if not M.retire(rec,'stopped','activation') then memory.retire(owner); return nil,rec.diagnostic end
+  if shell_lifecycle and not shell_lifecycle(rec,'activation') then memory.retire(owner); return nil,errors.new('E_ENGINE','shell cleanup failed; session retained') end
   rec.run_generation=rec.run_generation+1
   rec.run_id=rec.id..'/run-'..string.format('%.0f',rec.run_generation)
-  rec.active={source=plan.source,revision=rec.saved_revision,api_version=1,compiler_version=limits.compiler_version,storage_version=limits.storage_version,handlers=plan.handlers}
+  memory.retire(rec.active_source_memory)
+  rec.active_source_memory=owner; rec.active=active_source
   rec.status='running'; rec.diagnostic=nil; rec.candidate_diagnostic=nil
   if plan.handlers.start then
     local event={name='start',tick=tick,computer_id=rec.id,run_id=rec.run_id,sequence=registry.sequence()}

@@ -42,7 +42,7 @@ All names in `scripts/runtime/limits.lua` are assigned here; duplicates across r
 
 - Format/version metadata, not resource settings: `api_version`, `compiler_version`, `storage_version`.
 - Work/cache policy: `callback_work`, `callback_allocations`, `compile_work`, `host_work_per_tick`, `maintenance_work_per_tick`, `compiler_cache_bytes`.
-- Compiler/host recursion and source shape: `source_bytes`, `generated_source_bytes`, `source_nodes`, `source_tokens`, `source_nesting`, `handler_names`, `identifier_bytes`, `tuple_entries`, `callback_depth`.
+- Compiler/host recursion and source shape: `host_stack_depth`, `identifier_bytes`, `tuple_entries`, `callback_depth`. The obsolete `source_bytes`, `generated_source_bytes`, `source_nodes`, `source_tokens`, `source_nesting` and `handler_names` fields are removed. Saved/active source now uses distinct owners on the existing host account; Console and other downstream storage guards remain pending.
 - Global metadata counts: `active_computers`, `active_logic_handlers`, `aggregate_subscriptions`, `aggregate_owned_outputs`, `registry_entries`, `owned_children`, `shell_sessions`, `host_hooks`.
 - State/Data shape: `state_bytes`, `state_entries`, `data_depth`, `string_bytes`, `table_entries`, `peripheral_call_bytes`, `peripheral_call_entries`. The former `data_nodes` declaration and its shared-copy/event/timer checks are removed; node statistics remain for accounting. Durable service copies use retained-memory admission instead of `peripheral_call_bytes`, but non-durable copies and other shape checks still require integration.
 - Queues/registrations: `event_queue_entries`, `event_queue_bytes`, `timers`, `subscriptions`, `shell_pending_entries`, `shell_pending_bytes`.

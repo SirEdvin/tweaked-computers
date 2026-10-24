@@ -296,18 +296,19 @@ end
   success,diagnostic=document('function '..long_name..'() end',long_name)
   assert(success,diagnostic and diagnostic.message)
   report('declaration-reserved-public-and-private-identifiers')
+  local former_export_limit=64
   local declarations={}
-  for i=1,limits.handler_names do declarations[i]='function f'..i..'() end' end
+  for i=1,former_export_limit do declarations[i]='function f'..i..'() end' end
   local maximum=table.concat(declarations,'\n')
-  success,diagnostic,candidate=document(maximum,'f'..limits.handler_names)
+  success,diagnostic,candidate=document(maximum,'f'..former_export_limit)
   assert(success,diagnostic and diagnostic.message)
   local export_count=0; for _ in pairs(candidate.handlers) do export_count=export_count+1 end
-  assert(export_count==limits.handler_names)
+  assert(export_count==former_export_limit)
   success,diagnostic=document(maximum..'\nfunction overflow() end','overflow')
   assert(success,diagnostic and diagnostic.message)
   report('declaration-maximum-export-inventory')
   declarations={}
-  for i=1,limits.handler_names do
+  for i=1,former_export_limit do
     local name='f'..string.rep('x',limits.identifier_bytes-4)..string.format('%03d',i)
     declarations[i]='function '..name..'() assert(type('..name..')=="function") end'
   end
@@ -315,7 +316,7 @@ end
   assert(success,diagnostic and diagnostic.message)
   report('declaration-maximum-identifier-and-binding-work')
   declarations={}
-  for i=1,limits.handler_names+1 do declarations[i]='local function h'..i..'() end' end
+  for i=1,former_export_limit+1 do declarations[i]='local function h'..i..'() end' end
   success,diagnostic=document(table.concat(declarations,'\n')..'\nfunction start() h1(); h'..#declarations..'() end')
   assert(success,diagnostic and diagnostic.message)
   -- Native lexical limits still apply; no new unbounded private registry.

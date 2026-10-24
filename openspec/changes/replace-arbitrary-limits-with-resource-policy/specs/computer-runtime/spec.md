@@ -33,7 +33,7 @@ Save/load and multiplayer joining SHALL preserve source revision, run generation
 - **AND** retained work resumes without invoking `start` or repeating already completed peripheral writes.
 
 ### Requirement: Bounded native work
-Source validation, reconstruction, callbacks and host services SHALL have explicit per-computer and aggregate limits. Loops, recursion, allocation and opaque library work MUST be bounded. Work exhaustion SHALL suspend/resume; memory and depth exhaustion SHALL refuse recoverably under resource-policy. Pressure alone SHALL NOT fault a run or clear outputs.
+Source validation, reconstruction, callbacks and host services SHALL have explicit per-computer and aggregate resource protection. Loops, recursion, allocation and opaque library work MUST be bounded. Runtime work exhaustion SHALL suspend/resume; compilation/reconstruction use bounded non-resumable passes. Memory, necessary depth and compilation-work refusal SHALL be recoverable. Pressure alone SHALL NOT fault a run or clear outputs.
 
 #### Scenario: Infinite loop cannot monopolize the simulation
 - **WHEN** a callback loops indefinitely or repeatedly catches ordinary errors
@@ -45,6 +45,11 @@ Source validation, reconstruction, callbacks and host services SHALL have explic
 - **WHEN** a program attempts maximum-sized concatenation, formatting, table construction, state copying or peripheral output
 - **THEN** required work and capacity are checked before the affected mutation
 - **AND** valid accepted maxima fit the published service envelope.
+
+#### Scenario: Bounded blocks preserve safety without per-primitive checkpoints
+- **WHEN** several small operations execute in one conservatively admitted block
+- **THEN** work and growth remain bounded, source errors and committed prefixes are preserved, and loops, callbacks and effects cannot bypass admission or Stop
+- **AND** an artificial block boundary does not create a new capacity refusal when the operations can safely be split across slices.
 
 ### Requirement: Deterministic event dispatch
 Computers SHALL process non-reentrant callbacks in deterministic order using simulation ticks, durable queue sequence numbers and a fair bounded scheduler. Ordinary API and hard-resource errors SHALL be catchable; scheduling suspension and stop SHALL NOT be catchable. A suspended invocation SHALL finish or end before its lane starts another callback. Uncaught resource refusal SHALL end only that invocation; unrelated program errors retain existing fault semantics.
@@ -146,6 +151,11 @@ Suspended invocations SHALL preserve control location, locals, aliases, closure 
 - **WHEN** a handler writes a KV value, enters a nested function with aliased tables and suspends before another write
 - **THEN** a cold-loaded or joining peer resumes with identical values and performs only the remaining write
 - **AND** loading executes no guest code and replenishes no credits.
+
+#### Scenario: Reconstruction cannot fit reduced settings
+- **WHEN** a bounded reconstruction pass cannot fit the current resource policy
+- **THEN** source, suspended frames and committed state remain intact with a recoverable diagnostic and host control/recovery access
+- **AND** no startup or completed effect replays, no partial compiler state becomes trusted code, and a suitable allowance permits reconstruction without resetting handler progress.
 
 ### Requirement: Runtime pressure and event-loss introspection
 The runtime SHALL expose a defensive snapshot containing wait reason, effective policy, usage and persistent event-drop diagnostics. Diagnostic reads and control actions SHALL have reserved service opportunity under guest resource exhaustion.
