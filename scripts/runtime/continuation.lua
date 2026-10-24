@@ -69,16 +69,25 @@ end
 -- The ordinary compiler validates the source before passing its AST here.
 -- Unsupported slice syntax is explicit, never executed by a native fallback.
 function M.lower(main,reject,position,mode)
+  local function vector(...)
+    parsing.allocate(192+48*select('#',...))
+    return {...}
+  end
+  local function put(t,key,value)
+    if t[key]==nil and value~=nil then parsing.allocate(48) end
+    t[key]=value
+  end
+  parsing.allocate(9*192)
   local blocks,flow,locals,local_count,slots={},{},{},0,0
   local symbol_paths,literals,calls={},{},{}
   local protos,proto_ids,captured={},{},{}
   local function static_path(node)
-    local parts,bytes={},0
+    local parts,bytes=vector(),0
     while node and node.node_type=='index' and node.suffix.node_type=='string' do
       local key=node.suffix.value
       parsing.enter(#key+1)
       if key:find('.',1,true) then return end
-      parts[#parts+1]=key; bytes=bytes+#key+1
+      put(parts,#parts+1,key); bytes=bytes+#key+1
       if node.src_ex_did_not_exist then
         parsing.enter(bytes+#parts+1)
         for i=1,#parts/2 do parts[i],parts[#parts-i+1]=parts[#parts-i+1],parts[i] end
@@ -93,63 +102,65 @@ function M.lower(main,reject,position,mode)
     local def=ref.reference_def
     while def and def.def_type=='upval' do def=def.parent_def end
     if not def or def.def_type~='local' then reject(ref,'invalid lexical reference','E_UNSUPPORTED') end
-    if not locals[def] then local_count=local_count+1; locals[def]=local_count end
+    if not locals[def] then put(locals,def,local_count+1); local_count=local_count+1 end
     local id=locals[def]
-    if #def.child_defs>0 then captured[id]=true end
+    if #def.child_defs>0 then put(captured,id,true) end
     return captured[id] and 'f.cells['..id..'].value' or 'f.locals['..id..']',id
   end
   local function value(i) return 'f.slots['..i..']' end
   local function block(n,code,nextpc,uses,defs,branch)
     parsing.enter(#code+1)
     local line,column=position(n)
+    parsing.allocate(2*192+8*48)
     blocks[#blocks+1]={line=line,column=column,code=code..'; return '..nextpc}
-    flow[#blocks]={uses=uses or {},defs=defs or {},next={nextpc,branch}}
+    flow[#blocks]={uses=uses or vector(),defs=defs or vector(),next=vector(nextpc,branch)}
     return #blocks
   end
-  local function reserve() blocks[#blocks+1]=false; return #blocks end
+  local function reserve() put(blocks,#blocks+1,false); return #blocks end
   local function define(pc,n,code,successors,uses,defs)
     parsing.enter(#code+1)
     local line,column=position(n)
+    parsing.allocate(2*192+7*48)
     blocks[pc]={line=line,column=column,code=code}
-    flow[pc]={uses=uses or {},defs=defs or {},next=successors}
+    flow[pc]={uses=uses or vector(),defs=defs or vector(),next=successors}
   end
   function expression(n,out,nextpc)
     parsing.enter(1)
     local k=n.node_type
     local target=value(out)
     local function output(code,uses,tuple)
-      return block(n,target..'='..code,nextpc,uses,{'s'..out,tuple and 't'..out or nil})
+      return block(n,target..'='..code,nextpc,uses,vector('s'..out,tuple and 't'..out or nil))
     end
     if k=='number' then return output(n.src_value or tostring(n.value))
-    elseif k=='string' then literals[n.value]=true; return output(quote(n.value))
+    elseif k=='string' then put(literals,n.value,true); return output(quote(n.value))
     elseif k=='boolean' then return output(tostring(n.value))
     elseif k=='nil' then return output('nil')
     elseif k=='vararg' then
-      calls[out]=true
+      put(calls,out,true)
       return output('r.varargs('..out..')',nil,true)
     elseif k=='local_ref' or k=='upval_ref' then
       local ref,id=register(n)
-      return output(ref,{'l'..id})
+      return output(ref,vector('l'..id))
     elseif k=='func_proto' then
       local id,captures=lower_function(n.func_def)
-      local uses,ids={},{}
-      for i,ref in ipairs(captures) do uses[i]='l'..ref; ids[i]=ref end
+      local uses,ids=vector(),vector()
+      for i,ref in ipairs(captures) do put(uses,i,'l'..ref); put(ids,i,ref) end
       return output('r.closure('..id..',{'..table.concat(ids,',')..'})',uses)
     elseif k=='index' then
       local path=static_path(n)
-      if path then symbol_paths[path]=true end
+      if path then put(symbol_paths,path,true) end
       if n.src_ex_did_not_exist then
         return output('r.global('..quote(n.suffix.value)..')')
       end
       local a,b=slot(),slot()
-      local pc=output('r.get('..value(a)..','..value(b)..')',{'s'..a,'s'..b})
+      local pc=output('r.get('..value(a)..','..value(b)..')',vector('s'..a,'s'..b))
       pc=expression(n.suffix,b,pc)
       return expression(n.ex,a,pc)
     elseif k=='binop' then
       local a,b=slot(),slot()
       if n.op=='and' or n.op=='or' then
         local right=expression(n.right,out,nextpc)
-        local pc=block(n,target..'='..value(a)..'; if '..(n.op=='and' and '' or 'not ')..value(a)..' then return '..right..' end',nextpc,{'s'..a},{'s'..out},right)
+        local pc=block(n,target..'='..value(a)..'; if '..(n.op=='and' and '' or 'not ')..value(a)..' then return '..right..' end',nextpc,vector('s'..a),vector('s'..out),right)
         return expression(n.left,a,pc)
       end
       local left,right=value(a),value(b)
@@ -158,8 +169,9 @@ function M.lower(main,reject,position,mode)
       elseif n.op=='==' or n.op=='~=' or n.op=='<' or n.op=='>' or n.op=='<=' or n.op=='>=' then
         left='r.guard.scalar('..left..')'; right='r.guard.scalar('..right..')'
       else reject(n,'unsupported continuation operator','E_UNSUPPORTED') end
-      local pc=output('('..left..' '..n.op..' '..right..')',{'s'..a,'s'..b})
+      local pc=output('('..left..' '..n.op..' '..right..')',vector('s'..a,'s'..b))
       parsing.enter(8)
+      parsing.allocate(192+7*48)
       blocks[pc].operands={left=a,right=b,op=n.op,output=out,nextpc=nextpc,
         numeric=n.op=='+' or n.op=='-' or n.op=='*' or n.op=='/' or n.op=='%' or n.op=='^'}
       pc=expression(n.right,b,pc)
@@ -170,47 +182,48 @@ function M.lower(main,reject,position,mode)
       elseif n.op=='-' then operand='-r.guard.number('..operand..')'
       elseif n.op=='#' then operand='r.guard.length('..operand..')'
       else reject(n,'unsupported continuation unary operator','E_UNSUPPORTED') end
-      return expression(n.ex,a,output('('..operand..')',{'s'..a}))
+      return expression(n.ex,a,output('('..operand..')',vector('s'..a)))
     elseif k=='concat' then
-      calls[out]=true
+      put(calls,out,true)
       return expressions(n.exp_list,function(tuple,uses)
         local pc=reserve()
         define(pc,n,'return r.invoke('..out..',r.symbol("@concat"),'..nextpc..',r.arguments('..tuple..'))',
-          {nextpc},uses,{'s'..out,'t'..out})
+          vector(nextpc),uses,vector('s'..out,'t'..out))
         return pc
       end)
     elseif k=='constructor' then
-      local fields,uses,evaluations={}, {},{}
+      local fields,uses,evaluations=vector(),vector(),vector()
       local array,tail=0
       for i,field in ipairs(n.fields) do
         local key,value_slot=slot(),slot()
+        parsing.allocate(2*192+48*(field.type=='list' and 7 or 6))
         if field.type=='list' then
           array=array+1
           evaluations[#evaluations+1]={number=array,out=key,node=field.value}
         else evaluations[#evaluations+1]={node=field.key,out=key} end
         evaluations[#evaluations+1]={node=field.value,out=value_slot}
         if field.type=='list' and i==#n.fields and (field.value.node_type=='call' or field.value.node_type=='vararg') and not field.value.force_single_result then
-          tail='f.tuples['..value_slot..']'; uses[#uses+1]='t'..value_slot
+          tail='f.tuples['..value_slot..']'; put(uses,#uses+1,'t'..value_slot)
         else
-          fields[#fields+1]='{'..value(key)..','..value(value_slot)..'}'
-          uses[#uses+1]='s'..key; uses[#uses+1]='s'..value_slot
+          put(fields,#fields+1,'{'..value(key)..','..value(value_slot)..'}')
+          put(uses,#uses+1,'s'..key); put(uses,#uses+1,'s'..value_slot)
         end
       end
       local pc=output('r.construct({'..table.concat(fields,',')..'},'..(tail or 'nil')..','..array..')',uses)
       for i=#evaluations,1,-1 do
         local item=evaluations[i]
-        if item.number then pc=block(item.node,value(item.out)..'='..item.number,pc,nil,{'s'..item.out})
+        if item.number then pc=block(item.node,value(item.out)..'='..item.number,pc,nil,vector('s'..item.out))
         else pc=expression(item.node,item.out,pc) end
       end
       return pc
     elseif k=='call' then
       local callee=slot()
-      calls[out]=true
+      put(calls,out,true)
       local pc=expressions(n.args,function(tuple,uses)
-        uses[#uses+1]='s'..callee
+        put(uses,#uses+1,'s'..callee)
         local pc=reserve()
         define(pc,n,'return r.invoke('..out..','..value(callee)..','..nextpc..(tuple~='' and ','..tuple or '')..')',
-          {nextpc},uses,{'s'..out,'t'..out})
+          vector(nextpc),uses,vector('s'..out,'t'..out))
         return pc
       end,true)
       return expression(n.ex,callee,pc)
@@ -218,6 +231,7 @@ function M.lower(main,reject,position,mode)
     reject(n,'continuation slice does not yet lower '..tostring(k),'E_UNSUPPORTED')
   end
   function expressions(list,consume,spread)
+    parsing.allocate(2*192+2*48*#list)
     local outputs,values={},{}
     for i=1,#list do outputs[i]=slot(); values[i]=value(outputs[i]) end
     local last=list[#list]
@@ -229,6 +243,7 @@ function M.lower(main,reject,position,mode)
       if tail then values[#values+1]='r.arguments(f.tuples['..outputs[#outputs]..'])' end
       tuple=table.concat(values,',')
     end
+    parsing.allocate(192+48*#list)
     local uses={}
     for i=1,#list do uses[i]=(tail and i==#list and 't' or 's')..outputs[i] end
     local pc=consume(tuple,uses)
@@ -236,8 +251,8 @@ function M.lower(main,reject,position,mode)
     return pc
   end
   function body(scope,nextpc,breakpc)
-    local statements={}; local n=scope.body.first
-    while n do statements[#statements+1]=n; n=n.next end
+    local statements=vector(); local n=scope.body.first
+    while n do put(statements,#statements+1,n); n=n.next end
     for i=#statements,1,-1 do nextpc=statement(statements[i],nextpc,breakpc) end
     return nextpc
   end
@@ -249,10 +264,12 @@ function M.lower(main,reject,position,mode)
     elseif k=='localfunc' then
       local _,id=register(n.name)
       local out=slot()
-      local assign=block(n,'r.assign({{slot='..id..(captured[id] and ',cell=true' or '')..'}}, {n=1,'..value(out)..'})',nextpc,{'s'..out,captured[id] and 'l'..id or nil},{'l'..id})
+      local assign=block(n,'r.assign({{slot='..id..(captured[id] and ',cell=true' or '')..'}}, {n=1,'..value(out)..'})',nextpc,vector('s'..out,captured[id] and 'l'..id or nil),vector('l'..id))
+      parsing.allocate(192+2*48)
       local create=expression({node_type='func_proto',func_def=n.func_def},out,assign)
-      return captured[id] and block(n,'r.new_cells({'..id..'})',create,nil,{'l'..id}) or create
+      return captured[id] and block(n,'r.new_cells({'..id..'})',create,nil,vector('l'..id)) or create
     elseif k=='funcstat' then
+      parsing.allocate(4*192+7*48)
       return statement({node_type='assignment',lhs={n.name},rhs={{node_type='func_proto',func_def=n.func_def}}},nextpc,breakpc)
     elseif k=='localstat' or k=='assignment' then
       local lhs=n.lhs[1]
@@ -261,38 +278,38 @@ function M.lower(main,reject,position,mode)
       if #n.lhs==1 and lhs.node_type=='local_ref' and not captured[first_id] and n.rhs and #n.rhs==1 then
         local ref=register(lhs); local out=slot()
         local pc=block(n,'r.guard.scalar(r.decode('..value(out)..'),true); '..ref..'=r.guard.bind(1,'..value(out)..')',
-          nextpc,{'s'..out},{'l'..locals[lhs.reference_def]})
+          nextpc,vector('s'..out),vector('l'..locals[lhs.reference_def]))
         return expression(n.rhs[1],out,pc)
       end
       if #n.lhs==1 and lhs.node_type=='index' and not lhs.src_ex_did_not_exist and n.rhs and #n.rhs==1 then
         local object,key,out=slot(),slot(),slot()
         local pc=block(n,'r.assign_one('..value(object)..','..value(key)..','..value(out)..')',
-          nextpc,{'s'..object,'s'..key,'s'..out})
+          nextpc,vector('s'..object,'s'..key,'s'..out))
         pc=expression(n.rhs[1],out,pc)
         pc=expression(lhs.suffix,key,pc)
         return expression(lhs.ex,object,pc)
       end
-      local targets,defs,evaluations,target_uses,new_cells,refs={},{},{},{},{},{}
+      local targets,defs,evaluations,target_uses,new_cells,refs=vector(),vector(),vector(),vector(),vector(),vector()
       for i,lhs in ipairs(n.lhs) do
         if lhs.node_type=='local_ref' or lhs.node_type=='upval_ref' then
           local _,id=register(lhs)
-          targets[i]='{slot='..id..(captured[id] and ',cell=true' or '')..'}'
-          if lhs.node_type=='local_ref' and not captured[id] then refs[#refs+1]='f.locals['..id..']' end
-          defs[#defs+1]='l'..id
+          put(targets,i,'{slot='..id..(captured[id] and ',cell=true' or '')..'}')
+          if lhs.node_type=='local_ref' and not captured[id] then put(refs,#refs+1,'f.locals['..id..']') end
+          put(defs,#defs+1,'l'..id)
           if captured[id] then
-            if k=='localstat' then new_cells[#new_cells+1]=id else target_uses[#target_uses+1]='l'..id end
+            if k=='localstat' then put(new_cells,#new_cells+1,id) else put(target_uses,#target_uses+1,'l'..id) end
           end
         elseif mode=='shell' and lhs.node_type=='index' and lhs.src_ex_did_not_exist then
-          targets[i]='{name='..quote(lhs.suffix.value)..'}'
+          put(targets,i,'{name='..quote(lhs.suffix.value)..'}')
         elseif lhs.node_type=='index' and not lhs.src_ex_did_not_exist then
           local object,key=slot(),slot()
-          targets[i]='{'..value(object)..','..value(key)..'}'
-          evaluations[#evaluations+1]={lhs.ex,object}; evaluations[#evaluations+1]={lhs.suffix,key}
-          target_uses[#target_uses+1]='s'..object; target_uses[#target_uses+1]='s'..key
+          put(targets,i,'{'..value(object)..','..value(key)..'}')
+          put(evaluations,#evaluations+1,vector(lhs.ex,object)); put(evaluations,#evaluations+1,vector(lhs.suffix,key))
+          put(target_uses,#target_uses+1,'s'..object); put(target_uses,#target_uses+1,'s'..key)
         else reject(lhs,'global assignment is forbidden','E_UNSUPPORTED') end
       end
-      local pc=expressions(n.rhs or {},function(tuple,uses)
-        for _,ref in ipairs(target_uses) do uses[#uses+1]=ref end
+      local pc=expressions(n.rhs or vector(),function(tuple,uses)
+        for _,ref in ipairs(target_uses) do put(uses,#uses+1,ref) end
         if #refs==#n.lhs then
           return block(n,table.concat(refs,',')..'=r.bind('..#refs..','..tuple..')',nextpc,uses,defs)
         end
@@ -305,64 +322,64 @@ function M.lower(main,reject,position,mode)
     elseif k=='breakstat' then return block(n,'',assert(breakpc))
     elseif k=='retstat' and #n.exp_list==0 then return block(n,'',0)
     elseif k=='retstat' then
-      calls[0]=true
+      put(calls,0,true)
       return expressions(n.exp_list,function(tuple,uses)
         return block(n,'r.finish('..tuple..')',0,uses)
       end)
     elseif k=='forlist' then
       local iterator,state,control,out=slot(),slot(),slot(),slot()
-      calls[out]=true
+      put(calls,out,true)
       local head=reserve()
       local loop=body(n,head,nextpc)
-      local targets,defs,new_cells,refs={},{'s'..control},{},{}
+      local targets,defs,new_cells,refs=vector(),vector('s'..control),vector(),vector()
       for i,ref in ipairs(n.name_list) do
-        local _,id=register(ref); targets[i]='{slot='..id..(captured[id] and ',cell=true' or '')..'}'
-        if not captured[id] then refs[#refs+1]='f.locals['..id..']' end
-        defs[#defs+1]='l'..id
-        if captured[id] then new_cells[#new_cells+1]=id end
+        local _,id=register(ref); put(targets,i,'{slot='..id..(captured[id] and ',cell=true' or '')..'}')
+        if not captured[id] then put(refs,#refs+1,'f.locals['..id..']') end
+        put(defs,#defs+1,'l'..id)
+        if captured[id] then put(new_cells,#new_cells+1,id) end
       end
       local test=block(n,'if f.tuples['..out..'][1]~=nil then '..(#new_cells>0 and 'r.new_cells({'..table.concat(new_cells,',')..'}); ' or '')..
         (#new_cells==0 and table.concat(refs,',')..'=r.bind('..#refs..',f.tuples['..out..']); '
           or 'r.assign({'..table.concat(targets,',')..'},f.tuples['..out..']); ')..value(control)..'=f.tuples['..out..'][1]; return '..loop..' end',
-        nextpc,{'t'..out},defs,loop)
+        nextpc,vector('t'..out),defs,loop)
       define(head,n,'return r.invoke('..out..','..value(iterator)..','..test..','..value(state)..','..value(control)..')',
-        {test},{'s'..iterator,'s'..state,'s'..control},{'t'..out})
+        vector(test),vector('s'..iterator,'s'..state,'s'..control),vector('t'..out))
       return expressions(n.exp_list,function(tuple,uses)
         return block(n,'local t='..tuple..'; '..value(iterator)..','..value(state)..','..value(control)..'=t[1],t[2],t[3]',
-          head,uses,{'s'..iterator,'s'..state,'s'..control})
+          head,uses,vector('s'..iterator,'s'..state,'s'..control))
       end)
     elseif k=='fornum' then
       local index,limit,step=slot(),slot(),slot()
       local localvar,var_id=register(n.var)
       local head=reserve()
-      local advance=block(n,value(index)..'='..value(index)..'+'..value(step),head,{'s'..index,'s'..step},{'s'..index})
+      local advance=block(n,value(index)..'='..value(index)..'+'..value(step),head,vector('s'..index,'s'..step),vector('s'..index))
       local loop=body(n,advance,nextpc)
-      local controls={'s'..index,'s'..limit,'s'..step}
+      local controls=vector('s'..index,'s'..limit,'s'..step)
       define(head,n,'if ('..value(step)..'>0 and '..value(index)..'<='..value(limit)..') or ('..value(step)..'<=0 and '..value(index)..'>='..value(limit)..') then '..
         (captured[var_id] and 'r.new_cells({'..var_id..'}); r.assign({{slot='..var_id..',cell=true}},{n=1,'..value(index)..'});' or localvar..'='..value(index)..';')..' return '..loop..' end; return '..nextpc,
-        {loop,nextpc},controls,{'l'..locals[n.var.reference_def]})
+        vector(loop,nextpc),controls,vector('l'..locals[n.var.reference_def]))
       local convert=block(n,'local a,b,c=r.guard.number('..value(index)..'),r.guard.number('..value(limit)..'),r.guard.number('..value(step)..'); '..value(index)..','..value(limit)..','..value(step)..'=a,b,c',head,controls,controls)
-      local pc=n.step and expression(n.step,step,convert) or block(n,value(step)..'=1',convert,nil,{'s'..step})
+      local pc=n.step and expression(n.step,step,convert) or block(n,value(step)..'=1',convert,nil,vector('s'..step))
       pc=expression(n.stop,limit,pc)
       return expression(n.start,index,pc)
     elseif k=='whilestat' then
       local head=reserve(); local condition=slot()
       local loop=body(n,head,nextpc)
-      local test=expression(n.condition,condition,block(n,'if '..value(condition)..' then return '..loop..' end',nextpc,{'s'..condition},nil,loop))
-      define(head,n,'return '..test,{test})
+      local test=expression(n.condition,condition,block(n,'if '..value(condition)..' then return '..loop..' end',nextpc,vector('s'..condition),nil,loop))
+      define(head,n,'return '..test,vector(test))
       return head
     elseif k=='repeatstat' then
       local head=reserve(); local condition=slot()
-      local test=expression(n.condition,condition,block(n,'if not '..value(condition)..' then return '..head..' end',nextpc,{'s'..condition},nil,head))
+      local test=expression(n.condition,condition,block(n,'if not '..value(condition)..' then return '..head..' end',nextpc,vector('s'..condition),nil,head))
       local loop=body(n,test,nextpc)
-      define(head,n,'return '..loop,{loop})
+      define(head,n,'return '..loop,vector(loop))
       return head
     elseif k=='ifstat' then
       local pc=n.elseblock and body(n.elseblock,nextpc,breakpc) or nextpc
       for i=#n.ifs,1,-1 do
         local b=n.ifs[i]; local condition=slot()
         local branch=body(b,nextpc,breakpc)
-        pc=expression(b.condition,condition,block(b,'if '..value(condition)..' then return '..branch..' end',pc,{'s'..condition},nil,branch))
+        pc=expression(b.condition,condition,block(b,'if '..value(condition)..' then return '..branch..' end',pc,vector('s'..condition),nil,branch))
       end
       return pc
     end
@@ -370,17 +387,19 @@ function M.lower(main,reject,position,mode)
   end
   function lower_function(fn)
     if proto_ids[fn] then local id=proto_ids[fn]; return id,protos[id].captures end
-    local id=#protos+1; proto_ids[fn]=id
+    local id=#protos+1; put(proto_ids,fn,id)
+    parsing.allocate(2*192+3*48)
     local proto={captures={}}; protos[id]=proto
-    for _,upval in ipairs(fn.upvals or {}) do
+    for _,upval in ipairs(fn.upvals or vector()) do
       if upval.name~='_ENV' then
-        local _,ref=register({reference_def=upval}); proto.captures[#proto.captures+1]=ref
+        parsing.allocate(192+48)
+        local _,ref=register({reference_def=upval}); put(proto.captures,#proto.captures+1,ref)
       end
     end
-    local params,defs,new_cells={},{},{}
-    for i,param in ipairs(fn.params or {}) do
-      local _,ref=register(param); params[i]=ref; defs[#defs+1]='l'..ref
-      if captured[ref] then new_cells[#new_cells+1]=ref end
+    local params,defs,new_cells=vector(),vector(),vector()
+    for i,param in ipairs(fn.params or vector()) do
+      local _,ref=register(param); put(params,i,ref); put(defs,#defs+1,'l'..ref)
+      if captured[ref] then put(new_cells,#new_cells+1,ref) end
     end
     local entry=body(fn,0)
     if #params>0 then entry=block(fn,'r.parameters({'..table.concat(params,',')..'},{'..table.concat(new_cells,',')..'})',entry,nil,defs)
@@ -389,45 +408,45 @@ function M.lower(main,reject,position,mode)
     proto.entry=entry
     return id,proto.captures
   end
-  local handlers,entries,helpers={},{},{}
-  local exports={}
+  local handlers,entries,helpers=vector(),vector(),vector()
+  local exports=vector()
   local first=main.body.first
   while first and first.node_type=='empty' do first=first.next end
-  if mode=='shell' then handlers.command=main
+  if mode=='shell' then put(handlers,'command',main)
   elseif first and first.node_type=='retstat' then
     local descriptor=first.exp_list[1]
     for _,field in ipairs(descriptor.fields) do
       if field.key.value=='handlers' then
-        for _,handler in ipairs(field.value.fields) do handlers[handler.key.value]=handler.value.func_def end
+        for _,handler in ipairs(field.value.fields) do put(handlers,handler.key.value,handler.value.func_def) end
       end
     end
   else
     local n=first
     while n do
-      if n.node_type=='funcstat' then handlers[n.name.suffix.value]=n.func_def
-      elseif n.node_type=='localfunc' then helpers[#helpers+1]=n
+      if n.node_type=='funcstat' then put(handlers,n.name.suffix.value,n.func_def)
+      elseif n.node_type=='localfunc' then put(helpers,#helpers+1,n)
       elseif n.node_type~='empty' then reject(n,'unsupported declaration','E_UNSUPPORTED') end
       n=n.next
     end
   end
-  local names={}; for name in pairs(handlers) do names[#names+1]=name end; table.sort(names)
+  local names=vector(); for name in pairs(handlers) do put(names,#names+1,name) end; table.sort(names)
   for _,name in ipairs(names) do
     local fn=handlers[name]
     local id=lower_function(fn)
-    if mode~='shell' and first.node_type~='retstat' then exports[#exports+1]='['..quote(name)..']='..id end
+    if mode~='shell' and first.node_type~='retstat' then put(exports,#exports+1,'['..quote(name)..']='..id) end
   end
   local exports_text='{'..table.concat(exports,',')..'}'
   for _,name in ipairs(names) do
     local entry=protos[proto_ids[handlers[name]]].entry
     if #exports>0 then
-      local uses={}
+      local uses=vector()
       for _,handler in ipairs(names) do
-        for _,ref in ipairs(protos[proto_ids[handlers[handler]]].captures) do uses[#uses+1]='l'..ref end
+        for _,ref in ipairs(protos[proto_ids[handlers[handler]]].captures) do put(uses,#uses+1,'l'..ref) end
       end
       entry=block(handlers[name],'r.init_exports('..exports_text..')',entry,uses)
     end
     for i=#helpers,1,-1 do entry=statement(helpers[i],entry) end
-    entries[#entries+1]='['..quote(name)..']='..entry
+    put(entries,#entries+1,'['..quote(name)..']='..entry)
   end
   -- Temporary graph tables use the same 192-byte/48-byte-field weights as private jobs.
   parsing.allocate(2*192+2*48*#flow)
@@ -512,14 +531,15 @@ function M.lower(main,reject,position,mode)
     end
   end
   local function quoted_set(values)
-    local ordered={}; for value in pairs(values) do ordered[#ordered+1]=value end
+    local ordered=vector(); for value in pairs(values) do put(ordered,#ordered+1,value) end
     table.sort(ordered,function(a,b) parsing.enter(#a+#b+1); return a<b end)
     for i,value in ipairs(ordered) do ordered[i]=quote(value) end
     return '{'..table.concat(ordered,',')..'}'
   end
-  local outputs={}; for out in pairs(calls) do outputs[#outputs+1]=out end
+  local outputs=vector(); for out in pairs(calls) do put(outputs,#outputs+1,out) end
   table.sort(outputs,function(a,b) parsing.enter(1); return a<b end)
   for i,out in ipairs(outputs) do outputs[i]='['..out..']=true' end
+  parsing.allocate(192+48*#protos)
   local functions={}
   for i,proto in ipairs(protos) do functions[i]='{entry='..proto.entry..',captures={'..table.concat(proto.captures,',')..'}}' end
   return 'return {blocks={'..table.concat(blocks,',\n')..'},cleanup={'..table.concat(cleanups,',')..'},entries={'..table.concat(entries,',')..'},protos={'..table.concat(functions,',')..'},symbols='..quoted_set(symbol_paths)..',strings='..quoted_set(literals)..',calls={'..table.concat(outputs,',')..'},call_count='..#outputs..',slots='..slots..',locals='..local_count..'}'

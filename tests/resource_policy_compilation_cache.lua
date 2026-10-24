@@ -39,7 +39,17 @@ function M.run()
       bytes=account.reserved-reserved
       return native_load(...)
     end
-    local native_source='function start() local x="private native cache"; assert(x~=nil) end'
+    local native_source=[[local function pack(...) return {...} end
+function start(...)
+  local x,y=1,2; local t={x,y,key="private native cache"}
+  local function bump(n) x=x+n; return x,nil end
+  for i=1,2 do t[i]=bump(i) end
+  for k,v in pairs(t) do if k=="key" then break else y=y+v end end
+  while x<10 do x=x+1 end
+  repeat y=y-1 until y==0
+  do local z=not false and #t or -1; assert(z) end
+  local a,b=pack(...),t.key.."!"; assert(a,b)
+end]]
     local a=admission.context(admission.new(),'native-cold',0)
     local b=admission.context(admission.new(),'native-warm',0)
     local requests={}
@@ -52,7 +62,7 @@ function M.run()
     _G.load,memory.reserve=native_load,native_reserve
     assert(plan and first,problem and problem.message)
     assert(bytes>#plan.generated*8,'lowering workspace was not admitted before native loading')
-    assert(#requests>2 and requests[1].amount==2*192+2*48*#first().blocks
+    assert(#requests>2 and requests[1].amount==9*192
       and requests[#requests].amount==#plan.generated*8,'workspace probe missed its real allocation boundaries')
     local second_plan,second_problem,second=compiler.prepare(native_source,b)
     assert(second_plan and second,second_problem and second_problem.message)
@@ -60,8 +70,17 @@ function M.run()
     assert(a.machine.compile==b.machine.compile and a.ledger.total==b.ledger.total)
     local original=first(); local modified=second(); modified.entries.start=nil
     assert(original.entries.start and first().entries.start,'caller mutated cached executable data')
-    -- Refuse inside lowering, including when work and memory would both run out.
-    for _,index in ipairs({1,math.floor(#requests/2),#requests-1}) do
+    local block_boundary,operand_boundary,liveness_boundary
+    for i,step in ipairs(requests) do
+      if step.amount==2*192+8*48 then block_boundary=block_boundary or i end
+      if step.amount==192+7*48 then operand_boundary=operand_boundary or i end
+      if step.amount==2*192+2*48*#original.blocks then liveness_boundary=liveness_boundary or i end
+    end
+    assert(block_boundary and operand_boundary and liveness_boundary
+      and block_boundary<liveness_boundary and operand_boundary<liveness_boundary,
+      'graph growth was not admitted before liveness analysis')
+    -- Refuse graph construction as well as later analysis, with competing shortages.
+    for _,index in ipairs({1,block_boundary,operand_boundary,liveness_boundary,math.floor(#requests/2),#requests-1}) do
       local step=requests[index]
       for _,short_work in ipairs({false,true}) do
         assert(compiler.prepare(native_source,admission.context(admission.new(),'warm-lowering',0)))
