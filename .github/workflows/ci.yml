@@ -91,7 +91,7 @@ jobs:
           set -euo pipefail
           archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
           engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
-          for fixture in kv_engine configurator_engine configurator_full_engine; do
+          for fixture in kv_engine configurator_engine configurator_full_engine configurator_resource_engine; do
             data=()
             if [[ "$fixture" == configurator_full_engine ]]; then data+=(--data-fixture tests.configurator_full_data); fi
             python tools/smoke.py --factorio "$engine" --archive "$archive" \

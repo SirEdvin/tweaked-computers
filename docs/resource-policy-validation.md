@@ -4,6 +4,31 @@ This is an **unfinished implementation checkpoint**, not a release candidate or 
 
 The [source-site disposition inventory](resource-policy-inventory.md) maps every policy-manifest audit row and shared limit constant to its implementation paths and required treatment. Inventory coverage is not proof that those limits have been removed.
 
+## Configurator shared-group preparation checkpoint
+
+Preparing a section join now snapshots the incoming force-local logistic group's
+native filters, including empty slot positions, and includes that payload in the
+existing preparation work estimate. Commit rechecks those filters before any
+setter or section creation. An outside writer changing the destination group
+while preparation is paused now causes `E_BUSY` without changing the target or
+creating a recovery record. Both `setSection` and `addSection` use this check.
+Native group membership handles are never retained in the prepared plan.
+
+The native regression fails against the old implementation, which accepts the
+changed destination group. The revised resource fixture verifies sparse slots,
+unchanged target contents after refusal, saved plans across separate-process
+cold reload, outside growth to 129 distinct filters, increased preparation work
+and complete successful joins after fresh preparation in base and Space Age.
+CI now runs this fixture alongside the existing Configurator fixtures rather
+than removing the later failing speaker integration gate.
+
+Evidence: `/home/siredvin/artifacts/tweaked-computers/resource-policy-configurator-groups/`.
+These new cases use actual native group/section APIs and direct adapter plans;
+the fixture's existing service-cursor cases still use an explicitly labelled
+host guard double. This is not production result/recovery ownership or exactly-once
+guest delivery: `guard.commit_configuration` remains unavailable. No production
+budget or acceptance gate changed, and task 7.3 remains open at **12/47** overall.
+
 ## Scalar validation metering checkpoint
 
 Validation-only string transfers now retain their constant type/length check

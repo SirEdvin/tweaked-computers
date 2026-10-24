@@ -45,6 +45,21 @@ function M.get(item,spend)
   end
   return (data.copy(result,spend,limits.host_memory_bytes))
 end
+local function group_snapshot(item,name,spend)
+  if not name or name=='' then return nil end
+  spend(#name+128)
+  local group=item.entity.force.get_logistic_group(name,defines.logistic_group_type.with_trash)
+  local filters={}
+  if group then
+    spend(#group.filters*64+#group.members*8)
+    for i,value in ipairs(group.filters) do
+      local normal=validation.normal(catalog.section_fields.filters.items,value)
+      normal.index=i; filters[i]=normal
+    end
+  end
+  -- Native members are observation-only LuaObjects, never part of a saved plan.
+  return (data.copy(filters,spend,limits.host_memory_bytes))
+end
 local function fields(value,spend,patch,cursor)
   cursor=cursor or {}
   if not cursor.request then
@@ -148,16 +163,20 @@ function M.prepare_set(item,origin,i,patch,spend,cursor)
   local final_group=values.group
   if final_group==nil then final_group=before.group end
   if values.filters~=nil and final_group~='' then errors.raise('E_SHARED_SCOPE','shared filter writes refused; explicitly detach first') end
+  local incoming=values.group~=before.group and group_snapshot(item,values.group,spend) or nil
   -- Reserve bounded setter + readback + restoration including saved effective filters.
-  local _,stats=data.copy({before=before_all,request=request},spend,limits.host_memory_bytes)
+  local _,stats=data.copy({before=before_all,request=request,incoming=incoming},spend,limits.host_memory_bytes)
   return {id=item.id,operation='set',index=i,values=values,request=request,before=before_all,
-    work=stats.bytes*3+stats.nodes*4+(#before.filters+#(values.filters or {}))*64+1024}
+    incoming=incoming,work=stats.bytes*3+stats.nodes*4+(#before.filters+#(values.filters or {})+#(incoming or {}))*64+1024}
 end
 local function revalidate(item,origin,plan,spend)
   guard(item,origin)
   if item.id~=plan.id then errors.raise('E_UNREACHABLE','prepared section target identity changed') end
   local current=M.get(item,spend)
   if not validation.equal(current,plan.before) then errors.raise('E_BUSY','target sections changed while preparing; retry with current sections') end
+  if plan.incoming and not validation.equal(group_snapshot(item,plan.values.group,spend),plan.incoming) then
+    errors.raise('E_BUSY','shared group changed while preparing; retry with current group')
+  end
   spend(plan.work)
 end
 function M.set(item,origin,i,patch,spend,prepared)
@@ -185,10 +204,11 @@ function M.prepare_add(item,origin,definition,spend,cursor)
   local before=M.get(item,spend)
 
   if (values.group or '')~='' and values.filters~=nil then errors.raise('E_SHARED_SCOPE','group assignment cannot write shared contents') end
-  local _,stats=data.copy({before=before,request=request},spend,limits.host_memory_bytes)
+  local incoming=group_snapshot(item,values.group,spend)
+  local _,stats=data.copy({before=before,request=request,incoming=incoming},spend,limits.host_memory_bytes)
   local cb=control(item,false); local absent=not cb
   return {id=item.id,operation='add',values=values,request=request,before=before,
-    work=stats.bytes*3+stats.nodes*4+#(values.filters or {})*64+1024+(absent and 16384 or 0)}
+    incoming=incoming,work=stats.bytes*3+stats.nodes*4+(#(values.filters or {})+#(incoming or {}))*64+1024+(absent and 16384 or 0)}
 end
 function M.add(item,origin,definition,spend,prepared)
   local plan=prepared or M.prepare_add(item,origin,definition,spend)

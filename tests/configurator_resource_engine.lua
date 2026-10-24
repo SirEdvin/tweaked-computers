@@ -42,12 +42,60 @@ local function call(name,...)
   return service.guarded_methods[name](nil,registry.record(state().cfg),'red',game.tick,nop,host_guard(),state().id,...)
 end
 local function fresh() state().job=nil; state().job_name=nil end
+local function shared_join(cfg)
+  local outside=create('constant-combinator',3,15)
+  local shared=assert(outside.get_or_create_control_behavior().add_section('resource-join'))
+  shared.set_slot(5,{value={type='item',name='iron-plate',quality='normal',comparator='='},min=3})
+  local entity=create('constant-combinator',9,15)
+  local cb=entity.get_or_create_control_behavior()
+  if cb.sections_count==0 then assert(cb.add_section('')) end
+  local target=item(entity)
+  local before=sections.get(target,nop)
+  local patch={set={group='resource-join'}}
+  local plan=sections.prepare_set(target,cfg,1,patch,nop)
+  shared.set_slot(5,{value={type='item',name='iron-plate',quality='normal',comparator='='},min=9})
+  check('E_BUSY',function() sections.commit(target,cfg,plan,nop) end)
+  assert(validation.equal(before,sections.get(target,nop)) and shared.get_slot(5).min==9)
+  local added=sections.prepare_add(target,cfg,{group='resource-join'},nop)
+  shared.set_slot(5,{value={type='item',name='iron-plate',quality='normal',comparator='='},min=11})
+  check('E_BUSY',function() sections.commit(target,cfg,added,nop) end)
+  assert(validation.equal(before,sections.get(target,nop)) and not cfg.configuration_recovery)
+  local joined=sections.set(target,cfg,1,patch,nop)
+  assert(joined.group=='resource-join' and joined.filters[1].index==5 and joined.filters[1].min==11)
+  assert(shared.get_slot(5).min==11)
+  sections.set(target,cfg,1,{set={group='',filters={}}},nop)
+  state().join={entity=entity,outside=outside,shared_index=shared.index,before=sections.get(target,nop),
+    set=sections.prepare_set(target,cfg,1,patch,nop),add=sections.prepare_add(target,cfg,{group='resource-join'},nop)}
+  report('shared-group-join-revalidates-outside-filters-before-set-and-add')
+end
+local function resume_shared_join(cfg)
+  local saved=state().join; local target=item(saved.entity)
+  local shared=saved.outside.get_control_behavior().get_section(saved.shared_index)
+  assert(validation.equal(saved.before,sections.get(target,nop)) and shared.get_slot(5).min==11)
+  assert(saved.set.incoming[5].min==11 and saved.add.incoming[5].min==11)
+  shared.filters={}
+  for _,filter in ipairs(state().filters) do
+    local native=validation.native(catalog.section_fields.filters.items,filter); native.index=nil
+    shared.set_slot(filter.index,native)
+  end
+  check('E_BUSY',function() sections.commit(target,cfg,saved.set,nop) end)
+  check('E_BUSY',function() sections.commit(target,cfg,saved.add,nop) end)
+  assert(validation.equal(saved.before,sections.get(target,nop)))
+  local plan=sections.prepare_set(target,cfg,1,{set={group='resource-join'}},nop)
+  assert(#plan.incoming==129 and plan.work>saved.set.work,'incoming group payload was omitted from preparation')
+  local result=sections.commit(target,cfg,plan,nop)
+  assert(#result.filters==129 and result.filters[129].value.name==state().filters[129].value.name)
+  local added=sections.add(target,cfg,{group='resource-join'},nop)
+  assert(#sections.get(target,nop)[added].filters==129 and shared.filters_count==129)
+  report('cold-shared-group-growth-refuses-stale-plans-and-fresh-129-filter-joins-succeed')
+end
 function M.run()
   registry.initialize(); game.forces.player.research_all_technologies()
   storage.configurator_resource_fixture={groups=0,phase='armed'}
   local cfg=assert(lifecycle.build(create(defs.devices.configurator.entity_name,0,0)))
   cfg.powered=true; lifecycle.power_entity(cfg).energy=defs.devices.configurator.watts/30
   state().cfg=cfg.id
+  shared_join(cfg)
   local entity=create('constant-combinator',3,0); state().entity=entity; state().id=targets.identity(entity)
   local target=lifecycle.connector(cfg,'targets','green')
   assert(target.connect_to(connector(entity,'green')))
@@ -181,6 +229,7 @@ function M.on_tick()
     loaded=false
     local cfg=registry.record(state().cfg)
     assert(cfg.configuration_recovery==state().recovery and cfg.configuration_recovery['host-fixture-257'].before.value==257)
+    resume_shared_join(cfg)
     assert(validation.equal(state().before,sections.get(item(state().entity),nop)))
     validation.resume(state().validation,function(n) state().paid=state().paid+n end)
     assert(state().validation.done and state().paid==state().expected_work)
