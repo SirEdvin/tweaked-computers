@@ -85,6 +85,16 @@ jobs:
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/resource-policy-state" --mode both \
             --fixture tests.resource_policy_state --production-context --cold
+      - name: Check event loss and throttled warning persistence
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
+          engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
+          for fixture in resource_policy_events resource_policy_warnings; do
+            python tools/smoke.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold
+          done
       - name: Check packaged sandbox and cold factory integration
         shell: bash
         run: |
@@ -124,10 +134,6 @@ jobs:
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/computer-cold" --mode both \
             --fixture tests.computer_cold --cold
-          for fixture in resource_policy_events; do
-            python tools/smoke.py --factorio "$engine" --archive "$archive" \
-              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold
-          done
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/runtime-budgets" --mode both \
             --fixture tests.runtime_budget_engine --production-context --cold

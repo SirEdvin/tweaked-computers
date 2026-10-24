@@ -12,7 +12,7 @@ function M.summary(status)
 
   local drops=status.dropped_events
   if drops and (drops.total>0 or drops.saturated) then
-    text=text..' / dropped '..tostring(drops.total)..(drops.saturated and '+' or '')
+    text=text..' / dropped '..string.format('%d',drops.total)..(drops.saturated and '+' or '')
   end
   return text
 end
@@ -29,7 +29,7 @@ function M.details(status,drafts)
       lines[#lines+1]=name..': '..r.used..' / '..r.limit..' '..r.unit..' / '..r.scope..' / '..r.setting..(r.over_limit and ' (over limit; accepted data retained)' or '')
     end
     local d=status.dropped_events
-    lines[#lines+1]='Dropped events (cumulative): '..d.total..(d.saturated and ' (saturated)' or '')
+    lines[#lines+1]='Dropped events (cumulative): '..string.format('%d',d.total)..(d.saturated and ' (saturated)' or '')
     if d.last_tick then lines[#lines+1]='Last drop at tick '..d.last_tick..': '..(d.last_kind or '')..' / '..(d.last_reason or '') end
     local e=status.last_refusal
     if e then

@@ -141,7 +141,20 @@ local function drop_event(rec,kind,tick,reason)
   if drops.total<MAX then drops.total=drops.total+1 end
   if drops.total==MAX then drops.saturated=true end
   drops.last_tick=tick; drops.last_kind=kind; drops.last_reason=reason
+  drops.warning_pending=true
   return false,'overflow'
+end
+-- Maintenance owns warning work. Event publication only records bounded control
+-- state, so full queues cannot recurse and an unpaid warning cannot lose a drop.
+function M.warn_event_drops(rec,tick,spend)
+  local drops=rec.dropped_events
+  if not drops or drops.total==0 or drops.warning_pending==false then return end
+  if drops.warning_tick and tick-drops.warning_tick<limits.event_drop_warning_interval then return end
+  spend(128) -- Bounded formatting; cumulative safe integers have at most 16 digits.
+  local text='Dropped events (cumulative): '..string.format('%d',drops.total)..(drops.saturated and ' (saturated)' or '')
+  if #text>limits.console_bytes then return end -- Retain pending status under a tiny live limit.
+  M.log(rec,text,tick,spend)
+  drops.warning_tick=tick; drops.warning_pending=false
 end
 local function event_copy(payload,spend)
   local ok,copied,stats=pcall(data.copy,payload,spend,limits.event_queue_bytes)

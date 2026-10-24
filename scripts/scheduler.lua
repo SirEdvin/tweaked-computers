@@ -242,6 +242,7 @@ function M.tick(tick)
         else M.advance_timers(rec,tick,spend) end
       end
     end)
+    M.try_maintenance(function() if rec then runtime.warn_event_drops(rec,tick,spend) end end)
   end
   root.scheduler.maintenance_cursor=maintenance_start%n+1
   for offset=0,n-1 do

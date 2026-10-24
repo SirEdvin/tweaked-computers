@@ -4,6 +4,27 @@ This is an **unfinished implementation checkpoint**, not a release candidate or 
 
 The [source-site disposition inventory](resource-policy-inventory.md) maps every policy-manifest audit row and shared limit constant to its implementation paths and required treatment. Inventory coverage is not proof that those limits have been removed.
 
+## Event-loss warning checkpoint
+
+Event publication now marks a pending warning without logging or enqueueing
+another event. The existing fair maintenance walk formats a cumulative message
+and prepays ordinary log retention before publication. The per-computer throttle
+and pending bit survive cold reload; exhausted maintenance or a too-small Console
+byte setting leaves the warning pending without evicting prior logs. Stop and
+reset do not clear physical loss diagnostics. Warning and workspace text use
+integer formatting to preserve the exact saturated counter.
+
+`tests.resource_policy_warnings` exercises full queues, separate-process throttle
+persistence, log eviction, pre-publication maintenance refusal, lowered Console
+bytes, exact-integer saturation, defensive guest status, and Stop/reset/Run.
+It uses the actual scheduler and maintenance ledger with fixture-local limits;
+it does not replace work admission with a no-op spender. CI includes the fixture
+beside `resource_policy_events`. Native-client observations and their exact
+test-only overlay are preserved separately from headless receipts at
+`/home/siredvin/artifacts/tweaked-computers/resource-policy-event-warnings/`.
+This checkpoint does not establish full-memory control reservation, complete
+ownership enrollment, multiplayer, or controller/chart performance acceptance.
+
 ## Configurator shared-group preparation checkpoint
 
 Preparing a section join now snapshots the incoming force-local logistic group's

@@ -34,7 +34,7 @@ Planning only. Every checkbox remains unfinished until real implementation and i
 
 - [x] 5.1 Replace `computer.publish_event` overflow faults with drop-newest entry/byte admission and durable counters; verify at-capacity, one-byte-over, oversized-single-event, multiple-handler and same-tick cases preserve queue order, registrations, state and outputs.
 - [x] 5.2 Audit timer, logic, topology, monitor, modem and power producers for preparation/refusal paths; verify each dropped delivery is counted once, one-shot timers retire, recurring deadlines advance, initial start cannot disappear and independent fail-safe cleanup still executes.
-- [ ] 5.3 Add `computer.getResourceStatus()` and host-backed workspace pressure/loss display plus rate-limited warnings; verify counter persistence across Stop/Run/reset/cold reload, warning eviction, native integer saturation and operation under full queues without recursively enqueueing warnings.
+- [x] 5.3 Add `computer.getResourceStatus()` and host-backed workspace pressure/loss display plus rate-limited warnings; verify counter persistence across Stop/Run/reset/cold reload, warning eviction, native integer saturation and operation under full queues without recursively enqueueing warnings.
 - [ ] 5.4 Implement explicit non-event admission/backpressure for Console ingress, activation jobs and pending host operations; verify no accepted command/write is silently dropped, refused new input remains editable, and cancellation/reset/replacement releases only the correct owner's resources. Update queue/event API and player recovery documentation.
 
 ## 6. Native circuit reads and logic output

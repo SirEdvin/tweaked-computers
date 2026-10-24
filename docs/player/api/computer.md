@@ -74,6 +74,14 @@ saturates rather than wrapping, with `saturated=true`, and may include
 their rate-limited warning has been evicted from the log. Reading the snapshot
 does not clear counters or change accepted events.
 
+Warnings are cumulative log messages, never extra events in the full queue.
+`tc-event-drop-warning-interval` sets the minimum simulation ticks between
+warnings for each physical computer. Several losses share one pending warning;
+cold reload preserves its throttle. Host work pressure delays the warning without
+delaying the counter. If the configured Console byte allowance cannot hold the
+message, it remains pending until it fits; the workspace/API still report loss.
+Warning publication pays for log retention before evicting older messages.
+
 ## General events
 
 Register declared handler names, never functions. Each `on` call is independent:
