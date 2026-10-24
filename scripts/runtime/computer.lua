@@ -115,7 +115,7 @@ local function handler(rec,name)
   if type(name)~='string' or not M.check_active(rec) or rec.active.handlers[name]~=true then errors.raise('E_ARGUMENT','declared handler name required') end
   return name
 end
-function M.subscribe(rec,event_name,handler_name,details,spend)
+function M.subscribe(rec,event_name,handler_name,details,spend,prepare)
   -- Trusted providers may register their own documented event kinds here;
   -- computer.on below separately restricts the guest general-event surface.
   handler(rec,handler_name)
@@ -125,15 +125,21 @@ function M.subscribe(rec,event_name,handler_name,details,spend)
   if details~=nil then copied=data.copy(details,spend) end
   local total=0; for _,c in pairs(root().computers) do total=total+count(c.subscriptions) end
   if count(rec.subscriptions)>=limits.subscriptions or total>=limits.aggregate_subscriptions then errors.raise('E_CAPACITY','subscription capacity reached') end
-  local seq=registry.sequence(); local id=rec.run_id..'/sub-'..string.format('%.0f',seq)
+  local id
+  local seq=registry.sequence(function(n)
+    id=rec.run_id..'/sub-'..string.format('%d',n)
+    if prepare then prepare(id) end
+  end)
   rec.subscriptions[id]={id=id,event_name=event_name,handler=handler_name,sequence=seq,details=copied}
   return id
 end
-function M.unsubscribe(rec,id,spend)
+function M.unsubscribe(rec,id,spend,prepare)
   local prefix=rec.run_id..'/sub-'
   if type(id)~='string' or #id>128 or id:sub(1,#prefix)~=prefix then errors.raise('E_ARGUMENT','ID belongs to another computer/run') end
   if spend then spend(#id+1) end
-  local exists=rec.subscriptions[id]~=nil; rec.subscriptions[id]=nil; return exists
+  local exists=rec.subscriptions[id]~=nil
+  if prepare then prepare(exists) end
+  rec.subscriptions[id]=nil; return exists
 end
 local function drop_event(rec,kind,tick,reason)
   local drops=rec.dropped_events
@@ -312,12 +318,12 @@ function M.services(rec,tick,guard,execution)
   method('log',1,1,function(text) M.log(rec,text,tick,spend,guard.prepare_empty_result) end)
   method('on',2,2,function(event_name,handler_name)
     if not general[event_name] then errors.raise('E_ARGUMENT','unsupported general event name') end
-    return M.subscribe(rec,event_name,handler_name,nil,spend)
+    return M.subscribe(rec,event_name,handler_name,nil,spend,guard.prepare_result)
   end)
   local function owned_id(id,kind)
     if type(id)~='string' or #id>128 or id:sub(1,#rec.run_id+#kind+2)~=rec.run_id..'/'..kind..'-' then errors.raise('E_ARGUMENT','ID belongs to another computer/run') end
   end
-  method('off',1,1,function(id) return M.unsubscribe(rec,id,spend) end)
+  method('off',1,1,function(id) return M.unsubscribe(rec,id,spend,guard.prepare_result) end)
   local function timer(delay,name,payload,recurring)
     if not errors.integer(delay,1,MAX-tick) then errors.raise('E_RANGE','positive safe integer duration required') end
     handler(rec,name); spend(limits.timers+#rec.queue+1)
@@ -328,7 +334,11 @@ function M.services(rec,tick,guard,execution)
     if payload~=nil then
       copied,size=data.copy(payload,spend,limits.event_queue_bytes-512)
     end
-    local seq=registry.sequence(); local id=rec.run_id..'/timer-'..string.format('%.0f',seq)
+    local id
+    local seq=registry.sequence(function(n)
+      id=rec.run_id..'/timer-'..string.format('%d',n)
+      guard.prepare_result(id)
+    end)
     rec.timers[id]={id=id,handler=name,deadline=tick+delay,interval=recurring and delay or nil,payload=copied,payload_bytes=size and size.bytes or 0,sequence=seq}
     return id
   end
@@ -336,12 +346,13 @@ function M.services(rec,tick,guard,execution)
   method('every',2,3,function(delay,name,payload) return timer(delay,name,payload,true) end)
   method('cancelTimer',1,1,function(id)
     owned_id(id,'timer'); spend(#id+#rec.queue*2+limits.timers+1)
-    local exists=rec.timers[id]~=nil; rec.timers[id]=nil
+    local exists=rec.timers[id]~=nil
     local retained={}; local bytes=0
     for _,item in ipairs(rec.queue) do
       if item.timer_id==id then exists=true else retained[#retained+1]=item; bytes=bytes+item.bytes end
     end
-    rec.queue=retained; rec.queue_bytes=bytes; return exists
+    guard.prepare_result(exists)
+    rec.timers[id]=nil; rec.queue=retained; rec.queue_bytes=bytes; return exists
   end)
   local map={computer=api,peripheral={}}
   local names={}; for name in pairs(providers) do names[#names+1]=name end; table.sort(names)

@@ -29,9 +29,10 @@ local function writable()
   if not M.supported(root) then errors.raise('E_UNSUPPORTED','unsupported storage schema; source/data retained') end
   return root
 end
-function M.sequence()
+function M.sequence(prepare)
   local root=writable(); local n=root.next_sequence
   if not errors.integer(n,1,9007199254740990) then errors.raise('E_CAPACITY','identity sequence exhausted') end
+  if prepare then prepare(n) end -- Refused result storage must not consume an identity.
   root.next_sequence=n+1; return n
 end
 function M.record(id)

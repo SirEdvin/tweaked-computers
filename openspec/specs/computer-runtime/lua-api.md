@@ -61,6 +61,13 @@ Logic input subscriptions are created by the logic-handler API, not by `computer
 
 ## Timers
 
+Guest registration and cancellation prepare their returned ID or boolean before
+publishing changes. Refused return-value admission consumes no identity sequence
+and leaves existing subscriptions, timers and accepted queued events unchanged.
+After a committed effect, suspension or cold reload delivers its saved result
+without repeating registration or cancellation. This return-value guarantee does
+not replace the still-required aggregate retained registration ownership.
+
 ```text
 computer.after(delay_ticks, handler_name, payload?) -> TimerId
 computer.every(interval_ticks, handler_name, payload?) -> TimerId

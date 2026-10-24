@@ -79,7 +79,7 @@ jobs:
             python tools/smoke.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture"
           done
-          for fixture in resource_policy_refusal resource_policy_memory resource_policy_heap_memory resource_policy_functions resource_policy_long_strings; do
+          for fixture in resource_policy_refusal resource_policy_memory resource_policy_heap_memory resource_policy_functions resource_policy_long_strings resource_policy_results; do
             python tools/smoke.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold
           done

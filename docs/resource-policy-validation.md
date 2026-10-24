@@ -4,6 +4,35 @@ This is an **unfinished implementation checkpoint**, not a release candidate or 
 
 The [source-site disposition inventory](resource-policy-inventory.md) maps every policy-manifest audit row and shared limit constant to its implementation paths and required treatment. Inventory coverage is not proof that those limits have been removed.
 
+## Registration result admission checkpoint
+
+Computer `on/off/after/every/cancelTimer` and Logic `subscribe/unsubscribe` now
+prepare their ID/boolean result before consuming an identity, publishing a
+registration, removing a timer or replacing the accepted event queue. The shared
+sequence allocator runs optional trusted result preparation before committing
+its increment. Subscription/timer IDs use exact integer formatting. Cancellation
+stages its retained queue before admitting its result; false/absent and queued-only
+one-shot cases retain their existing semantics.
+
+`tests.resource_policy_results` preserves its existing scalar/direct mutation,
+KV and six generic cold-result cases, and adds result-refusal assertions for all
+registration/cancellation paths. Refusal must preserve sequence, map entries,
+queue identity/order/bytes and unrelated events. Native tests also cover exact
+near-safe-integer IDs and exhaustion. A real scheduled guest creates general and
+Logic subscriptions plus one-shot/recurring timers; a test-only private suspension
+freezes the recurring timer after its effect but before caller delivery. Cold
+reload must preserve its admitted result and run, deliver once, cancel all four
+registrations and keep the sequence unchanged. The real scheduler and runtime
+memory guard are used; the forced boundary is explicitly fixture instrumentation.
+
+This is return-value atomicity, **not complete registration/host-memory ownership**.
+The strict 1,100-filter Logic gate still requires replacing the shared Data-copy
+fallback with lifetime admission; no byte/count ceiling or production budget is
+raised here. Tasks 2.2, 5.4 and 6.1 remain open, as do broader compiler, transaction,
+chart, native-client, old-release migration and multiplayer acceptance. Evidence
+is preserved outside git at
+`/home/siredvin/artifacts/tweaked-computers/resource-policy-registration-results/`.
+
 ## Durable Data-copy checkpoint
 
 The total 4,096-node Data ceiling is removed from shared copies, sandbox

@@ -140,8 +140,13 @@ every(interval_ticks, handler_name, payload?) -> timer ID
 
 cancelTimer(ID) -> boolean, including already queued timer notifications.
 
+Registration/cancellation admit their ID/boolean result before changing state.
+Result-storage refusal preserves existing registrations and queued events.
+Once committed, a paused call resumes its saved result without repeating the effect.
+
 Timer event: timer_id, scheduled_tick, interval_ticks?, missed, payload?.
-Recurring overdue intervals coalesce. Callbacks finish or fault; they never yield.
+Recurring overdue intervals coalesce. Handlers may pause across ticks or reload;
+paid progress and completed effects are retained.
 
 Data: finite numbers, booleans, strings, dense arrays or string-keyed maps;
 no mixed keys, nil entries, cycles, functions, metatables or native objects.

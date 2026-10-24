@@ -198,7 +198,7 @@ local function subscribe(c,rec,wire,tick,spend,guard,options,handler)
   local raw,connected=native_read(rec,input,spend,job.read)
   local baseline,selected=project(raw,connected,input,filter,spend,job.project)
   return runtime.subscribe(c,'signal_changed',handler,{peripheral=rec.id,generation=rec.generation,wire=wire,input=input,signals=filter,
-    previous=baseline,connected=selected,initial=options.initial==true,resync=false},spend)
+    previous=baseline,connected=selected,initial=options.initial==true,resync=false},spend,guard and guard.prepare_result)
 end
 local methods={}
 local function method(name,n,fn)
@@ -230,7 +230,7 @@ method('unsubscribe',1,function(c,r,w,t,spend,guard,id)
   local d=sub and details(sub)
   if sub and (sub.event_name~='signal_changed' or not d or d.peripheral~=r.id or d.wire~=w) then errors.raise('E_ARGUMENT','subscription belongs to another binding') end
   spend(#c.queue*2+1)
-  local existed=runtime.unsubscribe(c,id,spend); remove_queued(c,id,function() end); return existed
+  local existed=runtime.unsubscribe(c,id,spend,guard and guard.prepare_result); remove_queued(c,id,function() end); return existed
 end)
 method('getLimits',0,function(c,r,w,t,spend)
   local result=policy.limits({callback_work=true,callback_allocations=true,host_work_per_tick=true,

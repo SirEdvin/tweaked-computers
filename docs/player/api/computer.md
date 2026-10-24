@@ -36,6 +36,11 @@ belong to this program, never to the [live Console](../console.md).
 | `computer.every(interval_ticks, handler_name, payload?)` | timer string | Recurring positive integer tick interval |
 | `computer.cancelTimer(timer_id)` | boolean | Cancel deadline and admitted undispatched event; false if neither remains |
 
+Registration and cancellation admit their return value before changing state.
+If result storage refuses the operation, no ID is consumed and existing timers,
+subscriptions and queued events remain intact. A committed operation waiting to
+return resumes with that saved result after reload, without registering twice.
+
 State: at most 256 root entries and, by default, 65,536 accounted bytes;
 there is no separate total-node ceiling.
 Data depth 16, per-table entries 1,024, strings 16,384 bytes. Keys/container

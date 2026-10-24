@@ -7,8 +7,28 @@ local registry=require('scripts.registry')
 local lifecycle=require('scripts.lifecycle')
 local defs=require('scripts.device-definitions')
 local runtime=require('scripts.runtime.computer')
+local scheduler=require('scripts.scheduler')
 local kv=require('scripts.services.kv')
+require('scripts.services.logic')
 local M={}
+runtime.register_services('registration-result-fixture',function(rec,tick,g)
+  local f=storage.tc_scalar_results
+  if f and rec.id==f.native_id then
+    local prepare=g.prepare_result
+    g.prepare_result=function(value,...)
+      local result=table.pack(prepare(value,...))
+      if type(value)=='string' and value:find('/timer-',1,true) then
+        f.timer_preparations=f.timer_preparations+1
+        if f.phase=='native' and f.timer_preparations==2 then
+          f.periodic_id=value
+          assert(not pcall(g.suspend)) -- Test-only pause at prepaid effect/caller boundary.
+        end
+      end
+      return table.unpack(result,1,result.n)
+    end
+  end
+  return {}
+end)
 local function direct(available,refuse)
   local ctx=admission.context(admission.new(),'prepared-result',0)
   ctx.machine.work=limits.callback_work-available
@@ -270,12 +290,99 @@ function M.run()
     assert(result.n==(case[1]=='deleteState' and 1 or 0) and result[1]==case[3],'computer result arity changed')
   end
   log('TC_CONTRACT computer-state-label-log-results-admitted-before-publication')
-  storage.tc_scalar_results={phase='armed',cases={}}
+  local io=build('logic',6)
+  assert(lifecycle.connector(computer,'network','red').connect_to(lifecycle.connector(io,'network','red')))
+  computer.active={source='function noop() end',revision=1,api_version=1,compiler_version=limits.compiler_version,
+    storage_version=limits.storage_version,handlers={noop=true}}
+  g=sandbox.new(admission.context(admission.new(),computer.id,game.tick),function(guard) return runtime.services(computer,game.tick,guard) end)
+  g.initialize()
+  local logic_handle=g.call(g.get(g.global('peripheral'),'wrap'),io.id,'red')
+  local function same(current,old)
+    for k,v in pairs(old) do assert(current[k]==v,'refused registration changed retained entry') end
+    for k,v in pairs(current) do assert(old[k]==v,'refused registration published a new entry') end
+  end
+  local function shallow(value) local out={}; for k,v in pairs(value) do out[k]=v end; return out end
+  for _,kind in ipairs({'on','after','every','off','off-absent','cancelTimer','cancelTimer-queued','cancelTimer-absent',
+                        'logic-subscribe','logic-unsubscribe','logic-unsubscribe-absent'}) do
+    computer.subscriptions={}; computer.timers={}; computer.queue={}; computer.queue_bytes=0
+    local args,method,expected,created
+    if kind=='on' then args={'modem_message','noop'}; method=computer_method('on'); created='subscriptions'
+    elseif kind=='after' or kind=='every' then args={1000,'noop',{retained='payload'}}; method=computer_method(kind); created='timers'
+    elseif kind=='logic-subscribe' then args={{input='red'},'noop'}; method=g.get(logic_handle,'subscribe'); created='subscriptions'
+    elseif kind:sub(1,11)=='cancelTimer' then
+      local id=kind=='cancelTimer-absent' and computer.run_id..'/timer-missing' or g.call(computer_method('after'),1000,'noop')
+      if kind~='cancelTimer-absent' then
+        assert(runtime.enqueue(computer,'noop',{name='timer'},game.tick,nil,{timer_id=id}))
+        if kind=='cancelTimer-queued' then computer.timers[id]=nil end
+      end
+      args={id}; method=computer_method('cancelTimer'); expected=kind~='cancelTimer-absent'
+    elseif kind:sub(1,5)=='logic' then
+      local id=kind=='logic-unsubscribe-absent' and computer.run_id..'/sub-missing' or
+        g.call(g.get(logic_handle,'subscribe'),g.snapshot({input='red'}),'noop')
+      if kind~='logic-unsubscribe-absent' then assert(runtime.enqueue(computer,'noop',{name='signal_changed',subscription_id=id},game.tick)) end
+      args={id}; method=g.get(logic_handle,'unsubscribe'); expected=kind~='logic-unsubscribe-absent'
+    else
+      args={kind=='off-absent' and computer.run_id..'/sub-missing' or g.call(computer_method('on'),'modem_message','noop')}
+      method=computer_method('off'); expected=kind~='off-absent'
+    end
+    assert(runtime.enqueue(computer,'noop',{name='unrelated'},game.tick))
+    local peer=computer.queue[#computer.queue]
+    local before={subscriptions=shallow(computer.subscriptions),timers=shallow(computer.timers),queue=shallow(computer.queue),
+      queue_identity=computer.queue,bytes=computer.queue_bytes,sequence=registry.get().next_sequence}
+    local prepare,marker=g.prepare_result,{}
+    g.prepare_result=function() error(marker,0) end
+    for i,v in ipairs(args) do if type(v)=='table' then args[i]=g.snapshot(v) end end
+    local ran,problem=pcall(g.call,method,table.unpack(args))
+    assert(not ran and problem==marker,'registration skipped result admission: '..kind)
+    same(computer.subscriptions,before.subscriptions); same(computer.timers,before.timers); same(computer.queue,before.queue)
+    assert(computer.queue==before.queue_identity and computer.queue_bytes==before.bytes and registry.get().next_sequence==before.sequence)
+    g.prepare_result=prepare
+    local result=table.pack(g.call(method,table.unpack(args)))
+    assert(result.n==1 and (created and type(result[1])=='string' or not created and result[1]==expected))
+    if created then assert(computer[created][result[1]] and registry.get().next_sequence==before.sequence+1)
+    else assert(registry.get().next_sequence==before.sequence) end
+    assert(computer.queue[#computer.queue]==peer,'cancellation removed an unrelated accepted event')
+    if kind=='cancelTimer' or kind=='cancelTimer-queued' or kind=='logic-unsubscribe' then assert(#computer.queue==1) end
+  end
+  computer.subscriptions={}; computer.timers={}; computer.queue={}; computer.queue_bytes=0
+  log('TC_CONTRACT registration-and-cancellation-result-refusal-preserves-identities-maps-and-queue')
+  local sequence=registry.get().next_sequence
+  for _,name in ipairs({'on','after','every'}) do
+    registry.get().next_sequence=9007199254740989
+    local fn=computer_method(name); local args=name=='on' and {'modem_message','noop'} or {1000,'noop'}
+    local prefix=computer.run_id..(name=='on' and '/sub-' or '/timer-')
+    assert(g.call(fn,table.unpack(args))==prefix..'9007199254740989')
+    assert(g.call(fn,table.unpack(args))==prefix..'9007199254740990')
+    local ran,problem=pcall(g.call,fn,table.unpack(args))
+    assert(not ran and problem.code=='E_CAPACITY' and registry.get().next_sequence==9007199254740991)
+    computer.subscriptions={}; computer.timers={}
+  end
+  registry.get().next_sequence=sequence
+  log('TC_CONTRACT exact-registration-identities-and-safe-sequence-exhaustion')
+  storage.tc_scalar_results={phase='native',cases={},native_id=computer.id,logic_id=io.id,timer_preparations=0}
+  local source=[[function start()
+    local io=assert(peripheral.find('logic_handler','red'))
+    local subscription=computer.on('modem_message','noop')
+    local signal=io.subscribe({input='red'},'noop')
+    local once=computer.after(1000,'noop',{value=1})
+    local recurring=computer.every(1000,'noop',{value=2})
+    computer.setState('periodic',recurring)
+    assert(computer.cancelTimer(once) and not computer.cancelTimer(once))
+    assert(computer.cancelTimer(recurring) and not computer.cancelTimer(recurring))
+    assert(computer.off(subscription) and not computer.off(subscription))
+    assert(io.unsubscribe(signal) and not io.unsubscribe(signal))
+    computer.setState('registration_done',true)
+  end
+  function noop() error('timer or unchanged signal delivered unexpectedly') end]]
+  assert(runtime.save(computer.id,source,computer.saved_revision)); assert(runtime.activate(computer.id,game.tick))
 end
 local loaded=false
 function M.on_load()
   local f=storage.tc_scalar_results
   if f.phase=='frozen' then
+    local c=registry.computer(f.native_id)
+    assert(c.run_id==f.native_run and registry.get().next_sequence==f.native_sequence and c.state.periodic==nil)
+    assert(c.invocation.checkpoint.frame.pending.service_result[2]==f.periodic_id)
     for _,case in ipairs(f.cases) do
       assert(case.entered==1 and case.finished==0 and case.checkpoint.frame.pc==case.pc)
       assert(case.ledger.total==case.spent and case.checkpoint.frame.pending.call_result==nil)
@@ -287,6 +394,31 @@ end
 function M.on_tick(event)
   local f=storage.tc_scalar_results
   if f.phase=='done' or f.phase=='frozen' and not loaded then return end
+  if f.phase=='native' or f.phase=='native-resume' then
+    local c=registry.computer(f.native_id); local io=registry.record(f.logic_id)
+    assert(event.tick<500,'scheduled registration result timed out')
+    lifecycle.power_entity(c).energy=1000000; c.powered=true
+    lifecycle.power_entity(io).energy=1000000; io.powered=true
+    scheduler.tick(event.tick)
+    assert(c.status=='running' and not c.diagnostic and not c.resource_refusal,serpent.line(c.diagnostic or c.resource_refusal))
+    if f.phase=='native-resume' then
+      if c.invocation then return end
+      assert(c.state.registration_done and c.state.periodic==f.periodic_id and f.timer_preparations==2)
+      assert(c.run_id==f.native_run and registry.get().next_sequence==f.native_sequence)
+      assert(next(c.timers)==nil and next(c.subscriptions)==nil and #c.queue==0)
+      runtime.stop(c.id); f.phase='done'
+      log('TC_CONTRACT scheduled-registration-results-cold-exactly-once-and-cancellation')
+      log('TC_COLD_OK'); return
+    end
+    if not f.periodic_id then return end
+    local pending=assert(c.invocation.checkpoint.frame.pending)
+    assert(pending.call_result==nil and pending.service_result==pending.prepared.called and pending.service_result[2]==f.periodic_id)
+    local timers,subs=0,0
+    for _ in pairs(c.timers) do timers=timers+1 end
+    for _ in pairs(c.subscriptions) do subs=subs+1 end
+    assert(timers==2 and subs==2 and c.timers[f.periodic_id].interval==1000 and c.state.periodic==nil)
+    f.native_sequence=registry.get().next_sequence; f.native_run=c.run_id; f.phase='armed'
+  end
   if f.phase=='armed' then
     for _,value in ipairs({'empty','false','true'}) do
       for _,declaration in ipairs({false,true}) do
@@ -323,7 +455,7 @@ function M.on_tick(event)
   if f.phase=='armed' then
     f.phase='frozen'; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
   else
-    f.phase='done'; log('TC_CONTRACT scalar-results-cold-between-effect-and-caller-delivery'); log('TC_COLD_OK')
+    f.phase='native-resume'; log('TC_CONTRACT scalar-results-cold-between-effect-and-caller-delivery')
   end
 end
 return M
