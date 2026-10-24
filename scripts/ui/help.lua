@@ -542,6 +542,8 @@ replaced identity. Same coordinates do not authorize a replacement body.
 
 getCapabilities(id, target_wire) -> copied typed CapabilitySet of current settings,
 observations and sections. Inspect writable/clearable flags and unavailable reasons.
+Schemas retain native types/ranges and prototype validation, not fixed string/array
+capacities. Section filter indexes use native 1..65535; resource admission still applies.
 
 
 getConfiguration(id, target_wire) -> copied {values={...},unset={...},observations={...}}.

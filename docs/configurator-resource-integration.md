@@ -1,6 +1,9 @@
 # Configurator resource integration
 
-This lane owns configuration schemas, target projection and transactions, not the common runtime, UI or network provider. **Tasks 7.2–7.3 are not ready to mark complete from this isolated checkout.**
+Configuration schema removal and durable transaction admission are separate gates.
+Task 7.2 covers native-capacity schemas, generated contracts and native adapter
+boundary fixtures. Task 7.3 remains open: guest mutations still refuse before
+effects because the common transaction admission hook is absent.
 
 ## Implemented interface
 
@@ -32,10 +35,32 @@ Plan shapes:
 ## Remaining integration gates
 
 1. Supply and exercise `commit_configuration` through the real durable runtime, not the fixture double. Reprove computer-to-configurator authority/power/run identity on every resume as well as the target-side proof inside the callback. Insufficient full-slice commit work must refuse with setting guidance, not retry forever. The existing fixture only establishes host-side staging, revalidation and native effects.
-2. Common `data.copy` must remove former node/string/table shape ceilings and provide resource-accounted, resumable copying. Configurator copies pass effective `host_memory_bytes` when available, rather than the removed 16 KiB configuration cap. On the isolated baseline that key is absent and Data falls back to the old 64 KiB state cap. The strict `tests.configurator_large_engine` creates 33 native sections and fails on that **shared** byte cap during the complete read; no production budget was raised to hide it. Native schema metadata repeats per section and materially contributes to the result size.
+2. Common byte-bounded `data.copy` now removes the former node/string/table shape ceilings, and durable result copying retains its paid cursor. Configurator copies pass effective `host_memory_bytes`, rather than the removed 16 KiB configuration cap. The strict `tests.configurator_large_engine` crosses 33 native sections; its original shared 64 KiB fallback failure is historical, not a current refusal oracle. Native schema metadata still repeats per section and contributes to retained size; this does not prove transaction peak admission or close aggregate ownership task 2.2.
 3. Validation is incremental, but initial Data copying, native normalization and complete snapshots still contain indivisible work. Target traversal and inspector projection remain complete synchronous observations with work charging. They no longer have independent graph ceilings, but a durable read/traversal cursor and retained-host admission are still required for observations that cannot fit a slice. `inspect(rec,tick,spend)` returns both colors together or errors; never publish a partially gathered color or a partial unique count. UI must expose pending/stale state.
 4. `getLimits` now uses the shared policy-v2 provider with the seven applicable work/memory/depth descriptors and no unrelated settings or legacy count/shape keys. The native read-only fixture below verifies the public durable path; this does not complete transaction admission.
-5. Parent/UI owns final in-game documentation generation. Update `tools/player_docs.py`'s `typename` strings, generic schema introduction, LogisticFilter index prose and import-location normalization (currently 256 bytes / 128 entries / Nauvis); regenerate `docs/player/api/{settings,schemas}.md` and generated in-game guidance. This lane updates the hand-authored configurator references and regenerates `scripts/configuration/catalog.lua` with `tools/configuration_catalog.py`.
+5. Generated player settings/schema pages and Reference now agree with the native-capacity catalog: no generic 256-byte/128-entry gates, uint16 filter indexes and item-specific import defaults. `tools/test_configuration_resource_contracts.py` checks generated contracts without dropping native range/type/prototype restrictions. Full native UI acceptance is separate.
+
+## Schema gate (task 7.2)
+
+`configuration_catalog.py --check` verifies the generated native schemas and
+coverage ledger. The player-contract regression first fails on the stale
+128-entry/256-byte prose and filter index range, then passes after regeneration.
+No execution budgets or native adapters change in this contract reconciliation.
+
+The packaged base/Space Age matrix uses `configurator_large_engine` for complete
+33-section reads, update, cold retention and removal; `configurator_resource_engine`
+for 129 distinct filters, 129 decider conditions, long group names, native numeric
+ranges and paid validation across cold load; and `configurator_policy` for actual
+scheduled guest reads and defensive capability snapshots. The resource fixture
+checks every filter's item-specific import default and rejects sparse arrays,
+duplicate indexes, unknown fields and unknown prototypes without changing the
+target or creating recovery records. Existing adapter-family fixtures remain in
+the matrix. Source/archive hashes and complete receipts are preserved outside git
+under `/home/siredvin/artifacts/tweaked-computers/resource-policy-configurator-schemas/`.
+
+These native mutation tests call adapters directly or use the explicitly labelled
+host guard double. They prove schema removal, not public durable write admission.
+No test double is promoted to production, and task 7.3 remains fail-closed.
 
 ## Scoped native evidence
 
@@ -64,7 +89,7 @@ Native/normalized/readback peaks, pre-effect result carriers, persistent recover
 ownership and release still need their own complete proof. In particular, the
 weighted `plan.work` value must not be multiplied into a guessed memory allowance
 or used as permission to publish a result after an unreserved native effect.
-Tasks 7.2–7.3 and full acceptance remain open. Exact archives, failures and local
+Task 7.3 and full acceptance remain open. Exact archives, failures and local
 receipts for this checkpoint are kept outside git under
 `/home/siredvin/artifacts/tweaked-computers/resource-policy-configurator-reads/`.
 

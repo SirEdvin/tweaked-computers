@@ -80,14 +80,14 @@ def generated():
             if t in catalog['concepts'] and t not in ('boolean', 'float', 'int32', 'uint32', 'string', 'nil', 'table'):
                 return '[' + t + '](schemas.md#schema-' + t.lower() + ')'
             return {'int32': 'integer −2147483648…2147483647', 'uint32': 'integer 0…4294967295',
-                    'float': 'finite number', 'string': 'string ≤256 bytes, no NUL', 'table': 'bounded plain table'}.get(t, t)
+                    'float': 'finite float32 number', 'string': 'string (native field rules)', 'table': 'plain table'}.get(t, t)
         kind = t['complex_type']
         if kind == 'literal':
             return '`' + str(t['value']) + '`'
         if kind == 'type':
             return typename(t['value'])
         if kind == 'array':
-            return 'dense array ≤128 of ' + typename(t['value'])
+            return 'dense array of ' + typename(t['value'])
         if kind == 'union':
             return ' or '.join(typename(x) for x in t['options'])
         if kind == 'table':
@@ -133,9 +133,10 @@ def generated():
     schemas = ['# Configurator nested types and enums', '',
                'This is the player-readable schema companion to [supported settings](settings.md).',
                'Fields marked optional may be omitted; required fields must be present.',
-               'Unknown fields are refused. Arrays are dense and at most 128 items. Strings',
-               'are at most 256 bytes and cannot contain NUL. Numbers are finite; guest integer',
-               'bounds remain exact. Prototype identities use installed names, never objects.', '',
+               'Unknown fields are refused. Arrays are dense; strings and arrays have no',
+               'independent mod size ceiling. Native field rules and configured resource',
+               'admission still apply. Numbers are finite and retain their native ranges.',
+               'Prototype identities use installed names, never objects.', '',
                'SignalID/SignalIDBase require explicit type and name; quality defaults normal',
                'where supported. Conditional fulfilled is read-only and excluded. Quality/location',
                'object unions normalize to registered name strings. Selector fields must belong',
@@ -164,7 +165,7 @@ def generated():
             for f in variant['parameters']:
                 schemas += ['| `' + f['name'] + '` | ' + typename(f['type']) + ' | ' + ('no' if f['optional'] else 'yes') + ' |']
         if name == 'LogisticFilter':
-            schemas += ['', 'Section filters additionally require `index`: integer 1–128. The list is dense',
+            schemas += ['', 'Section filters additionally require `index`: integer 1–65535 (native uint16). The list is dense',
                         'but indexes can be sparse. Duplicate indexes/identities refuse; nonzero min',
                         'requires explicit exact quality. max must not be below min.']
         schemas += ['']
@@ -186,7 +187,8 @@ def generated():
                 '  signal quality uses quality_source_signal instead of static source.',
                 '- SignalFilter/QualityCondition readback includes normal and comparator = defaults.',
                 '  BlueprintQualityID defaults name normal. Ordinary signal quality defaults normal.',
-                '- LogisticFilter min defaults 0; registered nauvis is the default item import location.',
+                '- LogisticFilter min defaults 0; an omitted item import location uses that item',
+                '  prototype\'s `default_import_location`, when present, not a universal planet.',
                 '  Section multiplier readback preserves native float32 precision.',
                 '- Native enum values are strings, not defines ordinals. Speaker instrument/note',
                 '  IDs are zero-based and validated against the actual target catalogue.', '',

@@ -50,6 +50,7 @@ jobs:
           python tools/test_monitor_animation.py
           python tools/planning_examples.py --check
           python tools/configuration_catalog.py --check
+          python tools/test_configuration_resource_contracts.py
           python -m mkdocs build --strict --site-dir "$RUNNER_TEMP/tc-ci/site"
           python tools/player_docs.py --check --site "$RUNNER_TEMP/tc-ci/site" \
             --report "$RUNNER_TEMP/tc-ci/reports/player-docs.json"
@@ -116,13 +117,13 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/recipe-searcher" --mode both \
             --fixture tests.recipe_searcher_engine --data-fixture tests.recipe_searcher_data \
             --production-context --cold --upgrade-fixture
-      - name: Check Configurator policy and cold native readback
+      - name: Check Configurator policy, schemas and cold native readback
         shell: bash
         run: |
           set -euo pipefail
           archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
           engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
-          for fixture in configurator_policy configurator_large_engine; do
+          for fixture in configurator_policy configurator_large_engine configurator_resource_engine; do
             python tools/smoke.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold
           done
@@ -147,7 +148,7 @@ jobs:
           set -euo pipefail
           archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
           engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
-          for fixture in kv_engine configurator_engine configurator_full_engine configurator_resource_engine; do
+          for fixture in kv_engine configurator_engine configurator_full_engine; do
             data=()
             if [[ "$fixture" == configurator_full_engine ]]; then data+=(--data-fixture tests.configurator_full_data); fi
             python tools/smoke.py --factorio "$engine" --archive "$archive" \

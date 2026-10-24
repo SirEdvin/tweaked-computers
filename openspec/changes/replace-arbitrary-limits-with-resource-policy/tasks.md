@@ -47,7 +47,7 @@ Planning only. Every checkbox remains unfinished until real implementation and i
 ## 7. Discovery, configurator and recipe inventories
 
 - [ ] 7.1 Replace fixed graph/witness/find counts in `scripts/network.lua`, `services/peripheral.lua` and configuration targets with complete resumable proofs; verify old boundaries plus larger cyclic networks, both-color isolation, changing paths during suspension and no stale-authority commits in network fixtures.
-- [ ] 7.2 Remove invented schema/cardinality/string guards in configuration adapters/sections/validation and `tools/configuration_catalog.py`; regenerate contracts and verify `python tools/configuration_catalog.py --check` plus native fixtures beyond old section/filter limits where the engine permits them.
+- [x] 7.2 Remove invented schema/cardinality/string guards in configuration adapters/sections/validation and `tools/configuration_catalog.py`; regenerate contracts and verify `python tools/configuration_catalog.py --check` plus native fixtures beyond old section/filter limits where the engine permits them.
 - [ ] 7.3 Implement staged configurator mutation/revalidation and complete inspector enumeration under resource policy; verify competing writers, protected/nonmanual/shared groups, rollback/recovery records and no partial UI totals across save/reload. Update Configurator API and in-game guidance.
 - [ ] 7.4 Remove Recipe Searcher's 50-match and downstream shape ceilings while preserving complete sorted records; verify 50/51/larger matches, category/force metadata, large products/ingredients, pause/reload and native errors using recipe data/engine fixtures. Update API, player docs and examples to replace the old cardinality-error workflow.
 

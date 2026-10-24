@@ -121,6 +121,18 @@ function M.run()
   local ok,result=pcall(sections.set,item(entity),cfg,i,{set={filters=filters}},nop)
   assert(ok,serpent.line(result))
   assert(#result.filters==129 and result.filters[129].index==129 and cb.get_section(i).get_slot(129).value.name==names[129])
+  for n,filter in ipairs(result.filters) do
+    assert(filter.index==n and filter.value.name==names[n] and filter.min==0)
+    local location=prototypes.item[names[n]].default_import_location
+    assert(filter.import_from==(location and location.name or nil),'item-specific import default was lost')
+  end
+  local before=sections.get(item(entity),nop)
+  check('E_ARGUMENT',function() sections.set(item(entity),cfg,i,{set={filters={[1]=filters[1],[3]=filters[3]}}},nop) end)
+  check('E_ARGUMENT',function() sections.set(item(entity),cfg,i,{set={filters={filters[1],filters[1]}}},nop) end)
+  check('E_ARGUMENT',function() sections.set(item(entity),cfg,i,{set={active=false,unknown=true}},nop) end)
+  check('E_RANGE',function() sections.set(item(entity),cfg,i,{set={active=false,
+    filters={{index=1,value={type='item',name='tc-resource-missing-item'}}}}},nop) end)
+  assert(validation.equal(before,sections.get(item(entity),nop)) and not cfg.configuration_recovery)
   state().filters=filters
   report('native-section-129-distinct-filters-and-complete-readback')
 
