@@ -340,8 +340,11 @@ unsubscribe(subscription_id) -> boolean. Removes this run/binding's registration
 and its queued samples; false when absent, not authority to remove another binding.
 
 
-getLimits() -> copied common/logic ceilings, including while reachable unpowered.
-Includes 64 slots/filter signals and one-tick sampling; shared admission still applies.
+getLimits() -> {policy_version=2,resources={...},tuning={},sample_interval_ticks=1},
+also while reachable unpowered. Resources describe callback/host/maintenance work,
+runtime/host/pending memory, host depth and event queue entries/bytes; each includes
+limit, unit, scope, setting and behavior. Former flat slot/filter/shape caps are absent.
+One-tick sampling is nominal cadence, not a promise under pressure. Copies are defensive.
 
 KV DATABASE
 Shared storage guidance: values/fields/keys are byte strings, including empty/NUL.

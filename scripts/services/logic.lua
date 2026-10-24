@@ -6,7 +6,7 @@ local peripheral=require('scripts.services.peripheral')
 local lifecycle=require('scripts.lifecycle')
 local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
-local data=require('scripts.runtime.data')
+local policy=require('scripts.runtime.resource-policy')
 local defs=require('scripts.device-definitions')
 local work=require('scripts.services.inventory-work')
 local M={}
@@ -233,7 +233,9 @@ method('unsubscribe',1,function(c,r,w,t,spend,guard,id)
   local existed=runtime.unsubscribe(c,id,spend); remove_queued(c,id,function() end); return existed
 end)
 method('getLimits',0,function(c,r,w,t,spend)
-  local result=data.copy(limits,spend)
+  local result=policy.limits({callback_work=true,callback_allocations=true,host_work_per_tick=true,
+    maintenance_work_per_tick=true,runtime_memory_bytes=true,host_memory_bytes=true,pending_work_bytes=true,
+    host_stack_depth=true,event_queue_entries=true,event_queue_bytes=true})
   result.sample_interval_ticks=1
   return result
 end)

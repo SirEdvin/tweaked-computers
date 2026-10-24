@@ -14,7 +14,7 @@ Normative companion to [spec.md](spec.md). Obtain as `peripheral.find("logic_han
 | `io.clearOutput()` | no values | Equivalent to `setOutput({})`; no separate color bank |
 | `io.subscribe(options, handler_name)` | SubscriptionId | Create a named input-change subscription for this computer/run/binding |
 | `io.unsubscribe(subscription_id)` | boolean | Remove this run's subscription and its queued, undispatched samples; false if already absent |
-| `io.getLimits()` | table | `signal_slots`, `subscriptions`, `filter_signals`, `sample_interval_ticks` (1), `notification_latency_ticks`, plus shared caps |
+| `io.getLimits()` | table | Defensive `{policy_version=2, resources={...}, tuning={}, sample_interval_ticks=1}` |
 
 Signal identity is the full type/name/quality tuple. Ordinary reads/writes reject wildcard pseudo-signals. Missing quality is normalized to `normal`; returned identities always include all three fields. Counts must be exact signed 32-bit integers. No string/float coercion is accepted.
 
@@ -31,6 +31,19 @@ materialize unsupported categories before rejecting them.
 Input selectors are mandatory red or green. Missing, `both` and invalid values fail before registration; no default, compatibility alias or color combination exists. Each read retains native signed32 semantics on the selected circuit. Negative counts are legal. Output arrays must have unique normalized identities; duplicates are rejected before mutation, rather than silently added. Zero-valued entries are removed in the canonical stored bank. An empty bank emits no contribution.
 
 Output is one set mirrored to both output connectors. Other devices can contribute different totals on those networks; getOutput does not report those totals. Externally wiring input and output together can deliberately create feedback, but there is no internal feedthrough between input, middle and output.
+
+## Resource introspection
+
+`getLimits()` selects `callback_work`, `callback_allocations`, `host_work_per_tick`,
+`maintenance_work_per_tick`, `runtime_memory_bytes`, `host_memory_bytes`,
+`pending_work_bytes`, `host_stack_depth`, `event_queue_entries` and
+`event_queue_bytes` from the shared resource-policy registry. Each descriptor
+contains `limit`, `unit`, `scope`, `setting` and `behavior`; nested maps are
+defensive. Removed flat count/shape keys and unrelated device settings are absent.
+`tuning` is empty. The retained `sample_interval_ticks=1` is nominal sampling
+cadence, not an inventory ceiling or a guarantee under work pressure. The query
+remains available for a reachable unpowered handler, with strict zero-argument
+dot-call arity. Other signal operations still require power.
 
 ## Subscriptions
 

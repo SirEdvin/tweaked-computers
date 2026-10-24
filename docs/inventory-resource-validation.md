@@ -59,8 +59,42 @@ projection cursors. Public return signatures are unchanged.
   `logic.inspect_output` and `peripheral.inventory`. No UI files were changed.
   Configurator callers retain the existing network primitive signatures;
   `network.real_edges` accepts but no longer enforces the old remaining count.
-  The UI-owned in-game help still needs its old signal/graph prose updated;
-  the Recipe Searcher section now describes resource policy rather than 50 results.
+  The Logic and Recipe Searcher Reference introspection sections now describe
+  resource policy rather than obsolete count caps; the broader UI/graph audit
+  remains incomplete.
+
+## Scheduled Logic reads and policy checkpoint
+
+`tests.logic_policy_reads` uses actual wired native sources, compiled guest code,
+the scheduler and real continuation/result-copy guards. Both discovery colors
+read separate INPUT colors at 64, 65, 150 and 1,100 identities; every bulk entry
+is cross-checked with the scalar API, including negative counts. It also checks
+same-named item/recipe signals, fluid signals, long virtual names, expansion
+qualities, invalid identities, defensive results, a 150-entry output bank and
+invalid-count preservation. A separate-process reload occurs inside the paid
+1,100-entry result copy, retaining its frontier and run identity. Cleanup and
+reachable-unpowered policy access are exercised without changing budgets.
+
+Logic `getLimits()` now uses shared policy-v2 descriptors rather than copying the
+legacy common-limits table. Tests compare every applicable descriptor with
+computer policy, check nested defensive mutation and strict arity, and retain
+the nominal `sample_interval_ticks=1` metadata. API, player docs and Reference
+agree; no native read/output implementation changes are part of this checkpoint.
+
+**Task 6.1 remains open.** The companion strict `tests.logic_policy` runs the same
+sequence and additionally requires a 1,100-signal subscription with its complete
+baseline and later unsubscribe. This reaches `runtime.subscribe`'s shared
+`data.copy(details, spend)` fallback and fails with `E_CAPACITY` / `data_bytes` at
+the default state-byte ceiling. It is a retained failing integration gate, not
+an expected-refusal pass. The scoped read fixture deliberately skips that one
+gate; CI retains the strict fixture alongside the legacy integration tests.
+The fallback must be replaced with complete subscription lifetime/result
+admission, not just a larger byte allowance. Host/native temporary accounting,
+subscription sampling/resync, full UI and multiplayer remain separate open gates.
+
+Exact archives, native logs/saves, scoped passes, strict failures and provenance
+are preserved outside git at
+`/home/siredvin/artifacts/tweaked-computers/resource-policy-logic-reads/`.
 
 ## Recipe Searcher limits checkpoint
 

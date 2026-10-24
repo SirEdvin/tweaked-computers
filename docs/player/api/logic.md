@@ -19,7 +19,7 @@ Discovery red is independent of the explicit INPUT selection red or green.
 | `io.clearOutput()` | None; equivalent to setOutput({}) |
 | `io.subscribe(options, handler_name)` | Run-scoped subscription string |
 | `io.unsubscribe(subscription_id)` | Boolean; remove own binding's registration and queued samples; false when absent |
-| `io.getLimits()` | Defensive shared + device ceilings |
+| `io.getLimits()` | Defensive `{policy_version=2, resources={...}, tuning={}, sample_interval_ticks=1}` |
 
 Strict dot calls; extra arguments/unknown options fail. `input` is exactly red
 or green; missing, `both` and other selectors are refused before registration.
@@ -98,6 +98,18 @@ Unexpected native bank failure restores prior contribution or retains explicit
 recovery and clears output; never assume a callback-wide factory transaction.
 
 ## Bounds and use
+
+`getLimits().resources` contains callback work/allocation, shared host work,
+maintenance work, runtime/host/pending memory, host stack depth and event queue
+entry/byte descriptors. Their keys are `callback_work`, `callback_allocations`,
+`host_work_per_tick`, `maintenance_work_per_tick`, `runtime_memory_bytes`,
+`host_memory_bytes`, `pending_work_bytes`, `host_stack_depth`, `event_queue_entries`
+and `event_queue_bytes`. Each reports `limit`, `unit`, `scope`, `setting` and
+`behavior`, matching `computer.getLimits()`. Nested maps are independent copies.
+Former flat shape/count fields and unrelated device settings are absent; `tuning`
+is empty. `sample_interval_ticks=1` remains a cadence hint, not a capacity or
+guaranteed delivery deadline. This query works while reachable but unpowered;
+ordinary reads and writes still require power.
 
 Input snapshots and filters have no signal-count ceiling. Each explicit color
 returns its complete sorted native inventory, including negative counts, quality

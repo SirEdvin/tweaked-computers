@@ -127,6 +127,14 @@ jobs:
             python tools/smoke.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" --cold
           done
+      - name: Check Logic policy and cold native reads
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
+          python tools/smoke.py --factorio "$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/logic-policy-reads" --mode both \
+            --fixture tests.logic_policy_reads --data-fixture tests.inventory_data --cold
       - name: Check editor contracts and cold workspace recovery
         shell: bash
         run: |
@@ -199,6 +207,9 @@ jobs:
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/logic" --mode both \
             --fixture tests.logic_engine --cold
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/logic-policy-filters" --mode both \
+            --fixture tests.logic_policy --data-fixture tests.inventory_data --cold
           for layout in four-walls mixed; do
             python tools/monitor_animation.py --factorio "$engine" --archive "$archive" \
               --output "$RUNNER_TEMP/tc-ci/animation-$layout" --mode both --layout "$layout"
