@@ -190,7 +190,14 @@ function M.new(context, services, shell, durable)
     if not durable then fatal('callback call depth exhausted') end
     errors.refuse('call_depth','tc-host-stack-depth',used,1,limits.host_stack_depth,'host call or message-handler re-entry depth exhausted')
   end
-  function G.step(source_line,source_column) line=source_line or line; column=source_column or column; G.spend(1) end
+  function G.step(source_line,source_column,cleanup)
+    line=source_line or line; column=source_column or column
+    if cleanup==nil then G.spend(1); return end
+    G.check()
+    -- Adjacent compiler-owned charges have no observable operation between them.
+    -- A refused combined proof spends nothing; preserve the original paid prefix.
+    if not admission.reserve(context,'work',1+cleanup) then G.spend(1); G.spend(cleanup) end
+  end
   function G.enter(source_line,source_column,parameters)
     G.step(source_line,source_column); G.spend(parameters); allocate(parameters)
   end

@@ -3,6 +3,7 @@ local compiler=require('scripts.runtime.compiler')
 local admission=require('scripts.runtime.admission')
 local sandbox=require('scripts.runtime.sandbox')
 local errors=require('scripts.runtime.errors')
+local limits=require('scripts.runtime.limits')
 local M={}
 local function guard_before_publication(body,marker)
   local ledger=admission.new(); local ctx=admission.context(ledger,'local-guard',0)
@@ -48,7 +49,45 @@ local function binding_work(length,count,descriptor)
   assert(ok,e and e.message or control)
   return ctx.machine.work
 end
+local function paired_steps()
+  for _,cleanup in ipairs({0,1,4,20}) do
+    for available=-1,cleanup+2 do
+      for _,kind in ipairs({'callback','aggregate','maintenance'}) do
+        for _,poisoned in ipairs({false,true}) do
+          local function sample(paired)
+            local ctx=admission.context(admission.new(),'step-pair',1)
+            if kind=='callback' then ctx.machine.work=limits.callback_work-available
+            elseif kind=='aggregate' then ctx.ledger.total=admission.guest_ceiling(ctx.ledger,ctx.tick)-available
+            else ctx.ledger.maintenance={maintenance_tick=ctx.tick,maintenance_spent=limits.host_work_per_tick-available} end
+            local g=sandbox.new(ctx,{},nil,{owned={},owned_order={}})
+            if poisoned then
+              assert(not pcall(g.suspend))
+              assert(g.work_suspended(),'fixture did not establish private suspension')
+            end
+            local reserve,calls=admission.reserve,0
+            admission.reserve=function(...) calls=calls+1; return reserve(...) end
+            local ok,problem=pcall(function()
+              if paired then g.step(42,7,cleanup) else g.step(42,7); g.spend(cleanup) end
+            end)
+            admission.reserve=reserve
+            local diagnostic=not ok and g.diagnostic(problem) or {}
+            return {ok=ok,work=ctx.machine.work,total=ctx.ledger.total,code=diagnostic.code,
+              line=diagnostic.line,column=diagnostic.column},calls
+          end
+          local separate=sample(false)
+          local paired,calls=sample(true)
+          for key,value in pairs(separate) do assert(paired[key]==value,'paired step changed '..key) end
+          for key,value in pairs(paired) do assert(separate[key]==value,'paired step added '..key) end
+          if paired.ok then assert(calls==1,'fitting adjacent block charges were not coalesced') end
+          if poisoned then assert(calls==0,'private suspension attempted further admission') end
+        end
+      end
+    end
+  end
+  log('TC_CONTRACT paired-block-admission-preserves-refusal-prefix-location-and-private-suspension')
+end
 function M.run()
+  paired_steps()
   guard_before_publication('local value=1',1)
   guard_before_publication('local first,second=1,2',2)
   for _,descriptor in ipairs({false,true}) do

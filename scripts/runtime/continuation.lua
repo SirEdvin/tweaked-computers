@@ -477,7 +477,7 @@ function M.lower(main,reject,position,mode)
     end
     cleanups[i]='{'..table.concat(transitions,',')..'}'
     local b=blocks[i]
-    blocks[i]='function(f,r) r.guard.step('..b.line..','..b.column..'); r.guard.spend('..maximum..'); '..b.code..' end'
+    blocks[i]='function(f,r) r.guard.step('..b.line..','..b.column..','..maximum..'); '..b.code..' end'
   end
   local function quoted_set(values)
     local ordered={}; for value in pairs(values) do ordered[#ordered+1]=value end
