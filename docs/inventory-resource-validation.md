@@ -128,6 +128,13 @@ raising the production queue allowance; the existing 300-tick deadline remains.
 Task 2.2/7.4 and full integration remain open. Evidence for this checkpoint lives
 outside git at `/home/siredvin/artifacts/tweaked-computers/resource-policy-data-width/`.
 
+The follow-up snapshot regression verifies that scalar entries reuse an already
+admitted traversal frame, while each descent into a nested table admits a new
+frame. Payload copying and result-table growth remain charged; retained cursor
+capacity may stay conservatively high until the next descent or job reclamation.
+This removes redundant cursor reservations, not resource protection. It does not
+resolve the mixed-chart gate, which still fails its unchanged shared-model oracle.
+
 ## Focused native regression
 
 `tests.inventory_engine` + `tests.inventory_data` exercises native 1,100-signal

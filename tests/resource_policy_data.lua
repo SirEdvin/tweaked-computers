@@ -73,9 +73,14 @@ local function admission_checks()
   local checkpoint={owned={},owned_order={},symbols={},bindings={},functions={}}
   local pending={}; local input={}
   for i=1,1100 do input[i]=string.rep('x',100) end
+  local cursor_resizes=0
   local function guard(tick)
     local ctx=admission.context(ledger,'data-copy-admission',tick); ctx.memory_owner=owner
     local g=sandbox.new(ctx,{},nil,checkpoint); g.call_checkpoint(pending,{})
+    local resize=g.job_resize
+    g.job_resize=function(...)
+      resize(...); cursor_resizes=cursor_resizes+1
+    end
     return g
   end
   local used,count=account.used,owner.count
@@ -92,10 +97,12 @@ local function admission_checks()
     local job=pending.jobs.copy; assert(job.bytes>0 and not job.done and owner.values[job.source])
   end
   assert(ok and waited and #result==1100 and result~=input and result[1100]==input[1])
+  assert(cursor_resizes==1,'scalar copies must reuse the admitted traversal frame')
   assert(owner.values[result] and owner.values[input[1]] and account.used<=account.limit)
   g=guard(11)
   local shared={true}; local alias=g.snapshot({left=shared,right=shared},'alias')
   assert(alias.left~=alias.right and alias.left~=shared and alias.left[1]==true and alias.right[1]==true)
+  assert(cursor_resizes==4,'each nested copy must admit its traversal frame')
   used=account.used; count=#checkpoint.owned[result].keys
   memory.configure(account,used)
   g=guard(12); ok,e=pcall(g.assignment_one,result,1101,true)

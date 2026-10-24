@@ -584,7 +584,9 @@ function M.new(context, services, shell, durable)
         elseif typ=='string' then string_value(value); bytes=bytes+#value
         else fail('plain Data required') end
         if not heap and job.bytes+bytes>limits.peripheral_call_bytes then errors.raise('E_LIMIT','Data snapshot byte limit exceeded') end
-        G.host_work(bytes+1,bytes+1); room(#job.stack+(typ=='table' and 1 or 0))
+        G.host_work(bytes+1,bytes+1)
+        -- Scalar steps reuse admitted cursor fields; only descent allocates a frame.
+        if typ=='table' then room(#job.stack+1) end
         local copied=typ=='table' and G.new(0,function() return {} end) or value
         G.assignment_one(frame.result,k,copied); frame.result[k]=copied
         frame.key=k; frame.kind=kt; frame.count=frame.count+1
