@@ -4,6 +4,30 @@ This is an **unfinished implementation checkpoint**, not a release candidate or 
 
 The [source-site disposition inventory](resource-policy-inventory.md) maps every policy-manifest audit row and shared limit constant to its implementation paths and required treatment. Inventory coverage is not proof that those limits have been removed.
 
+## Scalar validation metering checkpoint
+
+Validation-only string transfers now retain their constant type/length check
+without charging an unperformed byte scan. The internal guard's default path
+still prepays string comparison work: emitted comparisons, default sorting and
+`rawequal` retain their existing charges. Native copying/transformation, key
+processing, retained-byte admission and existing trust/domain checks are not
+relaxed. Return, assignment, insertion and continuation-binding validation use
+the validation-only path; no compiler format or production budget changes.
+
+The heap fixture regresses short/long validation cost, comparison admission,
+retained string bytes and the existing oversized-string refusal. The original
+production archive fails the new constant-cost assertion; the candidate passes
+the heap fixture in base and Space Age with clean separate-process cold reload.
+Evidence is preserved under
+`/home/siredvin/artifacts/tweaked-computers/resource-policy-scalar-validation/`.
+
+This does **not** complete task 3.4: the unchanged mixed-chart oracle still
+rejects an incomplete model during a suspended draw. Diagnostic-only runs expose
+both work and allocation pressure; they are not acceptance or client performance
+evidence. The mixed fixture, chart source, deadlines and budgets remain unchanged.
+The overall checklist remains **12/47**; Configurator transaction admission,
+durable compiler trust/accounting and full integration remain open.
+
 ## Native oversized speaker inventories and maintained examples
 
 The new `speaker_resource_engine` fixture installs **real native prototypes**:

@@ -242,10 +242,13 @@ function M.new(context, services, shell, durable)
     elseif typ=='function' then if not callable[k] then fail('untrusted key') end
     elseif typ~='number' and typ~='boolean' then fail('invalid key type') end
   end
-  function G.scalar(v)
+  function G.scalar(v,validation_only)
     G.spend(1)
     local typ=type(v)
-    if typ=='string' then string_value(v); G.spend(#v)
+    if typ=='string' then
+      string_value(v)
+      -- Emitted comparisons still prepay byte scans; validation alone reads only the length.
+      if not validation_only then G.spend(#v) end
     elseif typ=='table' then if not owned[v] and not protected[v] and not G.encoded_type(v) then fail('untrusted value') end
     elseif typ=='function' then if not callable[v] then fail('untrusted function') end
     elseif typ~='number' and typ~='boolean' and typ~='nil' then fail('untrusted value') end
@@ -275,7 +278,7 @@ function M.new(context, services, shell, durable)
     local result=table.pack(...)
     assert(not frame.prepared_return and result.n<=limits.tuple_entries)
     G.spend(result.n+1); allocate(result.n+1)
-    for i=1,result.n do G.scalar(result[i]) end
+    for i=1,result.n do G.scalar(result[i],true) end
     frame.prepared_return=result
     prepare_checkpoint(result)
     return true
@@ -311,7 +314,7 @@ function M.new(context, services, shell, durable)
       if result.n~=2 or type(result[2])~='boolean' then fatal('trusted boolean return contract violated') end
     else
       G.spend(result.n); allocate(result.n)
-      for i=2,result.n do G.scalar(result[i]) end
+      for i=2,result.n do G.scalar(result[i],true) end
     end
     line,column=caller_line,caller_column
     return table.unpack(result,2,result.n)
@@ -346,7 +349,7 @@ function M.new(context, services, shell, durable)
     if actual>limits.tuple_entries then fatal('assignment tuple width exceeded') end
     G.spend(n+actual+1); allocate(math.max(n,actual)+1)
     local values=table.pack(...)
-    for i=1,actual do G.scalar(values[i]) end
+    for i=1,actual do G.scalar(values[i],true) end
     return values
   end
   local function changed_keys(t,updates,final)
@@ -463,7 +466,7 @@ function M.new(context, services, shell, durable)
     -- Publication is statically emitted native writes after complete preflight.
   end
   function G.assignment_one(t,k,v)
-    G.scalar(v)
+    G.scalar(v,true)
     G.assignment_check(1,nil,nil,t,k,v)
   end
   function G.new(count, factory, ...)
@@ -476,7 +479,7 @@ function M.new(context, services, shell, durable)
     if not ok then error(t,0) end
     own(t)
     inventory(t)
-    for k,v in pairs(t) do key(k); G.scalar(v) end
+    for k,v in pairs(t) do key(k); G.scalar(v,true) end
     return t
   end
   function G.reindex(t) plain(t); own(t) end
@@ -727,14 +730,14 @@ function M.new(context, services, shell, durable)
       end
       depth=depth+1
       if type(problem)=='table' and not owned[problem] and not protected[problem] then problem=G.snapshot(problem) end
-      G.scalar(problem) -- Reject foreign objects/oversized scalars before guest message code.
+      G.scalar(problem,true) -- Reject foreign objects/oversized scalars before guest message code.
       return (G.call(handler,problem))
     end))
     depth=caller_depth
     G.check()
     if result.n>limits.tuple_entries then fatal('protected return width exceeded') end
     G.spend(result.n); allocate(result.n)
-    for i=1,result.n do G.scalar(result[i]) end
+    for i=1,result.n do G.scalar(result[i],true) end
     return table.unpack(result,1,result.n)
   end
   local function required(n,...)
@@ -751,7 +754,7 @@ function M.new(context, services, shell, durable)
   env.rawset=function(...)
     required(3,...)
     local t,k,v=...
-    plain(t); G.scalar(v)
+    plain(t); G.scalar(v,true)
     if v~=nil then retained(k); retained(v) end
     prepare_return(env.rawset,t)
     G.assignment_one(t,k,v)
@@ -904,7 +907,7 @@ function M.new(context, services, shell, durable)
   tab.insert=function(t,...)
     local n=dense(t); local argc=select('#',...); local pos,value
     if argc==1 then pos,value=n+1,... elseif argc==2 then pos,value=... else fail('insert arity') end
-    integer(pos,1,n+1); G.scalar(value)
+    integer(pos,1,n+1); G.scalar(value,true)
     retained(value)
     if n>=limits.table_entries then errors.raise('E_LIMIT','table full') end
     G.spend(n-pos+3); allocate(1)

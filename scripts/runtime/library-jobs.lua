@@ -161,7 +161,7 @@ local function mutate(g,j,args,call,prepare,remove)
       if args.n==2 then position=n+1; value=args[2]
       elseif args.n==3 then position=args[2]; value=args[3]
       else fail('insert arity') end
-      integer(position,1,n+1); g.scalar(value)
+      integer(position,1,n+1); g.scalar(value,true)
     end
     keep(g,j,0,0)
     j.values={}; j.n=n; j.position=position; j.value=value; j.index=1

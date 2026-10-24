@@ -96,6 +96,26 @@ local function lazy_bindings()
   memory.close(owner,function() end)
   log('TC_CONTRACT method-descriptor-materializes-once-at-binding-boundary')
 end
+local function scalar_validation()
+  local g,account,owner,checkpoint,ctx=guard()
+  local small,large='x',string.rep('x',16000)
+  local before=ctx.machine.work
+  assert(g.scalar(small,true)==small); local short_cost=ctx.machine.work-before
+  before=ctx.machine.work
+  assert(g.scalar(large,true)==large and ctx.machine.work-before==short_cost,
+    'immutable scalar validation charged an unperformed byte scan')
+  before=ctx.machine.work
+  assert(g.scalar(large)==large and ctx.machine.work-before==#large+short_cost,
+    'comparison operands lost their byte-scan admission')
+  local a=g.new(0,function() return {} end)
+  g.assignment_one(a,'kept',large); a.kept=large
+  assert(account.values[large].bytes==#large+32,'constant-cost validation bypassed retained byte accounting')
+  local ok,e=pcall(g.scalar,string.rep('x',16385),true)
+  assert(not ok and e.code=='E_LIMIT','scalar validation lost its existing trust boundary')
+  memory.close(owner,function() end)
+  assert(next(account.values)==nil and account.reserved==0)
+  log('TC_CONTRACT constant-cost-string-validation-preserves-retention-and-domain-checks')
+end
 local function stable_keys()
   local g,account,owner,checkpoint,ctx=guard()
   local a=g.new(2,function() return {1,2} end)
@@ -513,7 +533,7 @@ local function binding_shell()
   log('TC_CONTRACT shell-graph-binding-restoration-shares-accounted-parent-and-method-identities')
 end
 function M.run()
-  single_replacement(); single_insertion(); native_copy_admission(); scalar_results(); bounded_transforms(); lazy_bindings(); stable_keys(); frames(); bulk(); mutations(); copies(); growth(); binding_refusal(); binding_shell()
+  scalar_validation(); single_replacement(); single_insertion(); native_copy_admission(); scalar_results(); bounded_transforms(); lazy_bindings(); stable_keys(); frames(); bulk(); mutations(); copies(); growth(); binding_refusal(); binding_shell()
   for _,kind in ipairs({'rawset','insert','remove','sort'}) do
     local ok,cost=metered(kind,limits.callback_work); assert(ok)
     for available=0,cost-1 do assert(not metered(kind,available),'short heap allowance published a mutation') end

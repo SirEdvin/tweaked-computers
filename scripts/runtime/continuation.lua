@@ -655,7 +655,7 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     end)
   end
   function r.bind(count,values)
-    for i=1,values.n do guard.scalar(r.decode(values[i])) end
+    for i=1,values.n do guard.scalar(r.decode(values[i]),true) end
     return guard.bind(count,table.unpack(values,1,values.n))
   end
   function r.assign_one(t,k,v)
