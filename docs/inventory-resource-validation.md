@@ -19,7 +19,10 @@ projection cursors. Public return signatures are unchanged.
   retain their paid cursor and use real memory admission instead of the old
   snapshot byte ceiling; non-durable copies retain that fallback. The native
   600-product guest query and mid-copy cold boundary are separate from the
-  remaining full inventory/lifecycle/upgrade acceptance.
+  remaining full inventory/lifecycle/upgrade acceptance. Byte-bounded host Data
+  copies and memory-owned durable table growth/copy/iteration no longer impose
+  the 1,024-entry ceiling. Literal constructors, non-owned/non-durable copies,
+  persisted Console graphs and other string/tuple/shape gates remain incomplete.
 - Maintenance event preparation needs a save-safe cursor argument:
   `runtime.prepare_event(c, handler, payload, tick, spend, metadata, job)`.
   Logic now supplies the last argument. The baseline runtime ignores it;
@@ -104,6 +107,26 @@ CI runs this entire fixture alongside the policy/Data tests before the separatel
 failing speaker integration, without dropping native cases. Task 7.4 and the
 full resource-policy checklist remain unfinished: other shape ceilings and
 aggregate ownership gates are not proven by this fixture.
+
+## Memory-owned table width checkpoint
+
+The Data fixtures now also query a real native recipe with 1,100 product records,
+and carry 1,100-entry arrays/maps through admitted events and defensive snapshots.
+Guest checks cover single/multiple assignment, `ipairs`, insertion/removal, a
+tail `unpack`, comparator sorting, state retention and deletion. The cold-copy
+variant freezes within the 1,100-product service result; the state variant reloads
+the retained wide table. Original 600-product and nested Data/timer checks remain.
+
+The real memory-guard subcase refuses both single growth and a two-key assignment
+that has room for only one key, before changing table membership or ownership.
+It then verifies admitted growth, shrink and explicit owner release. These are
+accounting checks, not proof of every production lifetime. Host byte ceilings,
+plain/dense Data checks, finite numbers, safe integer indexes and depth protection
+remain enforced. Queue-heavy test events are submitted serially rather than
+raising the production queue allowance; the existing 300-tick deadline remains.
+
+Task 2.2/7.4 and full integration remain open. Evidence for this checkpoint lives
+outside git at `/home/siredvin/artifacts/tweaked-computers/resource-policy-data-width/`.
 
 ## Focused native regression
 

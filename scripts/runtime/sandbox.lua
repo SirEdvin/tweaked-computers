@@ -333,7 +333,7 @@ function M.new(context, services, shell, durable)
   end
   local function inventory(t)
     local count=0
-    for _ in pairs(t) do G.spend(1); count=count+1; if count>limits.table_entries then errors.raise('E_LIMIT','table entry limit exceeded') end end
+    for _ in pairs(t) do G.spend(1); count=count+1; if not heap and count>limits.table_entries then errors.raise('E_LIMIT','table entry limit exceeded') end end
     return count
   end
   function G.move(n,...)
@@ -421,7 +421,7 @@ function M.new(context, services, shell, durable)
         if t[k]==nil and v~=nil then
           local keys=owned[t].keys
           local count=#keys+1
-          if count>limits.table_entries then errors.raise('E_LIMIT','table growth exceeded') end
+          if not heap and count>limits.table_entries then errors.raise('E_LIMIT','table growth exceeded') end
           G.host_work(24,12)
           if heap then
             local items={{t,192+48*count}}
@@ -451,7 +451,7 @@ function M.new(context, services, shell, durable)
         state.keys[k]=v~=nil
         if heap then state.values[k]=v end
         if durable then state.updates[#state.updates+1]={k,v~=nil} end
-        if state.count>limits.table_entries then errors.raise('E_LIMIT','table growth exceeded') end
+        if not heap and state.count>limits.table_entries then errors.raise('E_LIMIT','table growth exceeded') end
       end
     end
     if durable then
@@ -531,9 +531,9 @@ function M.new(context, services, shell, durable)
     count,max=0,0
     for k,x in pairs(v) do
       G.spend(1); count=count+1
-      if count>limits.table_entries then errors.raise('E_LIMIT','Data table entries exceeded') end
+      if not heap and count>limits.table_entries then errors.raise('E_LIMIT','Data table entries exceeded') end
       local kt=type(k)
-      if kt=='number' then integer(k,1,limits.table_entries); max=math.max(max,k)
+      if kt=='number' then integer(k,1,9007199254740991); max=math.max(max,k)
       elseif kt=='string' then string_value(k); stats.bytes=stats.bytes+#k; G.spend(#k); allocate(#k)
       else fail('Data keys must be strings or dense array indexes') end
       if kind and kind~=kt then fail('Data arrays/maps cannot mix') end
@@ -567,11 +567,11 @@ function M.new(context, services, shell, durable)
       else
         if #job.stack>limits.data_depth then errors.raise('E_LIMIT','Data nesting exceeded') end
         local kt=type(k)
-        if kt=='number' then integer(k,1,limits.table_entries)
+        if kt=='number' then integer(k,1,9007199254740991)
         elseif kt=='string' then string_value(k)
         else fail('Data keys must be strings or dense array indexes') end
         if frame.kind and frame.kind~=kt then fail('Data arrays/maps cannot mix') end
-        if frame.count>=limits.table_entries then errors.raise('E_LIMIT','Data table entries exceeded') end
+        if not heap and frame.count>=limits.table_entries then errors.raise('E_LIMIT','Data table entries exceeded') end
         local typ=type(value)
         local bytes=kt=='string' and #k or 0
         if typ=='table' then
@@ -848,7 +848,7 @@ function M.new(context, services, shell, durable)
   end
   env.pairs=function(t) plain(t); G.spend(1); return env.next,t,nil end
   local function ipairs_next(t,i)
-    plain(t); integer(i,0,limits.table_entries); G.spend(1)
+    plain(t); integer(i,0,9007199254740990); G.spend(1)
     i=i+1; if t[i]~=nil then return i,t[i] end
     return nil -- Lua 5.2 iterator termination has one nil result, not zero.
   end
@@ -970,7 +970,7 @@ function M.new(context, services, shell, durable)
     if argc==1 then pos,value=n+1,... elseif argc==2 then pos,value=... else fail('insert arity') end
     integer(pos,1,n+1); G.scalar(value,true)
     retained(value)
-    if n>=limits.table_entries then errors.raise('E_LIMIT','table full') end
+    if not heap and n>=limits.table_entries then errors.raise('E_LIMIT','table full') end
     G.spend(n-pos+3); allocate(1)
     local keys,added
     if durable then keys,added=changed_keys(t,{{n+1,pos<=n or value~=nil},{pos,value~=nil}}) end
@@ -1016,7 +1016,7 @@ function M.new(context, services, shell, durable)
     local count=inventory(t)
     G.spend(n)
     for i=1,n do if t[i]==nil then count=count+1 end end
-    if count>limits.table_entries then errors.raise('E_LIMIT','sort publication exceeds table capacity') end
+    if not heap and count>limits.table_entries then errors.raise('E_LIMIT','sort publication exceeds table capacity') end
     local keys,added
     if durable then
       local updates={}; for i=1,n do updates[i]={i,true} end

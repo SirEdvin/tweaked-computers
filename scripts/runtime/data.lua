@@ -30,12 +30,11 @@ function M.copy(value, spend, ceiling, on_capacity)
     local result,kind,count,max={},nil,0,0
     for k,x in pairs(v) do
       count=count+1
-      if count>limits.table_entries then errors.raise('E_LIMIT','Data entry limit exceeded') end
       local kt=type(k)
       if kt=='string' then
         if #k>limits.string_bytes then errors.raise('E_LIMIT','Data key limit exceeded') end
         charge(#k+8)
-      elseif kt=='number' and errors.integer(k,1,limits.table_entries) then
+      elseif kt=='number' and errors.integer(k,1,9007199254740991) then
         max=math.max(max,k); charge(8)
       else errors.raise('E_ARGUMENT','Data keys must be strings or dense indexes') end
       if kind and kind~=kt then errors.raise('E_ARGUMENT','Data arrays and maps cannot mix') end

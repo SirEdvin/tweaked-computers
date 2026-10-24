@@ -28,6 +28,21 @@ legacy integration step. Task 7.4 remains open: per-table/string/tuple ceilings,
 complete native inventory/upgrade integration and aggregate service ownership
 still require work. The overall checklist remains **13/47**.
 
+## Owned-table width checkpoint
+
+Shared byte-bounded Data copies and memory-owned durable table growth/snapshots
+now accept more than 1,024 entries, including safe dense numeric indexes.
+`resource_policy_data` and its cold-copy variant add a 1,100-product native recipe,
+wide array/map event copies, table mutation/iteration/sorting, retained state and
+atomic single/multiple-key memory refusal. The copy boundary now freezes in the
+larger native result. Existing budgets and the 300-tick deadline are unchanged.
+
+Constructor and non-owned/non-durable width fallbacks, Console graph validation,
+string/tuple gates and aggregate provider/lifecycle ownership remain unfinished.
+This does not complete tasks 2.2, 4.3 or 7.4, repair Configurator's missing
+pre-effect transaction guard, or establish full speaker integration. Evidence:
+`/home/siredvin/artifacts/tweaked-computers/resource-policy-data-width/`.
+
 ## Workspace ownership fixture correction
 
 The previously retained `editor_workspace` failure at the foreign-close case

@@ -272,7 +272,10 @@ def generated():
                   'is needed; ordinary synchronized admission resets counters only on a new tick.', '',
                   '## Default common limits', '',
                   '| Key | Default value |', '| --- | ---: |']
-    limit_page += ['| `' + k + '` | ' + v + ' |' for k, v in limits]
+    for key, value in limits:
+        note = (' (constructor, non-owned/non-durable and Console graph fallback; '
+                'not owned table growth or byte-bounded Data copies)') if key == 'table_entries' else ''
+        limit_page.append(f'| `{key}`{note} | {value} |')
     limit_page += ['', 'Device-specific limits: [monitor](monitor.md#bounds-example-and-troubleshooting),',
                    '[KV](kv.md#atomicity-errors-and-capacities), [logic](logic.md#bounds-and-use),',
                    '[configurator](configurator.md#bounds-programs-and-troubleshooting),',

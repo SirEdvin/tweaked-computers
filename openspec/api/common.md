@@ -39,7 +39,7 @@ BaseEvent = {
 }
 ```
 
-`Data` means a finite boolean/number/string, dense 1-based array of Data, or string-keyed map of Data. Arrays and maps cannot mix key kinds; cycles, metatables, functions, threads and LuaObjects are prohibited. No explicit nil element exists inside Data. Limits bound total bytes, nodes, nesting, key lengths and entries, not just one dimension. Persistent state stores nonnil Data; use the separate deletion method to remove a key. An empty table is an empty map unless a specific schema calls for an array.
+`Data` means a finite boolean/number/string, dense 1-based array of Data, or string-keyed map of Data. Arrays and maps cannot mix key kinds; cycles, metatables, functions, threads and LuaObjects are prohibited. No explicit nil element exists inside Data. Byte-bounded host copies and memory-owned durable snapshots have no separate total-node or per-table entry ceiling; numeric indexes remain positive safe integers and arrays must be dense. Remaining string/key and nesting checks still apply. Constructor, non-owned/non-durable and Console graph width fallbacks are not yet removed by the resource-policy implementation. Persistent state stores nonnil Data; use the separate deletion method to remove a key. An empty table is an empty map unless a specific schema calls for an array.
 
 The radar-modem transport additionally accepts explicit top-level nil as the required third `transmit` argument; the resulting event omits `message`. This is a transport-only exception, not an expansion of persistent Data or nested collection values.
 

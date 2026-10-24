@@ -200,7 +200,10 @@ particular formatted result would be shorter. No patterns or Unicode processing.
 | `table.remove(t, position?)` | One removed value or one nil; default final position |
 | `table.sort(t, less?)` | None; staged dense-sequence sort, default primitive <; optional guest comparator |
 
-Table helpers require guest-owned plain tables and bounded inventory (1,024 entries).
+Table helpers require guest-owned plain tables. Memory-owned durable tables can
+grow, iterate and copy beyond 1,024 entries under work and retained-memory admission.
+The old width fallback remains for non-owned/non-durable tables, literal constructor
+admission and persisted Console graph validation; this is not unlimited-table support.
 Pack may contain nil holes plus n, so do not store it as Data without conversion.
 Sort failure does not publish a partially sorted target, but comparator effects on
 other guest/API state are not a callback-wide transaction. Never depend on hash
