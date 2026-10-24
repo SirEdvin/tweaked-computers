@@ -5,7 +5,6 @@ local runtime=require('scripts.runtime.computer')
 local scheduler=require('scripts.scheduler')
 local admission=require('scripts.runtime.admission')
 local limits=require('scripts.runtime.limits')
-local compiler=require('scripts.runtime.compiler')
 local peripheral=require('scripts.services.peripheral')
 local provider=require('scripts.services.recipe-searcher')
 local shell=require('scripts.runtime.shell')
@@ -31,10 +30,21 @@ local function connect(a,b,color)
 end
 local function guest(c,body)
   local source='return {api_version=1,handlers={start=function(e) '..body..' end}}'
-  local ctx=runtime.context(c,game.tick)
-  local plan,problem=compiler.compile(source,ctx); assert(plan,serpent.line(problem))
-  local ok,diagnostic=compiler.run(plan,'start',{},function(g) return runtime.services(c,game.tick,g) end,ctx)
-  assert(ok,serpent.line(diagnostic))
+  local x=f()
+  if not x.guest then
+    local run=c.run_id
+    if c.active and c.active.source==source then
+      assert(runtime.enqueue(c,'start',{name='fixture-query'},game.tick))
+    else
+      local saved,problem=runtime.save(c.id,source,c.saved_revision); assert(saved,serpent.line(problem))
+      local e; run,e=runtime.activate(c.id,game.tick); assert(run,serpent.line(e))
+    end
+    x.guest={computer=c.id,source=source,run=run}; return false
+  end
+  assert(x.guest.computer==c.id and x.guest.source==source and x.guest.run==c.run_id)
+  assert(c.status=='running' and not c.diagnostic,serpent.line(c.diagnostic))
+  if c.invocation or #c.queue>0 then return false end
+  x.guest=nil; return true
 end
 local prefix=[[local s=peripheral.find('recipe_searcher','red'); assert(s)
 local function refused(code,fn,...)
@@ -112,8 +122,14 @@ local query_source=[[return {api_version=1,handlers={start=function(e) computer.
  end}}]]
 local exhausted_source=[[return {api_version=1,handlers={start=function(e)
   local s=peripheral.find('recipe_searcher','red')
-  local ok,e=pcall(function() for i=1,100 do local a=s.findRecipes('item','tc-rs-fifty'); assert(#a==50) end end)
-  computer.setState('escaped',true)
+  computer.setState('first_tick',computer.getTick())
+  local ok,e=pcall(function() for i=1,100 do
+    local a=s.findRecipes('item','tc-rs-fifty'); assert(#a==50)
+    computer.setState('repeated_queries',i)
+  end end)
+  assert(ok)
+  computer.setState('finished_tick',computer.getTick())
+  computer.setState('completed',(computer.getState('completed') or 0)+1)
 end}}]]
 local function snapshot()
   local x=f(); local root=registry.get(); local c=registry.record(x.c)
@@ -148,8 +164,9 @@ function M.run()
   report('native-independent-research-and-fresh-force')
 end
 function M.on_load()
-  loaded=true
-  if f().phase=='frozen' then unchanged(); report('on-load-identity-state-wires-and-spent-credits-unchanged') end
+  if f().phase=='frozen' then
+    loaded=true; unchanged(); report('on-load-identity-state-wires-and-spent-credits-unchanged')
+  end
 end
 function M.on_configuration_changed()
   unchanged(); assert(game.forces.player.technologies['tc-recipe-searcher'].researched)
@@ -166,18 +183,24 @@ function M.on_tick(event)
     loaded=false; x.phase='resume'
   else loaded=false end
   assert(event.tick-x.start<900,'recipe fixture deadline '..x.phase)
+  if x.phase=='foreign' then
+    for _,id in ipairs({x.foreign,x.foreign_searcher}) do
+      local rec=registry.record(id); lifecycle.power_entity(rec).energy=100000; rec.powered=true
+    end
+  elseif x.phase=='unpowered' then lifecycle.power_entity(s).energy=0; s.powered=false end
   local scheduler_profile=helpers.create_profiler()
   scheduler.tick(event.tick)
   scheduler_profile.stop()
   if x.phase=='contention' then log({'','TC_RECIPE_SCHEDULER ',scheduler_profile}) end
   assert(c.status=='running',serpent.line(c.diagnostic))
-  if not c.powered or not s.powered then return end
+  if not c.powered or not s.powered and x.phase~='unpowered' then return end
   if x.phase=='power' then x.phase='cases'; return end
   if x.phase=='cases' then
     local case=cases[x.case]
     if case then
 
-      guest(c,prefix..case[2]); report(case[1]); x.case=x.case+1
+      if not guest(c,prefix..case[2]) then return end
+      report(case[1]); x.case=x.case+1
       if case[1]=='complete-metadata-and-defensive-snapshots' then
         local actual=c.state.metadata; local native=prototypes.recipe['tc-rs-metadata']
         assert(equal(actual.ingredients,native.ingredients) and equal(actual.products,native.products))
@@ -191,12 +214,19 @@ function M.on_tick(event)
       return
     end
     assert(c.state.enabled==false); game.forces.player.recipes['tc-rs-item'].enabled=true
-    guest(c,prefix..cases[#cases][2]); assert(c.state.enabled==true)
+    x.force_run=c.run_id
+    x.phase='force'; return
+  elseif x.phase=='force' then
+    if not guest(c,prefix..cases[#cases][2]) then return end
+    assert(c.state.enabled==true and c.run_id==x.force_run,'live force query restarted the program')
     local foreign=build('computer',-4,0,game.forces['tc-rs-fresh']); local fs=build('recipe_searcher',-7,0,game.forces['tc-rs-fresh'])
     connect(foreign,fs,'red'); foreign.powered=true; fs.powered=true
     lifecycle.power_entity(foreign).energy=2000; lifecycle.power_entity(fs).energy=1000
-    foreign.status='running'; foreign.run_id='fixture-foreign'
-    guest(foreign,prefix..cases[#cases][2]); assert(foreign.state.enabled==false)
+    x.foreign=foreign.id; x.foreign_searcher=fs.id; x.phase='foreign'; return
+  elseif x.phase=='foreign' then
+    local foreign=registry.record(x.foreign); local fs=registry.record(x.foreign_searcher)
+    if not guest(foreign,prefix..cases[#cases][2]) then return end
+    assert(foreign.state.enabled==false)
     assert(not peripheral.inventory(c,'red',nop)[fs.id])
     assert(lifecycle.remove(foreign.id,'fixture',true) and lifecycle.remove(fs.id,'fixture',true))
     report('live-script-change-and-independent-forces')
@@ -219,22 +249,29 @@ function M.on_tick(event)
     report('native-cardinal-clone-one-drop-and-helper-cleanup')
     assert(peripheral.inventory(c,'red',nop)[x.relay] and peripheral.inventory(c,'green',nop)[s.id])
     lifecycle.power_entity(s).energy=0; s.powered=false
-    guest(c,prefix..[[assert(s.getLimits().policy_version==2 and s.getLimits().recipe_search_results==nil); refused('E_UNPOWERED',s.findRecipes,'item','iron-plate')]])
+    x.phase='unpowered'; return
+  elseif x.phase=='unpowered' then
+    if not guest(c,prefix..[[assert(s.getLimits().policy_version==2 and s.getLimits().recipe_search_results==nil); refused('E_UNPOWERED',s.findRecipes,'item','iron-plate')]]) then return end
     assert(peripheral.inventory(c,'red',nop)[x.relay],'unpowered relay lost discovery')
     lifecycle.power_entity(s).energy=1000; s.powered=true
-    guest(c,prefix..[[assert(#s.findRecipes('item','tc-rs-fifty')==50)]])
-    -- Trusted shell evaluation exercises retained captured-method revalidation;
-    -- GUI submission/focus is not part of this fixture's evidence.
+    x.phase='restored'; return
+  elseif x.phase=='restored' then
+    if not guest(c,prefix..[[assert(#s.findRecipes('item','tc-rs-fifty')==50)]]) then return end
+    local other=game.create_surface('tc-rs-other',{width=32,height=32})
+    local cross_body=assert(s.body.clone{position={0,0},surface=other,force='player'})
+    local cross=assert(registry.by_entity(cross_body)); assert(cross.id~=s.id and cross.surface_index~=c.surface_index)
+    x.cross=cross.id; x.phase='cross-surface'; return
+  elseif x.phase=='cross-surface' then
+    local cross=registry.record(x.cross)
+    if not guest(c,"assert(peripheral.wrap('"..cross.id.."','red')==nil)") then return end
+    assert(lifecycle.remove(cross.id,'fixture',true))
+    -- Keep captured-method probes together: program replacement retires Console state.
+    -- Direct shell evaluation is not native GUI submission/focus acceptance.
     c.shell={version=1,id='recipe-fixture-shell',pending={},pending_bytes=0}
     local ok,e=shell.evaluate(c,"s=peripheral.find('recipe_searcher','red'); captured=s.findRecipes",game.tick,1); assert(ok,serpent.line(e))
     s.body.force=game.forces['tc-rs-fresh']
     ok,e=shell.evaluate(c,"local ok,e=pcall(captured,'item','iron-plate'); assert(not ok and e.code=='E_UNREACHABLE')",game.tick,2); assert(ok,serpent.line(e))
     s.body.force=game.forces.player
-    local other=game.create_surface('tc-rs-other',{width=32,height=32})
-    local cross_body=assert(s.body.clone{position={0,0},surface=other,force='player'})
-    local cross=assert(registry.by_entity(cross_body)); assert(cross.id~=s.id and cross.surface_index~=c.surface_index)
-    guest(c,"assert(peripheral.wrap('"..cross.id.."','red')==nil)")
-    assert(lifecycle.remove(cross.id,'fixture',true))
     local position=s.body.position; assert(lifecycle.remove(s.id,'fixture',true))
     local replacement=build('recipe_searcher',position.x,position.y); connect(c,replacement,'red'); connect(c,replacement,'green'); connect(replacement,registry.record(x.relay),'red')
     x.s=replacement.id; lifecycle.power_entity(replacement).energy=1000; replacement.powered=true
@@ -254,20 +291,31 @@ function M.on_tick(event)
     end
     if event.tick-x.since<20 then return end
     local exhausted=registry.record(x.exhausted)
-    assert(exhausted.status=='faulted' and exhausted.diagnostic.code=='E_BUDGET' and not exhausted.state.escaped,
-      'guest pcall caught fatal repeated-query exhaustion: '..serpent.line(exhausted.diagnostic))
-    assert(c.state.queries and c.state.queries>=15,'production query scheduler did not progress')
+    assert(exhausted.status=='running' and not exhausted.diagnostic,serpent.line(exhausted.diagnostic))
+    if not x.cadence_checked then
+      assert(event.tick-x.since==20 and c.state.queries and c.state.queries>=15,'production query scheduler did not progress')
+      log('TC_RECIPE_CADENCE '..serpent.line{elapsed=event.tick-x.since,queries=c.state.queries,
+        neighbor=registry.record(x.neighbor).state.samples})
+      x.cadence_checked=true
+    end
+    if not exhausted.state.completed then return end
+    assert(exhausted.state.completed==1 and exhausted.state.repeated_queries==100
+      and exhausted.state.finished_tick>exhausted.state.first_tick,'finite protected query loop did not resume exactly once')
+    assert(runtime.stop(exhausted.id))
+    report('protected-hundred-queries-resume-and-complete-once')
     log('TC_RECIPE_CONTENTION '..serpent.line{queries=c.state.queries,neighbor=registry.record(x.neighbor).state.samples,
       catalogue=#prototypes.recipe,total=registry.get().ledger.total})
-    guest(c,prefix..[[computer.setState('retained',s.findRecipes('item','tc-rs-overlap'))]])
+    x.phase='retain'; return
+  elseif x.phase=='retain' then
+    if not guest(c,prefix..[[computer.setState('retained',s.findRecipes('item','tc-rs-overlap'))]]) then return end
     local ctx=runtime.context(c,event.tick)
     assert(admission.reserve(ctx,'work',limits.callback_work-ctx.machine.work))
     x.expected=snapshot(); x.phase='frozen'
     game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED'); return
   elseif x.phase=='resume' then
-    local prior=c.state.retained
-    guest(c,prefix..[[computer.setState('retained',s.findRecipes('item','tc-rs-overlap'))]])
-    assert(equal(prior,c.state.retained))
+    x.resume_prior=x.resume_prior or c.state.retained
+    if not guest(c,prefix..[[computer.setState('retained',s.findRecipes('item','tc-rs-overlap'))]]) then return end
+    assert(equal(x.resume_prior,c.state.retained) and c.run_id==x.expected.run)
     report('ordinary-cold-complete-query-and-neighbor-progress')
     x.phase='done'; if x.upgraded then log('TC_UPGRADE_OK') else log('TC_COLD_OK') end
   end

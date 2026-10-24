@@ -80,6 +80,31 @@ Exact archive, local summaries, original regression failure and CI receipts for
 this checkpoint are preserved outside git at
 `/home/siredvin/artifacts/tweaked-computers/resource-policy-recipe-limits/`.
 
+## Scheduled full Recipe Searcher fixture
+
+`tests.recipe_searcher_engine` now submits its complete guest-query cases through
+`runtime.save`/`activate`, queues repeat probes on the same active run, and waits
+for the real scheduler rather than executing a non-durable compiler shortcut.
+The live force-enabled probe explicitly retains its run identity. Captured-method
+Console probes stay together because replacing a program correctly retires its
+Console state; those direct shell evaluations are not GUI or durable Console
+acceptance.
+
+All native catalogue, 50/51-match, 600-product, metadata, force/surface, wiring,
+power, clone/mining/replacement and captured-authority assertions remain. The
+100-query protected loop now must suspend and finish exactly once on later
+ticks, not fail with the superseded fatal budget error. Its independent query
+peer still must complete at least 15 queries at the original 20-tick boundary;
+the original 900-tick fixture deadline and production budgets are unchanged.
+
+Cold and configuration-change processes preserve retained records, active/run
+identity, native wires and spent credits before an explicitly queued new query.
+The configuration-change probe is not migration from an older released archive.
+CI runs this entire fixture alongside the policy/Data tests before the separately
+failing speaker integration, without dropping native cases. Task 7.4 and the
+full resource-policy checklist remain unfinished: other shape ceilings and
+aggregate ownership gates are not proven by this fixture.
+
 ## Focused native regression
 
 `tests.inventory_engine` + `tests.inventory_data` exercises native 1,100-signal

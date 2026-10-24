@@ -109,6 +109,10 @@ jobs:
               --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" \
               --data-fixture tests.recipe_searcher_data --cold
           done
+          python tools/smoke.py --factorio "$engine" --archive "$archive" \
+            --output "$RUNNER_TEMP/tc-ci/recipe-searcher" --mode both \
+            --fixture tests.recipe_searcher_engine --data-fixture tests.recipe_searcher_data \
+            --production-context --cold --upgrade-fixture
       - name: Check editor contracts and cold workspace recovery
         shell: bash
         run: |
@@ -212,10 +216,6 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/lifecycle" --mode both \
             --fixture tests.lifecycle_engine --data-fixture tests.candidate_data \
             --production-context --cold
-          python tools/smoke.py --factorio "$engine" --archive "$archive" \
-            --output "$RUNNER_TEMP/tc-ci/recipe-searcher" --mode both \
-            --fixture tests.recipe_searcher_engine --data-fixture tests.recipe_searcher_data \
-            --production-context --cold --upgrade-fixture
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/device-art" --mode both \
             --fixture tests.art_engine --data-fixture tests.art_data
