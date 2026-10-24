@@ -226,7 +226,7 @@ function M.new(context, services, shell, durable)
   end
   local function string_value(s)
     if type(s) ~= 'string' then fail('string required') end
-    if #s > limits.string_bytes then errors.raise('E_LIMIT','string size exceeded') end
+    if not heap and #s > limits.string_bytes then errors.raise('E_LIMIT','string size exceeded') end
     return s
   end
   local function plain(t)
@@ -522,7 +522,7 @@ function M.new(context, services, shell, durable)
     stats.nodes=stats.nodes+1
     if typ=='number' then if not errors.finite(v) then fail('Data number must be finite') end; stats.bytes=stats.bytes+8; return v end
     if typ=='boolean' then stats.bytes=stats.bytes+1; return v end
-    if typ=='string' then string_value(v); stats.bytes=stats.bytes+#v; G.spend(#v); allocate(#v); return v end
+    if typ=='string' then string_value(v); stats.bytes=stats.bytes+#v; G.atomic(#v,#v); return v end
     if typ~='table' or getmetatable(v)~=nil or protected[v] or G.encoded_type(v) then fail('plain Data required') end
     if seen[v] then fail('cyclic Data is not persistable') end
     seen[v]=true
@@ -534,7 +534,7 @@ function M.new(context, services, shell, durable)
       if not heap and count>limits.table_entries then errors.raise('E_LIMIT','Data table entries exceeded') end
       local kt=type(k)
       if kt=='number' then integer(k,1,9007199254740991); max=math.max(max,k)
-      elseif kt=='string' then string_value(k); stats.bytes=stats.bytes+#k; G.spend(#k); allocate(#k)
+      elseif kt=='string' then string_value(k); stats.bytes=stats.bytes+#k; G.atomic(#k,#k)
       else fail('Data keys must be strings or dense array indexes') end
       if kind and kind~=kt then fail('Data arrays/maps cannot mix') end
       kind=kt; t[k]=copy(x,seen,level+1,stats)
@@ -555,7 +555,7 @@ function M.new(context, services, shell, durable)
       room(1)
       local result=G.new(0,function() return {} end)
       job.result=result; job.seen[job.source]=true
-      job.stack[1]={source=job.source,result=result,count=0,max=0}
+      job.stack[1]={source=job.source,result=result,count=0,max=0,copy_paid=false}
     end
     while #job.stack>0 do
       G.spend(2)
@@ -584,17 +584,19 @@ function M.new(context, services, shell, durable)
         elseif typ=='string' then string_value(value); bytes=bytes+#value
         else fail('plain Data required') end
         if not heap and job.bytes+bytes>limits.peripheral_call_bytes then errors.raise('E_LIMIT','Data snapshot byte limit exceeded') end
-        G.host_work(bytes+1,bytes+1)
+        if not frame.copy_paid then
+          G.atomic(bytes+1,bytes+1); frame.copy_paid=true
+        end
         -- Scalar steps reuse admitted cursor fields; only descent allocates a frame.
         if typ=='table' then room(#job.stack+1) end
         local copied=typ=='table' and G.new(0,function() return {} end) or value
         G.assignment_one(frame.result,k,copied); frame.result[k]=copied
-        frame.key=k; frame.kind=kt; frame.count=frame.count+1
+        frame.key=k; frame.kind=kt; frame.count=frame.count+1; frame.copy_paid=false
         if kt=='number' then frame.max=math.max(frame.max,k) end
         job.bytes=job.bytes+bytes
         if typ=='table' then
           job.seen[value]=true
-          job.stack[#job.stack+1]={source=value,result=copied,count=0,max=0}
+          job.stack[#job.stack+1]={source=value,result=copied,count=0,max=0,copy_paid=false}
         end
       end
     end

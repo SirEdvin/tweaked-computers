@@ -35,28 +35,59 @@ function M.run()
     memory.close(owner,function() end); assert(next(account.values)==nil and account.reserved==0)
   end
   log('TC_CONTRACT source-literals-and-pure-call-string-results-retain-aliases-after-decrease')
-  local account=memory.new(1000000,256); local owner=memory.owner(account)
-  local ledger=admission.new(); local ctx=admission.context(ledger,'prepared-string',0); ctx.memory_owner=owner
-  local plan,e=compiler.compile('function start() local value,tail=computer.probe(); computer.finished() end',ctx); assert(plan,e and e.message)
-  local value,tail=string.rep('v',200),string.rep('w',100)
-  local effects,finished,before=0,0,0; local refuse=true
-  local function services(g)
-    return {computer={probe=function()
-      before=account.used
-      if refuse then memory.configure(account,before+256+#value+32+256+#tail+32-1) end
-      local a,b=g.prepare_result(value,tail); effects=effects+1; return a,b
-    end,finished=function() g.prepare_empty_result(); finished=finished+1 end}}
+  for _,sizes in ipairs({{200,100},{21000,17000}}) do
+    local account=memory.new(1000000,256); local owner=memory.owner(account)
+    local ledger=admission.new(); local ctx=admission.context(ledger,'prepared-string',0); ctx.memory_owner=owner
+    local source='function start() local value,tail=computer.probe(); computer.finished() end'
+    if sizes[1]>200 then source=[[function start()
+      local ok,e=pcall(computer.probe); assert(not ok and e.recoverable)
+      computer.retry()
+      local value,tail=computer.probe(); assert(#value==21000 and #tail==17000)
+      computer.finished()
+    end]] end
+    local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
+    local value,tail=string.rep('v',sizes[1]),string.rep('w',sizes[2])
+    local effects,finished,before=0,0,0; local refuse=true
+    local function services(g)
+      return {computer={probe=function()
+        before=account.used
+        -- Two-value output grows both the output and control capacities by one slot.
+        if refuse then memory.configure(account,before+256+#value+32+256+#tail+32+32-1) end
+        local accepted,a,b=pcall(g.prepare_result,value,tail)
+        if not accepted then
+          assert(account.used==before and not owner.values[value] and not owner.values[tail],
+            'prepared tuple refused after partial retained publication')
+          assert(a.used==before and a.used+a.requested==a.limit+1,
+            'prepared tuple was not refused exactly one byte short: '..serpent.line(a))
+          error(a,0)
+        end
+        effects=effects+1; return a,b
+      end,retry=function()
+        assert(effects==0 and finished==0 and not owner.values[value] and not owner.values[tail])
+        g.prepare_empty_result(); memory.configure(account,1000000); refuse=false
+      end,finished=function() g.prepare_empty_result(); finished=finished+1 end}}
+    end
+    local checkpoint={}
+    local ok,e,control=compiler.run(plan,'start',nil,services,ctx,checkpoint)
+    if sizes[1]==200 then
+      assert(not ok and control=='resource' and e.recoverable and effects==0 and finished==0
+        and account.used==before and not owner.values[value] and not owner.values[tail],
+        'string refusal followed its prepared effect or partially charged the tuple')
+      refuse=false; memory.configure(account,1000000)
+      ctx=admission.context(ledger,'prepared-string',1); ctx.memory_owner=owner
+      ok,e=compiler.run(plan,'start',nil,services,ctx,checkpoint); assert(ok,e and e.message)
+    else
+      for tick=1,16 do
+        if ok then break end
+        assert(control=='wait',e and e.message)
+        ctx=admission.context(ledger,'prepared-string',tick); ctx.memory_owner=owner
+        ok,e,control=compiler.run(plan,'start',nil,services,ctx,checkpoint)
+      end
+      assert(ok,e and e.message)
+    end
+    assert(effects==1 and finished==1 and owner.values[value] and owner.values[tail])
+    memory.close(owner,function() end); assert(next(account.values)==nil and account.reserved==0)
   end
-  local checkpoint={}
-  local ok,e,control=compiler.run(plan,'start',nil,services,ctx,checkpoint)
-  assert(not ok and control=='resource' and e.recoverable and effects==0 and finished==0
-    and account.used==before and not owner.values[value] and not owner.values[tail],
-    'string refusal followed its prepared effect or partially charged the tuple')
-  refuse=false; memory.configure(account,1000000)
-  ctx=admission.context(ledger,'prepared-string',1); ctx.memory_owner=owner
-  ok,e=compiler.run(plan,'start',nil,services,ctx,checkpoint); assert(ok,e and e.message)
-  assert(effects==1 and finished==1 and owner.values[value] and owner.values[tail])
-  memory.close(owner,function() end); assert(next(account.values)==nil and account.reserved==0)
   log('TC_CONTRACT prepared-string-result-refuses-one-byte-short-before-effect-and-retries-once')
 end
 return M

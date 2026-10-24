@@ -43,6 +43,29 @@ This does not complete tasks 2.2, 4.3 or 7.4, repair Configurator's missing
 pre-effect transaction guard, or establish full speaker integration. Evidence:
 `/home/siredvin/artifacts/tweaked-computers/resource-policy-data-width/`.
 
+## Resource-owned strings and copy-step admission
+
+Byte-bounded host Data and memory-owned durable string validation no longer apply
+the independent 16,384-byte string/key gate. `resource_policy_long_strings` uses
+real scheduling and lifetime owners with a 21,000-byte binary value and a
+17,001-byte map key: transforms, formatting, concatenation, search, state reads,
+defensive copies and timer delivery. Its separate-process reload freezes inside
+string reversal and checks the paid frontier, run identity and spent ledger.
+
+The same fixture retains a regression for a formerly endless copy retry: an
+oversized indivisible key/value copy now raises recoverable allocation refusal
+before state publication. A real-guard subcase spends a complete allocation slice
+on one fitting copy step, suspends before owned publication, and finishes without
+repaying that step; a larger primitive copy refuses and owner cleanup releases
+its payloads. These guard checks are distinct from the native cold boundary.
+`resource_policy_strings` additionally checks one-byte-short retained admission
+for 21,000/17,000-byte prepared results before effects, then exact-once retry.
+
+No budgets, production reserves or existing deadlines are increased. Unowned,
+non-durable, Console, source/identifier and other shape fallbacks remain; tasks
+2.2 and 4.3 are still open. This checkpoint does not establish full chart, compiler,
+Configurator mutation, client, old-release migration or multiplayer acceptance.
+
 ## Workspace ownership fixture correction
 
 The previously retained `editor_workspace` failure at the foreign-close case

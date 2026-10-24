@@ -106,7 +106,7 @@ is needed; ordinary synchronized admission resets counters only on a new tick.
 | `state_bytes` | 65536 |
 | `state_entries` | 256 |
 | `data_depth` | 16 |
-| `string_bytes` | 16384 |
+| `string_bytes` (non-owned/non-durable and Console graph fallback; not byte-bounded Data or memory-owned durable strings) | 16384 |
 | `table_entries` (constructor, non-owned/non-durable and Console graph fallback; not owned table growth or byte-bounded Data copies) | 1024 |
 | `event_queue_entries` | 128 |
 | `event_queue_bytes` | 65536 |

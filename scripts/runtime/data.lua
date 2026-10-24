@@ -18,7 +18,6 @@ function M.copy(value, spend, ceiling, on_capacity)
     if depth>limits.data_depth then errors.raise('E_LIMIT','Data nesting limit exceeded') end
     local typ=type(v)
     if typ=='string' then
-      if #v>limits.string_bytes then errors.raise('E_LIMIT','Data string limit exceeded') end
       charge(#v+8); return v
     elseif typ=='boolean' then charge(1); return v
     elseif typ=='number' then
@@ -32,7 +31,6 @@ function M.copy(value, spend, ceiling, on_capacity)
       count=count+1
       local kt=type(k)
       if kt=='string' then
-        if #k>limits.string_bytes then errors.raise('E_LIMIT','Data key limit exceeded') end
         charge(#k+8)
       elseif kt=='number' and errors.integer(k,1,9007199254740991) then
         max=math.max(max,k); charge(8)

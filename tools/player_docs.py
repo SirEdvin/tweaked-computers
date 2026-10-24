@@ -275,6 +275,8 @@ def generated():
     for key, value in limits:
         note = (' (constructor, non-owned/non-durable and Console graph fallback; '
                 'not owned table growth or byte-bounded Data copies)') if key == 'table_entries' else ''
+        if key == 'string_bytes':
+            note = ' (non-owned/non-durable and Console graph fallback; not byte-bounded Data or memory-owned durable strings)'
         limit_page.append(f'| `{key}`{note} | {value} |')
     limit_page += ['', 'Device-specific limits: [monitor](monitor.md#bounds-example-and-troubleshooting),',
                    '[KV](kv.md#atomicity-errors-and-capacities), [logic](logic.md#bounds-and-use),',

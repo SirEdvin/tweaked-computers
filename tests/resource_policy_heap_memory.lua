@@ -98,7 +98,7 @@ local function lazy_bindings()
 end
 local function scalar_validation()
   local g,account,owner,checkpoint,ctx=guard()
-  local small,large='x',string.rep('x',16000)
+  local small,large='x',string.rep('x',21000)
   local before=ctx.machine.work
   assert(g.scalar(small,true)==small); local short_cost=ctx.machine.work-before
   before=ctx.machine.work
@@ -110,8 +110,11 @@ local function scalar_validation()
   local a=g.new(0,function() return {} end)
   g.assignment_one(a,'kept',large); a.kept=large
   assert(account.values[large].bytes==#large+32,'constant-cost validation bypassed retained byte accounting')
-  local ok,e=pcall(g.scalar,string.rep('x',16385),true)
-  assert(not ok and e.code=='E_LIMIT','scalar validation lost its existing trust boundary')
+  local ok,e=pcall(g.scalar,{},true)
+  assert(not ok and e.code=='E_ARGUMENT','scalar validation accepted a foreign table')
+  local fallback=sandbox.new(admission.context(admission.new(),'unowned-string',0),{})
+  ok,e=pcall(fallback.scalar,large,true)
+  assert(not ok and e.code=='E_LIMIT','unowned fallback lost its string bound')
   memory.close(owner,function() end)
   assert(next(account.values)==nil and account.reserved==0)
   log('TC_CONTRACT constant-cost-string-validation-preserves-retention-and-domain-checks')

@@ -252,6 +252,18 @@ storage 1, without startup replay. A colliding old Console root reports named
 `E_UNSUPPORTED` before command effects and retains its graph. Confirm Reset Shell
 only when ready to discard scratch values; nested fields are unaffected.
 
+### Resource-owned strings
+
+Memory-owned durable execution and byte-bounded Data copies accept strings and
+nested map keys beyond the former 16,384-byte boundary. Length, scalar validation,
+comparison, copying and library results still use their existing work and retained
+memory accounting. State, event and timer payloads retain their aggregate byte
+allowances; this does not widen the separate state-key identifier domain.
+An indivisible copy step that cannot fit a full allocation slice refuses with
+recoverable `E_CAPACITY` rather than retrying forever. A paid step whose result
+publication defers keeps its progress. Non-owned/non-durable helper and persisted
+Console graph fallbacks remain; this is not an unlimited-string promise.
+
 ## Excluded features
 
 No `_ENV`, `_G`, global assignment, generated/private names or host globals
