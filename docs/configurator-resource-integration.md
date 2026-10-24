@@ -34,10 +34,41 @@ Plan shapes:
 1. Supply and exercise `commit_configuration` through the real durable runtime, not the fixture double. Reprove computer-to-configurator authority/power/run identity on every resume as well as the target-side proof inside the callback. Insufficient full-slice commit work must refuse with setting guidance, not retry forever. The existing fixture only establishes host-side staging, revalidation and native effects.
 2. Common `data.copy` must remove former node/string/table shape ceilings and provide resource-accounted, resumable copying. Configurator copies pass effective `host_memory_bytes` when available, rather than the removed 16 KiB configuration cap. On the isolated baseline that key is absent and Data falls back to the old 64 KiB state cap. The strict `tests.configurator_large_engine` creates 33 native sections and fails on that **shared** byte cap during the complete read; no production budget was raised to hide it. Native schema metadata repeats per section and materially contributes to the result size.
 3. Validation is incremental, but initial Data copying, native normalization and complete snapshots still contain indivisible work. Target traversal and inspector projection remain complete synchronous observations with work charging. They no longer have independent graph ceilings, but a durable read/traversal cursor and retained-host admission are still required for observations that cannot fit a slice. `inspect(rec,tick,spend)` returns both colors together or errors; never publish a partially gathered color or a partial unique count. UI must expose pending/stale state.
-4. Route `getLimits` through the parent's policy-v2 shared provider. This lane removed the configurator-specific invented limits, but the isolated common table still contains legacy keys.
+4. `getLimits` now uses the shared policy-v2 provider with the seven applicable work/memory/depth descriptors and no unrelated settings or legacy count/shape keys. The native read-only fixture below verifies the public durable path; this does not complete transaction admission.
 5. Parent/UI owns final in-game documentation generation. Update `tools/player_docs.py`'s `typename` strings, generic schema introduction, LogisticFilter index prose and import-location normalization (currently 256 bytes / 128 entries / Nauvis); regenerate `docs/player/api/{settings,schemas}.md` and generated in-game guidance. This lane updates the hand-authored configurator references and regenerates `scripts/configuration/catalog.lua` with `tools/configuration_catalog.py`.
 
 ## Scoped native evidence
+
+### Integrated policy and large native reads
+
+`tests.configurator_policy` runs actual compiled guest code through wired native
+devices, the production scheduler and the real continuation/memory guard. It
+checks both discovery colors, separate target-port/color isolation, device and
+capability reads, 129 native decider conditions and all 33 constant-combinator
+sections with 129 distinct native filters. The fixture freezes during the paid
+section-result copy, resumes in a separate process, then verifies complete
+defensive readback and powered/unpowered policy access with strict arity and
+exact descriptor fields. Final native settings must equal the original snapshots.
+No transaction guard, native target or result provider is replaced by a double.
+
+The new policy assertion first fails against the old flat limits response.
+The corrected provider passes both content modes and cold reload without changing
+production budgets. The independent strict `configurator_large_engine` remains
+a native adapter mutation test, not durable guest mutation admission. The shared
+Data-cap failure recorded below is historical; the current integrated read test
+crosses that old boundary. CI runs these two fixtures before legacy integration,
+without omitting the existing Configurator or speaker cases.
+
+The common transaction hook remains absent and guest writes remain fail-closed.
+Native/normalized/readback peaks, pre-effect result carriers, persistent recovery
+ownership and release still need their own complete proof. In particular, the
+weighted `plan.work` value must not be multiplied into a guessed memory allowance
+or used as permission to publish a result after an unreserved native effect.
+Tasks 7.2–7.3 and full acceptance remain open. Exact archives, failures and local
+receipts for this checkpoint are kept outside git under
+`/home/siredvin/artifacts/tweaked-computers/resource-policy-configurator-reads/`.
+
+### Earlier adapter and host-double checks
 
 - `tests.configurator_engine`: ordinary target topology, malformed/readonly/protected inputs, root-field failure/restoration/recovery, actual compiled facade, cold recovery aliases; target graph now exceeds the former connector/edge envelope.
 - `tests.configurator_full_engine` plus `tests.configurator_full_data`: every existing adapter family, nonmanual host double, shared groups, section rollback/recovery, actual compiled facade, base/Space Age cold reload.

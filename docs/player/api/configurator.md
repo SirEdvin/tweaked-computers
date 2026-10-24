@@ -24,7 +24,16 @@ gets a different ID. Readback is copied Data, not Factorio objects.
 | `cfg.addSection(id, definition, target_wire)` | Actual new native integer index |
 | `cfg.setSection(id, index, patch, target_wire)` | Selected SectionInfo after update |
 | `cfg.removeSection(id, index, target_wire)` | Boolean; false if absent, true after verified removal |
-| `cfg.getLimits()` | Defensive common effective resource policy |
+| `cfg.getLimits()` | Defensive `{policy_version=2, resources={...}, tuning={}}` |
+
+`resources` contains `callback_work`, `callback_allocations`, `host_work_per_tick`,
+`runtime_memory_bytes`, `host_memory_bytes`, `pending_work_bytes` and
+`host_stack_depth`. Each descriptor has `limit`, `unit`, `scope`, `setting` and
+`behavior`, matching the corresponding `computer.getLimits()` descriptor.
+`tuning` is empty. The former flat common/configurator count and shape keys are
+absent; unrelated device settings are not included. Returned nested maps are
+independent copies. This read remains available while the configurator is
+reachable but unpowered; ordinary target reads still require power.
 
 ## Device and schema records
 

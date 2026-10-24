@@ -5,7 +5,10 @@ local data=require('scripts.runtime.data')
 local errors=require('scripts.runtime.errors')
 local common_limits=require('scripts.runtime.limits')
 local sections=require('scripts.configuration.sections')
+local policy=require('scripts.runtime.resource-policy')
 local M={}
+local policy_keys={callback_work=true,callback_allocations=true,host_work_per_tick=true,
+  runtime_memory_bytes=true,host_memory_bytes=true,pending_work_bytes=true,host_stack_depth=true}
 -- Host-only identity summary; do not load adapters or configuration schemas.
 function M.inspect(rec,tick,spend)
   local union,groups={},{}
@@ -47,10 +50,7 @@ local function method(name,n,fn)
     return fn(rec,spend,...)
   end
 end
-method('getLimits',0,function(rec,spend)
-  local limits=data.copy(common_limits,spend)
-  return limits
-end)
+method('getLimits',0,function() return policy.limits(policy_keys) end)
 method('getDevices',1,function(rec,spend,wire)
   local inventory=targets.inventory(rec,wire,spend); local result={}
   for _,id in ipairs(keys(inventory)) do result[#result+1]=M.describe(inventory[id],wire,spend) end

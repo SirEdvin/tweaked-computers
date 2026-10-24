@@ -571,8 +571,11 @@ removeSection(id, index, target_wire) -> boolean, false if absent, true after ve
 removal. Nonmanual sections refuse. Native 1-based indexes can shift afterward.
 
 
-getLimits() -> copied common/configurator capacities, including reachable unpowered.
-Target graph, patch, section, filter and result budgets apply independently.
+getLimits() -> {policy_version=2,resources={...},tuning={}}, also while reachable
+unpowered. Resources describe callback work/allocation, shared host work,
+runtime/host/pending memory and host depth: limit, unit, scope, setting, behavior.
+Tuning is empty. Former flat graph/patch/section/filter/shape limits are absent.
+Returned nested maps are independent copies; target reads still require power.
 
 COMBINED EXAMPLE
 Choose Examples for complete, small tutorials with setup, runnable code, execution
