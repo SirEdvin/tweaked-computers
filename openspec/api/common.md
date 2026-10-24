@@ -92,7 +92,7 @@ Discovery remains physical while a relay device is unpowered; actual service cal
 source_bytes, generated_source_bytes, source_nodes, source_nesting,
 callback_work, callback_depth, callback_allocations, compile_work, host_work_per_tick,
 active_computers, active_logic_handlers, aggregate_subscriptions, aggregate_owned_outputs,
-state_bytes, state_entries, data_nodes, data_depth, string_bytes,
+state_bytes, state_entries, data_depth, string_bytes,
 event_queue_entries, event_queue_bytes, timers, subscriptions,
 network_nodes, network_edges, topology_latency_ticks,
 peripheral_call_bytes, peripheral_call_entries,

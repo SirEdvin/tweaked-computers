@@ -174,7 +174,6 @@ function M.prepare_event(rec,name,payload,tick,spend,metadata)
     -- Preparation can be abandoned/retried; only publication records a loss.
     return {handler=name,event={name=payload.name,run_id=rec.run_id},overflow='event_queue_bytes'}
   end
-  if stats.nodes+7>limits.data_nodes then errors.raise('E_LIMIT','event leaves no room for envelope metadata') end
   -- Host overrides all authoritative envelope fields, never trusts injected ones.
   event.tick=tick; event.computer_id=rec.id; event.run_id=rec.run_id
   local bytes=stats.bytes+128+#rec.id+#rec.run_id
@@ -328,7 +327,6 @@ function M.services(rec,tick,guard,execution)
     local copied,size
     if payload~=nil then
       copied,size=data.copy(payload,spend,limits.event_queue_bytes-512)
-      if size.nodes+10>limits.data_nodes then errors.raise('E_LIMIT','timer payload leaves no room for event metadata') end
     end
     local seq=registry.sequence(); local id=rec.run_id..'/timer-'..string.format('%.0f',seq)
     rec.timers[id]={id=id,handler=name,deadline=tick+delay,interval=recurring and delay or nil,payload=copied,payload_bytes=size and size.bytes or 0,sequence=seq}

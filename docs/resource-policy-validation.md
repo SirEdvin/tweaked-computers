@@ -4,6 +4,30 @@ This is an **unfinished implementation checkpoint**, not a release candidate or 
 
 The [source-site disposition inventory](resource-policy-inventory.md) maps every policy-manifest audit row and shared limit constant to its implementation paths and required treatment. Inventory coverage is not proof that those limits have been removed.
 
+## Durable Data-copy checkpoint
+
+The total 4,096-node Data ceiling is removed from shared copies, sandbox
+snapshots and event/timer envelopes; node statistics remain. Durable service
+argument, prepared-result and return snapshots retain their traversal cursor
+in the existing private job mechanism. Their source, output and bounded
+traversal metadata use runtime memory admission, rather than the old flat
+snapshot byte ceiling. Work exhaustion preserves the paid prefix instead of
+restarting a large result indefinitely. Non-durable copies retain their byte
+fallback; depth, plain-data validation and other remaining shape gates are
+unchanged. No production budget is increased.
+
+`resource_policy_data` and `resource_policy_data_copy` exercise a real wired
+600-product Recipe Searcher query, state/event/timer defensive copies above
+4,096 nodes, malformed/cyclic/function/deep input rejection, and separate-process
+reload both inside the result copy and after state retention. A separate real
+guard/memory subcase checks atomic capacity refusal, allocation suspension,
+alias copying and explicit owner release; it is not production lifecycle proof.
+The native cold checks preserve the copy cursor, source ownership and spent
+ledger through load without guest execution. CI runs both fixtures before the
+legacy integration step. Task 7.4 remains open: per-table/string/tuple ceilings,
+complete native inventory/upgrade integration and aggregate service ownership
+still require work. The overall checklist remains **13/47**.
+
 ## Workspace ownership fixture correction
 
 The previously retained `editor_workspace` failure at the foreign-close case

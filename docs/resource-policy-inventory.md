@@ -44,7 +44,7 @@ All names in `scripts/runtime/limits.lua` are assigned here; duplicates across r
 - Work/cache policy: `callback_work`, `callback_allocations`, `compile_work`, `host_work_per_tick`, `maintenance_work_per_tick`, `compiler_cache_bytes`.
 - Compiler/host recursion and source shape: `source_bytes`, `generated_source_bytes`, `source_nodes`, `source_tokens`, `source_nesting`, `handler_names`, `identifier_bytes`, `tuple_entries`, `callback_depth`.
 - Global metadata counts: `active_computers`, `active_logic_handlers`, `aggregate_subscriptions`, `aggregate_owned_outputs`, `registry_entries`, `owned_children`, `shell_sessions`, `host_hooks`.
-- State/Data shape: `state_bytes`, `state_entries`, `data_nodes`, `data_depth`, `string_bytes`, `table_entries`, `peripheral_call_bytes`, `peripheral_call_entries`.
+- State/Data shape: `state_bytes`, `state_entries`, `data_depth`, `string_bytes`, `table_entries`, `peripheral_call_bytes`, `peripheral_call_entries`. The former `data_nodes` declaration and its shared-copy/event/timer checks are removed; node statistics remain for accounting. Durable service copies use retained-memory admission instead of `peripheral_call_bytes`, but non-durable copies and other shape checks still require integration.
 - Queues/registrations: `event_queue_entries`, `event_queue_bytes`, `timers`, `subscriptions`, `shell_pending_entries`, `shell_pending_bytes`.
 - Shell/retention: `console_entries`, `console_bytes`, `shell_source_bytes`, `shell_bindings`, `shell_value_bytes`, `shell_nodes`.
 - Discovery/presentation: `network_nodes`, `network_edges`, `sync_group_refs`, `sync_group_members`, `sync_group_cells`, `sync_groups_per_run`.

@@ -105,7 +105,6 @@ is needed; ordinary synchronized admission resets counters only on a new tick.
 | `aggregate_owned_outputs` | 128 |
 | `state_bytes` | 65536 |
 | `state_entries` | 256 |
-| `data_nodes` | 4096 |
 | `data_depth` | 16 |
 | `string_bytes` | 16384 |
 | `table_entries` | 1024 |

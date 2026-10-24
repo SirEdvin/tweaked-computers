@@ -12,9 +12,14 @@ projection cursors. Public return signatures are unchanged.
   it is not cold continuation acceptance through the guest boundary.
   Durable guards without this contract fail closed with `E_UNSUPPORTED`.
 - Generic Data and service return/tuple preparation must remove old
-  `table_entries`, `data_nodes`, `identifier_bytes`, `tuple_entries` and
+  `table_entries`, `identifier_bytes`, `tuple_entries` and
   `peripheral_call_bytes` shape ceilings in favor of real retained-memory
   admission. Otherwise complete provider results still fail at the shared edge.
+  The total-node ceiling is now removed. Durable service argument/result copies
+  retain their paid cursor and use real memory admission instead of the old
+  snapshot byte ceiling; non-durable copies retain that fallback. The native
+  600-product guest query and mid-copy cold boundary are separate from the
+  remaining full inventory/lifecycle/upgrade acceptance.
 - Maintenance event preparation needs a save-safe cursor argument:
   `runtime.prepare_event(c, handler, payload, tick, spend, metadata, job)`.
   Logic now supplies the last argument. The baseline runtime ignores it;

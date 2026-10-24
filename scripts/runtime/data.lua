@@ -15,7 +15,7 @@ function M.copy(value, spend, ceiling, on_capacity)
   local function visit(v,depth)
     if spend then spend(1) end
     stats.nodes=stats.nodes+1
-    if stats.nodes>limits.data_nodes or depth>limits.data_depth then errors.raise('E_LIMIT','Data structure limit exceeded') end
+    if depth>limits.data_depth then errors.raise('E_LIMIT','Data nesting limit exceeded') end
     local typ=type(v)
     if typ=='string' then
       if #v>limits.string_bytes then errors.raise('E_LIMIT','Data string limit exceeded') end

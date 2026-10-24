@@ -104,6 +104,11 @@ jobs:
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/recipe-policy" --mode both \
             --fixture tests.recipe_searcher_policy
+          for fixture in resource_policy_data resource_policy_data_copy; do
+            python tools/smoke.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both --fixture "tests.$fixture" \
+              --data-fixture tests.recipe_searcher_data --cold
+          done
       - name: Check editor contracts and cold workspace recovery
         shell: bash
         run: |

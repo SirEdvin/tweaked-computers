@@ -9,7 +9,7 @@ return {
   compile_work = 1250000, host_work_per_tick = 5000000, compiler_cache_bytes = 8388608,
   active_computers = 64, active_logic_handlers = 128,
   aggregate_subscriptions = 1024, aggregate_owned_outputs = 128,
-  state_bytes = 65536, state_entries = 256, data_nodes = 4096, data_depth = 16,
+  state_bytes = 65536, state_entries = 256, data_depth = 16,
   string_bytes = 16384, table_entries = 1024,
   event_queue_entries = 128, event_queue_bytes = 65536, timers = 64, subscriptions = 64,
   network_nodes = 256, network_edges = 512, topology_latency_ticks = 60,

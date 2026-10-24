@@ -520,7 +520,6 @@ function M.new(context, services, shell, durable)
     if level>limits.data_depth then errors.raise('E_LIMIT','Data nesting exceeded') end
     local typ=type(v)
     stats.nodes=stats.nodes+1
-    if stats.nodes>limits.data_nodes then errors.raise('E_LIMIT','Data nodes exceeded') end
     if typ=='number' then if not errors.finite(v) then fail('Data number must be finite') end; stats.bytes=stats.bytes+8; return v end
     if typ=='boolean' then stats.bytes=stats.bytes+1; return v end
     if typ=='string' then string_value(v); stats.bytes=stats.bytes+#v; G.spend(#v); allocate(#v); return v end
@@ -544,16 +543,78 @@ function M.new(context, services, shell, durable)
     seen[v]=nil; own(t)
     return t
   end
-  function G.snapshot(v)
+  -- Retain the paid copy frontier instead of restarting large service snapshots.
+  local function snapshot_job(v,name)
+    local job=G.job(name,function() return {source=v,stack={},seen={},done=false,bytes=0} end)
+    if job.done then return job.result end
+    local function room(depth)
+      G.host_work(24,24)
+      G.job_resize(job,2048+depth*1024)
+    end
+    if not job.result then
+      room(1)
+      local result=G.new(0,function() return {} end)
+      job.result=result; job.seen[job.source]=true
+      job.stack[1]={source=job.source,result=result,count=0,max=0}
+    end
+    while #job.stack>0 do
+      G.spend(2)
+      local frame=job.stack[#job.stack]
+      local k,value=next(frame.source,frame.key)
+      if k==nil then
+        if frame.kind=='number' and frame.max~=frame.count then fail('Data array must be dense') end
+        job.seen[frame.source]=nil; job.stack[#job.stack]=nil
+      else
+        if #job.stack>limits.data_depth then errors.raise('E_LIMIT','Data nesting exceeded') end
+        local kt=type(k)
+        if kt=='number' then integer(k,1,limits.table_entries)
+        elseif kt=='string' then string_value(k)
+        else fail('Data keys must be strings or dense array indexes') end
+        if frame.kind and frame.kind~=kt then fail('Data arrays/maps cannot mix') end
+        if frame.count>=limits.table_entries then errors.raise('E_LIMIT','Data table entries exceeded') end
+        local typ=type(value)
+        local bytes=kt=='string' and #k or 0
+        if typ=='table' then
+          if getmetatable(value) or protected[value] or G.encoded_type(value) then fail('plain Data required') end
+          if job.seen[value] then fail('cyclic Data is not persistable') end
+        elseif typ=='number' then
+          if not errors.finite(value) then fail('Data number must be finite') end
+          bytes=bytes+8
+        elseif typ=='boolean' then bytes=bytes+1
+        elseif typ=='string' then string_value(value); bytes=bytes+#value
+        else fail('plain Data required') end
+        if not heap and job.bytes+bytes>limits.peripheral_call_bytes then errors.raise('E_LIMIT','Data snapshot byte limit exceeded') end
+        G.host_work(bytes+1,bytes+1); room(#job.stack+(typ=='table' and 1 or 0))
+        local copied=typ=='table' and G.new(0,function() return {} end) or value
+        G.assignment_one(frame.result,k,copied); frame.result[k]=copied
+        frame.key=k; frame.kind=kt; frame.count=frame.count+1
+        if kt=='number' then frame.max=math.max(frame.max,k) end
+        job.bytes=job.bytes+bytes
+        if typ=='table' then
+          job.seen[value]=true
+          job.stack[#job.stack+1]={source=value,result=copied,count=0,max=0}
+        end
+      end
+    end
+    job.done=true
+    return job.result
+  end
+  function G.snapshot(v,job_name)
     if v==nil then return nil end
     local resource=errors.resource_diagnostic(v)
     if resource then
       resource.line=resource.line or line; resource.column=resource.column or column
       v=resource -- Admit source fields with the snapshot, not after publication.
     end
-    local stats={nodes=0,bytes=0}
-    local result=copy(v,{},0,stats)
-    if stats.bytes>limits.peripheral_call_bytes then errors.raise('E_LIMIT','Data snapshot byte limit exceeded') end
+    local result
+    if job_name and durable and call_checkpoint and type(v)=='table' then
+      if getmetatable(v) or protected[v] or G.encoded_type(v) then fail('plain Data required') end
+      result=snapshot_job(v,job_name)
+    else
+      local stats={nodes=0,bytes=0}
+      result=copy(v,{},0,stats)
+      if stats.bytes>limits.peripheral_call_bytes then errors.raise('E_LIMIT','Data snapshot byte limit exceeded') end
+    end
     if durable and type(result)=='table' then
       resource=resource or owned[v] and owned[v].resource
       if resource then
@@ -599,7 +660,7 @@ function M.new(context, services, shell, durable)
     local result=table.pack(...)
     if result.n>limits.tuple_entries then fatal('service result width exceeded') end
     for i=1,result.n do
-      if not (type(result[i])=='table' and protected[result[i]]) then result[i]=G.snapshot(result[i]) end
+      if not (type(result[i])=='table' and protected[result[i]]) then result[i]=G.snapshot(result[i],'prepared-data-'..i) end
     end
     if not prepare_return(service.wrapper,table.unpack(result,1,result.n)) then prepare_checkpoint(result) end
     service.prepared_result=result
@@ -616,7 +677,7 @@ function M.new(context, services, shell, durable)
         args=table.pack(...)
         for i=1,n do
           if not (handle_arguments[fn]==i and type(args[i])=='table' and protected[args[i]]) then
-            args[i]=G.snapshot(args[i])
+            args[i]=G.snapshot(args[i],'argument-data-'..i)
           end
         end
         if call_checkpoint and checkpoint_codec then call_checkpoint.service_args=checkpoint_codec.encode(args,true) end
@@ -657,7 +718,7 @@ function M.new(context, services, shell, durable)
         if called[1] and frame.empty_result and called.n~=1 then errors.raise('E_ENGINE','trusted empty service contract violated') end
         if called[1] and not (frame.prepared_result or frame.boolean_result or frame.empty_result) then
           for i=2,called.n do
-            if not (type(called[i])=='table' and protected[called[i]]) then called[i]=G.snapshot(called[i]) end
+            if not (type(called[i])=='table' and protected[called[i]]) then called[i]=G.snapshot(called[i],'result-data-'..i) end
           end
         end
         if call_checkpoint and called[1] then

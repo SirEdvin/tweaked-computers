@@ -36,7 +36,8 @@ belong to this program, never to the [live Console](../console.md).
 | `computer.every(interval_ticks, handler_name, payload?)` | timer string | Recurring positive integer tick interval |
 | `computer.cancelTimer(timer_id)` | boolean | Cancel deadline and admitted undispatched event; false if neither remains |
 
-State: at most 256 root entries, 65,536 accounted bytes and 4,096 nodes total;
+State: at most 256 root entries and, by default, 65,536 accounted bytes;
+there is no separate total-node ceiling.
 Data depth 16, per-table entries 1,024, strings 16,384 bytes. Keys/container
 metadata count too. Rejected updates preserve the old value. Snapshots do not
 mutate originals; nil is not a state value, use deleteState. Payloads use copied
