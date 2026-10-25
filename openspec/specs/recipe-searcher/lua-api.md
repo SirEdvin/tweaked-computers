@@ -44,8 +44,8 @@ Every record is a fresh plain string-keyed map. All required fields appear even 
 | Field | Type | Meaning |
 | --- | --- | --- |
 | `name` | string | Internal recipe prototype name; stable deduplication/sort key |
-| `category` | string | Primary crafting category |
-| `additional_categories` | string[] | Sorted unique additional category names, excluding the primary category |
+| `category` | string | First native Factorio 2.1 crafting category, retained as the compatibility primary |
+| `additional_categories` | string[] | Sorted unique remaining native category names, excluding the first category |
 | `energy` | finite number | Base recipe crafting time in seconds at crafting speed 1; not electrical energy |
 | `enabled` | boolean | Current enabled state in the requesting computer's force |
 | `enabled_by_default` | boolean | Recipe prototype's initial enabled flag |
@@ -66,6 +66,7 @@ Required fields: `type` (`"item"` or `"fluid"`), `name` (string), `amount` (fini
 Optional fields, copied only when present:
 
 - Both types: `ignored_by_stats` (finite number).
+- Items: `quality_min`, `quality_max` (registered quality names), `quality_change`, `spoil_weight` (finite numbers), when present in native 2.1 metadata.
 - Fluids: `temperature`, `minimum_temperature`, `maximum_temperature` (finite numbers), `fluidbox_index`, `fluidbox_multiplier` (integers).
 
 Preserve the engine's distinction between exact temperature and a temperature interval; do not fabricate all three fields. No quality is invented for an ingredient.
@@ -74,10 +75,17 @@ Preserve the engine's distinction between exact temperature and a temperature in
 
 Required fields: `type` (`"item"` or `"fluid"`), `name` (string), `probability` (finite number in `[0,1]`).
 
+Factorio 2.1 also supplies `independent_probability` (number in `[0,1]`) and
+`shared_probability={min=number,max=number}` (ordered bounds in `[0,1]`). Both
+are returned. The compatibility `probability` is their marginal probability:
+`independent_probability * (shared_probability.max - shared_probability.min)`.
+Shared intervals can correlate multiple products; the marginal alone does not describe that correlation.
+
 Quantity uses either `amount` or the pair `amount_min`, `amount_max`, according to engine readback. Preserve fixed versus ranged quantities and all other optional fields:
 
 - Both types: `ignored_by_stats`, `ignored_by_productivity` (finite numbers).
 - Items: `extra_count_fraction`, `percent_spoiled` (finite numbers).
+- Items, when native metadata provides them: `affected_by_quality`, `always_fresh`, `reset_freshness_on_craft` (booleans), `quality_min`, `quality_max` (quality names), `quality_change`, `spoil_weight` (finite numbers).
 - Fluids: `temperature` (finite number), `fluidbox_index` (integer).
 
 Probability and extra-count fractions remain explicit. Do not multiply amounts by probability, add productivity, project quality chances, synthesize extra recipes or discard zero-valued modifiers.

@@ -479,7 +479,7 @@ class ShellClientSceneTests(unittest.TestCase):
                 Path(command[command.index('--create') + 1]).write_bytes(b'unit-test-only')
                 return SimpleNamespace(returncode=0, stdout='TC_SMOKE_OK')
 
-            with patch.object(shell_client.subprocess, 'check_output', return_value='Version: 2.0.77 (unit test full)'), \
+            with patch.object(shell_client.subprocess, 'check_output', return_value='Version: 2.1.23 (unit test full)'), \
                  patch.object(shell_client.subprocess, 'run', side_effect=create):
                 shell_client.prepare(archive, root / 'engine/bin/x64/factorio', client, scene, 'base')
 

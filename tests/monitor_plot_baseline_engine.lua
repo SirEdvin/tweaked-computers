@@ -38,7 +38,7 @@ function M.on_tick(event)
   x.phase='running'; loaded=false; x.resumed=true; log('TC_BASELINE_COLD_RETAINED')
  end
  for _,id in ipairs(root.order) do lifecycle.power_entity(registry.record(id)).energy=100000 end
- local profiler=game.create_profiler(); scheduler.tick(event.tick); profiler.stop()
+ local profiler=helpers.create_profiler(); scheduler.tick(event.tick); profiler.stop()
  assert(c.status=='running' or x.phase=='draining' and c.status=='stopped',serpent.line(c.diagnostic)); x.steps=x.steps+1; assert(x.steps<250)
  local machine=root.ledger.machines[c.id]
  if machine then x.peak_work=math.max(x.peak_work,machine.work); x.peak_allocations=math.max(x.peak_allocations,machine.allocations) end

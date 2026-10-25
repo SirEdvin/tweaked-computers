@@ -67,8 +67,8 @@ the author's prototype-source order.
 | Required field | Type and meaning |
 | --- | --- |
 | `name` | Internal recipe name, sorting/deduplication key |
-| `category` | Primary category name |
-| `additional_categories` | Sorted unique additional category names, excluding primary |
+| `category` | First native 2.1 category, kept as the compatibility primary |
+| `additional_categories` | Sorted unique remaining native category names, excluding the first |
 | `energy` | Finite base crafting time in seconds at speed 1, not electrical energy |
 | `enabled` | Current enabled flag in the requesting computer's force |
 | `enabled_by_default` | Prototype's initial enabled flag |
@@ -86,12 +86,23 @@ finite `temperature`, `minimum_temperature`, `maximum_temperature`, and integer
 `fluidbox_index` / `fluidbox_multiplier`. Exact versus interval temperature remains
 distinct; no ingredient quality is invented.
 
+In 2.1, item ingredients/products also copy `quality_min` / `quality_max` as
+quality names and finite `quality_change` / `spoil_weight` when native metadata
+provides them. Products additionally retain the optional boolean fields
+`affected_by_quality`, `always_fresh` and `reset_freshness_on_craft`.
+
 Product records require `type`, `name`, and finite `probability` in [0,1]. Quantity
 is either finite `amount` or the finite pair `amount_min` / `amount_max`, as read
 from the engine. Optional finite `ignored_by_stats` and `ignored_by_productivity`
 apply to either type. Item products may provide finite `extra_count_fraction` and
 `percent_spoiled`; fluids may provide finite `temperature` and integer
 `fluidbox_index`. Zero values and repeated product entries remain intact.
+
+Products also return 2.1's `independent_probability` and
+`shared_probability={min,max}`. The compatibility `probability` is
+`independent_probability * (shared_probability.max - shared_probability.min)`.
+Shared intervals can correlate products; the marginal probability alone does not
+describe that correlation. Amounts remain unmodified, not expected yields.
 No expected yields, productivity or quality projection is calculated.
 
 SurfaceCondition records require `property`; optional finite `min` / `max` are

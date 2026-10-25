@@ -209,7 +209,7 @@ function M.on_tick(event)
   x.phase='running'; loaded=false; x.resumed=true; log('TC_PRESENT_COLD_RETAINED')
  end
  fuel()
- local profiler=game.create_profiler(); scheduler.tick(event.tick); profiler.stop()
+ local profiler=helpers.create_profiler(); scheduler.tick(event.tick); profiler.stop()
  assert(c.status=='running' or x.phase=='stopped' and c.status=='stopped'
    or x.phase=='faulting' and c.status=='faulted',serpent.line(c.diagnostic))
  x.steps=x.steps+1; assert(x.steps<1500,'presentation and staged-example scenario deadline')

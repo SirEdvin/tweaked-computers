@@ -89,6 +89,9 @@ local cases={
     assert(#v.additional_categories==2 and v.additional_categories[1]=='tc-rs-additional')
     local p=v.products[1]; assert(p.amount==nil and p.amount_min==1 and p.amount_max==3 and p.probability==.5)
     assert(p.extra_count_fraction==.25 and p.ignored_by_stats==1 and p.ignored_by_productivity==1)
+    local shared=v.products[2]
+    assert(shared.probability==.25 and shared.independent_probability==.5
+      and shared.shared_probability.min==.25 and shared.shared_probability.max==.75)
     assert(v.products[3].temperature==80 and v.products[3].fluidbox_index==1)
     local i=v.ingredients[2]; assert(i.minimum_temperature==20 and i.maximum_temperature==90 and i.temperature==nil)
     assert(i.fluidbox_index==1)
@@ -179,7 +182,11 @@ function M.on_tick(event)
       guest(c,prefix..case[2]); report(case[1]); x.case=x.case+1
       if case[1]=='complete-metadata-and-defensive-snapshots' then
         local actual=c.state.metadata; local native=prototypes.recipe['tc-rs-metadata']
-        assert(equal(actual.ingredients,native.ingredients) and equal(actual.products,native.products))
+        local products=native.products
+        for _,product in ipairs(products) do
+          product.probability=product.independent_probability*(product.shared_probability.max-product.shared_probability.min)
+        end
+        assert(equal(actual.ingredients,native.ingredients) and equal(actual.products,products),serpent.line({actual=actual,products=products,ingredients=native.ingredients}))
         local conditions=native.surface_conditions or {}; assert(#actual.surface_conditions==#conditions)
         for i,condition in ipairs(conditions) do
           local a=actual.surface_conditions[i]; assert(a.property==condition.property)

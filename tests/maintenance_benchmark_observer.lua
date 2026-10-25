@@ -17,7 +17,7 @@ function M.install()
     register(phase,name,function(...)
       if not active then return fn(...) end
       local spent=registry.get().scheduler.maintenance_spent
-      local p=game.create_profiler()
+      local p=helpers.create_profiler()
       local result=table.pack(pcall(fn,...))
       p.stop(); profiles[#profiles+1]={name=phase..'/'..name,profiler=p,work=registry.get().scheduler.maintenance_spent-spent}
       if not result[1] then error(result[2],0) end
@@ -29,7 +29,7 @@ function M.install()
     scheduler[name]=function(...)
       if not active then return fn(...) end
       local spent=registry.get().scheduler.maintenance_spent
-      local p=game.create_profiler()
+      local p=helpers.create_profiler()
       local result=table.pack(pcall(fn,...))
       p.stop(); profiles[#profiles+1]={name=name,profiler=p,work=registry.get().scheduler.maintenance_spent-spent}
       if not result[1] then error(result[2],0) end

@@ -54,7 +54,7 @@ function M.run()
     assert(not tech.researched and not force.recipes['tc-interplanetary-radar'].enabled)
     force.add_research(tech); force.research_progress=499/500
     local lab=assert(s.create_entity{name='lab',position={12,-6},force='player'})
-    lab.active=false -- Exercise native research only after a real client joins.
+    lab.disabled_by_script=true -- Exercise native research only after a real client joins.
     for _,pack in ipairs(tech.research_unit_ingredients) do lab.insert{name=pack.name,count=2} end
     f().lab=lab
     local assembler=assert(s.create_entity{name='assembling-machine-3',position={12,6},force='player'})
@@ -95,9 +95,9 @@ function M.on_player_joined(event)
   p.set_controller{type=defines.controllers.god}; p.teleport({2,1},game.surfaces[1]); p.zoom=1.5
   if p.index==2 and x.platform then p.teleport({10,11},x.platform.surface) end
   p.game_view_settings.show_entity_info=true
-  p.insert{name='radar',count=5}; p.set_quick_bar_slot(1,'radar')
-  if x.advanced then p.insert{name='tc-interplanetary-radar',count=5}; p.set_quick_bar_slot(2,'tc-interplanetary-radar') end
-  if x.lab and not x.researched then x.lab.active=true end
+  p.insert{name='radar',count=5}; p.set_quick_bar_slot(1,1,'radar')
+  if x.advanced then p.insert{name='tc-interplanetary-radar',count=5}; p.set_quick_bar_slot(1,2,'tc-interplanetary-radar') end
+  if x.lab and not x.researched then x.lab.disabled_by_script=false end
   if x.phase=='ready' then x.late_join=true; assert(registry.record(x.radar).modem.channels[201]); log('TC_RADAR_LATE_JOIN_RETAINED') end
   x.joined[p.index]=true
 end
@@ -126,7 +126,7 @@ function M.on_tick(event)
       for _,ingredient in ipairs(force.recipes['tc-interplanetary-radar'].ingredients) do x.assembler.insert{name=ingredient.name,count=ingredient.amount} end
       log('TC_RADAR_NATIVE_RESEARCH_COMPLETED accelerated-final-unit')
     end
-    if x.researched and x.assembler.get_inventory(defines.inventory.assembling_machine_output).get_item_count('tc-interplanetary-radar')==1 then
+    if x.researched and x.assembler.get_inventory(defines.inventory.crafter_output).get_item_count('tc-interplanetary-radar')==1 then
       x.crafted=true; log('TC_RADAR_NATIVE_CRAFT_COMPLETED')
     end
   end

@@ -24,6 +24,7 @@ FIXTURE = 'tests.rd1_upgrade_engine'
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--factorio', type=Path, required=True)
+    ap.add_argument('--legacy-factorio', type=Path, required=True)
     ap.add_argument('--archive', type=Path, required=True)
     ap.add_argument('--output', type=Path, required=True)
     ap.add_argument('--mode', choices=['base', 'space-age', 'both'], default='both')
@@ -35,7 +36,8 @@ def main():
         ap.error('use a fresh directory outside git')
     args.output.mkdir(parents=True)
     version = subprocess.check_output([str(args.factorio), '--version'], text=True)
-    assert version.startswith('Version: 2.0.77 '), version
+    assert version.startswith('Version: 2.1.23 '), version
+    assert subprocess.check_output([str(args.legacy_factorio), '--version'], text=True).startswith('Version: 2.0.77 ')
     (args.output / 'engine-version.txt').write_text(version)
     old = args.output / 'alpha-source'
     old.mkdir()
@@ -52,7 +54,7 @@ def main():
     result = subprocess.run(['python3', str(old / 'tools/build.py'), '--output', str(args.output / 'alpha-artifact')],
                             capture_output=True, text=True, check=True)
     baseline = json.loads(result.stdout)
-    summary = {'engine': '2.0.77', 'baseline_commit': args.baseline, 'fixture': args.fixture, 'instrumented_alpha': baseline,
+    summary = {'engine': '2.1.23', 'legacy_engine': '2.0.77', 'baseline_commit': args.baseline, 'fixture': args.fixture, 'instrumented_alpha': baseline,
                'candidate_sha256': hashlib.sha256(args.archive.read_bytes()).hexdigest(), 'cases': []}
     for mode in (['base', 'space-age'] if args.mode == 'both' else [args.mode]):
         folder = args.output / mode
@@ -72,8 +74,8 @@ def main():
         enabled += [{'name': n, 'enabled': mode == 'space-age'} for n in ('space-age', 'quality', 'elevated-rails')]
         (mods / 'mod-list.json').write_text(json.dumps({'mods': enabled}))
         cfg = folder / 'config.ini'
-        cfg.write_text('[path]\nread-data=' + str(args.factorio.resolve().parents[2] / 'data') + '\nwrite-data=' + str(write) + '\n[other]\ncheck-updates=false\n')
-        create = subprocess.run([str(args.factorio), '--config', str(cfg), '--mod-directory', str(mods),
+        cfg.write_text('[path]\nread-data=' + str(args.legacy_factorio.resolve().parents[2] / 'data') + '\nwrite-data=' + str(write) + '\n[other]\ncheck-updates=false\n')
+        create = subprocess.run([str(args.legacy_factorio), '--config', str(cfg), '--mod-directory', str(mods),
                                  '--create', str(folder / 'old.zip'), '--map-gen-seed', '1'],
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=120)
         (folder / 'alpha-create.log').write_text(create.stdout)
@@ -81,19 +83,23 @@ def main():
             print(create.stdout)
             raise RuntimeError('alpha save creation failed')
         snapshot = write / 'saves/tc03-snapshot.zip'
-        phases = [cold_phase(args.factorio, cfg, mods, folder / 'old.zip', folder,
+        phases = [cold_phase(args.legacy_factorio, cfg, mods, folder / 'old.zip', folder,
                              'cold-first', 'TC_COLD_SNAPSHOT_REQUESTED', snapshot)]
         original_save = folder / 'untouched-alpha-save.zip'
         shutil.copy2(snapshot, original_save)
         ordinary = folder / 'ordinary-alpha.zip'
         shutil.copy2(snapshot, ordinary)
-        phases.append(cold_phase(args.factorio, cfg, mods, ordinary, folder, 'cold-second', 'TC_COLD_OK'))
+        phases.append(cold_phase(args.legacy_factorio, cfg, mods, ordinary, folder, 'cold-second', 'TC_COLD_OK'))
         # Replace only the isolated mod copy; assert the exact production bytes.
         archive_path.unlink()
         archive_path = mods / args.archive.name
         shutil.copy2(args.archive, archive_path)
         assert hashlib.sha256(archive_path.read_bytes()).hexdigest() == summary['candidate_sha256']
         info['version'] = '0.0.2'
+        info['factorio_version'] = '2.1'
+        cfg.write_text(cfg.read_text().replace(str(args.legacy_factorio.resolve().parents[2] / 'data'), str(args.factorio.resolve().parents[2] / 'data')))
+        enabled.append(dict(name='recycler', enabled=mode == 'space-age'))
+        (mods / 'mod-list.json').write_text(json.dumps(dict(mods=enabled)))
         (testmod / 'info.json').write_text(json.dumps(info))
         testmod.rename(mods / 'tc-smoke_0.0.2')
         candidate_save = folder / 'candidate-upgrade.zip'

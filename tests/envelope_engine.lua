@@ -102,7 +102,7 @@ function M.on_tick(event)
   for _,id in ipairs(x.computers) do local c=registry.computer(id)
     if c.status=='running' then before.running=before.running+1; before.subscriptions=before.subscriptions+count(c.subscriptions) end
   end
-  local profiler=game.create_profiler(); scheduler.tick(event.tick); profiler.stop()
+  local profiler=helpers.create_profiler(); scheduler.tick(event.tick); profiler.stop()
   x.steps=x.steps+1
   log({'','TC_ENVELOPE_CPU tick=',event.tick,' phase=',x.phase,' ',profiler})
   assert(root.scheduler.maintenance_spent<=200000 and root.ledger.total<=4800000)

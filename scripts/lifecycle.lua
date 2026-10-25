@@ -28,7 +28,7 @@ local function position(rec,index,direction)
   return {x=rec.body.position.x+x,y=rec.body.position.y+y}
 end
 local function protect(port)
-  port.minable=false; port.destructible=false; port.operable=false; port.rotatable=false
+  port.minable_flag=false; port.destructible=false; port.operable=false; port.rotatable=false
 end
 local function create_port(body,role,pos,direction,token)
   local port
@@ -166,7 +166,7 @@ function M.build(body,token)
     -- application state or future KV data. Destruction remains explicit loss.
     if item_adapters[kind] then item_adapters[kind].initialize(rec)
     elseif kind=='computer' or kind=='kv' then
-      body.minable=false; rec.mining_guard='awaiting-data-bearing-snapshots'
+      body.minable_flag=false; rec.mining_guard='awaiting-data-bearing-snapshots'
     end
   end)
   if ok then return rec end
@@ -307,7 +307,7 @@ function M.upgrade(rec)
       direction=old.direction,force=old.force,quality=old.quality,create_build_effect_smoke=false},'shell allocation refused')
     staged[#staged+1]=body; passive(body)
     assert(body.position.x==old.position.x and body.position.y==old.position.y,'shell placement moved')
-    body.health=old.health; body.minable=old.minable; body.destructible=old.destructible; body.rotatable=old.rotatable
+    body.health=old.health; body.minable_flag=old.minable_flag; body.destructible=old.destructible; body.rotatable=old.rotatable
     local parts={power=create_power(body,rec.kind)}; staged[#staged+1]=parts.power
     parts.power.energy=old.energy
     local watts=defs.devices[rec.kind].watts

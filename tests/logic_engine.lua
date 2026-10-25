@@ -158,7 +158,7 @@ function M.on_tick(event)
     loaded=false; f().phase='cold-resume'; f().resume=event.tick
     put(f().red,{{signal=signal(),count=120}})
     -- Keep stock fixture machinery frozen until the cold controller reacts.
-    f().inserter.active=false
+    f().inserter.disabled_by_script=true
   elseif f().phase=='inputs' then loaded=false end
   if f().phase=='done' then return end
   scheduler.tick(event.tick)
@@ -238,7 +238,7 @@ function M.on_tick(event)
       assert(c.state.starts==1 and c.state.stock==5 and io.output_owner.computer_id==c.id)
       report('actual-powered-inserter-transfer-from-saved-controller')
       -- Save retained controller/output/subscription identities with pending input.
-      f().inserter.active=false; f().phase='frozen'; f().snapshot=snapshot()
+      f().inserter.disabled_by_script=true; f().phase='frozen'; f().snapshot=snapshot()
       f().native_bank=serpent.line(logic.inspect_output(io,nop))
       log('TC_CONTRACT_TOTAL '..f().groups)
       game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
@@ -248,7 +248,7 @@ function M.on_tick(event)
     assert(event.tick-f().resume<120,'cold reaction deadline')
     if c.state.stock==120 and not logic.inspect_output(io,nop)[1] then
       assert(c.state.starts==1 and c.run_id==f().snapshot.run)
-      f().inserter.active=true; f().phase='cessation'; f().since=event.tick; f().count=f().dest.get_item_count('iron-plate')
+      f().inserter.disabled_by_script=false; f().phase='cessation'; f().since=event.tick; f().count=f().dest.get_item_count('iron-plate')
       report('cold-owned-output-subscription-identity-and-no-startup-replay')
       verify_faults(); report('cold-shared-sampler-fault-identities-retained')
     end

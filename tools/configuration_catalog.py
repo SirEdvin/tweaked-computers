@@ -39,6 +39,9 @@ def generate():
                 if t == 'uint32': s.update(min=0,max=4294967295)
                 return s
             if t.startswith('defines.'):
+                if t in ('defines.control_behavior.cargo_landing_pad.exclusive_mode',
+                         'defines.control_behavior.logistic_container.exclusive_mode'):
+                    return {'kind':'enum','values':catalog['enum_values'][t] + ['send_contents_and_set_requests']}
                 return {'kind':'enum','values':catalog['enum_values'][t], 'native_enum':t}
             if t in ('QualityID','SpaceLocationID'):
                 return {'kind':'string','max_bytes':256,'prototype_registry':'quality' if t=='QualityID' else 'space_location'}

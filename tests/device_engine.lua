@@ -194,7 +194,7 @@ function M.run()
     local def=defs.devices[kind]
     local assembler=assert(craft_surface.create_entity{name='assembling-machine-3',position={x=index*8-24,y=0},force='player'})
     assembler.set_recipe(def.name)
-    local inventory=assembler.get_inventory(defines.inventory.assembling_machine_input)
+    local inventory=assembler.get_inventory(defines.inventory.crafter_input)
     for _,ingredient in ipairs(def.ingredients) do assert(inventory.insert{name=ingredient[1],count=ingredient[2]}==ingredient[2]) end
     f.crafts[#f.crafts+1]={entity=assembler,name=def.name}
     f.grids[#f.grids+1]=power(craft_surface,assembler.position)
@@ -268,8 +268,8 @@ function M.on_tick(event)
     end
     assert(good.status=='running' and good.state.boots==1,good.diagnostic and good.diagnostic.message)
     for _,craft in ipairs(f.crafts) do
-      if craft.entity.get_inventory(defines.inventory.assembling_machine_output).get_item_count(craft.name)==0 then return end
-      assert(craft.entity.products_finished==1 and craft.entity.get_inventory(defines.inventory.assembling_machine_input).is_empty())
+      if craft.entity.get_inventory(defines.inventory.crafter_output).get_item_count(craft.name)==0 then return end
+      assert(craft.entity.products_finished==1 and craft.entity.get_inventory(defines.inventory.crafter_input).is_empty())
     end
     log('TC_NATIVE_CRAFTING_OK all-five exact-base-ingredients one-item unmodified-native-production')
     for _,id in ipairs(f.power_ids) do assert(registry.record(id).powered) end

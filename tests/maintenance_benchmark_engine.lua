@@ -168,7 +168,7 @@ function M.on_tick(event)
   local root=registry.get()
   local measuring=x.phase=='measure'
   if measuring or x.phase=='rewarm' or x.phase=='warmup' then drive_input(event.tick) end
-  observer.begin(); local profiler=game.create_profiler()
+  observer.begin(); local profiler=helpers.create_profiler()
   scheduler.tick(event.tick); profiler.stop()
   local refused=observer.finish(event.tick,profiler)
   if refused>0 then emit('PRESSURE',{tick=event.tick,phase=x.phase,refused=refused,spent=root.scheduler.maintenance_spent}) end

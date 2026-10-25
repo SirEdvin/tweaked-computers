@@ -5,22 +5,25 @@
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot; removal/destruction of a device is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
-   the Mod Portal, select **0.1.14 ALPHA**, enable it, and restart when prompted.
-   This version exposes complete native circuit signals and restricts computer
-   Ctrl-click opening to the selected computer body.
-3. For manual installation, download `tweaked-computers_0.1.14.zip` from the
-   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.14)
+   the Mod Portal, select **0.1.15 ALPHA**, enable it, and restart when prompted.
+   This version targets Factorio 2.1.23. Stay on 0.1.14 for Factorio 2.0.77.
+3. For manual installation, download `tweaked-computers_0.1.15.zip` from the
+   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.15)
    and place it in your Factorio
    user-data `mods` directory without unpacking it. Remove conflicting duplicate
    versions, enable the mod, and restart. The ZIP's internal folder must match its
    numeric version. GitHub's automatic source archives are not installable mod ZIPs.
    Record the exact engine/mod versions when reporting a bug.
-4. Load a copy of the save first. Tested engine: **2.0.77**. Base alone works;
+4. Load a copy of the save first. Tested engine: **2.1.23**. Base alone works;
    Space Age is optional, not a required dependency. Expansion settings and quality
    names require their corresponding installed prototypes. This guide does not
    claim later Factorio engines or arbitrary mod combinations are verified.
 
-Artwork and live charts have isolated software-rendered base/Space Age checks;
+Verification on 2.1.23 is **headless-only**. Keep the pre-conversion save, 2.0.77
+engine and matching mod ZIP for rollback; do not downgrade a converted save.
+The following graphical, audio and connected-client checks were performed on
+**2.0.77**, not repeated on 2.1.23:
+artwork and live charts have isolated software-rendered base/Space Age checks;
 the Console has native workflow checks in both modes and real base two-client
 late-join/cold-server checks. Recipe Searcher appearance and Ctrl-click transfer,
 held-modifier and monitor-touch checks cover both native clients; connected recipe

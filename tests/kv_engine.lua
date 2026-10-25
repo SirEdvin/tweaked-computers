@@ -259,7 +259,7 @@ function M.on_tick(event)
     loaded=false
     assert(not f().restored.powered and command(f().restored,'get',event.tick,'1')==nil)
     assert(f().chest.get_inventory(defines.inventory.chest).insert(f().carried[1])==1)
-    f().carried[1].clear(); f().roboport.active=true; f().roboport.energy=100000000
+    f().carried[1].clear(); f().roboport.disabled_by_script=false; f().roboport.energy=100000000
     f().phase='rebuilding'; f().rebuild_tick=event.tick
     assert(game.surfaces[1].create_entity{name='entity-ghost',inner_name=defs.devices.kv.entity_name,position={3,0},force='player'})
     return
@@ -295,12 +295,12 @@ function M.on_tick(event)
   -- Validate another ordinary save/load alias while the genuine mined item is carried.
   local restored=build('kv',12,0)
   kv.restore(restored,carried[1].tags.tc_kv)
-  lifecycle.power_entity(restored).energy=0; restored.powered=false; restored.body.active=false
+  lifecycle.power_entity(restored).energy=0; restored.powered=false; restored.body.disabled_by_script=true
   f().restored=restored
   local spend=scheduler.maintenance(registry.get(),event.tick); spend(77)
   f().saved={deadline=f().deadline,value=carried[1].tags.tc_kv.entries[1].value,
     alias=restored.database,identity=restored.id,maintenance=registry.get().scheduler.maintenance_spent}
-  f().phase='frozen'; f().roboport.active=false; f().chest.active=false
+  f().phase='frozen'; f().roboport.disabled_by_script=true; f().chest.disabled_by_script=true
   log('TC_KV_NATIVE_ROBOT_TRANSFER_OK'); game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
 end
 return M

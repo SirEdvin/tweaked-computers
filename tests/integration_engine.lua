@@ -167,7 +167,7 @@ function M.on_tick(event)
     if g.render and g.render.presented_revision==g.model.revision then
       for _,id in ipairs(x.busy) do assert(registry.computer(id).state.sum==8256) end
       x.snapshot=snapshot(); x.phase='frozen'
-      x.inserter.active=false
+      x.inserter.disabled_by_script=true
       game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
     end
   elseif x.phase=='resumed' and event.tick-x.since>=75 then

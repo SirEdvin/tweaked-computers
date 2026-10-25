@@ -242,7 +242,7 @@ function M.on_tick(event)
   end
   loaded=false
   -- Freeze actual participants before requesting a durable snapshot.
-  for _,r in ipairs(f().entities) do if r.entity.type~='space-platform-hub' then r.entity.active=false end end
+  for _,r in ipairs(f().entities) do if r.entity.type~='space-platform-hub' then r.entity.disabled_by_script=true end end
   f().section_alias=f().section_item.entity
   f().phase='frozen'; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
 end

@@ -206,7 +206,7 @@ function M.on_tick(event)
     local nodes,paths,discovery_work
     if x.case==2 then nodes,paths,discovery_work=physical_paths() end
     local before=registry.get().scheduler.maintenance_spent
-    local profiler=game.create_profiler()
+    local profiler=helpers.create_profiler()
     local proof_work=0
     if paths then
       for _,path in ipairs(paths) do
@@ -228,7 +228,7 @@ function M.on_tick(event)
       local lengths={}; for _,path in ipairs(paths) do lengths[#lengths+1]=tostring(#path) end
       log('TC_BUFFER_PATHS lengths='..table.concat(lengths,',')..' discovery_work='..discovery_work..' witness_work='..proof_work)
       local root=registry.get(); local after_commit=root.scheduler.maintenance_spent
-      local maintenance_profiler=game.create_profiler()
+      local maintenance_profiler=helpers.create_profiler()
       local advanced=scheduler.try_maintenance(function() monitor.reconcile(event.tick,spend) end)
       maintenance_profiler.stop()
       log({'','TC_BUFFER_TOPOLOGY_CPU ',maintenance_profiler})

@@ -99,7 +99,7 @@ def build(destination):
         raise ValueError('duplicate package inventory')
     limit_source = (ROOT / 'scripts/runtime/limits.lua').read_text()
     manifest = {'format_version': 1, 'mod': info['name'], 'version': info['version'],
-        'engine': '2.0.77', 'stage': 'alpha-candidate',
+        'engine': '2.1.23', 'stage': 'alpha-candidate',
         'client_verified': False, 'limits_status': 'provisional; work units are not real-time latency guarantees',
         'common_limits': {k: int(v) for k, v in re.findall(r'(\w+)\s*=\s*(\d+)', limit_source)},
         'payload_sha256': dict(sorted(payload.items()))}

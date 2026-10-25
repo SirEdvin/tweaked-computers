@@ -324,12 +324,12 @@ local function lifecycle_cases(c,r,d,s)
   radar.reconcile(s,nop); assert(s.modem.count==0); call(d,s,'open',42)
   local retained=s.modem; s.modem={version=99,channels={secret='retained'},count=1}
   error_is('E_UNSUPPORTED',function() radar.state(s,nop) end); s.modem=retained
-  r.body.active=false
+  r.body.disabled_by_script=true
   guest(c,[[function start(e)
     local m=peripheral.find('modem','red'); local ok,e=pcall(m.isOpen,42)
     assert(not ok and e.code=='E_UNPOWERED' and m.getLimits().open_channels==128)
   end]])
-  r.body.active=true; assert(r.modem.channels[42])
+  r.body.disabled_by_script=false; assert(r.modem.channels[42])
   lifecycle.remove(fc.id,'fixture-cleanup',true); lifecycle.remove(fr.id,'fixture-cleanup',true)
   report('allied-force-exclusion-computer-outage-scope-clear-corrupt-state-and-native-disable')
 end

@@ -55,19 +55,27 @@ jobs:
             --report "$RUNNER_TEMP/tc-ci/reports/player-docs.json"
           python tools/build.py --output "$RUNNER_TEMP/tc-ci/package" \
             > "$RUNNER_TEMP/tc-ci/reports/package.json"
-      - name: Install verified Factorio 2.0.77 headless engine
+      - name: Install verified Factorio 2.1.23 and legacy 2.0.77 engines
         shell: bash
         run: |
           set -euo pipefail
           curl --fail --location --retry 3 --connect-timeout 20 --max-time 240 \
-            https://factorio.com/get-download/2.0.77/headless/linux64 \
+            https://factorio.com/get-download/2.1.23/headless/linux64 \
             --output "$RUNNER_TEMP/tc-ci/factorio.tar.xz"
           printf '%s  %s\n' \
-            c4efc11529f74d37c96933e291e0db73fd9f5aa4738913d9301b24680b3e947f \
+            4633250f7747676279fb210a1717ba34caed6b9890c951fb3e469eefe43c46b9 \
             "$RUNNER_TEMP/tc-ci/factorio.tar.xz" | sha256sum --check --strict
           tar -xf "$RUNNER_TEMP/tc-ci/factorio.tar.xz" -C "$RUNNER_TEMP/tc-ci"
           "$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio" --version \
             > "$RUNNER_TEMP/tc-ci/reports/engine-version.txt"
+          mkdir "$RUNNER_TEMP/tc-ci/legacy-engine"
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 240 \
+            https://factorio.com/get-download/2.0.77/headless/linux64 \
+            --output "$RUNNER_TEMP/tc-ci/legacy-engine/factorio.tar.xz"
+          printf '%s  %s\n' \
+            c4efc11529f74d37c96933e291e0db73fd9f5aa4738913d9301b24680b3e947f \
+            "$RUNNER_TEMP/tc-ci/legacy-engine/factorio.tar.xz" | sha256sum --check --strict
+          tar -xf "$RUNNER_TEMP/tc-ci/legacy-engine/factorio.tar.xz" -C "$RUNNER_TEMP/tc-ci/legacy-engine"
       - name: Check packaged sandbox and cold factory integration
         shell: bash
         run: |
@@ -177,13 +185,16 @@ jobs:
             https://github.com/SirEdvin/tweaked-computers/releases/download/alpha-0.1.8/tweaked-computers_0.1.8.zip \
             --output "$RUNNER_TEMP/tc-ci/legacy_0.1.8.zip"
           python tools/recipe_searcher_upgrade.py --factorio "$engine" --archive "$archive" \
+            --legacy-factorio "$RUNNER_TEMP/tc-ci/legacy-engine/factorio/bin/x64/factorio" \
             --legacy "$RUNNER_TEMP/tc-ci/legacy_0.1.8.zip" --output "$RUNNER_TEMP/tc-ci/recipe-install"
           curl --fail --location --retry 3 --connect-timeout 20 --max-time 120 \
             https://github.com/SirEdvin/tweaked-computers/releases/download/alpha-0.1.10/tweaked-computers_0.1.10.zip \
             --output "$RUNNER_TEMP/tc-ci/legacy_0.1.10.zip"
           python tools/radar_upgrade.py --factorio "$engine" --archive "$archive" \
+            --legacy-factorio "$RUNNER_TEMP/tc-ci/legacy-engine/factorio/bin/x64/factorio" \
             --legacy "$RUNNER_TEMP/tc-ci/legacy_0.1.10.zip" --output "$RUNNER_TEMP/tc-ci/radar-install"
           python tools/radar_upgrade.py --carrier speaker --factorio "$engine" --archive "$archive" \
+            --legacy-factorio "$RUNNER_TEMP/tc-ci/legacy-engine/factorio/bin/x64/factorio" \
             --legacy "$RUNNER_TEMP/tc-ci/legacy_0.1.10.zip" --output "$RUNNER_TEMP/tc-ci/speaker-install"
 
       - name: Check buffered presentation and released-save migration
@@ -222,6 +233,7 @@ jobs:
             https://github.com/SirEdvin/tweaked-computers/releases/download/alpha-0.1.4/tweaked-computers_0.1.4.zip \
             --output "$RUNNER_TEMP/tc-ci/legacy_0.1.4.zip"
           python tools/monitor_upgrade.py --factorio "$engine" --archive "$archive" \
+            --legacy-factorio "$RUNNER_TEMP/tc-ci/legacy-engine/factorio/bin/x64/factorio" \
             --legacy "$RUNNER_TEMP/tc-ci/legacy_0.1.4.zip" --output "$RUNNER_TEMP/tc-ci/upgrade"
       - name: Retain focused verification reports
         if: ${{ always() }}
