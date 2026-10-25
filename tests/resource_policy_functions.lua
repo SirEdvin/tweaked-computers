@@ -111,6 +111,44 @@ local function step(f,tick)
   end,ctx,f.checkpoint)
 end
 function M.run()
+  -- No value-return statement anywhere: slot zero is not a compiled call site.
+  for _,source in ipairs({
+    "function start(...) assert(select('#',...)==1); computer.finished() end",
+    "function start() local function f(...) assert(select('#',...)==3) end; assert(select('#',f(false,nil,7))==0); assert(pcall(f,false,nil,7)); computer.finished() end",
+    "function start() local function f(...) assert(select('#',...)==0); return end; f(); computer.finished() end",
+  }) do
+    local f=create(source)
+    local ok,e=step(f,0); assert(ok,serpent.line(e))
+    assert(f.finished==1 and f.prefix==0 and f.writes==0)
+    memory.close(f.owner,function() end)
+    assert(f.owner.closed and next(f.account.values)==nil and f.account.reserved==0)
+  end
+  local f=create([[function start()
+    local function attempt(...) computer.finished() end
+    local ok,e=pcall(attempt,false,nil,7)
+    assert(not ok and e.code=='E_CAPACITY' and e.recoverable)
+    attempt(false,nil,7)
+  end]])
+  local reserve=memory.reserve; local refused=false
+  memory.reserve=function(owner,bytes)
+    local frame=f.checkpoint.frame
+    if owner==f.owner and not refused and frame and frame.parent and frame.args and frame.args.n==3 and not frame.varargs then
+      assert(bytes==64+16*3+256)
+      local account=owner.account
+      local limit,used,reserved,count=account.limit,account.used,account.reserved,owner.count
+      account.limit=used+reserved+bytes-1
+      local ok,e=pcall(reserve,owner,bytes)
+      account.limit=limit; refused=true
+      assert(not ok and e.code=='E_CAPACITY' and e.requested==bytes)
+      assert(account.used==used and account.reserved==reserved and owner.count==count and not frame.varargs and f.finished==0)
+      error(e,0)
+    end
+    return reserve(owner,bytes)
+  end
+  local ran,ok,e=pcall(step,f,0); memory.reserve=reserve
+  assert(ran and ok,serpent.line(e or ok)); assert(refused and f.finished==1)
+  memory.close(f.owner,function() end)
+  assert(f.owner.closed and next(f.account.values)==nil and f.account.reserved==0)
   storage.tc_functions={phase='arm',cases={
     create('function start() '..body..' end'),
     create('return {api_version=1,handlers={start=function() '..body..' end}}'),

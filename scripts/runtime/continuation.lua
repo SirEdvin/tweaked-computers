@@ -826,9 +826,12 @@ function M.run(source,factory,name,event,services,context,checkpoint,shell)
     local args=f.args or {n=0}
     local count=math.max(0,args.n-parameters)
     guard.host_work(count*2+1,count+1)
-    admit_tuple({n=count},0)
+    -- Varargs outlive call results and need no source return site.
+    local bytes=64+16*count
+    if memory_owner then memory.reserve(memory_owner,bytes+256) end
     local values={n=count}
     for i=1,count do values[i]=args[parameters+i] end
+    if memory_owner then memory.acquire(memory_owner,values,bytes) end
     f.varargs=values
   end
   function r.varargs(out)
