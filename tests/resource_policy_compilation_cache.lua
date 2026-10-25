@@ -5,11 +5,12 @@ local limits=require('scripts.runtime.limits')
 local policy=require('scripts.runtime.resource-policy')
 local memory=require('scripts.runtime.memory')
 local registry=require('scripts.registry')
+local continuation=require('scripts.runtime.continuation')
 local M={}
 function M.run()
   registry.initialize()
   local saved_cache,saved_compile,saved_host=limits.compiler_cache_bytes,limits.compile_work,limits.host_memory_bytes
-  local native_load,native_reserve=load,memory.reserve
+  local native_load,native_reserve,native_lower=load,memory.reserve,continuation.lower
   local source=[[function start()
     computer.log('cache-prefix'); local n=0
     while n<300000 do n=n+1 end
@@ -53,16 +54,21 @@ end]]
     local a=admission.context(admission.new(),'native-cold',0)
     local b=admission.context(admission.new(),'native-warm',0)
     local requests={}
+    local graph_boundary
+    continuation.lower=function(...)
+      graph_boundary=#requests+1
+      return native_lower(...)
+    end
     memory.reserve=function(owner,amount)
       assert(owner.account==account)
       requests[#requests+1]={used=account.used+account.reserved,amount=amount,work=a.machine.compile}
       return native_reserve(owner,amount)
     end
     local plan,problem,first=compiler.prepare(native_source,a)
-    _G.load,memory.reserve=native_load,native_reserve
+    _G.load,memory.reserve,continuation.lower=native_load,native_reserve,native_lower
     assert(plan and first,problem and problem.message)
     assert(bytes>#plan.generated*8,'lowering workspace was not admitted before native loading')
-    assert(#requests>2 and requests[1].amount==192+5*48
+    assert(#requests>2 and requests[1].amount==5*192+6*48
       and requests[#requests].amount==#plan.generated*8,'workspace probe missed its real allocation boundaries')
     local second_plan,second_problem,second=compiler.prepare(native_source,b)
     assert(second_plan and second,second_problem and second_problem.message)
@@ -70,11 +76,12 @@ end]]
     assert(a.machine.compile==b.machine.compile and a.ledger.total==b.ledger.total)
     local original=first(); local modified=second(); modified.entries.start=nil
     assert(original.entries.start and first().entries.start,'caller mutated cached executable data')
-    local graph_boundary,block_boundary,operand_boundary,liveness_boundary,quote_boundary
+    local block_boundary,operand_boundary,liveness_boundary,quote_boundary
     for i,step in ipairs(requests) do
-      if step.amount==9*192 then graph_boundary=graph_boundary or i end
-      if step.amount==2*192+8*48 then block_boundary=block_boundary or i end
-      if step.amount==192+7*48 then operand_boundary=operand_boundary or i end
+      if i>=graph_boundary then
+        if step.amount==2*192+8*48 then block_boundary=block_boundary or i end
+        if step.amount==192+7*48 then operand_boundary=operand_boundary or i end
+      end
       if step.amount==2*192+2*48*#original.blocks then liveness_boundary=liveness_boundary or i end
       if step.amount==34+4*#'private native cache' then quote_boundary=quote_boundary or i end
     end
@@ -84,8 +91,13 @@ end]]
       'graph growth was not admitted before liveness analysis')
     assert(quote_boundary and requests[#requests-1].amount>=32+#plan.generated,
       'quoted literal or final generated join was not admitted')
-    -- Refuse lexical allocation, graph construction and analysis with competing shortages.
-    for _,index in ipairs({1,2,graph_boundary,block_boundary,operand_boundary,quote_boundary,liveness_boundary,math.floor(#requests/2),#requests-1}) do
+    -- Exercise every admitted frontend boundary, then graph/analysis/emission.
+    local probes={}
+    for i=1,graph_boundary do probes[#probes+1]=i end
+    for _,i in ipairs({block_boundary,operand_boundary,quote_boundary,liveness_boundary,math.floor(#requests/2),#requests-1}) do
+      if i>graph_boundary then probes[#probes+1]=i end
+    end
+    for _,index in ipairs(probes) do
       local step=requests[index]
       for _,short_work in ipairs({false,true}) do
         assert(compiler.prepare(native_source,admission.context(admission.new(),'warm-lowering',0)))
@@ -108,6 +120,7 @@ end]]
         limits.host_memory_bytes=saved_host; limits.compile_work=saved_compile; limits.compiler_cache_bytes=saved_cache
       end
     end
+    log('TC_FRONTEND_MEMORY boundaries='..(graph_boundary-1)..' warm-cold-competing-work-verified')
     -- One source key may change backend/mode; a foreign proof must never replay.
     local legacy=assert(compiler.compile(native_source,admission.context(admission.new(),'legacy-variant',0)))
     assert(legacy.generated~=plan.generated)
@@ -199,7 +212,7 @@ end]]
     limits.compiler_cache_bytes=saved_cache; limits.compile_work=saved_compile
     local full=slice(); equal(cold,full)
   end)
-  _G.load,memory.reserve=native_load,native_reserve
+  _G.load,memory.reserve,continuation.lower=native_load,native_reserve,native_lower
   limits.compiler_cache_bytes=saved_cache; limits.compile_work=saved_compile; limits.host_memory_bytes=saved_host
   assert(ok,type(e)=='table' and e.message or tostring(e))
   log('TC_CONTRACT continuation-cache-warm-cold-evicted-and-partial-admission-equal')

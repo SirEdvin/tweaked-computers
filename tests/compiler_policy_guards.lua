@@ -111,7 +111,74 @@ local function lexical_memory()
   assert(passed,type(problem)=='table' and problem.message or tostring(problem))
   log('TC_CONTRACT tokenizer-payload-admission-before-copy-join-and-one-byte-short-refusal')
 end
+local function single_frontend()
+  local find,cache=string.find,limits.compiler_cache_bytes
+  local reserve,host,work=memory.reserve,limits.host_memory_bytes,limits.compile_work
+  local watched,passes={},0
+  string.find=function(value,pattern,...)
+    if watched[value] and pattern=='^\239\187\191' then passes=passes+1 end
+    return find(value,pattern,...)
+  end
+  limits.compiler_cache_bytes=1
+  local ok,problem=pcall(function()
+    for _,case in ipairs({
+      {'function one_pass() return true end',false,1},
+      {'return {api_version=1,handlers={one_pass=function() return true end}}',false,1},
+      {'1+2','shell',1},
+      {'local n=1; n=n+1','shell',2},
+      {'\239\187\191function one_pass() end',false,1},
+      {'#!/usr/bin/lua\nfunction one_pass() end',false,1},
+    }) do
+      watched={[case[1]]=true,['return '..case[1]]=true}; passes=0
+      local plan,e=compiler.prepare(case[1],admission.context(admission.new(),'single-frontend',0),case[2] or nil)
+      assert(plan,e and e.message)
+      assert(passes==case[3],'compiler duplicated the tokenizer pass')
+    end
+    local source='"'..string.rep('prefix',20)..'"'
+    local first
+    memory.reserve=function(owner,bytes)
+      first=first or {used=owner.account.used+owner.account.reserved,bytes=bytes}
+      return reserve(owner,bytes)
+    end
+    assert(compiler.prepare(source,admission.context(admission.new(),'prefix-fit',0),'shell'))
+    memory.reserve=reserve
+    assert(first and first.bytes==32+7+#source)
+    for _,resource in ipairs({'host_memory','compile_work'}) do
+      watched={['return '..source]=true}; passes=0
+      limits.host_memory_bytes=resource=='host_memory' and first.used+first.bytes-1 or host
+      limits.compile_work=resource=='compile_work' and (#source*2+1)+(#source+8)-1 or work
+      local plan,e=compiler.prepare(source,admission.context(admission.new(),'prefix-refused',0),'shell')
+      assert(not plan and e.recoverable and e.resource==resource and passes==0,
+        'Console prefix entered the parser before admission')
+    end
+    limits.host_memory_bytes,limits.compile_work=host,work
+    watched={}
+    for _,name in ipairs({'_ENV','_G','__tc_private'}) do
+      for _,source in ipairs({'local '..name..'=1','return t.'..name,
+        'return {'..name..'=1}','local function f('..name..') end','::'..name..'::'}) do
+        for _,mode in ipairs({false,'shell'}) do
+          local plan,e=compiler.prepare(source,admission.context(admission.new(),'identifier-boundary',0),mode or nil)
+          assert(not plan and e.message=='forbidden identifier','parser bypassed reserved identifier validation')
+          assert(e.line==1 and e.column==assert(find(source,name,1,true)),'identifier position changed')
+        end
+      end
+    end
+    for _,source in ipairs({'function broken(','function broken(\n','function broken(\r\n'}) do
+      local plan,e=compiler.prepare(source,admission.context(admission.new(),'eof-position',0))
+      assert(not plan and e.code=='E_PROGRAM')
+      assert(e.line==(source:find('\n',1,true) and 2 or 1))
+      assert(e.column==(e.line==2 and 1 or #source+1),'EOF position changed')
+    end
+    assert(compiler.prepare('function safe() return {["__tc_private"]=1} end',
+      admission.context(admission.new(),'quoted-key',0)))
+  end)
+  string.find,limits.compiler_cache_bytes=find,cache
+  memory.reserve,limits.host_memory_bytes,limits.compile_work=reserve,host,work
+  assert(ok,type(problem)=='table' and problem.message or tostring(problem))
+  log('TC_CONTRACT single-tokenizer-parser-path-reserved-identifiers-and-eof-positions')
+end
 function M.run()
+  single_frontend()
   lexical_memory()
   -- Durable validation must traverse the language without emitting a discarded backend.
   local format,concat,lower=string.format,table.concat,continuation.lower

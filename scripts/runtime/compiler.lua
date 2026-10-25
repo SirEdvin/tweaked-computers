@@ -1,5 +1,4 @@
 local parse = require('vendor.phobos.parser')
-local tokenize = require('vendor.phobos.tokenize')
 local parser_errors = require('vendor.phobos.error_code_util')
 local limits = require('scripts.runtime.limits')
 local admission = require('scripts.runtime.admission')
@@ -67,6 +66,7 @@ local function identifier(name, node)
   end
   return name
 end
+local parser_options={on_identifier=identifier}
 local function global(node)
   return node.node_type == 'index' and node.src_ex_did_not_exist
 end
@@ -381,29 +381,24 @@ local function compile(source, context, mode, durable)
       return plan_copy(retained.plan)
     end
     charges={}; parsing.record(charges)
-    -- The bounded pinned tokenizer also validates identifiers before AST parsing.
-    local iter,state,index = tokenize(source,'@computer')
-    local count = 0
-    while true do
-      local tok; index,tok = iter(state,index)
-      if not tok or tok.token_type == 'eof' then break end
-      count = count + 1
-
-      if tok.token_type == 'ident' then identifier(tok.value,tok) end
-    end
+    -- Validate identifiers in the parser's tokenizer, not a discarded first pass.
     local main, diagnostics, expression
     if mode=='shell' then
-      main,diagnostics=parse('return '..source,'@computer')
+      expression_source=true
+      parsing.enter(#source+8); parsing.allocate(32+7+#source)
+      main,diagnostics=parse('return '..source,'@computer',parser_options)
       expression=#diagnostics==0
-      if not expression then main,diagnostics=parse(source,'@computer') end
-    else main,diagnostics=parse(source,'@computer') end
+      if not expression then
+        expression_source=false
+        main,diagnostics=parse(source,'@computer',parser_options)
+      end
+    else main,diagnostics=parse(source,'@computer',parser_options) end
     if #diagnostics > 0 then
       local d = diagnostics[1]
       local e = errors.new('E_PROGRAM',parser_errors.get_message(d))
-      -- Phobos's synthetic EOF token has no coordinates. Reuse the already
-      -- admitted original tokenizer's final position, not the expression prefix.
-      e.line = d.start_position and d.start_position.line or state.line
-      e.column = d.start_position and d.start_position.column or #source+1-state.line_offset
+      -- EOF carries the real scanner position, including CRLF/BOM handling.
+      e.line = d.start_position and d.start_position.line or 1
+      e.column = d.start_position and d.start_position.column or 1
       error(e,0)
     end
     expression_source=expression==true

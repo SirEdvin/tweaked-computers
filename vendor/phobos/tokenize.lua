@@ -548,6 +548,7 @@ local function next_token(state,index)
       )
       if not keywords[ident] then
         put(token,'value',ident)
+        if state.on_identifier then state.on_identifier(ident,token) end
       end
       return match_end+1,token
     else
@@ -584,6 +585,7 @@ local function tokenize(str, source, options)
     line = 1,
     line_offset = 0, -- pretend the previous character was a newline. not too far fetched
   }
+  if options and options.on_identifier then put(state,'on_identifier',options.on_identifier) end
   if str:find("^\xef\xbb\xbf") then -- ignore utf8 byte-order mark (BOM)
     state.line_offset = 3
     index = 4

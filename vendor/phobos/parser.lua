@@ -32,6 +32,7 @@ local err_pos_token
 local extra_node
 
 local token_iter_state
+local token_iter, index
 local token ---@type Token
 ---set by test_next() and therefore also assert_next() and assert_match()
 local prev_token ---@type Token
@@ -1471,12 +1472,61 @@ local function main_func()
 end
 
 local tokenize = require("vendor.phobos.tokenize")
+-- The parser is already non-reentrant; reuse its scanner functions rather than
+-- allocate two closures per parse. The protected wrapper clears all scan roots.
+function next_token()
+  admission.enter()
+  if token and token.token_type == "eof" then return end
+  admission.allocate(192)
+  local leading = {}
+  while true do
+    admission.enter()
+    index,token = token_iter(token_iter_state,index)
+    if not token then
+      admission.allocate(192+4*48)
+      token = {token_type="eof",leading=leading,line=token_iter_state.line,
+        column=#token_iter_state.str+1-token_iter_state.line_offset}
+      break
+    end
+    if token.token_type == "comment" or token.token_type == "blank" then
+      admission.allocate(48)
+      leading[#leading+1] = token
+    else
+      admission.allocate(48)
+      token.leading = leading
+      if token.token_type == "invalid" then
+        err_pos_token = token
+        for _, error_code_inst in ipairs(token.error_code_insts) do
+          admission.enter()
+          syntax_error(error_code_inst, nil, nil, token)
+        end
+      end
+      break
+    end
+  end
+end
+
+function peek_token(start_at)
+  admission.enter()
+  local line, line_offset = token_iter_state.line, token_iter_state.line_offset
+  start_at = start_at or index
+  local peek_tok
+  repeat
+    admission.enter()
+    start_at,peek_tok = token_iter(token_iter_state,start_at)
+  until peek_tok.token_type ~= "blank" and peek_tok.token_type ~= "comment"
+  token_iter_state.line, token_iter_state.line_offset = line, line_offset
+  return peek_tok, start_at
+end
+
 ---@param text string
 ---@param source_name string
 ---@param options Options?
 local function parse(text, source_name, options)
   admission.enter()
   source = source_name
+  -- Placeholder parameter/position carriers and the two private root vectors.
+  admission.allocate(5*192+6*48)
   prevent_assert = nodes.new_invalid{
     error_code_inst = error_code_util.new_error_code{
       error_code = error_code_util.codes.incomplete_node,
@@ -1486,68 +1536,7 @@ local function parse(text, source_name, options)
   }
   error_code_insts = {}
   invalid_token_invalid_node_lut = {}
-  local token_iter, index
-  -- technically this doesn't have to pass along source because it gets set int the syntax_error function,
-  -- but it is more correct this way
   token_iter,token_iter_state,index = tokenize(text, source, options)
-
-
-  function next_token()
-
-
-    admission.enter()
-    if token and token.token_type == "eof" then
-      return
-    end
-    local leading = {}
-    while true do
-      admission.enter()
-      index,token = token_iter(token_iter_state,index)
-      if not token then
-        token = {token_type="eof", leading = leading}
-        break
-      end
-      if token.token_type == "comment" then
-        leading[#leading+1] = token
-        -- parse doc comments, accumulate them for the next token that wants them
-        --[[ these patterns match all of the following:
-          --- Description text, three dashes, a space, and any text
-          ---@tag three dashes, at-tag, and any text
-          -- @tag two dashes, a space, at-tag, and any text
-        ]]
-        -- if token.value:match("^%- ") or token.value:match("^[- ]@") then
-        --   print("found doc comment " .. token.value)
-        -- end
-      elseif token.token_type == "blank" then
-        leading[#leading+1] = token
-      else
-        token.leading = leading
-        if token.token_type == "invalid" then
-          err_pos_token = token
-          for _, error_code_inst in ipairs(token.error_code_insts) do
-            admission.enter()
-            syntax_error(error_code_inst, nil, nil, token)
-          end
-        end
-        break
-      end
-    end
-  end
-
-  function peek_token(start_at)
-
-    admission.enter()
-    local line, line_offset = token_iter_state.line, token_iter_state.line_offset
-    start_at = start_at or index
-    local peek_tok
-    repeat
-      admission.enter()
-      start_at,peek_tok = token_iter(token_iter_state,start_at)
-    until peek_tok.token_type ~= "blank" and peek_tok.token_type ~= "comment"
-    token_iter_state.line, token_iter_state.line_offset = line, line_offset
-    return peek_tok, start_at
-  end
-
   -- have to reset token because if the previous `parse` call was interrupted by an error
   -- which was caught by pcall the current token might still be eof which would cause
   -- this parse call to do literally nothing
@@ -1556,20 +1545,7 @@ local function parse(text, source_name, options)
   next_token()
   local main = main_func()
 
-  -- have to reset token, otherwise the next parse call will think its already reached the end
-  token = (nil)--[[@as Token]]
-  -- clear these references to not hold on to memory
-  local result_error_code_insts = error_code_insts
-  error_code_insts = nil
-  invalid_token_invalid_node_lut = nil
-  source = nil
-  prevent_assert = nil
-  prev_token = (nil)--[[@as Token]]
-  token_iter_state = nil
-  -- with token_iter_state cleared, next_token and peek_token
-  -- don't really have any other big upvals, so no need to clear them
-
-  return main, result_error_code_insts
+  return main, error_code_insts
 end
 
 local raw_expr, raw_statement = expr, statement
@@ -1587,12 +1563,13 @@ statement = function(...)
 end
 local raw_parse = parse
 parse = function(...)
-  local results = table.pack(pcall(raw_parse, ...))
+  local ok,main,diagnostics = pcall(raw_parse, ...)
   -- Release parse roots on success and failure; admission is reset by its owner.
   token = nil; prev_token = nil; token_iter_state = nil
   error_code_insts = nil; invalid_token_invalid_node_lut = nil
   source = nil; prevent_assert = nil; extra_node = nil; err_pos_token = nil
-  if not results[1] then error(results[2], 0) end
-  return table.unpack(results, 2, results.n)
+  token_iter = nil; index = nil
+  if not ok then error(main, 0) end
+  return main,diagnostics
 end
 return parse

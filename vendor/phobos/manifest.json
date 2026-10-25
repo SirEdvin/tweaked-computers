@@ -1,23 +1,23 @@
 {
   "repository": "https://github.com/JanSharp/phobos",
   "revision": "2566dd85807b4f2bdff8e40ba4d79bcf8e96de3f",
-  "transform": "tools/import_parser.py base import: namespaced requires, parser work/depth probes and root cleanup; local tokenizer character cursors, pre-admitted lexical text/tables and diagnostic records",
+  "transform": "tools/import_parser.py base import: namespaced requires and parser work/depth probes; local pre-admitted lexical/driver records, identifier callback, static scanner functions, EOF coordinates and protected root cleanup",
   "files": [
     {
       "upstream_path": "src/parser.lua",
       "installed_path": "vendor/phobos/parser.lua",
       "original_sha256": "d14e8d9ca5b63855e7c52fb96a5d124ab7b3b2a74f3888eb4cec8aef634268bb",
-      "installed_sha256": "df68ba54eb56b5fbb4792fc4a93e2c4a2359878aac7e555053bcfdfbee07e194",
+      "installed_sha256": "dbe626442d565958e4a9dbeba360b0173aea3d6c59de554c896522234c825b2a",
       "original_bytes": 47008,
-      "installed_bytes": 49451
+      "installed_bytes": 48637
     },
     {
       "upstream_path": "src/tokenize.lua",
       "installed_path": "vendor/phobos/tokenize.lua",
       "original_sha256": "b8fec26290a28465a28862483cdaee5c2d87c226e6b76d064543ea917ce4dd24",
-      "installed_sha256": "94f63a99ff8d51dd8985b11688706bec5c351a6907f9ee43eff739454c1337d6",
+      "installed_sha256": "728c0ca080b5bbaabb4cf56a225741c9ff11848fb5e2a073a9c3ce7686c7deb5",
       "original_bytes": 17413,
-      "installed_bytes": 19757
+      "installed_bytes": 19927
     },
     {
       "upstream_path": "src/nodes.lua",

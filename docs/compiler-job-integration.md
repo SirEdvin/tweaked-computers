@@ -50,6 +50,13 @@ the same setting, without initializing world storage. Malformed existing storage
 does not select that fallback. These are deterministic accounting units, not a
 calibrated measurement of native heap usage or complete frontend allocation.
 
+The compiler uses the parser's tokenizer directly instead of discarding a separate
+whole-source identifier-validation scan. A private tokenizer callback still checks
+every identifier, including field/parameter/label names; quoted data keys are not
+identifiers. Console expression probing retains its statement fallback and admits
+the `return ` prefix before copying. First-line diagnostics remove that prefix's
+offset, and real EOF coordinates preserve CRLF/BOM source positions.
+
 Tokenization now shares that owner: state/token records, new fields, decoded-part
 vectors, lexical diagnostic records and position copies reserve before growth.
 Input-sized source slices and decoded joins reserve their header/payload before
@@ -57,7 +64,10 @@ native copying; copy/join work is prepaid too. This covers quoted/block strings,
 comments, identifiers, numbers, whitespace, shebangs and malformed-token paths.
 Block-comment recognition no longer copies its delimiter padding twice. Fixed
 single-character probes and native allocator buffers are not a calibrated heap
-bound; parser AST/validation temporaries still need separate coverage.
+bound; parser AST/validation temporaries still need separate coverage. The parser
+driver admits its root vectors, trivia lists/slots and EOF records. Its scanner
+functions are module-local rather than recreated closures; one protected cleanup
+clears scanner roots without allocating a `table.pack` result carrier.
 
 The lowering pass reserves its table workspace before growing it: initial graph
 maps, block/branch records, lexical/capture/prototype metadata, expression and
@@ -111,8 +121,11 @@ emission, including long literals with NUL, control characters, quotes and
 backslashes in both program forms and Console.
 Lexical probes observe native slices/joins, verify decoded bytes and source forms,
 and refuse one byte before each recorded allocation boundary with exact paid work
-and complete temporary-owner cleanup. Cache probes cover lexical admission as
-well as lowering, preserving warm/cold first refusal under competing shortages.
+and complete temporary-owner cleanup. Cache probes cover every recorded frontend
+allocation in the rich-language case as well as lowering, preserving warm/cold
+first refusal under competing shortages. Single-frontend probes count actual
+tokenizer starts for both source forms and Console, preserve forbidden-identifier
+and EOF locations, and refuse the Console prefix before parser entry.
 
 `tests.compiler_bounded --cold` covers recoverable compilation refusal,
 220 durable locals, warm-cache host-depth reduction, prior-run preservation,
