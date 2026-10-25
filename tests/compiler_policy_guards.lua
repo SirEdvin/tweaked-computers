@@ -6,6 +6,7 @@ local tokenize=require('vendor.phobos.tokenize')
 local continuation=require('scripts.runtime.continuation')
 local memory=require('scripts.runtime.memory')
 local ast_memory=require('tests.compiler_ast_memory')
+local parser_memory=require('tests.compiler_parser_memory')
 local M={}
 local function lexical_memory()
   local payload=string.rep('lexical',24)
@@ -180,6 +181,7 @@ local function single_frontend()
 end
 function M.run()
   ast_memory.run()
+  parser_memory.run()
   single_frontend()
   lexical_memory()
   -- Durable validation must traverse the language without emitting a discarded backend.

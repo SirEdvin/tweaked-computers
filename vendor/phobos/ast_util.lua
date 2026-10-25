@@ -6,6 +6,7 @@ local ill = require("vendor.phobos.indexed_linked_list")
 local stack = require("vendor.phobos.stack")
 
 local ast = {}
+local no_position = {}
 
 ---returns `(1/0)` if the local definition doesn't have a `start_at` field yet\
 ---only really relevant when parsing localfunc, since references can be resolved
@@ -24,6 +25,8 @@ end
 ---@return AstLocalDef
 function ast.new_local_def(name, scope)
   admission.enter()
+  -- Definition, child/reference vectors and the parser's later local metadata.
+  admission.allocate(3 * 192 + 9 * 48)
   return {
     def_type = "local",
     name = name,
@@ -39,6 +42,7 @@ end
 function ast.create_local(ident_token, scope)
   admission.enter()
   local local_def = ast.new_local_def(ident_token.value--[[@as string]], scope)
+  admission.allocate(192 + 4 * 48)
   local ref = nodes.new_local_ref{
     position = ident_token,
     name = ident_token.value--[[@as string]],
@@ -51,6 +55,7 @@ end
 function ast.create_upval_def(parent_def, target_scope)
 
   admission.enter()
+  admission.allocate(3 * 192 + 8 * 48)
   local upval_def = {
     def_type = "upval",
     name = parent_def.name,
@@ -62,6 +67,7 @@ function ast.create_upval_def(parent_def, target_scope)
   parent_def.child_defs[#parent_def.child_defs+1] = upval_def
   if upval_def.name == "_ENV" then
     -- always put _ENV first so that `load`'s mangling will be correct
+    admission.enter(#target_scope.upvals + 1)
     table.insert(target_scope.upvals, 1, upval_def)
   else
     target_scope.upvals[#target_scope.upvals+1] = upval_def
@@ -141,10 +147,11 @@ do
   ---@return AstLocalReference|AstUpvalReference
   function ast.resolve_ref(target_scope, stat_stack, name, node_for_position)
     admission.enter()
-    node_for_position = node_for_position or {}
+    node_for_position = node_for_position or no_position
     local def = try_get_def(target_scope, stat_stack, name)
     if def then
       -- `local_ref` or `upval_ref`
+      admission.allocate(192 + 3 * 48)
       local ref = (def.def_type == "local" and nodes.new_local_ref or nodes.new_upval_ref)--[[@as (fun(params: AstLocalReferenceParams):AstLocalReference)|(fun(params: AstUpvalReferenceParams):AstUpvalReference)]]{
         name = name,
         reference_def = def,
@@ -154,12 +161,14 @@ do
       return ref
     end
 
+    admission.allocate(192 + 2 * 48)
     local suffix = nodes.new_string{
       value = name,
       src_is_ident = true,
     }
     nodes.set_position(suffix, node_for_position)
 
+    admission.allocate(192 + 3 * 48)
     local node = nodes.new_index{
       ex = ast.resolve_ref(target_scope, stat_stack, "_ENV", node_for_position),
       suffix = suffix,
@@ -186,6 +195,7 @@ end
 local function create_ref_to_local_or_upval_def(def)
 
   admission.enter()
+  admission.allocate(192 + 2 * 48)
   return (def.def_type == "local" and nodes.new_local_ref or nodes.new_upval_ref){
     name = def.name,
     reference_def = def,
@@ -274,6 +284,7 @@ end
 function ast.new_main(source)
 
   admission.enter()
+  admission.allocate(2 * 192 + 6 * 48)
   local env_scope = nodes.new_env_scope{main = (true)--[[@as AstMain]]} -- prevent assert
   -- Lua emits _ENV as if it's a local in the parent scope
   -- of the file. I'll probably change this one day to be

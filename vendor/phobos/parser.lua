@@ -5,6 +5,23 @@ local ast = require("vendor.phobos.ast_util")
 local nodes = require("vendor.phobos.nodes")
 local error_code_util = require("vendor.phobos.error_code_util")
 
+local function vector(value)
+  admission.allocate(192 + (value == nil and 0 or 48))
+  if value == nil then return {} end
+  return {value}
+end
+
+local function append(list, value)
+  admission.allocate(48)
+  list[#list + 1] = value
+end
+
+local function insert(list, position, value)
+  admission.enter(#list - position + 2)
+  admission.allocate(48)
+  table.insert(list, position, value)
+end
+
 ---a fake value to prevent assertions from failing during node creation
 ---since there are cases where not all required information is available yet,
 ---but a reference to the incomplete node is already needed. Like for scopes.\
@@ -79,6 +96,7 @@ local function new_error_code_inst(params)
 
   admission.enter()
   err_pos_token = params.position or token
+  admission.allocate(192 + 3 * 48)
   return error_code_util.new_error_code{
     error_code = params.error_code,
     message_args = params.message_args,
@@ -93,7 +111,7 @@ end
 local function add_consumed_node(invalid, consumed_node)
   admission.enter()
   if not (consumed_node.node_type == "token" and consumed_node--[[@as AstTokenNode]].token_type == "eof") then
-    invalid.consumed_nodes[#invalid.consumed_nodes+1] = consumed_node
+    append(invalid.consumed_nodes, consumed_node)
   end
 end
 
@@ -171,13 +189,15 @@ local function syntax_error(
   )
   error_code_inst.location_str = location
   error_code_inst.source = source
+  admission.allocate(192 + 48)
   local invalid = nodes.new_invalid{error_code_inst = error_code_inst}
   if error_code_insts_insertion_index then
-    table.insert(error_code_insts, error_code_insts_insertion_index, error_code_inst)
+    insert(error_code_insts, error_code_insts_insertion_index, error_code_inst)
   else
-    error_code_insts[#error_code_insts+1] = error_code_inst
+    append(error_code_insts, error_code_inst)
   end
   if current_invalid_token then
+    if not invalid_token_invalid_node_lut[current_invalid_token] then admission.allocate(48) end
     invalid_token_invalid_node_lut[current_invalid_token] = invalid
   end
   return invalid
@@ -188,6 +208,7 @@ end
 local function assert_ident()
   admission.enter()
   if token.token_type ~= "ident" then
+    admission.allocate(192 + 48)
     return syntax_error(new_error_code_inst{
       error_code = error_code_util.codes.expected_ident,
     })
@@ -216,6 +237,7 @@ end
 local function assert_next(tok)
   admission.enter()
   if not test_next(tok) then
+    admission.allocate(2 * 192 + 3 * 48)
     return syntax_error(new_error_code_inst{
       error_code = error_code_util.codes.expected_token,
       message_args = {tok},
@@ -229,6 +251,7 @@ end
 local function assert_match(open_token, close)
   admission.enter()
   if not test_next(close) then
+    admission.allocate(2 * 192 + 5 * 48)
     return syntax_error(new_error_code_inst{
       error_code = error_code_util.codes.expected_closing_match,
       message_args = {close, open_token.token_type, open_token.line..":"..open_token.column},
@@ -292,8 +315,10 @@ end
 ---@return AstRecordField
 local function rec_field(scope)
   admission.enter()
+  admission.allocate(192 + 6 * 48)
   local field = {type = "rec"}
   if token.token_type == "ident" then
+    admission.allocate(192 + 3 * 48)
     field.key = nodes.new_string{
       position = token,
       value = token.value--[[@as string]],
@@ -318,6 +343,7 @@ end
 ---@return AstListField
 local function list_field(scope)
   admission.enter()
+  admission.allocate(192 + 2 * 48)
   return {type = "list", value = expr(scope)}
 end
 
@@ -327,17 +353,10 @@ end
 ---@return AstField
 local function field(scope)
   admission.enter()
-  return (({
-    ["ident"] = function()
-      local peek_tok = peek_token()
-      if peek_tok.token_type ~= "=" then
-        return list_field(scope)
-      else
-        return rec_field(scope)
-      end
-    end,
-    ["["] = rec_field,
-  })[token.token_type] or list_field)(scope)
+  if token.token_type == "[" or (token.token_type == "ident" and peek_token().token_type == "=") then
+    return rec_field(scope)
+  end
+  return list_field(scope)
 end
 
 --- Table Constructor
@@ -347,16 +366,17 @@ end
 ---@return AstConstructor
 local function constructor(scope)
   admission.enter()
+  admission.allocate(192 + 2 * 48)
   local node = nodes.new_constructor{
     open_token = new_token_node(),
-    comma_tokens = {},
+    comma_tokens = vector(),
   }
   assert(assert_next("{") == nil, "Do not call 'constructor' if the current token is not '{'.")
   while token.token_type ~= "}" do
     admission.enter()
-    node.fields[#node.fields+1] = field(scope)
+    append(node.fields, field(scope))
     if test_next(",") or test_next(";") then
-      node.comma_tokens[#node.comma_tokens+1] = new_token_node(true)
+      append(node.comma_tokens, new_token_node(true))
     else
       break
     end
@@ -371,7 +391,7 @@ end
 local function par_list(scope)
   admission.enter()
   -- param_list -> [ param { ',' param } ]
-  local params = {}
+  local params = vector()
   if token.token_type == ")" then
     return params
   end
@@ -379,22 +399,24 @@ local function par_list(scope)
     admission.enter()
     if test_next("ident") then
       local param_def
+      admission.allocate(48)
       param_def, params[#params+1] = ast.create_local(prev_token, scope)
       param_def.whole_block = true
-      scope.locals[#scope.locals+1] = param_def
+      append(scope.locals, param_def)
     elseif token.token_type == "..." then
       scope.is_vararg = true
       scope.vararg_token = new_token_node()
       next_token()
       return params
     else
-      params[#params+1] = syntax_error(new_error_code_inst{
+      admission.allocate(192 + 48)
+      append(params, syntax_error(new_error_code_inst{
         error_code = error_code_util.codes.expected_ident_or_vararg,
-      })
+      }))
       return params
     end
     if test_next(",") then
-      scope.param_comma_tokens[#scope.param_comma_tokens+1] = new_token_node(true)
+      append(scope.param_comma_tokens, new_token_node(true))
     else
       break
     end
@@ -415,19 +437,20 @@ local function functiondef(function_token, scope, is_method)
     admission.enter()
     parent_functiondef = parent_functiondef.parent_scope
   end
+  admission.allocate(192 + 4 * 48)
   local node = nodes.new_functiondef{
     parent_scope = scope,
     source = source,
     is_method = is_method,
-    param_comma_tokens = {},
+    param_comma_tokens = vector(),
   }
   -- add to parent before potential early returns
-  parent_functiondef.func_protos[#parent_functiondef.func_protos+1] = node
+  append(parent_functiondef.func_protos, node)
   if is_method then
     local self_local = ast.new_local_def("self", node)
     self_local.whole_block = true
     self_local.src_is_method_self = true
-    node.locals[1] = self_local
+    append(node.locals, self_local)
   end
   node.function_token = function_token
   node.open_paren_token = assert_next("(") or new_token_node(true)
@@ -455,12 +478,12 @@ end
 ---@return AstTokenNode[] comma_tokens @ length is `#expression_list - 1`
 local function exp_list(scope)
   admission.enter()
-  local el = {expr(scope)}
-  local comma_tokens = {}
+  local el = vector(expr(scope))
+  local comma_tokens = vector()
   while test_next(",") do
     admission.enter()
-    comma_tokens[#comma_tokens+1] = new_token_node(true)
-    el[#el+1] = expr(scope)
+    append(comma_tokens, new_token_node(true))
+    append(el, expr(scope))
   end
   return el, comma_tokens
 end
@@ -471,49 +494,50 @@ end
 ---@return AstExpression[]
 local function func_args(node, scope)
   admission.enter()
-  return (({
-    ["("] = function()
-      node.open_paren_token = new_token_node()
+  if token.token_type == "(" then
+    node.open_paren_token = new_token_node()
+    next_token()
+    if token.token_type == ")" then
+      node.close_paren_token = new_token_node()
       next_token()
-      if token.token_type == ")" then
-        node.close_paren_token = new_token_node()
-        next_token()
-        return {}
-      end
-      local el, comma_tokens = exp_list(scope)
-      node.close_paren_token = assert_match(node.open_paren_token, ")") or new_token_node(true)
-      return el, comma_tokens
-    end,
-    ["string"] = function()
-      local string_node = nodes.new_string{
-        position = token,
-        value = token.value--[[@as string]],
-        src_is_block_str = token.src_is_block_str,
-        src_quote = token.src_quote,
-        src_value = token.src_value,
-        src_has_leading_newline = token.src_has_leading_newline,
-        src_pad = token.src_pad,
-      }
-      next_token()
-      return {string_node}, {}
-    end,
-    ["{"] = function()
-      return {(constructor(scope))}, {}
-    end,
-  })[token.token_type] or function()
-    return {syntax_error(new_error_code_inst{
+      return vector()
+    end
+    local el, comma_tokens = exp_list(scope)
+    node.close_paren_token = assert_match(node.open_paren_token, ")") or new_token_node(true)
+    return el, comma_tokens
+  elseif token.token_type == "string" then
+    admission.allocate(192 + 7 * 48)
+    local string_node = nodes.new_string{
+      position = token,
+      value = token.value--[[@as string]],
+      src_is_block_str = token.src_is_block_str,
+      src_quote = token.src_quote,
+      src_value = token.src_value,
+      src_has_leading_newline = token.src_has_leading_newline,
+      src_pad = token.src_pad,
+    }
+    next_token()
+    return vector(string_node), vector()
+  elseif token.token_type == "{" then
+    return vector(constructor(scope)), vector()
+  else
+    admission.allocate(192 + 48)
+    return vector(syntax_error(new_error_code_inst{
       error_code = error_code_util.codes.expected_func_args,
-    })}
-  end)()
+    }))
+  end
 end
 
 local function init_concat_src_paren_wrappers(node)
 
   admission.enter()
-  node.concat_src_paren_wrappers = node.concat_src_paren_wrappers or {}
+  node.concat_src_paren_wrappers = node.concat_src_paren_wrappers or vector()
   for i = 1, #node.exp_list - 1 do
     admission.enter()
-    node.concat_src_paren_wrappers[i] = node.concat_src_paren_wrappers[i] or {}
+    if not node.concat_src_paren_wrappers[i] then
+      admission.allocate(48)
+      node.concat_src_paren_wrappers[i] = vector()
+    end
   end
 end
 
@@ -532,7 +556,9 @@ local function primary_exp(scope)
     --  followed by `)` or anything else is expr of inner, current behavior
     local ex = expr(scope)
     local close_paren_token = assert_match(open_paren_token, ")") or new_token_node(true)
+    if ex.node_type == "invalid" then admission.allocate(2 * 48) end
     ex.force_single_result = true
+    admission.allocate(192 + 2 * 48)
     local wrapper = {
       open_paren_token = open_paren_token,
       close_paren_token = close_paren_token,
@@ -540,11 +566,11 @@ local function primary_exp(scope)
     if ex.node_type == "concat" then
       ---@cast ex AstConcat
       init_concat_src_paren_wrappers(ex)
-      ex.concat_src_paren_wrappers[1][#ex.concat_src_paren_wrappers[1]+1] = wrapper
+      append(ex.concat_src_paren_wrappers[1], wrapper)
     else
       ---@cast ex AstExpression
-      ex.src_paren_wrappers = ex.src_paren_wrappers or {}
-      ex.src_paren_wrappers[#ex.src_paren_wrappers+1] = wrapper
+      ex.src_paren_wrappers = ex.src_paren_wrappers or vector()
+      append(ex.src_paren_wrappers, wrapper)
     end
     return ex
   elseif token.token_type == "ident" then
@@ -557,6 +583,7 @@ local function primary_exp(scope)
       next_token()
       return invalid
     else
+      admission.allocate(192 + 48)
       local invalid = syntax_error(new_error_code_inst{
         error_code = error_code_util.codes.unexpected_token,
       }, "")
@@ -571,6 +598,7 @@ end
 local function new_regular_call(ex, scope)
 
   admission.enter()
+  admission.allocate(192 + 48)
   local node = nodes.new_call{
     ex = ex,
   }
@@ -580,6 +608,7 @@ end
 
 local suffixed_lut = {
   ["."] = function(ex, scope)
+    admission.allocate(192 + 3 * 48)
     local node = nodes.new_index{
       ex = ex,
       dot_token = new_token_node(),
@@ -590,6 +619,7 @@ local suffixed_lut = {
     if is_invalid(ident) then
       node.suffix = ident
     else
+      admission.allocate(192 + 3 * 48)
       node.suffix = nodes.new_string{
         position = ident,
         value = ident.value--[[@as string]],
@@ -599,6 +629,7 @@ local suffixed_lut = {
     return node
   end,
   ["["] = function(ex, scope)
+    admission.allocate(192 + 2 * 48)
     local node = nodes.new_index{
       ex = ex,
       suffix = prevent_assert,
@@ -607,6 +638,7 @@ local suffixed_lut = {
     return node
   end,
   [":"] = function(ex, scope)
+    admission.allocate(192 + 4 * 48)
     local node = nodes.new_call{
       is_selfcall = true,
       ex = ex,
@@ -622,6 +654,7 @@ local suffixed_lut = {
         return node
       end
     else
+      admission.allocate(192 + 3 * 48)
       node.suffix = nodes.new_string{
         position = ident,
         value = ident.value--[[@as string]],
@@ -645,16 +678,11 @@ local function suffixed_exp(scope)
   --   primary_exp { '.' NAME | '[' exp ']' | ':' NAME func_args | func_args }
   --TODO: safe chaining adds optional '?' in front of each suffix
   local ex = primary_exp(scope)
-  local should_break = false
   while ex.node_type ~= "invalid" do
     admission.enter()
-    ex = ((suffixed_lut)[token.token_type] or function(ex)
-      should_break = true
-      return ex
-    end)(ex, scope)
-    if should_break then
-      break
-    end
+    local suffix = suffixed_lut[token.token_type]
+    if not suffix then break end
+    ex = suffix(ex, scope)
   end
   return ex
 end
@@ -662,6 +690,7 @@ end
 ---value is set outside, for all of them
 local simple_lut = {
   ["number"] = function(scope)
+    admission.allocate(192 + 3 * 48)
     return nodes.new_number{
       position = token,
       value = token.value--[[@as number]],
@@ -669,6 +698,7 @@ local simple_lut = {
     }
   end,
   ["string"] = function(scope)
+    admission.allocate(192 + 7 * 48)
     return nodes.new_string{
       position = token,
       value = token.value--[[@as string]],
@@ -680,17 +710,20 @@ local simple_lut = {
     }
   end,
   ["nil"] = function(scope)
+    admission.allocate(192 + 48)
     return nodes.new_nil{
       position = token,
     }
   end,
   ["true"] = function(scope)
+    admission.allocate(192 + 2 * 48)
     return nodes.new_boolean{
       position = token,
       value = true,
     }
   end,
   ["false"] = function(scope)
+    admission.allocate(192 + 2 * 48)
     return nodes.new_boolean{
       position = token,
       value = false,
@@ -702,12 +735,14 @@ local simple_lut = {
       scope = scope.parent_scope
     end
     if not scope.is_vararg then
+      admission.allocate(192 + 48)
       local invalid = syntax_error(new_error_code_inst{
         error_code = error_code_util.codes.vararg_outside_vararg_func,
       }, "at")
       add_consumed_node(invalid, new_token_node())
       return invalid
     end
+    admission.allocate(192 + 48)
     return nodes.new_vararg{
       position = token,
     }
@@ -731,6 +766,7 @@ local function simple_exp(scope)
   if token.token_type == "{" then
     return constructor(scope)
   elseif test_next("function") then
+    admission.allocate(192 + 48)
     return nodes.new_func_proto{
       func_def = functiondef(new_token_node(true), scope, false),
     }
@@ -803,6 +839,7 @@ local function sub_expr(limit, scope)
   do
     local prio = unop_prio[token.token_type]
     if prio then
+      admission.allocate(192 + 3 * 48)
       node = nodes.new_unop{
         op = token.token_type--[[@as AstUnOpOp]],
         op_token = new_token_node(),
@@ -827,10 +864,10 @@ local function sub_expr(limit, scope)
         -- needs to init before adding the node to the exp_list so that the
         -- insert of another concat_src_paren_wrappers doesn't make the list too long
         init_concat_src_paren_wrappers(right_node)
-        table.insert(right_node.exp_list, 1, node)
+        insert(right_node.exp_list, 1, node)
         node = right_node
-        table.insert(node.op_tokens, 1, op_token)
-        table.insert(node.concat_src_paren_wrappers, 1, {})
+        insert(node.op_tokens, 1, op_token)
+        insert(node.concat_src_paren_wrappers, 1, vector())
       elseif node.node_type == "concat" and not node.force_single_result then
         util.debug_abort("Impossible because concat is right associative which causes `sub_expr` to \z
           recursively parse until the end of the concat chain and the if block above handles that. \z
@@ -839,6 +876,7 @@ local function sub_expr(limit, scope)
         )
       else
         local left_node = node
+        admission.allocate(3 * 192 + 5 * 48)
         node = nodes.new_concat{
           exp_list = {left_node, right_node},
           op_tokens = {op_token},
@@ -847,6 +885,7 @@ local function sub_expr(limit, scope)
     else
       ---@cast binop AstBinOpOp
       local left_node = node
+      admission.allocate(192 + 4 * 48)
       node = nodes.new_binop{
         left = left_node,
         op = binop,
@@ -880,31 +919,33 @@ end
 ---@param lhs_comma_tokens AstTokenNode[]
 ---@param scope AstScope
 ---@return AstAssignment
-local function assignment(lhs, lhs_comma_tokens, state_for_unexpected_expressions, scope)
+local function assignment(lhs, lhs_comma_tokens, position, error_count, scope)
   admission.enter()
   if lhs[#lhs].force_single_result or lhs[#lhs].node_type == "call" then
     -- insert the syntax error at the correct location
     -- (so the order of syntax errors is in the same order as they appeared in the file)
+    admission.allocate(192 + 2 * 48)
     local invalid = syntax_error(new_error_code_inst{
       error_code = error_code_util.codes.unexpected_expression,
-      position = state_for_unexpected_expressions.position,
-    }, nil, state_for_unexpected_expressions.error_code_insts_count + 1)
+      position = position,
+    }, nil, error_count + 1)
     add_consumed_node(invalid, lhs[#lhs])
     lhs[#lhs] = invalid
   end
   if test_next(",") then
-    lhs_comma_tokens[#lhs_comma_tokens+1] = new_token_node(true)
+    append(lhs_comma_tokens, new_token_node(true))
     local first_token = token
     local initial_error_code_insts_count = get_error_code_insts_count()
-    lhs[#lhs+1] = suffixed_exp(scope)
+    append(lhs, suffixed_exp(scope))
     return assignment(
       lhs,
       lhs_comma_tokens,
-      {position = first_token, error_code_insts_count = initial_error_code_insts_count},
+      first_token, initial_error_code_insts_count,
       scope
     )
   else
     local invalid = assert_next("=")
+    admission.allocate(192 + 3 * 48)
     local node = nodes.new_assignment{
       eq_token = invalid or new_token_node(true),
       lhs = lhs,
@@ -934,6 +975,7 @@ local function label_stat(scope)
   ---@cast ident Token
   local prev_label = scope.labels[ident.value]
   if prev_label then
+    admission.allocate(2 * 192 + 5 * 48)
     local invalid = syntax_error(new_error_code_inst{
       error_code = error_code_util.codes.duplicate_label,
       message_args = {ident.value, prev_label.name_token.line..":"..prev_label.name_token.column},
@@ -953,6 +995,7 @@ local function label_stat(scope)
     return invalid
   else
     -- storing the value both in `name` and `name_token.value`
+    admission.allocate(192 + 5 * 48)
     local node = nodes.new_label{
       name = ident.value--[[@as string]],
       open_token = open_token,
@@ -970,6 +1013,7 @@ end
 ---@return AstWhileStat
 local function while_stat(scope)
   admission.enter()
+  admission.allocate(192 + 3 * 48)
   local node = nodes.new_whilestat{
     parent_scope = scope,
     while_token = new_token_node(),
@@ -993,6 +1037,7 @@ end
 ---@return AstRepeatStat
 local function repeat_stat(scope)
   admission.enter()
+  admission.allocate(192 + 3 * 48)
   local node = nodes.new_repeatstat{
     parent_scope = scope,
     repeat_token = new_token_node(),
@@ -1019,10 +1064,11 @@ local function for_num(first_name, scope)
   -- currently the only place calling for_num is for_stat which will only call
   -- this function if the current token is '=', but we're handling invalid anyway
   local invalid = assert_next("=")
+  admission.allocate(192 + 6 * 48)
   local node = nodes.new_fornum{
     parent_scope = scope,
     var = prevent_assert,
-    locals = {prevent_assert},
+    locals = vector(prevent_assert),
     eq_token = invalid or new_token_node(true),
     start = prevent_assert,
     stop = prevent_assert,
@@ -1066,25 +1112,27 @@ local function for_list(first_name, scope)
   local name_local, name_ref = ast.create_local(first_name, scope)
   name_local.whole_block = true
   ---@type AstExpression[]
-  local name_list = {name_ref}
+  local name_list = vector(name_ref)
+  admission.allocate(192 + 5 * 48)
   local node = nodes.new_forlist{
     parent_scope = scope,
     name_list = name_list,
-    locals = {name_local},
-    exp_list = {prevent_assert},
-    comma_tokens = {},
+    locals = vector(name_local),
+    exp_list = vector(prevent_assert),
+    comma_tokens = vector(),
   }
   while test_next(",") do
     admission.enter()
-    node.comma_tokens[#node.comma_tokens+1] = new_token_node(true)
+    append(node.comma_tokens, new_token_node(true))
     local ident = assert_ident()
     if is_invalid(ident) then
-      name_list[#name_list+1] = ident--[[@as AstExpression]]
+      append(name_list, ident--[[@as AstExpression]])
       -- if it's an 'in' then basically just ignore the extra comma and continue with this node
       if token.token_type ~= "in" then
         return node, true
       end
     else
+      admission.allocate(2 * 48)
       node.locals[#node.locals+1], name_list[#name_list+1] = ast.create_local(ident--[[@as Token]], scope)
       node.locals[#node.locals].whole_block = true
     end
@@ -1127,6 +1175,7 @@ local function for_stat(scope)
   elseif t == "," or t == "in" then
     node, is_partially_invalid = for_list(first_ident, scope)
   else
+    admission.allocate(192 + 48)
     local invalid = syntax_error(new_error_code_inst{
       error_code = error_code_util.codes.expected_eq_comma_or_in,
     })
@@ -1150,6 +1199,7 @@ local function test_then_block(scope)
   -- NOTE: [IF | ELSEIF] ( condition | name_list '=' exp_list  [';' condition] ) THEN block
   -- if first token is ident, and second is ',' or '=', use if-init, else original parse
   -- if no condition in if-init, first name/expr is used
+  admission.allocate(192 + 3 * 48)
   local node = nodes.new_testblock{
     parent_scope = scope,
     if_token = new_token_node(),
@@ -1170,20 +1220,23 @@ local function if_stat(scope)
 
   admission.enter()
   -- ifstat -> IF condition THEN block {ELSEIF condition THEN block} [ELSE block] END
-  local ifs = {}
+  local ifs = vector()
   local invalid ---@type boolean?
   repeat
     admission.enter()
+    admission.allocate(48)
     ifs[#ifs+1], invalid = test_then_block(scope)
   until token.token_type ~= "elseif" or invalid
   local elseblock
   if not invalid and test_next("else") then
+    admission.allocate(192 + 2 * 48)
     elseblock = nodes.new_elseblock{
       parent_scope = scope,
       else_token = new_token_node(true),
     }
     stat_list(elseblock)
   end
+  admission.allocate(192 + 2 * 48)
   local node = nodes.new_ifstat{
     ifs = ifs,
     elseblock = elseblock,
@@ -1203,8 +1256,9 @@ local function local_func(local_token, function_token, scope)
     name_ref = ident--[[@as AstInvalidNode]]
   else
     name_local, name_ref = ast.create_local(ident--[[@as Token]], scope)
-    scope.locals[#scope.locals+1] = name_local
+    append(scope.locals, name_local)
   end
+  admission.allocate(192 + 3 * 48)
   local node = nodes.new_localfunc{
     name = name_ref--[[@as AstLocalReference]],
     func_def = prevent_assert,
@@ -1225,31 +1279,28 @@ local function local_stat(local_token, scope)
 
   admission.enter()
   -- stat -> LOCAL NAME {',' NAME} ['=' exp_list]
+  admission.allocate(192 + 2 * 48)
   local node = nodes.new_localstat{
     local_token = local_token,
-    lhs_comma_tokens = {},
+    lhs_comma_tokens = vector(),
   }
-  local function test_comma()
-    admission.enter()
-    if test_next(",") then
-      node.lhs_comma_tokens[#node.lhs_comma_tokens+1] = new_token_node(true)
-      return true
-    end
-    return false
-  end
-  local local_defs = {}
+  local local_defs = vector()
   repeat
     admission.enter()
     local ident = assert_ident()
     if is_invalid(ident) then
-      node.lhs[#node.lhs+1] = ident--[[@as AstLocalReference]]
+      append(node.lhs, ident--[[@as AstLocalReference]])
       break
     else
+      admission.allocate(2 * 48)
       local_defs[#local_defs+1], node.lhs[#node.lhs+1] = ast.create_local(ident--[[@as Token]], scope)
       local_defs[#local_defs].start_at = node
       local_defs[#local_defs].start_offset = 1
     end
-  until not test_comma()
+    admission.enter()
+    if not test_next(",") then break end
+    append(node.lhs_comma_tokens, new_token_node(true))
+  until false
   -- just continue even if it was invalid, because an '=' token would just be another syntax error
   if test_next("=") then
     node.eq_token = new_token_node(true)
@@ -1258,7 +1309,7 @@ local function local_stat(local_token, scope)
   -- add the locals after the expression list has been parsed
   for _, name_local in ipairs(local_defs) do
     admission.enter()
-    scope.locals[#scope.locals+1] = name_local
+    append(scope.locals, name_local)
   end
   return node
 end
@@ -1299,11 +1350,11 @@ local function func_stat(scope)
   local is_method, name = func_name(scope)
   if is_invalid(name) then
     ---@cast name AstInvalidNode
-    -- using table.insert?! disgusting!! but we have to put the token first
-    table.insert(name.consumed_nodes, 1, function_token)
+    insert(name.consumed_nodes, 1, function_token)
     return name
   end
   ---@cast name AstExpression
+  admission.allocate(192 + 2 * 48)
   return nodes.new_funcstat{
     name = name,
     func_def = functiondef(function_token, scope, is_method),
@@ -1320,9 +1371,9 @@ local function expr_stat(scope)
   if token.token_type == "=" or token.token_type == "," then
     -- stat -> assignment
     return assignment(
-      {first_exp},
-      {},
-      {position = first_token, error_code_insts_count = initial_error_code_insts_count},
+      vector(first_exp),
+      vector(),
+      first_token, initial_error_code_insts_count,
       scope
     )
   else
@@ -1338,6 +1389,7 @@ local function expr_stat(scope)
     else
       -- insert the syntax error at the correct location
       -- (so the order of syntax errors is in the same order as they appeared in the file)
+      admission.allocate(192 + 2 * 48)
       local invalid = syntax_error(new_error_code_inst{
         error_code = error_code_util.codes.unexpected_expression,
         position = first_token,
@@ -1352,6 +1404,7 @@ local function retstat(scope)
 
   admission.enter()
   -- stat -> RETURN [exp_list] [';']
+  admission.allocate(192 + 48)
   local this_node = nodes.new_retstat{
     return_token = new_token_node(),
   }
@@ -1371,6 +1424,7 @@ end
 
 local statement_lut = {
   [";"] = function(scope) -- stat -> ';' (empty statement)
+    admission.allocate(192 + 48)
     local node = nodes.new_empty{
       semi_colon_token = new_token_node(),
     }
@@ -1384,6 +1438,7 @@ local statement_lut = {
     return while_stat(scope)
   end,
   ["do"] = function(scope) -- stat -> DO block END
+    admission.allocate(192 + 2 * 48)
     local node = nodes.new_dostat{
       parent_scope = scope,
       do_token = new_token_node(),
@@ -1419,6 +1474,7 @@ local statement_lut = {
   end,
 
   ["break"] = function(scope) -- stat -> breakstat
+    admission.allocate(192 + 48)
     local this_tok = nodes.new_breakstat{
       break_token = new_token_node(),
     }
@@ -1435,6 +1491,7 @@ local statement_lut = {
       return target_ident
     else
       -- storing the value both in `target_name` and `target_token.value`
+      admission.allocate(192 + 3 * 48)
       return nodes.new_gotostat{
         goto_token = goto_token,
         target_name = target_ident.value--[[@as string]],
@@ -1454,6 +1511,7 @@ local function main_func()
 
   admission.enter()
   local main = ast.new_main(source)
+  admission.allocate(48)
   main.shebang_line = token_iter_state.shebang_line
   stat_list(main)
   -- this will only fail either if there previously were syntax errors or an early return

@@ -1,15 +1,15 @@
 {
   "repository": "https://github.com/JanSharp/phobos",
   "revision": "2566dd85807b4f2bdff8e40ba4d79bcf8e96de3f",
-  "transform": "tools/import_parser.py base import: namespaced requires and parser work/depth probes; local pre-admitted lexical/driver/AST constructor and linked-list records, identifier callback, static scanner/token dispatch, EOF coordinates and protected root cleanup",
+  "transform": "tools/import_parser.py base import: namespaced requires and parser work/depth probes; local pre-admitted lexical/parser/AST reference and constructor/list graphs, identifier callback, static scanner/token/expression dispatch, EOF coordinates and protected root cleanup",
   "files": [
     {
       "upstream_path": "src/parser.lua",
       "installed_path": "vendor/phobos/parser.lua",
       "original_sha256": "d14e8d9ca5b63855e7c52fb96a5d124ab7b3b2a74f3888eb4cec8aef634268bb",
-      "installed_sha256": "dbe626442d565958e4a9dbeba360b0173aea3d6c59de554c896522234c825b2a",
+      "installed_sha256": "0f6c549ba85e2782dc01e6fa2d1377e334b4177a43163a2ffa595cb958e8e9b5",
       "original_bytes": 47008,
-      "installed_bytes": 48637
+      "installed_bytes": 50562
     },
     {
       "upstream_path": "src/tokenize.lua",
@@ -31,9 +31,9 @@
       "upstream_path": "src/ast_util.lua",
       "installed_path": "vendor/phobos/ast_util.lua",
       "original_sha256": "381e95bde2d80ff76bffe1cffc8abf450f9b02a233c5b330d362067b78e9e707",
-      "installed_sha256": "5dd0ae28d85401ba3bc29a4ec25512dab72c2eee05b12b71473e973887bf3f79",
+      "installed_sha256": "2a4038fc80988d7adcc568247b29d6e602d5612068271df1ddaeee82f25011cf",
       "original_bytes": 12131,
-      "installed_bytes": 12930
+      "installed_bytes": 13388
     },
     {
       "upstream_path": "src/util.lua",
