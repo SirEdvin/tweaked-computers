@@ -6,6 +6,7 @@ local admission=require('scripts.runtime.admission')
 local scheduler=require('scripts.scheduler')
 local policy=require('scripts.runtime.resource-policy')
 local speaker=require('scripts.services.speaker')
+local runtime=require('scripts.runtime.computer')
 local M={}
 local loaded=false
 local expected={
@@ -13,7 +14,7 @@ local expected={
   host_work_per_tick=5000000,maintenance_work_per_tick=200000,
   runtime_memory_bytes=8388608,host_memory_bytes=134217728,state_bytes=65536,
   shell_value_bytes=16384,draft_storage_bytes=1048576,
-  event_queue_entries=128,event_queue_bytes=65536,pending_work_bytes=1048576,
+  event_queue_bytes=65536,pending_work_bytes=1048576,
   host_stack_depth=32,console_entries=64,console_bytes=16384,
   compiler_cache_bytes=8388608,render_commit_work=160000,
   event_drop_warning_interval=600,speaker_sound_page_size=50,
@@ -32,6 +33,8 @@ local function unchanged(f)
   local root=registry.get()
   local exposed=policy.limits()
   assert(exposed.policy_version==2)
+  assert(exposed.resources.event_queue_entries==nil and limits.event_queue_entries==nil)
+  assert(settings.global['tc-event-queue-entries']==nil)
   local speaker_policy=speaker.methods.getLimits()
   assert(speaker_policy.policy_version==2 and speaker_policy.callback_work==nil)
   assert(speaker_policy.tuning.speaker_sound_page_size.limit==f.values.speaker_sound_page_size)
@@ -43,6 +46,10 @@ local function unchanged(f)
   assert(speaker_policy.resources.kv_keys==nil and speaker_policy.resources.monitor_width_tiles==nil)
   assert(root.ledger==f.ledger and root.ledger.tick==f.tick and root.ledger.total==f.total,'policy refresh renewed retained work')
   assert(root.ledger.machines[f.id]==f.machine and f.machine.work==123)
+  assert(f.rec.queue==f.queue and #f.queue==129 and f.rec.queue_bytes==f.queue_bytes and f.rec.run_id==f.run)
+  for i,item in ipairs(f.queue) do assert(item.event.value==i) end
+  local queue_status=policy.status(f.rec,f.tick).resources.event_queue_bytes
+  assert(queue_status.used==f.queue_bytes and queue_status.limit==1 and queue_status.over_limit)
   for _,definition in ipairs(budgets.definitions) do
     assert(settings.global[definition.name].value==f.values[definition.key])
     local value=f.values[definition.key]
@@ -105,16 +112,21 @@ function M.run()
   storage.tweaked_computers=nil
   registry.initialize()
   local root=registry.get()
+  local body=assert(game.surfaces[1].create_entity{name='constant-combinator',position={0,0},force='player'})
+  local rec=registry.register('computer',body)
+  runtime.save(rec.id,'function receive() end',0); assert(runtime.activate(rec.id,game.tick))
+  for i=1,129 do assert(runtime.enqueue(rec,'receive',{name='timer',value=i},game.tick)) end
   local ctx=admission.context(root.ledger,'policy-settings',game.tick)
   assert(admission.reserve(ctx,'work',123))
   local f={phase='arm',ledger=root.ledger,machine=ctx.machine,id='policy-settings',tick=game.tick,
-    total=root.ledger.total,values={}}
+    total=root.ledger.total,values={},rec=rec,queue=rec.queue,queue_bytes=rec.queue_bytes,run=rec.run_id}
   for _,definition in ipairs(budgets.definitions) do
     local value=definition.default_value+1
     if value>definition.maximum_value then value=definition.default_value-1 end
     change(definition,value); f.values[definition.key]=value
     assert(root.ledger.total==f.total and ctx.machine.work==123)
   end
+  change(found.event_queue_bytes,1); f.values.event_queue_bytes=1
   unchanged(f)
   -- The engine must accept each declared endpoint, not merely its default.
   for _,definition in ipairs(budgets.definitions) do
@@ -148,6 +160,8 @@ function M.on_tick()
     unchanged(f)
     for _,definition in ipairs(budgets.definitions) do change(definition,definition.default_value) end
     assert(registry.get().ledger.total==f.total and f.machine.work==123)
+    assert(runtime.enqueue(f.rec,'receive',{name='timer',value=130},game.tick))
+    assert(f.rec.queue==f.queue and #f.queue==130 and f.queue[130].event.value==130 and not f.rec.dropped_events)
     f.phase='done'; log('TC_CONTRACT complete-resource-policy-settings-cold-preserved'); log('TC_COLD_OK')
   end
 end

@@ -172,10 +172,11 @@ local function failures(c,r,d,s)
   clear(d)
   -- One receiver loses this delivery without retiring or forcing sender retry.
   local healthy=build('computer',d.body.surface,1000,-6); connect(healthy,s,'red'); subscribe(healthy)
-  for _=1,limits.event_queue_entries do assert(runtime.enqueue(d,'received',{name='modem_message'},game.tick)) end
+  local queue_count=math.floor(limits.event_queue_bytes/runtime.prepare_event(d,'received',{name='modem_message'},game.tick).bytes)
+  for _=1,queue_count do assert(runtime.enqueue(d,'received',{name='modem_message'},game.tick)) end
   local first,subscriptions=d.queue[1],d.subscriptions
   call(c,r,'transmit',42,17,'overflow')
-  assert(d.status=='running' and #d.queue==limits.event_queue_entries and d.queue[1]==first and d.subscriptions==subscriptions)
+  assert(d.status=='running' and #d.queue==queue_count and d.queue[1]==first and d.subscriptions==subscriptions)
   assert(d.dropped_events.total==1 and d.dropped_events.last_kind=='modem_message')
   assert(healthy.status=='running' and #healthy.queue==1 and healthy.queue[1].event.message=='overflow')
   lifecycle.remove(healthy.id,'fixture-cleanup',true)

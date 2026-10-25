@@ -9,7 +9,7 @@ return {
   aggregate_subscriptions = 1024, aggregate_owned_outputs = 128,
   state_bytes = 65536, state_entries = 256, data_depth = 16,
   string_bytes = 16384, table_entries = 1024,
-  event_queue_entries = 128, event_queue_bytes = 65536, timers = 64, subscriptions = 64,
+  event_queue_bytes = 65536, timers = 64, subscriptions = 64,
   network_nodes = 256, network_edges = 512, topology_latency_ticks = 60,
   sync_group_refs = 8, sync_group_members = 4, sync_group_cells = 10584, sync_groups_per_run = 1,
   peripheral_call_bytes = 65536, peripheral_call_entries = 4096,

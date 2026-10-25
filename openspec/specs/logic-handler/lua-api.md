@@ -36,7 +36,7 @@ Output is one set mirrored to both output connectors. Other devices can contribu
 
 `getLimits()` selects `callback_work`, `callback_allocations`, `host_work_per_tick`,
 `maintenance_work_per_tick`, `runtime_memory_bytes`, `host_memory_bytes`,
-`pending_work_bytes`, `host_stack_depth`, `event_queue_entries` and
+`pending_work_bytes`, `host_stack_depth` and
 `event_queue_bytes` from the shared resource-policy registry. Each descriptor
 contains `limit`, `unit`, `scope`, `setting` and `behavior`; nested maps are
 defensive. Removed flat count/shape keys and unrelated device settings are absent.

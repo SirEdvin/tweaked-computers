@@ -15,7 +15,6 @@ local M={maintenance_max=maintenance_max,definitions={
   {key='state_bytes',name='tc-state-bytes',unit='bytes',scope='computer',behavior='reject'},
   {key='shell_value_bytes',name='tc-shell-value-bytes',unit='bytes',scope='computer',behavior='reject'},
   {key='draft_storage_bytes',name='tc-draft-storage-bytes',unit='bytes',scope='player',behavior='reject'},
-  {key='event_queue_entries',name='tc-event-queue-entries',unit='entries',scope='computer',behavior='drop_newest'},
   {key='event_queue_bytes',name='tc-event-queue-bytes',unit='bytes',scope='computer',behavior='drop_newest'},
   {key='pending_work_bytes',name='tc-pending-work-bytes',unit='bytes',scope='computer',behavior='reject'},
   {key='host_stack_depth',name='tc-host-stack-depth',unit='depth',scope='host_call',behavior='reject'},

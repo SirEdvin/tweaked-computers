@@ -80,11 +80,18 @@ Errors never convert a failed lookup into an empty successful result. Expected a
 4. Dispatch ready computers in deterministic round-robin order using a persisted cursor; each computer consumes its FIFO event order. IDs and queue sequence break ties. A running callback finishes or faults; it never suspends mid-Lua-stack.
 5. Complete bounded display presentation and housekeeping. Native circuit propagation determines when other factory entities observe output; no zero-latency feedback guarantee is made.
 
-Within the published supported envelope, no changed logic sample is silently lost. Queue-capacity overflow faults the affected run visibly and clears its still-owned outputs. Unpowered computers do not admit transient touch/signal event history; on restoration they discard obsolete transient samples, retain durable application state/registrations, and request current-input resynchronization. Already completed effects never replay. Recurring overdue timers produce one event with a missed count instead of a burst; one-shots fire once. Ordinary cold load does not cause power-restoration or startup events merely because host functions were reconstructed.
+Queue-byte overflow drops the newest delivery and records the loss without faulting the run or clearing its still-owned outputs. Unpowered computers do not admit transient touch/signal event history; on restoration they discard obsolete transient samples, retain durable application state/registrations, and request current-input resynchronization. Already completed effects never replay. Recurring overdue timers produce one event with a missed count instead of a burst; one-shots fire once. Ordinary cold load does not cause power-restoration or startup events merely because host functions were reconstructed.
 
 Discovery remains physical while a relay device is unpowered; actual service calls on an unpowered endpoint fail. Display render state and database contents survive outages. KV expiry follows simulation time even while its entity is unpowered or in a data-bearing item.
 
 ## Queryable limits
+
+Event queue admission uses `tc-event-queue-bytes` alone, including payload and
+nonzero envelope/entry metadata. There is no `event_queue_entries` descriptor or
+entry-count setting. Byte overflow drops only the newest delivery and updates
+persistent loss diagnostics; it does not fault the run or clear owned outputs.
+Accepted FIFO entries survive lower settings and cold reload, including when
+their retained bytes exceed the new allowance. Lifecycle startup is not droppable.
 
 `computer.getLimits()` returns a defensive table of effective integer ceilings. The release manifest records the same values. At least these keys are present:
 
@@ -93,7 +100,7 @@ host_memory_bytes, host_stack_depth,
 callback_work, callback_depth, callback_allocations, compile_work, host_work_per_tick,
 active_computers, active_logic_handlers, aggregate_subscriptions, aggregate_owned_outputs,
 state_bytes, state_entries, data_depth, string_bytes,
-event_queue_entries, event_queue_bytes, timers, subscriptions,
+event_queue_bytes, timers, subscriptions,
 network_nodes, network_edges, topology_latency_ticks,
 peripheral_call_bytes, peripheral_call_entries,
 console_entries, console_bytes, fail_safe_latency_ticks

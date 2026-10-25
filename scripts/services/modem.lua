@@ -11,7 +11,7 @@ local policy=require('scripts.runtime.resource-policy')
 local M={methods={}}
 local policy_keys={callback_work=true,callback_allocations=true,host_work_per_tick=true,maintenance_work_per_tick=true,
   runtime_memory_bytes=true,host_memory_bytes=true,pending_work_bytes=true,host_stack_depth=true,
-  event_queue_entries=true,event_queue_bytes=true}
+  event_queue_bytes=true}
 local MAX=9007199254740991
 local function arity(n,want) if n~=want then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end end
 local function channel(value)

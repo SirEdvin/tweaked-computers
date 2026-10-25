@@ -84,7 +84,6 @@ function M.status(rec,tick)
     out.resources[key]={used=used,limit=limit,unit=d.unit,scope=d.scope,setting=d.name,over_limit=used>limit}
   end
   measured('state_bytes',rec.state_bytes)
-  measured('event_queue_entries',rec.queue and #rec.queue)
   measured('event_queue_bytes',rec.queue_bytes)
   measured('console_entries',rec.logs and #rec.logs)
   measured('console_bytes',rec.log_bytes)

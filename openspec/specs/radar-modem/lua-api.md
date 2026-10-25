@@ -99,7 +99,7 @@ matching the corresponding descriptor from `computer.getLimits()`:
 
 - `callback_work`, `callback_allocations`, `host_work_per_tick`, `maintenance_work_per_tick`.
 - `runtime_memory_bytes`, `host_memory_bytes`, `pending_work_bytes`, `host_stack_depth`.
-- `event_queue_entries`, `event_queue_bytes`.
+- `event_queue_bytes` (payload and entry metadata, without a separate event-count ceiling).
 
 There are no flat common-limit fields or `open_channels`, `message_bytes`,
 `message_nodes`, `message_depth`, `routing_candidates`, `deliveries_per_transmit`,

@@ -17,17 +17,19 @@ local function retained(s,tick)
   assert(rec.status=='running' and rec.run_id==s.run and rec.queue==s.queue and rec.queue[1]==s.first)
   assert(#rec.queue==1 and rec.queue_bytes==s.bytes and not rec.invocation)
   local status=resources.read(rec,tick)
-  assert(status.resources.event_queue_entries.used==1 and status.resources.event_queue_entries.limit==1)
+  assert(status.resources.event_queue_entries==nil)
+  assert(status.resources.event_queue_bytes.used==s.bytes and status.resources.event_queue_bytes.limit==s.bytes)
   assert(status.dropped_events.total==rec.dropped_events.total)
   status.dropped_events.total=0
   assert(policy.status(rec,tick).dropped_events.total==rec.dropped_events.total,'status exposes mutable diagnostics')
   assert(resources.details(resources.read(rec,tick)):find('Dropped events (cumulative):',1,true))
 end
 local function bounded(fn)
-  local entries,logs,bytes,interval=limits.event_queue_entries,limits.console_entries,limits.console_bytes,limits.event_drop_warning_interval
-  limits.event_queue_entries=1; limits.console_entries=1; limits.console_bytes=1024; limits.event_drop_warning_interval=10
+  local queue,logs,bytes,interval=limits.event_queue_bytes,limits.console_entries,limits.console_bytes,limits.event_drop_warning_interval
+  if storage.tc_warnings then limits.event_queue_bytes=storage.tc_warnings.bytes end
+  limits.console_entries=1; limits.console_bytes=1024; limits.event_drop_warning_interval=10
   local ok,e=pcall(fn)
-  limits.event_queue_entries,limits.console_entries,limits.console_bytes,limits.event_drop_warning_interval=entries,logs,bytes,interval
+  limits.event_queue_bytes,limits.console_entries,limits.console_bytes,limits.event_drop_warning_interval=queue,logs,bytes,interval
   assert(ok,type(e)=='table' and e.message or tostring(e))
 end
 function M.run()
@@ -38,6 +40,7 @@ function M.run()
     runtime.save(rec.id,'function receive() local s=computer.getResourceStatus(); computer.setState("observed",s.dropped_events.total); s.dropped_events.total=0 end',0)
     assert(runtime.activate(rec.id,game.tick)); rec.powered=false
     assert(runtime.enqueue(rec,'receive',{name='timer'},game.tick))
+    limits.event_queue_bytes=rec.queue_bytes
     drop(rec,game.tick); drop(rec,game.tick)
     storage.tc_warnings={phase='first',rec=rec,run=rec.run_id,queue=rec.queue,first=rec.queue[1],bytes=rec.queue_bytes}
     assert(#rec.logs==0,'event publication must not perform unadmitted log work')

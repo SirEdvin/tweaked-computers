@@ -28,7 +28,13 @@ local function snapshot(rec)
 end
 function M.run()
   registry.initialize()
-  local entries,bytes=limits.event_queue_entries,limits.event_queue_bytes
+  local burst=computer()
+  for i=1,129 do
+    assert(runtime.enqueue(burst,'receive',{name='fixture',value=i,empty={}},game.tick),'byte-admissible event rejected by the old count ceiling')
+    assert(burst.queue[i].bytes>128,'event envelope/entry metadata was not charged')
+  end
+  assert(#burst.queue==129 and burst.queue_bytes<=limits.event_queue_bytes and not burst.dropped_events)
+  local bytes=limits.event_queue_bytes
   local ok,problem=pcall(function()
     limits.event_queue_bytes=1
     local started=computer()
@@ -37,16 +43,15 @@ function M.run()
     assert(pending_start.invocation and pending_start.invocation.pending_start and not pending_start.state.kept)
     limits.event_queue_bytes=bytes
     local rec=computer()
-    limits.event_queue_entries=1
     assert(runtime.enqueue(rec,'receive',{name='fixture',value=1},game.tick))
+    limits.event_queue_bytes=rec.queue_bytes
     local before=snapshot(rec)
     local accepted,reason=runtime.enqueue(rec,'receive',{name='fixture',value=2},game.tick)
-    assert(not accepted and reason=='overflow','entry overflow was admitted')
-    preserved(rec,before,1,'event_queue_entries')
+    assert(not accepted and reason=='overflow','full byte allowance admitted another event')
+    preserved(rec,before,1,'event_queue_bytes')
     assert(rec.dropped_events.last_kind=='fixture')
     assert(not runtime.enqueue(rec,'receive',{name='fixture',value=3},game.tick))
-    preserved(rec,before,2,'event_queue_entries')
-    limits.event_queue_entries=entries
+    preserved(rec,before,2,'event_queue_bytes')
     limits.event_queue_bytes=bytes
     rec=computer()
     local item=assert(runtime.prepare_event(rec,'receive',{name='fixture',value=1},game.tick))
@@ -71,11 +76,11 @@ function M.run()
     runtime.subscribe(rec,'modem_message','receive')
     runtime.subscribe(rec,'modem_message','receive')
     runtime.subscribe(rec,'modem_message','receive')
-    limits.event_queue_entries=1
     assert(runtime.enqueue(rec,'receive',{name='fixture'},game.tick))
+    limits.event_queue_bytes=rec.queue_bytes
     before=snapshot(rec)
     assert(not runtime.emit(rec.id,'modem_message',{message='new'},game.tick))
-    preserved(rec,before,3,'event_queue_entries')
+    preserved(rec,before,3,'event_queue_bytes')
     rec.timers.once={id=rec.run_id..'/timer-fixture-once',handler='receive',deadline=game.tick,sequence=1}
     rec.timers.recurring={id=rec.run_id..'/timer-fixture-recurring',handler='receive',deadline=game.tick,sequence=2,interval=2}
     -- Timers are normally indexed by their actual IDs.
@@ -87,7 +92,7 @@ function M.run()
     scheduler.advance_timers(rec,game.tick,function() end)
     assert(rec.dropped_events.total==losses+2,'dropped timer retried on the same tick')
     before=snapshot(rec); losses=rec.dropped_events.total
-    limits.event_queue_entries=entries; limits.event_queue_bytes=1
+    limits.event_queue_bytes=1
     assert(not runtime.emit(rec.id,'modem_message',{message=string.rep('x',100)},game.tick))
     preserved(rec,before,losses+3,'event_queue_bytes')
     local total=rec.dropped_events.total
@@ -99,7 +104,7 @@ function M.run()
     rec.dropped_events.total=9007199254740991
     assert(not runtime.enqueue(rec,'receive',{name='fixture'},game.tick))
     assert(rec.dropped_events.total==9007199254740991 and rec.dropped_events.saturated)
-    limits.event_queue_entries=entries; limits.event_queue_bytes=bytes
+    limits.event_queue_bytes=bytes
     local drops=rec.dropped_events
     assert(runtime.stop(rec.id)); runtime.reset_state(rec.id)
     assert(runtime.activate(rec.id,game.tick) and rec.dropped_events==drops and drops.saturated,'Stop/reset/Run reset physical loss diagnostics')
@@ -107,22 +112,24 @@ function M.run()
     runtime.subscribe(power,'power_restored','receive')
     assert(runtime.enqueue(power,'receive',{name='timer'},game.tick))
     assert(runtime.set_power(power.id,false,game.tick))
-    before=snapshot(power); limits.event_queue_entries=1
+    before=snapshot(power); limits.event_queue_bytes=power.queue_bytes
     assert(runtime.set_power(power.id,true,game.tick))
-    preserved(power,before,1,'event_queue_entries')
+    preserved(power,before,1,'event_queue_bytes')
     assert(power.dropped_events.last_kind=='power_restored' and power.needs_input_resync)
     assert(not runtime.set_power(power.id,true,game.tick) and power.dropped_events.total==1)
-    limits.event_queue_entries=entries
+    limits.event_queue_bytes=bytes
     storage.tc_event_drops={phase='arm',rec=cold_rec,drops=cold_rec.dropped_events,queue=cold_rec.queue,
       first=cold_rec.queue[1],bytes=cold_rec.queue_bytes,run=cold_rec.run_id,total=cold_rec.dropped_events.total,
-      start=pending_start,start_invocation=pending_start.invocation}
+      start=pending_start,start_invocation=pending_start.invocation,burst=burst,burst_queue=burst.queue,burst_bytes=burst.queue_bytes}
     log('TC_CONTRACT event-drop-newest-boundaries-oversized-fanout-and-durable-counters')
   end)
-  limits.event_queue_entries,limits.event_queue_bytes=entries,bytes
+  limits.event_queue_bytes=bytes
   assert(ok,type(problem)=='table' and problem.message or tostring(problem))
 end
 local function unchanged(state)
   local rec=state.rec
+  assert(state.burst.queue==state.burst_queue and #state.burst.queue==129 and state.burst.queue_bytes==state.burst_bytes)
+  for i,item in ipairs(state.burst.queue) do assert(item.event.value==i and next(item.event.empty)==nil) end
   assert(rec.status=='running' and rec.run_id==state.run and rec.state.kept)
   assert(rec.queue==state.queue and rec.queue[1]==state.first and rec.queue_bytes==state.bytes)
   assert(rec.dropped_events==state.drops and state.drops.total==state.total)
@@ -140,6 +147,11 @@ function M.on_tick(event)
     state.phase='frozen'; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED'); return
   end
   assert(loaded); loaded=false
+  local allowance=limits.event_queue_bytes; limits.event_queue_bytes=1
+  assert(not runtime.enqueue(state.burst,'receive',{name='fixture'},event.tick))
+  unchanged(state)
+  assert(state.burst.dropped_events.total==1 and state.burst.dropped_events.last_reason=='event_queue_bytes')
+  limits.event_queue_bytes=allowance
   assert(runtime.enqueue(state.rec,'receive',{name='fixture',value='after cold load'},event.tick))
   assert(state.rec.queue[1]==state.first and state.rec.queue[2].event.sequence>state.first.event.sequence)
   assert(state.drops.total==state.total)
@@ -147,6 +159,8 @@ function M.on_tick(event)
   assert(scheduler.dispatch(state.start,event.tick) and state.start.state.kept and state.start.state.starts==1)
   assert(state.start.invocation==nil and #state.start.queue==0 and state.start.dropped_events==nil)
   limits.event_queue_bytes=bytes
+  assert(runtime.enqueue(state.burst,'receive',{name='fixture',value=130,empty={}},event.tick))
+  assert(#state.burst.queue==130 and state.burst.queue[130].event.sequence>state.burst.queue[129].event.sequence)
   state.phase='done'; log('TC_CONTRACT event-loss-counters-and-accepted-FIFO-cold-preserved'); log('TC_COLD_OK')
 end
 return M

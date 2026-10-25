@@ -13,7 +13,7 @@ local source=[[function policy(io)
   assert(select('#',io.getLimits())==1 and next(p.tuning)==nil and p.sample_interval_ticks==1)
   assert(p.signal_slots==nil and p.filter_signals==nil and p.table_entries==nil and p.callback_work==nil)
   local keys={'callback_work','callback_allocations','host_work_per_tick','maintenance_work_per_tick',
-    'runtime_memory_bytes','host_memory_bytes','pending_work_bytes','host_stack_depth','event_queue_entries','event_queue_bytes'}
+    'runtime_memory_bytes','host_memory_bytes','pending_work_bytes','host_stack_depth','event_queue_bytes'}
   local count=0; for _ in pairs(p.resources) do count=count+1 end; assert(count==#keys)
   for _,key in ipairs(keys) do
     for field,value in pairs(common.resources[key]) do assert(p.resources[key][field]==value) end

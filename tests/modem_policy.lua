@@ -15,7 +15,7 @@ function policy(m)
   for _,key in ipairs({'open_channels','message_bytes','message_nodes','message_depth','routing_candidates',
       'deliveries_per_transmit','transmits_per_computer_tick','transmits_per_tick','table_entries','callback_work'}) do assert(p[key]==nil) end
   local keys={'callback_work','callback_allocations','host_work_per_tick','maintenance_work_per_tick',
-    'runtime_memory_bytes','host_memory_bytes','pending_work_bytes','host_stack_depth','event_queue_entries','event_queue_bytes'}
+    'runtime_memory_bytes','host_memory_bytes','pending_work_bytes','host_stack_depth','event_queue_bytes'}
   local count=0; for _ in pairs(p.resources) do count=count+1 end; assert(count==#keys)
   for _,key in ipairs(keys) do
     for field,value in pairs(common.resources[key]) do assert(p.resources[key][field]==value) end

@@ -199,7 +199,6 @@ function M.publish_event(rec,item,tick)
   if rec.status~='running' or item.event.run_id~=rec.run_id then return false,'inactive' end
   if item.overflow then return drop_event(rec,item.event.name,tick,item.overflow) end
   local bytes=item.bytes
-  if #rec.queue>=limits.event_queue_entries then return drop_event(rec,item.event.name,tick,'event_queue_entries') end
   if rec.queue_bytes+bytes>limits.event_queue_bytes then return drop_event(rec,item.event.name,tick,'event_queue_bytes') end
   item.event.sequence=registry.sequence()
   rec.queue[#rec.queue+1]=item

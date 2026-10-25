@@ -101,9 +101,9 @@ recovery and clears output; never assume a callback-wide factory transaction.
 
 `getLimits().resources` contains callback work/allocation, shared host work,
 maintenance work, runtime/host/pending memory, host stack depth and event queue
-entry/byte descriptors. Their keys are `callback_work`, `callback_allocations`,
+byte descriptors. Their keys are `callback_work`, `callback_allocations`,
 `host_work_per_tick`, `maintenance_work_per_tick`, `runtime_memory_bytes`,
-`host_memory_bytes`, `pending_work_bytes`, `host_stack_depth`, `event_queue_entries`
+`host_memory_bytes`, `pending_work_bytes`, `host_stack_depth`
 and `event_queue_bytes`. Each reports `limit`, `unit`, `scope`, `setting` and
 `behavior`, matching `computer.getLimits()`. Nested maps are independent copies.
 Former flat shape/count fields and unrelated device settings are absent; `tuning`

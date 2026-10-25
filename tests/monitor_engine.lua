@@ -232,12 +232,12 @@ function M.run()
   game=original_game; if not ok then error(err,0) end
   monitor.deliver(job,display,c,game.tick,nop,player)
   assert(#c.queue==1 and c.queue[1].event.x==1 and #c.queue[1].event.wires==2 and c.queue[1].event.wire=='red')
-  local entries=limits.event_queue_entries; limits.event_queue_entries=1
+  local allowance=limits.event_queue_bytes; limits.event_queue_bytes=c.queue_bytes
   local first=c.queue[1]
   assert(monitor.deliver(job,display,c,game.tick,nop,player))
   assert(c.status=='running' and #c.queue==1 and c.queue[1]==first and c.dropped_events.total==1)
   assert(c.dropped_events.last_kind=='monitor_touch')
-  limits.event_queue_entries=entries
+  limits.event_queue_bytes=allowance
   registry.get().monitors.touches={}; c.queue={}; c.queue_bytes=0
   guest(c,"local m=peripheral.find('monitor','red'); m.setTextScale(2)")
   monitor.notifications(game.tick,nop); assert(#c.queue==1 and c.queue[1].event.reason=='scale')

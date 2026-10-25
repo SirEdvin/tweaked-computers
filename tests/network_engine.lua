@@ -206,7 +206,7 @@ function M.run()
   assert(c.queue[1].event.peripheral<c.queue[2].event.peripheral and c.queue[1].event.wire=='red')
   connect(c,db,'red'); peripheral.reconcile_one(c,'red',game.tick,nop)
   assert(#c.queue==4 and c.queue[3].event.name=='peripheral_attach' and c.queue[4].event.name=='peripheral_attach')
-  local entries=limits.event_queue_entries; limits.event_queue_entries=#c.queue
+  local allowance=limits.event_queue_bytes; limits.event_queue_bytes=c.queue_bytes
   local first,bytes=c.queue[1],c.queue_bytes
   output(io,c,'red'); disconnect(c,db,'red'); peripheral.reconcile_one(c,'red',game.tick,nop)
   assert(c.status=='running' and #c.queue==4 and c.queue[1]==first and c.queue_bytes==bytes)
@@ -215,7 +215,7 @@ function M.run()
   peripheral.reconcile_one(c,'red',game.tick,nop); assert(c.dropped_events.total==2,'dropped topology delivery retried')
   connect(c,db,'red'); peripheral.reconcile_one(c,'red',game.tick,nop)
   assert(c.dropped_events.total==4 and c.dropped_events.last_kind=='peripheral_attach' and c.queue[1]==first)
-  limits.event_queue_entries=entries
+  limits.event_queue_bytes=allowance
   report('topology-drop-once-preserves-FIFO-and-independent-native-output-cleanup')
   c.queue={}; c.queue_bytes=0
   report('silent-baseline-and-deterministic-detach-before-attach-events')

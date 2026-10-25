@@ -97,9 +97,10 @@ function M.run()
   end
   for _=1,17 do call(c,r,'transmit',777,42,nil) end
   local full=record(f().receivers[2].computer)
-  for _=1,limits.event_queue_entries do assert(runtime.enqueue(full,'receive',{name='modem_message'},game.tick)) end
+  local queue_count=math.floor(limits.event_queue_bytes/runtime.prepare_event(full,'receive',{name='modem_message'},game.tick).bytes)
+  for _=1,queue_count do assert(runtime.enqueue(full,'receive',{name='modem_message'},game.tick)) end
   local first=full.queue[1]; call(c,r,'transmit',42,17,false)
-  assert(#full.queue==limits.event_queue_entries and full.queue[1]==first and full.dropped_events.total==4)
+  assert(#full.queue==queue_count and full.queue[1]==first and full.dropped_events.total==4)
   for _,pair in ipairs(f().receivers) do clear(record(pair.computer)) end
   log('TC_CONTRACT twelve-deliveries-large-payload-no-rate-ceiling-and-drop-newest')
   local staged={}

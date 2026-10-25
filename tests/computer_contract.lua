@@ -144,12 +144,13 @@ function M.run()
   report('timer-FIFO-equal-deadlines-cancel-coalescence-and-power')
   root=fresh(); rec=computer(source('computer.setState("kept",true)',',event=function(e) end'))
   scheduler.tick(0)
-  for i=1,limits.event_queue_entries do assert(runtime.enqueue(rec,'event',{name='timer'},1)) end
+  local queue_count=math.floor(limits.event_queue_bytes/runtime.prepare_event(rec,'event',{name='timer'},1).bytes)
+  for i=1,queue_count do assert(runtime.enqueue(rec,'event',{name='timer'},1)) end
   local first,queued_bytes,cleanups=rec.queue[1],rec.queue_bytes,#cleanup_calls
   assert(not runtime.enqueue(rec,'event',{name='timer'},1))
-  assert(rec.status=='running' and rec.state.kept and #rec.queue==limits.event_queue_entries)
+  assert(rec.status=='running' and rec.state.kept and #rec.queue==queue_count)
   assert(rec.queue[1]==first and rec.queue_bytes==queued_bytes and #cleanup_calls==cleanups)
-  assert(rec.dropped_events.total==1 and rec.dropped_events.last_reason=='event_queue_entries')
+  assert(rec.dropped_events.total==1 and rec.dropped_events.last_reason=='event_queue_bytes')
   report('queue-overflow-drops-newest-without-run-or-output-cleanup')
   root=fresh()
   local bad=computer(source('pcall(function() while true do end end); computer.setState("unsafe",true)'))
