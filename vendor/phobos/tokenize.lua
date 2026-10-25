@@ -9,6 +9,29 @@ local keywords = util.invert{
   "while", "goto",
 }
 
+-- Reuse lowering's arena weights instead of a token/string count quota.
+local function put(value,key,item)
+  if value[key]==nil then admission.allocate(48) end
+  value[key]=item
+end
+local function append(parts,value)
+  admission.allocate(48)
+  parts[#parts+1]=value
+end
+local function slice(str,first,last)
+  local bytes=math.max(0,last-first+1)
+  admission.enter(bytes+1)
+  admission.allocate(32+bytes)
+  return str:sub(first,last)
+end
+local function join(parts)
+  local bytes=0
+  for _,part in ipairs(parts) do admission.enter(); bytes=bytes+#part end
+  admission.enter(bytes+1)
+  admission.allocate(32+bytes)
+  return table.concat(parts)
+end
+
 ---@param token_type TokenType
 ---@param index number
 ---@param line number
@@ -16,6 +39,7 @@ local keywords = util.invert{
 ---@return Token
 local function new_token(token_type,index,line,column)
   admission.enter()
+  admission.allocate(192+4*48)
   return {
     token_type = token_type,
     index = index,
@@ -27,8 +51,11 @@ end
 local function add_error_code_inst(token, inst)
 
   admission.enter()
-  token.error_code_insts = token.error_code_insts or {}
-  token.error_code_insts[#token.error_code_insts+1] = inst
+  if not token.error_code_insts then
+    admission.allocate(192+48)
+    token.error_code_insts={}
+  end
+  append(token.error_code_insts,inst)
 end
 
 ---@param str string
@@ -47,7 +74,7 @@ end
 
 local newline_chars = util.invert{"\n", "\r"}
 
--- Single-character probes keep lexical scans suspendible in the trusted transform.
+-- Single-character probes bound work before input-sized copies.
 local function scan(str, index, pattern)
   while str:sub(index,index):match(pattern) do
     admission.enter()
@@ -60,7 +87,7 @@ local function block_open(str,index)
   if str:sub(index,index)~="[" then return end
   local stop=scan(str,index+1,"^=$")
   if str:sub(stop,stop)~="[" then return end
-  return index,stop,str:sub(index+1,stop-1)
+  return index,stop
 end
 
 local function consume_newline(str, index, state, current_char)
@@ -99,12 +126,13 @@ local function read_string(str,index,quote,state)
   local next_char = str:sub(i,i)
   if next_char == quote then
     -- empty string
-    token.value = ""
-    token.src_quote = quote
-    token.src_value = ""
+    put(token,'value',"")
+    put(token,'src_quote',quote)
+    put(token,'src_value',"")
     return i+1,token
   end
 
+  admission.allocate(192)
   local parts = {}
 
   ::matching::
@@ -116,7 +144,7 @@ local function read_string(str,index,quote,state)
   end
 
   if i ~= start_i then
-    parts[#parts+1] = str:sub(start_i, i - 1)
+    append(parts,slice(str,start_i,i-1))
   end
 
   next_char = str:sub(i,i)
@@ -124,17 +152,18 @@ local function read_string(str,index,quote,state)
   if next_char == quote then
     -- finished string
     if token.token_type == "invalid" then
-      token.value = str:sub(index,i)
+      put(token,'value',slice(str,index,i))
     else
-      token.src_value = str:sub(index+1,i-1)
-      token.value = table.concat(parts)
+      put(token,'src_value',slice(str,index+1,i-1))
+      put(token,'value',join(parts))
       -- token.src_is_block_str = false -- why bother setting quite literally anything to false :P
-      token.src_quote = quote
+      put(token,'src_quote',quote)
     end
     return i+1,token
   elseif next_char == "" then
     token.token_type = "invalid"
-    token.value = str:sub(index,i-1)
+    put(token,'value',slice(str,index,i-1))
+    admission.allocate(2*192+5*48)
     add_error_code_inst(token, error_code_util.new_error_code{
       error_code = error_code_util.codes.unterminated_string,
       source = state.source,
@@ -144,7 +173,8 @@ local function read_string(str,index,quote,state)
     return i,token
   elseif newline_chars[next_char] then
     token.token_type = "invalid"
-    token.value = str:sub(index,i-1)
+    put(token,'value',slice(str,index,i-1))
+    admission.allocate(3*192+7*48+32)
     add_error_code_inst(token, error_code_util.new_error_code{
       error_code = error_code_util.codes.unterminated_string_at_eol,
       message_args = {tostring(state.line)},
@@ -158,12 +188,14 @@ local function read_string(str,index,quote,state)
     i = i + 1
     next_char = str:sub(i,i)
     if next_char == "x" then
+      admission.allocate(34)
       local digits = str:match("^%x%x", i + 1)
       if not digits then
         token.token_type = "invalid"
+        admission.allocate(4*192+10*48)
         add_error_code_inst(token, error_code_util.new_error_code{
           error_code = error_code_util.codes.invalid_hexadecimal_escape,
-          message_args = {str:sub(i + 1, i + 2)},
+          message_args = {slice(str,i+1,math.min(#str,i+2))},
           source = state.source,
           -- start at \
           start_position = {line = state.line, column = (i - 1) - state.line_offset},
@@ -172,12 +204,13 @@ local function read_string(str,index,quote,state)
         })
         i = i + 1 -- skip x
       else
-        parts[#parts+1] = string.char(tonumber(digits, 16))
+        admission.allocate(33)
+        append(parts,string.char(tonumber(digits,16)))
         i = i + 3 -- skip x and two hex digits
       end
       goto matching
     elseif newline_chars[next_char] then
-      parts[#parts+1] = "\n"
+      append(parts,"\n")
       i = consume_newline(str, i, state, next_char)
       goto matching
     elseif next_char == "z" then
@@ -191,15 +224,17 @@ local function read_string(str,index,quote,state)
       end
       goto matching
     elseif escape_sequence_lut[next_char] then
-      parts[#parts+1] = escape_sequence_lut[next_char]
+      append(parts,escape_sequence_lut[next_char])
       i = i + 1
       goto matching
     else
+      admission.allocate(35)
       local digits_start, skip, digits = str:find("^(%d%d?%d?)",i)
       if digits_start then
         local number = tonumber(digits, 10)
         if number > 255 then
           token.token_type = "invalid"
+          admission.allocate(4*192+10*48)
           add_error_code_inst(token, error_code_util.new_error_code{
             error_code = error_code_util.codes.too_large_decimal_escape,
             message_args = {digits},
@@ -210,12 +245,14 @@ local function read_string(str,index,quote,state)
             stop_position = {line = state.line, column = skip - state.line_offset},
           })
         else
-          parts[#parts+1] = string.char(number)
+          admission.allocate(33)
+          append(parts,string.char(number))
         end
         i = skip + 1
         goto matching
       else
         token.token_type = "invalid"
+        admission.allocate(4*192+10*48)
         add_error_code_inst(token, error_code_util.new_error_code{
           error_code = error_code_util.codes.unrecognized_escape,
           message_args = {next_char},
@@ -241,10 +278,11 @@ end
 ---@return Token
 local function read_block_string(str,index,state)
   admission.enter()
-  local _,open_end,pad = block_open(str,index)
-  if not pad then
+  local _,open_end = block_open(str,index)
+  if not open_end then
     local token = new_token("invalid",index,state.line,index - state.line_offset)
-    token.value = "["
+    put(token,'value',"[")
+    admission.allocate(2*192+5*48)
     add_error_code_inst(token, error_code_util.new_error_code{
       error_code = error_code_util.codes.invalid_block_string_open_bracket,
       source = state.source,
@@ -254,6 +292,7 @@ local function read_block_string(str,index,state)
     return index+1,token
   end
 
+  local pad=slice(str,index+1,open_end-1)
   local token_line = state.line
   local token_col = index - state.line_offset
 
@@ -267,31 +306,34 @@ local function read_block_string(str,index,state)
     end
   end
 
+  admission.allocate(192+48)
   local parts = {""}
   while true do
     admission.enter()
     local stopped_at=scan(str,next_index,"^[^\r\n%]]$")
-    local part,stop_char=str:sub(next_index,stopped_at-1),str:sub(stopped_at,stopped_at)
-    parts[#parts+1] = part
+    local part,stop_char=slice(str,next_index,stopped_at-1),str:sub(stopped_at,stopped_at)
+    append(parts,part)
     if stop_char == "]" then
       local stop=scan(str,stopped_at+1,"^=$")
       local bracket_end
       if stop-stopped_at-1==#pad and str:sub(stop,stop)=="]" then bracket_end=stop+1 end
       if bracket_end then
         local token = new_token("string", index, token_line, token_col)
-        token.value = table.concat(parts)
-        token.src_is_block_str = true
-        token.src_has_leading_newline = has_leading_newline
-        token.src_pad = pad
+        put(token,'value',join(parts))
+        put(token,'src_is_block_str',true)
+        put(token,'src_has_leading_newline',has_leading_newline)
+        put(token,'src_pad',pad)
         return bracket_end, token
       else
-        parts[#parts+1] = "]"
+        append(parts,"]")
         next_index = stopped_at + 1
       end
     elseif stop_char == "" then
       local token = new_token("invalid", index, token_line, token_col)
+      admission.allocate(32+2+#pad+(has_leading_newline and 1 or 0))
       parts[1] = "["..pad.."["..(has_leading_newline and "\n" or "")
-      token.value = table.concat(parts)
+      put(token,'value',join(parts))
+      admission.allocate(2*192+5*48)
       add_error_code_inst(token, error_code_util.new_error_code{
         error_code = error_code_util.codes.unterminated_block_string,
         source = state.source,
@@ -300,7 +342,7 @@ local function read_block_string(str,index,state)
       })
       return stopped_at, token
     else
-      parts[#parts+1] = "\n"
+      append(parts,"\n")
       next_index = consume_newline(str, stopped_at, state, stop_char)
     end
   end
@@ -332,7 +374,7 @@ local function read_number(str, index, state)
     else break end
   end
 
-  local src_value = str:sub(start_index, index - 1)
+  local src_value = slice(str,start_index,index-1)
   local value = tonumber(src_value)
   local token
   local error_code
@@ -352,11 +394,12 @@ local function read_number(str, index, state)
   end
   if value then
     token = new_token("number", start_index, state.line, start_index - state.line_offset)
-    token.src_value = src_value
-    token.value = value
+    put(token,'src_value',src_value)
+    put(token,'value',value)
   else
     token = new_token("invalid", start_index, state.line, start_index - state.line_offset)
-    token.value = src_value
+    put(token,'value',src_value)
+    admission.allocate(4*192+10*48)
     add_error_code_inst(token, error_code_util.new_error_code{
       error_code = error_code or error_code_util.codes.malformed_number,
       message_args = {src_value},
@@ -378,7 +421,8 @@ end
 local function simple_invalid_token(invalid_char, index, state)
   admission.enter()
   local token = new_token("invalid",index,state.line,index - state.line_offset)
-  token.value = invalid_char
+  put(token,'value',invalid_char)
+  admission.allocate(3*192+7*48)
   add_error_code_inst(token, error_code_util.new_error_code{
     error_code = error_code_util.codes.invalid_token,
     message_args = {invalid_char},
@@ -415,14 +459,15 @@ local function next_token(state,index)
 
   if next_char:match("%s") then
     local line_end=scan(str,index,"^[^%S\r\n]$")
-    local value,newline=str:sub(index,line_end-1),str:sub(line_end,line_end)
+    local value,newline=slice(str,index,line_end-1),str:sub(line_end,line_end)
     if not newline_chars[newline] then newline="" end
     local token = new_token("blank", index, state.line, index - state.line_offset)
     if newline ~= "" then -- ends with newline?
-      token.value = value.."\n"
+      admission.allocate(32+#value+1)
+      put(token,'value',value.."\n")
       return consume_newline(str, line_end, state), token
     end
-    token.value = value
+    put(token,'value',value)
     return line_end, token
   elseif next_char:match("[+*/%%^#;,(){}%]]") then
     return index+1,new_token(next_char,index,state.line,index - state.line_offset)
@@ -446,6 +491,7 @@ local function next_token(state,index)
         token.index = index
         token.column = token.column - 2
         if token.token_type == "invalid" then
+          admission.allocate(32+2+#token.value)
           token.value = "--"..token.value
         else
           token.token_type = "comment"
@@ -453,9 +499,9 @@ local function next_token(state,index)
         return next_index,token
       else
         local token_end=scan(str,index+2,"^[^\r\n]$")-1
-        local text=str:sub(index+2,token_end)
+        local text=slice(str,index+2,token_end)
         local token = new_token("comment",index,state.line,index - state.line_offset)
-        token.value = text
+        put(token,'value',text)
         return token_end+1,token
       end
     else
@@ -495,13 +541,13 @@ local function next_token(state,index)
     -- try to match keywords/identifiers
     if next_char:match("^[_%a]$") then
       local match_end=scan(str,index+1,"^[_%w]$")-1
-      local ident=str:sub(index,match_end)
+      local ident=slice(str,index,match_end)
       local token = new_token(
         keywords[ident] and ident or "ident",
         index,state.line,index - state.line_offset
       )
       if not keywords[ident] then
-        token.value = ident
+        put(token,'value',ident)
       end
       return match_end+1,token
     else
@@ -530,6 +576,7 @@ end
 local function tokenize(str, source, options)
   admission.enter()
   local index
+  admission.allocate(192+5*48)
   local state = {
     str = str,
     source = source,
@@ -546,8 +593,8 @@ local function tokenize(str, source, options)
   if str:find("^#", index) then -- first line is a comment (Unix exec. file)?
     -- read first line and skip parsing it
     local stop=scan(str,index or 1,"^[^\n]$")
-    local comment=str:sub(index or 1,stop-1)
-    state.shebang_line = comment
+    local comment=slice(str,index or 1,stop-1)
+    put(state,'shebang_line',comment)
     state.line_offset = stop - 1
     index = stop
   end

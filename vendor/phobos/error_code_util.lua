@@ -279,6 +279,7 @@ add_error_code(
 local function get_position(position)
 
   admission.enter()
+  if position then admission.allocate(192+2*48) end
   return position and {
     line = position.line,
     column = position.column,
@@ -289,6 +290,7 @@ end
 ---@return ErrorCodeInstance
 local function new_error_code_inst(params)
   admission.enter()
+  admission.allocate(192+6*48+(params.message_args and 0 or 192))
   return {
     error_code = params.error_code,
     message_args = params.message_args or {},

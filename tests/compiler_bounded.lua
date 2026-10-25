@@ -6,12 +6,33 @@ local registry=require('scripts.registry')
 local runtime=require('scripts.runtime.computer')
 local scheduler=require('scripts.scheduler')
 local shell=require('scripts.runtime.shell')
+local continuation=require('scripts.runtime.continuation')
 local M={}
 local loaded=false
 shell.register_authority(function() return true end)
 local function diagnostic(e)
   assert(e and e.code=='E_BUDGET' and e.recoverable and e.resource and e.setting,
     'bounded compilation needs an actionable recoverable diagnostic')
+end
+local function lowering_limit(rec,console,tick)
+  local account=registry.get().host_memory
+  local lower,cache=continuation.lower,limits.compiler_cache_bytes
+  local entries={}
+  continuation.lower=function(...)
+    entries[#entries+1]=account.used+account.reserved
+    return lower(...)
+  end
+  limits.compiler_cache_bytes=1
+  local ok,problem=pcall(function()
+    for _,case in ipairs({{rec.active.source},{console.shell.invocation.item.source,'shell'}}) do
+      local plan,e=compiler.prepare(case[1],admission.context(admission.new(),'lowering-probe',tick),case[2])
+      assert(plan,e and e.message)
+    end
+  end)
+  continuation.lower,limits.compiler_cache_bytes=lower,cache
+  assert(ok,type(problem)=='table' and problem.message or tostring(problem))
+  assert(#entries==2,'fixture did not observe both real lowering entries')
+  return math.max(entries[1],entries[2])
 end
 function M.run(native_memory)
   local saved=limits.compile_work
@@ -77,7 +98,8 @@ function M.on_tick(event)
     assert(rec.run_id==f.run and rec.status=='running' and rec.state.prefix==1 and console.state.prefix==1)
     diagnostic(rec.resource_refusal); diagnostic(console.resource_refusal)
     -- A new rejected candidate preserves the suspended old run and its source.
-    runtime.save(rec.id,'function start() computer.setState("wrong",true) end',rec.saved_revision)
+    local padding=f.native_memory and string.rep('local padding=0; ',200) or ''
+    runtime.save(rec.id,'function start() '..padding..'computer.setState("wrong",true) end',rec.saved_revision)
     local run,e=runtime.activate(rec.id,event.tick)
     assert(not run); diagnostic(e)
     assert(rec.invocation==f.program and rec.run_id==f.run and rec.saved_source:find('wrong',1,true))
@@ -96,17 +118,19 @@ function M.on_tick(event)
     end
     limits.compile_work=f.compile
     f.host_memory=limits.host_memory_bytes
-    local account=registry.get().host_memory
-    f.pressure_limit=account.used+account.reserved+128+2*192-1
+    f.pressure_limit=lowering_limit(rec,console,event.tick)
     limits.host_memory_bytes=f.pressure_limit
     f.phase='memory-refuse'
   elseif f.phase=='memory-refuse' then
+    local lower,calls=continuation.lower,0
+    continuation.lower=function(...) calls=calls+1; return lower(...) end
     scheduler.dispatch(rec,event.tick); scheduler.dispatch(console,event.tick)
+    continuation.lower=lower
+    assert(calls==2,'memory fixture refused before reaching both lowering passes')
     assert(rec.invocation==f.program and console.shell.invocation==f.command,'native memory refusal discarded progress')
     assert(f.program.checkpoint.frame.pc==f.program_pc and f.command.checkpoint.frame.pc==f.command_pc)
     for _,e in ipairs({rec.resource_refusal,console.resource_refusal}) do
       assert(e.code=='E_CAPACITY' and e.recoverable and e.resource=='host_memory' and e.setting=='tc-host-memory-bytes')
-      assert(e.requested>=2*192,'memory fixture refused before reaching lowering')
     end
     local run,e=runtime.activate(rec.id,event.tick)
     assert(not run and e.recoverable and e.resource=='host_memory')

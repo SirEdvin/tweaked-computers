@@ -1,6 +1,7 @@
 -- Exact-source cache must not change credits, partial refusal or trust caller data.
 local compiler=require('scripts.runtime.compiler')
 local admission=require('scripts.runtime.admission')
+local parsing=require('scripts.runtime.parse_admission')
 local limits=require('scripts.runtime.limits')
 local M={}
 local source='return {api_version=1,handlers={start=function(e) local t={1,2,3}; for i,v in ipairs(t) do assert(i==v) end end}}'
@@ -24,7 +25,9 @@ end
 -- replay may batch the reservation, but must accept the identical cold prefix.
 local function observed(text,ctx,mode)
   local reserve,replay=admission.reserve,admission.replay_compile
+  local replay_proof=parsing.replay
   local prefix,used_replay={},false
+  parsing.replay=function(charges) used_replay=true; return replay_proof(charges) end
   admission.reserve=function(c,kind,n)
     local ok=reserve(c,kind,n)
     if c==ctx and kind=='compile' and ok then prefix[#prefix+1]=n end
@@ -32,19 +35,21 @@ local function observed(text,ctx,mode)
   end
   admission.replay_compile=function(c,charges)
     if c==ctx then
-      used_replay=true
       local available=math.min(limits.compile_work-c.machine.compile,
         limits.host_work_per_tick-limits.maintenance_work_per_tick-c.ledger.total)
       local spent=0
       for _,n in ipairs(charges) do
-        if spent+n>available then break end
-        prefix[#prefix+1]=n; spent=spent+n
+        if n>0 then
+          if spent+n>available then break end
+          prefix[#prefix+1]=n; spent=spent+n
+        end
       end
     end
     return replay(c,charges)
   end
   local ok,plan,problem=pcall(compiler.compile,text,ctx,mode)
   admission.reserve,admission.replay_compile=reserve,replay
+  parsing.replay=replay_proof
   assert(ok,plan)
   return plan,problem,table.concat(prefix,','),used_replay
 end

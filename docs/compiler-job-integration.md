@@ -50,6 +50,15 @@ the same setting, without initializing world storage. Malformed existing storage
 does not select that fallback. These are deterministic accounting units, not a
 calibrated measurement of native heap usage or complete frontend allocation.
 
+Tokenization now shares that owner: state/token records, new fields, decoded-part
+vectors, lexical diagnostic records and position copies reserve before growth.
+Input-sized source slices and decoded joins reserve their header/payload before
+native copying; copy/join work is prepaid too. This covers quoted/block strings,
+comments, identifiers, numbers, whitespace, shebangs and malformed-token paths.
+Block-comment recognition no longer copies its delimiter padding twice. Fixed
+single-character probes and native allocator buffers are not a calibrated heap
+bound; parser AST/validation temporaries still need separate coverage.
+
 The lowering pass reserves its table workspace before growing it: initial graph
 maps, block/branch records, lexical/capture/prototype metadata, expression and
 assignment vectors, and output indexes, as well as live/definition sets,
@@ -100,6 +109,10 @@ not proof that all remaining parser/lowering/native allocations are admitted.
 The same fixture observes admission before actual quoting/joining during durable
 emission, including long literals with NUL, control characters, quotes and
 backslashes in both program forms and Console.
+Lexical probes observe native slices/joins, verify decoded bytes and source forms,
+and refuse one byte before each recorded allocation boundary with exact paid work
+and complete temporary-owner cleanup. Cache probes cover lexical admission as
+well as lowering, preserving warm/cold first refusal under competing shortages.
 
 `tests.compiler_bounded --cold` covers recoverable compilation refusal,
 220 durable locals, warm-cache host-depth reduction, prior-run preservation,
@@ -108,7 +121,8 @@ separate-process recovery without repeating the completed prefix.
 
 `tests.compiler_native_memory --cold` adds lowered host-memory refusal to those
 same program/Console lanes, preserving the original work-refusal cold case.
-Its memory case permits the compiler owner but refuses inside lowering, then
+Its memory case measures both frontends and observes actual lowering entry (not
+an allocation-size proxy), permits the compiler owner but refuses inside lowering, then
 cold-resumes the unchanged program and command without repeating their prefix.
 `tests.resource_policy_compilation_cache` checks equal warm/cold memory refusals,
 one-byte-short admission, full-host refusal before parsing, release on parser,
@@ -151,8 +165,9 @@ production budget was raised to fit these observations.
 
 This is not completion of the full resource-policy change or task 4.4. Console
 ingress and other downstream storage guards still need reconciliation. Compiler
-temporary allocation coverage (tokenizer/parser, closures and proof metadata)
-and measured native headroom remain incomplete; lowering-table, emitted-payload
+temporary allocation coverage (parser AST/validation, closures, diagnostic text
+and proof metadata) and measured native headroom remain incomplete; lexical,
+lowering-table, emitted-payload
 and native-load reservations do not establish them. Full migration and host-domain
 enrollment also remain open. Resolve these before claiming complete resource
 safety; do not restore the deleted compiler machine to solve them.

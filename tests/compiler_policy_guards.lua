@@ -6,7 +6,113 @@ local tokenize=require('vendor.phobos.tokenize')
 local continuation=require('scripts.runtime.continuation')
 local memory=require('scripts.runtime.memory')
 local M={}
+local function lexical_memory()
+  local payload=string.rep('lexical',24)
+  local cases={
+    {'"'..payload..'\\n\\x41\\065\\z  \r\nend"','string',payload..'\nAAend'},
+    {'[==[\r\n'..payload..'\r\n]x]==]','string',payload..'\n]x'},
+    {payload,'ident',payload},
+    {'0.'..string.rep('1',80),'number'},
+    {'--'..payload,'comment',payload},
+    {'--[=['..payload..']=]','comment',payload},
+    {string.rep(' ',80)..'\r\n','blank',string.rep(' ',80)..'\n'},
+    {'"'..payload,'invalid','"'..payload},
+    {'[=['..payload,'invalid','[=['..payload},
+    {'"'..payload..'\\q"','invalid','"'..payload..'\\q"'},
+    {'"'..payload..'\\x!"','invalid','"'..payload..'\\x!"'},
+    {'"'..payload..'\\999"','invalid','"'..payload..'\\999"'},
+    {'"'..payload..'\n','invalid','"'..payload},
+    {'--[=['..payload,'invalid','--[=['..payload},
+    {'1'..string.rep('0',80)..'e+','invalid','1'..string.rep('0',80)..'e+'},
+    {'['..string.rep('=',80)..'['..payload..']'..string.rep('=',80)..']','string',payload},
+    {'"'..payload..'\\\r\nend"','string',payload..'\nend'},
+    {'\239\187\191#'..payload..'\n','blank','\n','#'..payload},
+  }
+  local reserve,sub,concat=memory.reserve,string.sub,table.concat
+  local watching,last,first_copy,copies,joins,account=false,0,nil,0,0,nil
+  local reservations,context
+  memory.reserve=function(owner,bytes)
+    if watching and reservations then
+      reservations[#reservations+1]={used=account.used+account.reserved,bytes=bytes,work=context.machine.compile}
+    end
+    last=bytes; return reserve(owner,bytes)
+  end
+  string.sub=function(value,first,final)
+    if watching and first>0 and final and final-first+1>16 then
+      assert(last>=32+final-first+1,'tokenizer payload copied before memory admission')
+      first_copy=first_copy or account.used+account.reserved
+      copies=copies+1; last=0
+    end
+    return sub(value,first,final)
+  end
+  table.concat=function(parts,...)
+    if watching then
+      local bytes=32; for _,part in ipairs(parts) do bytes=bytes+#part end
+      assert(last>=bytes,'tokenizer joined text before memory admission')
+      joins=joins+1; last=0
+    end
+    return concat(parts,...)
+  end
+  local passed,problem=pcall(function()
+    local total_copies,total_joins,total_boundaries=0,0,0
+    for _,case in ipairs(cases) do
+      local boundary,charges
+      for attempt=1,2 do
+        account=memory.new(attempt==1 and limits.host_memory_bytes or boundary-1,0,'host_memory')
+        local owner=memory.owner(account)
+        context=admission.context(admission.new(),'lexical-memory',0)
+        parsing.begin(context); parsing.attach(owner)
+        reservations=attempt==1 and {} or nil
+        watching,last,first_copy,copies,joins=true,0,nil,0,0
+        local ok,result=pcall(function()
+          local iter,state,index=tokenize(case[1],'@lexical-memory')
+          if case[4] then assert(state.shebang_line==case[4]) end
+          local next_index,token=iter(state,index)
+          assert(next_index and token and token.token_type==case[2])
+          if case[3] then assert(token.value==case[3],'tokenizer changed decoded bytes') end
+          assert(owner.reserved>=192+5*48,'tokenizer state metadata was not admitted')
+        end)
+        watching=false; parsing.finish(); memory.close(owner,function() end)
+        assert(account.used==256 and account.reserved==0,'lexical refusal leaked temporary ownership')
+        if attempt==1 then
+          assert(ok,type(result)=='table' and result.message or tostring(result))
+          assert(first_copy,'fixture did not exercise input-sized text')
+          boundary=first_copy; total_copies=total_copies+copies; total_joins=total_joins+joins
+          charges=reservations
+        else
+          assert(not ok and result.recoverable and result.resource=='host_memory' and copies==0,
+            'one-byte-short tokenizer refusal followed payload copying')
+        end
+      end
+      -- Exercise every actual record/part/diagnostic growth boundary, not just text.
+      reservations=nil
+      for _,charge in ipairs(charges) do
+        total_boundaries=total_boundaries+1
+        account=memory.new(charge.used+charge.bytes-1,0,'host_memory')
+        local owner=memory.owner(account)
+        context=admission.context(admission.new(),'lexical-boundary',0)
+        parsing.begin(context); parsing.attach(owner)
+        local ok,e=pcall(function()
+          local iter,state,index=tokenize(case[1],'@lexical-memory'); iter(state,index)
+        end)
+        parsing.finish()
+        assert(not ok and e.recoverable and e.resource=='host_memory'
+          and e.used==charge.used and e.requested==charge.bytes
+          and context.machine.compile==charge.work,'lexical growth changed refusal order or paid work')
+        memory.close(owner,function() end)
+        assert(account.used==256 and account.reserved==0)
+      end
+    end
+    assert(total_copies>0 and total_joins>0)
+    log('TC_LEXICAL_MEMORY cases='..#cases..' boundaries='..total_boundaries..' copies='..total_copies..' joins='..total_joins)
+  end)
+  watching=false; parsing.finish()
+  memory.reserve,string.sub,table.concat=reserve,sub,concat
+  assert(passed,type(problem)=='table' and problem.message or tostring(problem))
+  log('TC_CONTRACT tokenizer-payload-admission-before-copy-join-and-one-byte-short-refusal')
+end
 function M.run()
+  lexical_memory()
   -- Durable validation must traverse the language without emitting a discarded backend.
   local format,concat,lower=string.format,table.concat,continuation.lower
   local validating,formats,joins=false,0,0
