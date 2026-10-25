@@ -45,6 +45,16 @@ Keep the pre-upgrade save and 0.1.13 ZIP for rollback; do not load a newly saved
 data are not reset. This release does **not** include the abandoned configurable
 resource-policy/durable-execution rewrite.
 
+Review also removed a duplicate authority charge from direct peripheral calls;
+non-circuit calls retain their previous work allowance without raising budgets.
+The focused regression fails before that fix and passes afterward.
+
+Known legacy verification gap: the old 0.1.1 physical-conversion fixture fails its
+exact role/color-edge assertion both against published 0.1.13 and this candidate.
+This is not a newly introduced failure, but it prevents a claim of universal
+old-save migration coverage. The populated 0.1.13 native-circuit upgrade is tested
+separately; keep old saves and their matching ZIPs rather than relying on rollback.
+
 The release combines the reviewed Ctrl-click and native-circuit changes. Its
 external verification receipt records the exact archive hash, final packaged
 engine checks, populated-save upgrade results, inherited hash-matched native UI

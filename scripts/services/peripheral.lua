@@ -222,7 +222,9 @@ function M.services(computer,tick,guard,execution)
     return invoke(name,wire,nil,method_name,...)
   end
   if guard.circuit_call then guard.circuit_call(api.call,function(name,wire)
-    local rec=lookup(name,wire); return rec and rec.kind=='logic'
+    check_name(name); network.wire(wire)
+    -- Classification is not authority; invoke performs the single charged live lookup.
+    local rec=registry.record(name); return rec and rec.kind=='logic'
   end) end
   method('find',2,function(type_name,wire)
     if type(type_name)~='string' or #type_name>limits.identifier_bytes then errors.raise('E_ARGUMENT','peripheral type required') end

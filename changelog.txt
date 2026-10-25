@@ -6,6 +6,7 @@ Date: 2026-10-25
     - Preserve native signal order and optional type/quality fields. Circuit events carry complete isolated observations without applying generic Data transfer ceilings to their signal graphs.
   Bugfixes:
     - Open the computer workspace only when Ctrl-click selects a registered computer body. Empty ground no longer opens draft recovery; Maintenance recovery and native transfers/monitor touches remain available.
+    - Keep direct non-circuit peripheral calls on their existing single authority charge; native argument classification does not repeat the charged topology lookup.
   Info:
     - Code must treat omitted signal type as item and omitted quality as normal, and must not rely on sorted reads. Native output slot limits, validation, authority, fail-safe ownership and ordinary guest/persistence budgets remain.
     - Retain existing subscriptions, pending events and output owners across upgrades without replaying start. Obsolete read caches/output mirrors are retired during synchronized gameplay.

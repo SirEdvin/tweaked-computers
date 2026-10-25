@@ -139,6 +139,19 @@ function M.run()
     ok,e=pcall(db.getLimits,db); assert(not ok and e.code=='E_ARGUMENT')]])
   db.powered=true
   report('compiled-discovery-metadata-copy-arity-unpowered-static-limits-and-zero-tuple')
+  local direct_source='return {api_version=1,handlers={start=function(e) return peripheral.call('..string.format('%q',db.id)..',"red","testGet") end}}'
+  local direct_work={}
+  for i,classify in ipairs({false,true}) do
+    local ctx=admission.context(admission.new(),c.id,game.tick)
+    local plan=assert(compiler.compile(direct_source,ctx)); local before=ctx.machine.work
+    local ok,e=compiler.run(plan,'start',{},function(g)
+      if not classify then g.circuit_call=nil end -- Reference non-circuit dispatch, with the same authority checks.
+      return runtime.services(c,game.tick,g)
+    end,ctx)
+    assert(ok,e and e.message); direct_work[i]=ctx.machine.work-before
+  end
+  assert(direct_work[1]==direct_work[2],'native classification charged a duplicate authority lookup')
+  report('direct-non-circuit-call-keeps-single-authority-charge')
   guest(c,[[local db=peripheral.find('kv_database','red'); local n=peripheral.getName(db)
     db.testSet({value=false}); local v=db.testGet(); assert(v.value==false); v.value=true
     assert(peripheral.call(n,'red','testGet').value==false)
