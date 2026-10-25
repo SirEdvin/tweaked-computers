@@ -34,6 +34,20 @@ Plan shapes:
 
 ## Remaining integration gates
 
+Snapshot preparation no longer fetches each root native field twice or copies
+already-detached normalized settings, capabilities, section inventories and shared
+group filters again. `data.measure` reuses the Data validator/byte accounting
+without allocating an output graph; section plan sizing uses it instead of making
+discarded copies. Caller-owned requests and rollback candidates still take their
+required defensive copies. Validation, work charges, capacity callbacks and result
+arity are preserved. `tests.configurator_snapshot_contract` covers single getter
+access, false values, defensive snapshots, alias copies, invalid Data and exact
+byte boundaries, and runs inside the existing native resource fixture.
+
+This removes avoidable temporary graphs; it does not supply the transaction hook,
+pre-effect native/readback peaks, durable result reservation or recovery ownership.
+Guest mutations remain fail-closed until those requirements are implemented.
+
 1. Supply and exercise `commit_configuration` through the real durable runtime, not the fixture double. Reprove computer-to-configurator authority/power/run identity on every resume as well as the target-side proof inside the callback. Insufficient full-slice commit work must refuse with setting guidance, not retry forever. The existing fixture only establishes host-side staging, revalidation and native effects.
 2. Common byte-bounded `data.copy` now removes the former node/string/table shape ceilings, and durable result copying retains its paid cursor. Configurator copies pass effective `host_memory_bytes`, rather than the removed 16 KiB configuration cap. The strict `tests.configurator_large_engine` crosses 33 native sections; its original shared 64 KiB fallback failure is historical, not a current refusal oracle. Native schema metadata still repeats per section and contributes to retained size; this does not prove transaction peak admission or close aggregate ownership task 2.2.
 3. Validation is incremental, but initial Data copying, native normalization and complete snapshots still contain indivisible work. Target traversal and inspector projection remain complete synchronous observations with work charging. They no longer have independent graph ceilings, but a durable read/traversal cursor and retained-host admission are still required for observations that cannot fit a slice. `inspect(rec,tick,spend)` returns both colors together or errors; never publish a partially gathered color or a partial unique count. UI must expose pending/stale state.

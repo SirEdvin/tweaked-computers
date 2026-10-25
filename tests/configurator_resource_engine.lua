@@ -8,6 +8,7 @@ local sections=require('scripts.configuration.sections')
 local validation=require('scripts.configuration.validation')
 local catalog=require('scripts.configuration.catalog')
 local service=require('scripts.services.configurator')
+local snapshot_contract=require('tests.configurator_snapshot_contract')
 local M={}; local loaded=false
 local function nop() end
 local function state() return storage.configurator_resource_fixture end
@@ -92,6 +93,7 @@ end
 function M.run()
   registry.initialize(); game.forces.player.research_all_technologies()
   storage.configurator_resource_fixture={groups=0,phase='armed'}
+  snapshot_contract.run(report)
   local cfg=assert(lifecycle.build(create(defs.devices.configurator.entity_name,0,0)))
   cfg.powered=true; lifecycle.power_entity(cfg).energy=defs.devices.configurator.watts/30
   state().cfg=cfg.id

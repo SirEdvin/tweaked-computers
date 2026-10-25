@@ -67,7 +67,8 @@ function M.capabilities(item,spend)
   if not reason and not writable then reason='no_writable_native_settings' end
   local caps={api_version=1,behavior=class,settings=settings,observations=observations,
     sections={supported=class=='LuaConstantCombinatorControlBehavior',fields=validation.public(catalog.section_fields),limits={}},reason=reason}
-  return (data.copy(caps,spend,limits.host_memory_bytes))
+  data.measure(caps,spend,limits.host_memory_bytes)
+  return caps
 end
 local function read_snapshot(item,spend)
   spend(256)
@@ -75,8 +76,7 @@ local function read_snapshot(item,spend)
   for _,name in ipairs(sorted(catalog.schemas[class] or {})) do
     local schema=catalog.schemas[class][name]
     if schema.readable and not (unavailable(item,class,name)=='rail_chain_signal_only') then
-      local value=cb and cb[name] or nil
-      -- Do not use and/or for false values.
+      local value
       if cb then value=cb[name] end
       local normal=validation.normal(schema,value)
       if normal==nil then result.unset[#result.unset+1]=name else result.values[name]=normal end
@@ -84,7 +84,7 @@ local function read_snapshot(item,spend)
     end
   end
   if cb then local ok,value=pcall(function() return cb.disabled end); if ok and type(value)=='boolean' then result.observations.disabled=value end end
-  return data.copy(result,spend,limits.host_memory_bytes)
+  return result,data.measure(result,spend,limits.host_memory_bytes)
 end
 function M.snapshot(item,spend) return (read_snapshot(item,spend)) end
 -- Signals/modes first, activation switches last; alphabetical within each rank.

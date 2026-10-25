@@ -43,7 +43,8 @@ function M.get(item,spend)
   if cb then
     for i=1,cb.sections_count do result[#result+1]=read(assert(cb.get_section(i)),spend) end
   end
-  return (data.copy(result,spend,limits.host_memory_bytes))
+  data.measure(result,spend,limits.host_memory_bytes)
+  return result
 end
 local function group_snapshot(item,name,spend)
   if not name or name=='' then return nil end
@@ -58,7 +59,8 @@ local function group_snapshot(item,name,spend)
     end
   end
   -- Native members are observation-only LuaObjects, never part of a saved plan.
-  return (data.copy(filters,spend,limits.host_memory_bytes))
+  data.measure(filters,spend,limits.host_memory_bytes)
+  return filters
 end
 local function fields(value,spend,patch,cursor)
   cursor=cursor or {}
@@ -165,7 +167,7 @@ function M.prepare_set(item,origin,i,patch,spend,cursor)
   if values.filters~=nil and final_group~='' then errors.raise('E_SHARED_SCOPE','shared filter writes refused; explicitly detach first') end
   local incoming=values.group~=before.group and group_snapshot(item,values.group,spend) or nil
   -- Reserve bounded setter + readback + restoration including saved effective filters.
-  local _,stats=data.copy({before=before_all,request=request,incoming=incoming},spend,limits.host_memory_bytes)
+  local stats=data.measure({before=before_all,request=request,incoming=incoming},spend,limits.host_memory_bytes)
   return {id=item.id,operation='set',index=i,values=values,request=request,before=before_all,
     incoming=incoming,work=stats.bytes*3+stats.nodes*4+(#before.filters+#(values.filters or {})+#(incoming or {}))*64+1024}
 end
@@ -205,7 +207,7 @@ function M.prepare_add(item,origin,definition,spend,cursor)
 
   if (values.group or '')~='' and values.filters~=nil then errors.raise('E_SHARED_SCOPE','group assignment cannot write shared contents') end
   local incoming=group_snapshot(item,values.group,spend)
-  local _,stats=data.copy({before=before,request=request,incoming=incoming},spend,limits.host_memory_bytes)
+  local stats=data.measure({before=before,request=request,incoming=incoming},spend,limits.host_memory_bytes)
   local cb=control(item,false); local absent=not cb
   return {id=item.id,operation='add',values=values,request=request,before=before,
     incoming=incoming,work=stats.bytes*3+stats.nodes*4+(#(values.filters or {})+#(incoming or {}))*64+1024+(absent and 16384 or 0)}
@@ -241,7 +243,7 @@ function M.prepare_remove(item,origin,i,spend)
   index(i); guard(item,origin)
   local before=M.get(item,spend)
   if before[i] and not before[i].is_manual then errors.raise('E_READ_ONLY','nonmanual section protected') end
-  local _,stats=data.copy(before,spend,limits.host_memory_bytes)
+  local stats=data.measure(before,spend,limits.host_memory_bytes)
   local filter_count=0; for _,s in ipairs(before) do filter_count=filter_count+s.filters_count end
   return {id=item.id,operation='remove',index=i,request={remove=i},before=before,
     work=stats.bytes*3+stats.nodes*4+filter_count*64+#before*128+1024}

@@ -2,7 +2,7 @@
 local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
 local M = {}
-function M.copy(value, spend, ceiling, on_capacity)
+local function traverse(value, spend, ceiling, on_capacity, copying)
   local stats, seen = {bytes=0,nodes=0}, {}
   local function charge(n)
     if spend then spend(n) end
@@ -26,7 +26,7 @@ function M.copy(value, spend, ceiling, on_capacity)
     elseif typ~='table' or getmetatable(v)~=nil then errors.raise('E_ARGUMENT','plain nonnil Data required') end
     if seen[v] then errors.raise('E_ARGUMENT','cyclic Data is not persistable') end
     seen[v]=true; charge(16)
-    local result,kind,count,max={},nil,0,0
+    local result,kind,count,max=copying and {} or nil,nil,0,0
     for k,x in pairs(v) do
       count=count+1
       local kt=type(k)
@@ -36,13 +36,23 @@ function M.copy(value, spend, ceiling, on_capacity)
         max=math.max(max,k); charge(8)
       else errors.raise('E_ARGUMENT','Data keys must be strings or dense indexes') end
       if kind and kind~=kt then errors.raise('E_ARGUMENT','Data arrays and maps cannot mix') end
-      kind=kt; result[k]=visit(x,depth+1)
+      kind=kt
+      local child=visit(x,depth+1)
+      if copying then result[k]=child end
     end
     if kind=='number' and max~=count then errors.raise('E_ARGUMENT','Data array must be dense') end
     seen[v]=nil; return result
   end
   local result=visit(value,0)
   return result,stats
+end
+function M.copy(value, spend, ceiling, on_capacity)
+  return traverse(value,spend,ceiling,on_capacity,true)
+end
+-- Validate and size an already-detached graph without building a discarded copy.
+function M.measure(value, spend, ceiling, on_capacity)
+  local _,stats=traverse(value,spend,ceiling,on_capacity,false)
+  return stats
 end
 function M.key(key)
   if type(key)~='string' or #key==0 or #key>limits.identifier_bytes then errors.raise('E_ARGUMENT','bounded nonempty state key required') end
