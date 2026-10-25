@@ -78,7 +78,7 @@ local function verify(tick)
   local a=logic.inspect(rec('logic'),tick,function(n) cost=cost+n end)
   log('TC_INSPECTOR_LOGIC_WORK '..cost)
   local found={}
-  for _,entry in ipairs(a.red) do found[entry.signal.type..'/'..entry.signal.quality]=entry.count end
+  for _,entry in ipairs(a.red) do found[(entry.signal.type or 'item')..'/'..(entry.signal.quality or 'normal')]=entry.count end
   assert(found['virtual/normal']==11 and found['item/normal']==2147483647 and found['recipe/normal']==-2147483648)
   if script.active_mods.quality then assert(found['item/uncommon']==4) end
   assert(#a.green==1 and a.green[1].count==-7)

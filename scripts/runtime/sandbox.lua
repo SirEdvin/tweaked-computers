@@ -7,6 +7,9 @@ function M.new(context, services, shell)
   local G = {shell_enabled=shell~=nil}
   local poison, line, column, depth = nil, 1, 1, 0
   local owned = setmetatable({}, {__mode='k'})
+  local circuit_arrays = setmetatable({}, {__mode='k'})
+  local circuit_strings = {}
+  local circuit_calls = setmetatable({}, {__mode='k'})
   local protected = setmetatable({}, {__mode='k'})
   local callable = setmetatable({}, {__mode='k'})
   local handle_arguments = setmetatable({}, {__mode='k'}) -- Host-only opt-in, not Data.
@@ -90,7 +93,7 @@ function M.new(context, services, shell)
   function G.scalar(v)
     G.spend(1)
     local typ=type(v)
-    if typ=='string' then string_value(v); G.spend(#v)
+    if typ=='string' then if not circuit_strings[v] then string_value(v) end; G.spend(#v)
     elseif typ=='table' then if not owned[v] and not protected[v] then fail('untrusted value') end
     elseif typ=='function' then if not callable[v] then fail('untrusted function') end
     elseif typ~='number' and typ~='boolean' and typ~='nil' then fail('untrusted value') end
@@ -196,13 +199,16 @@ function M.new(context, services, shell)
       if pair then
         local t,k,v=pair[1],pair[2],values[i]
         plain(t); key(k)
-        if not staged[t] then staged[t]={count=inventory(t),keys={}} end
+        if not staged[t] then staged[t]={keys={},delta=0} end
         local state=staged[t]
         local present=state.keys[k]
         if present==nil then present=t[k]~=nil end
-        if (v~=nil)~=present then state.count=state.count+(v~=nil and 1 or -1) end
+        if v~=nil and not present then
+          if not state.count then state.count=inventory(t) end
+          state.delta=state.delta+1
+        elseif v==nil and present then state.delta=state.delta-1 end
         state.keys[k]=v~=nil
-        if state.count>limits.table_entries then errors.raise('E_LIMIT','table growth exceeded') end
+        if state.count and state.count+state.delta>limits.table_entries then errors.raise('E_LIMIT','table growth exceeded') end
       end
     end
     -- Publication is statically emitted native writes after complete preflight.
@@ -223,7 +229,7 @@ function M.new(context, services, shell)
   function G.length(v)
     G.spend(1)
     if type(v)=='string' then string_value(v); return #v end
-    plain(v); inventory(v); return #v
+    plain(v); if not circuit_arrays[v] then inventory(v) end; return #v
   end
   function G.concat(...)
     local n=select('#',...); integer(n,0,limits.tuple_entries)
@@ -275,6 +281,26 @@ function M.new(context, services, shell)
     if stats.bytes>limits.peripheral_call_bytes then errors.raise('E_LIMIT','Data snapshot byte limit exceeded') end
     return result
   end
+  local function adopt_signals(signals)
+    owned[signals]=true; circuit_arrays[signals]=true
+    for _,entry in ipairs(signals) do
+      owned[entry]=true; owned[entry.signal]=true
+      for _,v in pairs(entry.signal) do if type(v)=='string' then circuit_strings[v]=true end end
+    end
+  end
+  -- Only the closed Logic provider transfers fresh, detached native records.
+  function G.circuit_result(signals)
+    local frame=assert(service_frames[#service_frames],'circuit result outside service')
+    adopt_signals(signals)
+    frame.circuit_result=signals
+    return signals
+  end
+  function G.circuit_event(event)
+    owned[event]=true; owned[event.connected]=true; owned[event.previous_connected]=true
+    for _,field in ipairs({'previous','current','changes'}) do adopt_signals(event[field]) end
+    return event
+  end
+  function G.circuit_call(fn,classify) circuit_calls[fn]=classify end
   function G.namespace(entries,label)
     G.spend(1); allocate(1)
     local proxy={}; protected[proxy]=entries
@@ -300,14 +326,17 @@ function M.new(context, services, shell)
     prepare_return(service.wrapper)
     service.empty_result=true
   end
-  function G.service(fn)
+  function G.service(fn,circuit)
     local wrapper
     wrapper=function(...)
       G.spend(1) -- Must precede trusted service's authority/admission/effect boundary.
       local n=select('#',...); integer(n,0,limits.tuple_entries)
       local args=table.pack(...)
+      local circuit_request=circuit or circuit_calls[fn] and circuit_calls[fn](...)
       for i=1,n do
-        if not (handle_arguments[fn]==i and type(args[i])=='table' and protected[args[i]]) then
+        if circuit_request then
+          if type(args[i])=='table' then plain(args[i]) else G.scalar(args[i]) end
+        elseif not (handle_arguments[fn]==i and type(args[i])=='table' and protected[args[i]]) then
           args[i]=G.snapshot(args[i])
         end
       end
@@ -323,7 +352,7 @@ function M.new(context, services, shell)
         if result.n~=1 or type(result[1])~='boolean' then fatal('trusted boolean service contract violated') end
       else
         for i=1,result.n do
-          if not (type(result[i])=='table' and protected[result[i]]) then result[i]=G.snapshot(result[i]) end
+          if not (type(result[i])=='table' and (protected[result[i]] or result[i]==frame.circuit_result)) then result[i]=G.snapshot(result[i]) end
         end
       end
       G.check()
@@ -437,7 +466,7 @@ function M.new(context, services, shell)
   end
   env.pairs=function(t) plain(t); G.spend(1); return env.next,t,nil end
   local function ipairs_next(t,i)
-    plain(t); integer(i,0,limits.table_entries); G.spend(1)
+    plain(t); integer(i,0,circuit_arrays[t] and 9007199254740990 or limits.table_entries); G.spend(1)
     i=i+1; if t[i]~=nil then return i,t[i] end
     return nil -- Lua 5.2 iterator termination has one nil result, not zero.
   end

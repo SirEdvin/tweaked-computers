@@ -12,7 +12,7 @@ Discovery red is independent of the explicit INPUT selection red or green.
 | Signature | Exact returns |
 | --- | --- |
 | `io.readSignal(input, signal)` | Int32, absent gives 0 |
-| `io.readSignals(input)` | Defensive canonical nonzero Signal array |
+| `io.readSignals(input)` | Complete fresh native Signal array, in native order |
 | `io.getInputStatus()` | `{red_connected=boolean, green_connected=boolean}` from actual INPUT edges |
 | `io.getOutput()` | Defensive Signal array of this handler's configured contribution only |
 | `io.setOutput(signals)` | None; complete bank replacement and writer transfer |
@@ -23,10 +23,12 @@ Discovery red is independent of the explicit INPUT selection red or green.
 
 Strict dot calls; extra arguments/unknown options fail. `input` is exactly red
 or green; missing, `both` and other selectors are refused before registration.
-A SignalId is `{type="item"/"fluid"/"virtual"/"recipe", name=prototype,
-quality=quality_name?}`; a Signal is `{signal=SignalId,count=Int32}`. Type/name and
-quality must exist. Quality defaults normal and is explicit on readback. No
-wildcards or count coercion. Complete identities sort by type/name/quality.
+A SignalId is `{type=native_type?, name=prototype, quality=quality_name?}`;
+a Signal is `{signal=SignalId,count=Int32}`. Native types include item, fluid,
+virtual, recipe, entity, space-location, asteroid-chunk and quality. Missing type
+means item; missing quality means normal. Reads preserve optional fields and
+native order, without sorting, normalization or a stable-order guarantee.
+Caller-supplied prototypes/qualities must exist; wildcards and count coercion fail.
 
 Recipe names are exact installed recipe prototype names, including recipes added
 by other mods; they need not match the recipe's output item. An item and recipe
@@ -69,7 +71,7 @@ connectivity. Within-tick transients are not observed.
 | input | red / green |
 | sample_tick | Tick of observation, not callback dispatch |
 | initial, resync | booleans |
-| previous, current | canonical Signal arrays |
+| previous, current | complete selected native Signal arrays, with optional identity fields |
 | changes | array of `{signal=SignalId, previous=Int32, current=Int32}` |
 | previous_connected, connected | maps with selected red/green boolean keys only |
 
@@ -99,20 +101,30 @@ recovery and clears output; never assume a callback-wide factory transaction.
 
 ## Bounds and use
 
-Initial caps: 64 signal slots per selected input snapshot/output; 64 filter signals;
-64 subscriptions per computer shared with general registrations; 128 sampled
-handlers; 1,024 aggregate subscriptions; 128 owned banks. Sample interval 1 tick,
-fail-safe target 1 tick, notification/topology ceiling 60 ticks is provisional.
-Since 0.1.13, native calls and actual returned signals are charged, not every
-installed prototype/quality. A small chest input does not cost more because an
-unrelated mod adds recipes. The 64-signal ceiling, supported signal identities,
-validation, copying and sorting remain. Queue overflow or sampling/notification
-maintenance refusal visibly faults affected runs, not silently loses history.
-Other native signal categories remain unsupported and are refused, not filtered out.
-Independent subscriptions on multiple colors/devices still share the unchanged
-maintenance budget; admission refusal faults the run visibly, never silently
-misses updates. Native enumeration materializes its list before size/type checks;
-the call charge is not a universal native CPU-time or allocation bound.
+No mod-defined signal, filter, output-slot or prototype-name ceiling applies.
+Every read and registration baseline queries the selected native input afresh.
+Own-output reads use native configuration, never combined network totals or a
+stored mirror. Output must fit the native section's uint16 slot-index domain.
+Subscriptions retain 64 registrations per computer and 1,024 globally, checked
+when registering; no separate sampled-device or owned-bank allowance remains.
+Sample interval is 1 tick; the provisional notification/topology allowance is 60.
+
+Direct results and circuit-event signal graphs bypass generic Data transfer
+ceilings. Events still consume queue entries and envelope bytes; overflow faults
+the run and clears owned output. The queue byte counter is not total native
+snapshot memory. Guest loops, arbitrary table growth, string operations, explicit
+state/KV writes and Console persistence retain their ordinary protections.
+Replacing existing entries of a native array does not impose the old width gate.
+Mutated output/filter requests are validated again. Event mutation cannot affect
+another subscriber or its baseline. Fixed call charges do not prove a universal
+native CPU or memory bound.
+
+Compatibility: code relying on sorted arrays or explicit defaults must use
+effective identities: `(s.type or "item", s.name, s.quality or "normal")`.
+Existing accepted observations, subscriptions and native owners survive load
+without replay; obsolete caches are retired during synchronized gameplay.
+Back up saves before upgrading. Rollback requires the prior package and a
+pre-upgrade backup, not loading a newly saved world in the old package.
 
 Use [logic-controller](../examples.md#logic-controller) and the
 [first inserter tutorial](../first-controller.md). If reads stay zero, check chest

@@ -97,14 +97,15 @@ local function handler(rec,name)
   if type(name)~='string' or not M.check_active(rec) or rec.active.handlers[name]~=true then errors.raise('E_ARGUMENT','declared handler name required') end
   return name
 end
-function M.subscribe(rec,event_name,handler_name,details,spend)
+function M.subscribe(rec,event_name,handler_name,details,spend,circuit)
   -- Trusted providers may register their own documented event kinds here;
   -- computer.on below separately restricts the guest general-event surface.
   handler(rec,handler_name)
   if type(event_name)~='string' or #event_name==0 or #event_name>limits.identifier_bytes then errors.raise('E_ARGUMENT','bounded event name required') end
   if spend then spend(limits.registry_entries+limits.aggregate_subscriptions+limits.subscriptions+1) end
   local copied
-  if details~=nil then copied=data.copy(details,spend) end
+  if circuit then copied=details -- Closed Logic provider owns its validated request and fresh baseline.
+  elseif details~=nil then copied=data.copy(details,spend) end
   local total=0; for _,c in pairs(root().computers) do total=total+count(c.subscriptions) end
   if count(rec.subscriptions)>=limits.subscriptions or total>=limits.aggregate_subscriptions then errors.raise('E_CAPACITY','subscription capacity reached') end
   local seq=registry.sequence(); local id=rec.run_id..'/sub-'..string.format('%.0f',seq)
@@ -121,13 +122,29 @@ function M.prepare_event(rec,name,payload,tick,spend,metadata)
   if rec.status~='running' then return false,'inactive' end
   handler(rec,name)
   if not rec.powered and payload.name~='timer' and payload.name~='start' then return false,'unpowered' end
-  local event,stats=data.copy(payload,spend,limits.event_queue_bytes)
+  local circuit=metadata and metadata.circuit==true
+  local envelope=payload
+  if circuit then
+    envelope={}
+    for k,v in pairs(payload) do if k~='previous' and k~='current' and k~='changes' then envelope[k]=v end end
+  end
+  local event,stats=data.copy(envelope,spend,limits.event_queue_bytes)
+  if circuit then
+    -- Native graphs have independent owners but do not consume guest payload bytes.
+    for _,field in ipairs({'previous','current','changes'}) do
+      local copied={}; event[field]=copied
+      for i,e in ipairs(payload[field]) do
+        local s=e.signal
+        copied[i]={signal={type=s.type,name=s.name,quality=s.quality},count=e.count,previous=e.previous,current=e.current}
+      end
+    end
+  end
   if type(event)~='table' or type(event.name)~='string' then errors.raise('E_ARGUMENT','named event payload required') end
   if stats.nodes+7>limits.data_nodes then errors.raise('E_LIMIT','event leaves no room for envelope metadata') end
   -- Host overrides all authoritative envelope fields, never trusts injected ones.
   event.tick=tick; event.computer_id=rec.id; event.run_id=rec.run_id
   local bytes=stats.bytes+128+#rec.id+#rec.run_id
-  return {handler=name,event=event,bytes=bytes,timer_id=metadata and metadata.timer_id}
+  return {handler=name,event=event,bytes=bytes,timer_id=metadata and metadata.timer_id,circuit=circuit or nil}
 end
 -- Immediate trusted publication of an owned, prepaid prepare_event result.
 function M.publish_event(rec,item,tick)

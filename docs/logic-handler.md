@@ -45,7 +45,7 @@ selected discovery wire for authority; its shared physical bank is not split by 
 | Method | Result |
 | --- | --- |
 | `readSignal(input, signal)` | Signed-32-bit integer; absent is 0 |
-| `readSignals(input)` | Defensive canonical nonzero `Signal[]` |
+| `readSignals(input)` | Complete fresh native `Signal[]`, with native order and optional fields |
 | `getInputStatus()` | `{red_connected=boolean, green_connected=boolean}` from real input edges |
 | `getOutput()` | Defensive configured contribution, not other native contributors |
 | `setOutput(signals)` | Zero return values; complete replacement and writer transfer |
@@ -54,13 +54,14 @@ selected discovery wire for authority; its shared physical bank is not split by 
 | `unsubscribe(id)` | Boolean; removes this binding's registration and queued samples |
 | `getLimits()` | Defensive shared caps plus logic-specific limits |
 
-Signal: `{signal={type="item"|"fluid"|"virtual"|"recipe",name=prototype,quality="normal"},count=integer}`.
-Quality may be omitted on input and defaults to normal. Returned identities always
-include type/name/quality. Prototype and quality must exist; ordinary wildcards are
-refused. Counts are -2147483648 through 2147483647 without coercion. Reads observe
-one selected circuit, retaining native signed32 sums without combining colors.
-Normal/uncommon copies of an item never merge. Lists sort by type/name/
-quality. Duplicate normalized identities (including duplicate zeros) are rejected
+Signal: `{signal={type=native_type?,name=prototype,quality=quality_name?},count=integer}`.
+Missing type means item; missing quality means normal. Native records keep those
+fields optional and are neither normalized nor sorted. All native signal categories
+are available. Caller-supplied prototypes/qualities must exist; wildcards fail.
+Counts are -2147483648 through 2147483647 without coercion. Each read queries the
+selected native circuit afresh, preserving its values, sequence and fields without
+combining colors. Normal/uncommon copies of an item never merge.
+Duplicate effective identities (including duplicate zeros) are rejected
 before mutation; zero output entries are omitted. Failed validation/admission keeps
 both old bank and old writer. Output uses a private manual native section, staged
 inactive, verified then enabled. Unexpected engine failure restores the prior bank;
@@ -107,23 +108,26 @@ suppress cleanup. New placement/clones start with empty bank/no owner.
 
 ## Bounds and failures
 
-Initial development ceilings: 64 signal slots per selected input snapshot/output,
-64 filter identities, 64 subscriptions per computer, 128 sampled handlers, 1024
-aggregate subscriptions and 128 owned banks. Sampling interval is 1; fail-safe
-latency is 1 tick under the safety envelope. Notification latency reports the shared
-60-tick scheduler/topology ceiling, not guaranteed real-time latency under an
-oversubscribed world. Limits are queried through getLimits and are not yet frozen
-release tuning. The integrated envelope remains a downstream acceptance gate.
+Native input cardinality determines the complete result; there is no mod-defined
+signal/name/filter/output count ceiling. Native output slot-index and signed-count
+domains still apply. Own output is read from its native section, not a cached bank.
+Registration counts remain 64 per computer and 1024 globally, admitted only when
+registering. There is no distinct sampled-handler or owned-output quota.
+Sampling interval is 1; the 60-tick notification/topology allowance is provisional.
 
-Since 0.1.13, connected-input reads admit the native call and charge its actual
-returned tuple count, identity validation, copying and sorting. They do not charge
-the installed prototype × quality universe. Disconnected inputs avoid the native
-list query; single-signal reads keep their direct native lookup. More than 64
-actual input signals still refuses the whole snapshot, never a partial prefix.
-Unsupported native signal categories still refuse rather than being filtered out.
-Native enumeration materializes its list before Lua can inspect its size; neither
-the fixed call charge nor the copy-work weights bound opaque C++ CPU time or
-allocation. Refresh throttling and shared work/Data admission remain in effect.
+Circuit result, baseline and event signal graphs do not pass through generic Data
+size admission. Only queue entries and event envelopes consume circuit backlog
+capacity; queue bytes therefore do not measure total circuit snapshot memory.
+Guest execution, arbitrary allocation, string operations, explicit state/KV and
+Console persistence retain their ordinary limits. Native-array non-growing edits
+are supported, but mutated requests must pass caller validation. Native work and
+heap use depend on the actual circuit: fixed call charges are not a universal bound.
+
+Use effective identities `(type or "item", name, quality or "normal")`, not array
+positions or always-present defaults. Accepted subscriptions, queued observations
+and native ownership survive reload without replay. Obsolete read/output caches
+are retired during synchronized gameplay, never during on_load. Back up before
+upgrading; rollback uses the previous package and a pre-upgrade save backup.
 
 Argument/domain/capacity/unpowered/path failures are ordinary catchable ApiErrors.
 Queue overflow visibly faults the computer and clears its exact owned outputs.

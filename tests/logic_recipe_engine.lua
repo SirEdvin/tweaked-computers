@@ -110,7 +110,7 @@ function M.on_tick(event)
   if x.phase=='frozen' then
     if not loaded then return end
     unchanged(); loaded=false
-    assert(c.state.boots==1 and io.output_bank[2].signal.type=='recipe')
+    assert(c.state.boots==1 and logic.inspect_output(io,function() end)[1].signal.type=='recipe')
     put(x.red,{{signal=recipe(),count=20},{signal={type='item',name='iron-plate'},count=99}})
     x.phase='resume'; x.resumed=event.tick
   else loaded=false end
@@ -132,15 +132,16 @@ function M.on_tick(event)
     assert(e.initial and #e.current==1 and e.current[1].signal.type=='recipe' and e.current[1].count==12)
     assert(e.changes[1].previous==0 and e.changes[1].current==12)
     log('TC_RECIPE_NATIVE_INPUT '..serpent.line(io.children.input.get_signals(defines.wire_connector_id.circuit_red)))
-    local sampled,bank,owner=io.logic_sample,io.output_bank,io.output_owner
+    local sampled,bank,owner=io.logic_sample,logic.inspect_output(io,function() end),io.output_owner
     local observed=logic.inspect(io,event.tick,function() end)
     local identities={}
-    for _,entry in ipairs(observed.red) do identities[entry.signal.type..'/'..entry.signal.name..'/'..entry.signal.quality]=entry.count end
+    for _,entry in ipairs(observed.red) do identities[(entry.signal.type or 'item')..'/'..entry.signal.name..'/'..(entry.signal.quality or 'normal')]=entry.count end
     assert(identities['item/iron-plate/normal']==99 and identities['recipe/iron-plate/normal']==12)
     assert(identities['recipe/copper-plate/normal']==-2147483648)
-    assert(#observed.output==2 and observed.output[2].signal.type=='recipe' and observed.output[2].count==7)
-    observed.output[2].signal.name='changed'; observed.output[2].count=0
-    assert(io.logic_sample==sampled and io.output_bank==bank and io.output_owner==owner and bank[2].signal.name=='iron-plate' and bank[2].count==7)
+    assert(#observed.output==2 and observed.output[1].signal.type=='recipe' and observed.output[1].count==7)
+    observed.output[1].signal.name='changed'; observed.output[1].count=0
+    assert(io.logic_sample==sampled and serpent.line(logic.inspect_output(io,function() end))==serpent.line(bank) and io.output_owner==owner)
+    assert(bank[1].signal.name=='iron-plate' and bank[1].count==7)
     probe(c,[[assert(p.readSignal('red',{type='recipe',name='iron-plate'})==12)
       assert(p.readSignal('green',{type='recipe',name='iron-plate'})==-5)
       assert(p.readSignal('red',{type='item',name='iron-plate'})==99)
@@ -150,10 +151,9 @@ function M.on_tick(event)
       assert(p.readSignal('red',{type='recipe',name='steel-plate'})==0)
       local kinds={}
       for _,wire in ipairs({'red','green'}) do
-      local all=p.readSignals(wire); local last=''
+      local all=p.readSignals(wire)
       for _,s in ipairs(all) do
-        local key=s.signal.type..'/'..s.signal.name..'/'..s.signal.quality
-        assert(key>last); last=key; kinds[s.signal.type]=true
+        local kind=s.signal.type or 'item'; kinds[kind]=true
         if s.signal.type=='recipe' and s.signal.name=='iron-plate' and s.signal.quality=='normal' then assert(s.count==(wire=='red' and 12 or -5)) end
         if s.signal.type=='recipe' and s.signal.name=='copper-plate' then assert(s.count==(wire=='red' and -2147483648 or 1)) end
       end
@@ -168,22 +168,22 @@ function M.on_tick(event)
       local ok,e=pcall(p.readSignals); assert(not ok and e.code=='E_ARGUMENT')
       ok,e=pcall(p.readSignal,nil,{type='recipe',name='iron-plate'}); assert(not ok and e.code=='E_ARGUMENT')
       ok,e=pcall(p.subscribe,{},'changed'); assert(not ok and e.code=='E_ARGUMENT')
-      local out=p.getOutput(); assert(#out==2 and out[1].signal.type=='item' and out[2].signal.type=='recipe')
-      out[2].count=999; assert(p.getOutput()[2].count==7)
+      local out=p.getOutput(); assert(#out==2 and (out[2].signal.type or 'item')=='item' and out[1].signal.type=='recipe')
+      out[1].count=999; assert(p.getOutput()[1].count==7)
       local ok,err=pcall(p.setOutput,{{signal={type='recipe',name='tc-missing-recipe'},count=1}})
       assert(not ok and err.code=='E_RANGE')
       ok,err=pcall(p.readSignal,'red',{type='recipe',name='tc-missing-recipe'}); assert(not ok and err.code=='E_RANGE')
       ok,err=pcall(p.setOutput,{{signal={type='recipe',name='iron-plate'},count=1},{signal={type='recipe',name='iron-plate',quality='normal'},count=2}})
-      assert(not ok and err.code=='E_ARGUMENT' and p.getOutput()[2].count==7)
+      assert(not ok and err.code=='E_ARGUMENT' and p.getOutput()[1].count==7)
       ok,err=pcall(p.setOutput,{{signal={type='recipe',name='iron-plate',quality='tc-missing-quality'},count=1}})
-      assert(not ok and err.code=='E_RANGE' and p.getOutput()[2].count==7)
+      assert(not ok and err.code=='E_RANGE' and p.getOutput()[1].count==7)
       ok,err=pcall(p.subscribe,{input='red',signals={{type='recipe',name='tc-missing-recipe'}}},'changed')
       assert(not ok and err.code=='E_RANGE')
       ok,err=pcall(p.subscribe,{input='red',signals={{type='recipe',name='iron-plate'},{type='recipe',name='iron-plate',quality='normal'}}},'changed')
       assert(not ok and err.code=='E_ARGUMENT')
       local many={}; for i=1,65 do many[i]={signal={type='recipe',name='iron-plate'},count=i} end
-      ok,err=pcall(p.setOutput,many); assert(not ok and err.code=='E_ARGUMENT' and p.getOutput()[2].count==7)
-      ok,err=pcall(p.readSignal,'red',{type='entity',name='inserter'}); assert(not ok and err.code=='E_ARGUMENT')]])
+      ok,err=pcall(p.setOutput,many); assert(not ok and err.code=='E_ARGUMENT' and p.getOutput()[1].count==7)
+      assert(p.readSignal('red',{type='entity',name='inserter'})==0)]])
     if script.active_mods.quality then
       probe(c,[[assert(p.readSignal('green',{type='recipe',name='iron-plate',quality='uncommon'})==4)
         assert(p.readSignal('red',{type='recipe',name='iron-plate',quality='uncommon'})==0)
@@ -214,13 +214,13 @@ function M.on_tick(event)
     prototypes=original; assert(measured,problem)
     -- Refuse before the native call; ownership and the old bank stay intact.
     local expected=32
-    local first; local refusal={code='E_BUDGET'}; local old_bank=io.output_bank; local old_owner=io.output_owner
+    local first; local refusal={code='E_BUDGET'}; local old_bank=serpent.line(logic.inspect_output(io,function() end)); local old_owner=io.output_owner
     local api=peripheral.services(c,event.tick,{check=function() end,accept_handle=function() end,spend=function(n)
       if n==expected then first=n; error(refusal,0) end
     end}).peripheral
     local ok,problem=pcall(api.call,io.id,'red','readSignals','red')
     assert(not ok and problem==refusal and first==expected,'native call entered without work admission')
-    assert(io.output_bank==old_bank and io.output_owner==old_owner)
+    assert(serpent.line(logic.inspect_output(io,function() end))==old_bank and io.output_owner==old_owner)
     -- The reported Console path, through real submission/authority/dispatch;
     -- only the player and native GUI objects are table-backed fixtures.
     player=players.player(8101,c.body)
@@ -228,7 +228,7 @@ function M.on_tick(event)
     with_player(function()
       gui.content.selected_tab_index=2; editor.on_tab{player_index=player.index,element=gui.content,tick=event.tick}
       local input=gui.content.console.prompt.command
-      input.text='p=peripheral.wrap("'..io.id..'","red"); for _,s in ipairs(p.readSignals("red")) do print(s.signal.type,s.signal.name,s.signal.quality,s.count) end'
+      input.text='p=peripheral.wrap("'..io.id..'","red"); for _,s in ipairs(p.readSignals("red")) do print(s.signal.type or "item",s.signal.name,s.signal.quality or "normal",s.count) end'
       editor.on_text{player_index=player.index,element=input,tick=event.tick}
       editor.on_confirmed{player_index=player.index,element=input,tick=event.tick}
       assert(input.text=='','recipe Console ingress refused')
@@ -248,14 +248,14 @@ function M.on_tick(event)
       wire='red',input='both',previous={},connected={},initial=true},function() end)
     assert(runtime.enqueue(legacy,'changed',{name='signal_changed',input='both'},event.tick))
     x.legacy_armed=true
-    x.phase='frozen'; x.snapshot=snapshot()
+    x.phase='frozen'; x.snapshot=snapshot(); x.native_bank=serpent.line(logic.inspect_output(io,function() end))
     log('TC_CONTRACT recipe-native-mixed-read-write-filter-quality-refusal-and-admission')
     game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
   elseif x.phase=='resume' and c.state.events>x.snapshot.events then
     local e=c.state.last
     assert(not e.initial and #e.current==1 and e.current[1].signal.type=='recipe' and e.current[1].count==20)
     assert(e.changes[1].previous==12 and e.changes[1].current==20 and c.state.boots==1)
-    assert(c.run_id==x.snapshot.run and io.output_bank==x.snapshot.bank and io.output_owner==x.snapshot.owner)
+    assert(c.run_id==x.snapshot.run and serpent.line(logic.inspect_output(io,function() end))==x.native_bank and io.output_owner==x.snapshot.owner)
     put(x.red,{{signal={type='item',name='iron-plate'},count=99}}); x.phase='disappear'; x.since=event.tick
   elseif x.phase=='disappear' and #c.state.last.current==0 then
     local e=c.state.last
@@ -276,11 +276,11 @@ function M.on_tick(event)
     assert(c.state.last.changes[1].previous==-2147483648 and c.state.last.changes[1].current==0)
     probe(c,[[assert(p.unsubscribe(computer.getState('subscription')))]])
     put(x.green,{{signal={type='entity',name='inserter'},count=1}})
-    x.phase='unsupported'; x.since=event.tick
-  elseif x.phase=='unsupported' and event.tick-x.since>=3 then
-    local bank,owner=io.output_bank,io.output_owner
-    probe(c,[[local ok,e=pcall(p.readSignals,'green'); assert(not ok and e.code=='E_ARGUMENT')]])
-    assert(io.output_bank==bank and io.output_owner==owner)
+    x.phase='entity'; x.since=event.tick
+  elseif x.phase=='entity' and event.tick-x.since>=3 then
+    local bank,owner=serpent.line(logic.inspect_output(io,function() end)),io.output_owner
+    probe(c,[[local a=p.readSignals('green'); assert(#a==1 and a[1].signal.type=='entity' and a[1].signal.name=='inserter' and a[1].count==1)]])
+    assert(serpent.line(logic.inspect_output(io,function() end))==bank and io.output_owner==owner)
     x.phase='done'; log('TC_COLD_OK recipe-red-green-isolation-legacy-fault-no-replay-and-disappearance')
   end
 end

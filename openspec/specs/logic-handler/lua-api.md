@@ -7,28 +7,33 @@ Normative companion to [spec.md](spec.md). Obtain as `peripheral.find("logic_han
 | Signature | Returns | Meaning |
 | --- | --- | --- |
 | `io.readSignal(input, signal)` | Int32 | `input` explicitly selects red or green; absent signal gives 0 |
-| `io.readSignals(input)` | `Signal[]` | Selected native input snapshot, sorted, with zero totals omitted |
+| `io.readSignals(input)` | `Signal[]` | Complete fresh selected native input, preserving order and optional fields |
 | `io.getInputStatus()` | table | `{red_connected=boolean, green_connected=boolean}` for actual input connectors |
 | `io.getOutput()` | `Signal[]` | This handler's configured contribution only, not external signals on its output network |
 | `io.setOutput(signals)` | no values | Atomically replace the entire shared output bank and transfer its last-writer ownership |
 | `io.clearOutput()` | no values | Equivalent to `setOutput({})`; no separate color bank |
 | `io.subscribe(options, handler_name)` | SubscriptionId | Create a named input-change subscription for this computer/run/binding |
 | `io.unsubscribe(subscription_id)` | boolean | Remove this run's subscription and its queued, undispatched samples; false if already absent |
-| `io.getLimits()` | table | `signal_slots`, `subscriptions`, `filter_signals`, `sample_interval_ticks` (1), `notification_latency_ticks`, plus shared caps |
+| `io.getLimits()` | table | `subscriptions`, `sample_interval_ticks` (1), `notification_latency_ticks`, plus retained shared policy; no signal/filter/device/bank count caps |
 
-Signal identity is the full type/name/quality tuple. Ordinary reads/writes reject wildcard pseudo-signals. Missing quality is normalized to `normal`; returned identities always include all three fields. Counts must be exact signed 32-bit integers. No string/float coercion is accepted.
+Effective signal identity is `(type or "item", name, quality or "normal")`.
+Caller writes/filters reject wildcard pseudo-signals. Reads trust engine-produced
+records, preserving native sequence and omitted fields without validation,
+normalization, sorting or a stable-order guarantee. Counts supplied by callers must
+be exact signed 32-bit integers; no string/float coercion is accepted.
 
-Supported ordinary types are `item`, `fluid`, `virtual` and `recipe`. A recipe
+Supported native types are `item`, `fluid`, `virtual`, `recipe`, `entity`,
+`space-location`, `asteroid-chunk` and `quality`. A recipe
 name identifies an installed recipe prototype, including mod-added recipes,
 independently of its products or research status. Same-named item and recipe
 signals do not merge. This applies to reads, output banks and subscription filters.
-Native snapshot pre-admission includes the installed recipe prototype registry.
-Other signal categories remain unsupported. Existing work/maintenance caps remain binding;
-independent per-color sampling can refuse when the complete envelope does not fit.
-This supported-type estimate is not a universal bound: native enumeration may
-materialize unsupported categories before rejecting them.
+Every direct read and registration baseline queries the selected native input.
+There is no mod-defined name, signal, filter or output-slot ceiling. Native output
+index/count domains still apply; fixed service/dispatch work remains metered.
+Native graph transfer bypasses generic Data limits, not guest execution or explicit
+state/KV/Console persistence. Native cost is not a calibrated universal heap/tick bound.
 
-Input selectors are mandatory red or green. Missing, `both` and invalid values fail before registration; no default, compatibility alias or color combination exists. Each read retains native signed32 semantics on the selected circuit. Negative counts are legal. Output arrays must have unique normalized identities; duplicates are rejected before mutation, rather than silently added. Zero-valued entries are removed in the canonical stored bank. An empty bank emits no contribution.
+Input selectors are mandatory red or green. Missing, `both` and invalid values fail before registration; no default, compatibility alias or color combination exists. Each read retains native signed32 semantics on the selected circuit. Negative counts are legal. Output arrays must have unique effective identities, including omitted/explicit default aliases; duplicates fail before mutation. Zero-valued entries are omitted. The native section is the source of truth, not a retained output mirror. An empty bank emits no contribution.
 
 Output is one set mirrored to both output connectors. Other devices can contribute different totals on those networks; getOutput does not report those totals. Externally wiring input and output together can deliberately create feedback, but there is no internal feedthrough between input, middle and output.
 
@@ -45,7 +50,12 @@ SignalSubscriptionOptions = {
 
 `handler_name` must name a handler in the active document. The registration persists by name/validated data, never by a saved function. It is scoped to the wrapper's selected discovery channel; losing that binding revokes it. A new path on another color does not silently transfer the subscription.
 
-The registration uses the most recent authoritative sample as its baseline. With initial=false, notify only when selected values or selected input-connectivity change. With initial=true, enqueue an initial snapshot on the next sampling tick; `previous` is empty and `initial=true` distinguishes it from a delta. Filters apply to complete identities, not name substrings; a nonzero-to-absent change remains observable as zero in `changes`.
+Registration reads a fresh baseline, never a cached observation. Existing per-computer
+and aggregate registration counts are checked only when registering. Filters have
+no cardinality cap; non-growing native-array edits can construct a large request.
+With initial=false, notify only on effective identity/count or connectivity changes,
+not ordering or explicit-default differences. With initial=true, enqueue next sample
+with empty previous. A disappearance remains observable as zero in changes.
 
 ```text
 -- Documentation event; also includes BaseEvent.
@@ -68,7 +78,7 @@ SignalChanged = {
 }
 ```
 
-Only selected colors are present in connectivity maps. Initial events use false selected connectivity in previous_connected. `resync=true` denotes restoration after a power interruption, not a replay of every unobserved transition. `previous` is the most recent successfully admitted sample, or the registration baseline if none has been admitted; queue admission advances this baseline, not later callback dispatch. A power interruption discards queued transient samples for the affected computer/subscription, so a resync's previous snapshot may describe a sample whose callback was discarded. Current is the newly selected sample, and resync explicitly marks that discontinuity. All collections are copied and canonical. Empty changes with changed connectivity is a valid event.
+Only selected colors are present in connectivity maps. Initial events use false selected connectivity in previous_connected. `resync=true` denotes restoration after a power interruption, not replay. `previous` is the most recent successfully admitted sample, or the registration baseline; queue admission advances it, not callback dispatch. Power interruption discards queued transient samples, so previous may describe a discarded callback's observation. Collections preserve optional fields and have no sorting guarantee; delivered events are isolated from baselines and other subscribers. Empty changes with changed connectivity is valid. Native graph size does not consume generic payload capacity, but queue entries and envelope bytes remain bounded with existing fault-on-overflow behavior.
 
 Factorio reports circuit values from its native circuit-update state, documented as previous-tick signals. `sample_tick` identifies observation time; it does not assert that a newly written output can be read by another device immediately. `event.tick` identifies callback dispatch. No within-tick transient detection or recursively triggered signal callback is promised. When powered and within the supported envelope, sampling is once per actual simulation tick, not once per arbitrary number of scheduler dispatches.
 

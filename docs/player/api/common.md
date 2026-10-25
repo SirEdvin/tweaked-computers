@@ -16,22 +16,31 @@ the next call; a callback is **not** a transaction.
 | ID / name | Opaque case-sensitive string; never a coordinate, native object or label |
 | Tick | Nonnegative exact integer, at most 9007199254740991 |
 | Int32 | Exact integer -2147483648 through 2147483647 |
-| SignalId | `{type="item"/"fluid"/"virtual"/"recipe", name=prototype, quality=quality_name?}` |
+| SignalId | Logic: `{type=native_type?, name=prototype, quality=quality_name?}`; Configurator follows its independent field schema |
 | Signal | `{signal=SignalId, count=Int32}` |
 | Data | Finite boolean/number/string, dense 1-based Data array, or string-keyed Data map |
 
-Signal type/name are explicit and must exist. Quality defaults to `normal` on
-input and is explicit on readback; other qualities require installed prototypes.
+Logic signal names must exist on caller input. Missing type means `item`; missing
+quality means `normal`. Native readback does not fill optional fields.
 Ordinary signals reject wildcards. Only configurator schemas permit them in
 specified roles. Complete signal identity is type/name/quality, not name alone.
-Signals sort by that tuple; peripheral/device arrays by opaque name/ID; section
-arrays by native index. Hash snapshots are maps, not ordered sequences.
+Logic signals have no sorting guarantee; compare effective identities, not array
+positions. Peripheral/device arrays sort by opaque name/ID, sections by native
+index. Hash snapshots are maps, not ordered sequences.
 
 Data excludes nil values, mixed/sparse arrays, cycles, functions, metatables,
 threads and Factorio objects. An empty table is an empty map unless a schema
 requires an array. Values are validated and defensively copied. Mutating a returned
 snapshot never edits stored state. Persist peripheral names/colors, not wrappers.
 IDs survive ordinary load but are not reused for replacement/cloned entities.
+
+Logic's fresh native results and trusted notification signal graphs bypass generic
+Data transport ceilings, without granting caller data that trust. Native arrays
+support indexing, iteration and non-growing edits beyond ordinary table width.
+Guest execution, arbitrary growth, string operations and explicit state/KV/Console
+persistence retain their normal limits. Circuit notifications consume queue
+entries and envelope bytes, not native signal payload bytes; queue bytes therefore
+do not measure total circuit snapshot memory. Other event producers are unchanged.
 
 The [modem](modem.md) accepts explicit top-level nil only as the required third
 argument of `transmit`. Its event then omits `message`. This does not add nil to

@@ -6,6 +6,7 @@ local runtime=require('scripts.runtime.computer')
 local scheduler=require('scripts.scheduler')
 local monitor=require('scripts.services.monitor')
 local kv=require('scripts.services.kv')
+local logic=require('scripts.services.logic')
 local help=require('scripts.ui.help')
 local defs=require('scripts.device-definitions')
 local peripheral=require('scripts.services.peripheral')
@@ -150,7 +151,8 @@ function M.on_tick(event)
     assert(found and recipes.logs[1].text:match('Iron plate smelting recipes:\t[1-9]'));report('recipe-actual-smelting-results')
     for _,id in ipairs({'logic','factory'}) do
       local scene=x[id];local io=registry.record(scene.io)
-      assert(io.output_bank[1].signal.name=='signal-A' and io.output_bank[1].count==1)
+      local output=logic.inspect_output(io,function() end)
+      assert(output[1].signal.name=='signal-A' and output[1].count==1)
       assert(scene.destination.get_item_count('iron-plate')>0,'native inserter must transfer actual items')
       scene.stock.insert{name='iron-plate',count=95}
     end
@@ -166,7 +168,7 @@ function M.on_tick(event)
     x.phase='high';x.since=event.tick
   elseif x.phase=='high' and event.tick-x.since>=120 then
     for _,id in ipairs({'logic','factory'}) do
-      assert(#registry.record(x[id].io).output_bank==0)
+      assert(#logic.inspect_output(registry.record(x[id].io),function() end)==0)
       x[id].settled=x[id].destination.get_item_count('iron-plate')
     end
     assert(row(x.factory.screen,1):find('Iron: 100',1,true) and row(x.factory.screen,2):find('STOPPED',1,true))

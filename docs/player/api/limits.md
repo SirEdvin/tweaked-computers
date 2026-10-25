@@ -88,9 +88,7 @@ is needed; ordinary synchronized admission resets counters only on a new tick.
 | `compile_work` | 1250000 |
 | `host_work_per_tick` | 5000000 |
 | `active_computers` | 64 |
-| `active_logic_handlers` | 128 |
 | `aggregate_subscriptions` | 1024 |
-| `aggregate_owned_outputs` | 128 |
 | `state_bytes` | 65536 |
 | `state_entries` | 256 |
 | `data_nodes` | 4096 |
@@ -130,3 +128,9 @@ Device-specific limits: [monitor](monitor.md#bounds-example-and-troubleshooting)
 [configurator](configurator.md#bounds-programs-and-troubleshooting),
 [Recipe Searcher](recipe-searcher.md#complete-results-not-a-prefix).
 See [shared rules](common.md) for Data accounting and refusal behavior.
+
+Logic native results and trusted signal snapshots are not generic Data payloads.
+Their cardinality is not bounded by the table/node/byte keys above. Circuit queues
+still consume entries and envelope bytes, excluding native graphs; this is not a
+total-memory bound. Removed `signal_slots`, `filter_signals`, `active_logic_handlers`
+and `aggregate_owned_outputs` keys are absent, not configurable replacements.

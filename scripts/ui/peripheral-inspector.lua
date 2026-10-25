@@ -144,8 +144,7 @@ local function prepare(s,spend)
     for _,wire in ipairs({'red','green','output'}) do
       parts[#parts+1]=wire..tostring(d.connected[wire])..'/'..tostring(d.errors and d.errors[wire])..'/'..tostring(d[wire]~=nil)
       for _,e in ipairs(d[wire] or {}) do
-        spend(#e.signal.name+#e.signal.quality+32)
-        parts[#parts+1]=e.signal.type..'/'..e.signal.name..'/'..e.signal.quality..'/'..e.count
+        parts[#parts+1]=(e.signal.type or 'item')..'/'..(e.signal.name or '')..'/'..(e.signal.quality or 'normal')..'/'..e.count
       end
     end
     view.signature=table.concat(parts,'\0')
@@ -169,15 +168,17 @@ local function slots(parent,wire,entries,connected,tick,err)
   local grid=tray.signal_grid
   for i,e in ipairs(entries or {}) do
     local signal=e.signal
-    local namespace=signal.type=='virtual' and 'virtual-signal' or signal.type
-    local name='signal_'..i; local slot=grid[name]; local sprite=namespace..'/'..signal.name
-    local identity=sprite..'/'..signal.quality
+    local kind,quality=signal.type or 'item',signal.quality or 'normal'
+    local namespace=kind=='virtual' and 'virtual-signal' or kind
+    local name='signal_'..i; local slot=grid[name]; local sprite=namespace..'/'..(signal.name or '')
+    local identity=sprite..'/'..quality
+    if not helpers.is_valid_sprite_path(sprite) then sprite='utility/questionmark' end
     if slot and slot.tags.identity~=identity then slot.destroy(); slot=nil end
     if not slot then slot=grid.add{type='sprite-button',name=name,sprite=sprite,
-      number=e.count,quality=signal.quality,style=wire=='output' and 'compact_slot' or wire..'_circuit_network_content_slot',
-      tags={identity=identity},tooltip={ '',tr(wire),'\n',signal.type,'/',signal.name,'\n',signal.quality,'\n',tostring(e.count)}} end
+      number=e.count,quality=quality,style=wire=='output' and 'compact_slot' or wire..'_circuit_network_content_slot',
+      tags={identity=identity}} end
     slot.number=e.count
-    slot.tooltip={ '',tr(wire),'\n',signal.type,'/',signal.name,'\n',signal.quality,'\n',tostring(e.count)}
+    slot.tooltip={ '',tr(wire),'\n',kind,'/',signal.name or '', '\n',quality,'\n',tostring(e.count)}
     if slot.get_index_in_parent()~=i then grid.swap_children(slot.get_index_in_parent(),i) end
     -- Enabled only for native tooltips/backplates. The click router exposes no
     -- action for these ordinary sprite buttons; they are never signal pickers.

@@ -489,6 +489,7 @@ function M.reconcile(tick,spend)
     local removed=false
     local ok=scheduler.try_maintenance(function()
       spend(16)
+      if rec and rec.kind=='logic' then rec.logic_sample=nil; rec.output_bank=nil end
       if rec and rec.native_carrier=='radar' then
         removed=radar.reconcile(rec,spend)
       elseif rec and rec.native_carrier=='speaker' then
