@@ -129,7 +129,8 @@ player rotation events. These functions are host-only, not guest capabilities:
 - `clear_output(record)`: disable and remove this physical logic endpoint's
   sections/bank on a peripheral outage. Downstream logic owns generation-specific
   writer retirement via `registry.register_cleanup`; use the same endpoint and
-  coordinate its `output_bank`/`output_owner` metadata with this function.
+  coordinate native output configuration and `output_owner`/recovery metadata
+  with this function; no reusable output mirror is retained.
 - `power_losses`, `reconcile`, `sample_power`, `unlocks`: admitted scheduler or
   synchronized initialization/configuration helpers, never on_load.
 

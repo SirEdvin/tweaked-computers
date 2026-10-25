@@ -11,11 +11,12 @@ Factorio objects, and no command history.
 
 ## Start here
 
-**0.1.13 ALPHA** fixes connected logic inputs becoming permanently unavailable
-because unrelated mods add many prototypes. Logic reads and Recipe Searcher
-queries now account actual returned data rather than the entire installed
-catalogue. Independent [signal trays](inspectors.md), concise UI text and real
-validation, authority and work/Data limits remain.
+**0.1.14 ALPHA** exposes complete fresh [native circuit signals](api/logic.md)
+without mod-defined signal/filter/output-slot ceilings. Reads retain native order
+and optional identity fields. Ctrl-click opens only a selected computer body;
+empty ground is inert and draft recovery remains in Maintenance. Independent
+[signal trays](inspectors.md), validation, authority, fail-safe ownership and
+ordinary guest/persistence budgets remain.
 
 Version 0.1.11 added [peripheral inspectors](inspectors.md),
 [radar modems](api/modem.md), [vanilla speaker audio](api/speaker.md),

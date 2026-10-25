@@ -172,7 +172,8 @@ data, not a wiring fix or a way to clear a database.
 ## Integrated redesign playtest
 
 This short user-owned native-client review is not yet performed. Use the exact
-0.1.4 release and a backed-up test save, retaining the old mod/world for rollback.
+candidate or release under review and a backed-up test save, retaining the old
+mod/world for rollback.
 
 - Place/rotate all five devices; check ordinary-zoom silhouettes, icons/status,
   ordinary-click red/green wiring without a workspace opening, then clear the

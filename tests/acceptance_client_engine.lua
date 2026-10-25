@@ -9,6 +9,7 @@ local monitor=require('scripts.services.monitor')
 local lifecycle=require('scripts.lifecycle')
 local defs=require('scripts.device-definitions')
 local kv=require('scripts.services.kv')
+local logic=require('scripts.services.logic')
 local rotation_contract=require('tests.rotation_contract')
 local M={}; local loaded=false
 local function fixture() return storage.tc13 end
@@ -87,7 +88,7 @@ local function publish()
   local c=computer(); local x=fixture(); local root=registry.get()
   local world={tick=game.tick,state=c.state,status=c.status,run=c.run_id,saved_revision=c.saved_revision,
     active_revision=c.active and c.active.revision,ledger=root.ledger,transferred=x.destination.get_item_count('iron-plate'),
-    database=registry.record(x.db) and registry.record(x.db).database,output=registry.record(x.io).output_bank,joins=setup().joins}
+    database=registry.record(x.db) and registry.record(x.db).database,output=logic.inspect_output(registry.record(x.io),function() end),joins=setup().joins}
   helpers.write_file('acceptance-world.json',helpers.table_to_json(world),false,0)
   for _,p in pairs(game.connected_players) do
     helpers.write_file('acceptance-state.json',helpers.table_to_json(report(p)),false,p.index)

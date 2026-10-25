@@ -315,6 +315,7 @@ class CanonicalContractTests(unittest.TestCase):
         self.assertEqual(len(build.CONTRACT_FILES), len(expected))
 
     def test_archived_requirements_and_scenarios_survive_promotion(self):
+        import hashlib
         import re
         archives = build.ROOT / 'openspec/changes/archive'
         changes = ('2026-10-19-add-native-circuit-computers', '2026-10-19-redesign-device-experience',
@@ -363,6 +364,19 @@ class CanonicalContractTests(unittest.TestCase):
             ('peripheral-network', 'Wiring compatibility after presentation changes', 'Mixed-color and vanilla relay paths'):
                 ('traverses a vanilla relay', 'traverses an unsupported vanilla relay'),
         }
+        # Exact reviewed direct-native-circuit replacements, not name-only exemptions.
+        # Hash the complete trimmed requirement body; retain every historical scenario.
+        native_evolved = {
+            ('computer-runtime', 'Bounded native work'): '9d05602eeb7a4d90163fed7c6069eaf3331404f5c1bef1f7aed63b23e40a1d02',
+            ('computer-runtime', 'Guest trust boundary'): '16a8460cfff7643614b925648c11a15e4448debf77c2fc9b04086b7f5b02b6d8',
+            ('computer-runtime', 'Simulation timers and bounded queues'): '74b50cac17b7d56b2df832b9d7b1e5ea0cad51f02bbe575cb5ab5b4cb8b90085',
+            ('logic-handler', 'Quality-aware input inspection'): '50a675dcbf04bcceb7ae2d0a718585e492dba60e10ff5d44a748b82600881d02',
+            ('logic-handler', 'Shared combinator-style output'): '9dcbad34fb19b752031794a7e922f4368a0a7f18a7975cd2032a224a55001393',
+            ('logic-handler', 'Tick-sampled change subscriptions'): '3c331da021078833c3d25129460f3dc927003dc7a0299b1d30c272bff87a60c2',
+            ('logic-handler', 'Faithful signal identities and counts'): 'b615fa16400875c16614ec0f79e630c759b9de09db06af3151bf1944b0ccc27c',
+            ('logic-handler', 'Bounded live signal observation'): '88df9636300ccab501411a2379f693aa5f27d1d9538bcaa771439243edb44ef4',
+            ('peripheral-inspection', 'Bounded and honest refresh'): 'bdab1570ade89d62b6a66667b7a2cbaf81538c34f4a0099e10ecb1aaf72cad1d',
+        }
         for change in changes:
             folder = archives / change
             self.assertTrue((folder / '.openspec.yaml').is_file(), change)
@@ -376,6 +390,13 @@ class CanonicalContractTests(unittest.TestCase):
                                           r'\n(.*?)(?=^### Requirement:|\Z)', canonical, re.M | re.S)
                         self.assertIsNotNone(found)
                         assert found is not None
+                        expected = native_evolved.get((delta.parent.name, name))
+                        if expected:
+                            self.assertEqual(hashlib.sha256(found[1].strip().encode()).hexdigest(), expected)
+                            old_names = set(re.findall(r'^#### Scenario: ([^\n]+)', body, re.M))
+                            new_names = set(re.findall(r'^#### Scenario: ([^\n]+)', found[1], re.M))
+                            self.assertLessEqual(old_names, new_names)
+                            continue
                         for scenario, text in re.findall(
                                 r'^#### Scenario: ([^\n]+)\n(.*?)(?=^#### Scenario:|\Z)',
                                 body, re.M | re.S):
