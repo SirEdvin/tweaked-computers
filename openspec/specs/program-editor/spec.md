@@ -98,13 +98,28 @@ Console SHALL retain bounded selectable output with a user-controlled follow mod
 - **THEN** the interface does not repeatedly force the visible log position to the newest entry.
 - **AND** the single selectable text box continues receiving live output; changed text may reset native selection, unchanged text is not reassigned, and re-enabling Follow resumes tailing. Existing bounded-history eviction remains visible and cannot recover discarded bytes.
 
-#### Scenario: Recover without an accessible computer
-- **WHEN** the computer is gone or draft capacity is exhausted
-- **THEN** the standalone recovery entry remains available and permits reviewed copy/forget without executing source.
+#### Scenario: Recover a removed computer's draft
+- **WHEN** the original computer is gone and the player Ctrl-clicks another accessible computer body
+- **THEN** Maintenance permits reviewed draft replacement and confirmed forget without executing source or deleting drafts automatically.
+
+#### Scenario: Recover at draft capacity
+- **WHEN** all eight draft slots are occupied and the player Ctrl-clicks a new accessible computer body
+- **THEN** the standalone capacity viewer permits review/native copy and confirmed forget without executing source or evicting drafts.
 
 #### Scenario: Resize or increase GUI scale
 - **WHEN** display resolution or GUI scale changes
 - **THEN** navigation, close, source and essential controls remain reachable, source is retained, and the window is clamped to the available screen rather than clipped beyond it.
+
+### Requirement: Computer-body-only world activation
+The shared world gesture SHALL open computer UI only for the selected valid registered computer body, under existing cursor, GUI, permission, reach, force and surface guards. It SHALL NOT resolve nearby computers, helpers or ghosts. Empty ground SHALL remain inert even with retained drafts. Intentional position-based monitor touch and native Ctrl-click inventory transfers SHALL remain unchanged.
+
+#### Scenario: Empty ground with or without drafts
+- **WHEN** the player Ctrl-clicks empty ground, with no monitor cell at the cursor
+- **THEN** no computer workspace or recovery viewer opens and retained drafts remain unchanged.
+
+#### Scenario: Unrelated or invalid target
+- **WHEN** the gesture targets a vanilla entity, unrelated peripheral, helper, ghost, unregistered or removed body
+- **THEN** no computer UI opens and no nearby computer is substituted.
 
 ### Requirement: Console and saved-source isolation
 The optional Console Lua input SHALL follow the independent `console-shell` contract. It SHALL NOT become a prerequisite for authoring, saving or activating the source document, and its commands, drafts, state and reset controls SHALL remain distinct from saved-program editing and explicit application state.

@@ -31,7 +31,7 @@ Every inspector SHALL show the localized device name, peripheral type, availabil
 - **THEN** its name and status can be inspected and copied without invoking a recipe query or offering crafting/storage controls.
 
 ### Requirement: Inspection and existing gestures remain distinct
-Normal peripheral opening SHALL inspect rather than emit a monitor touch. Ctrl-click monitor touches, Ctrl-click computer editing, empty-ground draft recovery, native inventory transfers and cardinal rotation SHALL retain their existing behavior. Owned helper dialogs SHALL remain inaccessible, and unrelated entity windows SHALL NOT be replaced.
+Normal peripheral opening SHALL inspect rather than emit a monitor touch. Ctrl-click monitor touches, guarded Ctrl-click computer-body editing, native inventory transfers and cardinal rotation SHALL retain their existing behavior. Empty-ground clicks SHALL NOT open computer UI, even with retained drafts. Draft recovery SHALL remain accessible through another computer's Maintenance or the capacity viewer when opening a computer with all draft slots occupied. Owned helper dialogs SHALL remain inaccessible, and unrelated entity windows SHALL NOT be replaced.
 
 #### Scenario: Inspect then touch a monitor
 - **WHEN** a player normally opens a monitor, closes the inspector and then Ctrl-clicks a valid display cell

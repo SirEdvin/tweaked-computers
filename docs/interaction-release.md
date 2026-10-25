@@ -1,5 +1,10 @@
 # Tweaked Computers 0.1.4 — ALPHA
 
+Historical release notes: the current interaction no longer opens recovery on
+empty ground. Use another computer's Maintenance for retained drafts; opening a
+new computer with all eight slots occupied shows the capacity recovery viewer.
+See the [current editor guide](player/editor.md#retained-drafts-and-mined-computers).
+
 Wire-safe interaction hotfix for **Factorio 2.0.77**, base alone or optional Space
 Age. Back up your save and old mod ZIP before updating. This remains an alpha;
 native graphical-client and multiplayer acceptance is not claimed.
