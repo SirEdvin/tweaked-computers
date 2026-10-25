@@ -127,10 +127,10 @@ local function emit(main,mode,expression,validation_only)
   function func(n)
     visit(n)
     if n.is_method then reject(n, 'colon declarations are not supported') end
-    local names = {}
-    for i,p in ipairs(n.params) do names[i] = identifier(p.name,p) end
+    local names = not validation_only and {}
+    for i,p in ipairs(n.params) do local name=identifier(p.name,p); if names then names[i]=name end end
 
-    if n.is_vararg then names[#names+1] = '...' end
+    if names and n.is_vararg then names[#names+1] = '...' end
     local previous=variadic; variadic=n.is_vararg
     local contents=body(n); variadic=previous
     if validation_only then return leave('') end
@@ -142,10 +142,10 @@ local function emit(main,mode,expression,validation_only)
     local k, s = n.node_type
     if k == 'number' then
       if not errors.finite(n.value) then reject(n, 'nonfinite numeric literal') end
-      s = n.src_value or tostring(n.value)
+      if not validation_only then s = n.src_value or tostring(n.value) end
     elseif k == 'string' then s = quote(n.value)
     elseif k == 'nil' then s = 'nil'
-    elseif k == 'boolean' then s = tostring(n.value)
+    elseif k == 'boolean' then if not validation_only then s = tostring(n.value) end
     elseif k == 'local_ref' or k == 'upval_ref' then s = identifier(n.name,n)
     elseif k == 'vararg' then s = '__tc.values(...)'
     elseif k == 'index' then
@@ -153,40 +153,57 @@ local function emit(main,mode,expression,validation_only)
         local name = identifier(n.suffix.value,n.suffix)
         if mode=='shell' then shell_name(name,n.suffix,false)
         elseif not globals[name] and not (exports and exports[name]) then reject(n.suffix, 'unavailable global: '..name) end
-        if exports and exports[name] then
+        if validation_only then s=''
+        elseif exports and exports[name] then
           s = '__tc.get(__tc_functions,'..quote(name)..')'
         else s = '__tc.global('..quote(name)..')' end
-      else s = '__tc.get('..expr(n.ex)..','..expr(n.suffix)..')' end
+      else
+        local ex,suffix=expr(n.ex),expr(n.suffix)
+        if not validation_only then s = '__tc.get('..ex..','..suffix..')' end
+      end
     elseif k == 'call' then
       if n.is_selfcall then reject(n, 'colon calls are not supported') end
-      s = '__tc.call('..expr(n.ex)..(#n.args > 0 and ','..list(n.args) or '')..')'
-    elseif k == 'func_proto' then s = '__tc.closure('..func(n.func_def)..')'
+      local ex,args=expr(n.ex),#n.args>0 and list(n.args) or ''
+      if not validation_only then s = '__tc.call('..ex..(#n.args>0 and ','..args or '')..')' end
+    elseif k == 'func_proto' then
+      local definition=func(n.func_def)
+      if not validation_only then s = '__tc.closure('..definition..')' end
     elseif k == 'constructor' then
 
-      local out = {}
+      local out = not validation_only and {}
       for i,f in ipairs(n.fields) do
-        if f.type == 'list' then out[i] = expr(f.value)
-        elseif f.type == 'rec' or f.type == 'record' then out[i] = '['..expr(f.key)..']='..expr(f.value)
+        if f.type == 'list' then local value=expr(f.value); if out then out[i]=value end
+        elseif f.type == 'rec' or f.type == 'record' then
+          local key,value=expr(f.key),expr(f.value)
+          if out then out[i] = '['..key..']='..value end
         else reject(n, 'unsupported constructor field: '..tostring(f.type)) end
       end
-      s = '__tc.new('..#n.fields..',function('..(variadic and '...' or '')..') return {'..join(out,',')..'} end'..(variadic and ',...' or '')..')'
+      if out then s = '__tc.new('..#n.fields..',function('..(variadic and '...' or '')..') return {'..join(out,',')..'} end'..(variadic and ',...' or '')..')' end
     elseif k == 'unop' then
-      if n.op == 'not' then s = '(not __tc.scalar('..expr(n.ex)..'))'
-      elseif n.op == '-' then s = '(-__tc.number('..expr(n.ex)..'))'
-      elseif n.op == '#' then s = '__tc.length('..expr(n.ex)..')'
-      else reject(n,'unsupported unary operator') end
+      if n.op~='not' and n.op~='-' and n.op~='#' then reject(n,'unsupported unary operator') end
+      local ex=expr(n.ex)
+      if not validation_only then
+        if n.op == 'not' then s = '(not __tc.scalar('..ex..'))'
+        elseif n.op == '-' then s = '(-__tc.number('..ex..'))'
+        else s = '__tc.length('..ex..')' end
+      end
     elseif k == 'binop' then
       if n.op == 'and' or n.op == 'or' then
-        s = '(__tc.scalar('..expr(n.left)..') '..n.op..' '..expr(n.right)..')'
+        local left,right=expr(n.left),expr(n.right)
+        if not validation_only then s = '(__tc.scalar('..left..') '..n.op..' '..right..')' end
       elseif n.op == '+' or n.op == '-' or n.op == '*' or n.op == '/' or n.op == '%' or n.op == '^' then
-        s = '(__tc.number('..expr(n.left)..') '..n.op..' __tc.number('..expr(n.right)..'))'
+        local left,right=expr(n.left),expr(n.right)
+        if not validation_only then s = '(__tc.number('..left..') '..n.op..' __tc.number('..right..'))' end
       elseif n.op == '==' or n.op == '~=' or n.op == '<' or n.op == '>' or n.op == '<=' or n.op == '>=' then
-        s = '(__tc.scalar('..expr(n.left)..') '..n.op..' __tc.scalar('..expr(n.right)..'))'
+        local left,right=expr(n.left),expr(n.right)
+        if not validation_only then s = '(__tc.scalar('..left..') '..n.op..' __tc.scalar('..right..'))' end
       else reject(n,'unsupported binary operator') end
     elseif k == 'concat' then
       -- Primitive operands only: no metatable dispatch. Bound complete output before native concat.
-      s = '__tc.concat('..list(n.exp_list)..')'
+      local values=list(n.exp_list)
+      if not validation_only then s = '__tc.concat('..values..')' end
     else reject(n, 'unsupported expression: '..tostring(k)) end
+    if validation_only then return leave('') end
     if n.force_single_result then s = '('..s..')' end
     return leave(text(s))
   end
@@ -200,36 +217,54 @@ local function emit(main,mode,expression,validation_only)
     local k, s = n.node_type
     if k == 'empty' then s = ';'
     elseif k == 'localstat' then
-      local names = {}; for i,p in ipairs(n.lhs) do names[i] = identifier(p.name,p) end
-
-      s = 'local '..join(names,',')..' = __tc.bind('..#names..(n.rhs and #n.rhs > 0 and ','..list(n.rhs) or '')..');'
+      local names = not validation_only and {}
+      for i,p in ipairs(n.lhs) do local name=identifier(p.name,p); if names then names[i]=name end end
+      local rhs=n.rhs and #n.rhs>0 and list(n.rhs) or ''
+      if names then s = 'local '..join(names,',')..' = __tc.bind('..#names..(n.rhs and #n.rhs>0 and ','..rhs or '')..');' end
     elseif k == 'localfunc' then
       local name = identifier(n.name.name,n.name)
-      s = 'local '..name..'; '..name..'=__tc.closure('..func(n.func_def)..');'
-    elseif k == 'funcstat' then
-      -- Desugar through the same fully preflighted assignment path.
+      local definition=func(n.func_def)
+      if not validation_only then s = 'local '..name..'; '..name..'=__tc.closure('..definition..');' end
+    elseif k == 'funcstat' and not validation_only then
+      -- The legacy emitter still needs the assignment's generated scaffolding.
       s = statement({node_type='assignment', lhs={n.name}, rhs={{node_type='func_proto',func_def=n.func_def}}})
-    elseif k == 'assignment' then
+    elseif k == 'assignment' or k == 'funcstat' then
 
       temp = temp + 1
-      local prefix = '__tc_a'..temp..'_'
-      local count=#n.lhs
+      local declaration=k=='funcstat'
+      -- Retain the synthetic assignment/prototype visits without allocating ASTs.
+      if declaration then visit(n) end
+      local prefix = not validation_only and '__tc_a'..temp..'_'
+      local count=declaration and 1 or #n.lhs
       local indexed=0
-      local out,targets={'do', 'local '..prefix..'targets=__tc.assignment_targets('..count..');'},{}
-      for i,lhs in ipairs(n.lhs) do
-        if lhs.node_type == 'local_ref' or lhs.node_type == 'upval_ref' then targets[i] = identifier(lhs.name,lhs)
+      local out=not validation_only and {'do', 'local '..prefix..'targets=__tc.assignment_targets('..count..');'}
+      local targets=not validation_only and {}
+      for i=1,count do
+        local lhs=declaration and n.name or n.lhs[i]
+        if lhs.node_type == 'local_ref' or lhs.node_type == 'upval_ref' then
+          local name=identifier(lhs.name,lhs); if targets then targets[i]=name end
         elseif mode=='shell' and global(lhs) then
           local name=shell_name(lhs.suffix.value,lhs.suffix,true)
           indexed=indexed+1
-          out[#out+1]=prefix..'targets['..i..']={__tc.shell_root(),'..quote(name)..'};'
-          targets[i]=prefix..'targets['..i..'][1]['..prefix..'targets['..i..'][2]]'
+          if out then
+            out[#out+1]=prefix..'targets['..i..']={__tc.shell_root(),'..quote(name)..'};'
+            targets[i]=prefix..'targets['..i..'][1]['..prefix..'targets['..i..'][2]]'
+          end
         elseif lhs.node_type == 'index' and not global(lhs) then
           indexed=indexed+1
-          out[#out+1] = prefix..'targets['..i..']={'..expr(lhs.ex)..','..expr(lhs.suffix)..'};'
-          targets[i] = prefix..'targets['..i..'][1]['..prefix..'targets['..i..'][2]]'
+          local ex,suffix=expr(lhs.ex),expr(lhs.suffix)
+          if out then
+            out[#out+1] = prefix..'targets['..i..']={'..ex..','..suffix..'};'
+            targets[i] = prefix..'targets['..i..'][1]['..prefix..'targets['..i..'][2]]'
+          end
         else reject(lhs, 'global assignment is forbidden') end
       end
-      local rhs=#n.rhs>0 and ','..list(n.rhs) or ''
+      if declaration then
+        visit(n.func_def); func(n.func_def); leave(''); leave('')
+      end
+      local values=not declaration and #n.rhs>0 and list(n.rhs) or ''
+      if validation_only then return leave('') end
+      local rhs=#n.rhs>0 and ','..values or ''
       out[#out+1] = 'local '..prefix..'values=__tc.assignment_values('..count..rhs..');'
       out[#out+1] = '__tc.assignment_check('..count..','..prefix..'targets,'..prefix..'values);'
       -- Two bounded private vectors avoid multiplying the native local/register
@@ -241,30 +276,44 @@ local function emit(main,mode,expression,validation_only)
         -- Plain lexical writes need no heap staging or private native locals.
         s=join(targets,',')..'=__tc.move('..count..rhs..');'
       else s = join(out, '\n') end
-    elseif k == 'call' then s = expr(n)..';'
-    elseif k == 'retstat' then s = 'do return __tc.values('..list(n.exp_list)..') end'
+    elseif k == 'call' then local value=expr(n); if not validation_only then s=value..';' end
+    elseif k == 'retstat' then local values=list(n.exp_list); if not validation_only then s = 'do return __tc.values('..values..') end' end
     elseif k == 'breakstat' then s = 'do break end'
-    elseif k == 'dostat' then s = 'do '..body(n)..' end'
-    elseif k == 'whilestat' then s = 'while '..expr(n.condition)..' do __tc.step('..coordinates(n.while_token)..'); '..body(n)..' end'
-    elseif k == 'repeatstat' then s = 'repeat __tc.step('..coordinates(n.repeat_token)..'); '..body(n)..' until '..expr(n.condition)
+    elseif k == 'dostat' then local contents=body(n); if not validation_only then s = 'do '..contents..' end' end
+    elseif k == 'whilestat' then
+      local condition,contents=expr(n.condition),body(n)
+      if not validation_only then s = 'while '..condition..' do __tc.step('..coordinates(n.while_token)..'); '..contents..' end' end
+    elseif k == 'repeatstat' then
+      local contents,condition=body(n),expr(n.condition)
+      if not validation_only then s = 'repeat __tc.step('..coordinates(n.repeat_token)..'); '..contents..' until '..condition end
     elseif k == 'fornum' then
-      s = 'for '..identifier(n.var.name,n.var)..' = __tc.number('..expr(n.start)..'),__tc.number('..expr(n.stop)..'),__tc.number('..(n.step and expr(n.step) or '1')..') do __tc.loop('..coordinates(n.for_token)..',1); '..body(n)..' end'
+      local name=identifier(n.var.name,n.var)
+      local start,stop,step=expr(n.start),expr(n.stop),n.step and expr(n.step) or '1'
+      local contents=body(n)
+      if not validation_only then s = 'for '..name..' = __tc.number('..start..'),__tc.number('..stop..'),__tc.number('..step..') do __tc.loop('..coordinates(n.for_token)..',1); '..contents..' end' end
     elseif k == 'forlist' then
-      local names = {}; for i,p in ipairs(n.name_list) do names[i] = identifier(p.name,p) end
-
-      s = 'for '..join(names,',')..' in __tc.iter('..list(n.exp_list)..') do __tc.loop('..coordinates(n.for_token)..','..#names..'); '..body(n)..' end'
+      local names = not validation_only and {}
+      for i,p in ipairs(n.name_list) do local name=identifier(p.name,p); if names then names[i]=name end end
+      local values,contents=list(n.exp_list),body(n)
+      if names then s = 'for '..join(names,',')..' in __tc.iter('..values..') do __tc.loop('..coordinates(n.for_token)..','..#names..'); '..contents..' end' end
     elseif k == 'ifstat' then
-      local out = {}
-      for i,b in ipairs(n.ifs) do out[#out+1] = (i == 1 and 'if ' or 'elseif ')..expr(b.condition)..' then '..body(b) end
-      if n.elseblock then out[#out+1] = 'else '..body(n.elseblock) end
-      out[#out+1] = 'end'; s = join(out,'\n')
+      local out = not validation_only and {}
+      for i,b in ipairs(n.ifs) do
+        local condition,contents=expr(b.condition),body(b)
+        if out then out[#out+1] = (i == 1 and 'if ' or 'elseif ')..condition..' then '..contents end
+      end
+      if n.elseblock then local contents=body(n.elseblock); if out then out[#out+1] = 'else '..contents end end
+      if out then out[#out+1] = 'end'; s = join(out,'\n') end
     else reject(n,'unsupported statement: '..tostring(k)) end
+    if validation_only then return leave('') end
     return leave(text('__tc.step('..coordinates(n)..'); '..s))
   end
   if mode=='shell' then
-    local output='return function() '..body(main)..' end'
+    local contents=body(main)
+    local output=validation_only and '' or 'return function() '..contents..' end'
     if not validation_only then parsing.enter(#output) end
 
+    parsing.allocate(192)
     return output,{},nodes
   end
   local first=main.body.first
@@ -273,6 +322,7 @@ local function emit(main,mode,expression,validation_only)
     -- Discover the complete public inventory without executing any candidate
     -- code. Only parser-global reads of these names gain forward resolution;
     -- local/upvalue references keep the parser's lexical declaration order.
+    parsing.allocate(2*192)
     local names,seen,count,key_work={}, {},0,0
     local stat=main.body.first
     while stat do
@@ -287,9 +337,9 @@ local function emit(main,mode,expression,validation_only)
         parsing.enter(#name+1)
         if globals[name] or forbidden[name] or declaration_reserved[name] then reject(node,'reserved declaration name: '..name) end
         if seen[name] then reject(node,'duplicate declaration name: '..name) end
-        seen[name]=true
+        parsing.allocate(48); seen[name]=true
         if kind=='funcstat' then
-          count=count+1; names[name]=true
+          parsing.allocate(48); count=count+1; names[name]=true
           key_work=key_work+#name+1
 
         end
@@ -301,18 +351,20 @@ local function emit(main,mode,expression,validation_only)
     -- Descriptor admission in run prepays the static bindings; new prepays
     -- the complete bounded private table. Neither table nor its write path is
     -- available to guest code. Each exported value is a registered closure.
-    local out={text('__tc.spend('..key_work..'); local __tc_functions=__tc.new('..count..',function() return {} end);')}
+    local out=not validation_only and {text('__tc.spend('..key_work..'); local __tc_functions=__tc.new('..count..',function() return {} end);')}
     stat=main.body.first
     while stat do
       parsing.enter(1)
       if stat.node_type=='funcstat' then
         visit(stat)
         local name=stat.name.suffix.value
-        out[#out+1]=leave(text('__tc_functions['..quote(name)..']=__tc.closure('..func(stat.func_def)..');'))
-      else out[#out+1]=statement(stat) end
+        local definition=func(stat.func_def)
+        if out then out[#out+1]=leave(text('__tc_functions['..quote(name)..']=__tc.closure('..definition..');'))
+        else leave('') end
+      else local value=statement(stat); if out then out[#out+1]=value end end
       stat=stat.next
     end
-    out[#out+1]=text('return __tc_functions')
+    if out then out[#out+1]=text('return __tc_functions') end
     local output=join(out,'\n')
     if not validation_only then parsing.enter(#output) end
 
@@ -327,9 +379,11 @@ local function emit(main,mode,expression,validation_only)
     stat = stat.next
   end
   if not ret or #ret.exp_list ~= 1 or ret.exp_list[1].node_type ~= 'constructor' then reject(ret,'literal descriptor required') end
+  parsing.allocate(2*192)
   local descriptor, seen = {}, {}
   for _,f in ipairs(ret.exp_list[1].fields) do
     if f.type == 'list' or f.key.node_type ~= 'string' or seen[f.key.value] then reject(ret,'invalid or duplicate descriptor key') end
+    parsing.allocate(2*48)
     seen[f.key.value] = true; descriptor[f.key.value] = f.value
   end
   local count = 0
@@ -340,16 +394,18 @@ local function emit(main,mode,expression,validation_only)
   if count ~= 2 or not seen.api_version or not seen.handlers then reject(ret,'descriptor requires api_version and handlers') end
   if descriptor.api_version.node_type ~= 'number' or descriptor.api_version.value ~= 1 then reject(ret,'unsupported api_version') end
   if descriptor.handlers.node_type ~= 'constructor' then reject(ret,'literal handlers required') end
-  local handlers, names = {}, {}
+  parsing.allocate(192)
+  local handlers, names = not validation_only and {}, {}
   for _,f in ipairs(descriptor.handlers.fields) do
     if f.type == 'list' or f.key.node_type ~= 'string' or f.value.node_type ~= 'func_proto' then reject(ret,'literal named function handler required') end
     local name = identifier(f.key.value, f.key)
     if not name:match('^[a-zA-Z_][a-zA-Z_0-9]*$') or names[name] then reject(f.key,'invalid or duplicate handler name') end
-    names[name] = true
-    handlers[#handlers+1] = '['..quote(name)..']='..func(f.value.func_def)
+    parsing.allocate(48); names[name] = true
+    local definition=func(f.value.func_def)
+    if handlers then handlers[#handlers+1] = '['..quote(name)..']='..definition end
 
   end
-  local output = 'return {'..join(handlers,',\n')..'}'
+  local output = validation_only and '' or 'return {'..join(handlers,',\n')..'}'
 
   if not validation_only then parsing.enter(#output) end
   return output, names, nodes
