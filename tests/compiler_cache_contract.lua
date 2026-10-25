@@ -21,10 +21,9 @@ local function context(remaining,shared)
   ctx.ledger.total=shared and limits.host_work_per_tick-limits.maintenance_work_per_tick-shared or ctx.machine.compile
   return ctx
 end
--- Forward real admission while observing individual accepted charges. Warm
--- replay may batch the reservation, but must accept the identical cold prefix.
+-- Fitting summaries may batch charges; refusals must retain the exact cold prefix.
 local function observed(text,ctx,mode)
-  local reserve,replay=admission.reserve,admission.replay_compile
+  local reserve=admission.reserve
   local replay_proof=parsing.replay
   local prefix,used_replay={},false
   parsing.replay=function(charges) used_replay=true; return replay_proof(charges) end
@@ -33,22 +32,8 @@ local function observed(text,ctx,mode)
     if c==ctx and kind=='compile' and ok then prefix[#prefix+1]=n end
     return ok
   end
-  admission.replay_compile=function(c,charges)
-    if c==ctx then
-      local available=math.min(limits.compile_work-c.machine.compile,
-        limits.host_work_per_tick-limits.maintenance_work_per_tick-c.ledger.total)
-      local spent=0
-      for _,n in ipairs(charges) do
-        if n>0 then
-          if spent+n>available then break end
-          prefix[#prefix+1]=n; spent=spent+n
-        end
-      end
-    end
-    return replay(c,charges)
-  end
   local ok,plan,problem=pcall(compiler.compile,text,ctx,mode)
-  admission.reserve,admission.replay_compile=reserve,replay
+  admission.reserve=reserve
   parsing.replay=replay_proof
   assert(ok,plan)
   return plan,problem,table.concat(prefix,','),used_replay
@@ -122,7 +107,7 @@ function sample(a,b,n) assert(a==false and b==nil); return increment(n) end
       local b,be,bp,cached=observed(declaration,cold)
       assert(not cached,'eviction did not remove declaration proof')
       assert(not not a==not not b and (not ae or ae.code==be.code and ae.message==be.message))
-      assert(ap==bp,'cache changed accepted declaration charge prefix')
+      if not a then assert(ap==bp,'cache changed refused declaration charge prefix') end
       assert(warm.machine.compile==cold.machine.compile and warm.ledger.total==cold.ledger.total)
       if a then successes=successes+1 else
         assert(ae.code=='E_BUDGET'); refusals=refusals+1

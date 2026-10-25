@@ -6,11 +6,13 @@ local policy=require('scripts.runtime.resource-policy')
 local memory=require('scripts.runtime.memory')
 local registry=require('scripts.registry')
 local continuation=require('scripts.runtime.continuation')
+local parsing=require('scripts.runtime.parse_admission')
 local M={}
 function M.run()
   registry.initialize()
   local saved_cache,saved_compile,saved_host=limits.compiler_cache_bytes,limits.compile_work,limits.host_memory_bytes
   local native_load,native_reserve,native_lower=load,memory.reserve,continuation.lower
+  local native_allocate=parsing.allocate
   local source=[[function start()
     computer.log('cache-prefix'); local n=0
     while n<300000 do n=n+1 end
@@ -54,7 +56,11 @@ end]]
     local a=admission.context(admission.new(),'native-cold',0)
     local b=admission.context(admission.new(),'native-warm',0)
     local requests={}
-    local graph_boundary
+    local graph_boundary,frontend_boundary
+    parsing.allocate=function(bytes)
+      frontend_boundary=frontend_boundary or #requests+1
+      return native_allocate(bytes)
+    end
     continuation.lower=function(...)
       graph_boundary=#requests+1
       return native_lower(...)
@@ -65,10 +71,11 @@ end]]
       return native_reserve(owner,amount)
     end
     local plan,problem,first=compiler.prepare(native_source,a)
-    _G.load,memory.reserve,continuation.lower=native_load,native_reserve,native_lower
+    _G.load,memory.reserve,continuation.lower,parsing.allocate=native_load,native_reserve,native_lower,native_allocate
     assert(plan and first,problem and problem.message)
     assert(bytes>#plan.generated*8,'lowering workspace was not admitted before native loading')
-    assert(#requests>2 and requests[1].amount==5*192+6*48
+    assert(#requests>3 and requests[1].amount==192+2*48
+      and frontend_boundary>1 and requests[frontend_boundary].amount==5*192+6*48
       and requests[#requests].amount==#plan.generated*8,'workspace probe missed its real allocation boundaries')
     local second_plan,second_problem,second=compiler.prepare(native_source,b)
     assert(second_plan and second,second_problem and second_problem.message)
@@ -212,7 +219,7 @@ end]]
     limits.compiler_cache_bytes=saved_cache; limits.compile_work=saved_compile
     local full=slice(); equal(cold,full)
   end)
-  _G.load,memory.reserve,continuation.lower=native_load,native_reserve,native_lower
+  _G.load,memory.reserve,continuation.lower,parsing.allocate=native_load,native_reserve,native_lower,native_allocate
   limits.compiler_cache_bytes=saved_cache; limits.compile_work=saved_compile; limits.host_memory_bytes=saved_host
   assert(ok,type(e)=='table' and e.message or tostring(e))
   log('TC_CONTRACT continuation-cache-warm-cold-evicted-and-partial-admission-equal')

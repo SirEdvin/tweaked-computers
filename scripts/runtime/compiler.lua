@@ -20,8 +20,8 @@ local function load_native(owner,generated,durable,retained)
   return load(generated,durable and '@continuation' or '@computer','t',{})
 end
 -- Host-only, bounded, exact-source validation cache. No caller-owned plan or
--- executable closure is trusted. Replay every original charge, in order, so
--- warm/cold peers retain identical admission and partial-refusal behavior.
+-- executable closure is trusted. Use a fixed-size summary only when it fits;
+-- otherwise the normal traversal preserves identical admission/refusal prefixes.
 -- Keep the last variant per source; do not copy source into composite keys.
 local cache,cache_bytes={},0
 local function prune_cache()
@@ -34,7 +34,7 @@ local function retain(key,entry)
   if total>limits.compiler_cache_bytes then cache,cache_bytes={},0; total=entry.bytes end
   cache[key]=entry; cache_bytes=total
 end
-local function proof_bytes(charges) return 64+16*#charges end
+
 local function plan_copy(p)
   local names={}; for k,v in pairs(p.handlers) do names[k]=v end
   return {compiler_version=p.compiler_version,api_version=p.api_version,source=p.source,
@@ -431,12 +431,11 @@ local function compile(source, context, mode, durable)
     local retained=cache[source]
     if retained and (retained.plan.mode~=mode or retained.durable~=durable
       or retained.depth~=limits.host_stack_depth) then retained=nil end
-    if retained then
-      parsing.replay(retained.charges)
+    if retained and parsing.replay(retained.charges) then
       factory=load_native(workspace,retained.plan.generated,durable,retained)
       return plan_copy(retained.plan)
     end
-    charges={}; parsing.record(charges)
+    charges=parsing.record()
     -- Validate identifiers in the parser's tokenizer, not a discarded first pass.
     local main, diagnostics, expression
     if mode=='shell' then
@@ -483,8 +482,8 @@ local function compile(source, context, mode, durable)
     if expression_source and plan.line==1 and type(plan.column)=='number' then plan.column=math.max(1,plan.column-7) end
     return nil,plan
   end
-  if charges and not charges.overflow then
-    local bytes=256+#plan.source+#plan.generated+proof_bytes(charges)
+  if charges then
+    local bytes=256+#plan.source+#plan.generated+parsing.proof_bytes()
     for name in pairs(plan.handlers) do bytes=bytes+#name+48 end
     if durable then bytes=bytes+native_bytes(plan.generated) end
     retain(source,{plan=plan_copy(plan),charges=charges,bytes=bytes,factory=durable and factory or nil,

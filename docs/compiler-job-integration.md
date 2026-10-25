@@ -98,11 +98,16 @@ concatenation. These reservations share the same temporary owner and proof;
 they are not a source/string-length quota or a calibrated bound on native
 formatter/concatenation allocator buffers.
 
-The private cache proof interleaves work charges and byte reservations. A warm
-pass batches them only when both complete allowances fit; otherwise it replays
-their original order, preserving the first refusal and paid work prefix when
-both resources are short. Work-only legacy proofs keep their existing replay
-path. Neither the saved-frame ABI nor generated handler behavior changes.
+The private cache stores only total work and temporary bytes, not an event-sized
+charge trace. The fixed two-field summary is reserved before allocation using
+the existing table/field weights, identically with or without cache retention.
+A warm pass batches work and memory only when both complete allowances fit.
+Otherwise it pays nothing for the summary lookup and uses the ordinary compiler
+traversal, preserving first refusal and the exact paid work prefix without a
+second replay engine or retained event vector. Successful warm/cold totals remain
+identical; the successful batch need not reproduce individual internal calls.
+Summaries are process-local, not saved executable authority. Neither the
+saved-frame ABI nor generated handler behavior changes.
 
 ## Source retention
 
@@ -142,6 +147,14 @@ append/prepend, both middle-insertion directions, actual lookup rebuilding,
 removal and clearing, with exact refusal work and complete owner reclamation.
 These private parser structures are discarded on refusal; they are not saved
 continuations or an independently atomic list-edit API.
+
+`tests.compiler_proof_memory` verifies fixed summary preallocation, absence of
+retained events, cache-independent weight, immutable fitting replay and unpaid
+fallback to real traversal on shortage. Mixed memory/work boundary refusals,
+disabled/small caches, empty, work-only, byte-only and zero-work input sequences
+retain their exact paid prefixes and release the temporary owner. Integrated
+cache checks observe the actual first parser allocation rather than assuming
+summary metadata cannot precede it.
 
 `tests.compiler_bounded --cold` covers recoverable compilation refusal,
 220 durable locals, warm-cache host-depth reduction, prior-run preservation,
@@ -194,8 +207,8 @@ production budget was raised to fit these observations.
 
 This is not completion of the full resource-policy change or task 4.4. Console
 ingress and other downstream storage guards still need reconciliation. Compiler
-temporary allocation coverage (later parser AST mutations/validation, closures, diagnostic text
-and proof metadata) and measured native headroom remain incomplete; lexical,
+temporary allocation coverage (remaining metadata/copies, closures and diagnostic
+text) and measured native headroom remain incomplete; fixed-summary, lexical,
 AST-constructor, lowering-table, emitted-payload
 and native-load reservations do not establish them. Full migration and host-domain
 enrollment also remain open. Resolve these before claiming complete resource

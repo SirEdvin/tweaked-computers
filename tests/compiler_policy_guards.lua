@@ -8,6 +8,7 @@ local memory=require('scripts.runtime.memory')
 local ast_memory=require('tests.compiler_ast_memory')
 local parser_memory=require('tests.compiler_parser_memory')
 local validation_memory=require('tests.compiler_validation_memory')
+local proof_memory=require('tests.compiler_proof_memory')
 local M={}
 local function lexical_memory()
   local payload=string.rep('lexical',24)
@@ -116,6 +117,7 @@ local function lexical_memory()
 end
 local function single_frontend()
   local find,cache=string.find,limits.compiler_cache_bytes
+  local allocate=parsing.allocate
   local reserve,host,work=memory.reserve,limits.host_memory_bytes,limits.compile_work
   local watched,passes={},0
   string.find=function(value,pattern,...)
@@ -138,13 +140,16 @@ local function single_frontend()
       assert(passes==case[3],'compiler duplicated the tokenizer pass')
     end
     local source='"'..string.rep('prefix',20)..'"'
-    local first
+    local first,allocating
     memory.reserve=function(owner,bytes)
-      first=first or {used=owner.account.used+owner.account.reserved,bytes=bytes}
+      if allocating then first=first or {used=owner.account.used+owner.account.reserved,bytes=bytes} end
       return reserve(owner,bytes)
     end
+    parsing.allocate=function(bytes)
+      allocating=true; allocate(bytes); allocating=false
+    end
     assert(compiler.prepare(source,admission.context(admission.new(),'prefix-fit',0),'shell'))
-    memory.reserve=reserve
+    memory.reserve,parsing.allocate=reserve,allocate
     assert(first and first.bytes==32+7+#source)
     for _,resource in ipairs({'host_memory','compile_work'}) do
       watched={['return '..source]=true}; passes=0
@@ -177,10 +182,12 @@ local function single_frontend()
   end)
   string.find,limits.compiler_cache_bytes=find,cache
   memory.reserve,limits.host_memory_bytes,limits.compile_work=reserve,host,work
+  parsing.allocate=allocate
   assert(ok,type(problem)=='table' and problem.message or tostring(problem))
   log('TC_CONTRACT single-tokenizer-parser-path-reserved-identifiers-and-eof-positions')
 end
 function M.run()
+  proof_memory.run()
   validation_memory.run()
   ast_memory.run()
   parser_memory.run()
