@@ -853,6 +853,20 @@ The native budget fixture also exposed an error-handler retry bug: unwinding a f
 
 `resource_policy_events` and `resource_policy_functions` are included in the packaged CI cold matrix. No source/runtime budget is raised. The original chart/client/multiplayer gates and all remaining policy work remain mandatory; no release or full implementation acceptance follows from this checkpoint.
 
+## Native speaker work admission
+
+Native metadata copies and path operations use the existing indivisible-work
+guard, rather than the ordinary retryable work charge. A block larger than a
+fresh callback or shared host allowance refuses with recoverable `E_CAPACITY`
+before native entry and names the limiting setting; an operation that fits a
+fresh allowance still suspends privately when only the current tail is short.
+The real prototype fixture includes an instrument whose note metadata exceeds
+one callback's work allowance, catches both `getNotes` and `playNote` refusals,
+and proceeds with the remaining saved program. Metadata doubles separately
+check pre-entry refusal for each native copy/path boundary and distinguish
+callback-work from shared-host-work guidance. This does not establish native
+heap calibration or complete transaction/result ownership.
+
 ## Still required
 
 The initial source-site inventory is complete; the final removal/enforcement audit remains open. Settings/resources, recoverable capacity handling, non-lossy settings decreases, remaining protected-call/library/compiler/service continuity, event diagnostics, native inventories/UI, complete migration and engine matrix, actual rendering/audio and connected multiplayer remain mandatory. No production budget increase or weaker test gate is authorized by this checkpoint.

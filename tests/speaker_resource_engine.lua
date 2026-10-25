@@ -7,6 +7,9 @@ local scheduler=require('scripts.scheduler')
 local radar=require('scripts.radar')
 local defs=require('scripts.device-definitions')
 local limits=require('scripts.runtime.limits')
+local admission=require('scripts.runtime.admission')
+local sandbox=require('scripts.runtime.sandbox')
+local service=require('scripts.services.speaker')
 local examples={require('examples.speaker-alarm'),require('examples.speaker-melody'),require('examples.speaker-catalogue')}
 local M={}; local loaded=false
 local source=[[function start()
@@ -19,6 +22,13 @@ local source=[[function start()
   local notes=speaker.getNotes('tc-resource-instrument-001'); assert(#notes==129)
   for i,n in ipairs(notes) do assert(n.name=='note-'..i and n.pitch==i-1) end
   notes[1].name='edited'; assert(speaker.getNotes('tc-resource-instrument-001')[1].name=='note-1')
+  for _,call in ipairs({function() speaker.getNotes('tc-resource-oversized') end,
+      function() speaker.playNote('tc-resource-oversized',0,0) end}) do
+    local ok,e=pcall(call)
+    assert(not ok and e.code=='E_CAPACITY' and e.recoverable and e.resource=='atomic_work')
+    assert(e.setting=='tc-callback-work' and e.requested>e.limit)
+  end
+  computer.setState('oversized_refused',true)
   local long='tc-resource-long-'..string.rep('x',257)
   assert(speaker.getNotes(long)[1].name==long)
   assert(speaker.playNote(long,0,0))
@@ -50,6 +60,12 @@ local function setting(value)
   assert(limits.speaker_sound_page_size==value)
 end
 function M.run()
+  local ctx=admission.context(admission.new(),'speaker-native-copy-refusal',game.tick)
+  local guard=sandbox.new(ctx,{})
+  local ok,e=pcall(service.methods.getNotes,nil,nil,'red',game.tick,guard.spend,guard,'tc-resource-oversized')
+  assert(not ok and type(e)=='table' and e.code=='E_CAPACITY' and e.resource=='atomic_work'
+    and e.requested>e.limit and not guard.work_suspended(),
+    'unfit native catalogue must refuse recoverably, not suspend forever')
   local body=assert(game.surfaces[1].create_entity{name=defs.devices.computer.entity_name,position={0,0},force='player'})
   lifecycle.on_built{entity=body}; local computer=assert(registry.by_entity(body))
   local sound=assert(game.surfaces[1].create_entity{name='programmable-speaker',position={6,0},force='player'})
@@ -107,6 +123,7 @@ function M.on_tick(event)
   elseif computer.state.complete then
     assert(f.phase=='resume' and computer.run_id==f.run and computer.state.starts==1 and computer.state.submissions==12)
     assert(computer.state.count==32769 and computer.state.instruments==prototypes.mod_data['tc-resource-speaker-oracle'].data.instruments)
+    assert(computer.state.oversized_refused,'caught native-copy refusal did not preserve subsequent guest progress')
     assert(f.before==serpent.line{parameters=speaker.body.parameters,alert=speaker.body.alert_parameters,circuit=speaker.body.get_or_create_control_behavior().circuit_parameters})
     assert(runtime.stop(computer.id) and computer.state.complete)
     log('TC_SPEAKER_RESOURCE_RESULT sounds='..computer.state.count..' instruments='..computer.state.instruments..' tick='..event.tick)

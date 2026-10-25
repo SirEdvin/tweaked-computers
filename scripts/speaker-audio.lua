@@ -94,6 +94,8 @@ function M.valid(path,spend)
   return value
 end
 function M.sounds(prefix,after,spend,guard)
+  -- Native copies and string scans cannot yield internally or fit a larger slice later.
+  local atomic=guard and guard.atomic or spend
   local function initial() return {phase='header',result={sounds={}},bytes=512} end
   local job=guard and guard.job('speaker-sounds',initial) or initial()
   local function resize(bytes)
@@ -101,31 +103,31 @@ function M.sounds(prefix,after,spend,guard)
     job.bytes=bytes
   end
   if job.phase=='header' then
-    local h=header(spend); status(h,'sound')
+    local h=header(atomic); status(h,'sound')
     job.header=h; job.low=1; job.high=h.sound_chunks
     job.page_size=limits.speaker_sound_page_size or 50; job.phase='search'
   end
   local h=job.header
   while job.phase=='search' and job.low<=job.high do
-    local mid=math.floor((job.low+job.high)/2); local last=chunk_index(mid,h,spend).last
+    local mid=math.floor((job.low+job.high)/2); local last=chunk_index(mid,h,atomic).last
     if last<=after or last<prefix then job.low=mid+1 else job.high=mid-1 end
   end
   if job.phase=='search' then job.index=job.low; job.offset=1; job.phase='scan' end
   while job.index<=h.sound_chunks do
     if not job.chunk then
-      local b=chunk_index(job.index,h,spend)
+      local b=chunk_index(job.index,h,atomic)
       -- Admit the native .data copy before retaining its current scan block.
       if guard then guard.job_resize(job.bytes+b.cost) end
-      local a=chunk(job.index,h,spend)
+      local a=chunk(job.index,h,atomic)
       if job.previous and a[1]<=job.previous then unsupported() end
       job.chunk=a; job.chunk_bytes=b.cost; job.bytes=job.bytes+b.cost
     end
     while job.offset<=#job.chunk do
       local path=job.chunk[job.offset]
-      spend(#prefix+#path+4)
+      atomic(#prefix+#path+4)
       if path>after and path>=prefix then
         if path:sub(1,#prefix)~=prefix then return job.result end
-        if M.valid(path,spend) then
+        if M.valid(path,atomic) then
           if #job.result.sounds==job.page_size then
             job.result.next=job.result.sounds[#job.result.sounds]; return job.result
           end

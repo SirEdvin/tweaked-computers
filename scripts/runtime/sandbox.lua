@@ -179,7 +179,7 @@ function M.new(context, services, shell, durable)
   end
   function G.atomic(work,allocations)
     allocations=allocations or 0
-    local allowance=math.min(limits.callback_work,admission.guest_ceiling(context.ledger,context.tick))
+    local allowance=limits.callback_work
     if work>allowance then
       errors.refuse('atomic_work','tc-callback-work',0,work,allowance,'indivisible native operation exceeds the work allowance')
     end

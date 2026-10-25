@@ -115,7 +115,7 @@ Use existing plain `{code,message,field?}` errors; message text is not stable AP
 | Bound entity/path/force/surface is no longer authorized | Existing `E_UNREACHABLE` behavior |
 | Incomplete or oversized physical proof/adoption | Existing `E_NETWORK_PENDING`, `E_LIMIT` or `E_CAPACITY` as applicable |
 | Native sound validation/dispatch fails unexpectedly | `E_ENGINE`; no fabricated success and no automatic replay |
-| Indivisible native operation cannot fit a fresh configured slice | Recoverable resource refusal, not a retryable false |
+| Indivisible native catalogue copy or path operation cannot fit a fresh configured slice | Recoverable `E_CAPACITY` before the native call, identifying the callback or shared host work setting; not endless suspension or a retryable false |
 
 Unsupported methods such as `stop` and `playAudio` are absent, not stubs returning success. Unknown addressed methods follow the ordinary peripheral dispatch error contract.
 

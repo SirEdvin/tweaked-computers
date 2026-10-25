@@ -27,12 +27,12 @@ function M.methods.getLimits(c,r,w,t,spend,guard,...)
 end
 function M.methods.getInstruments(c,r,w,t,spend,guard,...)
   arity(select('#',...),0)
-  local result={}; for _,v in ipairs(audio.index(spend)) do result[#result+1]=v.name end
+  local result={}; for _,v in ipairs(audio.index(guard and guard.atomic or spend)) do result[#result+1]=v.name end
   return result
 end
 function M.methods.getNotes(c,r,w,t,spend,guard,...)
   arity(select('#',...),1); local instrument=text(...)
-  local result={}; for _,v in ipairs(audio.instrument(instrument,spend)) do result[#result+1]={name=v.name,pitch=v.pitch} end
+  local result={}; for _,v in ipairs(audio.instrument(instrument,guard and guard.atomic or spend)) do result[#result+1]={name=v.name,pitch=v.pitch} end
   return result
 end
 function M.methods.getSounds(c,r,w,t,spend,guard,...)
@@ -63,16 +63,17 @@ function M.methods.playNote(c,r,w,t,spend,guard,...)
   arity(select('#',...),1,3); local instrument,vol,pitch=...
   text(instrument); vol=volume(vol); pitch=pitch==nil and 0 or pitch
   if type(pitch)~='number' or not errors.finite(pitch) then errors.raise('E_ARGUMENT','finite numeric pitch required') end
-  local notes=audio.instrument(instrument,spend)
+  local atomic=guard and guard.atomic or spend
+  local notes=audio.instrument(instrument,atomic)
   if not errors.integer(pitch,0,#notes-1) then errors.raise('E_RANGE','pitch outside instrument note inventory') end
   local path=notes[pitch+1].path
-  if not audio.valid(path,spend) then errors.raise('E_UNSUPPORTED','generated note alias unavailable') end
+  if not audio.valid(path,atomic) then errors.raise('E_UNSUPPORTED','generated note alias unavailable') end
   return submit(c,r,w,spend,guard,path,vol)
 end
 function M.methods.playSound(c,r,w,t,spend,guard,...)
   arity(select('#',...),1,2); local path,vol=...
   text(path); vol=volume(vol)
-  if not audio.valid(path,spend) then errors.raise('E_RANGE','invalid Factorio sound path') end
+  if not audio.valid(path,guard and guard.atomic or spend) then errors.raise('E_RANGE','invalid Factorio sound path') end
   return submit(c,r,w,spend,guard,path,vol)
 end
 peripheral.register_type('speaker',{methods=M.methods,with_guard=true,available=function(r) return speaker.available(r) end,callback_stable=true})
