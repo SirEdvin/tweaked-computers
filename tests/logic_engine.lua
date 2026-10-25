@@ -113,10 +113,12 @@ function M.run()
     ok,e=pcall(io.setOutput,{{signal={type='item',name='iron-plate'},count=2147483648}}); assert(not ok and e.code=='E_RANGE')
     ok,e=pcall(io.readSignals,'blue'); assert(not ok and e.code=='E_ARGUMENT')
     ok,e=pcall(io.clearOutput,io); assert(not ok and e.code=='E_ARGUMENT')
-    assert(io.getLimits().sample_interval_ticks==1 and io.getLimits().signal_slots==64)]])
+    local limits=io.getLimits()
+    assert(limits.sample_interval_ticks==1 and limits.signal_slots==nil and limits.filter_signals==nil)
+    assert(limits.active_logic_handlers==nil and limits.aggregate_owned_outputs==nil)]])
   report('native-sections-canonical-copy-duplicate-domain-and-arity-refusals')
   guest(b,[[peripheral.find('logic_handler','red').setOutput({{signal={type='virtual',name='signal-A'},count=7}})]])
-  local newer=io.output_owner; runtime.stop(c.id); assert(io.output_owner==newer and io.output_bank[1].count==7)
+  local newer=io.output_owner; runtime.stop(c.id); assert(io.output_owner==newer and logic.inspect_output(io,nop)[1].count==7)
   runtime.stop(b.id); assert(not io.output_owner and io.children.output.get_control_behavior().sections_count==0)
   report('real-multiple-writers-exact-run-stop-cleanup')
   c.status='running'; c.run_id=c.id..'/fixture2'
@@ -152,7 +154,8 @@ function M.on_tick(event)
   local c=registry.computer(f().c); local io=registry.record(f().io); local s=game.surfaces[1]
   if f().phase=='frozen' then
     if not loaded then return end
-    unchanged(); loaded=false; f().phase='cold-resume'; f().resume=event.tick
+    unchanged(); assert(serpent.line(logic.inspect_output(io,nop))==f().native_bank)
+    loaded=false; f().phase='cold-resume'; f().resume=event.tick
     put(f().red,{{signal=signal(),count=120}})
     -- Keep stock fixture machinery frozen until the cold controller reacts.
     f().inserter.active=false
@@ -236,13 +239,14 @@ function M.on_tick(event)
       report('actual-powered-inserter-transfer-from-saved-controller')
       -- Save retained controller/output/subscription identities with pending input.
       f().inserter.active=false; f().phase='frozen'; f().snapshot=snapshot()
+      f().native_bank=serpent.line(logic.inspect_output(io,nop))
       log('TC_CONTRACT_TOTAL '..f().groups)
       game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
     end
   elseif f().phase=='cold-resume' then
     assert(c.status=='running',c.diagnostic and c.diagnostic.message)
     assert(event.tick-f().resume<120,'cold reaction deadline')
-    if c.state.stock==120 and not io.output_bank[1] then
+    if c.state.stock==120 and not logic.inspect_output(io,nop)[1] then
       assert(c.state.starts==1 and c.run_id==f().snapshot.run)
       f().inserter.active=true; f().phase='cessation'; f().since=event.tick; f().count=f().dest.get_item_count('iron-plate')
       report('cold-owned-output-subscription-identity-and-no-startup-replay')

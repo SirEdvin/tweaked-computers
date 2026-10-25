@@ -22,9 +22,9 @@ Tick = integer                           -- nonnegative, <= 9007199254740991
 Int32 = integer                          -- -2147483648 .. 2147483647
 
 SignalId = {
-  type = "item" | "fluid" | "virtual" | "recipe", -- explicit on guest input/output
+  type = native_signal_type | nil,       -- Logic defaults to item; Configurator uses its schema
   name = string,                         -- exact registered prototype name
-  quality = string                       -- optional input, defaults to "normal"
+  quality = string | nil                 -- defaults to normal; native reads preserve omission
 }
 Signal = { signal = SignalId, count = Int32 }
 
@@ -43,11 +43,24 @@ BaseEvent = {
 
 The radar-modem transport additionally accepts explicit top-level nil as the required third `transmit` argument; the resulting event omits `message`. This is a transport-only exception, not an expansion of persistent Data or nested collection values.
 
+Logic's detached native signal results, registration baselines and trusted circuit
+event graphs bypass generic Data transport ceilings. Native arrays support normal
+indexing, iteration and non-growing edits beyond the guest table width. The closed
+provider validates caller output/filter data again; no guest marker grants trust.
+Explicit state/KV/Console persistence, arbitrary growth and guest execution retain
+their ordinary rules. Circuit events still consume bounded queue entries/envelope
+bytes, excluding native signal graphs: queue bytes are not total snapshot memory.
+
 The canonical [radar modem API](../specs/radar-modem/lua-api.md) specifies shared numeric channels and bounded message delivery; it grants no remote discovery authority. The [speaker API](../specs/speaker-peripheral/lua-api.md) specifies local positional submission, independent of native circuit playback. Neither extends the persistent Data domain or introduces a guest host-network/audio-streaming API.
 
 Identifiers are opaque case-sensitive strings. They are stable across an ordinary save/load but are not reused for a newly placed/cloned entity. Numeric native IDs never become floating-point identity keys in guest code. Prototype names are exact identifiers, not localized labels. `normal` is the only assumed quality; other names must exist in the active prototype registry. Ordinary signal collections reject wildcard pseudo-signals; configurator condition/combinator schemas explicitly permit supported wildcards in their legal positions.
 
-Collections returned by the API are defensive plain snapshots. Sorting is by complete `(type, name, quality)` for signals, opaque name for peripherals/devices, bytewise field name for hash snapshot construction, and native index for section arrays. No ordering relies on table addresses, CPU time, native hash order or player-local state.
+Collections returned by the API are isolated plain snapshots. Logic signals retain
+native ordering and optional fields, without a sorting or stable-order guarantee;
+compare `(type or "item", name, quality or "normal")` without rewriting records.
+Peripherals/devices sort by opaque name, hash snapshot construction by bytewise
+field name, and sections by native index. No ordering uses table addresses, CPU
+time or player-local state. Configurator's independent field schemas are unchanged.
 
 ## Errors
 
@@ -91,7 +104,7 @@ Discovery remains physical while a relay device is unpowered; actual service cal
 ```text
 source_bytes, generated_source_bytes, source_nodes, source_nesting,
 callback_work, callback_depth, callback_allocations, compile_work, host_work_per_tick,
-active_computers, active_logic_handlers, aggregate_subscriptions, aggregate_owned_outputs,
+active_computers, aggregate_subscriptions,
 state_bytes, state_entries, data_nodes, data_depth, string_bytes,
 event_queue_entries, event_queue_bytes, timers, subscriptions,
 network_nodes, network_edges, topology_latency_ticks,
@@ -99,7 +112,12 @@ peripheral_call_bytes, peripheral_call_entries,
 console_entries, console_bytes, fail_safe_latency_ticks
 ```
 
-Device-specific `getLimits()` adds monitor dimensions/cells/render latency, KV capacities, logic slots/subscriptions, or configurator traversal/configuration/section limits. Values are finite positive integers; allowed zeros are explicitly documented for optional capacities, not silently interpreted as unlimited. Prototype/signal availability is separate from size limits.
+Device-specific `getLimits()` adds monitor dimensions/cells/render latency, KV
+capacities, Logic registration/timing policy, or configurator traversal/configuration
+limits. Logic's removed `signal_slots`, `filter_signals`, `active_logic_handlers`
+and `aggregate_owned_outputs` keys are absent, not replacement knobs. Shared Data
+fields do not describe native circuit inventory capacity. Retained values are finite
+positive integers; documented optional zeros are not silently interpreted as unlimited.
 
 These are release-gated values, not falsely precise promises in this planning package. Implementation must derive and freeze a feasible envelope using the packaged engine and actual client workloads before accepting a release. Limits cannot be silently lowered below existing accepted content on load; retain such data readably and refuse growth until an explicit migration/policy is approved. Overflow metadata/item serialization must fit in addition to accepted payloads.
 

@@ -28,7 +28,7 @@ def main():
     ap.add_argument('--output', type=Path, required=True)
     ap.add_argument('--mode', choices=['base', 'space-age', 'both'], default='both')
     ap.add_argument('--baseline', default=BASELINE, help='Pinned source commit for the populated old save')
-    ap.add_argument('--fixture', choices=[FIXTURE, 'tests.peripheral_inspector_upgrade_engine'], default=FIXTURE)
+    ap.add_argument('--fixture', choices=[FIXTURE, 'tests.peripheral_inspector_upgrade_engine', 'tests.native_circuit_upgrade_engine'], default=FIXTURE)
     args = ap.parse_args()
     args.output = args.output.resolve()
     if args.output.exists() or args.output.is_relative_to(ROOT):

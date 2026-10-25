@@ -302,24 +302,27 @@ The in-game Stock-controlled inserter tutorial includes stock INPUT, inserter OU
 red NETWORK wiring, runnable source, execution steps and expected behavior.
 
 readSignal(input, signal) -> signed32 count; absent gives 0. signal is an exact
-SignalId {type,name,quality?}; type includes item/fluid/virtual/recipe.
+SignalId {type?,name,quality?}; missing type/quality mean item/normal. All native
+signal categories are supported; caller identities must name real prototypes.
 
 
-readSignals(input) -> complete sorted copied nonzero Signal array. Each entry is
-{signal={type,name,quality},count=Int32}; only the selected INPUT color is read.
+readSignals(input) -> complete fresh native Signal array. Each entry is
+{signal={type?,name,quality?},count=Int32}; only the selected INPUT color is read.
+Native order and optional fields are preserved; no sorting or signal-count cap.
 
 
 getInputStatus() -> {red_connected=boolean,green_connected=boolean}. Distinguishes
 disconnected wires from connected empty inputs using actual INPUT edges.
 
 
-getOutput() -> copied Signal array of this handler's own configured contribution,
-not summed network values or other emitters.
+getOutput() -> fresh Signal array from this handler's own native configuration,
+not summed network values, other emitters or a cached bank.
 
 
 setOutput(signals) -> no values. Replaces the complete bank mirrored to both OUTPUT
 wires and transfers writer ownership. Duplicate identities refuse, including zeros;
-zero counts are omitted. Failed admission preserves the prior bank and owner.
+zero counts are omitted. Native slot/count domains apply, not a mod slot cap.
+Failed admission preserves the prior bank and owner; default aliases are duplicates.
 
 
 clearOutput() -> no values. Equivalent to setOutput({}), including writer transfer;
@@ -329,6 +332,9 @@ it does not clear other native emitters on the output network.
 subscribe(options, handler_name) -> run-scoped subscription ID. options={input=...,
 signals={SignalId,...}?,initial=boolean?}; input required, filters nonempty/unique if
 supplied, initial defaults false. Named saved handlers only; Console refuses.
+Registration takes a fresh baseline. Ordering/default-field differences alone
+are not changes. Native payloads bypass Data size caps; queue entries/envelopes
+remain bounded, and state/KV/Console persistence retains its ordinary limits.
 
 
 unsubscribe(subscription_id) -> boolean. Removes this run/binding's registration
@@ -336,7 +342,7 @@ and its queued samples; false when absent, not authority to remove another bindi
 
 
 getLimits() -> copied common/logic ceilings, including while reachable unpowered.
-Includes 64 slots/filter signals and one-tick sampling; shared admission still applies.
+Includes registration limits and one-tick sampling; no slot/filter/device/bank cap.
 
 KV DATABASE
 Shared storage guidance: values/fields/keys are byte strings, including empty/NUL.

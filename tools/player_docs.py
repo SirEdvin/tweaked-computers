@@ -268,7 +268,12 @@ def generated():
                    '[KV](kv.md#atomicity-errors-and-capacities), [logic](logic.md#bounds-and-use),',
                    '[configurator](configurator.md#bounds-programs-and-troubleshooting),',
                    '[Recipe Searcher](recipe-searcher.md#complete-results-not-a-prefix).',
-                   'See [shared rules](common.md) for Data accounting and refusal behavior.', '']
+                   'See [shared rules](common.md) for Data accounting and refusal behavior.', '',
+                   'Logic native results and trusted signal snapshots are not generic Data payloads.',
+                   'Their cardinality is not bounded by the table/node/byte keys above. Circuit queues',
+                   'still consume entries and envelope bytes, excluding native graphs; this is not a',
+                   'total-memory bound. Removed `signal_slots`, `filter_signals`, `active_logic_handlers`',
+                   'and `aggregate_owned_outputs` keys are absent, not configurable replacements.', '']
     return {'api/settings.md': '\n'.join(out), 'api/schemas.md': '\n'.join(schemas),
             'examples.md': '\n'.join(examples), 'api/limits.md': '\n'.join(limit_page)}
 

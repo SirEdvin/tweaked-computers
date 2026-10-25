@@ -157,6 +157,9 @@ function M.services(computer,tick,guard,execution)
     end
     if rec.kind=='speaker' and (method=='playNote' or method=='playSound') then guard.prepare_boolean_result() end
     if rec.kind=='radar' and method=='transmit' then guard.prepare_empty_result() end
+    if rec.kind=='logic' and (method=='readSignals' or method=='getOutput') and guard.circuit_result then
+      return guard.circuit_result(fn(computer,rec,wire,tick,spend,execution,...))
+    end
     if bindings[rec.kind].with_principal then return fn(computer,rec,wire,tick,spend,execution,...) end
     return fn(computer,rec,wire,tick,spend,...)
   end
@@ -164,7 +167,7 @@ function M.services(computer,tick,guard,execution)
     local name,generation=rec.id,rec.generation; local methods={}
     for method in pairs(bindings[rec.kind].methods) do
       local key=method
-      methods[key]=guard.service(function(...) return invoke(name,wire,generation,key,...) end)
+      methods[key]=guard.service(function(...) return invoke(name,wire,generation,key,...) end,rec.kind=='logic')
 
     end
     local proxy=guard.namespace(methods,'peripheral method')
@@ -218,6 +221,9 @@ function M.services(computer,tick,guard,execution)
     if type(method_name)~='string' or #method_name>limits.identifier_bytes then errors.raise('E_ARGUMENT','method name required') end
     return invoke(name,wire,nil,method_name,...)
   end
+  if guard.circuit_call then guard.circuit_call(api.call,function(name,wire)
+    local rec=lookup(name,wire); return rec and rec.kind=='logic'
+  end) end
   method('find',2,function(type_name,wire)
     if type(type_name)~='string' or #type_name>limits.identifier_bytes then errors.raise('E_ARGUMENT','peripheral type required') end
     local values=inventory(wire); local matches={}
@@ -246,7 +252,7 @@ function M.services(computer,tick,guard,execution)
         if not identity or identity.name~=d.name or identity.wire~=d.wire or identity.generation~=d.generation then errors.raise('E_ARGUMENT','captured method/facade identity mismatch') end
         return guard.get(parent,d.method)
       end
-      local fn=guard.service(function(...) return invoke(d.name,d.wire,d.generation,d.method,...) end)
+      local fn=guard.service(function(...) return invoke(d.name,d.wire,d.generation,d.method,...) end,d.kind=='logic')
       guard.bind_value(fn,d); return fn
     end
     return facade({id=d.name,generation=d.generation,kind=d.kind},d.wire)
