@@ -55,7 +55,9 @@ local function retained()
     for _,role in ipairs(defs.devices[kind].roles) do for _,color in ipairs({'red','green'}) do assert(lifecycle.connector(r,role,color)) end end
   end
   assert(c.state==x.state and c.active==x.active and c.state.boots==1 and c.run_id==x.run)
-  assert(io.output_owner==x.owner and io.output_bank==x.bank and x.bank[1].count==13)
+  assert(io.output_owner==x.owner and x.bank[1].count==13)
+  if not x.upgraded then assert(io.output_bank==x.bank) end
+  assert(io.children.output.get_control_behavior().get_section(1).get_slot(1).min==13)
   assert(x.records.kv.database==x.database and x.database.entries['binary\0'].value=='retained\255')
   assert(x.database.entries['binary\0'].deadline==360000)
   assert(monitor.resolve(x.records.monitor)==x.group and x.group.model==x.model)
@@ -64,9 +66,9 @@ local function retained()
 end
 function M.on_load() loaded=true; if f().phase=='frozen' then retained(); log('TC_INSPECTOR_UPGRADE_LOAD_UNCHANGED') end end
 function M.on_configuration_changed()
+  f().upgraded=true
   retained()
   for kind,r in pairs(f().records) do assert(r.body.operable==(kind~='computer')) end
-  f().upgraded=true
 end
 function M.on_tick()
   local x=f(); if x.phase=='done' then return end

@@ -14,7 +14,7 @@ A logic handler SHALL occupy a rotatable 3×1 footprint with input, middle compu
 - **THEN** all three roles rotate consistently and remain visibly distinguishable without swapping their logical meanings or leaking signals between them.
 
 ### Requirement: Quality-aware input inspection
-The API SHALL require an explicit red or green input selector and SHALL NOT combine colors or supply a default. Missing, both and invalid selectors SHALL fail before subscription registration. Signal identities SHALL include type, name and quality, including installed recipe prototypes independently of same-named items. Missing signals SHALL read as zero, and collections SHALL be canonical, bounded defensive snapshots.
+The API SHALL require explicit red or green input selection. Each read SHALL query that native input directly, without a signal cache, mod inventory ceiling, sorting, normalization, reaggregation or validation of engine-produced values. Collections SHALL preserve native order, fields and signal categories, with no ordering guarantee. Missing signals SHALL read as zero; no signals SHALL return an empty array. Returned tables SHALL not expose mutable host state.
 
 #### Scenario: Same item at different qualities
 - **WHEN** normal and higher-quality item signals exist together
@@ -25,25 +25,44 @@ The API SHALL require an explicit red or green input selector and SHALL NOT comb
 - **THEN** only that color's native signed-32-bit values are returned; selecting both or omitting the selector fails without registration or mutation.
 
 #### Scenario: Unrelated prototype catalogue grows
-- **WHEN** installed mods add unrelated items, recipes, fluids, virtual signals or qualities without changing the selected input
-- **THEN** read admission charges the native call and actual returned data, not the global prototype inventory; actual signal capacity, validation and shared work/Data limits still apply.
+- **WHEN** installed mods add unrelated prototypes without changing the selected input
+- **THEN** reads query the selected input rather than scanning the prototype catalogue to calculate an admission envelope.
+
+#### Scenario: Native records replace canonical records
+- **WHEN** native results omit default identity fields or return signals in a different order
+- **THEN** reads preserve those records without filling defaults or sorting
+- **AND** item, fluid, virtual, recipe, entity and expansion-specific categories returned by the engine are not rejected by a mod-maintained read whitelist.
+
+#### Scenario: Fresh reads exceed former ceilings
+- **WHEN** an input carries 65, 150 or more than 1,024 signals and changes between calls
+- **THEN** each call returns its complete current native result, including entries beyond former boundaries, not an older subscription or inspector observation
+- **AND** signal names accepted by the engine are not rejected for exceeding the mod's identifier length.
 
 ### Requirement: Shared combinator-style output
-The handler SHALL hold one output signal set broadcast identically on red and green output wires. API writes SHALL replace or update that set as documented, validating all identities, counts and capacity before mutation. It MUST NOT offer independent output banks by color.
+The handler SHALL broadcast one output set identically on red and green. Writes SHALL validate caller data and replace the bank atomically within native domains, without mod signal-count/name ceilings or sorting. Native optional identity fields SHALL be accepted. Own-output reads SHALL query its native configuration, not cached values or network totals. Failed replacement SHALL preserve the previous bank and writer, subject to existing engine-failure recovery.
 
 #### Scenario: Output is visible on either wire color
 - **WHEN** an authorized computer successfully replaces the output set
 - **THEN** red and green output networks receive the same contribution through Factorio's native circuit update behavior.
 
 #### Scenario: Rejected output remains unchanged
-- **WHEN** a write contains duplicate identities, an invalid prototype/quality, an out-of-range count or exceeds capacity
+- **WHEN** a write contains duplicate effective identities, an invalid prototype/quality, an out-of-range count or exceeds native capacity
 - **THEN** the previous output and writer ownership remain unchanged.
 
+#### Scenario: Native-size replacement and own-output readback
+- **WHEN** a valid bank exceeding 64 entries fits the native output section and another emitter shares its output wire
+- **THEN** the whole replacement succeeds and readback contains only this handler's contribution, without canonical ordering or injected default fields.
+
+#### Scenario: Native defaults remain valid caller input
+- **WHEN** a caller supplies an item identity with omitted type or normal quality, including a record obtained from a native read
+- **THEN** validation interprets native defaults without requiring an expanded record
+- **AND** identities differing only by explicit versus omitted defaults are duplicates, not independent outputs.
+
 ### Requirement: Tick-sampled change subscriptions
-Programs SHALL subscribe named handlers to explicitly selected red or green input snapshots, optionally filtered by signal identity. Within the supported envelope, powered handlers SHALL be sampled once per simulation tick and only changed samples or explicitly requested initial/resync samples SHALL produce events.
+Programs SHALL subscribe named handlers to explicit red or green inputs, optionally filtered by identity. Subscription-count limits SHALL be checked only when the user registers. Accepted subscriptions SHALL sample native inputs each powered simulation tick without internal inventory ceilings or persisted processing jobs. Only changes, requested initial observations or resynchronization SHALL emit events. Comparisons SHALL use effective identities and counts, not order.
 
 #### Scenario: Unchanged input
-- **WHEN** consecutive selected input snapshots and connectivity are identical
+- **WHEN** consecutive selected input snapshots and connectivity are identical, possibly with different array ordering or omitted versus explicit default fields
 - **THEN** no redundant change event is emitted.
 
 #### Scenario: Signal disappears
@@ -52,7 +71,22 @@ Programs SHALL subscribe named handlers to explicitly selected red or green inpu
 
 #### Scenario: Input connection changes without values
 - **WHEN** an empty input network is disconnected
-- **THEN** the subscription can distinguish the connectivity change from a still-connected zero-valued input.
+- **THEN** the subscription distinguishes the connectivity change from a still-connected zero-valued input.
+
+#### Scenario: Admission happens at registration only
+- **WHEN** a user exceeds the existing per-computer or aggregate subscription-count allowance
+- **THEN** registration fails before adding a subscription or changing existing baselines
+- **AND** accepted subscriptions are not re-admitted or retired because of that refusal, signal growth or a distinct sampled-device count.
+
+#### Scenario: Large filters and complete event delivery
+- **WHEN** an accepted subscription observes or filters more than 1,024 valid identities and its event queue has backlog capacity
+- **THEN** its baseline and delivered previous/current/changes arrays contain all applicable entries, without a filter-count, generic Data or per-event signal-size rejection
+- **AND** native records remain unnormalized and unsorted throughout delivery.
+
+#### Scenario: Retained observations are not a read cache
+- **WHEN** previous observations or undispatched events exist
+- **THEN** they serve comparison and delivery only; a direct read or new registration baseline queries the native input independently
+- **AND** callback mutation cannot change another subscriber's event or the next comparison baseline.
 
 ### Requirement: Defined observation and delivery timing
 The API SHALL distinguish sample tick from callback-dispatch tick and document native previous-circuit-step observations. It MUST NOT promise same-tick combinational feedback or detection of changes occurring entirely between sampled engine states.
@@ -108,19 +142,19 @@ The Logic Handler inspector SHALL present one Input signals area and an adjacent
 - **THEN** the signal regions reflow or scroll without hiding close/copy controls or losing the distinction between inputs and outputs.
 
 ### Requirement: Faithful signal identities and counts
-Signal slots SHALL preserve type, prototype name, quality and signed count, including recipe signals distinct from same-named item signals. Exact counts and identity details SHALL be accessible even if slot overlays abbreviate large values. Disconnected inputs, connected networks with no nonzero signals, unavailable samples and capacity failures SHALL be distinguishable.
+Signal slots SHALL display effective native identity and exact signed count, interpreting omitted defaults at presentation without rewriting records. All engine-produced categories SHALL remain inspectable. Disconnected, connected-empty and unavailable inputs SHALL remain distinguishable. Presentation SHALL NOT introduce a sorting or complete-field guarantee for the API.
 
 #### Scenario: Quality and namespace distinctions
-- **WHEN** normal and higher-quality versions of an item, or an item and recipe with the same name, appear together
-- **THEN** they remain separate entries with appropriate icons and unambiguous identity details.
+- **WHEN** normal and higher-quality items, or an item and recipe with the same name, appear together
+- **THEN** they remain separate entries with unambiguous identity details and appropriate native icons where available.
 
 #### Scenario: Negative or large values
-- **WHEN** a sampled signal has a negative count or a value near a signed-32-bit boundary
-- **THEN** the inspector preserves the exact value in its detail/tooltip presentation rather than rounding the authoritative count.
+- **WHEN** a signal has a negative count or a value near a signed-32-bit boundary
+- **THEN** its exact value remains accessible in details/tooltips.
 
 #### Scenario: Empty versus disconnected
-- **WHEN** one input color is connected but has no nonzero signals and the other is disconnected
-- **THEN** the shared input region distinguishes those states without fabricating zero-valued slots or reporting a failed query as empty.
+- **WHEN** one input is connected with no signals and the other is disconnected
+- **THEN** the input region distinguishes those states without fabricated zero entries or treating a failed query as empty.
 
 ### Requirement: Own output contribution rather than network totals
 The Output signals area SHALL show the handler's own emitted bank, with an explicit label that it is shared across its red and green output wires. It SHALL NOT attribute signals from other emitters on an output network to this handler. Inspection SHALL NOT write a bank, claim ownership or change fail-safe cleanup behavior.
@@ -134,17 +168,17 @@ The Output signals area SHALL show the handler's own emitted bank, with an expli
 - **THEN** the next successful inspector update shows the cleared bank without replaying a write or restoring the former owner.
 
 ### Requirement: Bounded live signal observation
-Signal trays SHALL appear before query admission and publish complete per-wire samples independently with explicit ticks or pending/stale/error states. A refused input SHALL NOT block other inputs or own-output inspection. Separate-tick samples SHALL NOT be described as atomic. Inspection SHALL NOT create subscriptions or promise pulse capture; closing SHALL stop inspection without changing program subscriptions or output ownership.
+Signal trays SHALL appear before refresh and query native inputs and own output directly, independently of subscriptions. No native inventory SHALL be rejected or truncated by mod size ceilings. Refresh scheduling and presentation SHALL preserve responsiveness without caching service reads or adding persisted sampling/sorting/validation jobs. Separate-tick observations SHALL remain distinguishable; closing inspection SHALL not affect subscriptions or output ownership.
 
 #### Scenario: Signals change with the inspector open
-- **WHEN** powered input values change and inspection work is admitted
-- **THEN** the panel updates its displayed signals without reopening the window, altering subscriptions or changing the wire-selection contract.
+- **WHEN** powered inputs change and the inspector refreshes
+- **THEN** it displays fresh native observations without reopening or altering subscriptions.
 
 #### Scenario: Query exceeds supported signal capacity
-- **WHEN** a native input exceeds the existing supported signal limit or work admission fails
-- **THEN** the panel reports the relevant limit/pending state rather than presenting a truncated signal set as complete or resetting logic output.
+- **WHEN** a native input exceeds 64 or 1,024 signals
+- **THEN** every signal remains accessible in the inspector, not a capacity error, hidden tail or apparently complete prefix.
 
 #### Scenario: One input cannot be sampled
-- **WHEN** an input repeatedly fails work admission while the other input and own output fit within unchanged host ceilings
-- **THEN** all signal trays remain visible, the failed input is marked pending/stale/error, and the other regions continue updating independently.
-- **AND** unknown samples are not shown as empty, while any retained older sample keeps its original tick and explicit refusal state.
+- **WHEN** an input is genuinely unavailable while the other input and own output remain available
+- **THEN** all trays stay visible, the unavailable input is marked honestly and the other regions continue updating
+- **AND** retained presentation state is never returned as a fresh service read or mistaken for an empty successful sample.

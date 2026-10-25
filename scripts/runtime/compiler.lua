@@ -381,7 +381,7 @@ function M.compile(source, context, mode)
   return plan
 end
 
-function M.run(plan, name, event, services, context)
+function M.run(plan, name, event, services, context, circuit)
   if type(plan) ~= 'table' or plan.mode~=nil or plan.compiler_version ~= limits.compiler_version or plan.api_version ~= 1 then
     return false,errors.new('E_PROGRAM','unsupported compiler/API version; source retained')
   end
@@ -404,7 +404,7 @@ function M.run(plan, name, event, services, context)
     for _ in pairs(executable.handlers) do count = count + 1 end
     guard.prepare_descriptor(count)
     local handlers = factory()
-    return guard.call(handlers[name],guard.snapshot(event))
+    return guard.call(handlers[name],circuit and guard.circuit_event(event) or guard.snapshot(event))
   end)
   if not ok then return false,guard.diagnostic(result),guard.stop_requested() and 'stop' or nil end
   return true

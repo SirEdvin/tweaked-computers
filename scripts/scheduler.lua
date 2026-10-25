@@ -149,7 +149,7 @@ local function dispatch_program(rec,tick)
   rec.last_dispatch_tick=tick
   table.remove(rec.queue,1); rec.queue_bytes=rec.queue_bytes-item.bytes
   item.event.tick=tick
-  local ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,function(guard) return runtime.services(rec,tick,guard) end,ctx)
+  local ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,function(guard) return runtime.services(rec,tick,guard) end,ctx,item.circuit==true)
   if not ok then
     if control=='stop' then runtime.retire(rec,'stopped','stop')
     else runtime.fault(rec,diagnostic,tick) end

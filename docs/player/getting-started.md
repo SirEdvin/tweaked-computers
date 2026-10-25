@@ -5,11 +5,11 @@
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot; removal/destruction of a device is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
-   the Mod Portal, select **0.1.13 ALPHA**, enable it, and restart when prompted.
-   This version removes global prototype-count precharges from logic reads and
-   recipe queries, retaining independent signal panels and all previous features.
-3. For manual installation, download `tweaked-computers_0.1.13.zip` from the
-   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.13)
+   the Mod Portal, select **0.1.14 ALPHA**, enable it, and restart when prompted.
+   This version exposes complete native circuit signals and restricts computer
+   Ctrl-click opening to the selected computer body.
+3. For manual installation, download `tweaked-computers_0.1.14.zip` from the
+   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.14)
    and place it in your Factorio
    user-data `mods` directory without unpacking it. Remove conflicting duplicate
    versions, enable the mod, and restart. The ZIP's internal folder must match its
@@ -98,6 +98,15 @@ and Recipe Searcher product/category queries. Adding unrelated recipes, items or
 qualities no longer makes a small input query unaffordable. Actual result limits,
 validation, power/ownership checks and shared work/Data budgets remain unchanged.
 Back up the save and keep the matching 0.1.12 ZIP before upgrading.
+
+Version 0.1.14 reads complete native circuit inventories in native order, without
+mod-defined signal/filter/output-slot ceilings. Missing signal type means item;
+missing quality means normal. Update programs that assume sorted arrays or explicit
+default fields. Native output slot bounds, validation, authority, ownership and
+ordinary guest/persistence budgets still apply. Existing subscriptions, queued
+events and native output owners survive without restarting programs. Empty-ground
+Ctrl-click is inert; recover retained drafts through a computer's Maintenance tab.
+Keep the pre-upgrade save and matching 0.1.13 ZIP; do not downgrade the upgraded save.
 
 ## Research and craft
 

@@ -31,7 +31,7 @@ never assume an arbitrary newer-schema save can be downgraded safely.
 
 ## Configured envelope, not a real-time guarantee
 
-These unchanged ceilings reject unsafe growth; they are provisional alpha tuning.
+These retained ceilings reject unsafe growth; they are provisional alpha tuning.
 Successful work-unit accounting is not a CPU-time bound or measured maximum-world
 input/render latency. `computer.getLimits()` and each peripheral's `getLimits()`
 return defensive effective tables, including additional fields described in their
@@ -44,15 +44,15 @@ not the unfinished client performance gate.
 | Native callback | default work 500,000, depth 32, default allocations 81,920; work/allocation budgets are live Map settings |
 | Compilation | default work 1,250,000, live Map setting; active/saved source kept separately |
 | Shared actual tick | default 5,000,000 total-envelope units; default 200,000 reserved maintenance; both live Map settings, no extra guest pool |
-| Active admission | 64 computers, 128 sampled logic handlers, 1,024 subscriptions, 128 owned banks |
+| Active admission | 64 computers and 1,024 subscriptions; no separate sampled-handler/owned-bank quota |
 | State | 65,536 accounted bytes, 256 entries, 4,096 Data nodes, Data depth 16 |
-| Queue/timers | 128 queue entries / 65,536 accounted bytes; 64 timers and 64 subscriptions per computer |
+| Queue/timers | 128 queue entries / 65,536 accounted bytes; circuit native graphs excluded, envelopes retained; 64 timers and 64 subscriptions per computer |
 | Discovery | 256 connector nodes / 512 edges; explicit complete-result refusal |
 | Monitor | 4×4 tile rectangle, 4,704 cells at scale 0.5; aggregate 80,000 cells / 256 tiles; write 16,384 bytes |
 | Presentation | up to 1,024 cell visits per paid rendering tick; 60,000 units reserved inside maintenance |
 | Status artwork | at most 128 device visits per tick, persistent fair cursor; no added budget |
 | KV | 128 keys / 16,384 content bytes; snapshot metadata reserved separately |
-| Logic | 64 signal slots/filter signals; one actual-tick sample, mirrored output bank |
+| Logic | Complete native inventories with no mod signal/filter cap; one actual-tick sample, shared native output bank |
 | Configurator | full 36 native classes / 164 inherited field entries; bounded target/schema/section operations |
 
 The configurator ledger accounts for every field. There are 163 applicable writes

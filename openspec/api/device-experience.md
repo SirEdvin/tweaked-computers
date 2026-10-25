@@ -25,7 +25,7 @@ These are host-only adapter actions, not new guest APIs. The current model remai
 | review-active / copy-active | Maintenance source recovery | Review before replacing draft; copying never saves/runs. |
 | review-recovery / recover | Maintenance retained-drafts panel | Select/review source before replacing current draft; no autoactivation. |
 | forget / confirm-forget / cancel-forget | Maintenance retained-drafts panel | Explicit confirmation; never evict the open document. |
-| open_recovery / recovery_action | Standalone recovery entry | Still available without an accessible computer; review and confirmed forget only. |
+| open_recovery / recovery_action | Capacity recovery entry from an accessible computer | Eight retained slots open the viewer instead of evicting drafts; review and confirmed forget only. Removed-computer drafts remain recoverable through another computer's Maintenance; empty ground never opens UI. |
 | close | Native title close / Escape | Retain draft; do not stop execution. |
 | text edit | Editor source widget | Existing byte limits and exact player/frame/session/generation checks. |
 

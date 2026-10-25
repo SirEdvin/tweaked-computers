@@ -209,14 +209,14 @@ function M.run()
     end)
     group('logic-output-live-stopped-owner-and-exact-cleanup',function()
       execute('local q=peripheral.wrap("'..out.id..'","red"); q.setOutput({{signal={type="recipe",name="iron-plate"},count=7}}); assert(q.getOutput()[1].signal.type=="recipe" and q.getOutput()[1].count==7); assert(q.readSignal("red",{type="recipe",name="iron-plate"})==0); assert(#q.readSignals("red")==0)')
-      assert(out.output_owner.kind=='shell' and out.output_bank[1].signal.type=='recipe')
-      local bank,owner=out.output_bank,out.output_owner
+      assert(out.output_owner.kind=='shell' and logic.inspect_output(out,function() end)[1].signal.type=='recipe')
+      local bank,owner=serpent.line(logic.inspect_output(out,function() end)),out.output_owner
       tick=tick+1
       execute('local q=peripheral.wrap("'..out.id..'","red"); for _,bad in ipairs({"both","blue",false}) do local ok,e=pcall(q.readSignals,bad); assert(not ok and e.code=="E_ARGUMENT"); ok,e=pcall(q.readSignal,bad,{type="recipe",name="iron-plate"}); assert(not ok and e.code=="E_ARGUMENT"); for _,method in ipairs({"getOutput","setOutput","clearOutput"}) do ok,e=pcall(peripheral.call,"'..out.id..'",bad,method,{}); assert(not ok and e.code=="E_ARGUMENT") end end; local ok,e=pcall(q.readSignals); assert(not ok and e.code=="E_ARGUMENT"); ok,e=pcall(q.readSignal,nil,{type="recipe",name="iron-plate"}); assert(not ok and e.code=="E_ARGUMENT"); ok,e=pcall(peripheral.call,"'..out.id..'",nil,"setOutput",{}); assert(not ok and e.code=="E_ARGUMENT")')
-      assert(out.output_bank==bank and out.output_owner==owner and next(rec.subscriptions)==nil)
+      assert(serpent.line(logic.inspect_output(out,function() end))==bank and out.output_owner==owner and next(rec.subscriptions)==nil)
       tick=tick+1
       execute('peripheral.call("'..out.id..'","red","setOutput",{{signal={type="virtual",name="signal-A"},count=12}})')
-      assert(out.output_owner.kind=='shell' and #out.output_bank==1)
+      assert(out.output_owner.kind=='shell' and #logic.inspect_output(out,function() end)==1)
       peripheral.check_outputs(tick,function() end)
       assert(out.output_owner and out.output_owner.kind=='shell')
       out.output_owner={computer_id=rec.id,kind='program',run_id='later-run',wire='red'}

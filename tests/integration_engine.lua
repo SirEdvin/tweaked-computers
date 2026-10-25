@@ -4,6 +4,7 @@ local lifecycle=require('scripts.lifecycle')
 local runtime=require('scripts.runtime.computer')
 local scheduler=require('scripts.scheduler')
 local kv=require('scripts.services.kv')
+local logic=require('scripts.services.logic')
 local monitor=require('scripts.services.monitor')
 local model=require('scripts.monitor-model')
 local editor=require('scripts.ui.editor')
@@ -145,7 +146,7 @@ function M.on_tick(event)
       x.stock.insert{name='iron-plate',count=115}; x.phase='high'; x.since=event.tick
     end
   elseif x.phase=='high' then
-    if io.output_bank and #io.output_bank==0 then log('TC_MEASURE stock_input_to_output_ticks='..(event.tick-x.since)); x.phase='settle'; x.since=event.tick end
+    if #logic.inspect_output(io,nop)==0 then log('TC_MEASURE stock_input_to_output_ticks='..(event.tick-x.since)); x.phase='settle'; x.since=event.tick end
     assert(event.tick-x.since<180,'high stock reaction deadline')
   elseif x.phase=='settle' and event.tick-x.since>=90 then
     x.count=x.destination.get_item_count('iron-plate'); x.phase='cessation'; x.since=event.tick
@@ -153,9 +154,9 @@ function M.on_tick(event)
     assert(x.destination.get_item_count('iron-plate')==x.count,'native inserter did not stop')
     report('real-tick-stock-threshold-and-settled-item-cessation')
     x.stock.remove_item{name='iron-plate',count=115}; x.phase='low'; x.since=event.tick
-  elseif x.phase=='low' and io.output_bank and io.output_bank[1] then
+  elseif x.phase=='low' and logic.inspect_output(io,nop)[1] then
     touch(); x.phase='touch'; x.since=event.tick
-  elseif x.phase=='touch' and c.state.enabled==false and #io.output_bank==0 then
+  elseif x.phase=='touch' and c.state.enabled==false and #logic.inspect_output(io,nop)==0 then
     log('TC_MEASURE mock_touch_to_output_ticks='..(event.tick-x.since))
     report('table-backed-world-touch-production-handler-disables-output')
     -- Native player changes must not be overwritten by cold startup replay.
@@ -174,17 +175,17 @@ function M.on_tick(event)
     assert(x.inserter.get_control_behavior().circuit_condition.constant==7,'startup configuration replayed')
     report('cold-source-state-queue-display-aliases-spent-credits-and-no-startup-replay')
     touch(); x.phase='save-edit'; x.since=event.tick
-  elseif x.phase=='save-edit' and c.state.enabled and io.output_bank[1] then
+  elseif x.phase=='save-edit' and c.state.enabled and logic.inspect_output(io,nop)[1] then
     x.old_run=c.run_id; x.old_active=c.active
     x.edited_source=assert(sources.factory:gsub('count < 100','count < 3'))
     submit(c,x.edited_source,7101,true)
     assert(c.active==x.old_active and c.run_id==x.old_run and c.saved_source~=c.active.source)
     x.phase='saved-old'; x.since=event.tick
   elseif x.phase=='saved-old' and event.tick-x.since>=65 then
-    assert(c.active==x.old_active and c.run_id==x.old_run and io.output_bank[1].count==1)
+    assert(c.active==x.old_active and c.run_id==x.old_run and logic.inspect_output(io,nop)[1].count==1)
     submit(c,x.edited_source,nil,false,'apply'); x.phase='applied'; x.since=event.tick
   elseif x.phase=='applied' and event.tick-x.since>=65 then
-    assert(c.active.source==x.edited_source and c.run_id~=x.old_run and #io.output_bank==0 and c.state.enabled)
+    assert(c.active.source==x.edited_source and c.run_id~=x.old_run and #logic.inspect_output(io,nop)==0 and c.state.enabled)
     report('edited-threshold-save-keeps-old-factory-apply-uses-saved-revision')
     runtime.stop(c.id); x.phase='expiry'; x.since=event.tick
     assert(not io.output_owner and io.children.output.get_control_behavior().sections_count==0)

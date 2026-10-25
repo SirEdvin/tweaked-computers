@@ -145,8 +145,8 @@ or one nil, after a complete live search. `scripts.network` exposes `wire`,
 traversal, but do not reuse the discovery-role allowlist: target relay policy is
 separate and must not jump between an entity's isolated connectors.
 
-Logic writes use `output_owner={computer_id, run_id, wire, path?}` and a whole
-`output_bank`. The optional path is a physical ID sequence from computer to logic
+Logic writes use `output_owner={computer_id, run_id, wire, path?}` with native
+output configuration, not a retained `output_bank` mirror. The optional path is a physical ID sequence from computer to logic
 handler. The network safety hook revalidates it every tick, recovers an alternate
 bounded path, or calls `lifecycle.clear_output`. It also clears malformed ownership
 fail-closed. The registered source-independent cleanup hook clears exact

@@ -79,7 +79,10 @@ local function retained()
   assert(x.records.kv.database==x.database and x.database.entries.secret.value=='retained string')
   assert(x.database.entries.hash.fields.field=='retained hash' and x.database.entries.secret.deadline==x.deadline)
   assert(monitor.resolve(x.records.monitor)==x.group and x.group.model==x.screen and x.screen.cells[1][1]==75)
-  assert(x.records.logic.output_bank==x.bank and x.records.logic.output_owner==x.owner)
+  local io=x.records.logic
+  assert(io.output_owner==x.owner)
+  if not x.upgraded then assert(io.output_bank==x.bank) end
+  assert(io.children.output.get_control_behavior().get_section(1).get_slot(1).min==13)
   assert(registry.get().player_drafts[1].documents[c.id].source=='dirty retained draft')
 end
 function M.on_load()
@@ -87,7 +90,7 @@ function M.on_load()
   if f().phase=='frozen' then retained(); log('TC_RD1_OLD_ON_LOAD_UNCHANGED') end
 end
 function M.on_configuration_changed()
-  local x=f(); retained()
+  local x=f(); x.upgraded=true; retained()
   for _,kind in ipairs({'computer','kv','monitor','logic'}) do
     local rec=x.records[kind]; assert(rec.layout_version==2 and rec.body.name==defs.devices[kind].entity_name)
     assert(registry.by_entity(rec.body)==rec and lifecycle.has_power(rec))

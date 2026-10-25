@@ -24,8 +24,9 @@ shells, Input and Factory targets have zero combinator sections and are disabled
 and inoperable. Output contributes its single controlled bank to both colors.
 Opening a computer requires Ctrl + left-click with an empty cursor; ordinary
 open and the old Ctrl+Shift+E route are disabled. Existing reach/force/surface/session
-guards remain. Ctrl-click empty ground opens recovery; a monitor cell receives a
-touch instead. No implementation-only native constant-combinator dialog is exposed.
+guards remain. Ctrl-click empty ground does nothing; a monitor cell still receives a
+touch. Recover retained drafts through another computer's Maintenance, or the
+capacity viewer when opening a ninth computer. No implementation-only native constant-combinator dialog is exposed.
 Client selection/focus remains a
 small user-owned review, not a headless claim.
 
@@ -128,7 +129,8 @@ player rotation events. These functions are host-only, not guest capabilities:
 - `clear_output(record)`: disable and remove this physical logic endpoint's
   sections/bank on a peripheral outage. Downstream logic owns generation-specific
   writer retirement via `registry.register_cleanup`; use the same endpoint and
-  coordinate its `output_bank`/`output_owner` metadata with this function.
+  coordinate native output configuration and `output_owner`/recovery metadata
+  with this function; no reusable output mirror is retained.
 - `power_losses`, `reconcile`, `sample_power`, `unlocks`: admitted scheduler or
   synchronized initialization/configuration helpers, never on_load.
 

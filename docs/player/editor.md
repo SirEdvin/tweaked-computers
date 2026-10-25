@@ -2,8 +2,8 @@
 
 A computer has one Lua source document, not files or a terminal. With an empty
 cursor and no GUI open, **Ctrl + left-click the computer** to open its workspace.
-Ordinary clicks do not open it and remain available for wiring. **Ctrl + left-click
-empty ground** for standalone recovery drafts; on a monitor cell, the same gesture
+Ordinary clicks do not open it and remain available for wiring. Ctrl + left-click
+on empty ground does nothing, even with retained drafts; on a monitor cell, the same gesture
 activates the cell instead. The shared interaction action is rebindable in Controls;
 the old normal-open and Ctrl+Shift+E actions were removed in 0.1.4. Held items/wires
 and cursor ghosts refuse opening. Native buttons inside the workspace still use
@@ -97,9 +97,13 @@ affected identity. Selection changes cancel the pending review/forget, and the
 reviewed bytes are checked again before copying or deletion. You cannot forget
 the currently open document; use reviewed Reload instead.
 
-With an empty cursor, **Ctrl + left-click empty ground** for independent recovery. Select a
-draft, review it, **Select text** and use native Copy; no automatic clipboard access
-is claimed. This viewer can confirm forgetting a reviewed slot, but cannot run a
+If the original computer is gone, **Ctrl + left-click another accessible computer**
+with an empty cursor and open **Maintenance** to review/copy/forget its retained
+draft. Empty ground, unrelated entities, ghosts and private helpers do not open
+computer UI. If all eight slots are occupied, opening a new computer instead
+shows standalone recovery: select a draft, review it, **Select text** and use
+native Copy, or confirm forgetting a reviewed slot before reopening the computer.
+No automatic clipboard access is claimed. This capacity viewer cannot run a
 computer or reset application data.
 
 A mined computer item contains committed source/state, not your private draft.
@@ -168,11 +172,12 @@ data, not a wiring fix or a way to clear a database.
 ## Integrated redesign playtest
 
 This short user-owned native-client review is not yet performed. Use the exact
-0.1.4 release and a backed-up test save, retaining the old mod/world for rollback.
+candidate or release under review and a backed-up test save, retaining the old
+mod/world for rollback.
 
 - Place/rotate all five devices; check ordinary-zoom silhouettes, icons/status,
   ordinary-click red/green wiring without a workspace opening, then clear the
-  cursor and Ctrl + left-click a computer to open it. Check empty-ground recovery,
+  cursor and Ctrl + left-click a computer to open it. Check empty-ground clicks remain inert,
   monitor cell activation and that held wires/items/ghosts do not open a workspace.
   Check direct red/green Network contacts and distinct logic Input/Output / configurator
   Factory targets. Open/mine/mark the visible body, not a private power helper.
@@ -187,7 +192,8 @@ This short user-owned native-client review is not yet performed. Use the exact
   reset on arrival. Resume Follow and test Go to source line.
 - Wire a device on each color, inspect/select it, disconnect it, and observe automatic updates.
   Try reviewed rebase/reload, cancel reset/forget, then close/reopen a dirty draft.
-  Open standalone recovery after the original computer is unavailable.
+  Recover the removed computer's draft through another computer's Maintenance;
+  check standalone recovery when opening a ninth computer with eight retained slots.
 - On a powered 2×2 monitor, keep text/background/cursor changing; mark one
   non-anchor tile and confirm the genuine native red X remains visible. Repeat
   dark/unpowered and rotated. Save/load, cancel, restore power and check retained

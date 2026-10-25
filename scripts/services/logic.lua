@@ -8,7 +8,9 @@ local limits=require('scripts.runtime.limits')
 local errors=require('scripts.runtime.errors')
 local data=require('scripts.runtime.data')
 local defs=require('scripts.device-definitions')
-local M={signal_slots=64,filter_signals=64}
+local M={}
+local signal_prototypes={item='item',fluid='fluid',virtual='virtual_signal',recipe='recipe',entity='entity',
+  ['space-location']='space_location',['asteroid-chunk']='asteroid_chunk',quality='quality'}
 local function arity(n,want) if n~=want then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end end
 local function fields(value,allowed)
   if type(value)~='table' or getmetatable(value) then errors.raise('E_ARGUMENT','plain table required') end
@@ -16,38 +18,33 @@ local function fields(value,allowed)
 end
 local function signal(s,spend)
   fields(s,{type=true,name=true,quality=true})
-  if s.type~='item' and s.type~='fluid' and s.type~='virtual' and s.type~='recipe' then errors.raise('E_ARGUMENT','explicit supported signal type required: item, fluid, virtual or recipe') end
+  local kind=s.type==nil and 'item' or s.type
+  if type(kind)~='string' or not signal_prototypes[kind] then errors.raise('E_ARGUMENT','native signal type required') end
   local q=s.quality
   if q==nil then q='normal' end
-  if type(s.name)~='string' or #s.name==0 or #s.name>limits.identifier_bytes or type(q)~='string' or #q>limits.identifier_bytes then errors.raise('E_ARGUMENT','bounded prototype names required') end
+  if type(s.name)~='string' or #s.name==0 or type(q)~='string' then errors.raise('E_ARGUMENT','prototype names required') end
   spend(#s.name+#q+8)
-  local p=prototypes[s.type=='virtual' and 'virtual_signal' or s.type]
+  local p=prototypes[signal_prototypes[kind]]
   if not p[s.name] or not prototypes.quality[q] or (s.type=='virtual' and (s.name=='signal-each' or s.name=='signal-anything' or s.name=='signal-everything')) then errors.raise('E_RANGE','unknown or wildcard signal/quality') end
-  return {type=s.type,name=s.name,quality=q}
+  return {type=s.type,name=s.name,quality=s.quality}
 end
-local function key(s) return s.type..'\0'..s.name..'\0'..s.quality end
+local function key(s) return (s.type or 'item')..'\0'..s.name..'\0'..(s.quality or 'normal') end
 local function selection(input)
   if input~='red' and input~='green' then errors.raise('E_ARGUMENT','explicit red or green input required') end
   return input
 end
-local function array(t,max,spend)
+local function array(t,spend)
   if type(t)~='table' or getmetatable(t) then errors.raise('E_ARGUMENT','dense array required') end
   local n=0
   for k in pairs(t) do
     spend(1); n=n+1
-    if not errors.integer(k,1,max) then errors.raise('E_ARGUMENT','dense bounded array required') end
-    if n>max then errors.raise('E_CAPACITY','signal capacity exceeded') end
+    if not errors.integer(k,1,9007199254740991) then errors.raise('E_ARGUMENT','dense array required') end
   end
   for i=1,n do if t[i]==nil then errors.raise('E_ARGUMENT','dense array required') end end
   return n
 end
-local function sort(t,spend)
-  spend(#t+1)
-  table.sort(t,function(a,b) local x,y=key(a.signal),key(b.signal); spend(#x+#y+1); return x<y end)
-  return t
-end
-local function canonical(signals,spend)
-  local n=array(signals,M.signal_slots,spend); local result,seen={},{}
+local function validate_output(signals,spend)
+  local n=array(signals,spend); local result,seen={},{}
   for i=1,n do
     local entry=signals[i]; fields(entry,{signal=true,count=true})
     local s=signal(entry.signal,spend); local k=key(s)
@@ -56,7 +53,9 @@ local function canonical(signals,spend)
     if not errors.integer(entry.count,-2147483648,2147483647) then errors.raise('E_RANGE','signed 32-bit integer count required') end
     if entry.count~=0 then result[#result+1]={signal=s,count=entry.count} end
   end
-  return sort(result,spend)
+  -- LogisticFilterIndex is uint16 in the pinned native section API.
+  if #result>65535 then errors.raise('E_RANGE','native output section index exceeded') end
+  return result
 end
 local function status(rec)
   local result={}
@@ -68,73 +67,69 @@ local function status(rec)
   return result
 end
 local function native_read(rec,input,spend)
-  selection(input); local values={}; local size=0; local connected=status(rec)
-  -- A disconnected endpoint cannot carry signals. Avoid materializing and
-  -- charging the whole prototype envelope for a known empty wire.
-  if not connected[input] then spend(16); return {},connected end
-  for _,wire in ipairs({'red','green'}) do
-    if input==wire then
-      -- Admit the native call, then account its actual tuples. Unrelated installed
-      -- prototypes do not make a small connected input more expensive.
-      spend(32)
-      local c=lifecycle.connector(rec,'input',wire)
-      local native=c.owner.get_signals(c.wire_connector_id) or {}
-      spend(#native*8+16)
-      if #native>M.signal_slots then errors.raise('E_LIMIT','native input signal inventory exceeds signal_slots') end
-      for _,entry in ipairs(native) do
-        local s=signal({type=entry.signal.type or 'item',name=entry.signal.name,quality=entry.signal.quality},spend); local k=key(s); local old=values[k]
-        if not old then size=size+1; if size>M.signal_slots then errors.raise('E_LIMIT','selected input inventory exceeds signal_slots') end end
-        local sum=(old and old.count or 0)+entry.count
-        values[k]={signal=s,count=((sum+2147483648)%4294967296)-2147483648}
-      end
-    end
-  end
-  local result={}; for _,entry in pairs(values) do if entry.count~=0 then result[#result+1]=entry end end
-  return sort(result,spend),connected
+  selection(input); local connected=status(rec)
+  spend(32)
+  local c=lifecycle.connector(rec,'input',input)
+  return c.owner.get_signals(c.wire_connector_id) or {},connected
 end
 -- Host-only observation, independent of guest subscriptions and writer state.
 -- Read both colors before publishing any part of the candidate.
+function M.inspect_output(rec,spend)
+  spend(32)
+  local cb=rec.children.output.get_or_create_control_behavior()
+  local section=cb.sections_count>0 and cb.get_section(1)
+  local result={}
+  for _,filter in ipairs(section and section.filters or {}) do
+    local s=filter.value
+    result[#result+1]={signal={type=s.type,name=s.name,quality=s.quality},count=filter.min}
+  end
+  return result
+end
 function M.inspect(rec,tick,spend)
   local red,connected=native_read(rec,'red',spend)
   local green=native_read(rec,'green',spend)
-  return {tick=tick,red=red,green=green,connected=connected,output=canonical(rec.output_bank or {},spend)}
+  return {tick=tick,red=red,green=green,connected=connected,output=M.inspect_output(rec,spend)}
 end
 function M.inspect_input(rec,input,tick,spend)
   local values,connected=native_read(rec,input,spend)
   return {tick=tick,values=values,connected=connected[input]}
 end
-function M.inspect_output(rec,spend) return canonical(rec.output_bank or {},spend) end
+
 local function project(sample,connected,input,filter,spend)
   local result,c={},{}
   c[input]=connected[input]
   local allowed
-  if filter then allowed={}; for _,s in ipairs(filter) do spend(#key(s)+1); allowed[key(s)]=true end end
-  for _,entry in ipairs(sample) do spend(#key(entry.signal)+4); if not allowed or allowed[key(entry.signal)] then result[#result+1]=entry end end
+  if not filter then return sample,c end
+  allowed={}; for _,s in ipairs(filter) do allowed[key(s)]=true end
+  for _,entry in ipairs(sample) do if allowed[key(entry.signal)] then result[#result+1]=entry end end
   return result,c
 end
 local function delta(previous,current,spend)
   local before,after,union={},{},{}
-  for _,e in ipairs(previous) do local k=key(e.signal); spend(#k+4); before[k]=e; union[k]=e.signal end
-  for _,e in ipairs(current) do local k=key(e.signal); spend(#k+4); after[k]=e; union[k]=e.signal end
+  for _,e in ipairs(previous) do local k=key(e.signal); before[k]=e; union[k]=e.signal end
+  for _,e in ipairs(current) do local k=key(e.signal); after[k]=e; union[k]=e.signal end
   local changes={}
   for k,s in pairs(union) do
     local a=before[k] and before[k].count or 0; local b=after[k] and after[k].count or 0
     if a~=b then changes[#changes+1]={signal=s,previous=a,current=b} end
   end
-  return sort(changes,spend)
+  return changes
 end
 local function publish_native(rec,bank)
   local cb=rec.children.output.get_or_create_control_behavior()
   local staged=cb.add_section(); staged.active=false
   local filters={}
-  for i,e in ipairs(bank) do filters[i]={index=i,value=e.signal,min=e.count} end
+  for i,e in ipairs(bank) do
+    local s=e.signal
+    filters[i]={index=i,value={type=s.type,name=s.name,quality=s.quality or 'normal'},min=e.count}
+  end
   local ok,e=pcall(function()
     staged.filters=filters
     local read=staged.filters
     assert(#read==#filters,'native bank size mismatch')
     for i,f in ipairs(read) do
       local wanted=filters[i]
-      assert(f.min==wanted.min and (f.value.type or 'item')==wanted.value.type and f.value.name==wanted.value.name and (f.value.quality or 'normal')==wanted.value.quality,'native bank readback mismatch')
+      assert(f.min==wanted.min and key(f.value)==key(wanted.value),'native bank readback mismatch')
     end
   end)
   if not ok then cb.remove_section(staged.index); error(e,0) end
@@ -143,14 +138,11 @@ local function publish_native(rec,bank)
 end
 local principal=require('scripts.runtime.principal')
 local function output(computer,rec,wire,tick,spend,signals,execution)
-  local bank=canonical(signals,spend)
-  spend(limits.registry_entries+M.signal_slots*256+64)
-  local count=0
-  for _,id in ipairs(registry.get().order) do local r=registry.record(id); if r.kind=='logic' and r.output_owner then count=count+1 end end
-  if not rec.output_owner and count>=limits.aggregate_owned_outputs then errors.raise('E_CAPACITY','owned output capacity reached') end
+  local bank=validate_output(signals,spend)
+  spend(64)
   local target,path=peripheral.authority(computer,rec.id,wire,spend)
   if target~=rec then errors.raise('E_UNREACHABLE','writer authority lost') end
-  local old=rec.output_bank or {}
+  local old=M.inspect_output(rec,spend)
   local ok,e=pcall(publish_native,rec,bank)
   if not ok then
     local restored=pcall(publish_native,rec,old)
@@ -160,7 +152,7 @@ local function output(computer,rec,wire,tick,spend,signals,execution)
     end
     errors.raise('E_ENGINE',(restored and 'native output refused; old bank restored: ' or 'native output failed; output cleared and recovery retained: ')..tostring(e):sub(1,256))
   end
-  rec.output_bank=bank; rec.output_owner=principal.owner(computer,execution or principal.program(computer),wire,path)
+  rec.output_owner=principal.owner(computer,execution or principal.program(computer),wire,path)
   rec.output_recovery=nil
 end
 local function remove_queued(c,id,spend)
@@ -176,24 +168,14 @@ local function subscribe(c,rec,wire,tick,spend,options,handler)
   if options.initial~=nil and type(options.initial)~='boolean' then errors.raise('E_ARGUMENT','initial must be boolean') end
   local filter
   if options.signals~=nil then
-    local n=array(options.signals,M.filter_signals,spend); if n==0 then errors.raise('E_ARGUMENT','filter cannot be empty') end
+    local n=array(options.signals,spend); if n==0 then errors.raise('E_ARGUMENT','filter cannot be empty') end
     filter={}; local seen={}
     for _,s in ipairs(options.signals) do local normalized=signal(s,spend); local k=key(normalized); if seen[k] then errors.raise('E_ARGUMENT','duplicate filter identity') end; seen[k]=true; filter[#filter+1]=normalized end
   end
-  spend(limits.registry_entries+limits.aggregate_subscriptions+1)
-  local active={}
-  for _,id in ipairs(registry.get().order) do
-    local computer=registry.get().computers[id]
-    if computer then for _,sub in pairs(computer.subscriptions) do if sub.event_name=='signal_changed' then active[sub.details.peripheral]=true end end end
-  end
-  local n=0; for _ in pairs(active) do n=n+1 end
-  if not active[rec.id] and n>=limits.active_logic_handlers then errors.raise('E_CAPACITY','sampled handler capacity reached') end
-  local raw,connected
-  if rec.logic_sample and rec.logic_sample.tick==tick and rec.logic_sample[input] then raw=rec.logic_sample[input]; connected=rec.logic_sample.connected
-  else raw,connected=native_read(rec,input,spend) end
+  local raw,connected=native_read(rec,input,spend)
   local baseline,selected=project(raw,connected,input,filter,spend)
   return runtime.subscribe(c,'signal_changed',handler,{peripheral=rec.id,generation=rec.generation,wire=wire,input=input,signals=filter,
-    previous=baseline,connected=selected,initial=options.initial==true,resync=false},spend)
+    previous=baseline,connected=selected,initial=options.initial==true,resync=false},spend,true)
 end
 local methods={}
 local function method(name,n,fn)
@@ -209,9 +191,9 @@ method('readSignal',2,function(c,r,w,t,spend,input,s)
   local red,green=defines.wire_connector_id.circuit_red,defines.wire_connector_id.circuit_green
   return r.children.input.get_signal(s,input=='red' and red or green)
 end)
-method('readSignals',1,function(c,r,w,t,spend,input) return (data.copy((native_read(r,input,spend)),spend)) end)
+method('readSignals',1,function(c,r,w,t,spend,input) return (native_read(r,input,spend)) end)
 method('getInputStatus',0,function(c,r,w,t,spend) spend(16); local s=status(r); return {red_connected=s.red,green_connected=s.green} end)
-method('getOutput',0,function(c,r,w,t,spend) return (data.copy(r.output_bank or {},spend)) end)
+method('getOutput',0,function(c,r,w,t,spend) return M.inspect_output(r,spend) end)
 method('setOutput',1,output)
 method('clearOutput',0,function(c,r,w,t,spend) output(c,r,w,t,spend,{}) end)
 method('subscribe',2,subscribe)
@@ -224,7 +206,7 @@ method('unsubscribe',1,function(c,r,w,t,spend,id)
 end)
 method('getLimits',0,function(c,r,w,t,spend)
   local result=data.copy(limits,spend)
-  result.signal_slots=M.signal_slots; result.filter_signals=M.filter_signals; result.sample_interval_ticks=1; result.notification_latency_ticks=limits.topology_latency_ticks
+  result.sample_interval_ticks=1; result.notification_latency_ticks=limits.topology_latency_ticks
   return result
 end)
 function M.revoke(c,name,wire)
@@ -271,6 +253,15 @@ function M.sample(tick,spend)
             runtime.fault(c,errors.new('E_ARGUMENT','retained logic subscription requires explicit red or green input; update source and restart'),tick)
             break
           end
+          -- Older accepted events lacked the private dispatch marker. Keep their
+          -- snapshots/byte accounting intact; never infer trust from a guest name.
+          for _,item in ipairs(c.queue) do
+            local e=item.event
+            if not item.circuit and e.name=='signal_changed' and e.subscription_id==sub.id
+              and e.run_id==c.run_id and e.peripheral==d.peripheral and e.wire==d.wire and e.input==d.input then
+              item.circuit=true
+            end
+          end
           local needs=devices[d.peripheral] or {}; devices[d.peripheral]=needs
           subscriptions[#subscriptions+1]={computer=c,sub=sub}
           needs[d.input]=true
@@ -298,7 +289,7 @@ function M.sample(tick,spend)
           if needs.red then red=native_read(rec,'red',spend) end
           if needs.green then green=native_read(rec,'green',spend) end
           local sample={red=red,green=green,connected=connected,tick=tick}
-          rec.logic_sample=sample; return sample
+          return sample
         end)
         if not admitted then errors.raise('E_BUSY','logic sampling envelope exhausted; run stopped rather than losing observations') end
         return value
@@ -326,10 +317,8 @@ function M.sample(tick,spend)
           if d.initial or resync or #changes>0 or pc.red~=connected.red or pc.green~=connected.green then
             local payload={name='signal_changed',subscription_id=sub.id,peripheral=r.id,wire=d.wire,input=d.input,sample_tick=tick,
               initial=d.initial,resync=resync,previous=previous,current=current,changes=changes,previous_connected=pc,connected=connected}
-            -- Prepay complete bounded event copying before queue/baseline changes.
-            local copied,stats=data.copy(payload,spend,limits.event_queue_bytes)
-            spend(stats.bytes+stats.nodes+128)
-            if runtime.enqueue(c,sub.handler,copied,tick,nil) then
+            spend(256)
+            if runtime.enqueue(c,sub.handler,payload,tick,nil,{circuit=true}) then
               d.previous=current; d.connected=connected; d.initial=false; d.resync=false
             end
           end

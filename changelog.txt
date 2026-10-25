@@ -1,4 +1,17 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.14
+Date: 2026-10-25
+  Features:
+    - Expose complete fresh native circuit signal inventories, all native signal types and native own-output configuration without mod-defined signal, filter or output-slot ceilings.
+    - Preserve native signal order and optional type/quality fields. Circuit events carry complete isolated observations without applying generic Data transfer ceilings to their signal graphs.
+  Bugfixes:
+    - Open the computer workspace only when Ctrl-click selects a registered computer body. Empty ground no longer opens draft recovery; Maintenance recovery and native transfers/monitor touches remain available.
+    - Keep direct non-circuit peripheral calls on their existing single authority charge; native argument classification does not repeat the charged topology lookup.
+  Info:
+    - Code must treat omitted signal type as item and omitted quality as normal, and must not rely on sorted reads. Native output slot limits, validation, authority, fail-safe ownership and ordinary guest/persistence budgets remain.
+    - Retain existing subscriptions, pending events and output owners across upgrades without replaying start. Obsolete read caches/output mirrors are retired during synchronized gameplay.
+    - ALPHA: back up saves and matching ZIPs. Factorio 2.0.77 base and optional Space Age; API 1, compiler 2 and storage 1 are unchanged. This is not the abandoned configurable resource-policy or durable-execution rewrite.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.13
 Date: 2026-10-21
   Bugfixes:

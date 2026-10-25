@@ -8,10 +8,12 @@ Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. No interpreter,
 OS, gameplay filesystem or dynamic guest loader is shipped; there is no command history.
 
-Version **0.1.13 ALPHA** removes global prototype-count precharges from Logic
-Handler input reads and Recipe Searcher queries. A small input no longer becomes
-unavailable because unrelated mods add recipes or qualities. Real result limits,
-authority and shared work/Data budgets remain. See [0.1.13 release notes](docs/release-0.1.13.md).
+Version **0.1.14 ALPHA** exposes complete fresh native circuit signals and native
+own-output configuration, without mod-defined signal/filter/output-slot ceilings.
+Reads preserve native order and optional identity fields. Ctrl-click opens only
+an actual computer body, not draft recovery on empty ground. Authority, fail-safe
+ownership and ordinary guest/persistence budgets remain. See
+[0.1.14 release notes](docs/release-0.1.14.md) for compatibility and upgrade guidance.
 
 Version 0.1.12 added nonblank pending inspector panels, independent decider-style
 logic signal trays and concise UI text. See [historical 0.1.12 notes](docs/release-0.1.12.md).
@@ -73,7 +75,7 @@ earlier workload separately; current matched results accompany the release.
 Version 0.1.8 retains those monitor/live-budget features and adds bounded Console
 commands with live effects, shared save-backed values and confirmed reset, but no
 retained user functions or command history. See the [release notes](docs/console-shell-release.md).
-The release source is [alpha-0.1.13](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.13);
+The release source is [alpha-0.1.14](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.14);
 [0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development
@@ -95,7 +97,7 @@ Build an installable archive outside the checkout:
 Use a fresh output directory for the packaged official-engine integration smoke:
 
     python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
-      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.13.zip \
+      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.14.zip \
       --output /absolute/path/to/new-smoke-directory \
       --fixture tests.integration_engine --production-context --cold
 
