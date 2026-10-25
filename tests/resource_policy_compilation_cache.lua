@@ -70,17 +70,20 @@ end]]
     assert(a.machine.compile==b.machine.compile and a.ledger.total==b.ledger.total)
     local original=first(); local modified=second(); modified.entries.start=nil
     assert(original.entries.start and first().entries.start,'caller mutated cached executable data')
-    local block_boundary,operand_boundary,liveness_boundary
+    local block_boundary,operand_boundary,liveness_boundary,quote_boundary
     for i,step in ipairs(requests) do
       if step.amount==2*192+8*48 then block_boundary=block_boundary or i end
       if step.amount==192+7*48 then operand_boundary=operand_boundary or i end
       if step.amount==2*192+2*48*#original.blocks then liveness_boundary=liveness_boundary or i end
+      if step.amount==34+4*#'private native cache' then quote_boundary=quote_boundary or i end
     end
     assert(block_boundary and operand_boundary and liveness_boundary
       and block_boundary<liveness_boundary and operand_boundary<liveness_boundary,
       'graph growth was not admitted before liveness analysis')
+    assert(quote_boundary and requests[#requests-1].amount>=32+#plan.generated,
+      'quoted literal or final generated join was not admitted')
     -- Refuse graph construction as well as later analysis, with competing shortages.
-    for _,index in ipairs({1,block_boundary,operand_boundary,liveness_boundary,math.floor(#requests/2),#requests-1}) do
+    for _,index in ipairs({1,block_boundary,operand_boundary,quote_boundary,liveness_boundary,math.floor(#requests/2),#requests-1}) do
       local step=requests[index]
       for _,short_work in ipairs({false,true}) do
         assert(compiler.prepare(native_source,admission.context(admission.new(),'warm-lowering',0)))

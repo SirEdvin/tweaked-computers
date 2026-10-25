@@ -4,6 +4,7 @@ local limits=require('scripts.runtime.limits')
 local parsing=require('scripts.runtime.parse_admission')
 local tokenize=require('vendor.phobos.tokenize')
 local continuation=require('scripts.runtime.continuation')
+local memory=require('scripts.runtime.memory')
 local M={}
 function M.run()
   -- Durable validation must traverse the language without emitting a discarded backend.
@@ -29,6 +30,44 @@ function M.run()
     end
   end)
   string.format,table.concat,continuation.lower=format,concat,lower
+  assert(checked,type(problem)=='table' and problem.message or tostring(problem))
+  local reserve=memory.reserve
+  local emitting,last_reservation,quoted,joined=false,0,0,0
+  memory.reserve=function(owner,bytes) last_reservation=bytes; return reserve(owner,bytes) end
+  string.format=function(pattern,value,...)
+    if emitting and pattern=='%q' then
+      assert(last_reservation>=34+4*#value,'literal quoting allocated before admission')
+      quoted=quoted+1; last_reservation=0
+    end
+    return format(pattern,value,...)
+  end
+  table.concat=function(values,separator,...)
+    if emitting then
+      local bytes=32+math.max(0,#values-1)*#(separator or '')
+      for _,value in ipairs(values) do bytes=bytes+#tostring(value) end
+      assert(last_reservation>=bytes,'generated join allocated before admission')
+      joined=joined+1; last_reservation=0
+    end
+    return concat(values,separator,...)
+  end
+  continuation.lower=function(...)
+    emitting=true
+    local generated=lower(...)
+    emitting=false
+    return generated
+  end
+  local checked,problem=pcall(function()
+    local literal=string.rep('literal',2000)..'\0\1\n\r\\"'
+    local body='local text='..format('%q',literal)..'; return text'
+    for i,text in ipairs({'function strings_owned() '..body..' end',
+      'return {api_version=1,handlers={strings_owned=function() '..body..' end}}',body}) do
+      quoted,joined=0,0
+      local plan,e=compiler.prepare(text,admission.context(admission.new(),'emission-memory-'..i,0),i==3 and 'shell' or nil)
+      assert(plan,e and e.message)
+      assert(quoted>0 and joined>0,'fixture did not reach string emission')
+    end
+  end)
+  memory.reserve,string.format,table.concat,continuation.lower=reserve,format,concat,lower
   assert(checked,type(problem)=='table' and problem.message or tostring(problem))
   local invalid={
     'local x=1; function start() end', 'function start() end; function start() end',

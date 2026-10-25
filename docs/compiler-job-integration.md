@@ -61,6 +61,15 @@ ends, including records that become garbage earlier. This is a temporary arena,
 not a per-tick credit or a new node/count quota. Unneeded empty fallback tables
 are no longer allocated while traversing terminal edges.
 
+Durable emission also admits string payloads before quoting, concatenation and
+cleanup-reference slicing. Quoting reserves the string header, enclosing quotes
+and at most four escaped bytes per input byte; joins reserve their output header
+and payload (including separator bytes and bounded compiler-index text). One
+reused, capacity-accounted parts vector avoids allocating a fresh table for each
+concatenation. These reservations share the same temporary owner and proof;
+they are not a source/string-length quota or a calibrated bound on native
+formatter/concatenation allocator buffers.
+
 The private cache proof interleaves work charges and byte reservations. A warm
 pass batches them only when both complete allowances fit; otherwise it replays
 their original order, preserving the first refusal and paid work prefix when
@@ -88,6 +97,9 @@ all records succeed, and rolls back temporary owners on refusal.
 join legacy executable output, and compares invalid-source diagnostics with the
 legacy path for both program forms and Console. This is an allocation reduction,
 not proof that all remaining parser/lowering/native allocations are admitted.
+The same fixture observes admission before actual quoting/joining during durable
+emission, including long literals with NUL, control characters, quotes and
+backslashes in both program forms and Console.
 
 `tests.compiler_bounded --cold` covers recoverable compilation refusal,
 220 durable locals, warm-cache host-depth reduction, prior-run preservation,
@@ -102,7 +114,7 @@ cold-resumes the unchanged program and command without repeating their prefix.
 one-byte-short admission, full-host refusal before parsing, release on parser,
 work and native-loader failures, and retry after either raising the setting or
 releasing other host ownership.
-It additionally checks initial graph, block, operand, liveness and later lowering
+It additionally checks initial graph, block, operand, quoted-literal, liveness and final generated-text
 reservations with memory pressure alone and competing work pressure, including
 exact diagnostic fields and release of every temporary reservation. The source
 exercises nested closures, captures, varargs, constructors, both for-loop forms,
@@ -139,8 +151,8 @@ production budget was raised to fit these observations.
 
 This is not completion of the full resource-policy change or task 4.4. Console
 ingress and other downstream storage guards still need reconciliation. Compiler
-temporary allocation coverage (tokenizer/parser, emitted strings and proof
-metadata) and measured native headroom remain incomplete; lowering-table and
-native-load reservations do not establish them. Full migration and host-domain
+temporary allocation coverage (tokenizer/parser, closures and proof metadata)
+and measured native headroom remain incomplete; lowering-table, emitted-payload
+and native-load reservations do not establish them. Full migration and host-domain
 enrollment also remain open. Resolve these before claiming complete resource
 safety; do not restore the deleted compiler machine to solve them.
