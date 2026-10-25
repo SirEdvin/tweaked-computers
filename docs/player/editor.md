@@ -109,7 +109,8 @@ See [lifecycle](lifecycle.md).
 
 ## Diagnostics and discovery
 
-`computer.log(text)` writes plain text into a ring of **64 entries / 16,384 bytes**;
+`computer.log(text)` writes plain text into byte-limited history (default
+**16,384 accounted bytes**, including entry metadata, with no separate count cap);
 older output is discarded even when Follow is off. Re-enabling Follow cannot retrieve
 those discarded entries. The [live Console](console.md) evaluates bounded Lua
 lines; Reset Shell clears scratch values, not historical logs. There is no Clear command.

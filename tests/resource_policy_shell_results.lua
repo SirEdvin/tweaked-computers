@@ -16,8 +16,9 @@ function M.run()
   local tick=1
   for _,kind in ipairs({'work','capacity'}) do
     rec.logs={}; rec.log_bytes=0
-    for i=1,limits.console_entries do
-      local text='retained '..i; rec.logs[i]={text=text,tick=0}; rec.log_bytes=rec.log_bytes+#text
+    local retained=math.floor(limits.console_bytes/(registry.console_entry_bytes+#'retained'))
+    for i=1,retained do
+      local text='retained'; rec.logs[i]={text=text,tick=0}; rec.log_bytes=rec.log_bytes+#text
     end
     local first,bytes,committed=rec.logs[1],rec.log_bytes,rec.shell.values
     local ctx=runtime.context(rec,tick); local effects,poison=0,true
@@ -45,7 +46,7 @@ function M.run()
       local ran,diagnostic,control=shell.evaluate(rec,source,tick,7,checkpoint)
       if kind=='capacity' then
         assert(not ran and diagnostic and diagnostic.code=='E_CAPACITY' and control=='resource')
-        assert(effects==0 and rec.logs[1]==first and #rec.logs==limits.console_entries
+        assert(effects==0 and rec.logs[1]==first and #rec.logs==retained
           and rec.log_bytes==bytes and rec.shell.values==committed,'Console result refusal followed publication/eviction')
       else
         assert(not ran and control=='wait' and effects==1,diagnostic and diagnostic.message)
@@ -62,5 +63,23 @@ function M.run()
     tick=tick+1
   end
   log('TC_CONTRACT console-computer-log-prepares-result-before-eviction-and-resumes-once')
+  for _,method in ipairs({'print','computer.log'}) do
+    rec.logs={}; rec.log_bytes=0
+    local prefix='Shell #42 output: '
+    local bytes=limits.console_bytes-#prefix-registry.console_entry_bytes
+    local ran,diagnostic=shell.evaluate(rec,method..'(string.rep("x",'..bytes..'))',tick,42,{})
+    assert(ran,diagnostic and diagnostic.message)
+    assert(#rec.logs==1 and registry.console_usage(rec)==limits.console_bytes)
+    assert(rec.logs[1].text==prefix..string.rep('x',bytes))
+    local entry,graph,retained=rec.logs[1],rec.shell.values,rec.log_bytes
+    tick=tick+1
+    local control
+    ran,diagnostic,control=shell.evaluate(rec,method..'(string.rep("x",'..(bytes+1)..'))',tick,42,{})
+    assert(not ran and control=='resource' and diagnostic.code=='E_LIMIT' and diagnostic.recoverable)
+    assert(diagnostic.resource=='console_bytes' and diagnostic.setting=='tc-console-bytes')
+    assert(#rec.logs==1 and rec.logs[1]==entry and rec.log_bytes==retained and rec.shell.values==graph)
+    tick=tick+1
+  end
+  log('TC_CONTRACT console-print-and-log-prefix-metadata-exact-fit-refusal-without-eviction')
 end
 return M

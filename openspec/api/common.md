@@ -93,6 +93,13 @@ persistent loss diagnostics; it does not fault the run or clear owned outputs.
 Accepted FIFO entries survive lower settings and cold reload, including when
 their retained bytes exceed the new allowance. Lifecycle startup is not droppable.
 
+Console history likewise uses `tc-console-bytes` alone, counting text plus 64
+metadata bytes per entry. New output evicts oldest history as needed; an entry
+that cannot fit by itself refuses recoverably before eviction. Settings changes
+and cold load preserve accepted history. The persisted `log_bytes` field remains
+the text-only counter for save compatibility; effective usage includes metadata
+without rewriting records or renewing work credits.
+
 `computer.getLimits()` returns a defensive table of effective integer ceilings. The release manifest records the same values. At least these keys are present:
 
 ```text
@@ -103,7 +110,7 @@ state_bytes, state_entries, data_depth, string_bytes,
 event_queue_bytes, timers, subscriptions,
 network_nodes, network_edges, topology_latency_ticks,
 peripheral_call_bytes, peripheral_call_entries,
-console_entries, console_bytes, fail_safe_latency_ticks
+console_bytes, fail_safe_latency_ticks
 ```
 
 Device-specific `getLimits()` adds monitor dimensions/cells/render latency, KV capacities, logic slots/subscriptions, or configurator traversal/configuration/section limits. Values are finite positive integers; allowed zeros are explicitly documented for optional capacities, not silently interpreted as unlimited. Prototype/signal availability is separate from size limits.

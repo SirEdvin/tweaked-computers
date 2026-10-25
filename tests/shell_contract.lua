@@ -396,11 +396,11 @@ function M.run()
     end)
     group('print-exact-prefix-byte-boundary-and-no-refusal-eviction',function()
       local prefix='Shell #42 output: '
-      local bytes=limits.console_bytes-#prefix
+      local bytes=limits.console_bytes-#prefix-registry.console_entry_bytes
       tick=tick+1
       local ok,d=shell.evaluate(rec,'print(string.rep("x",'..bytes..'))',tick,42)
       assert(ok,d and d.message)
-      assert(#rec.logs==1 and #rec.logs[1].text==limits.console_bytes and rec.logs[1].text==prefix..string.rep('x',bytes))
+      assert(#rec.logs==1 and registry.console_usage(rec)==limits.console_bytes and rec.logs[1].text==prefix..string.rep('x',bytes))
       local entry,graph,retained=rec.logs[1],rec.shell.values,rec.log_bytes
       tick=tick+1; ok,d=shell.evaluate(rec,'print(string.rep("x",'..(bytes+1)..'))',tick,42)
       assert(not ok and d.code=='E_LIMIT' and #rec.logs==1 and rec.logs[1]==entry and rec.log_bytes==retained and rec.shell.values==graph)

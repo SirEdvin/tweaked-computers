@@ -3,7 +3,7 @@ local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local memory = require('scripts.runtime.memory')
-local M = {}
+local M = {console_entry_bytes=64}
 local cleanup = {} -- Ephemeral host hooks, registered during control parsing.
 function M.initialize()
   local root=storage.tweaked_computers
@@ -23,6 +23,10 @@ function M.initialize()
   return root
 end
 function M.get() return storage.tweaked_computers end
+function M.console_usage(rec)
+  -- Keep the saved text-byte counter compatible; metadata needs no migration.
+  return rec.logs and rec.log_bytes and rec.log_bytes+#rec.logs*M.console_entry_bytes
+end
 function M.supported(root) return root and root.schema_version==limits.storage_version end
 local function writable()
   local root=M.get()

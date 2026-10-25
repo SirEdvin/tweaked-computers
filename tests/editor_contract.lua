@@ -306,9 +306,9 @@ function M.run()
       assert(model.session(a.index).token~=token and f.content.editor.source.text==source(29))
       f.content.selected_tab_index=5; editor.on_tab{player_index=a.index,element=f.content,tick=tick}
       f.content.maintenance.recovery.selected_index=1; editor.refresh(a); assert(f.content.maintenance.recovery.selected_index==1)
-      for i=1,limits.console_entries+4 do runtime.log(rec,'[font=anything]'..i,tick) end
+      for i=1,math.floor(limits.console_bytes/registry.console_entry_bytes)+4 do runtime.log(rec,'[font=anything]'..i,tick) end
       f.content.selected_tab_index=2; editor.on_tab{player_index=a.index,element=f.content,tick=tick}
-      editor.refresh(a); assert(#rec.logs==limits.console_entries and f.content.console.output.tooltip[1]=='tc-editor.console-bounded')
+      editor.refresh(a); assert(registry.console_usage(rec)<=limits.console_bytes and f.content.console.output.tooltip[1]=='tc-editor.console-bounded')
       assert(not f.content.console.output.text:find('Rolling console:',1,true) and not f.content.reference['copy-note'])
       assert(rec.log_truncated and f.content.console.note.visible and f.content.console.note.caption[1]=='tc-editor.console-truncated')
       a.display_resolution={width=480,height=420}; a.display_scale=1.5

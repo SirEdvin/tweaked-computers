@@ -19,11 +19,21 @@ local function count(t) local n=0; for _ in pairs(t) do n=n+1 end; return n end
 function M.context(rec,tick) return admission.context(root().ledger,rec.id,tick) end
 function M.log(rec,text,tick,spend,prepare)
   if type(text)~='string' then errors.raise('E_ARGUMENT','log requires a string') end
-  if #text>limits.console_bytes then errors.raise('E_LIMIT','log entry too large') end
-  if spend then spend(#text+(#rec.logs)^2+1) end
+  local bytes=#text+registry.console_entry_bytes
+  if bytes>limits.console_bytes then
+    errors.refuse('console_bytes','tc-console-bytes',0,bytes,limits.console_bytes,'log entry too large','E_LIMIT')
+  end
+  local n=#rec.logs
+  if spend then spend(#text+n*2+1) end
   if prepare then prepare() end
-  while #rec.logs>=limits.console_entries or rec.log_bytes+#text>limits.console_bytes do
-    local old=table.remove(rec.logs,1); rec.log_bytes=rec.log_bytes-#old.text
+  local first,used=1,registry.console_usage(rec)
+  while used+bytes>limits.console_bytes do
+    local size=#rec.logs[first].text
+    rec.log_bytes=rec.log_bytes-size; used=used-size-registry.console_entry_bytes; first=first+1
+  end
+  if first>1 then
+    for i=first,n do rec.logs[i-first+1]=rec.logs[i] end
+    for i=n-first+2,n do rec.logs[i]=nil end
     rec.log_truncated=true
   end
   rec.logs[#rec.logs+1]={text=text,tick=tick}; rec.log_bytes=rec.log_bytes+#text
@@ -47,7 +57,7 @@ function M.fault(rec,diagnostic,tick)
   diagnostic.run_id=rec.run_id
   rec.diagnostic=diagnostic
   local text=(diagnostic.code or 'E_PROGRAM')..': '..(diagnostic.message or 'program failed'):sub(1,512)
-  if #text<=limits.console_bytes then M.log(rec,text,tick) else rec.log_truncated=true end
+  if #text+registry.console_entry_bytes<=limits.console_bytes then M.log(rec,text,tick) else rec.log_truncated=true end
 end
 function M.stop(id)
   root(); local rec=registry.computer(id)
@@ -61,7 +71,7 @@ function M.resource_refused(rec,diagnostic,tick)
   rec.diagnostic=owned
   rec.resource_refusal=owned
   local text=owned.code..': '..owned.message
-  if #text<=limits.console_bytes then M.log(rec,text,tick) else rec.log_truncated=true end
+  if #text+registry.console_entry_bytes<=limits.console_bytes then M.log(rec,text,tick) else rec.log_truncated=true end
 end
 function M.reset_state(id)
   root()
@@ -163,7 +173,7 @@ function M.warn_event_drops(rec,tick,spend)
   if drops.warning_tick and tick-drops.warning_tick<limits.event_drop_warning_interval then return end
   spend(128) -- Bounded formatting; cumulative safe integers have at most 16 digits.
   local text='Dropped events (cumulative): '..string.format('%d',drops.total)..(drops.saturated and ' (saturated)' or '')
-  if #text>limits.console_bytes then return end -- Retain pending status under a tiny live limit.
+  if #text+registry.console_entry_bytes>limits.console_bytes then return end -- Retain pending status under a tiny live limit.
   M.log(rec,text,tick,spend)
   drops.warning_tick=tick; drops.warning_pending=false
 end

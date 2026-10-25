@@ -751,7 +751,10 @@ function M.tick(tick,spend)
           if ok then refresh_resources(player,f,s,rec,tick) end
         end
       end)
-      scheduler.try_maintenance(function() spend(limits.console_bytes+limits.console_entries*64+1); M.refresh(player,nil,tick) end)
+      scheduler.try_maintenance(function()
+        local s=model.session(player.index); local rec=s and registry.record(s.id)
+        spend((rec and registry.console_usage(rec) or 0)+1); M.refresh(player,nil,tick)
+      end)
     end
   end
 end

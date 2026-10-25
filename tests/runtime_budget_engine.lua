@@ -176,6 +176,46 @@ local function maintenance_contracts(report)
   end
   report('malformed-retained-input-refused-before-callback-dispatch')
 end
+local function console_contracts(report)
+  assert(limits.console_entries==nil and settings.global['tc-console-entries']==nil)
+  assert(limits.event_queue_entries==nil and settings.global['tc-event-queue-entries']==nil)
+  assert(limits.console_bytes==16384 and limits.event_queue_bytes==65536)
+  local allowance=limits.console_bytes
+  local ok,problem=pcall(function()
+    local rec={logs={},log_bytes=0}
+    local capacity=math.floor(allowance/registry.console_entry_bytes)
+    for _=1,capacity do runtime.log(rec,'',game.tick) end
+    assert(capacity>64 and #rec.logs==capacity and not rec.log_truncated)
+    assert(registry.console_usage(rec)==capacity*registry.console_entry_bytes)
+    local second=rec.logs[2]; runtime.log(rec,'',game.tick)
+    assert(#rec.logs==capacity and rec.logs[1]==second and rec.log_truncated)
+    -- Legacy text-only counters are measured without mutating retained records.
+    rec={logs={{text='old',tick=0},{text='tail',tick=1}},log_bytes=7}
+    local logs,first,last=rec.logs,rec.logs[1],rec.logs[2]
+    assert(registry.console_usage(rec)==7+2*registry.console_entry_bytes and rec.log_bytes==7)
+    limits.console_bytes=registry.console_entry_bytes+1
+    local sentinel={}
+    local ran,e=pcall(runtime.log,rec,'x',game.tick,function() error(sentinel,0) end)
+    assert(not ran and e==sentinel and rec.logs==logs and rec.logs[1]==first and rec.logs[2]==last and rec.log_bytes==7)
+    ran,e=pcall(runtime.log,rec,'x',game.tick,nil,function() error(sentinel,0) end)
+    assert(not ran and e==sentinel and rec.logs[1]==first and rec.logs[2]==last and rec.log_bytes==7)
+    ran,e=pcall(runtime.log,rec,'xx',game.tick)
+    assert(not ran and e.code=='E_LIMIT' and e.recoverable and e.resource=='console_bytes' and e.setting=='tc-console-bytes')
+    assert(e.requested==limits.console_bytes+1 and #rec.logs==2 and rec.log_bytes==7)
+    runtime.log(rec,'x',game.tick)
+    assert(rec.logs==logs and #logs==1 and logs[1].text=='x' and rec.log_bytes==1 and rec.log_truncated)
+    assert(registry.console_usage(rec)==limits.console_bytes)
+    limits.console_bytes=registry.console_entry_bytes-1
+    ran,e=pcall(runtime.log,rec,'',game.tick)
+    assert(not ran and e.recoverable and #rec.logs==1 and logs[1].text=='x')
+  end)
+  limits.console_bytes=allowance
+  assert(ok,type(problem)=='table' and problem.message or tostring(problem))
+  local n=allowance-registry.console_entry_bytes
+  local rec=select(1,run('computer.log(string.rep("x",'..n..')); local ok,e=pcall(computer.log,string.rep("x",'..(n+1)..')); assert(not ok and e.recoverable and e.resource=="console_bytes"); computer.setState("refused",true)'))
+  assert(rec.state.refused and #rec.logs==1 and registry.console_usage(rec)==allowance)
+  report('console-byte-metadata-empty-history-legacy-counters-atomic-eviction-and-recoverable-refusal')
+end
 function M.run()
   local total=0
   local function report(name) total=total+1; log('TC_CONTRACT '..name) end
@@ -185,6 +225,7 @@ function M.run()
   end
   assert(limits.maintenance_work_per_tick==200000 and limits.source_bytes==nil and limits.state_bytes==65536)
   report('budget-fivefold-defaults-and-unchanged-structural-caps')
+  console_contracts(report)
   for _,case in ipairs({{'compile',250000},{'work',100000},{'allocations',16384}}) do
     local kind,old=case[1],case[2]
     local ledger=admission.new(); local ctx=admission.context(ledger,'boundary',game.tick)

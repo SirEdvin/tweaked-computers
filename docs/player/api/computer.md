@@ -48,8 +48,12 @@ metadata count too. Rejected updates preserve the old value. Snapshots do not
 mutate originals; nil is not a state value, use deleteState. Payloads use copied
 nonnil Data when supplied; metadata must also fit the event envelope.
 
-Logs keep the newest 64 entries / 16,384 bytes, evicting oldest. An entry must be
-a string within supported bounds. There is no program access to editor drafts,
+Logs keep newest output within `tc-console-bytes` (default 16,384 accounted bytes),
+evicting oldest only when new output needs space. Each entry charges its text plus
+64 metadata bytes, including empty entries; there is no separate count cap.
+An unfit entry refuses recoverably before any eviction or partial output.
+Lowering the setting or reloading does not itself discard retained history.
+There is no program access to editor drafts,
 other computers' state/lifecycle, wall clock or arbitrary Factorio objects.
 
 Use `print("Initial sample count:", total)` for ordinary multi-argument output.

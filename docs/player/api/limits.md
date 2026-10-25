@@ -123,7 +123,6 @@ is needed; ordinary synchronized admission resets counters only on a new tick.
 | `sync_groups_per_run` | 1 |
 | `peripheral_call_bytes` | 65536 |
 | `peripheral_call_entries` | 4096 |
-| `console_entries` | 64 |
 | `console_bytes` | 16384 |
 | `fail_safe_latency_ticks` | 1 |
 | `shell_source_bytes` | 4096 |

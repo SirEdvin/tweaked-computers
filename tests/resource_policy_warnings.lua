@@ -17,7 +17,8 @@ local function retained(s,tick)
   assert(rec.status=='running' and rec.run_id==s.run and rec.queue==s.queue and rec.queue[1]==s.first)
   assert(#rec.queue==1 and rec.queue_bytes==s.bytes and not rec.invocation)
   local status=resources.read(rec,tick)
-  assert(status.resources.event_queue_entries==nil)
+  assert(status.resources.event_queue_entries==nil and status.resources.console_entries==nil)
+  assert(status.resources.console_bytes.used==registry.console_usage(rec))
   assert(status.resources.event_queue_bytes.used==s.bytes and status.resources.event_queue_bytes.limit==s.bytes)
   assert(status.dropped_events.total==rec.dropped_events.total)
   status.dropped_events.total=0
@@ -25,11 +26,12 @@ local function retained(s,tick)
   assert(resources.details(resources.read(rec,tick)):find('Dropped events (cumulative):',1,true))
 end
 local function bounded(fn)
-  local queue,logs,bytes,interval=limits.event_queue_bytes,limits.console_entries,limits.console_bytes,limits.event_drop_warning_interval
+  local queue,bytes,interval=limits.event_queue_bytes,limits.console_bytes,limits.event_drop_warning_interval
   if storage.tc_warnings then limits.event_queue_bytes=storage.tc_warnings.bytes end
-  limits.console_entries=1; limits.console_bytes=1024; limits.event_drop_warning_interval=10
+  limits.console_bytes=registry.console_entry_bytes+#'Dropped events (cumulative): 9007199254740991 (saturated)'
+  limits.event_drop_warning_interval=10
   local ok,e=pcall(fn)
-  limits.event_queue_bytes,limits.console_entries,limits.console_bytes,limits.event_drop_warning_interval=queue,logs,bytes,interval
+  limits.event_queue_bytes,limits.console_bytes,limits.event_drop_warning_interval=queue,bytes,interval
   assert(ok,type(e)=='table' and e.message or tostring(e))
 end
 function M.run()

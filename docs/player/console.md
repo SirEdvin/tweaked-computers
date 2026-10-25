@@ -63,7 +63,8 @@ and diagnostics are marked **Shell**, not confused with saved-source errors.
 line. Follow-off keeps output live without automatic scrolling. Incoming changed
 text may clear native selection; select/copy between arrivals. Unchanged text is
 not reassigned. Re-enable Follow to resume tailing. Command status stays visible.
-The same 64-entry / 16,384-byte history bound applies in either mode: discarded
+The same configured byte allowance (default 16,384 bytes, including entry metadata)
+applies in either mode, without a separate entry-count ceiling: discarded
 output cannot be recovered, and truncation is reported even while Follow is off.
 
 ## Effects and ownership

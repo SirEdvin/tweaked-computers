@@ -273,14 +273,14 @@ function M.run()
       tab(f,2); local output=f.content.console.output; local text=output.text; local writes=output.text_writes; local scrolls=output.scrolls
       local follow=f.content.console.follow; follow.state=false
       editor.on_checked{player_index=a.index,element=follow,tick=tick}
-      for i=1,limits.console_entries+3 do runtime.log(rec,'[font=bad]'..i,tick) end
+      for i=1,math.floor(limits.console_bytes/registry.console_entry_bytes)+3 do runtime.log(rec,'[font=bad]'..i,tick) end
       for _=1,3 do editor.refresh(a) end
       tab(f,1); tab(f,2)
       assert(output.text~=text and output.text_writes==writes+1 and output.scrolls==scrolls)
       local live_writes=output.text_writes; editor.refresh(a); assert(output.text_writes==live_writes)
       follow.state=true; editor.on_checked{player_index=a.index,element=follow,tick=tick}
       runtime.log(rec,'last bounded output',tick); editor.refresh(a)
-      assert(#rec.logs==limits.console_entries and output.tooltip[1]=='tc-editor.console-bounded' and output.scrolls>scrolls)
+      assert(registry.console_usage(rec)<=limits.console_bytes and rec.log_truncated and output.tooltip[1]=='tc-editor.console-bounded' and output.scrolls>scrolls)
       assert(c.source.text==exact and f.content.selected_tab_index==2)
     end)
     group('workspace-real-wire-color-inventory-powered-and-disconnected-rows',function()
@@ -342,11 +342,14 @@ function M.run()
         editor.refresh(a,nil,tick+45)
         assert(output.detail.text:find(rec.diagnostic.message,1,true))
         limits.console_bytes=limits.maintenance_work_per_tick*2
+        runtime.log(rec,string.rep('x',limits.console_bytes-registry.console_entry_bytes),tick)
+        local snapshot_writes=output.output.text_writes
         status.dropped_events.total=19
         local at=math.ceil((registry.get().scheduler.last_tick+tick+1)/15)*15
         tick=at; game.tick=at
         editor.tick(at,scheduler.maintenance(registry.get(),at))
         assert(f.title.status.caption:find('19',1,true),'large Console admission must not block host status')
+        assert(output.output.text_writes==snapshot_writes,'unfunded retained Console snapshot was refreshed')
       end)
       resources.read=read; rec.diagnostic=previous; limits.console_bytes=console_bytes
       assert(passed,problem)

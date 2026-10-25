@@ -85,8 +85,7 @@ function M.status(rec,tick)
   end
   measured('state_bytes',rec.state_bytes)
   measured('event_queue_bytes',rec.queue_bytes)
-  measured('console_entries',rec.logs and #rec.logs)
-  measured('console_bytes',rec.log_bytes)
+  measured('console_bytes',registry.console_usage(rec))
   local root=registry.get(); local ledger=root and root.ledger
   if ledger then
     local machine=ledger.tick==tick and ledger.machines[rec.id]

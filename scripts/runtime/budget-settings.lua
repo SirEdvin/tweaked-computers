@@ -18,7 +18,6 @@ local M={maintenance_max=maintenance_max,definitions={
   {key='event_queue_bytes',name='tc-event-queue-bytes',unit='bytes',scope='computer',behavior='drop_newest'},
   {key='pending_work_bytes',name='tc-pending-work-bytes',unit='bytes',scope='computer',behavior='reject'},
   {key='host_stack_depth',name='tc-host-stack-depth',unit='depth',scope='host_call',behavior='reject'},
-  {key='console_entries',name='tc-console-entries',unit='entries',scope='computer',behavior='evict'},
   {key='console_bytes',name='tc-console-bytes',unit='bytes',scope='computer',behavior='evict'},
   {key='render_commit_work',name='tc-render-commit-work',unit='work_units',scope='world/tick',behavior='reject'},
   {key='event_drop_warning_interval',name='tc-event-drop-warning-interval',unit='ticks',scope='computer',kind='tuning'},

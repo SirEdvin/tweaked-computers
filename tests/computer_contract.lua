@@ -393,9 +393,10 @@ end
   -- Observe the existing retention sink at the exact remaining-credit boundary.
   -- Fatal readback is host-only: poisoned guests cannot execute witnesses.
   for _,kind in ipairs({'work','allocations'}) do
+    local retained=math.floor(limits.console_bytes/(registry.console_entry_bytes+#'new\tfalse\tnil'))
     local function setup()
       local target={logs={},log_bytes=0}
-      for i=1,limits.console_entries do runtime.log(target,'old-'..i,0) end
+      for i=1,retained do runtime.log(target,string.format('old-%09d',i),0) end
       local context=admission.context(admission.new(),'print-retention',0)
       local guard=sandbox.new(context,function(g)
         return {computer={log=function(text) runtime.log(target,text,0,g.spend) end}}
@@ -405,14 +406,14 @@ end
     end
     local target,context,guard,fn=setup(); local before=context.machine[kind]
     guard.call(fn,'new',false,nil); local cost=context.machine[kind]-before
-    assert(#target.logs==limits.console_entries and target.logs[1].text=='old-2' and target.logs[#target.logs].text=='new\tfalse\tnil')
+    assert(#target.logs==retained and target.logs[1].text=='old-000000002' and target.logs[#target.logs].text=='new\tfalse\tnil')
     target,context,guard,fn=setup()
     context.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost
-    assert(pcall(guard.call,fn,'new',false,nil) and target.logs[1].text=='old-2')
+    assert(pcall(guard.call,fn,'new',false,nil) and target.logs[1].text=='old-000000002')
     target,context,guard,fn=setup()
     local first,bytes=target.logs[1],target.log_bytes
     context.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost+1
-    assert(not pcall(guard.call,fn,'new',false,nil) and #target.logs==limits.console_entries and target.logs[1]==first and target.log_bytes==bytes)
+    assert(not pcall(guard.call,fn,'new',false,nil) and #target.logs==retained and target.logs[1]==first and target.log_bytes==bytes)
     assert(guard.diagnostic({}).code=='E_BUDGET')
   end
   report('saved-print-exact-admission-before-retention-eviction')

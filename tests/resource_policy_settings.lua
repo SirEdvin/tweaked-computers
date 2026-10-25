@@ -15,7 +15,7 @@ local expected={
   runtime_memory_bytes=8388608,host_memory_bytes=134217728,state_bytes=65536,
   shell_value_bytes=16384,draft_storage_bytes=1048576,
   event_queue_bytes=65536,pending_work_bytes=1048576,
-  host_stack_depth=32,console_entries=64,console_bytes=16384,
+  host_stack_depth=32,console_bytes=16384,
   compiler_cache_bytes=8388608,render_commit_work=160000,
   event_drop_warning_interval=600,speaker_sound_page_size=50,
   monitor_width_tiles=6,monitor_height_tiles=6,
@@ -35,6 +35,7 @@ local function unchanged(f)
   assert(exposed.policy_version==2)
   assert(exposed.resources.event_queue_entries==nil and limits.event_queue_entries==nil)
   assert(settings.global['tc-event-queue-entries']==nil)
+  assert(exposed.resources.console_entries==nil and limits.console_entries==nil and settings.global['tc-console-entries']==nil)
   local speaker_policy=speaker.methods.getLimits()
   assert(speaker_policy.policy_version==2 and speaker_policy.callback_work==nil)
   assert(speaker_policy.tuning.speaker_sound_page_size.limit==f.values.speaker_sound_page_size)
@@ -50,6 +51,10 @@ local function unchanged(f)
   for i,item in ipairs(f.queue) do assert(item.event.value==i) end
   local queue_status=policy.status(f.rec,f.tick).resources.event_queue_bytes
   assert(queue_status.used==f.queue_bytes and queue_status.limit==1 and queue_status.over_limit)
+  assert(f.rec.logs==f.logs and #f.logs==129 and f.rec.log_bytes==f.log_bytes and not f.rec.log_truncated)
+  for i,entry in ipairs(f.logs) do assert(entry.text==(i%2==0 and '' or tostring(i))) end
+  local console_status=policy.status(f.rec,f.tick).resources.console_bytes
+  assert(console_status.used>f.log_bytes and console_status.limit==1 and console_status.over_limit)
   for _,definition in ipairs(budgets.definitions) do
     assert(settings.global[definition.name].value==f.values[definition.key])
     local value=f.values[definition.key]
@@ -116,10 +121,13 @@ function M.run()
   local rec=registry.register('computer',body)
   runtime.save(rec.id,'function receive() end',0); assert(runtime.activate(rec.id,game.tick))
   for i=1,129 do assert(runtime.enqueue(rec,'receive',{name='timer',value=i},game.tick)) end
+  for i=1,129 do runtime.log(rec,i%2==0 and '' or tostring(i),game.tick) end
+  assert(#rec.logs==129 and not rec.log_truncated,'byte-admissible Console history lost to the old count ceiling')
   local ctx=admission.context(root.ledger,'policy-settings',game.tick)
   assert(admission.reserve(ctx,'work',123))
   local f={phase='arm',ledger=root.ledger,machine=ctx.machine,id='policy-settings',tick=game.tick,
-    total=root.ledger.total,values={},rec=rec,queue=rec.queue,queue_bytes=rec.queue_bytes,run=rec.run_id}
+    total=root.ledger.total,values={},rec=rec,queue=rec.queue,queue_bytes=rec.queue_bytes,run=rec.run_id,
+    logs=rec.logs,log_bytes=rec.log_bytes}
   for _,definition in ipairs(budgets.definitions) do
     local value=definition.default_value+1
     if value>definition.maximum_value then value=definition.default_value-1 end
@@ -127,6 +135,7 @@ function M.run()
     assert(root.ledger.total==f.total and ctx.machine.work==123)
   end
   change(found.event_queue_bytes,1); f.values.event_queue_bytes=1
+  change(found.console_bytes,1); f.values.console_bytes=1
   unchanged(f)
   -- The engine must accept each declared endpoint, not merely its default.
   for _,definition in ipairs(budgets.definitions) do
@@ -162,6 +171,8 @@ function M.on_tick()
     assert(registry.get().ledger.total==f.total and f.machine.work==123)
     assert(runtime.enqueue(f.rec,'receive',{name='timer',value=130},game.tick))
     assert(f.rec.queue==f.queue and #f.queue==130 and f.queue[130].event.value==130 and not f.rec.dropped_events)
+    runtime.log(f.rec,'restored',game.tick)
+    assert(f.rec.logs==f.logs and #f.logs==130 and f.logs[130].text=='restored' and not f.rec.log_truncated)
     f.phase='done'; log('TC_CONTRACT complete-resource-policy-settings-cold-preserved'); log('TC_COLD_OK')
   end
 end

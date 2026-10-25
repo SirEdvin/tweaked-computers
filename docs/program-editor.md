@@ -125,7 +125,10 @@ focuses a widget or changes tabs. Only the selected supporting tab refreshes its
 presentation; no background discovery graph or hidden recovery/help rebuild occurs.
 The active status/Console fault marker may update without stealing navigation.
 
-Console retains the runtime's newest 64 entries / 16,384 bytes. With Follow off,
+Console retains the runtime's newest output within `tc-console-bytes` (default
+16,384 accounted bytes, including 64 metadata bytes per entry), without a separate
+entry-count ceiling. Lowering the setting alone preserves accepted history;
+the next fitting entry evicts oldest entries as needed. With Follow off,
 the single selectable text box stays live without automatic scrolling. Incoming
 changed text may reset native selection; unchanged text is not reassigned, so copy
 works between updates. Follow resumes tailing. Older ring entries remain

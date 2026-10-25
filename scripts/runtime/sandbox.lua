@@ -3,6 +3,7 @@ local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local memory = require('scripts.runtime.memory')
 local private_jobs = require('scripts.runtime.private-jobs')
+local registry = require('scripts.registry')
 local M = {}
 
 function M.new(context, services, shell, durable)
@@ -1107,9 +1108,13 @@ function M.new(context, services, shell, durable)
     G.spend(n+1); allocate(n)
     for i=1,n do
       parts[i]=env.tostring(select(i,...)); bytes=bytes+#parts[i]
-      if bytes>limits.console_bytes then errors.raise('E_LIMIT','print output too large') end
+      if bytes+registry.console_entry_bytes>limits.console_bytes then
+        errors.refuse('console_bytes','tc-console-bytes',0,bytes+registry.console_entry_bytes,limits.console_bytes,'print output too large','E_LIMIT')
+      end
     end
-    if bytes>limits.console_bytes then errors.raise('E_LIMIT','print output too large') end
+    if bytes+registry.console_entry_bytes>limits.console_bytes then
+      errors.refuse('console_bytes','tc-console-bytes',0,bytes+registry.console_entry_bytes,limits.console_bytes,'print output too large','E_LIMIT')
+    end
     G.spend(bytes+1); allocate(bytes)
     local text=table.concat(parts,'\t')
     prepare_return(env.print)

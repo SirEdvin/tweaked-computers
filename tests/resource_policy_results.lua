@@ -270,7 +270,7 @@ function M.run()
     {'deleteState',{'absent'},false},{'setLabel',{'new label'}},{'log',{'new log'}}}) do
     g.call(computer_method('setState'),'before','old')
     if case[1]=='log' then
-      for _=1,limits.console_entries do runtime.log(computer,'retained',game.tick) end
+      for _=1,math.floor(limits.console_bytes/(registry.console_entry_bytes+#'retained')) do runtime.log(computer,'retained',game.tick) end
     end
     local before={label=computer.label,state=computer.state.before,bytes=computer.state_bytes,
       nodes=computer.state_nodes,entries=computer.state_entries,size=computer.state_sizes.before,

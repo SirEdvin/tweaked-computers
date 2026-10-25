@@ -35,7 +35,10 @@ function M.session(rec)
 end
 local function log(rec,id,kind,text,tick,spend,prepare)
   local prefix='Shell #'..tostring(id)..' '..kind..': '
-  if #prefix+#text>limits.console_bytes then errors.raise('E_LIMIT','shell console entry too large') end
+  local bytes=#prefix+#text+registry.console_entry_bytes
+  if bytes>limits.console_bytes then
+    errors.refuse('console_bytes','tc-console-bytes',0,bytes,limits.console_bytes,'shell console entry too large','E_LIMIT')
+  end
   runtime.log(rec,prefix..text,tick,spend,prepare)
 end
 function M.reset(rec,reason)
