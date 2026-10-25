@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/JanSharp/phobos",
   "revision": "2566dd85807b4f2bdff8e40ba4d79bcf8e96de3f",
-  "transform": "tools/import_parser.py base import: namespaced requires and parser work/depth probes; local pre-admitted lexical/driver records, identifier callback, static scanner functions, EOF coordinates and protected root cleanup",
+  "transform": "tools/import_parser.py base import: namespaced requires and parser work/depth probes; local pre-admitted lexical/driver/AST constructor and linked-list records, identifier callback, static scanner/token dispatch, EOF coordinates and protected root cleanup",
   "files": [
     {
       "upstream_path": "src/parser.lua",
@@ -23,9 +23,9 @@
       "upstream_path": "src/nodes.lua",
       "installed_path": "vendor/phobos/nodes.lua",
       "original_sha256": "eddc0f572ca448c9c2e65ccb7db2b551f2d3f3ed78d19a56ac2ef2edc3741222",
-      "installed_sha256": "e5accec23e47e55e3568c6d07bd2e9515e7fcfe406033839a3d1d1660467f62a",
+      "installed_sha256": "62fd071d9a65f80d29f57628d00b10b2dac99caf87a8788224cb1aa7b13f5f62",
       "original_bytes": 24016,
-      "installed_bytes": 25030
+      "installed_bytes": 25514
     },
     {
       "upstream_path": "src/ast_util.lua",
@@ -47,9 +47,9 @@
       "upstream_path": "src/indexed_linked_list.lua",
       "installed_path": "vendor/phobos/indexed_linked_list.lua",
       "original_sha256": "7d8bc23c2259b44f8c3d02bbd766293dbfb3b57bbc7548fda939cba3c9c70ba2",
-      "installed_sha256": "92c384e8a7cf56b4fdf3ca7d59f8cc6c48edd1aaa4209d64cd16fd49f2703ec5",
+      "installed_sha256": "62d3fb3f0d30056063e3998309856ab6d1fdb04e6d622f38e82bc12f342ac2b8",
       "original_bytes": 8624,
-      "installed_bytes": 9115
+      "installed_bytes": 9426
     },
     {
       "upstream_path": "src/stack.lua",

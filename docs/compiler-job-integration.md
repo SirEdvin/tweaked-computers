@@ -64,10 +64,19 @@ native copying; copy/join work is prepaid too. This covers quoted/block strings,
 comments, identifiers, numbers, whitespace, shebangs and malformed-token paths.
 Block-comment recognition no longer copies its delimiter padding twice. Fixed
 single-character probes and native allocator buffers are not a calibrated heap
-bound; parser AST/validation temporaries still need separate coverage. The parser
+bound; parser mutation/validation temporaries still need separate coverage. The parser
 driver admits its root vectors, trivia lists/slots and EOF records. Its scanner
 functions are module-local rather than recreated closures; one protected cleanup
 clears scanner roots without allocating a `table.pack` result carrier.
+
+AST constructors reserve node records, their possible field slots and lazily
+created default vectors before growth, using the same 192/table and 48/field
+weights. Optional slots are conservatively reserved even when absent; this
+capacity lasts until the synchronous parse ends. Intrusive statement lists also
+reserve roots, neighbor/index slots and rebuilt lookup tables. This covers the
+constructors, not every later parser/validator mutation. Token construction now
+uses direct branches instead of creating a dispatch table and closures per token;
+valid operator construction no longer assembles an unused error string.
 
 The lowering pass reserves its table workspace before growing it: initial graph
 maps, block/branch records, lexical/capture/prototype metadata, expression and
@@ -126,6 +135,13 @@ allocation in the rich-language case as well as lowering, preserving warm/cold
 first refusal under competing shortages. Single-frontend probes count actual
 tokenizer starts for both source forms and Console, preserve forbidden-identifier
 and EOF locations, and refuse the Console prefix before parser entry.
+`tests.compiler_ast_memory`, invoked by the same guard fixture, checks default
+and fully populated constructor graphs, caller-owned aliases, token payload
+semantics and every recorded one-byte-short reservation. List probes exercise
+append/prepend, both middle-insertion directions, actual lookup rebuilding,
+removal and clearing, with exact refusal work and complete owner reclamation.
+These private parser structures are discarded on refusal; they are not saved
+continuations or an independently atomic list-edit API.
 
 `tests.compiler_bounded --cold` covers recoverable compilation refusal,
 220 durable locals, warm-cache host-depth reduction, prior-run preservation,
@@ -178,9 +194,9 @@ production budget was raised to fit these observations.
 
 This is not completion of the full resource-policy change or task 4.4. Console
 ingress and other downstream storage guards still need reconciliation. Compiler
-temporary allocation coverage (parser AST/validation, closures, diagnostic text
+temporary allocation coverage (later parser AST mutations/validation, closures, diagnostic text
 and proof metadata) and measured native headroom remain incomplete; lexical,
-lowering-table, emitted-payload
+AST-constructor, lowering-table, emitted-payload
 and native-load reservations do not establish them. Full migration and host-domain
 enrollment also remain open. Resolve these before claiming complete resource
 safety; do not restore the deleted compiler machine to solve them.

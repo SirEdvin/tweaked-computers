@@ -7,6 +7,11 @@ local assert_params_field = util.assert_params_field
 
 local nodes = {}
 
+local function vector()
+  admission.allocate(192)
+  return {}
+end
+
 -- The idea behind all of these `new_*` functions is:
 -- Allow for easy changes to some node type by modifying its constructor and/or finding all references
 -- Improve/keep code readability because all constructors are using a `params` table,
@@ -16,6 +21,7 @@ local nodes = {}
 function nodes.set_position(node, token)
 
   admission.enter()
+  admission.allocate(3 * 48)
   node.line = token.line
   node.column = token.column
   node.leading = token.leading
@@ -24,6 +30,7 @@ end
 ---@param node_type AstNodeType
 local function new_node(node_type, position_token)
   admission.enter()
+  admission.allocate(192 + 48)
   local node = {node_type = node_type}
   if position_token then
     nodes.set_position(node, position_token)
@@ -52,6 +59,7 @@ end
 ---@param params AstExpressionBaseParams
 local function expr_base(node, params)
   admission.enter()
+  admission.allocate(2 * 48)
   assert(node)
   node.force_single_result = params.force_single_result or false
   node.src_paren_wrappers = params.src_paren_wrappers
@@ -68,13 +76,15 @@ end
 ---@param params AstScopeBaseParams
 local function scope_base(node, params)
   admission.enter()
+  admission.allocate(5 * 48)
   assert(node)
   node.body = params.body or ill.new()
+  if not node.body.scope then admission.allocate(48) end
   node.body.scope = node.body.scope or node
   node.parent_scope = params.parent_scope
-  node.child_scopes = params.child_scopes or {}
-  node.locals = params.locals or {}
-  node.labels = params.labels or {}
+  node.child_scopes = params.child_scopes or vector()
+  node.locals = params.locals or vector()
+  node.labels = params.labels or vector()
   return node
 end
 
@@ -84,8 +94,9 @@ end
 ---@param params AstLoopBaseParams
 local function loop_base(node, params)
   admission.enter()
+  admission.allocate(48)
   assert(node)
-  node.linked_breaks = params.linked_breaks or {}
+  node.linked_breaks = params.linked_breaks or vector()
   return node
 end
 
@@ -95,6 +106,7 @@ end
 ---@param params AstFuncBaseBaseParams
 local function func_base_base(node, params)
   admission.enter()
+  admission.allocate(48)
   assert(node)
   node.func_def = assert_params_field(params, "func_def")
   return node
@@ -108,6 +120,7 @@ end
 ---@param params AstEnvScopeParams
 function nodes.new_env_scope(params)
   admission.enter()
+  admission.allocate(48)
   local node = new_node("env_scope")
   scope_base(node, params)
   node.main = assert_params_field(params, "main")
@@ -133,14 +146,15 @@ end
 ---@param params AstFunctionDefParams
 function nodes.new_functiondef(params)
   admission.enter()
+  admission.allocate(14 * 48)
   local node = new_node("functiondef")
   scope_base(node, params)
   node.source = assert_params_field(params, "source")
   node.is_method = params.is_method or false
-  node.func_protos = params.func_protos or {}
-  node.upvals = params.upvals or {}
+  node.func_protos = params.func_protos or vector()
+  node.upvals = params.upvals or vector()
   node.is_vararg = params.is_vararg or false
-  node.params = params.params or {}
+  node.params = params.params or vector()
   node.is_main = params.is_main or false
   node.param_comma_tokens = params.param_comma_tokens
   node.vararg_token = params.vararg_token
@@ -155,55 +169,31 @@ end
 ---@param params AstTokenParams
 function nodes.new_token(params)
   admission.enter()
-  local node = new_node("token", params);
+  -- Reserve the union of token fields before construction. Unused optional
+  -- slots remain conservative workspace until the whole parse is released.
+  admission.allocate(9 * 48)
+  local node = new_node("token", params)
   node.token_type = assert_params_field(params, "token_type")
-  node.leading = params.leading or {}
-  local function block_string_specific_fields()
-    admission.enter()
-    node.src_has_leading_newline = assert_params_field(params, "src_has_leading_newline")
-    node.src_pad = assert_params_field(params, "src_pad")
-  end
-  (({
-    ["blank"] = function()
-      node.value = assert_params_field(params, "value")
-    end,
-    ["comment"] = function()
-      node.value = assert_params_field(params, "value")
-      node.src_is_block_str = params.src_is_block_str or false
-      if node.src_is_block_str then
-        block_string_specific_fields()
-      end
-    end,
-    ["string"] = function()
-      node.value = assert_params_field(params, "value")
-      node.src_is_block_str = params.src_is_block_str or false
-      if node.src_is_block_str then
-        block_string_specific_fields()
-      else
-        node.src_quote = assert_params_field(params, "src_quote")
-        node.src_value = assert_params_field(params, "src_value")
-      end
-    end,
-    ["number"] = function()
-      node.value = assert_params_field(params, "value")
+  node.leading = params.leading or vector()
+  local kind = node.token_type
+  if kind == "blank" or kind == "ident" or kind == "invalid" then
+    node.value = assert_params_field(params, "value")
+    if kind == "invalid" then node.error_code_insts = params.error_code_insts or vector() end
+  elseif kind == "comment" or kind == "string" then
+    node.value = assert_params_field(params, "value")
+    node.src_is_block_str = params.src_is_block_str or false
+    if node.src_is_block_str then
+      admission.enter()
+      node.src_has_leading_newline = assert_params_field(params, "src_has_leading_newline")
+      node.src_pad = assert_params_field(params, "src_pad")
+    elseif kind == "string" then
+      node.src_quote = assert_params_field(params, "src_quote")
       node.src_value = assert_params_field(params, "src_value")
-    end,
-    ["ident"] = function()
-      node.value = assert_params_field(params, "value")
-    end,
-    -- no fields for eof, so commented out even though it is one of the special ones
-    -- ["eof"] = function()
-    -- end,
-    ["invalid"] = function()
-      -- Generally speaking make invalid nodes for invalid tokens instead of token nodes
-      -- but in the parser it creates some floating invalid nodes (meaning they aren't
-      -- in the AST anywhere, just in the syntax errors list) and then when such a token
-      -- eventually causes an unexpected token syntax error it gets consumed by that invalid
-      -- node which makes an invalid token node for that token
-      node.value = assert_params_field(params, "value")
-      node.error_code_insts = params.error_code_insts or {}
-    end,
-  })[node.token_type] or function() end)()
+    end
+  elseif kind == "number" then
+    node.value = assert_params_field(params, "value")
+    node.src_value = assert_params_field(params, "src_value")
+  end
   return node
 end
 
@@ -214,9 +204,10 @@ end
 ---@param params AstInvalidParams
 function nodes.new_invalid(params)
   admission.enter()
+  admission.allocate(2 * 48)
   local node = new_node("invalid")
   node.error_code_inst = assert_params_field(params, "error_code_inst")
-  node.consumed_nodes = params.consumed_nodes or {}
+  node.consumed_nodes = params.consumed_nodes or vector()
   return node
 end
 
@@ -228,6 +219,7 @@ end
 ---@param params AstEmptyParams
 function nodes.new_empty(params)
   admission.enter()
+  admission.allocate(48)
   local node = stat_base(new_node("empty"), params)
   node.semi_colon_token = params.semi_colon_token
   return node
@@ -241,8 +233,9 @@ end
 ---@param params AstIfStatParams
 function nodes.new_ifstat(params)
   admission.enter()
+  admission.allocate(3 * 48)
   local node = stat_base(new_node("ifstat"), params)
-  node.ifs = params.ifs or {}
+  node.ifs = params.ifs or vector()
   node.elseblock = params.elseblock
   node.end_token = params.end_token
   return node
@@ -256,6 +249,7 @@ end
 ---@param params AstTestBlockParams
 function nodes.new_testblock(params)
   admission.enter()
+  admission.allocate(3 * 48)
   local node = stat_base(new_node("testblock"), params)
   scope_base(node, params)
   node.condition = assert_params_field(params, "condition")
@@ -270,6 +264,7 @@ end
 ---@param params AstElseBlockParams
 function nodes.new_elseblock(params)
   admission.enter()
+  admission.allocate(48)
   local node = stat_base(new_node("elseblock"), params)
   scope_base(node, params)
   node.else_token = params.else_token
@@ -285,6 +280,7 @@ end
 ---@param params AstWhileStatParams
 function nodes.new_whilestat(params)
   admission.enter()
+  admission.allocate(4 * 48)
   local node = stat_base(new_node("whilestat"), params)
   scope_base(node, params)
   loop_base(node, params)
@@ -302,6 +298,7 @@ end
 ---@param params AstDoStatParams
 function nodes.new_dostat(params)
   admission.enter()
+  admission.allocate(2 * 48)
   local node = stat_base(new_node("dostat"), params)
   scope_base(node, params)
   node.do_token = params.do_token
@@ -324,6 +321,7 @@ end
 ---@param params AstForNumParams
 function nodes.new_fornum(params)
   admission.enter()
+  admission.allocate(10 * 48)
   local node = stat_base(new_node("fornum"), params)
   scope_base(node, params)
   loop_base(node, params)
@@ -353,12 +351,13 @@ end
 ---@param params AstForListParams
 function nodes.new_forlist(params)
   admission.enter()
+  admission.allocate(8 * 48)
   local node = stat_base(new_node("forlist"), params)
   scope_base(node, params)
   loop_base(node, params)
-  node.name_list = params.name_list or {}
+  node.name_list = params.name_list or vector()
   assert(params.exp_list and params.exp_list[1], "'forlist' nodes without any expressions are invalid")
-  node.exp_list = params.exp_list or {}
+  node.exp_list = params.exp_list or vector()
   node.exp_list_comma_tokens = params.exp_list_comma_tokens
   node.for_token = params.for_token
   node.comma_tokens = params.comma_tokens
@@ -376,6 +375,7 @@ end
 ---@param params AstRepeatStatParams
 function nodes.new_repeatstat(params)
   admission.enter()
+  admission.allocate(3 * 48)
   local node = stat_base(new_node("repeatstat"), params)
   scope_base(node, params)
   loop_base(node, params)
@@ -391,6 +391,7 @@ end
 ---@param params AstFuncStatParams
 function nodes.new_funcstat(params)
   admission.enter()
+  admission.allocate(48)
   local node = stat_base(new_node("funcstat"), params)
   func_base_base(node, params)
   node.name = assert_params_field(params, "name")
@@ -408,8 +409,9 @@ end
 ---@param params AstLocalStatParams
 function nodes.new_localstat(params)
   admission.enter()
+  admission.allocate(6 * 48)
   local node = stat_base(new_node("localstat"), params)
-  node.lhs = params.lhs or {}
+  node.lhs = params.lhs or vector()
   node.rhs = params.rhs
   node.local_token = params.local_token
   node.lhs_comma_tokens = params.lhs_comma_tokens
@@ -425,6 +427,7 @@ end
 ---@param params AstLocalFuncParams
 function nodes.new_localfunc(params)
   admission.enter()
+  admission.allocate(2 * 48)
   local node = stat_base(new_node("localfunc"), params)
   func_base_base(node, params)
   node.name = assert_params_field(params, "name")
@@ -442,9 +445,10 @@ end
 ---@param params AstLabelParams
 function nodes.new_label(params)
   admission.enter()
+  admission.allocate(5 * 48)
   local node = stat_base(new_node("label"), params)
   node.name = assert_params_field(params, "name")
-  node.linked_gotos = params.linked_gotos or {}
+  node.linked_gotos = params.linked_gotos or vector()
   node.name_token = params.name_token
   node.open_token = params.open_token
   node.close_token = params.close_token
@@ -460,8 +464,9 @@ end
 ---@param params AstRetStatParams
 function nodes.new_retstat(params)
   admission.enter()
+  admission.allocate(4 * 48)
   local node = stat_base(new_node("retstat"), params)
-  node.exp_list = params.exp_list or {}
+  node.exp_list = params.exp_list or vector()
   node.return_token = params.return_token
   node.exp_list_comma_tokens = params.exp_list_comma_tokens
   node.semi_colon_token = params.semi_colon_token
@@ -475,6 +480,7 @@ end
 ---@param params AstBreakStatParams
 function nodes.new_breakstat(params)
   admission.enter()
+  admission.allocate(2 * 48)
   local node = stat_base(new_node("breakstat"), params)
   node.linked_loop = params.linked_loop
   node.break_token = params.break_token
@@ -490,6 +496,7 @@ end
 ---@param params AstGotoStatParams
 function nodes.new_gotostat(params)
   admission.enter()
+  admission.allocate(4 * 48)
   local node = stat_base(new_node("gotostat"), params)
   node.target_name = assert_params_field(params, "target_name")
   node.linked_label = params.linked_label
@@ -512,6 +519,7 @@ end
 ---@param params AstCallParams
 function nodes.new_call(params)
   admission.enter()
+  admission.allocate(8 * 48)
   local node = stat_base(new_node("call"), params)
   expr_base(node, params)
   if params.is_selfcall then
@@ -520,7 +528,7 @@ function nodes.new_call(params)
   node.is_selfcall = params.is_selfcall or false
   node.ex = assert_params_field(params, "ex")
   node.suffix = params.suffix
-  node.args = params.args or {}
+  node.args = params.args or vector()
   node.args_comma_tokens = params.args_comma_tokens
   node.colon_token = params.colon_token
   node.open_paren_token = params.open_paren_token
@@ -538,9 +546,10 @@ end
 ---@param params AstAssignmentParams
 function nodes.new_assignment(params)
   admission.enter()
+  admission.allocate(5 * 48)
   local node = stat_base(new_node("assignment"), params)
-  node.lhs = params.lhs or {}
-  node.rhs = params.rhs or {}
+  node.lhs = params.lhs or vector()
+  node.rhs = params.rhs or vector()
   node.lhs_comma_tokens = params.lhs_comma_tokens
   node.eq_token = params.eq_token
   node.rhs_comma_tokens = params.rhs_comma_tokens
@@ -563,6 +572,7 @@ end
 ---@param params AstLoopStatParams
 function nodes.new_loopstat(params)
   admission.enter()
+  admission.allocate(3 * 48)
   local node = stat_base(new_node("loopstat"), params)
   scope_base(node, params)
   loop_base(node, params)
@@ -581,6 +591,7 @@ end
 ---@param params AstLocalReferenceParams
 function nodes.new_local_ref(params)
   admission.enter()
+  admission.allocate(2 * 48)
   local node = expr_base(new_node("local_ref", params.position), params)
   node.name = assert_params_field(params, "name")
   assert(params.reference_def.def_type == "local")
@@ -595,6 +606,7 @@ end
 ---@param params AstUpvalReferenceParams
 function nodes.new_upval_ref(params)
   admission.enter()
+  admission.allocate(2 * 48)
   local node = expr_base(new_node("upval_ref", params.position), params)
   node.name = assert_params_field(params, "name")
   assert(params.reference_def.def_type == "upval")
@@ -613,6 +625,7 @@ end
 ---@param params AstIndexParams
 function nodes.new_index(params)
   admission.enter()
+  admission.allocate(6 * 48)
   local node = expr_base(new_node("index"), params)
   node.ex = assert_params_field(params, "ex")
   node.suffix = assert_params_field(params, "suffix")
@@ -632,8 +645,9 @@ local unop_ops = util.invert{"not", "-", "#"}
 ---@param params AstUnOpParams
 function nodes.new_unop(params)
   admission.enter()
+  admission.allocate(3 * 48)
   local node = expr_base(new_node("unop"), params)
-  assert(unop_ops[params.op], "invalid unop op '"..tostring(params.op).."'")
+  if not unop_ops[params.op] then error("invalid unop op", 0) end
   node.op = params.op
   node.ex = assert_params_field(params, "ex")
   node.op_token = params.op_token
@@ -650,8 +664,9 @@ local binop_ops = util.invert{"^", "*", "/", "%", "+", "-", "==", "<", "<=", "~=
 ---@param params AstBinOpParams
 function nodes.new_binop(params)
   admission.enter()
+  admission.allocate(4 * 48)
   local node = expr_base(new_node("binop"), params)
-  assert(binop_ops[params.op], "invalid binop op '"..tostring(params.op).."'")
+  if not binop_ops[params.op] then error("invalid binop op", 0) end
   node.op = params.op
   node.left = assert_params_field(params, "left")
   node.right = assert_params_field(params, "right")
@@ -668,11 +683,12 @@ end
 ---@param params AstConcatParams
 function nodes.new_concat(params)
   admission.enter()
+  admission.allocate(4 * 48)
   local node = expr_base(new_node("concat"), params)
   node.src_paren_wrappers = nil
   node.concat_src_paren_wrappers = params.concat_src_paren_wrappers
   assert(params.exp_list and params.exp_list[1], "'concat' nodes without any expressions are invalid")
-  node.exp_list = params.exp_list or {}
+  node.exp_list = params.exp_list or vector()
   node.op_tokens = params.op_tokens
   return node
 end
@@ -684,6 +700,7 @@ end
 ---@param params AstNumberParams
 function nodes.new_number(params)
   admission.enter()
+  admission.allocate(2 * 48)
   local node = expr_base(new_node("number", params.position), params)
   node.value = assert_params_field(params, "value")
   node.src_value = params.src_value
@@ -702,6 +719,7 @@ end
 ---@param params AstStringParams
 function nodes.new_string(params)
   admission.enter()
+  admission.allocate(7 * 48)
   local node = expr_base(new_node("string", params.position), params)
   node.value = assert(params.value, "null strings might be valid, but they truly are useless and annoying, so no")
   node.src_is_ident = params.src_is_ident
@@ -728,6 +746,7 @@ end
 ---@param params AstBooleanParams
 function nodes.new_boolean(params)
   admission.enter()
+  admission.allocate(48)
   local node = expr_base(new_node("boolean", params.position), params)
   assert(params.value == true or params.value == false, "'boolean' nodes need a boolean value")
   node.value = params.value
@@ -762,8 +781,9 @@ end
 ---@param params AstConstructorParams
 function nodes.new_constructor(params)
   admission.enter()
+  admission.allocate(4 * 48)
   local node = expr_base(new_node("constructor"), params)
-  node.fields = params.fields or {}
+  node.fields = params.fields or vector()
   node.open_token = params.open_token
   node.comma_tokens = params.comma_tokens
   node.close_token = params.close_token

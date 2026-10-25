@@ -23,6 +23,9 @@ local ill = {}
 local function new_node(list, value, index, prev, next)
 
   admission.enter()
+  -- Four intrusive slots (including currently absent neighbors) and one
+  -- lookup slot; the AST node's own fields are reserved by its constructor.
+  admission.allocate((value and 0 or 192) + 5 * 48)
   value = value or {}
   if value.list then
     util.debug_abort("Attempt to add the same table to some intrusive list multiple times.")
@@ -40,6 +43,7 @@ local function re_index(self)
   -- re-indexing creates a fresh lookup table
   -- it would be awesome if we could initialize this
   -- table with the correct hash table size, but we can't
+  admission.allocate(192 + self.count * 48)
   local lookup = {}
   local node = self.first
   local index = 0
@@ -176,6 +180,7 @@ end
 function ill.new()
 
   admission.enter()
+  admission.allocate(2 * 192 + 4 * 48)
   return {
     count = 0,
     first = nil,
@@ -257,6 +262,7 @@ end
 function ill:clear()
 
   admission.enter()
+  admission.allocate(192)
   self.count = 0
   self.first = nil
   self.last = nil
