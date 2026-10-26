@@ -148,7 +148,7 @@ script.on_event(defines.events.on_gui_click,function(event)
       supply.power_production=100000000; supply.power_usage=0
       for _,pos in ipairs({{36,6},{50,6},{64,6},{36,20},{50,20},{64,20}}) do surface.create_entity{name='substation',position=pos,force='player'} end
     end
-    for i,kind in ipairs({'computer','kv','monitor','logic','configurator'}) do p.set_quick_bar_slot(i,defs.devices[kind].name) end
+    for i,kind in ipairs({'computer','kv','monitor','logic','configurator'}) do p.set_quick_bar_slot(1,i,defs.devices[kind].name) end
     p.teleport({49,10}); p.zoom=.95
   elseif e.name=='kvmax' then
     p.opened=nil; local db=assert(registry.record(x.db)); db.database=kv.import{version=1,entries={}}
@@ -156,7 +156,7 @@ script.on_event(defines.events.on_gui_click,function(event)
     for i=1,128 do local k=tostring(i); kv.methods.set(nil,db,'red',game.tick,function() end,k,string.rep('\0',128-#k)) end
     kv.methods.expire(nil,db,'red',game.tick,function() end,'1',10)
     setup().kv_position=db.body.position; setup().kv_original=db.id
-    p.teleport(db.body.position); p.zoom=3; p.set_quick_bar_slot(1,'tc-kv')
+    p.teleport(db.body.position); p.zoom=3; p.set_quick_bar_slot(1,1,'tc-kv')
   elseif e.name=='wire' then p.cursor_stack.set_stack{name='red-wire',count=1}
   elseif e.name=='save' then
     if not game.is_multiplayer() then p.print('Use the native Save game menu in singleplayer.'); return end

@@ -1,6 +1,6 @@
 # Tweaked Computers — ALPHA
 
-Native circuit computers for Factorio 2.0.77, with base alone or optional Space Age.
+Native circuit computers for Factorio 2.1.23, with base alone or optional Space Age.
 The integrated alpha implements native guarded callbacks, a five-tab single-document editor,
 same-color peripheral discovery, merging world monitors, string/hash KV storage,
 logic I/O, typed factory configuration and data-bearing device lifecycle.
@@ -8,7 +8,13 @@ Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. No interpreter,
 OS, gameplay filesystem or dynamic guest loader is shipped; there is no command history.
 
-Version **0.1.14 ALPHA** exposes complete fresh native circuit signals and native
+Version **0.1.15 ALPHA** migrates to Factorio 2.1.23 while preserving guest programs,
+saved data and safety budgets. See [0.1.15 release notes](docs/release-0.1.15.md).
+Verification for this engine is **headless-only**; the graphical/audio/connected-client
+checks described below are historical 2.0.77 evidence, not 2.1 acceptance.
+Keep 0.1.14 if you remain on Factorio 2.0.77, and back up before converting a save.
+
+Version 0.1.14 exposes complete fresh native circuit signals and native
 own-output configuration, without mod-defined signal/filter/output-slot ceilings.
 Reads preserve native order and optional identity fields. Ctrl-click opens only
 an actual computer body, not draft recovery on empty ground. Authority, fail-safe
@@ -75,7 +81,7 @@ earlier workload separately; current matched results accompany the release.
 Version 0.1.8 retains those monitor/live-budget features and adds bounded Console
 commands with live effects, shared save-backed values and confirmed reset, but no
 retained user functions or command history. See the [release notes](docs/console-shell-release.md).
-The release source is [alpha-0.1.14](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.14);
+The release source is [alpha-0.1.15](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.15);
 [0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development
@@ -97,7 +103,7 @@ Build an installable archive outside the checkout:
 Use a fresh output directory for the packaged official-engine integration smoke:
 
     python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
-      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.14.zip \
+      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.15.zip \
       --output /absolute/path/to/new-smoke-directory \
       --fixture tests.integration_engine --production-context --cold
 

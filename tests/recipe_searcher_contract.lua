@@ -4,7 +4,7 @@ local M={}
 function M.run(c,s)
   local original=prototypes
   local actual=original.recipe['tc-rs-item']
-  local base={name=actual.name,category=actual.category,additional_categories=actual.additional_categories,
+  local base={name=actual.name,categories=actual.categories,
     energy=actual.energy,enabled=actual.enabled,hidden=actual.hidden,hidden_from_player_crafting=actual.hidden_from_player_crafting,
     hidden_from_flow_stats=actual.hidden_from_flow_stats,hidden_in_factoriopedia=actual.hidden_in_factoriopedia,
     ingredients=actual.ingredients,products=actual.products,surface_conditions={}}
@@ -16,10 +16,11 @@ function M.run(c,s)
   end
   local ok,e=pcall(function()
     failure('E_UNSUPPORTED',function(rec) rec.energy=math.huge end)
-    failure('E_UNSUPPORTED',function(rec) rec.products={{type='item',name='tc-rs-overlap',probability=0/0,amount=1}} end)
+    failure('E_UNSUPPORTED',function(rec) rec.products={{type='item',name='tc-rs-overlap',independent_probability=0/0,shared_probability={min=0,max=1},amount=1}} end)
+    failure('E_UNSUPPORTED',function(rec) rec.products={{type='item',name='tc-rs-overlap',independent_probability=1,shared_probability={min=.9,max=.1},amount=1}} end)
     failure('E_UNSUPPORTED',function(rec) rec.ingredients={{type='fluid',name='water',amount=1,fluidbox_index=.5}} end)
     failure('E_UNSUPPORTED',function(rec) rec.surface_conditions={{property='pressure',min=math.huge}} end)
-    failure('E_LIMIT',function(rec) rec.category=string.rep('x',16385) end)
+    failure('E_LIMIT',function(rec) rec.categories={string.rep('x',16385)} end)
     prototypes=setmetatable({get_recipe_filtered=function() error('injected native failure') end},{__index=original})
     local accepted,problem=pcall(provider.methods.findRecipes,c,s,'red',game.tick,function() end,'item','tc-rs-overlap')
     assert(not accepted and problem.code=='E_ENGINE')

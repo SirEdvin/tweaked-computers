@@ -91,7 +91,8 @@ function M.run()
   local exercised={}; local samples=0
   for i,entry in ipairs(fixtures) do
     local entity=create(entry[1],{i*8,20}); local cb=entity.get_or_create_control_behavior()
-    assert(cb and cb.object_name==entry[2],entry[1]..' class '..tostring(cb and cb.object_name))
+    local native_class=entry[1]=='storage-tank' and 'LuaSingleFluidBoxControlBehavior' or entry[2]
+    assert(cb and cb.object_name==native_class,entry[1]..' class '..tostring(cb and cb.object_name))
     local item={id=targets.identity(entity),entity=entity,connectors={}}
     exercised[entry[2]]=exercised[entry[2]] or {}
     for name,schema in pairs(catalog.schemas[entry[2]]) do
@@ -111,6 +112,26 @@ function M.run()
       exercised[entry[2]][name]=true; samples=samples+1
     end
   end
+  local tank=create('storage-tank',{120,20}); local tank_cb=tank.get_or_create_control_behavior()
+  local modes=defines.control_behavior.single_fluid_box.exclusive_mode
+  local tank_item={id=targets.identity(tank),entity=tank,connectors={}}
+  tank_cb.circuit_exclusive_mode_of_operation=modes.send_segment_contents
+  assert(adapters.apply(tank_item,cfg,{set={read_contents=true}},nop).values.read_contents)
+  assert(tank_cb.circuit_exclusive_mode_of_operation==modes.send_segment_contents)
+  local fail_mode='once'
+  local proxy=setmetatable({},{__index=function(_,key) return tank_cb[key] end,__newindex=function(_,key,value)
+    tank_cb[key]=value
+    if fail_mode then if fail_mode=='once' then fail_mode=nil end; error('injected fluid mode setter failure') end
+  end})
+  local injected={id='fluid-rollback',entity={valid=true,get_control_behavior=function() return proxy end}}
+  error_is('E_ENGINE',function() adapters.apply(injected,cfg,{set={read_contents=false}},nop) end)
+  assert(tank_cb.circuit_exclusive_mode_of_operation==modes.send_segment_contents and not cfg.configuration_recovery)
+  fail_mode='always'
+  error_is('E_ENGINE',function() adapters.apply(injected,cfg,{set={read_contents=false}},nop) end)
+  assert(cfg.configuration_recovery[injected.id].native_fluid_mode==modes.send_segment_contents)
+  cfg.configuration_recovery=nil
+  assert(not adapters.apply(tank_item,cfg,{set={read_contents=false}},nop).values.read_contents)
+  assert(tank_cb.circuit_exclusive_mode_of_operation==modes.none)
   f().exercised=exercised; f().basic_fields=samples; report('actual-native-basic-family-every-field-enum-and-boolean-readback-'..samples)
   -- Exact catalogue coverage is counted, not inferred from equal array lengths.
   local classes,fields,concepts,enums=0,0,0,0

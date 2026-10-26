@@ -160,8 +160,8 @@ M.methods=methods
 function M.initialize(rec)
   if rec.database==nil then rec.database=empty() end
   local ok=pcall(M.audit,rec.database,function() end)
-  if not ok then rec.body.minable=false; rec.mining_guard='unsupported-database'; return end
-  rec.body.minable=true; rec.mining_guard=nil
+  if not ok then rec.body.minable_flag=false; rec.mining_guard='unsupported-database'; return end
+  rec.body.minable_flag=true; rec.mining_guard=nil
 end
 function M.initialize_existing()
   local root=registry.get()

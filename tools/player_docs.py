@@ -96,7 +96,10 @@ def generated():
             return 'bounded primitive; see the type name/ranges above'
         return 'bounded plain ' + kind
     out = ['# Supported configurator settings', '',
-           'Factorio 2.0.77 circuit-control settings, grouped by native behavior family.',
+           'Guest circuit-control settings supported on Factorio 2.1.23, preserving the 2.0 field vocabulary.',
+           'Fuel/display fields map to native read_fuel/records; logistic-container and landing-pad',
+           'modes also accept send_contents_and_set_requests for simultaneous reading/requesting.',
+           'Storage-tank read_contents=true preserves an existing segment-read mode; false disables reading.',
            'These tables include inherited roots. Read current getCapabilities before writing:',
            'prototype/expansion/mode restrictions can make a listed field unavailable.',
            'Types link to the [complete nested schemas](schemas.md). All calls, patch semantics',

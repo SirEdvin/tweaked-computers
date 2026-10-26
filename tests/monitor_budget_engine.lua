@@ -28,7 +28,7 @@ local function render(tick,spend)
     spend(8); renderer.retire(registry.get().monitors,{cells={},panel=x.cleanup_object}); x.cleanup_queued=true
   end
   if registry.get().scheduler.render_reserved_work>60000 then
-    local profiler=game.create_profiler(); local work=0
+    local profiler=helpers.create_profiler(); local work=0
     for _,path in ipairs(x.paths) do
       assert(network.validate_witness(registry.computer(x.computer),'red',path,function(n) spend(n); work=work+n end))
     end
@@ -90,7 +90,7 @@ function M.on_tick(event)
   end
   fuel(x) -- Trusted refill outside the measured scheduler; no factory-grid claim.
   local previous_sequence=x.sequence
-  local profiler=game.create_profiler()
+  local profiler=helpers.create_profiler()
   scheduler.tick(event.tick)
   profiler.stop()
   if x.sequence~=previous_sequence then native.visibility(x,true,false) end -- Observer outside scheduler CPU sample.

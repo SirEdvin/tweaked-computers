@@ -78,7 +78,7 @@ No physical proof survives into a later callback or cold process.
 ## Verification and limits
 
 `tools/monitor_animation.py` wraps the exact packaged guest bytes in a test-only
-module and runs the production scheduler in Factorio 2.0.77. Layouts are four
+module and runs the production scheduler in Factorio 2.1.23. Layouts are four
 6×6 walls at the script's scale 2, or mixed 6×6, 3×6, 3×6 and 1×1 walls, with
 cardinal rotations and real red/green wiring. Both base and Space Age are tested.
 The real editor performs Validate, Save and Run without resetting same-tick
@@ -99,12 +99,13 @@ thresholds or client rendering measurements.
 At 60 UPS, a two-tick publication cadence corresponds to 30 updates/second.
 A slower simulation, client rendering, very dense grids, unrelated factory work,
 other writers and larger numbers of active producers can reduce visible motion.
-Isolated software-rendered base and Space Age clients have also displayed the
+Historical 2.0.77 software-rendered base and Space Age clients displayed the
 connected subpixel curves in actual window captures and native screenshots; an
 eight-second base-client recording shows the animation. The older screenshot
 equality and performance reports used star markers, not this new workload.
 These shared-host checks do not establish steady real-time motion.
-Representative GPU-backed FPS and multiplayer-client smoothness remain unverified.
+The 2.1 release is headless-only: rendering, representative GPU-backed FPS and
+multiplayer-client smoothness remain unverified on that engine.
 
 The source checkout also includes `tools/monitor_performance.py` for serial,
 matched sparse/full-row benchmarks and longer simulated soak runs. It reports

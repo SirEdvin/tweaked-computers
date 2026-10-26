@@ -18,10 +18,32 @@ local function unavailable(item,class,name)
 end
 M.unavailable=unavailable
 local function sorted(map) local keys={}; for k in pairs(map) do keys[#keys+1]=k end; table.sort(keys); return keys end
+-- Keep the guest's 2.0 field vocabulary without losing 2.1's independent switches.
+local field_names={include_fuel='read_fuel',messages='records'}
+local function read_field(cb,name)
+  if cb.object_name=='LuaSingleFluidBoxControlBehavior' and name=='read_contents' then
+    return cb.circuit_exclusive_mode_of_operation~=defines.control_behavior.single_fluid_box.exclusive_mode.none
+  end
+  if name=='circuit_exclusive_mode_of_operation' then
+    if cb.read_contents then return cb.set_requests and 'send_contents_and_set_requests' or 'send_contents' end
+    return cb.set_requests and 'set_requests' or 'none'
+  end
+  return cb[field_names[name] or name]
+end
+local function write_field(cb,name,value)
+  if cb.object_name=='LuaSingleFluidBoxControlBehavior' and name=='read_contents' then
+    local modes=defines.control_behavior.single_fluid_box.exclusive_mode
+    if not value then cb.circuit_exclusive_mode_of_operation=modes.none
+    elseif cb.circuit_exclusive_mode_of_operation==modes.none then cb.circuit_exclusive_mode_of_operation=modes.send_contents end
+  elseif name=='circuit_exclusive_mode_of_operation' then
+    cb.read_contents=value=='send_contents' or value=='send_contents_and_set_requests'
+    cb.set_requests=value=='set_requests' or value=='send_contents_and_set_requests'
+  else cb[field_names[name] or name]=value end
+end
 local function behavior(item)
   if item.protected then return nil,nil,'owned_mod_device_protected' end
   local cb=item.entity.get_control_behavior()
-  if cb then return cb,cb.object_name end
+  if cb then return cb,cb.object_name=='LuaSingleFluidBoxControlBehavior' and 'LuaStorageTankControlBehavior' or cb.object_name end
   -- Discovery may describe possible settings, but must never create a behavior.
   local type_name=item.entity.type
   local aliases={['underground-belt']='TransportBelt',['loader-1x1']='Loader',['rail-signal']='RailSignalBase',['rail-chain-signal']='RailSignalBase'}
@@ -75,9 +97,8 @@ local function read_snapshot(item,spend)
   for _,name in ipairs(sorted(catalog.schemas[class] or {})) do
     local schema=catalog.schemas[class][name]
     if schema.readable and not (unavailable(item,class,name)=='rail_chain_signal_only') then
-      local value=cb and cb[name] or nil
-      -- Do not use and/or for false values.
-      if cb then value=cb[name] end
+      local value
+      if cb then value=read_field(cb,name) end
       local normal=validation.normal(schema,value)
       if normal==nil then result.unset[#result.unset+1]=name else result.values[name]=normal end
       if value~=nil and schema.concept=='CircuitConditionDefinition' and value.fulfilled~=nil then result.observations[name..'_fulfilled']=value.fulfilled end
@@ -120,7 +141,7 @@ function M.preflight(item,patch,spend)
   end
   for name,value in pairs(patch.set or {}) do
     local schema=admit(name); validation.validate(schema,value,name)
-    if class=='LuaCargoLandingPadControlBehavior' and name=='circuit_exclusive_mode_of_operation' and value=='set_requests' and not script.feature_flags.space_travel then errors.raise('E_UNSUPPORTED','set_requests_requires_space_travel',name) end
+    if class=='LuaCargoLandingPadControlBehavior' and name=='circuit_exclusive_mode_of_operation' and (value=='set_requests' or value=='send_contents_and_set_requests') and not script.feature_flags.space_travel then errors.raise('E_UNSUPPORTED','set_requests_requires_space_travel',name) end
     if schema.concept=='ProgrammableSpeakerCircuitParameters' then
       local instrument=item.entity.prototype.instruments[value.instrument_id+1]
       if not instrument or not instrument.notes[value.note_id+1] then errors.raise('E_RANGE','unknown speaker instrument/note',name) end
@@ -153,8 +174,9 @@ function M.apply(item,origin,patch,spend)
   if recovery_count>=M.limits.target_nodes then errors.raise('E_CAPACITY','adapter recovery inventory full') end
   local cb=item.entity.get_control_behavior()
   local absent=not cb
+  local fluid_mode=cb and cb.object_name=='LuaSingleFluidBoxControlBehavior' and cb.circuit_exclusive_mode_of_operation
   local function setall(values)
-    for _,name in ipairs(order(values)) do cb[name]=values[name].native end
+    for _,name in ipairs(order(values)) do write_field(cb,name,values[name].native) end
   end
   local ok,result=pcall(function()
     cb=cb or item.entity.get_or_create_control_behavior()
@@ -182,13 +204,17 @@ function M.apply(item,origin,patch,spend)
     local prior={}
     for name,s in pairs(schemas) do if s.writable and not unavailable(item,class,name) then prior[name]={native=validation.native(s,before.values[name])} end end
     setall(prior)
+    if fluid_mode then
+      cb.circuit_exclusive_mode_of_operation=fluid_mode
+      if cb.circuit_exclusive_mode_of_operation~=fluid_mode then error('fluid mode restoration differs') end
+    end
     local actual=M.snapshot(item,nop)
     if not validation.equal(actual.values,before.values) or not validation.equal(actual.unset,before.unset) then error('restoration readback differs') end
   end)
   if not restored then
     origin.configuration_recovery=origin.configuration_recovery or {}
     origin.configuration_recovery[item.id]={device=item.id,before=before,patch=retained_patch,
-      tick=game.tick,reason='native failure; target-local restoration failed',behavior=class,created_behavior=absent}
+      tick=game.tick,reason='native failure; target-local restoration failed',behavior=class,created_behavior=absent,native_fluid_mode=fluid_mode or nil}
   end
   local e=errors.new('E_ENGINE',restored and 'native update failed; target settings restored (external effects not rolled back)' or 'native update failed; restoration failed; target-local recovery retained')
   e.device=item.id; error(e,0)

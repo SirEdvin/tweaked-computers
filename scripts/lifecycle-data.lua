@@ -75,11 +75,11 @@ function M.restore_computer(rec,s,settings_only)
   end
   rec.run_id=nil; rec.diagnostic=nil; rec.candidate_diagnostic=nil
   rec.network_views=nil; rec.network_job=nil; rec.needs_input_resync=nil
-  rec.body.minable=true; rec.mining_guard=nil
+  rec.body.minable_flag=true; rec.mining_guard=nil
 end
 function M.initialize_computer(rec)
   local ok,e=pcall(M.computer_snapshot,rec,false)
-  rec.body.minable=ok; rec.mining_guard=not ok and 'unsupported-computer-data' or nil
+  rec.body.minable_flag=ok; rec.mining_guard=not ok and 'unsupported-computer-data' or nil
   if not ok then runtime.retire(rec,'faulted','unsupported_retained_data'); rec.diagnostic=type(e)=='table' and e or errors.new('E_UNSUPPORTED','retained computer data needs host recovery') end
 end
 function M.monitor_snapshot(rec)
@@ -139,7 +139,7 @@ function M.initialize_existing()
     local n=0
     for _,rec in pairs(root.computers or {}) do n=n+1; if n>limits.registry_entries then break end
       registry.cleanup(rec,rec.run_id,'unsupported_storage'); rec.status='faulted'; rec.powered=false
-      if rec.body and rec.body.valid then rec.body.minable=false end
+      if rec.body and rec.body.valid then rec.body.minable_flag=false end
     end
     return
   end

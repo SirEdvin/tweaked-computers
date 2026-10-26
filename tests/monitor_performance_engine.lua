@@ -69,7 +69,7 @@ function M.on_tick(event)
   for _,id in ipairs(root.order) do local r=registry.record(id)
     if r and r.body.valid then lifecycle.power_entity(r).energy=100000 end
   end
-  local profiler=game.create_profiler()
+  local profiler=helpers.create_profiler()
   scheduler.tick(event.tick)
   profiler.stop()
   x.steps=x.steps+1

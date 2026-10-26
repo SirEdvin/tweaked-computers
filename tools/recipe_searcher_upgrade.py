@@ -21,14 +21,15 @@ def digest(path):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    for name in ('factorio', 'legacy', 'archive', 'output'):
+    for name in ('factorio', 'legacy-factorio', 'legacy', 'archive', 'output'):
         ap.add_argument('--' + name, type=Path, required=True)
     args = ap.parse_args()
     assert digest(args.legacy) == LEGACY_SHA256, 'immutable published 0.1.8 required'
     assert not args.output.exists() and not args.output.resolve().is_relative_to(ROOT)
     args.output.mkdir(parents=True)
     version = subprocess.check_output([str(args.factorio), '--version'], text=True)
-    assert version.startswith('Version: 2.0.77 ')
+    assert version.startswith('Version: 2.1.23 ')
+    assert subprocess.check_output([str(args.legacy_factorio), '--version'], text=True).startswith('Version: 2.0.77 ')
     with zipfile.ZipFile(args.archive) as z:
         prefix = next(n[:-len('info.json')] for n in z.namelist() if n.endswith('/info.json'))
         fixture = z.read(prefix + 'tests/recipe_searcher_upgrade_engine.lua')
@@ -71,23 +72,25 @@ def main():
         (mods / 'mod-list.json').write_text(json.dumps(dict(mods=enabled)))
         shutil.copy2(legacy_test, mods / legacy_test.name)
         cfg = folder / 'config.ini'
-        cfg.write_text('[path]\nread-data=' + str(args.factorio.resolve().parents[2] / 'data') +
+        cfg.write_text('[path]\nread-data=' + str(args.legacy_factorio.resolve().parents[2] / 'data') +
                        '\nwrite-data=' + str(write.resolve()) + '\n[other]\ncheck-updates=false\n')
         initial = folder / 'legacy.zip'
-        command = [str(args.factorio), '--config', str(cfg), '--mod-directory', str(mods),
+        command = [str(args.legacy_factorio), '--config', str(cfg), '--mod-directory', str(mods),
                    '--create', str(initial), '--map-gen-seed', '1']
         result = subprocess.run(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=120)
         (folder / 'create-engine.log').write_text(result.stdout)
         assert result.returncode == 0 and 'TC_SMOKE_OK' in result.stdout, result.stdout
         snapshot = write / 'saves/tc03-snapshot.zip'
-        phases = [cold_phase(args.factorio, cfg, mods, initial, folder, 'legacy-first', 'TC_COLD_SNAPSHOT_REQUESTED', snapshot)]
+        phases = [cold_phase(args.legacy_factorio, cfg, mods, initial, folder, 'legacy-first', 'TC_COLD_SNAPSHOT_REQUESTED', snapshot)]
         upgraded = folder / 'installed.zip'
         shutil.copy2(snapshot, upgraded)
         (mods / legacy_test.name).unlink()
         shutil.copy2(args.archive, mods / args.archive.name)
-        # Source version stays unchanged per task; a test-companion version change
-        # explicitly triggers the real configuration event in the next process.
         info['version'] = '0.0.2'
+        info['factorio_version'] = '2.1'
+        cfg.write_text(cfg.read_text().replace(str(args.legacy_factorio.resolve().parents[2] / 'data'), str(args.factorio.resolve().parents[2] / 'data')))
+        enabled.append(dict(name='recycler', enabled=mode == 'space-age'))
+        (mods / 'mod-list.json').write_text(json.dumps(dict(mods=enabled)))
         (companion / 'info.json').write_text(json.dumps(info))
         companion.rename(mods / 'tc-recipe-upgrade_0.0.2')
         phases.append(cold_phase(args.factorio, cfg, mods, upgraded, folder, 'installation', 'TC_UPGRADE_OK'))

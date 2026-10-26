@@ -38,7 +38,7 @@ end
 function M.on_load() loaded=true; if f().phase=='frozen' then unchanged() end end
 function M.on_configuration_changed() error('unexpected configuration change') end
 function M.run()
-  local profiler=game.create_profiler()
+  local profiler=helpers.create_profiler()
   if remote.interfaces.freeplay then
     remote.call('freeplay','set_skip_intro',true)
     remote.call('freeplay','set_disable_crashsite',true)
@@ -260,7 +260,7 @@ function M.on_tick(event)
     x.change_at=event.tick+24
   end
   observer.reset()
-  local profiler=game.create_profiler(); scheduler.tick(event.tick); profiler.stop()
+  local profiler=helpers.create_profiler(); scheduler.tick(event.tick); profiler.stop()
   x.steps=x.steps+1
   log({'','TC_ENVELOPE_CPU tick=',event.tick,' phase=',x.phase,' ',profiler})
   observe(event.tick)
@@ -295,7 +295,7 @@ function M.on_tick(event)
     if id then
       local c=registry.computer(id); local source=program(x.next)
       helpers.write_file('envelope-source-'..x.next..'.lua',source,false)
-      local profiler=game.create_profiler(); local ok,err=runtime.save(id,source,c.saved_revision); assert(ok,serpent.line(err))
+      local profiler=helpers.create_profiler(); local ok,err=runtime.save(id,source,c.saved_revision); assert(ok,serpent.line(err))
       local active,why=runtime.activate(id,event.tick); profiler.stop(); assert(active,serpent.line(why))
       log({'','TC_COMBINED_COLD_ACTIVATION computer=',x.next,' bytes=',#source,' ',profiler}); x.next=x.next+1
     else x.phase='warm'; x.window=event.tick end

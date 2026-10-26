@@ -44,7 +44,7 @@ local function retained()
   local x=f(); local c=registry.computer(x.computer); local io=registry.record(x.logic)
   assert(c.queue==x.queue and c.queue_bytes==x.bytes and c.subscriptions==x.subscriptions)
   assert(c.run_id==x.run and c.state.boots==1 and not c.state.events and io.output_owner==x.owner)
-  assert(c.queue[1].event.current==x.pending and x.pending[1].signal.type=='item' and x.pending[1].signal.quality=='normal')
+  assert(c.queue[1].event.current==x.pending and (x.pending[1].signal.type or 'item')=='item' and (x.pending[1].signal.quality or 'normal')=='normal')
   assert(x.pending[1].count==21)
 end
 function M.on_load() loaded=true; if f().phase=='frozen' then retained(); log('TC_COLD_ON_LOAD_UNCHANGED') end end

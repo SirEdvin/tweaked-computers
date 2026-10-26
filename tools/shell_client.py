@@ -24,8 +24,8 @@ def prepare(archive, engine, client, output, mode, config_template=None, fixture
         raise ValueError('use a fresh output directory outside the checkout')
     version = subprocess.check_output([str(engine), '--version'], text=True)
     client_version = subprocess.check_output([str(client / 'bin/x64/factorio'), '--version'], text=True)
-    if not version.startswith('Version: 2.0.77 ') or not client_version.startswith('Version: 2.0.77 ') or 'full' not in client_version:
-        raise ValueError('matching complete 2.0.77 headless and graphical engines required')
+    if not version.startswith('Version: 2.1.23 ') or not client_version.startswith('Version: 2.1.23 ') or 'full' not in client_version:
+        raise ValueError('matching complete 2.1.23 headless and graphical engines required')
     with zipfile.ZipFile(archive) as package:
         info = json.loads(package.read(next(n for n in package.namelist() if n.endswith('/info.json'))))
         assert any(n.endswith('/' + fixture_module.replace('.', '/') + '.lua') for n in package.namelist())
@@ -38,12 +38,12 @@ def prepare(archive, engine, client, output, mode, config_template=None, fixture
     assert copied.read_bytes() == archive.read_bytes()
     fixture = mods / 'tc-smoke_0.0.1'
     fixture.mkdir()
-    (fixture / 'info.json').write_text(json.dumps(dict(name='tc-smoke', version='0.0.1', title='Isolated Console client fixture', author='test fixture', factorio_version='2.0', dependencies=['base', info['name']])))
+    (fixture / 'info.json').write_text(json.dumps(dict(name='tc-smoke', version='0.0.1', title='Isolated Console client fixture', author='test fixture', factorio_version='2.1', dependencies=['base', info['name']])))
     (fixture / 'control.lua').write_text('-- Fixture lives in the production mod event/storage context.\n')
     value=json.dumps(fixture_module)
     (fixture / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value="+value+",allowed_values={"+value+"}}}\n")
     enabled = [dict(name=n, enabled=True) for n in ('base', info['name'], 'tc-smoke')]
-    enabled += [dict(name=n, enabled=mode == 'space-age') for n in ('space-age', 'quality', 'elevated-rails')]
+    enabled += [dict(name=n, enabled=mode == 'space-age') for n in ('space-age', 'quality', 'elevated-rails', 'recycler')]
     (mods / 'mod-list.json').write_text(json.dumps(dict(mods=enabled)))
     configs = {}
     for name in ('server', 'client1', 'client2'):

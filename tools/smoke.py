@@ -101,12 +101,12 @@ def main():
     args.output.mkdir(parents=True)
     version = subprocess.check_output([str(args.factorio), '--version'], text=True)
     (args.output / 'engine-version.txt').write_text(version)
-    if not version.startswith('Version: 2.0.77 '):
-        raise RuntimeError('exact Factorio 2.0.77 required')
+    if not version.startswith('Version: 2.1.23 '):
+        raise RuntimeError('exact Factorio 2.1.23 required')
     with zipfile.ZipFile(args.archive) as archive:
         info_path = next(n for n in archive.namelist() if n.endswith('/info.json'))
         info = json.loads(archive.read(info_path))
-    summary = {'engine': '2.0.77', 'archive_sha256': hashlib.sha256(args.archive.read_bytes()).hexdigest(), 'cases': []}
+    summary = {'engine': '2.1.23', 'archive_sha256': hashlib.sha256(args.archive.read_bytes()).hexdigest(), 'cases': []}
     for mode in (['base','space-age'] if args.mode=='both' else [args.mode]):
         folder = args.output / mode
         mods,write = folder / 'mods',folder / 'write'
@@ -115,7 +115,7 @@ def main():
         shutil.copy2(args.archive, mods / args.archive.name)
         fixture = mods / 'tc-smoke_0.0.1'
         fixture.mkdir()
-        (fixture / 'info.json').write_text(json.dumps({'name':'tc-smoke','version':'0.0.1','title':'TC isolated smoke', 'author':'test fixture','factorio_version':'2.0','dependencies':['base',info['name']]}))
+        (fixture / 'info.json').write_text(json.dumps({'name':'tc-smoke','version':'0.0.1','title':'TC isolated smoke', 'author':'test fixture','factorio_version':'2.1','dependencies':['base',info['name']]}))
         # Read fixture source from the same ZIP as production code.
         module = '__' + info['name'] + '__.' + args.fixture
         control = 'local test = require(' + json.dumps(module) + ')\nscript.on_init(function() test.run(); log("TC_SMOKE_OK") end)\n'
@@ -136,7 +136,7 @@ def main():
         if args.final_data_fixture:
             (fixture / 'data-final-fixes.lua').write_text('require('+json.dumps('__'+info['name']+'__.'+args.final_data_fixture)+')\n')
         enabled = [{'name':'base','enabled':True},{'name':info['name'],'enabled':True},{'name':'tc-smoke','enabled':True}]
-        enabled += [{'name':name,'enabled':mode=='space-age'} for name in ('space-age','quality','elevated-rails')]
+        enabled += [{'name':name,'enabled':mode=='space-age'} for name in ('space-age','quality','elevated-rails','recycler')]
         (mods / 'mod-list.json').write_text(json.dumps({'mods':enabled}))
         cfg = folder / 'config.ini'
         cfg.write_text('[path]\nread-data='+str(args.factorio.resolve().parents[2] / 'data')+'\nwrite-data='+str(write)+'\n[other]\ncheck-updates=false\n')

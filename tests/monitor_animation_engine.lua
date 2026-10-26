@@ -20,7 +20,7 @@ local function f() return storage.tc_animation end
 local compile=compiler.compile
 compiler.compile=function(...)
   local x=f(); local measured=x and x.steps>0 and x.steps%60==0
-  local profiler=measured and game.create_profiler()
+  local profiler=measured and helpers.create_profiler()
   local result,problem=compile(...)
   if profiler then profiler.stop(); log({'','TC_ANIMATION_COMPILER ',profiler}) end
   if problem then return result,problem end
@@ -121,7 +121,7 @@ function M.on_tick(event)
     local r=registry.record(id); if r and r.body.valid then lifecycle.power_entity(r).energy=id==x.outage and 0 or 100000 end
   end
   if contention then contention.begin(event.tick) end
-  local profiler=game.create_profiler()
+  local profiler=helpers.create_profiler()
   scheduler.tick(event.tick)
   profiler.stop()
   if contention then contention.finish() end

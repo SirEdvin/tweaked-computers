@@ -71,7 +71,7 @@ end
 function M.on_player_joined(event)
   local p=game.get_player(event.player_index)
   p.set_controller{type=defines.controllers.god}; p.teleport({4,1}); p.zoom=1.5
-  p.insert{name='tc-recipe-searcher',count=10}; p.set_quick_bar_slot(1,'tc-recipe-searcher')
+  p.insert{name='tc-recipe-searcher',count=10}; p.set_quick_bar_slot(1,1,'tc-recipe-searcher')
   p.game_view_settings.show_entity_info=true
   local x=f(); x.joined[p.index]=true
   if x.retained then

@@ -1,4 +1,15 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.15
+Date: 2026-10-25
+  Changes:
+    - Migrate to Factorio 2.1.23, base alone or optional Space Age. Use 0.1.14 for Factorio 2.0.77.
+    - Update protected entity mining flags, recipe categories and product probability metadata for the 2.1 runtime API.
+    - Preserve configurator guest field names while adapting native fuel, display-panel, logistic-container, landing-pad and storage-tank settings. Combined read/request mode is exposed as send_contents_and_set_requests.
+    - Keep Recipe Searcher probability as the marginal probability; also expose independent_probability and shared_probability. The first native category is the compatibility category and remaining categories are sorted additional_categories.
+  Info:
+    - ALPHA: back up saves and matching engine/mod versions before upgrading; do not downgrade a converted save in place. API 1, compiler 2 and storage 1 remain unchanged. No production budgets are raised.
+    - Verification on 2.1.23 is headless-only. Earlier 2.0.77 graphical, audio and connected-client checks do not certify 2.1 behavior.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.14
 Date: 2026-10-25
   Features:

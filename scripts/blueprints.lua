@@ -142,7 +142,7 @@ end
 function M.clone_port(event)
   local port=event.destination; local source,role=registry.by_entity(event.source)
   if not source or role=='body' then port.destroy(); return end
-  port.minable=false; port.destructible=false; port.operable=false; port.rotatable=false
+  port.minable_flag=false; port.destructible=false; port.operable=false; port.rotatable=false
   local cb=port.get_or_create_control_behavior(); cb.enabled=false
   for i=cb.sections_count,1,-1 do cb.remove_section(i) end
   local root=registry.get(); local pending=root.pending_clone_ports or {}; root.pending_clone_ports=pending

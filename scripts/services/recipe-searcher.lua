@@ -70,16 +70,32 @@ local function projector(spend)
     if v.type~='item' and v.type~='fluid' then fail('unsupported recipe component type') end
     put(t,'type',v.type,'string'); put(t,'name',v.name,'string')
     if product then
-      if not errors.finite(v.probability) or v.probability<0 or v.probability>1 then fail('unsupported product probability') end
-      put(t,'probability',v.probability,'number')
+      local probability=v.independent_probability; local shared=v.shared_probability
+      if not errors.finite(probability) or probability<0 or probability>1 or type(shared)~='table'
+        or not errors.finite(shared.min) or not errors.finite(shared.max)
+        or shared.min<0 or shared.max>1 or shared.min>shared.max then fail('unsupported product probability') end
+      put(t,'probability',probability*(shared.max-shared.min),'number')
+      put(t,'independent_probability',probability,'number')
+      local range=container(); put(range,'min',shared.min,'number'); put(range,'max',shared.max,'number')
+      put(t,'shared_probability',range,'table')
       if v.amount~=nil then put(t,'amount',v.amount,'number')
       else put(t,'amount_min',v.amount_min,'number'); put(t,'amount_max',v.amount_max,'number') end
       optional(t,v,{'ignored_by_stats','ignored_by_productivity'})
-      if v.type=='item' then optional(t,v,{'extra_count_fraction','percent_spoiled'})
+      if v.type=='item' then
+        optional(t,v,{'extra_count_fraction','percent_spoiled'})
+        for _,field in ipairs({'affected_by_quality','always_fresh','reset_freshness_on_craft'}) do
+          if v[field]~=nil then put(t,field,v[field],'boolean') end
+        end
       else optional(t,v,{'temperature','fluidbox_index'}) end
     else
       put(t,'amount',v.amount,'number'); optional(t,v,{'ignored_by_stats'})
       if v.type=='fluid' then optional(t,v,{'temperature','minimum_temperature','maximum_temperature','fluidbox_index','fluidbox_multiplier'}) end
+    end
+    if v.type=='item' then
+      optional(t,v,{'quality_change','spoil_weight'})
+      for _,field in ipairs({'quality_min','quality_max'}) do
+        if v[field]~=nil then put(t,field,type(v[field])=='string' and v[field] or v[field].name,'string') end
+      end
     end
     for _,field in ipairs({'fluidbox_index','fluidbox_multiplier'}) do
       if t[field]~=nil and t[field]%1~=0 then fail('noninteger fluidbox metadata') end
@@ -90,7 +106,8 @@ local function projector(spend)
     -- Native properties may materialize arrays. No Lua-side scan precedes its admission.
     spend(32)
     local source=native(function()
-      return {name=recipe.name,category=recipe.category,additional_categories=recipe.additional_categories,
+      local categories=recipe.categories
+      return {name=recipe.name,category=categories[1],additional_categories=categories,
         energy=recipe.energy,enabled=force_recipe.enabled,enabled_by_default=recipe.enabled,
         hidden=recipe.hidden,hidden_from_player_crafting=recipe.hidden_from_player_crafting,
         hidden_from_flow_stats=recipe.hidden_from_flow_stats,hidden_in_factoriopedia=recipe.hidden_in_factoriopedia,

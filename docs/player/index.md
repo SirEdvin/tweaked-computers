@@ -11,7 +11,12 @@ Factorio objects, and no command history.
 
 ## Start here
 
-**0.1.14 ALPHA** exposes complete fresh [native circuit signals](api/logic.md)
+**0.1.15 ALPHA** migrates to **Factorio 2.1.23**, base alone or optional Space Age.
+This release has **headless-only** verification. Earlier graphical, audio and
+connected-client results below apply to 2.0.77, not 2.1. Back up before converting
+your save; keep 0.1.14 if you remain on Factorio 2.0.77.
+
+Version 0.1.14 exposes complete fresh [native circuit signals](api/logic.md)
 without mod-defined signal/filter/output-slot ceilings. Reads retain native order
 and optional identity fields. Ctrl-click opens only a selected computer body;
 empty ground is inert and draft recovery remains in Maintenance. Independent
@@ -53,13 +58,14 @@ native GUI/circuit configuration preserved. See its maintained alarm/melody/cata
 ## Alpha warning
 
 Back up your save before installation, upgrades or manual recovery. The supported
-verification target is Factorio 2.0.77, base alone or with optional Space Age.
+verification target is Factorio 2.1.23, base alone or with optional Space Age.
 Expansion-only prototypes/settings are available only when the engine provides
 them. Newer engine versions and third-party prototype combinations are not claimed
 verified by this guide.
 
 The implementation has packaged headless native-runtime, factory-effect and
-cold-save checks. Service Rack artwork and live charts have isolated software-rendered
+cold-save checks. The following client results are historical **2.0.77** evidence:
+Service Rack artwork and live charts have isolated software-rendered
 base/Space Age captures. The Console has native input/size/workflow acceptance in
 both modes and actual base two-client late joining plus cold server resume.
 Recipe Searcher appearance and Ctrl-click transfers/held-modifier reuse/monitor
