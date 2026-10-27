@@ -57,6 +57,17 @@ The `main` ruleset requires this check from the GitHub Actions integration; do
 not rename the job without updating that rule. No administrator bypass is needed
 to merge a passing PR. Tags are not CI or publication triggers.
 
+Only changes to Lua files, `info.json`, `scripts/`, `prototypes/`, `locale/`,
+`vendor/`, `assets/`, `examples/`, `tests/`, `tools/`, this CI workflow,
+`mkdocs.yml` or `requirements-docs.txt` run the full validation steps. Spec-only,
+wiki-only and documentation-only changes instead pass the required check with an
+explicit skip message, without installing dependencies or downloading Factorio.
+The separate player-documentation workflow still checks its own inputs.
+PRs compare against their merge base; branch pushes compare against the default
+branch's merge base so a documentation follow-up cannot hide earlier code changes.
+Default-branch pushes compare against the previous head. Manual dispatch always
+runs the full suite; unavailable history never counts as a safe skip.
+
 The read-only job reuses the existing package regressions, generated-contract and
 player-documentation checks, then downloads the official Factorio **2.0.77**
 headless archive and verifies its pinned SHA-256 before execution. The packaged

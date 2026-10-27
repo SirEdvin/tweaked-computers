@@ -323,7 +323,8 @@ class CanonicalContractTests(unittest.TestCase):
                    '2026-10-19-add-recipe-searcher', '2026-10-20-add-function-program-syntax',
                    '2026-10-21-add-peripheral-inspectors', '2026-10-21-add-radar-modems',
                    '2026-10-21-expand-lua-globals', '2026-10-21-add-speaker-peripheral',
-                   '2026-10-21-restructure-peripheral-documentation')
+                   '2026-10-21-restructure-peripheral-documentation',
+                   '2026-10-27-track-only-computer-connected-radars')
         # Exact, intentional scenario evolution in the native-carrier deltas.
         # Every other historical scenario remains byte-for-byte checked below;
         # this is not a blanket name-only exception for modified requirements.
@@ -363,6 +364,13 @@ class CanonicalContractTests(unittest.TestCase):
                 ('opens a single-role device', 'opens a mod-authored single-role device'),
             ('peripheral-network', 'Wiring compatibility after presentation changes', 'Mixed-color and vanilla relay paths'):
                 ('traverses a vanilla relay', 'traverses an unsupported vanilla relay'),
+            ('radar-modem', 'Durable transport state without replay', 'Replace or clone a configured radar'):
+                ('- **THEN** the new entity has a new identity and an empty channel set, and old wrappers cannot retarget to it.',
+                 '- **THEN** the new entity has a new identity and an empty channel set when it is enrolled, and old wrappers cannot retarget to it\n'
+                 '- **AND** an unconnected replacement or clone remains unenrolled until a computer-rooted path exists.'),
+            ('radar-modem', 'Durable transport state without replay', 'Scope change'):
+                ('its previously opened channels are cleared.',
+                 'its previously opened channels are cleared before participation in the new scope.'),
         }
         # Exact reviewed direct-native-circuit replacements, not name-only exemptions.
         # Hash the complete trimmed requirement body; retain every historical scenario.
