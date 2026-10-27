@@ -32,7 +32,74 @@ local function fuel()
   if r and r.body.valid then lifecycle.power_entity(r).energy=100000; r.powered=true end
  end
 end
+local function maintenance_run()
+ local x={kind='maintenance',phase='maintenance-settling',steps=0,from_version=script.active_mods['tweaked-computers']}
+ storage.tc_monitor_upgrade=x
+ local c=build('computer',-3,0); x.computer=c.id
+ local wall={}; x.walls={wall}
+ for y=0,5 do for col=0,5 do wall[#wall+1]=build('monitor',col,y).id end end
+ x.unaffected=wall[1]; x.partial=build('monitor',10,0).id
+ for _=1,200 do monitor.reconcile(game.tick,nop); if not registry.get().monitors.job then break end end
+ local g=monitor.resolve(registry.record(x.unaffected)); model.calls.write(g.model,nop,'KEEP'); renderer.participate(g)
+ local p=monitor.resolve(registry.record(x.partial)); model.calls.write(p.model,nop,'OLD'); renderer.participate(p)
+ assert(runtime.save(c.id,source,c.saved_revision)); assert(runtime.activate(c.id,game.tick))
+end
+scheduler.register_phase('render','00-monitor-upgrade-pressure',function(tick,spend)
+ local x=f(); if not x or x.kind~='maintenance' or x.phase~='maintenance-preparing' then return end
+ renderer.tick(tick,function(n)
+  local s=registry.get().monitors; local g=monitor.resolve(registry.record(x.partial))
+  local lane=s.presentation and s.presentation.lanes[g.id]
+  if lane and lane.job and lane.job.ready then
+   local remaining=200000-registry.get().scheduler.maintenance_spent
+   if remaining>0 then spend(remaining) end
+   x.refused=true
+  end
+  spend(n)
+ end)
+end)
+local function maintenance_tick(event)
+ local x=f(); local root=registry.get(); local c=registry.computer(x.computer)
+ if x.phase=='maintenance-frozen' then return end
+ if x.phase=='done' then
+  if loaded then
+   local p=root.monitors.presentation; local work=p.work; local members=p.members
+   fuel(); scheduler.tick(event.tick)
+   assert(root.monitors.signature==x.candidate_signature and p.work==work and p.members==members,'ordinary load repeated demand enrollment')
+   for id,front in pairs(x.final_fronts) do assert(root.monitors.groups[id].render==front,'ordinary load rebuilt an idle front') end
+   assert(c.state.boots==1); loaded=false; log('TC_UPGRADE_ORDINARY_OK')
+  end
+  return
+ end
+ fuel(); scheduler.tick(event.tick); x.steps=x.steps+1; assert(x.steps<300)
+ local s=root.monitors; local p=s.presentation; local ready=not s.job and p and #p.jobs==0 and #p.retired==0 and #p.orphans==0 and p.pending_cells==0
+ for _,g in pairs(s.groups) do if not g.render or g.render.presented_revision~=g.model.revision then ready=false end end
+ local g=monitor.resolve(registry.record(x.unaffected)); local partial=monitor.resolve(registry.record(x.partial))
+ if x.phase=='maintenance-settling' and ready and c.state.boots==1 then
+  assert(not p.demand_version,'legacy save already contains candidate bookkeeping')
+  x.saved={id=g.id,model=g.model,cells=g.model.cells,render=g.render,glyph=g.render.cells[1].glyph,run_id=c.run_id}
+  x.partial_saved={model=partial.model,cells=partial.model.cells,render=partial.render,glyph=partial.render.cells[1].glyph}
+  model.calls.setCursorPos(partial.model,nop,1,1); model.calls.write(partial.model,nop,'NEXT'); renderer.participate(partial)
+  x.partial_saved.cells=partial.model.cells
+  x.phase='maintenance-preparing'
+ elseif x.phase=='maintenance-preparing' and x.refused then
+  local job=assert(p.lanes[partial.id].job); assert(job.ready and partial.render==x.partial_saved.render)
+  x.progress={job=job,member=job.member,cell=job.cell,spent=root.scheduler.maintenance_spent,reserved=root.scheduler.render_reserved_work}
+  x.phase='maintenance-frozen'; loaded=false; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
+ elseif x.phase=='maintenance-upgrading' then
+  assert(c.state.boots==1 and c.run_id==x.saved.run_id)
+  assert(g.model==x.saved.model and g.model.cells==x.saved.cells and g.render==x.saved.render and x.saved.glyph.valid and x.saved.glyph.visible)
+  assert(partial.model==x.partial_saved.model and partial.model.cells==x.partial_saved.cells)
+  if ready then
+   assert(p.demand_version==1 and s.topology_version==1 and x.progress.job.complete)
+   assert(partial.render~=x.partial_saved.render and partial.render.snapshot.cells[1][1]==78 and not x.partial_saved.glyph.valid)
+   x.final_fronts={}; for id,group in pairs(s.groups) do x.final_fronts[id]=group.render end
+   x.candidate_signature=s.signature; x.phase='done'
+   log('TC_MONITOR_MAINTENANCE_UPGRADE_OK from='..x.from_version..' to='..script.active_mods['tweaked-computers']); log('TC_UPGRADE_OK')
+  end
+ end
+end
 function M.run()
+ if script.active_mods['tweaked-computers']=='0.1.16' then return maintenance_run() end
  assert(model.limits.width_tiles==4,'legacy fixture must originate in the released four-tile runtime')
  local x={phase='legacy',walls={},steps=0}; storage.tc_monitor_upgrade=x
  local c=build('computer',-3,0); x.computer=c.id
@@ -71,13 +138,29 @@ end
 function M.on_load()
  loaded=true
  local x=f(); if not x then return end
+ if x.kind=='maintenance' and x.phase=='maintenance-frozen' then
+  local root=registry.get(); local job=x.progress.job
+  assert(job.ready and job.member==x.progress.member and job.cell==x.progress.cell)
+  assert(root.scheduler.maintenance_spent==x.progress.spent and root.scheduler.render_reserved_work==x.progress.reserved)
+ end
  if x.saved then
   local c=registry.computer(x.computer); local g=monitor.resolve(registry.record(x.unaffected))
   assert(c.run_id==x.saved.run_id and c.state.boots==1)
   assert(g.id==x.saved.id and g.model==x.saved.model and g.model.cells==x.saved.cells)
  end
 end
-function M.on_configuration_changed()
+function M.on_configuration_changed(event)
+ local x=f()
+ if x.kind=='maintenance' then
+  local change=assert(event.mod_changes['tweaked-computers'])
+  assert(change.old_version=='0.1.16' and change.old_version==x.from_version
+    and change.new_version==script.active_mods['tweaked-computers'] and change.new_version~=change.old_version)
+  assert(x.phase=='maintenance-frozen' and not registry.get().monitors.presentation.demand_version)
+  assert(x.progress.job.ready and x.progress.job.member==x.progress.member and x.progress.job.cell==x.progress.cell)
+  x.phase='maintenance-upgrading'; loaded=false
+  log('TC_MONITOR_MAINTENANCE_CONFIGURATION old='..change.old_version..' new='..change.new_version)
+  return
+ end
  assert(model.limits.width_tiles==6 and f().phase=='legacy-frozen')
  local x=f(); local g=monitor.resolve(registry.record(x.unaffected))
  assert(g.render==x.saved.render and x.saved.glyph.valid and x.saved.glyph.visible)
@@ -85,6 +168,7 @@ function M.on_configuration_changed()
 end
 function M.on_tick(event)
  local x=f(); if not x then return end
+ if x.kind=='maintenance' then return maintenance_tick(event) end
  if x.phase=='legacy-frozen' then return end
  if x.phase=='done' then
   if loaded then

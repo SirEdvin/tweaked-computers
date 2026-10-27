@@ -183,13 +183,19 @@ function M.run()
     group('monitor-model-and-independent-selection-ownership',function()
       execute('m=peripheral.wrap("'..screen.id..'","red"); m.write("Shell"); peripheral.setMonitorSyncGroup({{name="'..screen.id..'",wire="red"}})')
       assert(rec.shell.monitor_sync and not rec.monitor_sync)
+      presentation.tick(tick,function() end)
+      local p=registry.get().monitors.presentation; local key=rec.shell.monitor_sync.key
+      assert(p.demand_version==1 and p.shells[key]==p.lanes[key] and p.members[screen.id]==p.lanes[key])
+      assert(not p.work[key],'waiting shell lane was not parked')
       tick=tick+1; execute('assert(peripheral.getMonitorSyncGroup().status~="none")')
+      assert(not p.work[key],'read-only shell command woke rendering')
       local marker={key='synthetic-other-owner',run_id='other-run'}
       rec.monitor_sync=marker -- Explicit synthetic ownership witness, not a running program.
       local revision=screen.model.revision
       assert(lifecycle.connector(rec,'network','red').disconnect_from(lifecycle.connector(mon,'network','red')))
       presentation.tick(tick,function() end)
       assert(not rec.shell.monitor_sync and rec.monitor_sync==marker and screen.model.revision==revision,'idle stopped-shell revocation changed another owner or model')
+      assert(not p.shells[key] and not p.lanes[key] and not p.members[screen.id] and not p.work[key],'revoked shell retained demand ownership')
       rec.monitor_sync=nil
       assert(lifecycle.connector(rec,'network','red').connect_to(lifecycle.connector(mon,'network','red')))
     end)

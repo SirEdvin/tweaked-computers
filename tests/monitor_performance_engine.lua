@@ -7,6 +7,9 @@ local registry=require('scripts.registry')
 local lifecycle=require('scripts.lifecycle')
 local scheduler=require('scripts.scheduler')
 local model=require('scripts.monitor-model')
+local runtime=require('scripts.runtime.computer')
+local scene=config.scene or 'all'
+assert(scene=='zero' or scene=='idle' or scene=='one' or scene=='all')
 local M={}; local loaded=false
 local function f() return storage.tc_animation end
 local function audit(x)
@@ -46,6 +49,13 @@ function M.run()
   setup.run()
   local x=f(); x.phase='warmup'; x.peak_objects=0; x.measured=0; x.visible_changes=0; x.publications=0
   x.max_gap=0; x.previous={}
+  x.tiles=0
+  for _,wall in ipairs(x.walls) do x.tiles=x.tiles+#wall end
+  if scene=='zero' then
+    runtime.stop(x.computer)
+    for _,wall in ipairs(x.walls) do for _,id in ipairs(wall) do assert(lifecycle.remove(id,'timing-zero-control',true)) end end
+    x.tiles=0
+  end
   game.speed=100 -- Accelerated simulation, never a real-time UPS/FPS claim.
 end
 function M.on_load()
@@ -66,14 +76,21 @@ function M.on_tick(event)
     loaded=false; x.phase='rewarm'; x.steps=0
   end
   local root=registry.get(); local c=registry.computer(x.computer)
+  local tiles=0
   for _,id in ipairs(root.order) do local r=registry.record(id)
     if r and r.body.valid then lifecycle.power_entity(r).energy=100000 end
+    if r and r.kind=='monitor' then
+      assert(r.body.valid and lifecycle.has_power(r),'timing scene lost a live powered tile')
+      tiles=tiles+1
+    end
   end
+  assert(tiles==x.tiles,'timing scene tile count changed')
   local profiler=helpers.create_profiler()
   scheduler.tick(event.tick)
   profiler.stop()
   x.steps=x.steps+1
-  assert(c.status=='running',serpent.line(c.diagnostic))
+  local stopped=scene=='zero' or scene=='idle' and x.phase~='warmup'
+  assert(c.status==(stopped and 'stopped' or 'running'),serpent.line(c.diagnostic))
   if x.phase=='measuring' then
     x.measured=x.measured+1
     log({'','TC_PERF_CPU tick=',event.tick,' ',profiler})
@@ -101,7 +118,7 @@ function M.on_tick(event)
     end
     if x.measured==config.ticks then
       audit(x)
-      assert(x.publications>0 and x.visible_changes>0,'no chart motion')
+      if not stopped then assert(x.publications>0 and x.visible_changes>0,'no chart motion') end
       if config.max_gap then assert(x.max_gap<=config.max_gap,'publication cadence exceeded target') end
       log('TC_PERF_DONE ticks='..x.measured..' publications='..x.publications..' visible_changes='..x.visible_changes..' max_gap='..x.max_gap..' peak_objects='..x.peak_objects)
       x.phase='done'; log('TC_COLD_OK sustained-monitor-performance')
@@ -109,6 +126,7 @@ function M.on_tick(event)
   elseif x.steps>=120 then
     audit(x)
     if x.phase=='warmup' then
+      if scene=='idle' then runtime.stop(x.computer) end
       x.saved={chart=c.state.smooth_chart,run=c.run_id,presentation=root.monitors.presentation,
         total=root.ledger.total,maintenance=root.scheduler.maintenance_spent}
       x.phase='frozen'; loaded=false; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
