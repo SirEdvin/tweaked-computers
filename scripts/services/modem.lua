@@ -95,25 +95,15 @@ function M.methods.transmit(c,r,w,t,spend,...)
     errors.raise('E_LIMIT','modem transmission rate exceeded; retry on a later tick')
   end
   spend(#root.order*8+1)
-  local candidates={}; local surfaces={}; local count=0
-  for _,id in ipairs(root.order) do
-    local rec=registry.record(id)
-    if rec and eligible(r,rec) and state(rec,spend).channels[ch] then
-      count=count+1
-      if count>limits.routing_candidates then errors.raise('E_LIMIT','modem routing candidate limit exceeded') end
-      candidates[id]=rec; surfaces[rec.surface_index]=true
-    end
-  end
+  local candidates={}; local count=0
   local computers={}
-  if count>0 then
-    for _,id in ipairs(root.order) do
-      local rec=root.computers[id]
-      if rec and rec.status=='running' and rec.powered and rec.force_index==r.force_index and surfaces[rec.surface_index]
-        and lifecycle.has_power(rec) then
-        for _,sub in pairs(rec.subscriptions) do
-          spend(4)
-          if sub.event_name=='modem_message' then computers[#computers+1]=rec; break end
-        end
+  for _,rec in pairs(root.computers) do
+    if rec.status=='running' and rec.powered and rec.force_index==r.force_index
+      and (rec.surface_index==r.surface_index or r.modem_tier=='interplanetary' and script.active_mods['space-age'])
+      and lifecycle.has_power(rec) then
+      for _,sub in pairs(rec.subscriptions) do
+        spend(4)
+        if sub.event_name=='modem_message' then computers[#computers+1]=rec; break end
       end
     end
   end
@@ -125,7 +115,15 @@ function M.methods.transmit(c,r,w,t,spend,...)
     for _,wire in ipairs({'red','green'}) do
       local inventory=peripheral.inventory(computer,wire,spend)
       for id in pairs(inventory) do
-        if candidates[id] then paths[id]=paths[id] or {}; paths[id][#paths[id]+1]=wire end
+        local rec=registry.record(id)
+        if rec and eligible(r,rec) and state(rec,spend).channels[ch] then
+          if not candidates[id] then
+            count=count+1
+            if count>limits.routing_candidates then errors.raise('E_LIMIT','modem routing candidate limit exceeded') end
+            candidates[id]=rec
+          end
+          paths[id]=paths[id] or {}; paths[id][#paths[id]+1]=wire
+        end
       end
     end
     local names={}; for id in pairs(paths) do names[#names+1]=id end

@@ -4,6 +4,40 @@ local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local M = {}
 local cleanup = {} -- Ephemeral host hooks, registered during control parsing.
+local function track_destruction(root,rec)
+  if rec.kind=='radar' and rec.body.valid then
+    local registration=script.register_on_object_destroyed(rec.body)
+    rec.destruction_registration=registration
+    root.radar_destructions[registration]=rec.id
+  end
+end
+local function migrate_tracking(root)
+  if root.tracking_version~=nil then return end
+  if type(root.computers)~='table' or type(root.devices)~='table' or type(root.entities)~='table' then return end
+  local order,count={},0
+  for _,records in ipairs({root.computers,root.devices}) do
+    for id,rec in pairs(records) do
+      if type(rec)~='table' or rec.id~=id or type(rec.kind)~='string' or not rec.body then return end
+      count=count+1
+    end
+  end
+  for _,id in ipairs(root.order) do
+    local rec=root.computers[id] or root.devices[id]
+    if rec and rec.kind~='radar' then order[#order+1]=id end
+  end
+  root.order=order; root.retained_count=count; root.radar_destructions={}; root.tracking_version=1
+  for _,key in ipairs({'cursor','maintenance_cursor','physical_cursor','art_cursor','kv_cursor'}) do
+    if root.scheduler[key] then root.scheduler[key]=math.max(1,math.min(root.scheduler[key],#order)) end
+  end
+  root.scheduler.radar_cursor=nil
+  local lost={}
+  for id,rec in pairs(root.devices) do
+    track_destruction(root,rec)
+    if rec.kind=='radar' and not rec.body.valid then lost[#lost+1]=id end
+  end
+  table.sort(lost)
+  for _,id in ipairs(lost) do M.remove(id,'native_body_lost') end
+end
 function M.initialize()
   local root=storage.tweaked_computers
   if root then
@@ -13,16 +47,20 @@ function M.initialize()
     root.order=root.order or {}; root.next_sequence=root.next_sequence or 1
     root.ledger=root.ledger or admission.new()
     root.scheduler=root.scheduler or {cursor=1,last_tick=-1}
+    migrate_tracking(root)
     return root
   end
   root={schema_version=limits.storage_version,next_id=1,next_sequence=1,
     entities={},computers={},devices={},player_drafts={},order={},ledger=admission.new(),
-    scheduler={cursor=1,last_tick=-1}}
+    scheduler={cursor=1,last_tick=-1},tracking_version=1,retained_count=0,radar_destructions={}}
   storage.tweaked_computers=root
   return root
 end
 function M.get() return storage.tweaked_computers end
-function M.supported(root) return root and root.schema_version==limits.storage_version end
+function M.supported(root)
+  return root and root.schema_version==limits.storage_version and root.tracking_version==1
+    and errors.integer(root.retained_count,0,9007199254740991) and type(root.radar_destructions)=='table'
+end
 local function writable()
   local root=M.get()
   if not M.supported(root) then errors.raise('E_UNSUPPORTED','unsupported storage schema; source/data retained') end
@@ -59,11 +97,12 @@ function M.register(kind,body)
   if type(kind)~='string' or #kind==0 or #kind>limits.identifier_bytes then errors.raise('E_ARGUMENT','invalid device kind') end
   if not body or not body.valid or not body.unit_number then errors.raise('E_ARGUMENT','valid numbered entity required') end
   if root.entities[body.unit_number] then errors.raise('E_ARGUMENT','entity already bound') end
-  if #root.order>=limits.registry_entries then errors.raise('E_CAPACITY','placed identity capacity reached') end
+  if root.retained_count>=limits.registry_entries then errors.raise('E_CAPACITY','placed identity capacity reached') end
   if not errors.integer(root.next_id,1,9007199254740990) then errors.raise('E_CAPACITY','identity capacity exhausted') end
   local id='tc-'..string.format('%.0f',root.next_id); root.next_id=root.next_id+1
   local rec={schema_version=1,id=id,generation=1,kind=kind,body=body,children={},
     force_index=body.force.index,surface_index=body.surface.index,powered=true}
+  track_destruction(root,rec)
   if kind=='computer' then
     rec.saved_source=''; rec.saved_revision=0; rec.run_generation=0; rec.status='stopped'
     rec.state={}; rec.state_bytes=16; rec.state_entries=0; rec.state_sizes={}
@@ -73,7 +112,8 @@ function M.register(kind,body)
     root.computers[id]=rec
   else root.devices[id]=rec end
   root.entities[body.unit_number]={id=id,role='body',generation=rec.generation}
-  root.order[#root.order+1]=id
+  root.retained_count=root.retained_count+1
+  if kind~='radar' then root.order[#root.order+1]=id end
   return rec
 end
 function M.bind_child(id,role,entity)
@@ -140,6 +180,8 @@ function M.remove(id,reason)
   rec.status='removed'; rec.queue={}; rec.timers={}; rec.subscriptions={}
   for unit,binding in pairs(root.entities) do if binding.id==id then root.entities[unit]=nil end end
   root.computers[id]=nil; root.devices[id]=nil
+  root.retained_count=root.retained_count-1
+  if rec.destruction_registration then root.radar_destructions[rec.destruction_registration]=nil end
   for i,x in ipairs(root.order) do
     if x==id then
       table.remove(root.order,i)

@@ -1,13 +1,21 @@
 # Radar modems
 
-A vanilla radar is also a `modem`. Connect its native circuit socket directly to
-one computer's Network socket using red or green wire. No adapter item, extra
+A vanilla radar can be a `modem`. Connect its native circuit socket to a
+computer's Network socket using red or green wire, directly or through supported
+same-color network relays. No adapter item, extra
 research, replacement body or hidden power helper is required. Native scanning,
 circuit transmission, opening, settings, power use and mining remain vanilla.
 Only the exact vanilla `radar` and the optional advanced radar are supported;
 other mods' radar prototypes are not automatically enrolled.
 
-An existing wired radar is adopted by bounded connected-frontier maintenance.
+A radar is enrolled only through a physical path rooted at a placed computer.
+Placement, cloning, revival or a standalone peripheral component does not enroll
+it. A stopped, faulted or unpowered computer still supplies a physical root;
+running a program is not required for discovery. The complete path must stay on
+one wire color, force and surface. Hidden radio links and adjacent monitor tiles
+do not extend that path.
+
+An existing wired radar is adopted by bounded computer-rooted maintenance.
 While adoption is incomplete, discovery reports `E_NETWORK_PENDING`; exhausted
 identity capacity reports `E_CAPACITY`. Integration failure never destroys or
 refunds a native radar. Very crowded native hidden-link inventories can exceed
@@ -104,6 +112,9 @@ string/table/key overhead; a string's length alone is not its Data byte size.
 `getLimits()` also exposes `channel_min=0`, `channel_max=65535`, `open_channels=128`
 and common string/table/node/depth ceilings. Quality does not change these bounds.
 The full event envelope, not only payload bytes, must fit the recipient queue.
+Routing starts with eligible receiving computers and their fresh local paths.
+The candidate ceiling counts unique connected, available, open-channel receivers;
+disconnected remembered radars are not scanned and do not consume candidate slots.
 
 Proof, copies and complete fanout are admitted before publication. A relevant
 incomplete graph, invalid payload, payload/fanout/rate bound or fatal host budget
@@ -133,7 +144,7 @@ new local authority, even inside an accepted event handler.
 
 ## Space Age advanced tier
 
-With Space Age 2.0.77 enabled, research **Interplanetary radar modems**. Research
+With Space Age 2.1.23 enabled, research **Interplanetary radar modems**. Research
 requires exactly automation, logistic, chemical, production, utility and space
 science: 500 units, one of each pack per unit, 30 seconds. No military or
 planet-specific pack. Prerequisites are circuit computers and the production,
@@ -162,10 +173,25 @@ Ordinary save/load retains exact radar IDs, channels, accepted queues, subscript
 and spent same-tick transport credits. Load executes no guest startup or transmit.
 An ordinary same-scope power cycle retains channels. Force/surface changes revoke
 old bindings and clear channels before participation in the new scope. Mining,
-replacement, clone and blueprint placement create a new empty identity; channel
-state is not copied into items or pasted settings.
+replacement, clone and blueprint placement receive a new empty identity only
+after a valid computer connection; channel state is not copied into items or
+pasted settings.
+
+Disconnecting the last computer path preserves the same radar's name and channels
+as dormant saved data, without recurring availability checks, generic tick visits
+or dormant-pool polling. Same-entity, same-scope reconnection restores access;
+an old wrapper grants no authority while detached. Dormant radars receive and
+buffer no traffic, and reconnecting never replays missed messages. Already queued
+snapshots are not recalled by radar removal.
+
+Version 0.1.16 partitions previously registered radars out of generic ticking
+before the first ordinary tick after upgrading 0.1.15. No mining, rewiring or
+gameplay cleanup sweep is required. Ordinary cold reload preserves that separation.
+Dormant records still use memory/save space and count toward identity capacity;
+Factorio's own native radar simulation is unchanged.
 
 Back up the save and complete mod set before upgrade. Roll back by restoring that
-backup with its prior mods. Downgrading a live save or removing Space Age is not
+backup with its prior mods. Older code assumes a different registry layout, so do
+not downgrade a newly saved 0.1.16 world in place. Downgrading a live save or removing Space Age is not
 promised lossless: advanced entities/research can disappear. Unknown/corrupt modem
 state is retained inert with `E_UNSUPPORTED`, not silently reset.

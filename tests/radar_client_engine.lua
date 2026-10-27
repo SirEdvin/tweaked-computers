@@ -13,7 +13,7 @@ local function build(kind,x,y,surface)
   surface=surface or game.surfaces[1]
   local name=kind=='radar' and 'radar' or kind=='advanced' and 'tc-interplanetary-radar' or defs.devices[kind].entity_name
   local body=assert(surface.create_entity{name=name,position={x,y},force='player'})
-  lifecycle.on_built{entity=body}; return assert(registry.by_entity(body))
+  return assert(lifecycle.build(body))
 end
 local function connect(a,b,color)
   local function endpoint(r) return r.body.get_wire_connector(defines.wire_connector_id['circuit_'..color],true) end

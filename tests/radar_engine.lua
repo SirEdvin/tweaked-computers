@@ -9,6 +9,7 @@ local limits=require('scripts.runtime.limits')
 local blueprints=require('scripts.blueprints')
 local modem=require('scripts.services.modem')
 local speaker=require('scripts.speaker')
+local tracking=require('tests.radar_tracking_cases')
 local M={}; local loaded=false
 local function nop() end
 local function f() return storage.radar_fixture end
@@ -44,12 +45,15 @@ function M.run()
   assert(next((peripheral.inventory(c,'green',nop)))==nil and unsupported.valid)
   unsupported.destroy()
   local a=native(6,0,true); local b=native(100,0,true)
-  local rec=assert(registry.by_entity(a)); local remote=assert(registry.by_entity(b))
+  assert(not registry.by_entity(a) and not registry.by_entity(b))
+  conn(c.body,'red').connect_to(conn(a,'red'),false)
+  conn(a,'red').connect_to(conn(db.body,'red'),false)
+  error_is('E_NETWORK_PENDING',function() peripheral.inventory(c,'red',nop) end)
+  graph.adopt(c,'red',nop)
+  local rec=assert(registry.by_entity(a)); local remote=assert(radar.build(b)) -- Legacy dormant identity.
   assert(rec.native_carrier=='radar' and next(rec.children)==nil and not rec.layout_version)
   assert(a.operable and a.minable and a.active and a.name=='radar')
   assert(lifecycle.build(a)==rec and registry.by_entity(a)==rec)
-  conn(c.body,'red').connect_to(conn(a,'red'),false)
-  conn(a,'red').connect_to(conn(db.body,'red'),false)
   local inv=peripheral.inventory(c,'red',nop); assert(inv[rec.id] and inv[db.id] and not inv[remote.id])
   assert(next((peripheral.inventory(c,'green',nop)))==nil)
   local _,path=peripheral.authority(c,db.id,'red',nop)
@@ -74,21 +78,24 @@ function M.run()
   report('mixed-native-blueprint-settings-paste-and-power-guards-preserve-native-state')
   local clone=assert(a.clone{position={6,6},surface=a.surface,force=a.force,create_build_effect_smoke=false})
   lifecycle.on_cloned{source=a,destination=clone}
+  assert(not registry.by_entity(clone))
+  conn(c.body,'green').connect_to(conn(clone,'green'),false); graph.adopt(c,'green',nop)
   local copied=assert(registry.by_entity(clone)); assert(copied.id~=rec.id and copied.modem.count==0 and clone.operable and rec.modem.channels[7])
   lifecycle.remove(copied.id,'fixture',false); assert(clone.valid); clone.destroy()
   local ghost=assert(a.surface.create_entity{name='entity-ghost',inner_name='radar',position={6,6},force='player'})
   local _,revived=ghost.revive{raise_revive=true}; assert(revived,'native ghost revival refused')
   -- Factorio suppresses raised entity events during on_init; exercise the
   -- composed handler here, then actual raised events during the tick phase.
-  lifecycle.on_built{entity=revived}; assert(registry.by_entity(revived))
+  lifecycle.on_built{entity=revived}; assert(not registry.by_entity(revived))
+  conn(c.body,'green').connect_to(conn(revived,'green'),false); graph.adopt(c,'green',nop)
   local revived_id=registry.by_entity(revived).id
   local inventory=game.create_inventory(10); lifecycle.on_removed{entity=revived}
   assert(revived.mine{inventory=inventory,raise_destroyed=true})
   assert(inventory.get_item_count('radar')==1 and not registry.record(revived_id)); inventory.destroy()
   report('native-clone-revive-and-mining-material-identity')
   -- A genuine registration refusal must leave the native body untouched.
-  local full=native(6,12,false); local order=registry.get().order
-  local original=limits.registry_entries; limits.registry_entries=#order
+  local full=native(6,12,false)
+  local original=limits.registry_entries; limits.registry_entries=registry.get().retained_count
   local added,e=radar.build(full); limits.registry_entries=original
   assert(not added and e.code=='E_CAPACITY' and full.valid and full.operable and full.minable)
   full.destroy()
@@ -110,11 +117,11 @@ function M.run()
   local old=native(-6,0,false)
   conn(c.body,'green').connect_to(conn(old,'green'),false)
   error_is('E_NETWORK_PENDING',function() peripheral.inventory(c,'green',nop) end)
-  registry.get().scheduler.radar_cursor=1
-  for _=1,#registry.get().order+2 do radar.tick(game.tick,nop) end
+  registry.get().scheduler.native_cursor=1
+  for _=1,#registry.get().order+2 do graph.adopt_tick(game.tick,nop) end
   local adopted=assert(registry.by_entity(old)); assert(peripheral.inventory(c,'green',nop)[adopted.id])
   local next_id=registry.get().next_id
-  for _=1,#registry.get().order+2 do radar.tick(game.tick,nop) end
+  for _=1,#registry.get().order+2 do graph.adopt_tick(game.tick,nop) end
   assert(registry.get().next_id==next_id and old.valid)
   report('bounded-connected-frontier-existing-radar-adoption')
   -- Remote local wires are deliberately out of physical reach, never discovery.
@@ -130,6 +137,7 @@ function M.run()
   section.set_slot(1,{value={type='virtual',name='signal-A',quality='normal'},min=17}); behavior.enabled=true
   assert(conn(constant,'red').connect_to(conn(a,'red'),false))
   f().a=rec.id; f().b=remote.id; f().computer=c.id; f().db=db.id; f().old=adopted.id
+  f().tracking=tracking.run(report)
   f().body=a; f().remote=b; f().native_count=#registry.get().order; f().scan=a.radar_scan_progress
   game.tick_paused=false
   log('TC_CONTRACT_TOTAL '..f().groups)
@@ -137,6 +145,7 @@ end
 function M.on_load()
   loaded=true
   if f().phase=='snapshot' then
+    tracking.check_dormant(f().tracking)
     assert(not registry.by_entity(f().pending) and registry.get().next_id==f().next_id)
     log('TC_RADAR_PENDING_LOAD_UNCHANGED')
   end
@@ -145,6 +154,8 @@ function M.on_tick(event)
   local s=f()
   if s.phase=='initial' then loaded=false end
   if s.phase=='initial' and event.tick>=120 then
+    tracking.check_cleanup(s.tracking)
+    report('targeted-dormant-destruction-duplicate-unrelated-event-and-surface-cleanup')
     -- Engine forms hidden links only after power/ticks; assert actual origins.
     local hidden=false
     for _,edge in ipairs(conn(s.body,'red').real_connections) do
@@ -159,21 +170,25 @@ function M.on_tick(event)
     assert(s.remote.get_signal({type='virtual',name='signal-A'},defines.wire_connector_id.circuit_red)==17)
     report('actual-powered-native-hidden-link-discovery-and-witness-isolation')
     local raised=s.body.surface.create_entity{name='radar',position={6,12},force='player',raise_built=true}
-    assert(raised and registry.by_entity(raised),'actual script-raised native build missing')
+    assert(raised and not registry.by_entity(raised),'unconnected raised build must not enroll')
+    conn(c.body,'red').connect_to(conn(raised,'red'),false); graph.adopt(c,'red',nop)
     local id=registry.by_entity(raised).id
     raised.destroy{raise_destroy=true}; assert(not registry.record(id))
     s.pending=native(-12,0,false)
     assert(conn(registry.record(s.old).body,'green').connect_to(conn(s.pending,'green'),false))
     error_is('E_NETWORK_PENDING',function() peripheral.inventory(c,'green',nop) end)
     s.next_id=registry.get().next_id
+    tracking.detach(s.tracking)
     s.phase='snapshot'; s.tick=event.tick
     game.server_save('tc03-snapshot')
     log('TC_COLD_SNAPSHOT_REQUESTED')
   elseif loaded and s.phase=='snapshot' then
+    tracking.check_dormant(s.tracking)
     assert(registry.record(s.a).body==s.body and registry.record(s.b).body==s.remote)
     assert(registry.record(s.old) and #registry.get().order==s.native_count)
     assert(registry.get().next_id==s.next_id and not registry.by_entity(s.pending))
     s.phase='adopting'
+    tracking.reconnect(s.tracking)
   end
   if s.phase=='initial' or s.phase=='adopting' then scheduler.tick(event.tick) end
   if s.phase=='adopting' and registry.by_entity(s.pending) then
