@@ -14,12 +14,16 @@ The mod SHALL provide a 1×1 Production Statistics device of type `production_st
 - **THEN** discovery exposes one `production_statistics` identity with correctly aligned visible contacts and the normal power/status presentation.
 
 ### Requirement: Existing progression and upgrade-safe unlock
-The device recipe SHALL produce one item in 2 seconds from 8 iron plates, 5 electronic circuits and 2 advanced circuits, with a stack size of 50. Existing Circuit Computers research SHALL unlock it without a new technology or expansion-only ingredient. Configuration reconciliation SHALL enable it for already-researched forces without granting research or changing other recipe states.
+The device recipe SHALL produce one item in 2 seconds from 8 iron plates, 5 electronic circuits and 2 advanced circuits, with a stack size of 50. Existing Recipe Searcher research (`tc-recipe-searcher`) SHALL unlock it without a new technology or expansion-only ingredient. Reconciliation SHALL enable it only for forces that have researched Recipe Searcher, without granting research or changing other recipe states.
+
+#### Scenario: Circuit Computers alone does not unlock statistics
+- **WHEN** a force has researched Circuit Computers but not Recipe Searcher
+- **THEN** the statistics recipe remains locked, including after upgrade or configuration reconciliation.
 
 #### Scenario: Fresh and upgraded research
-- **WHEN** a fresh force has not researched Circuit Computers
-- **THEN** the recipe is locked until that technology is researched.
-- **WHEN** an existing force with Circuit Computers researched upgrades to this feature
+- **WHEN** a fresh force completes Recipe Searcher research
+- **THEN** both the existing Recipe Searcher recipe and the statistics recipe become enabled, without changing the technology's prerequisites or research cost.
+- **WHEN** an existing force with Recipe Searcher researched upgrades to this feature
 - **THEN** the new recipe becomes enabled while existing devices, recipes, source and saved data remain intact.
 
 ### Requirement: Local category and authority scope
