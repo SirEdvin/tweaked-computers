@@ -278,6 +278,103 @@
       },
       "width": 2
     },
+    "factoriopedia_interface": {
+      "directions": {
+        "east": {
+          "network": {
+            "center": [
+              0,
+              0
+            ],
+            "color": [
+              0.25,
+              0.8,
+              1
+            ],
+            "contacts": {
+              "green": [
+                0.1,
+                0.07
+              ],
+              "red": [
+                0.1,
+                -0.07
+              ]
+            }
+          }
+        },
+        "north": {
+          "network": {
+            "center": [
+              0,
+              0
+            ],
+            "color": [
+              0.25,
+              0.8,
+              1
+            ],
+            "contacts": {
+              "green": [
+                0.07,
+                -0.1
+              ],
+              "red": [
+                -0.07,
+                -0.1
+              ]
+            }
+          }
+        },
+        "south": {
+          "network": {
+            "center": [
+              0,
+              0
+            ],
+            "color": [
+              0.25,
+              0.8,
+              1
+            ],
+            "contacts": {
+              "green": [
+                -0.07,
+                0.1
+              ],
+              "red": [
+                0.07,
+                0.1
+              ]
+            }
+          }
+        },
+        "west": {
+          "network": {
+            "center": [
+              0,
+              0
+            ],
+            "color": [
+              0.25,
+              0.8,
+              1
+            ],
+            "contacts": {
+              "green": [
+                -0.1,
+                -0.07
+              ],
+              "red": [
+                -0.1,
+                0.07
+              ]
+            }
+          }
+        }
+      },
+      "width": 1
+    },
     "kv": {
       "directions": {
         "east": {
@@ -835,9 +932,9 @@
       "width": 1
     }
   },
-  "engine": "2.0.77",
+  "engine": "2.1.23",
   "source": {
     "path": "scripts/device-definitions.lua",
-    "sha256": "f69158936fde8661e2e87b53c7221890bdbe1496c861b75c50384d5b574347f3"
+    "sha256": "b109b6f9feaf65c14f580a4ae4264992946e841b477689065034e3da0471cdf8"
   }
 }

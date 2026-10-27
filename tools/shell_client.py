@@ -16,8 +16,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def prepare(archive, engine, client, output, mode, config_template=None, fixture_module='tests.shell_client_engine'):
-    if fixture_module not in ('tests.ui_live_client_engine', 'tests.editor_reference_client_engine', 'tests.speaker_client_engine', 'tests.radar_client_engine', 'tests.peripheral_inspector_client_engine', 'tests.shell_client_engine', 'tests.recipe_searcher_client_engine', 'tests.acceptance_client_engine', 'tests.acceptance_monitor_engine'):
+def prepare(archive, engine, client, output, mode, config_template=None, fixture_module='tests.shell_client_engine', data_fixture=None):
+    if fixture_module not in ('tests.factoriopedia_client_engine', 'tests.ui_live_client_engine', 'tests.editor_reference_client_engine', 'tests.speaker_client_engine', 'tests.radar_client_engine', 'tests.peripheral_inspector_client_engine', 'tests.shell_client_engine', 'tests.recipe_searcher_client_engine', 'tests.acceptance_client_engine', 'tests.acceptance_monitor_engine'):
         raise ValueError('fixed native client fixture required')
     output = output.resolve()
     if output.exists() or output.is_relative_to(ROOT):
@@ -40,6 +40,8 @@ def prepare(archive, engine, client, output, mode, config_template=None, fixture
     fixture.mkdir()
     (fixture / 'info.json').write_text(json.dumps(dict(name='tc-smoke', version='0.0.1', title='Isolated Console client fixture', author='test fixture', factorio_version='2.1', dependencies=['base', info['name']])))
     (fixture / 'control.lua').write_text('-- Fixture lives in the production mod event/storage context.\n')
+    if data_fixture:
+        (fixture / 'data.lua').write_text('require('+json.dumps('__'+info['name']+'__.'+data_fixture)+')\n')
     value=json.dumps(fixture_module)
     (fixture / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value="+value+",allowed_values={"+value+"}}}\n")
     enabled = [dict(name=n, enabled=True) for n in ('base', info['name'], 'tc-smoke')]
@@ -97,9 +99,10 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--mode', required=True, choices=('base', 'space-age'))
     parser.add_argument('--config-template', type=Path, help='engine-generated matching-version template if distribution has none')
-    parser.add_argument('--fixture', default='tests.shell_client_engine', choices=('tests.ui_live_client_engine', 'tests.editor_reference_client_engine', 'tests.speaker_client_engine', 'tests.radar_client_engine', 'tests.peripheral_inspector_client_engine', 'tests.shell_client_engine', 'tests.recipe_searcher_client_engine', 'tests.acceptance_client_engine', 'tests.acceptance_monitor_engine'))
+    parser.add_argument('--data-fixture', help='Packaged companion data module, as in smoke.py')
+    parser.add_argument('--fixture', default='tests.shell_client_engine', choices=('tests.factoriopedia_client_engine', 'tests.ui_live_client_engine', 'tests.editor_reference_client_engine', 'tests.speaker_client_engine', 'tests.radar_client_engine', 'tests.peripheral_inspector_client_engine', 'tests.shell_client_engine', 'tests.recipe_searcher_client_engine', 'tests.acceptance_client_engine', 'tests.acceptance_monitor_engine'))
     args = parser.parse_args()
-    print(json.dumps(prepare(args.archive.resolve(), args.factorio.resolve(), args.client.resolve(), args.output, args.mode, args.config_template, args.fixture), indent=2))
+    print(json.dumps(prepare(args.archive.resolve(), args.factorio.resolve(), args.client.resolve(), args.output, args.mode, args.config_template, args.fixture, args.data_fixture), indent=2))
 
 
 if __name__ == '__main__':

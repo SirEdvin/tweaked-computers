@@ -15,6 +15,7 @@
     "speaker": ["getInstruments", "getLimits", "getNotes", "getSounds", "playNote", "playSound"],
     "modem": ["open", "isOpen", "close", "closeAll", "transmit", "isWireless", "getLimits"],
     "recipe_searcher": ["findRecipes", "getLimits"],
+    "factoriopedia_interface": ["getItem", "getFluid", "listItems", "listFluids", "getLimits"],
     "kv_database": ["get", "set", "del", "exists", "type", "hget", "hset", "hdel", "hexists", "hgetall", "hlen", "expire", "ttl", "persist", "getLimits"],
     "logic_handler": ["readSignal", "readSignals", "getInputStatus", "getOutput", "setOutput", "clearOutput", "subscribe", "unsubscribe", "getLimits"],
     "configurator": ["getDevices", "getDevice", "getCapabilities", "getConfiguration", "setConfiguration", "getLimits", "getSections", "addSection", "setSection", "removeSection"],
@@ -22,6 +23,7 @@
   },
   "events": ["start", "timer", "peripheral_attach", "peripheral_detach", "monitor_resize", "monitor_touch", "power_restored", "signal_changed", "modem_message"],
   "capabilities": {
+    "factoriopedia-interface": {"guide": "docs/player/api/factoriopedia-interface.md", "contract": "specs/factoriopedia-interface/lua-api.md", "checks": ["tests/factoriopedia_data.lua", "tests/factoriopedia_engine.lua", "tests/factoriopedia_large_engine.lua", "tests/factoriopedia_client_engine.lua", "tests/factoriopedia_upgrade_engine.lua"]},
     "speaker-peripheral": {"guide": "docs/player/api/speaker.md", "contract": "specs/speaker-peripheral/lua-api.md", "checks": ["tests/speaker_engine.lua", "tests/speaker_data.lua"]},
     "radar-modem": {"guide": "docs/player/api/modem.md", "contract": "specs/radar-modem/lua-api.md", "checks": ["tests/radar_engine.lua", "tests/modem_engine.lua", "tests/radar_data.lua", "tests/radar_client_engine.lua"]},
     "computer-runtime": {"guide": "docs/computer-runtime.md", "contract": "specs/computer-runtime/lua-api.md", "checks": ["tests/computer_contract.lua", "tests/runtime_contract.lua", "tests/integration_engine.lua"]},

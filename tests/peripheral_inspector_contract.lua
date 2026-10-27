@@ -11,6 +11,7 @@ local terminal=require('scripts.monitor-model')
 local scheduler=require('scripts.scheduler')
 local logic=require('scripts.services.logic')
 local limits=require('scripts.runtime.limits')
+local provider=require('scripts.services.factoriopedia-interface')
 local M={}
 function M.run()
   local original=storage.tweaked_computers
@@ -20,11 +21,11 @@ function M.run()
   local groups=0
   local function check(name,fn) fn(); groups=groups+1; log('TC_CONTRACT '..name) end
   local records={}
-  for i,kind in ipairs({'kv','monitor','logic','configurator','recipe_searcher'}) do
+  for i,kind in ipairs({'kv','monitor','logic','configurator','recipe_searcher','factoriopedia_interface'}) do
     local body=assert(surface.create_entity{name=defs.devices[kind].entity_name,position={i*8,100},force='player'})
     local rec=assert(lifecycle.build(body)); records[kind]=rec
   end
-  check('inspector-five-family-authority-and-sessions',function()
+  check('inspector-six-family-authority-and-sessions',function()
     for _,rec in pairs(records) do
       local a=players.player(2001,rec.body); local b=players.player(2002,rec.body)
       assert(rec.body.operable)
@@ -36,6 +37,28 @@ function M.run()
       assert(model.current(b,other.token)==rec)
       model.close(a.index,s.token); model.close(b.index,other.token)
     end
+  end)
+  check('inspector-factoriopedia-identity-only-no-catalogue-queries',function()
+    local previous={}; local queries=0
+    for _,name in ipairs({'getItem','getFluid','listItems','listFluids'}) do
+      previous[name]=provider.methods[name]
+      provider.methods[name]=function() queries=queries+1; error('inspector queried catalogue') end
+    end
+    local r=records.factoriopedia_interface; local p=players.player(2001,r.body)
+    local ok,e=pcall(function()
+      for _,powered in ipairs({false,true}) do
+        lifecycle.power_entity(r).energy=powered and defs.devices.factoriopedia_interface.watts/30 or 0
+        local frame=assert(inspector.open(p,r.id))
+        assert(frame.identity.api_name.text==r.id and frame.identity.api_name.read_only)
+        assert(frame.availability.caption[1]==(powered and 'tc-inspector.available' or 'tc-inspector.unpowered'))
+        local view=model.read(r,game.tick,function() end)
+        assert(view.powered==powered and not view.details)
+        inspector.close(p)
+      end
+      assert(queries==0)
+    end)
+    for name,fn in pairs(previous) do provider.methods[name]=fn end
+    assert(ok,e)
   end)
   check('inspector-byte-escape-is-literal-and-reversible',function()
     assert(model.escape('')=='""')
@@ -66,7 +89,7 @@ function M.run()
     inspector.close(p)
   end)
   check('inspector-every-family-has-visible-pending-content-without-query-credits',function()
-    for _,kind in ipairs({'kv','monitor','logic','configurator','recipe_searcher'}) do
+    for _,kind in ipairs({'kv','monitor','logic','configurator','recipe_searcher','factoriopedia_interface'}) do
       local p=players.player(2001,records[kind].body)
       local f=assert(inspector.open(p,records[kind].id))
       assert(#f.details.children>0,'initial '..kind..' inspector must never be blank')
@@ -223,7 +246,8 @@ function M.run()
     r.database=kv.import{version=1,entries=entries}
     local view=kv.inspect(r,200,function() end)
     assert(#view.entries==128 and #view.entries[128].fields==128 and view.entries[128].key==last)
-    local p=players.player(2001,r.body); local real=game; local tick=210
+    local p=players.player(2001,r.body); local real=game
+    local tick=math.max(210,math.ceil(((registry.get().scheduler.maintenance_tick or 0)+15)/15)*15)
     lifecycle.power_entity(r).energy=defs.devices.kv.watts/30
     game={tick=tick,get_player=function() return p end,connected_players={p}}
     local ok,e=pcall(function()
@@ -380,7 +404,7 @@ function M.run()
     model.close(p.index,session.token); extras[#extras+1]=replacement
     for _,r in ipairs(extras) do if registry.record(r.id) then lifecycle.remove(r.id,'fixture-cleanup',true) end end
   end)
-  for _,kind in ipairs({'kv','monitor','logic','configurator','recipe_searcher'}) do
+  for _,kind in ipairs({'kv','monitor','logic','configurator','recipe_searcher','factoriopedia_interface'}) do
     check('inspector-'..kind..'-deferred-failed-and-recovered-details-stay-visible',function()
       local r=records[kind]; local real=game; local read=model.read
       for _=1,200 do monitor.reconcile(real.tick,function() end) end

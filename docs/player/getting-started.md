@@ -2,6 +2,12 @@
 
 ## Install safely
 
+In a build containing the [Factoriopedia Interface](api/factoriopedia-interface.md), it shares Recipe Searcher
+research: 10 steel plates, 5 advanced circuits, 2 processing units, 2 seconds per
+1×1 device. Supply 30 kW and connect its Network body to the computer's red or
+green Network. Ordinary opening shows identity/status; queries are read-only guest
+calls, not a catalogue GUI. No item/fluid input is needed.
+
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot; removal/destruction of a device is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
@@ -19,7 +25,7 @@
    names require their corresponding installed prototypes. This guide does not
    claim later Factorio engines or arbitrary mod combinations are verified.
 
-Verification on 2.1.23 is **headless-only**. Keep the pre-conversion save, 2.0.77
+The historical migration evidence summarized here is **headless-only** on 2.1.23. Keep the pre-conversion save, 2.0.77
 engine and matching mod ZIP for rollback; do not downgrade a converted save.
 The following graphical, audio and connected-client checks were performed on
 **2.0.77**, not repeated on 2.1.23:

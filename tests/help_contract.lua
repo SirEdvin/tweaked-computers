@@ -52,7 +52,7 @@ function M.run()
     end
     assert(count>0); total=total+count; family_count=family_count+1
   end
-  assert(family_count==8,'discovery plus all seven shipped families required')
+  assert(family_count==9,'discovery plus all eight shipped families required')
   for _,kind in ipairs({'MONITOR','Monitor','radar','kv','unknown','monitor_extra',''}) do assert(not help.peripheral_topic(kind)) end
   assert(not help.peripheral_topic(nil))
   for _,topic in ipairs(help.topics) do

@@ -244,7 +244,7 @@ function M.on_tick(event)
   loaded=false
   assert(event.tick<x.start_tick+1800,'compact lifecycle scenario deadline exceeded')
   if x.phase=='start' then
-    -- Genuine on_tick clone events, all six families, including native area helper clones.
+    -- Genuine on_tick clone events, all registered families, including native area helper clones.
     x.clones={}
     for _,kind in ipairs(defs.order) do
       local r=registry.record(x[kind]); local b=assert(r.body.clone{position={r.body.position.x,32},surface=r.body.surface,force=r.body.force})

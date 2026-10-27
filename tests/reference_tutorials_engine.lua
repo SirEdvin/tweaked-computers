@@ -65,6 +65,7 @@ function M.run()
       connect(c,speaker,'red');x.speaker=speaker.id
     elseif id=='recipe' then
       local search=build('recipe_searcher',px+3,0);connect(c,search,'red');x.recipe=search.id
+      local encyclopedia=build('factoriopedia_interface',px+9,0);connect(search,encyclopedia,'red')
       local radar=assert(lifecycle.build(assert(s.create_entity{name='radar',position={px+6,0},force='player'})))
       connect(c,radar,'red')
     elseif id=='logic' or id=='factory' then x[id]=stock_scene(c,px,id=='factory')
@@ -119,9 +120,9 @@ local function inventory(x,tick)
       end
     end
   end
-  for _,kind in ipairs({'speaker','modem','monitor','logic_handler','configurator','recipe_searcher','kv_database'}) do assert(seen[kind],kind) end
+  for _,kind in ipairs({'speaker','modem','monitor','logic_handler','configurator','recipe_searcher','factoriopedia_interface','kv_database'}) do assert(seen[kind],kind) end
   helpers.write_file('reference-coverage.json',helpers.table_to_json{topics=help.topics,inventory=ledger},false)
-  report('live-discovery-computer-and-seven-service-inventories-match-help')
+  report('live-discovery-computer-and-eight-service-inventories-match-help')
 end
 function M.on_tick(event)
   local x=storage.tc_reference_tutorials

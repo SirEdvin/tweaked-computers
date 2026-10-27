@@ -2,7 +2,7 @@
   "authored_inputs": [
     {
       "path": "assets/generate.py",
-      "sha256": "91dde5368eb91b67519b8ebca4a82941eb6a31e691d462f717eeae20d15874e1"
+      "sha256": "e6e26b69fda9c25a5ea979ad0a6216b6bd6a2ca99fb1794dd86937cfb77173a4"
     },
     {
       "path": "assets/glyphs.txt",
@@ -10,7 +10,7 @@
     },
     {
       "path": "assets/export_layout.py",
-      "sha256": "841b6524246e8b3de7fa2905b8c41bbdd4f18a02cc3e1ca655d76e9adbdcfca8"
+      "sha256": "9664f4260c22f037322de55ab50c7e8de38319afdb28e161220c65ffa47d9b93"
     },
     {
       "path": "assets/foundry.py",
@@ -18,7 +18,7 @@
     },
     {
       "path": "assets/industrial.py",
-      "sha256": "845492581cf2bda20986e2eaf14c7fa5cde6809d1fc80ccd27f49a64c8fc3df8"
+      "sha256": "962ef040f03e3c2011557e8ae01b13eaddcb91208a7d993226a06445c456131a"
     },
     {
       "path": "assets/layout-data.lua",
@@ -30,15 +30,15 @@
     },
     {
       "path": "assets/service_rack.py",
-      "sha256": "cdbdf5352c5f822457e30c0b978b9d263bdafd073a790079cc92fd797caa3bb6"
+      "sha256": "27899b87d0b65562f5a60308e31dea604d4c48c51c4840a13c657c969208a02d"
     },
     {
       "path": "assets/socket-layout.json",
-      "sha256": "eb7f534bef9fa06ea62137b76d03d323eb544647740d9c5fb3e0249c5cc6d163"
+      "sha256": "a97b828cae73aac3332d676d5f8279f541ce0715aaa86762078d815a5c9ce1c9"
     },
     {
       "path": "scripts/device-definitions.lua",
-      "sha256": "f69158936fde8661e2e87b53c7221890bdbe1496c861b75c50384d5b574347f3"
+      "sha256": "b109b6f9feaf65c14f580a4ae4264992946e841b477689065034e3da0471cdf8"
     }
   ],
   "deferred": [
@@ -482,6 +482,183 @@
         1
       ],
       "icon": "icons/configurator.png"
+    },
+    "factoriopedia_interface": {
+      "directions": {
+        "east": {
+          "body": "sprites/factoriopedia_interface-east-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  0.1,
+                  0.07
+                ],
+                "red": [
+                  0.1,
+                  -0.07
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/factoriopedia_interface-east-shadow.png",
+          "states": {
+            "blinking": "sprites/factoriopedia_interface-east-blinking.png",
+            "fault": "sprites/factoriopedia_interface-east-fault.png",
+            "off": "sprites/factoriopedia_interface-east-off.png",
+            "powered": "sprites/factoriopedia_interface-east-powered.png",
+            "unpowered": "sprites/factoriopedia_interface-east-unpowered.png"
+          }
+        },
+        "north": {
+          "body": "sprites/factoriopedia_interface-north-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  0.07,
+                  -0.1
+                ],
+                "red": [
+                  -0.07,
+                  -0.1
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/factoriopedia_interface-north-shadow.png",
+          "states": {
+            "blinking": "sprites/factoriopedia_interface-north-blinking.png",
+            "fault": "sprites/factoriopedia_interface-north-fault.png",
+            "off": "sprites/factoriopedia_interface-north-off.png",
+            "powered": "sprites/factoriopedia_interface-north-powered.png",
+            "unpowered": "sprites/factoriopedia_interface-north-unpowered.png"
+          }
+        },
+        "south": {
+          "body": "sprites/factoriopedia_interface-south-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  -0.07,
+                  0.1
+                ],
+                "red": [
+                  0.07,
+                  0.1
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/factoriopedia_interface-south-shadow.png",
+          "states": {
+            "blinking": "sprites/factoriopedia_interface-south-blinking.png",
+            "fault": "sprites/factoriopedia_interface-south-fault.png",
+            "off": "sprites/factoriopedia_interface-south-off.png",
+            "powered": "sprites/factoriopedia_interface-south-powered.png",
+            "unpowered": "sprites/factoriopedia_interface-south-unpowered.png"
+          }
+        },
+        "west": {
+          "body": "sprites/factoriopedia_interface-west-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  -0.1,
+                  -0.07
+                ],
+                "red": [
+                  -0.1,
+                  0.07
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/factoriopedia_interface-west-shadow.png",
+          "states": {
+            "blinking": "sprites/factoriopedia_interface-west-blinking.png",
+            "fault": "sprites/factoriopedia_interface-west-fault.png",
+            "off": "sprites/factoriopedia_interface-west-off.png",
+            "powered": "sprites/factoriopedia_interface-west-powered.png",
+            "unpowered": "sprites/factoriopedia_interface-west-unpowered.png"
+          }
+        }
+      },
+      "footprint": [
+        1,
+        1
+      ],
+      "icon": "icons/factoriopedia_interface.png"
     },
     "kv": {
       "directions": {
@@ -1364,7 +1541,7 @@
   "generated_metadata": [
     {
       "path": "assets/sprites.lua",
-      "sha256": "2cd3b234071d33db0e11f4333503b2686431450af39115b703292df54871acaf"
+      "sha256": "6408f96f2f800ca81dff8adf72f959c8a787fd0fa5b089b7edf426ec7877bb25"
     }
   ],
   "glyphs": {
@@ -3900,6 +4077,1112 @@
       "path": "assets/icons/configurator.png",
       "rgba_sha256": "a09352f2fb710ef3012da707474a302f1189c070050018cb6148584ee17e4b3c",
       "sha256": "8f6ec4698b5c24e2d3a06348494e3e81a3162e8a4ee40c27f55fd07c71aa96c7",
+      "width": 64
+    },
+    {
+      "alpha_sha256": "f222b3dbd3f5b92fa29cd3b6d29a132b6a36bc6ee513482e1df96f85277a95a2",
+      "device": "factoriopedia_interface",
+      "direction": "north",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-north-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "3ec4ffec7614cdd28d1546f0f7d01d8d36e0bdc5cc9d74a70986663939893cf1",
+      "scale": 0.5,
+      "sha256": "0d828634b5581be641ca5cf2ea2b9d8be0c229471a70d7a35968d5007b3c11eb",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "b612a13e2626166b0009850f61d07b96fa10a5d6378667cc67c6d3adbb73eb83",
+      "device": "factoriopedia_interface",
+      "direction": "north",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-north-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "4ed9d5267de2055ecd44ef24415887c05aee82611ce736696d1414ddea7ec3c1",
+      "scale": 0.5,
+      "sha256": "37fe2d7784bb7e73731e403f0c7609b08bb3a00dd88e44158543b2899f7b3e25",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "618398253fa6c1c76f11f2d3fc6d83d00ab51464e2bf022c6505d46e13a8dea2",
+      "device": "factoriopedia_interface",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-north-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "c9d57057aa83969850112394a1cd829029c376adffb568621a86ca42af3dba1a",
+      "scale": 0.5,
+      "sha256": "167859a477ba95e709274f6bdc1c354ddb7af6bf89c503b34527f55e4acd3189",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "712e9f64b15358bdda85c3acdbe3f18d7dbd1a24baa67abe1c3ec1a0d655d6c0",
+      "device": "factoriopedia_interface",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-north-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "ceff07c10b8020a213aa1bbbb231d3cfaad727b9ad9937b70c52aed8dc387759",
+      "scale": 0.5,
+      "sha256": "d17b575bb2c112a3d41b48c2d3bf786f386379dae666ee1e6545442be0a4e78a",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1ff00320a6ffcdf56b8038c46d3a92fe9c72fdc3e9254281d02253da4c3eaeac",
+      "device": "factoriopedia_interface",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-north-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "bb830db73c89d28ae0767311bacc42d3ab9cc2e79ca5ea00a480efeba9934f6f",
+      "scale": 0.5,
+      "sha256": "23c09131a6814c3ca443b3620d639c8007309192938f403cefefc18b909d6581",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "bd56f2d759541c1b5f0d70fa1e52479cecd4c17fa194a9fb60948fa985683b02",
+      "device": "factoriopedia_interface",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-north-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "b07f0a8621af89a3b5f0bbb200710f0f1da8781d8db435be15fd089d8504af6d",
+      "scale": 0.5,
+      "sha256": "f96f086370cd9040710b1b5f918c118eb470c8717811b5b7c057f914a62e1422",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "9c56d9dea95fd98e6d64edc7ea7d00a662c78db6d2d5898eebfe7355d75368eb",
+      "device": "factoriopedia_interface",
+      "direction": "north",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-north-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "864e492bbed69bc570174db714ea959b15d0abccf9fbf5a83d624f0d7aec2753",
+      "scale": 0.5,
+      "sha256": "36cbb6d2ee223c80a45c583fb09d75b9042ee774eedbed2849a2f15dd3b89ff8",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "26c2abefef537f9039529b4653773e837e40f554c016cf4666d5970bc8b9cf17",
+      "device": "factoriopedia_interface",
+      "direction": "east",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-east-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "9a2695ee3ec7142d78573a7f5e4c3f4f27b82d4dedc3e4c6d8f65f3565625f16",
+      "scale": 0.5,
+      "sha256": "00d5b1c57d874c204ff1a50da31e3b3a9fffaa4e9f6aa73bac700f6d678561a6",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "7b6b1e3cc2c17b487a562f173eeb63e75097381e5d1079e7e80f1c62570c5f66",
+      "device": "factoriopedia_interface",
+      "direction": "east",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-east-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "22fbd0b6a999d0bec67010cc4ea56c348ad332b10c4543b64329a38b813606e2",
+      "scale": 0.5,
+      "sha256": "41757d2e8571168f3b6ff9aac3316fd959931e53cb1f6ad07bfbcc7db66378c4",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c03745005eba99a696f39f468cb45eed8086f7550d61778f42de92ef5215dd81",
+      "device": "factoriopedia_interface",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-east-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "7c510a55ca7966bac98240d6f1b44d6a1dc5b0724e42de74a2de3541eb8738bc",
+      "scale": 0.5,
+      "sha256": "da055da5f69b7146f6f550ac8b56e665c3a17774f7cfeca4397e2def06a08547",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "f0707417a7d383b607d34c483cf7ee73cb8cf4c3f43d749245149742b9205ab9",
+      "device": "factoriopedia_interface",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-east-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "bda479f299fb4de35b29424f7c79fd39dced1907f48361f05b000908d423b1a4",
+      "scale": 0.5,
+      "sha256": "1dae629d382b55b4f759bf0fdaa7d799482d16c1a1532900a598ddf5d916d9a7",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "0fb96fb3724cdf1b80a7f51201a113a75d7209e28a0a8a9d0b105136dd926bbe",
+      "device": "factoriopedia_interface",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-east-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "5f114e174682375cb955606fda3ddaaa03d4592b5df6cf38420882ae5f5f5f77",
+      "scale": 0.5,
+      "sha256": "3ef527dd197ee92eb2e19ce589ec1be9c342fdccd769c07d282295866ff53af2",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "3bb9e72e2200c7208eb2478e8dda58fd0b791b2fccdf996a8a03ea3d3908abe7",
+      "device": "factoriopedia_interface",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-east-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "6293d48541a4ec0e342dd89da79bb392eea39c02e8e3cca684703a1baa8e740d",
+      "scale": 0.5,
+      "sha256": "873aa43d86031fd96bebb4ff61f95da13475e90be0e273d15afc06bc56489610",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "2d71fece254221784ea9b2d84ec982a5502c99aa85701032a5ada417d2522db9",
+      "device": "factoriopedia_interface",
+      "direction": "east",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-east-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "8afe9e495554e5f7793ea145d36cf964ebbde9cf12b28fb0d727df0ea1794b56",
+      "scale": 0.5,
+      "sha256": "be8680c344749d30f749163a7f3c828a0ecbd6177b7c212817a1f06b48c784a4",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "5310935a2971ea07e1deeeb0b4b5919117e5b16caa91bf1e558808831c059f8a",
+      "device": "factoriopedia_interface",
+      "direction": "south",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-south-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "6a398e241101d8bda73e21fc2ad1fa26f87af283f1d72664321a1596f26592a9",
+      "scale": 0.5,
+      "sha256": "2893ded79ece9fae2272dc4cb8b4389ab35d5bc24a2107067b2b69e203851998",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1265577c9b77f5f9368b972db0d52302fbe48391a64141402c4d477de6bb29c3",
+      "device": "factoriopedia_interface",
+      "direction": "south",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-south-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "2bf8a16a8153e8d23d9f38b0e6571790e2c21769b96b0147b87edbd023346ce4",
+      "scale": 0.5,
+      "sha256": "4c5cd138da2b7d595456d4aab22a8fa0f972be5155d411846f0a8f54d253f8fe",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "5207bbb33c736d2fa5dd2df51d59590372f288e36edf4fa45ad945367ebac6a3",
+      "device": "factoriopedia_interface",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-south-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "711bff74f6b2bf63e23968710712c946b9cef0430af2d6021f253faf95317b18",
+      "scale": 0.5,
+      "sha256": "16ebeda013efaa20853ffd338ed5994f74ad245bda518cac3d3a522ae8f42b84",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "173828e19e99c0d07f8f31527710b93d3997bf8eda12b41b710babc6b625dc5d",
+      "device": "factoriopedia_interface",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-south-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "2be5bd01e277227022eb439b9c8937c8fb5dec583dcf189a08ae8cc17620b275",
+      "scale": 0.5,
+      "sha256": "318b1e3106524fb4bf72be693a249a1f99d69bf3ca46c1489877710741de54ac",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "69c24958a15f288fb7fe03dceb3bbcde4b4db9348f7df95862ac6d9e390d4a8d",
+      "device": "factoriopedia_interface",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-south-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "56a4dd809c8684b973dea644d8ca2f513e9d0a031ab7e5547e82c8c11a98cab2",
+      "scale": 0.5,
+      "sha256": "86c9f47b6af6a0a3c43645b77aabadac54cd31bbe0778ed7e4b666788ab955a8",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "5caa75a8d8f3965c6deaae5114b47060a2a0baf3e3e4f7538f0f9d953f5d993e",
+      "device": "factoriopedia_interface",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-south-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "d309a7f54a1d36595bae43c167dd3b4481c2aa3a735bf16fd0d30082c86fcd28",
+      "scale": 0.5,
+      "sha256": "853b4ff1e4b15277a4e5cef54ae917c2bd214cc8e168ac8c6d7265b77673625b",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "76f13753ca84c5941b7dabbd2b6c56dcbcfdf2cc81136cb4f4a0d61d4f91d2af",
+      "device": "factoriopedia_interface",
+      "direction": "south",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-south-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "093d4004ae0b53b55d1227b38344cc52cb290503c12cd1a03fbaba3657cea2f7",
+      "scale": 0.5,
+      "sha256": "ced98ff796c759d5085d14bf4cb7f368bca4baae937a2c71a0bc8da9cb28f03d",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "5e3c438bba520d9e210a23eb9cf200ace49349d1f2307f648e1e2f63460ab2f6",
+      "device": "factoriopedia_interface",
+      "direction": "west",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-west-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "a333274a6c5fcc34fbd4cf8a434afdbe37f08e060d2b585774b4fd156213e361",
+      "scale": 0.5,
+      "sha256": "50c6d60721c8702b6cfdd57aed14d3367cb5724f2216edd7f5ae41c03e687470",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1f288885c5e6414b3c8d1c12fa6411ec94340ad76a41f4d6d86a8174b5fd176d",
+      "device": "factoriopedia_interface",
+      "direction": "west",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-west-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "7533dd566a66a53e13d62170cc04b4316363d31a5602d611a5d08a61f1dc3872",
+      "scale": 0.5,
+      "sha256": "76c16e2f7b30eb07a5243ddcb5085675fe85d5710066e7d7ba43fbe861b45783",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "b03c876ad7863b2a825590c14ba78e753dde455ea65be3ead218ecf820a55419",
+      "device": "factoriopedia_interface",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-west-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "58ca483cd8c95375a78367b45bc981499ac20e353435185dd28dfc3b313afb32",
+      "scale": 0.5,
+      "sha256": "6de34cf6b4690cce59c621eec3ac35ff0687f1a6876f95a60f62e3d0a1aa72ec",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "552133d7711e77a7884b59d67b8844be6bf10519f40257ba0f898e299ae536d3",
+      "device": "factoriopedia_interface",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-west-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "d9c9eaa52c2262638a8842e1e00621b02e860a0c1055709da0f620b7ce9b383f",
+      "scale": 0.5,
+      "sha256": "cd1fe11d73181c0a072ca0ef235b22c5e675172721fcc720bdd7f46ab5d00444",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "d42d1e825545e1e97febfe71aa50b4146e58a72adaf58027f86bfc1436532d45",
+      "device": "factoriopedia_interface",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-west-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "d6c53273929f5120e77aa7be02227d744e4edbe3534e33ca820d3ed8f227232b",
+      "scale": 0.5,
+      "sha256": "bd7951a9be6797062fba8810001ffb1aa918fc2968a365afef70a6cfaba7b2a3",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "d247aaf4003ba125892b0313475274591b70c5d5290f914e5d29161771b13504",
+      "device": "factoriopedia_interface",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-west-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f5057b2116de8969e8a6ab99a353a1127f0ae92da3c62e7d03b22e87ccf621ad",
+      "scale": 0.5,
+      "sha256": "b1718a43ae4c41610ea98a952cd6d599353b7065a3d118d25a8a2969bcea98ff",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "49011c912b591fcaa1aca5f31318a3c54a7ef2116040fdbacc63211f3eeb6626",
+      "device": "factoriopedia_interface",
+      "direction": "west",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-west-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "959806a3af453329384c79da855d55f01a913a7ee5476ae21fd88995133d0205",
+      "scale": 0.5,
+      "sha256": "67e918067b15e423d192dd73d2fdf0380cbbb6e891bf42dce3d1c2f72e24b0a0",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "543334979c3471174a271fc95ed9daafa6987b821adbb73474142c7abc31109a",
+      "device": "factoriopedia_interface",
+      "height": 64,
+      "icon_size": 64,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "icon",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/icons/factoriopedia_interface.png",
+      "rgba_sha256": "a4b6f50a7ceeca220b94ba1dab3c8ac509b597272fb366c597865112e2d65b7f",
+      "sha256": "667bf5cd2f20dfc15fd00aecfea232c26108f3452d459380a5bcfd9062640df7",
       "width": 64
     },
     {
@@ -8511,7 +9794,7 @@
     }
   },
   "transform": {
-    "contacts": "socket-layout.json exported from production defs.contact/offset in Factorio 2.0.77; projected at ground coordinates",
+    "contacts": "socket-layout.json exported from production defs.contact/offset in Factorio 2.1.23; projected at ground coordinates",
     "encoder": "RGBA8 Pillow compress_level=9 for selected bodies/icons/mesh shadows; filter 0 zlib 9 for unchanged glyph/status/monitor shadow",
     "monitor": "unchanged 64x64 tile/touch area and 60x60 interior; two-unit inner bezel plus four-unit exterior mechanical skirt; 72x72 chamfered artwork; unchanged ground pivot",
     "numpy_version": "2.4.2",
@@ -8520,6 +9803,6 @@
     "sampling": "3x depth-buffered barycentric rasterization, fixed forward math.fma three-vector reductions, world-fixed normals/light and deterministic grain; Lanczos downsample; nearest-neighbour icon fitting; exact retained monitor foundation",
     "shadow": "geometry projected toward world southeast; alpha 86 before Gaussian blur and Lanczos; monitor retained alpha 85",
     "status": "grey dash stopped; amber slash unpowered; green powered; red fault cross; amber/steel four-frame activity",
-    "zlib_version": "1.3.2"
+    "zlib_version": "1.3.1"
   }
 }
