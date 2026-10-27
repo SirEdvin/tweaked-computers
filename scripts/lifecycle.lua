@@ -126,6 +126,7 @@ function M.sample_power(rec,tick,spend)
     spend(4)
     if not powered then M.clear_output(rec) end
     rec.powered=powered; rec.power_revision=(rec.power_revision or 0)+1
+    if rec.kind=='monitor' then rec.monitor_art_dirty=true; registry.monitor_changed(rec,false) end
   end
   rec.power_checked_tick=tick
 end
@@ -258,6 +259,7 @@ function M.rotate(rec,previous_direction)
     return false,e
   end
   rec.direction=direction; rec.position={x=rec.body.position.x,y=rec.body.position.y}
+  if rec.kind=='monitor' then rec.monitor_art_dirty=true; registry.monitor_changed(rec,true) end
   return true
 end
 local function refund(event,body)
@@ -362,6 +364,7 @@ function M.upgrade(rec)
 end
 function M.upgrade_existing()
   local root=registry.get(); if not registry.supported(root) then return end
+  root.monitor_topology_dirty=true
   for _,id in ipairs(root.order) do
     local rec=registry.record(id)
     if rec and not rec.native_carrier and rec.physical_version==1 and rec.layout_version~=2 then
@@ -500,6 +503,12 @@ function M.reconcile(tick,spend)
       if rec and rec.kind=='logic' then rec.logic_sample=nil; rec.output_bank=nil end
       if rec and rec.native_carrier=='speaker' then
         removed=speaker.reconcile(rec,spend)
+      elseif rec and rec.kind=='monitor' and rec.layout_version==2 and not rec.monitor_repair then
+        if rec.monitor_available and not rec.powered then
+          spend(4); rec.powered=true; rec.power_revision=(rec.power_revision or 0)+1
+          rec.monitor_art_dirty=true; registry.monitor_changed(rec,false)
+        end
+        rec.power_checked_tick=tick
       elseif rec and rec.physical_version==1 then
         if not rec.body.valid then
           spend(limits.registry_entries*6)
@@ -529,6 +538,7 @@ function M.reconcile(tick,spend)
             M.rotate(rec,rec.direction)
           end
           if not rec.physical_error then M.sample_power(rec,tick,spend) end
+          if rec.kind=='monitor' then rec.monitor_repair=nil; registry.monitor_changed(rec,true) end
         end
       end
     end)
@@ -538,6 +548,39 @@ function M.reconcile(tick,spend)
     if not removed then cursor=cursor%size+1 elseif cursor>size then cursor=1 end
     root.scheduler.physical_cursor=cursor
   end
+end
+-- Change detection only: later calls and publication still prove live authority.
+function M.observe_monitor(rec,tick)
+  local body=rec.body; local available=body and body.valid and not rec.physical_error
+  local repair=not body or not body.valid
+  if available then
+    local at=body.position; local direction=body.direction
+    repair=direction~=rec.direction or at.x~=rec.position.x or at.y~=rec.position.y
+      or body.force.index~=rec.force_index or body.surface.index~=rec.surface_index
+    local owner,role=registry.by_entity(body)
+    local power=rec.children.power
+    available=not repair and owner==rec and role=='body' and power and power.valid
+    if available then
+      local pos=power.position; local power_owner,power_role=registry.by_entity(power)
+      available=power_owner==rec and power_role=='power'
+        and power.force.index==rec.force_index and power.surface.index==rec.surface_index
+        and pos.x==at.x and pos.y==at.y and power.energy>=defs.devices.monitor.watts/60
+        and body.get_wire_connector(defines.wire_connector_id.circuit_red,false)~=nil
+        and body.get_wire_connector(defines.wire_connector_id.circuit_green,false)~=nil
+    end
+  end
+  available=not not available
+  if repair and not rec.monitor_repair then
+    rec.monitor_repair=true; registry.monitor_changed(rec,true)
+  end
+  if rec.monitor_available~=available then
+    rec.monitor_available=available; rec.monitor_art_dirty=true; registry.monitor_changed(rec,false)
+  end
+  if not available and rec.powered then
+    M.clear_output(rec); rec.powered=false; rec.power_revision=(rec.power_revision or 0)+1
+    rec.monitor_art_dirty=true; registry.monitor_changed(rec,false)
+  end
+  if available==rec.powered then rec.power_checked_tick=tick end
 end
 function M.power_losses(tick,spend)
   local root=registry.get()
@@ -549,6 +592,8 @@ function M.power_losses(tick,spend)
     local rec=registry.record(id)
     if rec and rec.native_carrier=='speaker' then
       rec.powered=speaker.available(rec); rec.power_checked_tick=tick
+    elseif rec and rec.kind=='monitor' and rec.layout_version==2 then
+      M.observe_monitor(rec,tick)
     elseif rec and rec.physical_version==1 then
       local available=rec.body.valid and not rec.physical_error
       if available then

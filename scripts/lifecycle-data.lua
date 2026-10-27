@@ -6,6 +6,7 @@ local limits=require('scripts.runtime.limits')
 local data=require('scripts.runtime.data')
 local errors=require('scripts.runtime.errors')
 local model=require('scripts.monitor-model')
+local monitor=require('scripts.services.monitor')
 local M={computer_snapshot_bytes=131072}
 local MAX=9007199254740991
 local function fail(message) errors.raise('E_ARGUMENT',message) end
@@ -125,10 +126,11 @@ function M.apply_settings(rec,s)
     M.restore_monitor(rec,settings)
     local root=registry.get(); local state=root.monitors; local g=state and state.groups[state.membership[rec.id]]
     if g then
-      local m=g.model
-      model.scale(m,g.width_tiles,g.height_tiles,function() end,settings.scale)
+      local m=g.model; local scale=m.scale
+      local resized,w,h=model.scale(m,g.width_tiles,g.height_tiles,function() end,settings.scale)
       m.fg=settings.fg; m.bg=settings.bg; m.blink=settings.blink; m.palette=settings.palette; m.revision=m.revision+1
       model.invalidate(m)
+      monitor.settings_changed(rec,g,resized,w,h,scale~=m.scale)
     end
   elseif s.computer~=nil or s.monitor~=nil then fail('unexpected family settings') end
 end

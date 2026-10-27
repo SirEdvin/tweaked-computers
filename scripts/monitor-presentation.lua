@@ -12,8 +12,21 @@ local L=model.limits
 function M.install(b) assert(not backend); backend=b end
 function M.bind(a) assert(not authority); authority=a end
 local function slots(r) return r.slots or r.width*r.height end
+function M.supported(p)
+  if p==nil then return true end
+  if type(p)~='table' then return false end
+  local legacy=p.demand_version==nil
+  return p.version==1 and type(p.lanes)=='table' and type(p.jobs)=='table'
+    and type(p.orphans)=='table' and type(p.retired)=='table' and (legacy or p.demand_version==1)
+    and (type(p.work)=='table' or legacy and p.work==nil)
+    and (type(p.members)=='table' or legacy and p.members==nil)
+    and (type(p.shells)=='table' or legacy and p.shells==nil)
+end
 local function state(s)
-  if s.presentation then return s.presentation.version==1 and s.presentation or nil end
+  if s.presentation~=nil then
+    local p=s.presentation
+    return M.supported(p) and p or nil
+  end
   local p={version=1,lanes={},jobs={},orphans={},retired={},front_cells=0,front_frames=0,
     staging_cells=0,staging_frames=0,retired_cells=0,retired_frames=0,pending_cells=0,cursor=1}
   s.presentation=p
@@ -50,6 +63,9 @@ local function cancel(p,lane)
     lane.job=nil
   end
 end
+local function wake(p,lane)
+  if p.demand_version==1 then p.work[lane.key]=lane end
+end
 local function release(c,reason,execution)
   execution=execution or principal.program(c)
   if type(execution.id)~='string' then return end
@@ -58,9 +74,14 @@ local function release(c,reason,execution)
   local selection=type(owner)=='table' and owner.monitor_sync
   local matches=selection and selection.run_id==execution.id
   local key=matches and selection.key or 'group/'..c.id..'/'..execution.id
-  if p and p.version==1 then
+  if p and M.supported(p) then
     local lane=p.lanes[key]
     if lane and lane.owner==c.id and lane.run_id==execution.id and (lane.owner_kind or 'program')==execution.kind then
+      if p.demand_version==1 then
+        p.work[key]=nil; p.shells[key]=nil
+        for _,ref in ipairs(lane.members) do p.members[ref.name]=nil end
+        p.layout_dirty=true
+      end
       cancel(p,lane); p.lanes[key]=nil
     end
   end
@@ -70,6 +91,7 @@ local function release(c,reason,execution)
 end
 M.release=release
 local function owner_of(p,id)
+  if p.demand_version==1 then return p.members[id] end
   for _,lane in pairs(p.lanes) do if lane.owner then
     for _,ref in ipairs(lane.members) do if ref.name==id then return lane end end
   end end
@@ -88,7 +110,7 @@ function M.select(c,tick,spend,input,execution)
   if n==0 then spend(L.tiles*8+128); release(c,nil,execution); return end
   local s=registry.get().monitors
   if not s or s.version~=1 or s.job then errors.raise('E_NETWORK_PENDING','monitor topology pending') end
-  if s.presentation and s.presentation.version~=1 then errors.raise('E_UNSUPPORTED','unknown presentation version retained') end
+  if not M.supported(s.presentation) then errors.raise('E_UNSUPPORTED','unknown presentation version retained') end
   local refs={}; local count,total=0,0
   for i=1,n do
     local ref=input[i]
@@ -124,15 +146,23 @@ function M.select(c,tick,spend,input,execution)
   local lane={key=key,members=members,owner=c.id,owner_kind=execution.kind,run_id=execution.id,participation={},sequence=0,presented_sequence=0,status='waiting'}
   -- Selecting a display cancels its unpublished singleton epoch, not its front.
   for _,ref in ipairs(members) do
-    local single=p.lanes[ref.name]; if single then cancel(p,single); p.lanes[ref.name]=nil end
+    local single=p.lanes[ref.name]; if single then
+      cancel(p,single); p.lanes[ref.name]=nil
+      if p.demand_version==1 then p.work[ref.name]=nil end
+    end
   end
   p.lanes[key]=lane; owner.monitor_sync={key=key,run_id=execution.id,members=members}
+  if p.demand_version==1 then
+    for _,ref in ipairs(members) do p.members[ref.name]=lane end
+    if execution.kind=='shell' then p.shells[key]=lane end
+    wake(p,lane)
+  end
 end
 function M.status(c,spend,execution)
   local owner=principal.selection(c,execution or principal.program(c))
   local s=registry.get().monitors; local p=s and s.presentation
   local selected=owner.monitor_sync
-  local lane=selected and p and p.version==1 and p.lanes[selected.key]
+  local lane=selected and p and M.supported(p) and p.lanes[selected.key]
   local result={members={},status='none',presented_sequence=0,diagnostic=owner.monitor_sync_diagnostic}
   if lane then
     result.status=lane.diagnostic and 'blocked' or (lane.job or lane.pending) and 'preparing' or 'waiting'
@@ -144,19 +174,23 @@ end
 function M.participate(g)
   g.write_epoch=(g.write_epoch or 0)+1
   local s=registry.get().monitors; local p=s and s.presentation
-  if p and p.version==1 then
-    local lane=owner_of(p,g.id)
-    if lane then lane.participation[g.id]=true end
+  if p and M.supported(p) then
+    local lane=owner_of(p,g.id) or p.lanes[g.id]
+    if lane then
+      if lane.owner then lane.participation[g.id]=true end
+      wake(p,lane)
+    else p.layout_dirty=true end
   end
 end
 function M.changed(g)
   local s=registry.get().monitors; local p=s and s.presentation
-  if not p or p.version~=1 then return end
+  if not p or not M.supported(p) then return end
   local lane=owner_of(p,g.id) or p.lanes[g.id]
-  if lane then cancel(p,lane); lane.participation={}; lane.last=nil; lane.last_epoch=nil end
+  if lane then cancel(p,lane); lane.participation={}; lane.last=nil; lane.last_epoch=nil; wake(p,lane) end
 end
 function M.regroup(s,groups)
-  local p=s.presentation; if not p or p.version~=1 then return end
+  local p=s.presentation; if not p or not M.supported(p) then return end
+  p.layout_dirty=true
   for id,g in pairs(s.groups) do if groups[id]~=g then M.changed(g) end end
 end
 local function objects(r,fn)
@@ -219,8 +253,10 @@ local function context(g,snapshot)
   return {group=g,model=snapshot,direction=g.direction,left=g.left,top=g.top,world_width=g.world_width,
     world_height=g.world_height,width_tiles=g.width_tiles,height_tiles=g.height_tiles,surface_index=g.surface_index}
 end
-local function blocked(lane,code,message) lane.status='blocked'; lane.diagnostic=errors.new(code,message) end
-local function qualify(s,lane,spend,proofs)
+local function blocked(lane,code,message)
+  lane.status='blocked'; lane.diagnostic=errors.new(code,message); lane.power_blocked=code=='E_UNPOWERED' or nil
+end
+local function qualify(s,lane,spend,proofs,paths_only)
   if s.job then blocked(lane,'E_NETWORK_PENDING','monitor topology pending'); return false end
   local owner=lane.owner and registry.record(lane.owner)
   local execution=lane.owner and {kind=lane.owner_kind or 'program',id=lane.run_id}
@@ -240,7 +276,9 @@ local function qualify(s,lane,spend,proofs)
       return false
     end
     total=total+g.model.width*g.model.height
-    if not authority.available(g,spend,proofs) then blocked(lane,'E_UNPOWERED','monitor unpowered'); return false end
+    if paths_only and g.powered==false or not paths_only and not authority.available(g,spend,proofs) then
+      blocked(lane,'E_UNPOWERED','monitor unpowered'); return false
+    end
     -- Shells have no program subscriptions/topology sweep, and can remain live
     -- while stopped. Revoke their idle selections too, not only ready jobs.
     if owner and execution.kind=='shell' then
@@ -263,7 +301,7 @@ local function qualify(s,lane,spend,proofs)
     end
   end
   if total>L.sync_group_cells then blocked(lane,'E_CAPACITY','selected grids exceed combined capacity'); return false end
-  lane.diagnostic=nil; return true,total
+  lane.diagnostic=nil; lane.power_blocked=nil; return true,total
 end
 local function seal(s,p,lane,spend,total)
   local eligible=true; local changed=false
@@ -419,31 +457,15 @@ local function commit(s,p,job,tick,spend,proofs)
   for index,active in ipairs(p.jobs) do if active==job then table.remove(p.jobs,index); break end end
   return true
 end
-function M.tick(tick,spend)
-  local s=registry.get().monitors; if not s or s.version~=1 then return end
-  if s.presentation and s.presentation.version~=1 then return end
-  if s.presentation and s.presentation.tick==tick and registry.get().scheduler.last_tick==tick then return end
+local function enroll(s,p,spend)
   spend(L.tiles*16+16)
-  local p=state(s)
-  p.tick=tick
-  -- This non-yielding render pass cannot change physical members. Share only
-  -- positive all-member proofs inside it; never cache them by simulation tick.
-  local proofs={}
-  -- Demand requests are host bookkeeping, not a second work ledger.
-  local demand=0
-  for _,job in ipairs(p.jobs) do if not job.cancelled and job.ready then demand=160000 end end
-  if #p.orphans>0 then demand=160000 end
-  scheduler.request_render_work(registry.get(),tick,demand,spend)
-  local remaining=L.render_cells_per_tick
-  invalidate(p,spend)
-  remaining=cleanup(p,spend,math.floor(remaining/2)) + math.ceil(L.render_cells_per_tick/2)
-  local selected={}
-  for _,lane in pairs(p.lanes) do if lane.owner then for _,ref in ipairs(lane.members) do selected[ref.name]=lane end end end
-  local order={}
+  p.work=p.work or {}; p.members={}; p.shells={}
+  for _,lane in pairs(p.lanes) do if lane.owner then
+    for _,ref in ipairs(lane.members) do p.members[ref.name]=lane end
+    if lane.owner_kind=='shell' then p.shells[lane.key]=lane end
+  end end
   for _,id in ipairs(s.order) do
     local g=s.groups[id]; local front=g.render
-    -- Paid adoption of a proven complete legacy frame preserves unaffected
-    -- images. Partial/unknown sweeps instead take the hide/retire path below.
     if front and not front.version and front.layer_version==2 and front.presented_revision==g.model.revision
       and front.cursor_revision==g.model.revision and not front.sweep_cursor
       and front.width==g.model.width and front.height==g.model.height and front.scale==g.model.scale
@@ -452,21 +474,58 @@ function M.tick(tick,spend)
       local snap=model.capture(g.model,function() end)
       front.version=1; front.layer_version=3; front.snapshot=snap; front.context=context(g,snap); front.is_front=true
     end
-    if front and (not M.matches(g,front) or not authority.available(g,spend,proofs)) then
-      if not front.hidden then scheduler.request_render_work(registry.get(),tick,160000,spend); visible(front,false,spend) end
-      if not M.matches(g,front) then M.retire(s,front); g.render=nil end
-    elseif front and front.hidden then scheduler.request_render_work(registry.get(),tick,160000,spend); visible(front,true,spend) end
-    if not selected[id] and not p.lanes[id] then p.lanes[id]={key=id,members={{name=id,generation=g.generation}},participation={},sequence=0,presented_sequence=0,status='waiting'} end
-    local lane=selected[id] or p.lanes[id]
-    if lane and not lane.visited then lane.visited=true; order[#order+1]=lane end
+    if not p.members[id] and not p.lanes[id] then
+      p.lanes[id]={key=id,members={{name=id,generation=g.generation}},participation={},sequence=0,presented_sequence=0,status='waiting'}
+    end
+    local lane=p.members[id] or p.lanes[id]
+    lane.visited=true; p.work[lane.key]=lane
   end
   for key,lane in pairs(p.lanes) do
-    if not lane.visited then cancel(p,lane); p.lanes[key]=nil else lane.visited=nil end
+    if not lane.visited then
+      cancel(p,lane); p.lanes[key]=nil; p.work[key]=nil; p.shells[key]=nil
+      for _,ref in ipairs(lane.members) do if p.members[ref.name]==lane then p.members[ref.name]=nil end end
+    else lane.visited=nil end
   end
+  p.demand_version=1; p.layout_dirty=nil
+end
+function M.tick(tick,spend)
+  local s=registry.get().monitors; if not s or s.version~=1 then return end
+  if not M.supported(s.presentation) then return end
+  if s.presentation and s.presentation.tick==tick and registry.get().scheduler.last_tick==tick then return end
+  local p=state(s); if not p then return end
+  if not p.demand_version or p.layout_dirty then enroll(s,p,spend) end
+  p.tick=tick
+  -- This non-yielding render pass cannot change physical members. Share only
+  -- positive all-member proofs inside it; never cache them by simulation tick.
+  local proofs={}
+  -- Demand requests are host bookkeeping, not a second work ledger.
+  local demand=0
+  for _,job in ipairs(p.jobs) do
+    if not job.cancelled and job.ready and p.work[job.lane.key]==job.lane and not job.lane.power_blocked then demand=160000 end
+  end
+  if #p.orphans>0 then demand=160000 end
+  scheduler.request_render_work(registry.get(),tick,demand,spend)
+  local remaining=L.render_cells_per_tick
+  invalidate(p,spend)
+  remaining=cleanup(p,spend,math.floor(remaining/2)) + math.ceil(L.render_cells_per_tick/2)
+  for _,lane in pairs(p.shells) do qualify(s,lane,spend,proofs,true) end
+  local order={}
+  for key,lane in pairs(p.work) do
+    if p.lanes[key]==lane then order[#order+1]=lane else p.work[key]=nil end
+  end
+  spend(#order*16+16)
+  table.sort(order,function(a,b) spend(#a.key+#b.key); return a.key<b.key end)
   local start=math.min(p.cursor,math.max(1,#order))
   for offset=0,#order-1 do
     local index=(start+offset-1)%#order+1; local lane=order[index]
     p.cursor=index%#order+1 -- A deferred lane cannot monopolize the next tick's prefix.
+    for _,ref in ipairs(lane.members) do
+      local g=s.groups[ref.name]; local front=g and g.render
+      if front and (not M.matches(g,front) or not authority.available(g,spend,proofs)) then
+        if not front.hidden then scheduler.request_render_work(registry.get(),tick,160000,spend); visible(front,false,spend) end
+        if not M.matches(g,front) then M.retire(s,front); g.render=nil end
+      elseif front and front.hidden then scheduler.request_render_work(registry.get(),tick,160000,spend); visible(front,true,spend) end
+    end
     local ok,total=qualify(s,lane,spend,proofs)
     if ok then
       local invalid=false
@@ -485,13 +544,19 @@ function M.tick(tick,spend)
         end
       end
       if p.lanes[lane.key] then lane.status=(lane.job or lane.pending) and 'preparing' or 'waiting' end
+      if not lane.job and not lane.pending then p.work[lane.key]=nil end
+    elseif lane.power_blocked then
+      for _,ref in ipairs(lane.members) do
+        local g=s.groups[ref.name]
+        if g and g.powered==false then p.work[lane.key]=nil; break end
+      end
     end
   end
   if #order>0 then p.cursor=start%#order+1 end
   local kept={}; local demand=0
   for _,job in ipairs(p.jobs) do
     if not job.complete and (not job.cancelled or job.slots>0) then kept[#kept+1]=job end
-    if not job.cancelled and job.ready then demand=160000 end
+    if not job.cancelled and job.ready and p.work[job.lane.key]==job.lane and not job.lane.power_blocked then demand=160000 end
   end
   p.jobs=kept
   if #p.orphans>0 then demand=160000 end
@@ -502,8 +567,12 @@ principal.register_cleanup('monitor-sync',function(c,p,reason)
   release(c,errors.new('E_NOT_FOUND','monitor selection released: '..reason),p)
 end)
 registry.register_cleanup('monitor-sync',function(c,run,reason)
-  if c.kind=='computer' and c.monitor_sync and c.monitor_sync.run_id==run and reason~='power_loss' then
-    release(c,errors.new('E_NOT_FOUND','monitor selection released: '..reason))
+  if c.kind=='computer' and c.monitor_sync and c.monitor_sync.run_id==run then
+    if reason=='power_loss' then
+      local s=registry.get().monitors; local p=s and s.presentation
+      local lane=p and p.version==1 and p.lanes[c.monitor_sync.key]
+      if lane then wake(p,lane) end
+    else release(c,errors.new('E_NOT_FOUND','monitor selection released: '..reason)) end
   end
 end)
 return M

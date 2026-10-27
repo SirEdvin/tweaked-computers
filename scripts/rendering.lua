@@ -96,6 +96,7 @@ M.tick=buffered.tick
 M.bind=buffered.bind
 M.participate=buffered.participate
 M.matches=buffered.matches
+M.supported=buffered.supported
 M.select=buffered.select
 M.status=buffered.status
 M.release=buffered.release

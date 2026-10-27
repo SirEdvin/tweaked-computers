@@ -6,6 +6,7 @@ CPU (no graphical client), not a claim about real-time UPS. See provenance.json
 for every injected/replaced fixture and the exact guest-source hash.
 """
 import argparse
+import copy
 import hashlib
 import json
 from pathlib import Path
@@ -26,6 +27,8 @@ def main():
     ap.add_argument('--mode', choices=('base', 'space-age', 'both'), default='base')
     ap.add_argument('--layout', choices=('four-walls', 'mixed'), default='four-walls')
     ap.add_argument('--workload', choices=('sparse', 'full-blit'), default='sparse')
+    ap.add_argument('--scene', choices=('zero', 'idle', 'one', 'all'), default='all',
+                    help='No monitors, stopped 144 tiles, one independent producer, or all screens')
     ap.add_argument('--ticks', type=int, default=3600)
     ap.add_argument('--deadline', type=int, default=180)
     ap.add_argument('--max-gap', type=int, help='Optional publication-gap acceptance gate')
@@ -40,10 +43,15 @@ def main():
     folder.mkdir(parents=True)
     driver = (ROOT / 'tests/monitor_performance_engine.lua').read_bytes()
     target = folder / args.archive.name
-    config = f'return {{ticks={args.ticks},max_gap={args.max_gap or "nil"}}}\n'
+    config = f'return {{ticks={args.ticks},max_gap={args.max_gap or "nil"},scene="{args.scene}"}}\n'
     with zipfile.ZipFile(args.archive) as src, zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED) as dst:
         prefix = next(n[:-len('info.json')] for n in src.namelist() if n.endswith('/info.json'))
         source = src.read(prefix + 'examples/smooth-sine-chart.lua').decode()
+        if args.scene == 'one':
+            marker = 'P.setMonitorSyncGroup(refs)'
+            if source.count(marker) != 1:
+                raise ValueError('review one-screen workload transform against changed example')
+            source = source.replace(marker, 'refs = {refs[1]}\n                    ' + marker)
         if args.workload == 'full-blit':
             # Same image and cadence, but submit every terminal row like a
             # buffered pixelbox renderer. This is NOT executing Telem itself.
@@ -64,13 +72,13 @@ def main():
         }
         for entry in src.infolist():
             if entry.filename.removeprefix(prefix) not in replacements:
-                dst.writestr(entry, src.read(entry.filename))
+                dst.writestr(copy.copy(entry), src.read(entry.filename))
         for path, content in replacements.items():
             dst.writestr(prefix + path, content)
     record = {'candidate_sha256': hashlib.sha256(args.archive.read_bytes()).hexdigest(),
               'test_archive_sha256': hashlib.sha256(target.read_bytes()).hexdigest(),
               'guest_sha256': hashlib.sha256(source.encode()).hexdigest(),
-              'layout': args.layout, 'workload': args.workload, 'ticks': args.ticks,
+              'layout': args.layout, 'workload': args.workload, 'scene': args.scene, 'ticks': args.ticks,
               'test_only_replacements': {k: hashlib.sha256(v).hexdigest() for k, v in replacements.items()}}
     (folder / 'provenance.json').write_text(json.dumps(record, indent=2) + '\n')
     result = subprocess.run([sys.executable, str(ROOT / 'tools/smoke.py'), '--factorio', str(args.factorio),
@@ -90,8 +98,9 @@ def main():
         if len(done) == 1:
             entry.update(zip(('ticks', 'publications', 'visible_changes', 'max_gap_ticks', 'peak_objects'), map(int, done[0].groups())))
         samples.append(entry)
-    expected = 2 if args.mode == 'both' else 1
-    complete = len(samples) == expected and all(s['completed'] and s['samples'] == args.ticks for s in samples)
+    expected = ['base', 'space-age'] if args.mode == 'both' else [args.mode]
+    complete = sorted(s['mode'] for s in samples) == expected and all(
+        s['completed'] and s['samples'] == args.ticks and s.get('ticks') == args.ticks for s in samples)
     exit_code = result.returncode or (0 if complete else 1)
     record.update(exit_code=exit_code, scheduler_profiles=samples)
     (folder / 'summary.json').write_text(json.dumps(record, indent=2) + '\n')

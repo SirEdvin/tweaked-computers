@@ -5,11 +5,13 @@ local monitor=require('scripts.services.monitor')
 local model=require('scripts.monitor-model')
 local renderer=require('scripts.rendering')
 local defs=require('scripts.device-definitions')
+local snapshots=require('scripts.lifecycle-data')
 local M={}; local loaded=false
 local function nop() end
 local function f() return storage.tc_components end
 local function settle()
   for _=1,100 do
+    lifecycle.power_losses(game.tick,nop); lifecycle.reconcile(game.tick,nop)
     monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
     local p=registry.get().monitors.presentation
     if p and #p.jobs==0 and #p.retired==0 and #p.orphans==0 and p.pending_cells==0 then return end
@@ -18,6 +20,7 @@ local function settle()
 end
 local function write(g,text,fg,bg)
   model.calls.setCursorPos(g.model,nop,1,1); model.calls.blit(g.model,nop,text,fg or '0',bg or 'f')
+  renderer.participate(g)
 end
 local function defer(g)
   local refused={}; local p=registry.get().monitors.presentation; local front=g.render
@@ -44,6 +47,32 @@ function M.run()
   assert(not monitor.available(g,nop)); power.energy=100000
   assert(monitor.available(g,nop))
   log('TC_COMPONENT_AUTHORITY_OK live-same-event-position-direction-force-power')
+  local state=registry.get().monitors
+  local settings=snapshots.settings(tile); settings.monitor.scale=2
+  local width,height=g.model.width,g.model.height
+  snapshots.apply_settings(tile,settings)
+  local resize=state.resizes[g.id]
+  assert(resize and resize.payload.old_width==width and resize.payload.old_height==height
+    and resize.payload.width==g.model.width and resize.payload.height==g.model.height,
+    'settings paste changed dimensions without a resize notification')
+  settings.monitor.scale=1; snapshots.apply_settings(tile,settings); settle()
+  log('TC_COMPONENT_SETTINGS_OK paste-resize-and-presentation-without-guest-participation')
+  local p=state.presentation
+  for _,legacy in ipairs({false,true}) do
+    for _,field in ipairs({'demand_version','work','members','shells','lanes','jobs','orphans','retired'}) do
+      if not legacy or field~='demand_version' then
+        local saved,version=p[field],p.demand_version; local front=g.render; local tick=p.tick
+        if legacy then p.demand_version=nil end
+        p[field]=field=='demand_version' and 99 or false
+        local ok,problem=pcall(monitor.resolve,tile)
+        assert(not ok and problem.code=='E_UNSUPPORTED','unsupported demand state authorized a service: '..field..' legacy='..tostring(legacy))
+        renderer.tick(game.tick,nop)
+        assert(g.render==front and p.tick==tick and p[field]~=saved,'unsupported demand state was reset')
+        p[field]=saved; p.demand_version=version
+      end
+    end
+  end
+  log('TC_COMPONENT_DEMAND_UNSUPPORTED_OK recoverable-format-and-index-refusal')
   write(g,'A'); settle()
   local a=g.render.cells[1]; local background=a.background; local glyph=a.glyph
   write(g,'B'); settle()
@@ -74,10 +103,10 @@ function M.run()
   assert(g.render.cells[1].background==background and not g.render.cells[1].glyph)
   write(g,'D','0','1'); settle()
   glyph=g.render.cells[1].glyph
-  model.calls.setPaletteColor(g.model,nop,1,0x123456); settle()
+  model.calls.setPaletteColor(g.model,nop,1,0x123456); renderer.participate(g); settle()
   assert(g.render.cells[1].background==background and not glyph.valid)
   glyph=g.render.cells[1].glyph
-  model.calls.setPaletteColor(g.model,nop,2,0x223344); settle()
+  model.calls.setPaletteColor(g.model,nop,2,0x223344); renderer.participate(g); settle()
   assert(g.render.cells[1].glyph==glyph and not background.valid)
   background=g.render.cells[1].background
   write(g,'E','0','1'); job=defer(g)

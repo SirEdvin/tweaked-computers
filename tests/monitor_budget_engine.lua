@@ -97,6 +97,20 @@ function M.on_tick(event)
   local s=root.scheduler; local c=registry.computer(x.computer)
   assert(c.status=='running',serpent.line(c.diagnostic))
   assert(s.maintenance_spent<=limits.maintenance_work_per_tick and root.ledger.total<=limits.host_work_per_tick)
+  local monitors=root.monitors; local p=monitors and monitors.presentation
+  if p and p.demand_version==1 then
+    local count=0
+    for key,lane in pairs(p.work) do assert(lane==p.lanes[key] and lane.key==key); count=count+1 end
+    assert(count<=#monitors.order,'singleton demand grew beyond physical groups')
+    local rec=registry.record(x.nodes[2]); local g=monitors.groups[monitors.membership[rec.id]]
+    if g then
+      local lane=assert(p.lanes[g.id]); local existed=p.work[lane.key]~=nil
+      for _=1,32 do registry.monitor_changed(rec,false) end
+      local after=0; for _ in pairs(p.work) do after=after+1 end
+      assert(after==count+(existed and 0 or 1) and p.work[lane.key]==lane,'burst notifications duplicated demand')
+      x.demand_witness=true
+    end
+  end
   local spent,reserved,seq=s.maintenance_spent,s.render_reserved_work,x.sequence
   scheduler.tick(event.tick)
   assert(s.maintenance_spent==spent and s.render_reserved_work==reserved and x.sequence==seq,'same-tick scheduler replay')
@@ -119,6 +133,7 @@ function M.on_tick(event)
   elseif x.resumed and not root.monitors.job and #root.monitors.order==255 then
     assert(c.state.beats>=20 and c.state.notifications>=1 and x.boosts>=3 and x.baseline>=3 and x.sequence>=3)
     assert(x.cleanup_queued and not x.cleanup_object.valid,'retirement made no progress')
+    assert(x.demand_witness); log('TC_BUDGET_DEMAND_DEDUP_OK')
     assert(x.proof_work==20296 and x.last_publish_work==147384)
     log('TC_BUDGET_FAIR_OK steps='..x.steps..' boosts='..x.boosts..' baseline='..x.baseline..
       ' beats='..c.state.beats..' notifications='..c.state.notifications..' publications='..x.sequence..' groups='..#root.monitors.order..
