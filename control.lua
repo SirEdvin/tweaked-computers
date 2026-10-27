@@ -43,6 +43,7 @@ script.on_event(defines.events.on_player_setup_blueprint,blueprints.on_setup)
 script.on_event(defines.events.on_entity_settings_pasted,blueprints.on_pasted)
 script.on_event({defines.events.on_pre_surface_deleted,defines.events.on_pre_surface_cleared},lifecycle.on_surface_removed)
 script.on_event(defines.events.on_forces_merging,lifecycle.on_forces_merging)
+script.on_event(defines.events.on_object_destroyed,lifecycle.on_object_destroyed)
 
 local configurator = require('scripts.services.configurator')
 script.on_event({defines.events.on_built_entity,defines.events.on_robot_built_entity,
@@ -109,6 +110,21 @@ if script.active_mods['tc-radar-upgrade'] then
   end)
 end
 -- End isolated radar installation driver.
+-- Isolated radar-tracking installation driver. The companion is never shipped.
+if script.active_mods['tc-radar-tracking-upgrade'] then
+  local test=require('tests.radar_tracking_upgrade_engine')
+  script.on_init(function()
+    registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
+    test.run(); log('TC_SMOKE_OK')
+  end)
+  script.on_load(test.on_load)
+  script.on_event(defines.events.on_tick,test.on_tick)
+  script.on_configuration_changed(function()
+    registry.initialize(); lifecycle.upgrade_existing(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
+    test.on_configuration_changed()
+  end)
+end
+-- End isolated radar-tracking installation driver.
 -- Isolated recipe-searcher installation driver. The companion is never shipped.
 if script.active_mods['tc-recipe-upgrade'] then
   local test=require('tests.recipe_searcher_upgrade_engine')

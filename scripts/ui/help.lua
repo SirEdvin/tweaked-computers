@@ -244,6 +244,9 @@ Playback and catalogue caps are independent of ordinary callback/result budgets.
 RADAR MODEM
 Native radar: unchanged scanning, circuits, power, GUI and mining; no adapter item.
 find("modem", wire); numeric channels are not red/green discovery colors.
+Enrollment needs a placed computer's same-color physical path, direct or through
+supported relays. Standalone components and hidden radio links do not qualify.
+Stopped/unpowered computers remain physical roots; placement alone does not enroll.
 Shared radio guidance: all methods except getLimits require an active, electrically
 supplied radar. Discovery wire and numeric radio channel are independent.
 Channels 0..65535; 128 shared open channels per physical radar, across all callers.
@@ -262,6 +265,9 @@ Advanced: 5x5, 1.5x native art, 1MW; six-pack research excludes military/planet 
 Hidden native radar links and received names never grant remote device authority.
 No rednet, callRemote, remote inventory or pullEvent. Channels/queues survive cold
 load without replay; replacement/clone and force/surface changes clear channels.
+Last-path detachment keeps identity/channels dormant without recurring scans.
+Same-entity/same-scope reconnection restores access, not missed traffic. Dormant
+records use memory/save space but do not consume radio routing candidate slots.
 
 open(channel) -> no values. Integer channel 0..65535; idempotent. At most 128
 shared open channels per physical radar across colors, computers and Console.

@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.16
+Date: 2026-10-27
+  Bugfixes:
+    - Enroll radar modems only through a placed computer's same-color physical network, including supported native relays. Building a radar or wiring a standalone peripheral no longer starts radar maintenance.
+    - Keep disconnected radar identities and channels as dormant saved data outside recurring sweeps and radio candidate scans. Same-entity, same-scope reconnection restores access without replay.
+    - Retire dormant identities through targeted native destruction events; retain native radar bodies, settings, wires and accepted computer message snapshots.
+  Changes:
+    - Partition existing radar records before ordinary ticking resumes on upgrade. Cold reload retains the separation; identity capacity still includes dormant records. No production budget or guest method changes.
+  Info:
+    - ALPHA for Factorio 2.1.23, base or optional Space Age. Dormant data still uses memory/save space; native radar simulation is unaffected.
+    - Back up the pre-upgrade save and matching mod ZIP. Restore both to roll back; older versions do not support the partitioned registry layout. Matching-engine connected-client acceptance remains required before release.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.15
 Date: 2026-10-25
   Changes:

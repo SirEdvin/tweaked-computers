@@ -28,7 +28,7 @@ function M.build(b)
 end
 function M.pending(b)
   if not M.supports(b) or registry.by_entity(b) then return end
-  if #registry.get().order>=limits.registry_entries then errors.raise('E_CAPACITY','native speaker identity capacity reached') end
+  if registry.get().retained_count>=limits.registry_entries then errors.raise('E_CAPACITY','native speaker identity capacity reached') end
   errors.raise('E_NETWORK_PENDING','connected native speaker awaiting adoption')
 end
 function M.reconcile(rec,spend)

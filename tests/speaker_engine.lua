@@ -1,7 +1,7 @@
 local registry=require('scripts.registry')
 local lifecycle=require('scripts.lifecycle')
 local scheduler=require('scripts.scheduler')
-local radar=require('scripts.radar')
+
 local carrier=require('scripts.speaker')
 local audio=require('scripts.speaker-audio')
 local speaker=require('scripts.services.speaker')
@@ -94,7 +94,7 @@ function M.run()
   local before=serpent.line{parameters=b.parameters,alert=b.alert_parameters,behavior=b.get_or_create_control_behavior().circuit_parameters}
   connect(c.body,b,'red'); connect(c.body,b,'green'); connect(b,db.body,'red')
   error_is('E_NETWORK_PENDING',function() peripheral.inventory(c,'red',nop) end)
-  for _=1,#registry.get().order+3 do radar.tick(game.tick,nop) end
+  for _=1,#registry.get().order+3 do graph.adopt_tick(game.tick,nop) end
   local r=assert(registry.by_entity(b)); assert(r.native_carrier=='speaker' and not next(r.children))
   assert(lifecycle.build(b)==r and b.operable and b.minable)
   local inv=peripheral.inventory(c,'red',nop); assert(inv[r.id] and inv[db.id])
@@ -150,7 +150,7 @@ function M.run()
   local preserved=false; for _,entry in ipairs(bp.get_blueprint_entities()) do if entry.name=='programmable-speaker' then preserved=true; assert(not entry.tags or not entry.tags.tc_settings) end end
   assert(preserved and b.valid and b.operable); selection.destroy()
   report('configurator-native-ownership-and-mixed-blueprint-preservation')
-  local extra=native(6,6); local ceiling=limits.registry_entries; limits.registry_entries=#registry.get().order
+  local extra=native(6,6); local ceiling=limits.registry_entries; limits.registry_entries=registry.get().retained_count
   local refused,e=carrier.build(extra); limits.registry_entries=ceiling
   assert(not refused and e.code=='E_CAPACITY' and extra.valid and extra.minable and extra.operable)
   extra.destroy(); report('capacity-refusal-preserves-native-material')

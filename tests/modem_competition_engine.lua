@@ -32,7 +32,7 @@ end]]
 local function build(kind,x,y)
   local name=kind=='radar' and 'radar' or defs.devices[kind].entity_name
   local body=assert(game.surfaces[1].create_entity{name=name,position={x,y},force='player'})
-  lifecycle.on_built{entity=body}; return assert(registry.by_entity(body))
+  return assert(lifecycle.build(body))
 end
 local function connect(a,b,role)
   local from=a.body.get_wire_connector(defines.wire_connector_id.circuit_red,true)
@@ -57,12 +57,14 @@ function M.run()
   constant.get_control_behavior().enabled=true
   assert(constant.get_wire_connector(defines.wire_connector_id.circuit_red,true).connect_to(lifecycle.connector(io,'input','red'),false))
   activate(c,logic_source)
-  storage.modem_competition={sender=a.id,receiver=b.id,logic=c.id,handler=io.id,constant=constant}
+  storage.modem_competition={sender=a.id,receiver=b.id,logic=c.id,handler=io.id,constant=constant,radars={r.id,s.id}}
 end
 function M.on_load() animation.on_load() end
 function M.on_configuration_changed() animation.on_configuration_changed() end
 function M.on_tick(event)
   local state=storage.modem_competition
+  -- Same fixture supply as animation's generic sweep; native radars no longer tick there.
+  for _,id in ipairs(state.radars) do registry.record(id).body.energy=100000 end
   if storage.tc_animation.phase=='drawing' and event.tick%15==0 then
     state.constant.get_control_behavior().get_section(1).set_slot(1,{value={type='item',name='iron-plate',quality='normal'},min=event.tick%30==0 and 99 or 101})
   end

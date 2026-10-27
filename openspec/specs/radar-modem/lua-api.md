@@ -8,6 +8,8 @@ Use `peripheral.find("modem", "red")`, `peripheral.wrap(name, wire)` or checked 
 
 Only vanilla prototype `radar` and, when Space Age is active, `tc-interplanetary-radar` participate. No automatic support is promised for third-party radar prototypes. No method enumerates remote computers, wraps remote peripherals or returns Factorio objects.
 
+Enrollment originates only at a placed computer, through a complete same-color, same-force, same-surface physical path. Direct cables and supported transitive network connectors qualify, including previously unenrolled native radar/speaker relays. Factory-only sockets, unsupported vanilla relays, ghosts, merged-monitor adjacency and hidden radio links do not. Placement, cloning, revival or wiring to a standalone peripheral does not enroll a radar. Stopped, faulted and unpowered computers remain physical roots; execution and powered methods retain their separate checks. Incomplete or refused adoption retains `E_NETWORK_PENDING`, `E_LIMIT` and `E_CAPACITY`, never a successful partial inventory.
+
 ## Methods
 
 | Exact signature | Returns | Behavior |
@@ -78,6 +80,8 @@ At the accepted transmission, select powered/active receiving radars whose chann
 
 Only running, powered computers with a matching handler and a freshly proved local path to the receiver are destinations. A receiver with no eligible computer produces no event. No recipients is a successful no-op, not a discovery failure. Native hidden radar links are never local path evidence.
 
+Routing starts from those eligible receiving computers, not from the remembered-radar pool. `routing_candidates` counts unique available, open-channel receivers reached through their current inventories; disconnected retained records are neither enumerated nor charged against that ceiling. Both relevant color proofs must complete before publication. Numeric ceilings, selected-wire authority, deterministic ordering and failure atomicity are unchanged.
+
 Prepare and charge the complete relevant candidate/delivery plan before publishing its first event. An incomplete relevant graph, fan-out limit, copy failure or throughput refusal has no packet effects; no successful recipient prefix is returned. Unrelated forces and, for ordinary transmitters, other surfaces are not relevant routing candidates. Resource-exhaustion faults still follow the runtime's non-catchable budget rules.
 
 After successful preparation, publish in sorted computer ID, receiving radar ID and subscription sequence order. Local red/green paths are deduplicated before this sort. The existing FIFO scheduler controls callback dispatch, so callbacks never run reentrantly; no minimum one-tick delay is promised. Every accepted transmission is independent even if its payload equals a previous message.
@@ -88,7 +92,11 @@ A packet already queued is an accepted data snapshot: closing a channel, detachi
 
 ## Persistence and identity
 
-Ordinary cold saves retain the radar identity and channel set, the computer's registrations and queue, and transport rate-limit accounting. Load reconstructs no guest work and never re-transmits. Modem open state is not included in mined items, blueprints, clones or pasted settings. New placement starts with an empty set and a new identity. Radar force/surface reassignment clears channels and invalidates previous bindings; later ordinary same-scope reconnection does not itself reset channels.
+Ordinary cold saves retain the radar identity and channel set, the computer's registrations and queue, and transport rate-limit accounting. Load reconstructs no guest work and never re-transmits. Modem open state is not included in mined items, blueprints, clones or pasted settings. New placement receives an empty set and a new identity only when enrolled through a computer-rooted path. Radar force/surface reassignment clears channels and invalidates previous bindings before participation in the new scope; public reads refuse a scope mismatch pending synchronized reconciliation rather than mutating authority.
+
+Losing the last computer path retains the same entity's opaque identity and channels as dormant saved data, outside generic tick iteration, availability checks, adoption roots and radio-candidate scans. No dormant-pool polling is permitted. Same-entity, same-scope reconnection restores access without missed-traffic replay; old wrappers remain subject to fresh selected-color authority. Targeted destruction retires the exact entity identity without transferring it to a replacement. Accepted queued events remain independent snapshots.
+
+Upgrading a supported legacy save excludes its registered radar records from recurring work before the first ordinary tick, without player rewiring or an amortized cleanup sweep. Cold reload preserves that separation without authoritative writes in `on_load`. Identity capacity still includes dormant records; retained memory and save serialization are not free, and native Factorio radar simulation is unaffected. Rollback requires the backed-up pre-upgrade save and matching prior mod archive, not an in-place downgrade of the partitioned registry.
 
 ## Queryable limits
 

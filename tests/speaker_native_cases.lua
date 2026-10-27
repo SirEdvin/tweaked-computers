@@ -17,7 +17,7 @@ local function build(kind,x,y)
   lifecycle.on_built{entity=body}; local rec=assert(registry.by_entity(body)); lifecycle.power_entity(rec).energy=100000; rec.powered=true; return rec
 end
 local function native(x,y) return assert(game.surfaces[1].create_entity{name='programmable-speaker',position={x,y},force='player'}) end
-local function adopt() for _=1,#registry.get().order*2+4 do radar.tick(game.tick,nop) end end
+local function adopt() for _=1,#registry.get().order*2+4 do graph.adopt_tick(game.tick,nop) end end
 local function error_is(code,fn) local ok,e=pcall(fn); assert(not ok and type(e)=='table' and e.code==code,serpent.line(e)) end
 function M.run(c,r,conf,guest,report)
   local b=r.body; local s=b.surface
@@ -112,12 +112,14 @@ function M.run(c,r,conf,guest,report)
   local local_body=assert(s.create_entity{name='radar',position={16,3},force='player'}); lifecycle.on_built{entity=local_body}
   local remote_body=assert(s.create_entity{name='radar',position={100,3},force='player'}); lifecycle.on_built{entity=remote_body}
   local remote_db=build('kv',106,3); wire(middle,local_body,'red'); wire(remote_body,remote_db.body,'red')
+  adopt(); assert(not registry.by_entity(remote_body))
+  local remote=assert(radar.build(remote_body)) -- Retained legacy identity is still no physical bridge.
   for _,x in ipairs({16,100}) do
     local power=assert(s.create_entity{name='electric-energy-interface',position={x,-6},force='player'})
     power.power_production=1000000000; power.power_usage=0; power.electric_buffer_size=1000000000; power.energy=1000000000
     assert(s.create_entity{name='substation',position={x,-3},force='player'})
   end
-  return {middle=m.id,local_radar=registry.by_entity(local_body).id,remote_radar=registry.by_entity(remote_body).id,remote_db=remote_db.id,cold_speaker=cold_speaker}
+  return {middle=m.id,local_radar=registry.by_entity(local_body).id,remote_radar=remote.id,remote_db=remote_db.id,cold_speaker=cold_speaker}
 end
 function M.hidden(c,r,x)
   local local_rec=registry.record(x.local_radar); local remote=registry.record(x.remote_radar)

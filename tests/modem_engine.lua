@@ -22,7 +22,8 @@ end
 local function build(kind,surface,x,y,force)
   local name=kind=='radar' and 'radar' or kind=='advanced' and 'tc-interplanetary-radar' or defs.devices[kind].entity_name
   local body=assert(surface.create_entity{name=name,position={x,y},force=force or 'player'})
-  lifecycle.on_built{entity=body}; local rec=assert(registry.by_entity(body))
+  -- Transport cases seed retained identities; radar_engine covers rooted enrollment.
+  local rec=assert(lifecycle.build(body))
   lifecycle.power_entity(rec).energy=1000000; rec.powered=true; return rec
 end
 local function conn(rec,wire)
@@ -136,6 +137,9 @@ local function power()
   for _,id in ipairs(registry.get().order) do local rec=registry.record(id)
     if rec and rec.body.valid then lifecycle.power_entity(rec).energy=1000000; rec.powered=true end
   end
+  for _,rec in pairs(registry.get().devices) do
+    if rec.kind=='radar' and rec.body.valid then rec.body.energy=1000000 end
+  end
 end
 local function traffic(c,r,d,s)
   local payload={value=false,nested={text='original'}}
@@ -179,12 +183,15 @@ local function failures(c,r,d,s)
 end
 local function duplicates(c,r,d,s)
   runtime.subscribe(d,'modem_message','received',nil,nop)
-  local second=build('radar',d.body.surface,1006,6); connect(d,second,'red'); call(d,second,'open',42)
+  local second=build('radar',d.body.surface,1006,6)
+  local relay=build('kv',d.body.surface,1000,6); connect(d,relay,'red'); connect(relay,second,'red'); call(d,second,'open',42)
   call(c,r,'transmit',42,17,{value=1}); assert(#d.queue==4)
   assert(d.queue[1].event.peripheral<=d.queue[3].event.peripheral)
   d.queue[1].event.message.value=99
   for i=2,4 do assert(d.queue[i].event.message.value==1) end
-  clear(d); lifecycle.remove(second.id,'fixture',true)
+  lifecycle.remove(second.id,'fixture',true)
+  assert(#d.queue==4,'removing a receiving radar must not recall accepted snapshots')
+  clear(d); lifecycle.remove(relay.id,'fixture',true)
   -- Fanout counts subscriptions, not computers. No prefix at nine handlers.
   for _=3,9 do runtime.subscribe(d,'modem_message','received',nil,nop) end
   error_is('E_LIMIT',function() call(c,r,'transmit',42,17,'fanout') end)
@@ -316,7 +323,8 @@ local function lifecycle_cases(c,r,d,s)
   -- The pinned engine cannot teleport a radar between surfaces. Its actual
   -- cross-surface move operation is clone/replacement, with a fresh identity.
   local cloned=assert(s.body.clone{position={0,0},surface=other_surface,force=s.body.force})
-  local clone=assert(registry.by_entity(cloned)); assert(clone.id~=s.id and clone.modem.count==0)
+  assert(not registry.by_entity(cloned))
+  local clone=assert(radar.build(cloned)); assert(clone.id~=s.id and clone.modem.count==0)
   lifecycle.remove(clone.id,'fixture-cleanup',true)
   -- Explicit retained-scope fault injection covers the defensive mismatch path;
   -- this is not claimed as an unsupported native surface teleport.
@@ -391,13 +399,21 @@ local function candidates_setup(c,r,d,s)
   radar.reconcile(merged,nop)
   assert(merged.modem.count==0 and radar.available(merged))
   lifecycle.remove(merged.id,'fixture-cleanup',true)
-  local ids={}
-  for i=1,63 do
-    local rec=build('radar',c.body.surface,2000+i*6,0); call(c,rec,'open',42); ids[#ids+1]=rec.id
+  local ids={}; local dormant={}
+  for i=1,64 do
+    local rec=build('radar',c.body.surface,2000+i*6,0); call(c,rec,'open',42); ids[#ids+1]=rec.id; dormant[rec.id]=true
   end
-  call(c,r,'transmit',42,17,'maximum-candidates'); assert(#d.queue==1); clear(d)
-  local extra=build('radar',c.body.surface,2400,0); call(c,extra,'open',42); ids[#ids+1]=extra.id
-  error_is('E_LIMIT',function() call(c,r,'transmit',42,17,'candidate-overload') end)
+  local original=registry.record
+  registry.record=function(id) assert(not dormant[id],'routing visited dormant identity'); return original(id) end
+  call(c,r,'transmit',42,17,'dormant-not-candidates'); assert(#d.queue==1); clear(d)
+  registry.record=original
+  for i=1,63 do connect(d,registry.record(ids[i]),'red') end
+  local ok,e=pcall(call,c,r,'transmit',42,17,'maximum-candidates')
+  assert(not ok and e.code=='E_LIMIT' and e.message=='modem handler delivery limit exceeded' and #d.queue==0)
+  connect(d,registry.record(ids[64]),'red')
+  ok,e=pcall(call,c,r,'transmit',42,17,'candidate-overload')
+  assert(not ok and e.code=='E_LIMIT' and e.message=='modem routing candidate limit exceeded')
+  for _,id in ipairs(ids) do conn(d,'red').disconnect_from(conn(registry.record(id),'red')) end
   assert(#d.queue==0); f().crowded=ids
 end
 local function candidates_cleanup(c,r,d,s)
@@ -408,7 +424,14 @@ local function candidates_cleanup(c,r,d,s)
   error_is('E_LIMIT',function() graph.real_edges(conn(r,'red'),nop,0) end)
   assert(peripheral.inventory(c,'red',nop)[r.id] and not peripheral.inventory(c,'red',nop)[s.id])
   for _,id in ipairs(f().crowded) do lifecycle.remove(id,'fixture-cleanup',true) end
-  report('sixty-four-candidates-boundary-and-crowded-native-origin-inventory-isolation')
+  report('dormant-not-visited-connected-sixty-four-candidates-and-native-origin-isolation')
+  local pending=assert(d.body.surface.create_entity{name='radar',position={1012,0},force='player'})
+  assert(conn(d,'red').connect_to(pending.get_wire_connector(defines.wire_connector_id.circuit_red,true),false))
+  local subs=d.subscriptions; d.subscriptions={}
+  call(c,r,'transmit',42,17,'no-listener'); assert(#d.queue==0)
+  d.subscriptions=subs; pending.destroy()
+  call(c,r,'transmit',999,17,'no-open-channel'); assert(#d.queue==0)
+  report('no-listener-skips-unresolved-graph-and-no-recipient-successful-no-op')
 end
 function M.on_tick(event)
   local fixture=f()
