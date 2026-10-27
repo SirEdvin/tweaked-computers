@@ -35,7 +35,8 @@ local function snapshot()
     token=s.token,boots=rec.state.boots,ledger_tick=r.ledger.tick,total=r.ledger.total,compile=m.compile,
     work=m.work,allocations=m.allocations,scheduler_tick=r.scheduler.last_tick,sequence=r.next_sequence,
     tab=s.tab,focus=s.focus,before_focus=s.before_focus,follow=s.follow,search=s.search,category=s.category,topic=s.topic,
-    review_source=s.review and s.review.source,review_revision=s.review and s.review.revision}
+    review_source=s.review and s.review.source,review_revision=s.review and s.review.revision,
+    logs=serpent.line(rec.logs),log_bytes=rec.log_bytes}
 end
 local function frozen()
   local f=storage.tc06_fixture; local now=snapshot()
@@ -88,6 +89,13 @@ function M.on_tick(event)
     assert(editor.open(player,rec.id)); local gui=player.gui.screen[editor.frame_name]
     assert(gui.content.editor.source.text==draft_source and rec.active.source==old_source and rec.saved_source==saved_source)
     assert(gui.content.selected_tab_index==1 and not model.session(player.index).focus,'explicit reopen starts in Editor')
+    local original_game=game
+    game={get_player=function() return player end,tick=event.tick}
+    gui.content.selected_tab_index=2
+    local ok,e=pcall(editor.on_tab,{player_index=player.index,element=gui.content,tick=event.tick})
+    game=original_game; if not ok then error(e,0) end
+    assert(gui.content.console.output.text==f.console,'cold Console changed retained elapsed timestamps')
+    assert(serpent.line(rec.logs)==f.snapshot.logs and rec.log_bytes==f.snapshot.log_bytes)
     model.close(player.index,model.session(player.index).token); gui.destroy()
     f.phase='resumed'
   elseif f.phase=='armed' then
@@ -112,7 +120,11 @@ function M.on_tick(event)
       editor.on_text{player_index=player.index,element=search,tick=event.tick}
       local category=gui.content.reference.filters.category; category.selected_index=4
       editor.on_selection{player_index=player.index,element=category,tick=event.tick}
+      runtime.log(rec,'retained\tzero\nnext line',59)
+      runtime.log(rec,'retained long-hour',21600000)
       tab(2); gui.content.console.follow.state=false
+      f.console=gui.content.console.output.text
+      assert(f.console=='[00:00:00] retained zero\nnext line\n[100:00:00] retained long-hour')
       editor.on_checked{player_index=player.index,element=gui.content.console.follow,tick=event.tick}
       tab(5)
       editor.on_click{player_index=player.index,element=gui.content.maintenance.review_actions.review,tick=event.tick}

@@ -64,7 +64,10 @@ end
 local function console(rec)
   local lines={}
   if rec.diagnostic then lines[#lines+1]='Active: '..diagnostic(rec.diagnostic) end
-  for _,entry in ipairs(rec.logs) do lines[#lines+1]='['..entry.tick..'] '..entry.text end
+  for _,entry in ipairs(rec.logs) do
+    local seconds=math.floor(entry.tick/60)
+    lines[#lines+1]=string.format('[%02d:%02d:%02d] %s',math.floor(seconds/3600),math.floor(seconds/60)%60,seconds%60,entry.text)
+  end
   -- Native text boxes show tabs as missing glyphs. Normalize only the display,
   -- one byte for one byte, preserving stored logs, newlines and output quotas.
   return (string.gsub(table.concat(lines,'\n'),'\t',' '))

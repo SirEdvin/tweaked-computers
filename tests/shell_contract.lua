@@ -89,6 +89,14 @@ function M.run()
       local committed=rec.shell.values
       tick=tick+1; assert(execute('print(string.rep("x",'..limits.console_bytes..'))',false).code=='E_LIMIT')
       assert(rec.shell.values==committed)
+      editor.refresh(a)
+      local expected={}
+      for _,entry in ipairs(rec.logs) do
+        assert(entry.tick>=1000 and entry.tick<1020)
+        expected[#expected+1]='[00:00:16] '..entry.text:gsub('\t',' ')
+      end
+      assert(f.content.console.output.text==table.concat(expected,'\n'),'shared prefix lost shell attribution, errors or program output')
+      assert(f.content.console.output.text:find('Shell',1,true) and f.content.console.output.text:find('player '..b.index,1,true))
       for _,entry in ipairs(rec.logs) do assert(#entry.text<=limits.console_bytes and not entry.text:find(string.rep('x',256),1,true),'partial oversized print was appended') end
     end)
     group('follow-off-and-focused-draft-refresh-stability',function()
