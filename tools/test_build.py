@@ -26,6 +26,16 @@ class PackageInventoryTests(unittest.TestCase):
                 for relative in (*contracts,'examples/dashboard-program.lua','examples/dashboard-charts.lua'):
                     self.assertEqual(package.read(prefix+relative),(build.ROOT/relative).read_bytes())
 
+    def test_documented_peripheral_types_match_provider(self):
+        import re
+        provider = (build.ROOT / 'scripts/services/peripheral.lua').read_text()
+        types = set(re.findall(r"='([^']+)'", re.findall(r'local types=\{([^}]+)\}', provider)[0]))
+        companion = (build.ROOT / 'openspec/specs/peripheral-network/lua-api.md').read_text()
+        guide = (build.ROOT / 'docs/player/api/peripheral.md').read_text()
+        self.assertEqual(set(re.findall(r'`([^`]+)`', re.findall(r'One of (.*?); nil', companion)[0])), types)
+        self.assertEqual(set(re.findall(r'"([^"]+)"', re.findall(r'  type = ([^\n]+)', companion)[0])), types)
+        self.assertEqual(set(re.findall(r'`([^`]+)`', re.findall(r'Types: (.*?)Unknown string', guide, re.S)[0])), types)
+
     def test_console_companion_matches_live_follow_contract(self):
         companion = (build.ROOT / 'openspec/specs/console-shell/lua-api.md').read_text()
         spec = (build.ROOT / 'openspec/specs/console-shell/spec.md').read_text()
