@@ -5,8 +5,8 @@ local count=0
 for _,kind in ipairs(defs.order) do
   local def=defs.devices[kind]; local entity=data.raw['electric-energy-interface'][def.name]
   local item=data.raw['item-with-tags'][def.name] or data.raw.item[def.name]
-  assert(item.stack_size==((kind=='computer' or kind=='kv') and 1 or 50),'public device stack size '..kind)
-  assert(item.type==((kind=='computer' or kind=='kv' or kind=='monitor') and 'item-with-tags' or 'item'))
+  assert(item.stack_size==((kind=='computer' or kind=='kv' or kind=='dashboard') and 1 or 50),'public device stack size '..kind)
+  assert(item.type==((kind=='computer' or kind=='kv' or kind=='monitor' or kind=='dashboard') and 'item-with-tags' or 'item'))
   assert(entity.icon==art.devices[kind].icon and item.icon==entity.icon)
   for _,direction in ipairs({'north','east','south','west'}) do
     local images=art.devices[kind][direction]; local layers=entity.pictures[direction].layers
@@ -22,7 +22,7 @@ for _,kind in ipairs(defs.order) do
     end
   end
 end
-assert(count==256)
+assert(count==288)
 local styles=data.raw['gui-style'].default
 local inputs=data.raw['custom-input']
 local interact=assert(inputs['tc-interact'])
@@ -57,4 +57,4 @@ for name,style in pairs(data.raw['gui-style'].default) do
   if type(name)=='string' and name:sub(1,3)=='tc_' and type(style)=='table' then check_style(style) end
 end
 for byte=0,255 do assert(data.raw.sprite['tc-glyph-'..byte].filename==art.glyphs[byte].filename) end
-log('TC_CANDIDATE_DATA_OK 256 status frames; 256 independent glyphs; 8 actual body/item families; declared fonts')
+log('TC_CANDIDATE_DATA_OK 288 status frames; 256 independent glyphs; 9 actual body/item families; declared fonts')

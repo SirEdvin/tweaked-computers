@@ -6,5 +6,5 @@
   "factorio_version": "2.1",
   "description": "ALPHA: bounded native Lua programs and Console, peripheral inspectors, radar modems, vanilla speaker audio, monitors, KV databases, circuit logic, configurators and Recipe Searcher. Back up saves. Factorio 2.1.23; not stable or a GPU performance guarantee.",
   "homepage": "https://siredvin.github.io/tweaked-computers/",
-  "dependencies": ["base = 2.1.23", "? space-age = 2.1.23"]
+  "dependencies": ["base = 2.1.23", "? space-age = 2.1.23", "? factorio-charts >= 1.2.0"]
 }

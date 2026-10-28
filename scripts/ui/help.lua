@@ -154,7 +154,7 @@ Shared discovery guidance:
 wire is explicitly "red" or "green", never "both" for discovery.
 Only same-color physical mod NETWORK ports and supported native radar/speaker sockets relay discovery; vanilla poles,
 INPUT/OUTPUT/TARGETS ports and color changes are not discovery paths.
-Types: monitor, kv_database, logic_handler, configurator, recipe_searcher, factoriopedia_interface, production_statistics, modem, speaker.
+Types: monitor, dashboard, kv_database, logic_handler, configurator, recipe_searcher, factoriopedia_interface, production_statistics, modem, speaker.
 Each has getLimits().
 Store name/wire in state, not ephemeral facades. Calls recheck live authority.
 Use Peripherals for automatically updated names/types/power on the selected color.
@@ -538,6 +538,62 @@ categories, visibility, surface bounds and current force enabled state (not feas
 getLimits() -> copied common/recipe-searcher limits, including while unpowered.
 recipe_search_results=50; common work/result/allocation limits still apply.
 
+DASHBOARD
+find("dashboard", wire) -> shared physical control panel. Research Native circuit
+computers, supply 15 kW and wire its Network. Normal opening shows configured
+native tabs; identity/status remain outside six configurable slots. Each viewer
+selects and scrolls independently. Guest text is literal, not rich text.
+
+setTab(slot, definition) -> no values. Slots 1–6; replace one complete tab atomically.
+Definition is {title=string,content=Node}. Nodes have unique nonempty id and type.
+row/column have dense children; label has text; button has nonempty text and an
+optional enabled boolean, default true. Unknown fields/duplicate IDs refuse.
+Identical definitions keep identity; compatible chart IDs retain their history.
+
+getTab(slot) -> one defensive definition, or one nil. Does not expose chart data.
+
+removeTab(slot) -> one boolean, whether a tab existed. Releases that tab's data.
+
+setText(slot, id, text) -> no values. Changes one label/button without rebuilding
+unrelated controls, moving selected tabs or clearing unchanged text selection.
+
+setEnabled(slot, id, enabled) -> no values. Changes one button's boolean state.
+
+subscribe(handler_name) -> one run-bound subscription ID. Saved handlers only,
+never Console. Each registration receives one scheduled dashboard_click, including
+intentional registrations on both colors; the last writer has no special role.
+Fields: peripheral, wire, subscription_id, tab, button, player_index and activation
+tick, plus normal BaseEvent fields. No guest callback runs in the GUI handler.
+Exact control/session/player authority, wire path and power are rechecked at dispatch.
+
+unsubscribe(subscription_id) -> one boolean. Exact run/dashboard/wire binding;
+also retires matching pending clicks. Stop/replacement retires subscriptions.
+
+appendSample(slot, id, values) -> no values. Optional factorio-charts only; append
+one complete finite series map to a line. Rolling capacity is chosen at definition,
+at least two; order is sample order, not wall time. No synthetic outage samples.
+
+setBars(slot, id, bars) -> no values. Optional factorio-charts only; replace latest
+dense array of nonnegative finite duration maps in seconds. No numeric/category bars.
+
+clearChart(slot, id) -> no values. Optional factorio-charts only; clears data, not
+configuration or a line's reserved rolling capacity.
+
+getLimits() -> one defensive effective map, even when reachable unpowered.
+dashboard_tabs=6; dashboard_state_bytes equals existing state_bytes. With charts:
+chart_line_series and chart_bar_entries reflect unmodified upstream support.
+Line nodes define dense series names, capacity and format number/percent/time.
+stacked_bars nodes define dense phases in stack order. Number uses upstream host
+tostring; percent values are already percent units; time and duration bars are seconds.
+The full layout/data/reservation shares one physical device allowance on both wires.
+Ordinary Data/work/call protections still apply; no extra widget quota is introduced.
+Without the optional library, chart methods are absent and new chart definitions
+raise E_UNSUPPORTED. Retained data survives and shows unavailable placeholders.
+Charts are demand-rendered; pending/error is explicit and does not erase history.
+Mining retains layout/data in one tagged item with a new placement identity.
+Blueprints/clones/settings copy transfer definitions only, never source samples.
+See Examples for complete control and optional line/duration programs.
+
 PRODUCTION STATISTICS
 find("production_statistics", wire) -> read-only local statistics facade. Research
 Recipe Searcher, craft from 8 iron, 5 electronic circuits and 2 advanced circuits
@@ -679,6 +735,7 @@ local sections={
   ['RECIPE SEARCHER']={'Recipe Searcher','Peripherals','peripheral.recipe_searcher'},
   ['FACTORIOPEDIA INTERFACE']={'Factoriopedia Interface','Peripherals','peripheral.factoriopedia_interface'},
   ['PRODUCTION STATISTICS']={'Production Statistics','Peripherals','peripheral.production_statistics'},
+  DASHBOARD={'Dashboard','Peripherals','peripheral.dashboard'},
   ['RADAR MODEM']={'Radar modem','Peripherals','peripheral.modem'},
   SPEAKER={'Programmable speaker','Peripherals','peripheral.speaker'},
   ['COMBINED EXAMPLE']={'Factory examples','Examples'},
@@ -755,7 +812,7 @@ local function structure(topic)
   flush()
 end
 for _,entry in ipairs(M.topics) do structure(entry) end
-for _,id in ipairs({'starter','speaker','logic','recipe','factory','shared','statistics'}) do
+for _,id in ipairs({'starter','speaker','logic','recipe','factory','shared','statistics','dashboard','dashboard_charts'}) do
   local tutorial=tutorials[id]
   local entry={id='tutorial.'..id,title=tutorial.title,category='Examples',blocks={},text=''}
   block(entry,'heading',tutorial.title)
@@ -777,7 +834,7 @@ end
 -- Exact API types, never localized titles, substring matching or topic positions.
 local peripheral_topics={monitor='peripheral.monitor',kv_database='peripheral.kv_database',
   logic_handler='peripheral.logic_handler',configurator='peripheral.configurator',
-  recipe_searcher='peripheral.recipe_searcher',factoriopedia_interface='peripheral.factoriopedia_interface',production_statistics='peripheral.production_statistics',modem='peripheral.modem',speaker='peripheral.speaker'}
+  recipe_searcher='peripheral.recipe_searcher',factoriopedia_interface='peripheral.factoriopedia_interface',production_statistics='peripheral.production_statistics',dashboard='peripheral.dashboard',modem='peripheral.modem',speaker='peripheral.speaker'}
 function M.peripheral_topic(kind)
   local id=peripheral_topics[kind]
   if id then for i,entry in ipairs(M.topics) do if entry.id==id then return i end end end

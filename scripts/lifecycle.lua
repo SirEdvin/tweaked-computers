@@ -24,7 +24,7 @@ function M.register_blueprint_adapter(adapter)
   blueprint_adapter=adapter
 end
 function M.register_item_adapter(kind,adapter)
-  assert((kind=='kv' or kind=='monitor') and not item_adapters[kind])
+  assert((kind=='kv' or kind=='monitor' or kind=='dashboard') and not item_adapters[kind])
   assert(type(adapter.initialize)=='function' and type(adapter.snapshot)=='function'
     and type(adapter.restore)=='function' and type(adapter.tag)=='string')
   item_adapters[kind]=adapter

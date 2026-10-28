@@ -78,12 +78,12 @@ function M.run(report_total)
   plan,e=compiler.compile(source(''),zero); assert(not plan and e.code=='E_BUDGET')
   report('compile-refusal')
   -- Parse/compile every actual planning program without claiming peripheral execution.
-  assert(#examples==11,'planning program inventory changed; review the fixture count')
+  assert(#examples==12,'planning program inventory changed; review the fixture count')
   for _,example in ipairs(examples) do
     local candidate,diagnostic=compiler.compile(example.source,admission.context(admission.new(),example.name,0))
     assert(candidate,example.name..': '..(diagnostic and diagnostic.message or 'refused'))
   end
-  report('all-eleven-planning-programs-compile')
+  report('all-twelve-planning-programs-compile')
   run_case('semicolons-and-fresh-closures',[[; local function outer(x) return function() return x end end; local f=outer(false); assert(f()==false);]],true)
   local p,c=compiled('pcall(computer.stop); computer.log("unsafe")')
   local writes=0

@@ -44,6 +44,8 @@ CONTRACT_FILES = (
     'openspec/specs/factoriopedia-interface/lua-api.md',
     'openspec/specs/production-statistics/spec.md',
     'openspec/specs/production-statistics/lua-api.md',
+    'openspec/specs/dashboard-interface/spec.md',
+    'openspec/specs/dashboard-interface/lua-api.md',
     'openspec/specs/program-source/spec.md',
     'openspec/specs/program-source/lua-api.md',
     'openspec/specs/peripheral-inspection/spec.md',

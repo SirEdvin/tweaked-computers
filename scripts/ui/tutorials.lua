@@ -5,6 +5,18 @@ local computer='Research Native circuit computers (tc-circuit-computers). Craft 
 local wiring='\nDiscovery rule: use only the stated same-color NETWORK ports; ordinary poles and INPUT/OUTPUT/TARGETS sockets do not relay discovery.'
 local stock='\n• Power the computer, logic handler and inserter. For a north-facing handler the ports are INPUT, NETWORK, OUTPUT from left to right.\n• Connect computer NETWORK red directly to logic NETWORK red.\n• Connect a separate stock chest (Read contents enabled, five normal-quality iron plates) to INPUT red.\n• Connect OUTPUT green to a powered inserter taking plates from a supply chest into an empty destination chest. Do not connect INPUT to OUTPUT.\n'
 return {
+  dashboard={title='Dashboard button',purpose='Configure a physical Dashboard and acknowledge a real player button through a scheduled handler.',
+    setup=computer..'Craft one Dashboard from 4 iron plates, 2 copper plates and 5 electronic circuits. Supply its 15 kW and connect computer NETWORK red directly to Dashboard NETWORK red. No optional library is needed. '..wiring,
+    steps=authoring..' Close the computer and normally open the Dashboard. Select Overview and left-click Acknowledge.',
+    expected='The shared status label changes from Ready to Acknowledged. Merely opening or changing tabs sends no event. Every explicit subscriber receives its own event; coordinate factory side effects if several programs subscribe.',
+    failures='Missing wire/power faults setup. A disabled, stale, distant or unauthorized click is not delivered. Console cannot subscribe. Stop cancels this run\'s subscriptions but retains the Dashboard content.',
+    source='dashboard-program',code=require('examples.dashboard-program')},
+  dashboard_charts={title='Dashboard lines and duration bars',purpose='Show six native mixed tabs, an eight-sample wrapping line, latest duration bars and independent live labels.',
+    setup=computer..'Build, power and red-wire one Dashboard as in Dashboard button. Optionally enable the unchanged factorio-charts 1.2.0 mod for lines and duration bars. Without it this same program configures labels/buttons only. '..wiring,
+    steps=authoring..' Open the Dashboard after startup; scroll Overview to see both charts, change tabs, then acknowledge a button. Another player can choose a different tab.',
+    expected='Twelve explicit startup vectors leave samples 5–12 in the eight-slot ring, even if no window was open. Lines use sample-order X positions and library colors/order. Bars show work/wait durations in seconds, not arbitrary numeric categories. The Updates label advances once per 60 ticks; buttons acknowledge through scheduled dispatch.',
+    failures='Charts are not Factorio production widgets and do not reproduce their appearance. Existing byte/Data/work limits can refuse capacity; no samples are truncated. Chart errors/pending state do not disable other controls. Removing the library preserves accepted history with unavailable placeholders; restoring it does not replay startup.',
+    source='dashboard-charts',code=require('examples.dashboard-charts')},
   statistics={title='Native production statistics',purpose='Read local item, fluid and pollution totals/rates plus all 300 native iron-history samples without recording a second history.',
     setup=computer..'Research Recipe Searcher (tc-recipe-searcher). Craft one Production Statistics device from 8 iron plates, 5 electronic circuits and 2 advanced circuits. Supply 30 kW and connect computer NETWORK red directly to its NETWORK red. Produce some items, fluids or pollution to see nonempty maps. No item input, TARGETS wire or collector startup is needed. '..wiring,
     steps=authoring,

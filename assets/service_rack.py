@@ -170,6 +170,13 @@ def service(kind):
         for y in (.05,.12,.19,.26): m.box(-.25,y,.25,y+.008,.14,.143,'ceramic',0)
         m.cable([(-.24,.24,.15),(-.12,.17,.15),(0,.20,.15),(.12,.07,.15),(.24,.04,.15)],.012,'blue')
         for y in (0,.30): m.tube((-.32,y,.16),(.32,y,.16),.035,'brass')
+    elif kind=='dashboard':
+        m.box(-.41,-.35,.41,.35,.04,.10,'blue')
+        m.box(-.36,-.31,.36,.02,.10,.27,'blue')
+        m.display(-.29,-.25,.29,-.04,.275)
+        for x,material in ((-.23,'green'),(0,'brass'),(.23,'ceramic')):
+            m.cylinder(x,.20,.075,.10,.14,material,12)
+        m.box(-.34,.30,.34,.34,.10,.13,'iron')
     elif kind=='recipe_searcher':
         for x in (-.36,.36): m.box(x-.045,-.36,x+.045,.33,.04,.10,'iron')
         m.box(-.29,-.30,.29,.31,.04,.08,'paper')

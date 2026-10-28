@@ -157,6 +157,29 @@ return {
   assert(ok == false)
   print(message)
 end]=]},
+  {name=[=[specs/dashboard-interface/lua-api.md:1]=],sha256=[=[677a2479eff74b56bd484863fa8c7a155350a82a8483b20509e8a040e4050ced]=],source=[=[return {
+    api_version = 1,
+    handlers = {
+        start = function(event)
+            local panel = peripheral.find("dashboard", "red")
+            assert(panel, "Connect a powered Dashboard on red")
+            panel.setTab(1, {
+                title = "Overview",
+                content = {type = "column", id = "root", children = {
+                    {type = "label", id = "status", text = "Ready"},
+                    {type = "button", id = "ack", text = "Acknowledge"}
+                }}
+            })
+            panel.subscribe("clicked")
+        end,
+        clicked = function(event)
+            local panel = peripheral.wrap(event.peripheral, event.wire)
+            if event.tab == 1 and event.button == "ack" then
+                panel.setText(1, "status", "Acknowledged")
+            end
+        end
+    }
+}]=]},
   {name=[=[specs/device-configurator/lua-api.md:1]=],sha256=[=[f93d4dccf94db93dbf2d5496a830b23b0da53de9eb3a117019028491cbee8fd2]=],source=[=[return {
   api_version = 1,
   handlers = {

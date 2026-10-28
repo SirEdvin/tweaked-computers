@@ -10,6 +10,22 @@ import build
 
 
 class PackageInventoryTests(unittest.TestCase):
+    def test_optional_chart_ci_fixture_is_exact_and_not_shipped(self):
+        import smoke
+        path=build.ROOT/'.github/fixtures/factorio-charts/factorio-charts_1.2.0.zip'
+        self.assertEqual(smoke.chart_archive(path)['sha256'],
+                         '32b1683912281812c122d6b414d15ab553e943138ceb2b27fe52a38ee6512815')
+        with zipfile.ZipFile(path) as charts:
+            self.assertEqual(charts.read('factorio-charts_1.2.0/LICENSE'),path.with_name('LICENSE').read_bytes())
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            with zipfile.ZipFile(build.build(output)) as package:
+                self.assertFalse(any('/.github/' in name or name.endswith('.zip') for name in package.namelist()))
+                contracts={'openspec/specs/dashboard-interface/spec.md','openspec/specs/dashboard-interface/lua-api.md'}
+                self.assertTrue(contracts.issubset(build.CONTRACT_FILES))
+                prefix=next(name[:-len('info.json')] for name in package.namelist() if name.endswith('/info.json'))
+                for relative in (*contracts,'examples/dashboard-program.lua','examples/dashboard-charts.lua'):
+                    self.assertEqual(package.read(prefix+relative),(build.ROOT/relative).read_bytes())
+
     def test_console_companion_matches_live_follow_contract(self):
         companion = (build.ROOT / 'openspec/specs/console-shell/lua-api.md').read_text()
         spec = (build.ROOT / 'openspec/specs/console-shell/spec.md').read_text()
@@ -26,7 +42,7 @@ class PackageInventoryTests(unittest.TestCase):
         tutorials = (build.ROOT / 'scripts/ui/tutorials.lua').read_text()
         bindings = re.findall(r"source='([^']+)',code=require\('examples\.([^']+)'\)", tutorials)
         self.assertEqual({name for name, _ in bindings}, {
-            'reference-speaker', 'logic-controller', 'reference-recipe', 'reference-factory', 'shared-telemetry', 'production-statistics-program'})
+            'reference-speaker', 'logic-controller', 'reference-recipe', 'reference-factory', 'shared-telemetry', 'production-statistics-program', 'dashboard-program', 'dashboard-charts'})
         for name, module in bindings:
             self.assertEqual(name, module)
         self.assertIn("prelude=require('examples.reference-writer')", tutorials)
@@ -59,6 +75,17 @@ getName(facade)
 getWire(facade)
 setMonitorSyncGroup(members)
 getMonitorSyncGroup()''',
+            'DASHBOARD': '''setTab(slot, definition)
+getTab(slot)
+removeTab(slot)
+setText(slot, id, text)
+setEnabled(slot, id, enabled)
+subscribe(handler_name)
+unsubscribe(subscription_id)
+getLimits()
+appendSample(slot, id, values)
+setBars(slot, id, bars)
+clearChart(slot, id)''',
             'PRODUCTION STATISTICS': '''getTotals(kind)
 getRates(kind, window)
 getHistory(kind, name, window [, quality])
@@ -148,7 +175,7 @@ getLimits()''',
         reference = re.search(r'  text=\[\[(.*?)\]\]', source, re.S)
         assert reference is not None, 'missing packaged reference'
         text = reference[1]
-        self.assertEqual(sum(len(signatures.splitlines()) for signatures in expected.values()), 92)
+        self.assertEqual(sum(len(signatures.splitlines()) for signatures in expected.values()), 103)
         for heading, signatures in expected.items():
             found = re.search(r'^' + re.escape(heading) + r'\n(.*?)(?=^[A-Z][A-Z ]+\n|\Z)',
                               text, re.M | re.S)
@@ -257,7 +284,7 @@ getLimits()''',
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
                 self.assertEqual(set(planning), set(build.CONTRACT_FILES))
-                self.assertEqual(len(build.CONTRACT_FILES), 40)
+                self.assertEqual(len(build.CONTRACT_FILES), 42)
                 self.assertFalse(any(name.startswith('openspec/changes/') for name in planning))
                 for relative in ('openspec/specs/program-source/spec.md',
                                  'openspec/specs/program-source/lua-api.md'):
@@ -385,9 +412,13 @@ class CanonicalContractTests(unittest.TestCase):
                 ('its previously opened channels are cleared.',
                  'its previously opened channels are cleared before participation in the new scope.'),
         }
-        # Exact reviewed direct-native-circuit replacements, not name-only exemptions.
+        # Exact reviewed circuit/storage replacements, not name-only exemptions.
         # Hash the complete trimmed requirement body; retain every historical scenario.
         native_evolved = {
+            ('device-lifecycle', 'Coherent composite lifecycle'): 'c58a4e821fcdc9f5948781f45a26e60b454e91f8a8d2bff8887c53043a8ee903',
+            ('device-lifecycle', 'Device-specific mining data policy'): '56fa15dac997051678bc0393d9fa7b5a4dabd0eb26165ddbbcf7641c9f5a0920',
+            ('device-lifecycle', 'Blueprint and clone isolation'): '65493110d08f2efa6ea75afd1c4c40de06d28b3f2593854e7116589bf87af28d',
+            ('device-lifecycle', 'Blueprint and item continuity across shell changes'): '1c42f7fd22c1327c9cb482ce080c080a390250d5bbbc24f13e07298d79ff5d1e',
             ('computer-runtime', 'Bounded native work'): '9d05602eeb7a4d90163fed7c6069eaf3331404f5c1bef1f7aed63b23e40a1d02',
             ('computer-runtime', 'Guest trust boundary'): '16a8460cfff7643614b925648c11a15e4448debf77c2fc9b04086b7f5b02b6d8',
             ('computer-runtime', 'Simulation timers and bounded queues'): '74b50cac17b7d56b2df832b9d7b1e5ea0cad51f02bbe575cb5ab5b4cb8b90085',
@@ -407,6 +438,8 @@ class CanonicalContractTests(unittest.TestCase):
                         r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|^## |\Z)',
                         delta.read_text(), re.M | re.S):
                     with self.subTest(change=change, capability=delta.parent.name, requirement=name):
+                        if (delta.parent.name,name)==('device-lifecycle','Mining preserves user data'):
+                            name='Device-specific mining data policy'
                         found = re.search(r'^### Requirement: ' + re.escape(name) +
                                           r'\n(.*?)(?=^### Requirement:|\Z)', canonical, re.M | re.S)
                         self.assertIsNotNone(found)

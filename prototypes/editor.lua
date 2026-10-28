@@ -5,6 +5,8 @@ assert(data.raw.font.default,'missing core default font')
 assert(styles.textbox,'missing core textbox style')
 data:extend{{type='font',name='tc-editor-mono',from='default-mono',size=14}}
 styles.tc_editor_text={type='textbox_style',parent='textbox',font='tc-editor-mono',rich_text_setting='disabled'}
+styles.tc_dashboard_tab_caption={type='label_style',parent='label',rich_text_setting='disabled',
+  font_color={1,1,1},parent_hovered_font_color={1,1,1}}
 -- Read-only text boxes retain native selection/copy even for prose and headings.
 -- Transparent backgrounds make the hierarchy a document rather than a form.
 styles.tc_reference_prose={type='textbox_style',parent='textbox',font='default',

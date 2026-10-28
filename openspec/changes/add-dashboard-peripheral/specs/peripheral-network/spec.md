@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Integrated device wiring targets
-A player SHALL connect a computer, database, monitor, dashboard, supported radar modem or vanilla speaker using a socket visibly belonging to that device. Normal selection/wiring MUST NOT expose an anonymous NETWORK tile or require an invisible separate tile. Hover identity and connector position SHALL identify the device; wiring SHALL use native red/green wires. Native radar/speaker attachment SHALL use existing connectors and preserve native opening behavior.
+A player SHALL connect a computer, database, monitor, Production Statistics device, dashboard, supported radar modem or vanilla speaker using a socket visibly belonging to that device. Normal selection/wiring MUST NOT expose an anonymous NETWORK tile or require an invisible separate tile. Hover identity and connector position SHALL identify the device; wiring SHALL use native red/green wires. Native radar/speaker attachment SHALL use existing connectors and preserve native opening behavior.
 
 #### Scenario: Wire a computer directly to a monitor
 - **WHEN** a player selects a red or green wire and connects the visible computer and monitor sockets
@@ -20,6 +20,11 @@ A player SHALL connect a computer, database, monitor, dashboard, supported radar
 #### Scenario: Open a registered speaker
 - **WHEN** a player opens a vanilla speaker that is registered as a peripheral
 - **THEN** its ordinary speaker configuration GUI opens without a replacement inspector, helper socket or change to native interaction.
+
+#### Scenario: Wire a Production Statistics device
+- **WHEN** a player wires a computer to the statistics device's visible Network socket
+- **THEN** discovery exposes type `production_statistics` only through the selected same-color, same-force, same-surface physical path
+- **AND** the device is a passive Network relay without exposing factory signals or bridging red and green.
 
 #### Scenario: Discover a dashboard on both colors
 - **WHEN** independent valid red and green paths reach a dashboard

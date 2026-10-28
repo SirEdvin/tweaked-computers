@@ -29,17 +29,28 @@ The mod SHALL provide one tier of 1×1 computers, KV devices, monitor tiles and 
 - **WHEN** a dashboard is placed or rotated next to another dashboard or monitor
 - **THEN** it remains one independent 1×1 peripheral with correctly positioned native red/green network contacts.
 
-### Requirement: Mining preserves user data
-Mining SHALL preserve a computer's saved/active source snapshots, explicit state and label, a KV peripheral's contents/deadlines, and a dashboard's accepted layout and chart data, in bounded data-bearing items. Replacement SHALL create a new entity identity; computers SHALL be stopped. Runtime callbacks, queues, timers, subscriptions, viewer sessions and ownership MUST NOT travel in the item.
+### Requirement: Device-specific mining data policy
+Mining a computer SHALL produce plain hardware without source snapshots, explicit application state or a computer label. Ordinary replacement SHALL create a blank, stopped computer with a new identity. KV items SHALL retain contents and absolute deadlines, and monitor items SHALL retain their existing settings. Dashboard items SHALL retain accepted layout and chart data. Runtime callbacks, queues, timers and ownership MUST NOT travel in items. Undo restoration SHALL use the separate undo contract.
 
 #### Scenario: Mine a working computer with unsaved editor changes
 - **WHEN** mining is requested while a player's editor holds an unsaved draft
-- **THEN** the draft remains recoverable in player UI storage and the item's committed snapshots remain unambiguous
-- **AND** replacement does not auto-run the former program.
+- **THEN** the draft remains recoverable in player UI storage under its original identity, and the computer item contains no committed source/state snapshot
+- **AND** ordinary replacement starts blank and stopped without adopting the old draft.
 
 #### Scenario: Maximum accepted data is mined
 - **WHEN** a device at its declared content capacity is mined
-- **THEN** its snapshot including metadata fits the serialization/item limit without truncation or data loss.
+- **THEN** a computer still produces plain hardware, with any qualifying undo snapshot governed by the undo retention requirements
+- **AND** devices whose contents travel in items retain their complete approved snapshot including metadata without truncation or data loss.
+
+#### Scenario: Ordinary replacement is independent of the item history
+- **WHEN** a freshly crafted or newly mined computer item is placed without a blueprint or qualifying undo restoration
+- **THEN** the new computer has empty saved source and application state, no computer label, and no active execution
+- **AND** its previous location and any earlier computer identity are not used to recover contents automatically.
+
+#### Scenario: Robot and platform item transport
+- **WHEN** player, robot or space-platform construction consumes a computer item after ordinary removal
+- **THEN** the same plain-item policy applies without a hidden computer snapshot or an extra drop
+- **AND** KV deadlines and monitor item settings remain governed by their unchanged family-specific policies.
 
 #### Scenario: Replace a populated dashboard
 - **WHEN** a player or robot mines and replaces a dashboard containing a wrapped rolling window and a bar dataset
@@ -47,11 +58,31 @@ Mining SHALL preserve a computer's saved/active source snapshots, explicit state
 - **AND** restoration remains possible with the chart dependency absent.
 
 ### Requirement: Blueprint and clone isolation
-Blueprints, entity clones and settings copy SHALL carry applicable source and configuration only, not computer runtime state, event registrations, KV contents, chart samples/bar datasets, output ownership or active execution. Newly created computers SHALL start stopped, databases empty and logic outputs zero. New dashboards SHALL copy tab/widget definitions but start with empty chart data and no subscribers or viewers.
+Blueprints, clipboard copies, entity clones and settings copy SHALL carry applicable saved source, label and configuration only, not computer application state, event registrations, KV contents, output ownership or active execution. Newly created computers SHALL start stopped, databases empty and logic outputs zero. Computer item contents MUST NOT override the captured source/settings. Existing-destination settings copy SHALL retain its existing state policy. New dashboards SHALL copy definitions but start with empty charts and no subscribers or viewers.
 
 #### Scenario: Blueprint a functioning controller
 - **WHEN** its blueprint is built elsewhere
-- **THEN** code and selected settings are available for inspection but the new computer does not configure the factory until explicitly run.
+- **THEN** the captured saved code and selected settings are available for inspection but the new computer does not configure the factory until explicitly run.
+
+#### Scenario: Native clipboard copy onto empty ground
+- **WHEN** a player saves a program, selects the computer with Ctrl+C and places it onto empty ground with Ctrl+V
+- **THEN** the completed computer contains the exact saved source and label captured at copy time, with empty application state and no runtime work
+- **AND** the result is identical for fresh, previously mined and legacy-tagged computer construction items.
+
+#### Scenario: Delayed ghost construction
+- **WHEN** a source-bearing copied ghost is built later, including by a robot or after a save/load
+- **THEN** the completed computer receives that ghost's captured source/settings exactly once, with the correct role-specific wires and no automatic startup
+- **AND** later edits or removal of the original computer do not change the captured source.
+
+#### Scenario: Draft and running source differ from saved source
+- **WHEN** a copied computer has different saved source, formerly active source and a player's unsaved draft
+- **THEN** the copy carries only the saved source and label
+- **AND** neither the draft, formerly active source nor explicit application state is substituted for the saved source.
+
+#### Scenario: Clone and settings-copy regressions
+- **WHEN** a computer is cloned or its settings are copied onto an existing computer
+- **THEN** a clone receives a new stopped identity with copied saved source and empty application state
+- **AND** settings copy stops the destination and replaces saved source/label without copying source application state or erasing the destination's existing application state.
 
 #### Scenario: Copy a dashboard configuration
 - **WHEN** a populated dashboard is blueprinted, cloned or used as the source of settings copy

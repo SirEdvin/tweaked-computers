@@ -26,6 +26,10 @@ local function render_state_valid(s,tick)
   return true
 end
 local monitor_refresh
+local dashboard_validate
+function M.register_dashboard_validator(fn)
+  assert(not dashboard_validate and type(fn)=='function'); dashboard_validate=fn
+end
 function M.register_monitor_refresh(fn)
   assert(type(fn)=='function' and not monitor_refresh,'invalid monitor event refresh')
   monitor_refresh=fn
@@ -142,13 +146,23 @@ local function dispatch_program(rec,tick)
     return false
   end
   local item=rec.queue[1]
+  if item.event.name=='dashboard_click' then
+    local admitted,valid=M.try_maintenance(function()
+      return dashboard_validate and dashboard_validate(rec,item,M.maintenance(root,tick)) or false
+    end)
+    if not admitted then return false end
+    if not valid then
+      table.remove(rec.queue,1); rec.queue_bytes=rec.queue_bytes-item.bytes
+      rec.last_dispatch_tick=tick; return true
+    end
+  end
   if monitor_refresh and item.event.name=='monitor_resize' then
     if not admission.reserve(ctx,'work',8) then return false end
     monitor_refresh(item.event)
   end
   rec.last_dispatch_tick=tick
   table.remove(rec.queue,1); rec.queue_bytes=rec.queue_bytes-item.bytes
-  item.event.tick=tick
+  if item.event.name~='dashboard_click' then item.event.tick=tick end
   local ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,function(guard) return runtime.services(rec,tick,guard) end,ctx,item.circuit==true)
   if not ok then
     if control=='stop' then runtime.retire(rec,'stopped','stop')

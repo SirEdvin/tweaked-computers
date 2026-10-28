@@ -7,6 +7,7 @@ local data=require('scripts.runtime.data')
 local errors=require('scripts.runtime.errors')
 local model=require('scripts.monitor-model')
 local monitor=require('scripts.services.monitor')
+local dashboard=require('scripts.dashboard-model')
 local M={computer_snapshot_bytes=131072}
 local MAX=9007199254740991
 local function fail(message) errors.raise('E_ARGUMENT',message) end
@@ -118,12 +119,17 @@ function M.restore_monitor(rec,s)
   rec.monitor_settings=m
 end
 function M.settings(rec)
+  if rec.kind=='dashboard' then
+    local tabs={}
+    for key,tab in pairs(dashboard.current(rec).tabs) do tabs[key]=data.copy(tab.definition) end
+    return {version=1,kind=rec.kind,dashboard={version=1,tabs=tabs}}
+  end
   if rec.kind=='computer' then return {version=1,kind=rec.kind,computer=M.computer_snapshot(rec,true)} end
   if rec.kind=='monitor' then return {version=1,kind=rec.kind,monitor=M.monitor_snapshot(rec)} end
   return {version=1,kind=rec.kind}
 end
 function M.apply_settings(rec,s)
-  shape(s,{version=true,kind=true,computer=true,monitor=true},4)
+  shape(s,{version=true,kind=true,computer=true,monitor=true,dashboard=true},5)
   if s.version~=1 or s.kind~=rec.kind then fail('settings family/version mismatch') end
   if rec.kind=='computer' then M.restore_computer(rec,s.computer,true)
   elseif rec.kind=='monitor' then
@@ -137,7 +143,25 @@ function M.apply_settings(rec,s)
       model.invalidate(m)
       monitor.settings_changed(rec,g,resized,w,h,scale~=m.scale)
     end
-  elseif s.computer~=nil or s.monitor~=nil then fail('unexpected family settings') end
+  elseif rec.kind=='dashboard' then
+    shape(s.dashboard,{version=true,tabs=true},2)
+    if s.dashboard.version~=1 then errors.raise('E_UNSUPPORTED','unsupported dashboard settings') end
+    local incoming=data.copy(s.dashboard.tabs)
+    local staged={dashboard=dashboard.current(rec)}
+    local slots={}
+    for key in pairs(incoming) do
+      if type(key)~='string' or not key:match('^[1-6]$') then fail('invalid dashboard settings slot') end
+      slots[#slots+1]=key
+    end
+    table.sort(slots)
+    for _,key in ipairs(slots) do
+      local definition=dashboard.definition(incoming[key],function() end,true)
+      staged.dashboard=dashboard.replace(staged.dashboard,key,definition,function() end,true)
+    end
+    local candidate={version=1,generation=staged.dashboard.generation,tabs={}}
+    for _,key in ipairs(slots) do candidate.tabs[key]=staged.dashboard.tabs[key] end
+    dashboard.admit(candidate,rec.dashboard,function() end); rec.dashboard=candidate
+  elseif s.computer~=nil or s.monitor~=nil or s.dashboard~=nil then fail('unexpected family settings') end
 end
 function M.initialize_existing()
   local root=registry.get(); if not root then return end
@@ -152,9 +176,26 @@ function M.initialize_existing()
   end
   for _,id in ipairs(root.order) do
     local rec=registry.record(id)
-    if rec and rec.kind=='computer' and rec.body.valid then M.initialize_computer(rec) end
+    if rec and rec.kind=='computer' and rec.body.valid then M.initialize_computer(rec)
+    elseif rec and rec.kind=='dashboard' and rec.body.valid then M.initialize_dashboard(rec) end
   end
 end
 lifecycle.register_computer_initializer(M.initialize_computer)
+function M.dashboard_snapshot(rec)
+  return {version=1,model=dashboard.import(dashboard.current(rec)),label=rec.label}
+end
+function M.restore_dashboard(rec,s)
+  shape(s,{version=true,model=true,label=true},3)
+  if s.version~=1 then errors.raise('E_UNSUPPORTED','unsupported dashboard item; original retained') end
+  local retained=dashboard.import(s.model)
+  local label=s.label and text(s.label,limits.identifier_bytes) or nil
+  rec.dashboard=retained; rec.label=label; rec.body.minable_flag=true; rec.mining_guard=nil
+end
+function M.initialize_dashboard(rec)
+  if rec.dashboard==nil then rec.dashboard=dashboard.new() end
+  local ok=pcall(M.dashboard_snapshot,rec)
+  rec.body.minable_flag=ok; rec.mining_guard=not ok and 'unsupported-dashboard-data' or nil
+end
+lifecycle.register_item_adapter('dashboard',{initialize=M.initialize_dashboard,snapshot=M.dashboard_snapshot,restore=M.restore_dashboard,tag='tc_dashboard'})
 lifecycle.register_item_adapter('monitor',{initialize=function() end,snapshot=M.monitor_snapshot,restore=M.restore_monitor,tag='tc_monitor'})
 return M
