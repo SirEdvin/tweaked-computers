@@ -16,18 +16,18 @@ def export(engine, output):
     if output.exists() or output.is_relative_to(ROOT.parent):
         raise ValueError('fresh external output directory required')
     version = subprocess.check_output([str(engine), '--version'], text=True)
-    assert version.startswith('Version: 2.0.77 '), version
+    assert version.startswith('Version: 2.1.23 '), version
     mod = output / 'mods/tc-art-layout_0.0.1'
     (mod / 'scripts').mkdir(parents=True)
     (mod / 'assets').mkdir()
     shutil.copy2(DEFINITIONS, mod / 'scripts/device-definitions.lua')
     shutil.copy2(ROOT / 'layout-data.lua', mod / 'assets/layout-data.lua')
     (mod / 'info.json').write_text(json.dumps(dict(name='tc-art-layout', version='0.0.1',
-        title='Socket export fixture', author='TC', factorio_version='2.0', dependencies=['base = 2.0.77'])))
+        title='Socket export fixture', author='TC', factorio_version='2.1', dependencies=['base = 2.1.23'])))
     (mod / 'data.lua').write_text('log("TC_ART_LAYOUT "..require("assets.layout-data").json())\n')
     (output / 'mods/mod-list.json').write_text(json.dumps({'mods':[
         {'name':name,'enabled':name in ('base','tc-art-layout')} for name in
-        ('base','tc-art-layout','space-age','quality','elevated-rails')]}))
+        ('base','tc-art-layout','space-age','quality','elevated-rails','recycler')]}))
     write = output / 'write'
     write.mkdir()
     cfg = output / 'config.ini'
@@ -42,9 +42,9 @@ def export(engine, output):
     assert len(lines) == 1
     layout = json.loads(lines[0])
     layout['source'] = {'path':'scripts/device-definitions.lua','sha256':hashlib.sha256(DEFINITIONS.read_bytes()).hexdigest()}
-    layout['engine'] = '2.0.77'
+    layout['engine'] = '2.1.23'
     (ROOT / 'socket-layout.json').write_text(json.dumps(layout, indent=2, sort_keys=True)+'\n')
-    print(json.dumps({'exported':str(ROOT / 'socket-layout.json'),'engine':'2.0.77','source':layout['source']}))
+    print(json.dumps({'exported':str(ROOT / 'socket-layout.json'),'engine':'2.1.23','source':layout['source']}))
 
 
 if __name__ == '__main__':

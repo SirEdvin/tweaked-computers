@@ -1,6 +1,6 @@
 -- Shared host-only physical tuning. Directions use Factorio 2.0's 16 positions.
 local M = {}
-M.order={'computer','kv','monitor','logic','configurator','recipe_searcher'}
+M.order={'computer','kv','monitor','logic','configurator','recipe_searcher','factoriopedia_interface','production_statistics'}
 M.devices={
   computer={name='tc-computer',width=1,watts=60000,roles={'network'},icon='arithmetic-combinator',
     ingredients={{'iron-plate',10},{'copper-plate',5},{'electronic-circuit',10},{'advanced-circuit',2}}},
@@ -13,7 +13,11 @@ M.devices={
   configurator={name='tc-configurator',width=2,watts=30000,roles={'network','targets'},icon='constant-combinator',
     ingredients={{'iron-plate',8},{'electronic-circuit',8},{'advanced-circuit',2}}},
   recipe_searcher={name='tc-recipe-searcher',width=1,watts=30000,roles={'network'},icon='lab',
-    technology='tc-recipe-searcher',ingredients={{'steel-plate',10},{'advanced-circuit',5},{'processing-unit',2}}}
+    technology='tc-recipe-searcher',ingredients={{'steel-plate',10},{'advanced-circuit',5},{'processing-unit',2}}},
+  factoriopedia_interface={name='tc-factoriopedia-interface',width=1,watts=30000,roles={'network'},icon='lab',
+    technology='tc-recipe-searcher',ingredients={{'steel-plate',10},{'advanced-circuit',5},{'processing-unit',2}}},
+  production_statistics={name='tc-production-statistics',width=1,watts=30000,roles={'network'},icon='lab',
+    technology='tc-recipe-searcher',ingredients={{'iron-plate',8},{'electronic-circuit',5},{'advanced-circuit',2}}}
 }
 M.by_name={}
 for kind,def in pairs(M.devices) do

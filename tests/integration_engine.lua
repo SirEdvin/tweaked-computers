@@ -13,7 +13,7 @@ local players=require('tests.editor_contract')
 local defs=require('scripts.device-definitions')
 local limits=require('scripts.runtime.limits')
 local art=require('scripts.device-art')
-local sources={recipe_searcher=require('examples.recipe-searcher-program'),factory=require('examples.factory-controller'),observer=require('examples.shared-telemetry'),
+local sources={factoriopedia=require('examples.factoriopedia-program'),recipe_searcher=require('examples.recipe-searcher-program'),factory=require('examples.factory-controller'),observer=require('examples.shared-telemetry'),
   logic=require('examples.logic-controller'),kv=require('examples.kv-program'),monitor=require('examples.monitor-program'),
   peripheral=require('examples.peripheral-program'),configurator=require('examples.configurator-program'),sections=require('examples.configurator-sections'),inventory=require('tests.api_inventory')}
 local contract_programs=require('examples.planning-programs')
@@ -60,6 +60,8 @@ function M.run()
   local c=build('computer',0,0); local db=build('kv',3,0); local io=build('logic',6,0); local cfg=build('configurator',3,3)
   connect(c,db,'red'); connect(db,io,'red'); connect(db,cfg,'red')
   local searcher=build('recipe_searcher',6,3); connect(cfg,searcher,'red')
+  local encyclopedia=build('factoriopedia_interface',9,3); connect(searcher,encyclopedia,'red')
+  local statistics=build('production_statistics',12,3); connect(encyclopedia,statistics,'red')
   local tiles0={}; for y=4,5 do for x=0,1 do tiles0[#tiles0+1]=build('monitor',x,y).id end end
   connect(db,registry.record(tiles0[1]),'red')
   local observer=build('computer',0,-3); local private=build('kv',-3,-3)
@@ -195,13 +197,14 @@ function M.on_tick(event)
     assert(observer.state.shared_status=='expired' and observer.state.private_status=='absent')
     report('stopped-controller-output-cleanup-and-shared-whole-key-expiry')
     runtime.stop(observer.id); for _,id in ipairs(x.busy) do runtime.stop(id) end
-    x.phase='examples'; x.example_names={'logic','kv','monitor','peripheral','configurator','sections','recipe_searcher','inventory'}; x.example_index=1; x.since=event.tick
+    x.phase='examples'; x.example_names={'logic','kv','monitor','peripheral','configurator','sections','recipe_searcher','factoriopedia','inventory'}; x.example_index=1; x.since=event.tick
     for _,program in ipairs(contract_programs) do x.example_names[#x.example_names+1]=program.name end
   elseif x.phase=='examples' then
     if event.tick-x.since==1 then
       local key=x.example_names[x.example_index]
       if key then submit(c,sources[key]) else
         assert(c.state.api_inventory,'full guest API inventory did not execute')
+        assert(c.state.factoriopedia_example,'Factoriopedia example did not complete')
         assert(c.state.recipe_count and c.state.fluid_recipe_count,'Recipe Searcher example did not complete')
         report('all-shipped-and-contract-documents-saved-activated-and-started')
         local maximum,maintenance=0,0

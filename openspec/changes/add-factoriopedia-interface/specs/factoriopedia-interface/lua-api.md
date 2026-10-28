@@ -1,6 +1,6 @@
 # Factoriopedia Interface Lua API
 
-This is the companion contract for [the capability](spec.md). It describes the proposed guest API, not an implemented or engine-verified feature.
+This is the companion contract for [the capability](spec.md). It describes the guest API; execution and client acceptance evidence is recorded separately.
 
 ## Discovery and method inventory
 
@@ -146,7 +146,7 @@ Input Data admission occurs before provider validation; current authority and po
 
 ## Guest example
 
-This document is proposed example source to be exercised through the real compiler and packaged provider during implementation; it is not an execution receipt. On a fresh base or Space Age game, research Recipe Searcher, connect a powered interface on red, and run:
+This example is source documentation, not an execution receipt. On a fresh base or Space Age game, research Recipe Searcher, connect a powered interface on red, and run:
 
 ```lua
 return {

@@ -154,7 +154,7 @@ Shared discovery guidance:
 wire is explicitly "red" or "green", never "both" for discovery.
 Only same-color physical mod NETWORK ports and supported native radar/speaker sockets relay discovery; vanilla poles,
 INPUT/OUTPUT/TARGETS ports and color changes are not discovery paths.
-Types: monitor, kv_database, logic_handler, configurator, recipe_searcher, modem, speaker.
+Types: monitor, kv_database, logic_handler, configurator, recipe_searcher, factoriopedia_interface, production_statistics, modem, speaker.
 Each has getLimits().
 Store name/wire in state, not ephemeral facades. Calls recheck live authority.
 Use Peripherals for automatically updated names/types/power on the selected color.
@@ -538,6 +538,69 @@ categories, visibility, surface bounds and current force enabled state (not feas
 getLimits() -> copied common/recipe-searcher limits, including while unpowered.
 recipe_search_results=50; common work/result/allocation limits still apply.
 
+PRODUCTION STATISTICS
+find("production_statistics", wire) -> read-only local statistics facade. Research
+Recipe Searcher, craft from 8 iron, 5 electronic circuits and 2 advanced circuits
+(2 seconds), supply 30 kW and wire Network on red or green. Normal opening shows
+identity/status only; no queries run in the inspector. Item/fluid use this device's
+force and surface; pollution is surface-wide emissions/absorption, not concentration.
+
+getTotals(kind) -> fresh {tick,input,output} cumulative native maps.
+kind is item, fluid or pollution. Items nest quality name then item name; other maps
+use exact native names. Input means production/emissions, output consumption/absorption.
+Missing keys remain absent; empty maps are successful empty data, not refusal.
+
+getRates(kind, window) -> fresh {tick,input,output} maps of native per-minute rates.
+Each direction retains every key in its own native count map, including zero rates.
+Windows: five_seconds, one_minute, ten_minutes, one_hour, ten_hours, fifty_hours,
+two_hundred_fifty_hours, one_thousand_hours. No default and no unit conversion.
+
+getHistory(kind, name, window [, quality]) -> fresh {tick,input,output} with two
+dense arrays of 300 native per-minute samples. Index 1 is newest, 300 oldest.
+Item quality defaults normal; other categories reject non-nil quality. Use exact
+installed identities; pollution also accepts recorded native source/sink keys.
+
+getLimits() -> defensive effective common limits, even when reachable unpowered.
+All statistical methods require power. Existing work/allocation and Data protections
+apply to the entire result: E_LIMIT refuses, never truncates or creates a query job.
+Unknown identities/windows raise E_RANGE, bad arguments E_ARGUMENT, native failures
+E_ENGINE, nonfinite native data E_UNSUPPORTED. E_BUDGET remains fatal, not catchable.
+Results follow native reset/current-tick merge timing, without a retained collector.
+See Examples for the complete native statistics tutorial; the shipped monitor program
+plots both directions oldest-left without reversing the API arrays.
+
+FACTORIOPEDIA INTERFACE
+find("factoriopedia_interface", wire) -> read-only catalogue facade. Research Recipe
+Searcher; craft from 10 steel, 5 advanced circuits and 2 processing units (2 seconds).
+Supply 30 kW and wire its 1x1 Network body on red or green. Normal opening shows
+identity/status only. Native Factoriopedia stays unchanged; no inventory is needed.
+
+getItem(exact_name) -> detached Item record. Stack size/stackable, native weight,
+default_rocket_lift_weight and optional rocket_capacity describe individual items,
+not stacks, free silo space or launch feasibility. Count=floor(reference/weight);
+zero-weight items omit it. Fuel energy is J/item, categories are names. Spoil ticks
+explicitly use normal quality; optional burnt/spoil/place/import results are names.
+
+getFluid(exact_name) -> detached Fluid record. default_temperature is also minimum;
+max_temperature and visual gas_temperature use Celsius. heat_capacity is J/unit/C,
+fuel_value J/unit; emissions_multiplier is native. No obtainable temperatures.
+
+listItems() -> complete dense array of exact installed item names, bytewise sorted.
+
+listFluids() -> complete dense array of exact installed fluid names, bytewise sorted.
+Lists include modded/hidden/parameter entries, not detail records. Alternatives
+never substitute identity. Existing Data limits (including 1024 entries) can refuse
+a complete list with E_LIMIT; no prefix, pagination or cache. Exact lookups remain
+independent of unrelated catalogue growth. E_BUDGET remains fatal, not catchable.
+
+getLimits() -> copied common limits, including while unpowered. Other methods
+require power and current bound same-force/surface, explicit-color authority.
+Dot calls only; extra nil, wrong type/empty names raise E_ARGUMENT; unknown exact
+names raise E_RANGE. Unsupported finite representation raises E_UNSUPPORTED.
+Records share type/name/prototype_type/group/subgroup/order, visibility flags and
+optional factoriopedia_alternative. Editing any returned data cannot change later
+queries. The shipped Factoriopedia program demonstrates both lists and lookups.
+
 CONFIGURATOR
 Shared configuration guidance: NETWORK and TARGETS colors are separate arguments
 and graphs. Target IDs are opaque; each addressed call proves live identity/path.
@@ -614,6 +677,8 @@ local sections={
   ['LOGIC HANDLER']={'Logic handler','Peripherals','peripheral.logic_handler'}, ['KV DATABASE']={'KV database','Peripherals','peripheral.kv_database'},
   MONITOR={'Monitor','Peripherals','peripheral.monitor'}, CONFIGURATOR={'Configurator','Peripherals','peripheral.configurator'},
   ['RECIPE SEARCHER']={'Recipe Searcher','Peripherals','peripheral.recipe_searcher'},
+  ['FACTORIOPEDIA INTERFACE']={'Factoriopedia Interface','Peripherals','peripheral.factoriopedia_interface'},
+  ['PRODUCTION STATISTICS']={'Production Statistics','Peripherals','peripheral.production_statistics'},
   ['RADAR MODEM']={'Radar modem','Peripherals','peripheral.modem'},
   SPEAKER={'Programmable speaker','Peripherals','peripheral.speaker'},
   ['COMBINED EXAMPLE']={'Factory examples','Examples'},
@@ -690,7 +755,7 @@ local function structure(topic)
   flush()
 end
 for _,entry in ipairs(M.topics) do structure(entry) end
-for _,id in ipairs({'starter','speaker','logic','recipe','factory','shared'}) do
+for _,id in ipairs({'starter','speaker','logic','recipe','factory','shared','statistics'}) do
   local tutorial=tutorials[id]
   local entry={id='tutorial.'..id,title=tutorial.title,category='Examples',blocks={},text=''}
   block(entry,'heading',tutorial.title)
@@ -712,7 +777,7 @@ end
 -- Exact API types, never localized titles, substring matching or topic positions.
 local peripheral_topics={monitor='peripheral.monitor',kv_database='peripheral.kv_database',
   logic_handler='peripheral.logic_handler',configurator='peripheral.configurator',
-  recipe_searcher='peripheral.recipe_searcher',modem='peripheral.modem',speaker='peripheral.speaker'}
+  recipe_searcher='peripheral.recipe_searcher',factoriopedia_interface='peripheral.factoriopedia_interface',production_statistics='peripheral.production_statistics',modem='peripheral.modem',speaker='peripheral.speaker'}
 function M.peripheral_topic(kind)
   local id=peripheral_topics[kind]
   if id then for i,entry in ipairs(M.topics) do if entry.id==id then return i end end end

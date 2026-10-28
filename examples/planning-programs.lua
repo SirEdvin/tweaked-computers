@@ -280,6 +280,29 @@ end]=]},
     end
   }
 }]=]},
+  {name=[=[specs/production-statistics/lua-api.md:1]=],sha256=[=[6454af123624702fb34da6afa1f2db1d0cffcff7ce5b11a04ba801173afcf436]=],source=[=[return {
+  api_version = 1,
+  handlers = {
+    start = function()
+      local stats = peripheral.find("production_statistics", "red")
+      assert(stats, "Connect a Production Statistics device with red wire")
+      local items = stats.getTotals("item")
+      local normal = items.input.normal or {}
+      computer.log("Iron produced: " .. tostring(normal["iron-plate"] or 0))
+
+      local fluids = stats.getRates("fluid", "one_minute")
+      computer.log("Water consumed/min: " .. tostring(fluids.output.water or 0))
+
+      local pollution = stats.getTotals("pollution")
+      for name, amount in pairs(pollution.input) do
+        computer.log(name .. " emitted " .. tostring(amount))
+      end
+
+      local history = stats.getHistory("item", "iron-plate", "one_minute", "normal")
+      computer.log("Newest iron production/min: " .. tostring(history.input[1]))
+    end
+  }
+}]=]},
   {name=[=[specs/program-editor/lua-api.md:1]=],sha256=[=[9cabe018971ba69b2c1d4e69f6b53e7b07c7f66aa663aaf1c3488750c5b99550]=],source=[=[return {
   api_version = 1,
   handlers = {

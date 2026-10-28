@@ -1,7 +1,7 @@
 {
   "format_version": 1,
   "stage": "alpha-candidate",
-  "engine": "2.0.77",
+  "engine": "2.1.23",
   "scope": "Export/alias inventory, not a claim that every graphical/multiplayer acceptance scenario passed",
   "export_fixture": "tests/api_inventory.lua",
   "execution_fixture": "tests/integration_engine.lua",
@@ -15,6 +15,8 @@
     "speaker": ["getInstruments", "getLimits", "getNotes", "getSounds", "playNote", "playSound"],
     "modem": ["open", "isOpen", "close", "closeAll", "transmit", "isWireless", "getLimits"],
     "recipe_searcher": ["findRecipes", "getLimits"],
+    "factoriopedia_interface": ["getItem", "getFluid", "listItems", "listFluids", "getLimits"],
+    "production_statistics": ["getTotals", "getRates", "getHistory", "getLimits"],
     "kv_database": ["get", "set", "del", "exists", "type", "hget", "hset", "hdel", "hexists", "hgetall", "hlen", "expire", "ttl", "persist", "getLimits"],
     "logic_handler": ["readSignal", "readSignals", "getInputStatus", "getOutput", "setOutput", "clearOutput", "subscribe", "unsubscribe", "getLimits"],
     "configurator": ["getDevices", "getDevice", "getCapabilities", "getConfiguration", "setConfiguration", "getLimits", "getSections", "addSection", "setSection", "removeSection"],
@@ -22,6 +24,8 @@
   },
   "events": ["start", "timer", "peripheral_attach", "peripheral_detach", "monitor_resize", "monitor_touch", "power_restored", "signal_changed", "modem_message"],
   "capabilities": {
+    "production-statistics": {"guide": "docs/player/api/production-statistics.md", "contract": "specs/production-statistics/lua-api.md", "checks": ["tests/production_statistics_data.lua", "tests/production_statistics_engine.lua", "tests/production_statistics_contract.lua", "tests/production_statistics_upgrade_engine.lua", "tests/production_statistics_client_engine.lua"]},
+    "factoriopedia-interface": {"guide": "docs/player/api/factoriopedia-interface.md", "contract": "specs/factoriopedia-interface/lua-api.md", "checks": ["tests/factoriopedia_data.lua", "tests/factoriopedia_engine.lua", "tests/factoriopedia_large_engine.lua", "tests/factoriopedia_client_engine.lua", "tests/factoriopedia_upgrade_engine.lua"]},
     "speaker-peripheral": {"guide": "docs/player/api/speaker.md", "contract": "specs/speaker-peripheral/lua-api.md", "checks": ["tests/speaker_engine.lua", "tests/speaker_data.lua"]},
     "radar-modem": {"guide": "docs/player/api/modem.md", "contract": "specs/radar-modem/lua-api.md", "checks": ["tests/radar_engine.lua", "tests/modem_engine.lua", "tests/radar_data.lua", "tests/radar_client_engine.lua"]},
     "computer-runtime": {"guide": "docs/computer-runtime.md", "contract": "specs/computer-runtime/lua-api.md", "checks": ["tests/computer_contract.lua", "tests/runtime_contract.lua", "tests/integration_engine.lua"]},

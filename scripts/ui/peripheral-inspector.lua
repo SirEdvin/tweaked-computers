@@ -69,10 +69,10 @@ function M.open(player,id)
   identity.api_name.tooltip=tr('copy-help')
   identity.add{type='button',name='select_name',caption=tr('select-name'),tooltip=tr('copy-help')}
   identity.select_name.enabled=rec.kind~='monitor'
-  local types={kv='kv_database',logic='logic_handler',monitor='monitor',configurator='configurator',recipe_searcher='recipe_searcher'}
+  local types={kv='kv_database',logic='logic_handler',monitor='monitor',configurator='configurator',recipe_searcher='recipe_searcher',factoriopedia_interface='factoriopedia_interface',production_statistics='production_statistics'}
   label(f,tr('peripheral-type',types[rec.kind]))
   local powered=lifecycle.has_power(rec)
-  f.add{type='label',name='availability',caption=tr(not powered and 'unpowered' or rec.kind=='recipe_searcher' and 'available' or 'pending')}
+  f.add{type='label',name='availability',caption=tr(not powered and 'unpowered' or (rec.kind=='recipe_searcher' or rec.kind=='factoriopedia_interface' or rec.kind=='production_statistics') and 'available' or 'pending')}
 
   f.add{type='scroll-pane',name='details',horizontal_scroll_policy='auto',vertical_scroll_policy='auto'}
   -- Structure and identity never wait for expensive data-query admission.
@@ -206,7 +206,7 @@ draw_pending=function(f,s,rec,powered)
   local p=f.details; p.clear(); s.drawn=nil
   if rec.kind=='logic' then draw_logic(p,s,{connected={},errors={}}); return end
   local reason=tr(not powered and rec.kind~='monitor' and 'unpowered' or 'pending')
-  if rec.kind=='recipe_searcher' then reason=tr('identity-only')
+  if rec.kind=='recipe_searcher' or rec.kind=='factoriopedia_interface' or rec.kind=='production_statistics' then reason=tr('identity-only')
   elseif rec.kind=='kv' then label(p,tr('keys')); p.tooltip=tr('kv-help')
   elseif rec.kind=='configurator' then
     p.tooltip=tr('targets-help')

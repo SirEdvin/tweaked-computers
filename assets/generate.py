@@ -223,7 +223,7 @@ def generate(output):
         'transform':{'sampling':'3x depth-buffered barycentric rasterization, fixed forward math.fma three-vector reductions, world-fixed normals/light and deterministic grain; Lanczos downsample; nearest-neighbour icon fitting; exact retained monitor foundation',
             'projection':'64*x - 48*height, 64*z - 128*height; tile units; geometry rotated clockwise before projection; fixed world light',
             'monitor':'unchanged 64x64 tile/touch area and 60x60 interior; two-unit inner bezel plus four-unit exterior mechanical skirt; 72x72 chamfered artwork; unchanged ground pivot',
-            'contacts':'socket-layout.json exported from production defs.contact/offset in Factorio 2.0.77; projected at ground coordinates',
+            'contacts':'socket-layout.json exported from production defs.contact/offset in Factorio '+layout['engine']+'; projected at ground coordinates',
             'shadow':'geometry projected toward world southeast; alpha 86 before Gaussian blur and Lanczos; monitor retained alpha 85',
             'status':'grey dash stopped; amber slash unpowered; green powered; red fault cross; amber/steel four-frame activity',
             'encoder':'RGBA8 Pillow compress_level=9 for selected bodies/icons/mesh shadows; filter 0 zlib 9 for unchanged glyph/status/monitor shadow','zlib_version':zlib.ZLIB_VERSION,'pillow_version':PIL.__version__,'numpy_version':numpy.__version__},

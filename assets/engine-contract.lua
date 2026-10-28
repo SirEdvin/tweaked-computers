@@ -13,7 +13,7 @@ function M.run()
     assert(not object.valid)
     count = count + 1
   end
-  for _, kind in ipairs{"computer", "kv", "monitor", "logic", "configurator", "recipe_searcher"} do
+  for _, kind in ipairs{"computer", "kv", "monitor", "logic", "configurator", "recipe_searcher", "factoriopedia_interface", "production_statistics"} do
     draw("tc-art-" .. kind .. "-icon")
     for _, direction in ipairs{"north", "east", "south", "west"} do
       local prefix = "tc-art-" .. kind .. "-" .. direction
@@ -25,8 +25,8 @@ function M.run()
     end
   end
   for byte = 0, 255 do draw("tc-art-glyph-" .. byte) end
-  assert(count == 502)
-  log("TC_CONTRACT artwork 502 registered sprite draw/destroy checks; headless only")
+  assert(count == 584)
+  log("TC_CONTRACT artwork 584 registered sprite draw/destroy checks; headless only")
   log("TC_CONTRACT_TOTAL 1")
 end
 return M

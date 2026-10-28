@@ -19,6 +19,8 @@ local logic = require('scripts.services.logic')
 local kv = require('scripts.services.kv')
 local monitor = require('scripts.services.monitor')
 local recipe_searcher = require('scripts.services.recipe-searcher')
+local factoriopedia_interface = require('scripts.services.factoriopedia-interface')
+local production_statistics = require('scripts.services.production-statistics')
 local modem = require('scripts.services.modem')
 local speaker = require('scripts.services.speaker')
 local snapshots = require('scripts.lifecycle-data')
@@ -71,7 +73,10 @@ if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixt
     ['tests.monitor_state_ready']=true,['tests.monitor_state_retiring']=true,
     ['tests.acceptance_monitor_engine']=true,['tests.editor_reference_client_engine']=true,['tests.peripheral_inspector_engine']=true,
     ['tests.peripheral_inspector_client_engine']=true,['tests.peripheral_inspector_upgrade_engine']=true,['tests.ui_live_client_engine']=true,
-    ['tests.reference_tutorials_engine']=true,['tests.native_circuit_engine']=true,['tests.native_circuit_upgrade_engine']=true}
+    ['tests.reference_tutorials_engine']=true,['tests.native_circuit_engine']=true,['tests.native_circuit_upgrade_engine']=true,
+    ['tests.factoriopedia_engine']=true,['tests.factoriopedia_large_engine']=true,['tests.factoriopedia_client_engine']=true,
+    ['tests.production_statistics_engine']=true,['tests.production_statistics_large_engine']=true,['tests.production_statistics_client_engine']=true,
+    ['tests.production_statistics_timing_engine']=true}
   assert(monitor_state_fixture[name] or name=='tests.speaker_competition_engine' or name=='tests.speaker_engine' or name=='tests.speaker_client_engine' or name=='tests.modem_competition_engine' or name=='tests.radar_client_engine' or name=='tests.radar_engine' or name=='tests.modem_engine' or name=='tests.acceptance_client_engine' or name=='tests.logic_recipe_engine' or name=='tests.recipe_searcher_client_engine' or name=='tests.recipe_searcher_engine' or name=='tests.shell_client_engine' or name=='tests.shell_cold' or name=='tests.lifecycle_engine' or name=='tests.integration_engine' or name=='tests.redesign_engine' or name=='tests.monitor_feedback_engine' or name=='tests.rd1_upgrade_engine' or name=='tests.monitor_budget_engine' or name=='tests.monitor_presentation_engine' or name=='tests.monitor_plot_baseline_engine' or name=='tests.runtime_budget_engine' or name=='tests.monitor_animation_engine','unknown production-context fixture')
 
   local test=require(name) -- control parsing only; never a guest source loader
@@ -89,6 +94,36 @@ if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixt
     script.on_event({defines.events.on_player_created,defines.events.on_player_joined_game},test.on_player_joined)
   end
 end
+-- Isolated Production Statistics installation driver.
+if script.active_mods['tc-statistics-upgrade'] then
+  local test=require('tests.production_statistics_upgrade_engine')
+  script.on_init(function()
+    registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
+    test.run(); log('TC_SMOKE_OK')
+  end)
+  script.on_load(test.on_load)
+  script.on_event(defines.events.on_tick,test.on_tick)
+  script.on_configuration_changed(function()
+    registry.initialize(); lifecycle.upgrade_existing(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
+    test.on_configuration_changed()
+  end)
+end
+-- End isolated Production Statistics installation driver.
+-- Isolated Factoriopedia installation driver.
+if script.active_mods['tc-factoriopedia-upgrade'] then
+  local test=require('tests.factoriopedia_upgrade_engine')
+  script.on_init(function()
+    registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
+    test.run(); log('TC_SMOKE_OK')
+  end)
+  script.on_load(test.on_load)
+  script.on_event(defines.events.on_tick,test.on_tick)
+  script.on_configuration_changed(function()
+    registry.initialize(); lifecycle.upgrade_existing(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
+    test.on_configuration_changed()
+  end)
+end
+-- End isolated Factoriopedia installation driver.
 -- Isolated speaker installation driver. The companion is never shipped.
 if script.active_mods['tc-speaker-upgrade'] then
   local test=require('tests.speaker_upgrade_engine')

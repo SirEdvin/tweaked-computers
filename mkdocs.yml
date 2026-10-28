@@ -32,6 +32,8 @@ nav:
       - Logic handler: api/logic.md
       - Configurator: api/configurator.md
       - Recipe Searcher: api/recipe-searcher.md
+      - Factoriopedia Interface: api/factoriopedia-interface.md
+      - Production Statistics: api/production-statistics.md
       - Radar modem: api/modem.md
       - Programmable speaker: api/speaker.md
       - Supported settings: api/settings.md

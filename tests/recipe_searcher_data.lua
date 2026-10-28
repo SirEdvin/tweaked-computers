@@ -22,7 +22,7 @@ assert(equal(recipe.results,{{type='item',name=def.name,amount=1}}))
 local tech=data.raw.technology[def.technology]
 assert(equal(tech.prerequisites,{'tc-circuit-computers','utility-science-pack'}))
 assert(equal(tech.unit,{count=200,ingredients={{'automation-science-pack',1},{'logistic-science-pack',1},{'utility-science-pack',1}},time=60}))
-assert(equal(tech.effects,{{type='unlock-recipe',recipe=def.name}}))
+assert(equal(tech.effects,{{type='unlock-recipe',recipe=def.name},{type='unlock-recipe',recipe='tc-factoriopedia-interface'},{type='unlock-recipe',recipe='tc-production-statistics'}}))
 local old=data.raw.technology['tc-circuit-computers']
 assert(equal(old.prerequisites,{'circuit-network','advanced-circuit'}))
 assert(equal(old.unit,{count=100,ingredients={{'automation-science-pack',1},{'logistic-science-pack',1}},time=30}))
