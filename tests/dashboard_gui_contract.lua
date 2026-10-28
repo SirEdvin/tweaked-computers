@@ -5,6 +5,9 @@ local model=require('scripts.dashboard-model')
 local ui=require('scripts.ui.dashboard')
 local service=require('scripts.services.dashboard')
 local players=require('tests.editor_contract')
+local scheduler=require('scripts.scheduler')
+local limits=require('scripts.runtime.limits')
+local data=require('scripts.runtime.data')
 local M={}
 local function definition(text)
   return {title='Literal [img=iron-plate]',content={type='column',id='root',children={
@@ -13,6 +16,7 @@ local function definition(text)
 end
 function M.run()
   local saved=storage.tweaked_computers; local real_game=game; local click=service.click
+  local maintenance_limit=limits.maintenance_work_per_tick
   storage.tweaked_computers=nil; registry.initialize()
   local body=assert(real_game.surfaces[1].create_entity{name='tc-dashboard-shell',position={40,40},force='player'})
   local rec=assert(lifecycle.build(body)); lifecycle.power_entity(rec).energy=500
@@ -61,6 +65,22 @@ function M.run()
     local replacement=sa.tabs['1'].elements.ack; activate(replacement); assert(hits==2)
     model.set_leaf(rec,1,'ack',false,true,function() end); ui.tick(103,function() end)
     activate(replacement); assert(hits==2)
+    model.set_leaf(rec,1,'status','Fair update',false,function() end)
+    local cost=128
+    for _,tab in pairs(model.current(rec).tabs) do
+      local stats=data.measure(tab.definition,function(n) cost=cost+n end,limits.peripheral_call_bytes)
+      cost=cost+stats.nodes*8+stats.bytes
+    end
+    limits.maintenance_work_per_tick=cost
+    ui.tick(104,scheduler.maintenance(registry.get(),104,true))
+    local a_updated=sa.tabs['1'].elements.status.caption=='Fair update'
+    local b_updated=sb.tabs['1'].elements.status.caption=='Fair update'
+    assert(a_updated~=b_updated,'viewer fairness probe must fit exactly one refresh')
+    ui.tick(105,scheduler.maintenance(registry.get(),105,true))
+    assert(sa.tabs['1'].elements.status.caption=='Fair update' and sb.tabs['1'].elements.status.caption=='Fair update',
+      'continuously refreshed first viewer starved its peer')
+    limits.maintenance_work_per_tick=maintenance_limit
+    log('TC_DASHBOARD_GUI fair-viewers-one-refresh-allowance')
     a.display_resolution={width=1024,height=768}; a.display_scale=1.25; ui.on_size{player_index=a.index}
     assert(fa.location.x>=0 and fa.location.y>=0 and fa.style.minimal_width*1.25<=1024 and fa.style.minimal_height*1.25<=768)
     ui.on_closed{player_index=a.index,element=fb}; assert(registry.get().dashboard_sessions[a.index]==sa)
@@ -78,6 +98,7 @@ function M.run()
     end
     ui.close(b); assert(not fb.valid)
   end)
+  limits.maintenance_work_per_tick=maintenance_limit
   service.click=click; game=real_game
   lifecycle.remove(rec.id,'fixture_cleanup',true); storage.tweaked_computers=saved
   assert(ok,problem)

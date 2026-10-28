@@ -188,8 +188,10 @@ function M.on_opened(event)
 end
 function M.tick(tick,spend)
   charts.begin()
-  local all=sessions(); local indices={}; for index in pairs(all) do indices[#indices+1]=index end; table.sort(indices)
-  for _,index in ipairs(indices) do
+  local root=registry.get(); local all=sessions(); local indices={}; for index in pairs(all) do indices[#indices+1]=index end; table.sort(indices)
+  local start=math.min(root.dashboard_view_cursor or 1,math.max(1,#indices))
+  for offset=0,#indices-1 do
+    local index=indices[(start+offset-1)%#indices+1]
     local s=all[index]; local player=game.get_player(index); local rec=player and current(player,s); local f=player and frame(player)
     if not rec or not f or not f.valid or player.opened~=f then if player then M.close(player) else all[index]=nil end
     else
@@ -206,6 +208,8 @@ function M.tick(tick,spend)
       if not admitted then f.availability.caption='Dashboard update pending: maintenance allowance unavailable' end
     end
   end
+  -- Rotate the next starting viewer, not the end of the completed full walk.
+  root.dashboard_view_cursor=#indices>0 and start%#indices+1 or 1
   charts.finish(spend)
 end
 service.register_player_authority(function(index,rec,token,slot)
