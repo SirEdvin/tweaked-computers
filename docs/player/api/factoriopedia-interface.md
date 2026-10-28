@@ -10,7 +10,8 @@ Factoriopedia, search recipes, craft anything or inspect a live inventory.
 
 ## Setup
 
-Research **Recipe Searcher** (`tc-recipe-searcher`). This unlocks both devices;
+Research **Recipe Searcher** (`tc-recipe-searcher`). This unlocks the searcher, interface
+and [Production Statistics](production-statistics.md);
 Circuit Computers alone does not unlock the interface. Craft one interface from
 10 steel plates, 5 advanced circuits and 2 processing units (2 seconds).
 Place its 1×1 body, supply 30 kW, and connect its Network contacts directly to a

@@ -135,5 +135,5 @@ The feature SHALL ship localized names, identity/status inspection, contextual R
 
 #### Scenario: Native chart comparison
 - **WHEN** native client verification compares item/fluid/pollution statistics with the documented peripheral results at a controlled observation point
-- **THEN** directions, quality selection, windows, units and historical order agree, allowing only native display rounding and documented sampling boundaries
+- **THEN** directions, quality selection, windows, units and historical order agree, allowing only native display rounding, documented sampling boundaries and verified pinned-engine GUI presentation smoothing; the burst case remains and all 300 raw samples per side match direct native `get_flow_count`, with smoothing confined to verification/presentation comparison
 - **AND** missing graphical or connected-client receipts remain explicit unmet acceptance gates.

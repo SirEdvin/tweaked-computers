@@ -160,6 +160,16 @@ def service(kind):
             m.box(-.08,-.26+i*.045,.31,.22,h,h+.055,'paper')
             m.box(.24,-.23+i*.045,.34,-.12+i*.045,h+.055,h+.07,'brass')
         m.dial(.12,.22,.105,.335)
+    elif kind=='production_statistics':
+        # Chart recorder: brass rollers, ruled paper and a raised twin-gauge head.
+        m.box(-.40,-.34,.40,.34,.04,.12,'iron')
+        m.box(-.35,-.31,.35,-.05,.12,.34,'green')
+        m.dial(-.17,-.18,.115,.34)
+        m.dial(.17,-.18,.115,.34)
+        m.box(-.27,.01,.27,.29,.12,.14,'paper')
+        for y in (.05,.12,.19,.26): m.box(-.25,y,.25,y+.008,.14,.143,'ceramic',0)
+        m.cable([(-.24,.24,.15),(-.12,.17,.15),(0,.20,.15),(.12,.07,.15),(.24,.04,.15)],.012,'blue')
+        for y in (0,.30): m.tube((-.32,y,.16),(.32,y,.16),.035,'brass')
     elif kind=='recipe_searcher':
         for x in (-.36,.36): m.box(x-.045,-.36,x+.045,.33,.04,.10,'iron')
         m.box(-.29,-.30,.29,.31,.04,.08,'paper')

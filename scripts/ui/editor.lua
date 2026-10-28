@@ -130,7 +130,7 @@ local function refresh_reference(c,s)
   local width=c.reference_text.style.minimal_width or 700
   reference.show(c.reference_text,topic,width)
 end
-local icons={monitor='item/tc-monitor',kv_database='item/tc-kv',logic_handler='item/tc-logic',configurator='item/tc-configurator',recipe_searcher='item/tc-recipe-searcher',factoriopedia_interface='item/tc-factoriopedia-interface',modem='item/radar',speaker='item/programmable-speaker'}
+local icons={monitor='item/tc-monitor',kv_database='item/tc-kv',logic_handler='item/tc-logic',configurator='item/tc-configurator',recipe_searcher='item/tc-recipe-searcher',factoriopedia_interface='item/tc-factoriopedia-interface',production_statistics='item/tc-production-statistics',modem='item/radar',speaker='item/programmable-speaker'}
 local function peripheral_details(c,s)
   local inventory=s.inventory; local selected=s.peripheral; local found
   if inventory and inventory.items then

@@ -25,7 +25,7 @@ local technology=data.raw.technology[def.technology]
 assert(def.technology=='tc-recipe-searcher')
 assert(equal(technology.prerequisites,{'tc-circuit-computers','utility-science-pack'}))
 assert(equal(technology.unit,{count=200,ingredients={{'automation-science-pack',1},{'logistic-science-pack',1},{'utility-science-pack',1}},time=60}))
-assert(equal(technology.effects,{{type='unlock-recipe',recipe='tc-recipe-searcher'},{type='unlock-recipe',recipe=def.name}}))
+assert(equal(technology.effects,{{type='unlock-recipe',recipe='tc-recipe-searcher'},{type='unlock-recipe',recipe=def.name},{type='unlock-recipe',recipe='tc-production-statistics'}}))
 log('TC_FACT_DATA_OK geometry-power-crafting-shared-research')
 local function item(name,fields)
   local p={type='item',name=name,localised_name=name,icon='__base__/graphics/icons/iron-plate.png',icon_size=64,stack_size=17,weight=3000,auto_recycle=false}

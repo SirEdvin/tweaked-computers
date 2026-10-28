@@ -21,7 +21,14 @@ def payload(archive):
         prefix = next(n[:-len('info.json')] for n in package.namelist() if n.endswith('/info.json'))
         return {n.removeprefix(prefix): package.read(n) for n in package.namelist()}
 
-def main():
+def main(feature='factoriopedia'):
+    statistics = feature == 'production-statistics'
+    assert feature in ('factoriopedia', 'production-statistics')
+    title = 'Production Statistics' if statistics else 'Factoriopedia'
+    module = 'production_statistics' if statistics else 'factoriopedia'
+    companion_name = 'tc-statistics-upgrade' if statistics else 'tc-factoriopedia-upgrade'
+    installed_name = 'tc-stat-installed' if statistics else 'tc-fp-installed'
+    later_marker = 'TC_STAT_LATER_RECONCILIATION_OK' if statistics else 'TC_FACT_LATER_RECONCILIATION_OK'
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('factorio', 'legacy', 'archive', 'output'):
         parser.add_argument('--'+name, type=Path, required=True)
@@ -32,11 +39,12 @@ def main():
     assert subprocess.check_output([str(args.factorio), '--version'], text=True).startswith('Version: 2.1.23 ')
     candidate = payload(args.archive)
     control = candidate['control.lua'].decode()
-    start = '-- Isolated Factoriopedia installation driver.'
-    end = '-- End isolated Factoriopedia installation driver.'
+    start = '-- Isolated '+title+' installation driver.'
+    end = '-- End isolated '+title+' installation driver.'
     assert control.count(start) == control.count(end) == 1
     hook = (start+control.split(start, 1)[1].split(end, 1)[0]+end+'\n').encode()
-    fixture = candidate['tests/factoriopedia_upgrade_engine.lua']
+    fixture_path = 'tests/'+module+'_upgrade_engine.lua'
+    fixture = candidate[fixture_path]
     legacy_test = args.output / args.legacy.name
     with zipfile.ZipFile(args.legacy) as original, zipfile.ZipFile(legacy_test, 'w', zipfile.ZIP_DEFLATED) as patched:
         prefix = next(n[:-len('info.json')] for n in original.namelist() if n.endswith('/info.json'))
@@ -44,9 +52,9 @@ def main():
             value = original.read(entry.filename)
             if entry.filename == prefix+'control.lua': value += b'\n'+hook
             patched.writestr(copy.copy(entry), value)
-        patched.writestr(prefix+'tests/factoriopedia_upgrade_engine.lua', fixture)
+        patched.writestr(prefix+fixture_path, fixture)
     baseline = payload(args.legacy); instrumented = payload(legacy_test)
-    assert set(instrumented)-set(baseline) == {'tests/factoriopedia_upgrade_engine.lua'}
+    assert set(instrumented)-set(baseline) == {fixture_path}
     assert [name for name in baseline if baseline[name] != instrumented[name]] == ['control.lua']
     assert instrumented['control.lua'] == baseline['control.lua']+b'\n'+hook
     # Test-only version distinction; production info.json and immutable packages are untouched.
@@ -67,10 +75,10 @@ def main():
     for mode in ('base','space-age'):
         folder=args.output/mode; mods=folder/'mods'; write=folder/'write'
         mods.mkdir(parents=True); (write/'saves').mkdir(parents=True)
-        companion=mods/'tc-factoriopedia-upgrade_0.0.1'; companion.mkdir()
-        metadata=dict(name='tc-factoriopedia-upgrade',version='0.0.1',title='Same-engine installation fixture',author='test fixture',factorio_version='2.1',dependencies=['base','tweaked-computers'])
+        companion=mods/(companion_name+'_0.0.1'); companion.mkdir()
+        metadata=dict(name=companion_name,version='0.0.1',title='Same-engine installation fixture',author='test fixture',factorio_version='2.1',dependencies=['base','tweaked-computers'])
         (companion/'info.json').write_text(json.dumps(metadata)); (companion/'control.lua').write_text('-- Owning mod executes the fixture.\n')
-        enabled=[dict(name=n,enabled=True) for n in ('base','tweaked-computers','tc-factoriopedia-upgrade')]
+        enabled=[dict(name=n,enabled=True) for n in ('base','tweaked-computers',companion_name)]
         enabled += [dict(name=n,enabled=mode=='space-age') for n in ('space-age','quality','elevated-rails','recycler')]
         (mods/'mod-list.json').write_text(json.dumps(dict(mods=enabled)))
         shutil.copy2(legacy_test,mods/legacy_test.name)
@@ -86,14 +94,14 @@ def main():
         installed=folder/'installed.zip'; shutil.copy2(snapshot,installed)
         (mods/legacy_test.name).unlink(); shutil.copy2(versioned,mods/versioned.name)
         metadata['version']='0.0.2'; (companion/'info.json').write_text(json.dumps(metadata))
-        renamed=mods/'tc-factoriopedia-upgrade_0.0.2'; companion.rename(renamed); companion=renamed
-        after=write/'saves/tc-fp-installed.zip'
+        renamed=mods/(companion_name+'_0.0.2'); companion.rename(renamed); companion=renamed
+        after=write/('saves/'+installed_name+'.zip')
         phases.append(cold_phase(args.factorio,cfg,mods,installed,folder,'installation','TC_UPGRADE_OK',after))
         ordinary=folder/'ordinary.zip'; shutil.copy2(after,ordinary)
         phases.append(cold_phase(args.factorio,cfg,mods,ordinary,folder,'ordinary','TC_UPGRADE_ORDINARY_OK'))
-        metadata['version']='0.0.3'; (companion/'info.json').write_text(json.dumps(metadata)); companion.rename(mods/'tc-factoriopedia-upgrade_0.0.3')
+        metadata['version']='0.0.3'; (companion/'info.json').write_text(json.dumps(metadata)); companion.rename(mods/(companion_name+'_0.0.3'))
         later=folder/'later.zip'; shutil.copy2(after,later)
-        phases.append(cold_phase(args.factorio,cfg,mods,later,folder,'later-reconciliation','TC_FACT_LATER_RECONCILIATION_OK'))
+        phases.append(cold_phase(args.factorio,cfg,mods,later,folder,'later-reconciliation',later_marker))
         summary['cases'].append(dict(mode=mode,create_exit=result.returncode,phases=phases,passed=all(p['passed'] for p in phases)))
         (args.output/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
     print(json.dumps(summary))

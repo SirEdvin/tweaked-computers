@@ -834,6 +834,103 @@
       },
       "width": 1
     },
+    "production_statistics": {
+      "directions": {
+        "east": {
+          "network": {
+            "center": [
+              0,
+              0
+            ],
+            "color": [
+              0.25,
+              0.8,
+              1
+            ],
+            "contacts": {
+              "green": [
+                0.1,
+                0.07
+              ],
+              "red": [
+                0.1,
+                -0.07
+              ]
+            }
+          }
+        },
+        "north": {
+          "network": {
+            "center": [
+              0,
+              0
+            ],
+            "color": [
+              0.25,
+              0.8,
+              1
+            ],
+            "contacts": {
+              "green": [
+                0.07,
+                -0.1
+              ],
+              "red": [
+                -0.07,
+                -0.1
+              ]
+            }
+          }
+        },
+        "south": {
+          "network": {
+            "center": [
+              0,
+              0
+            ],
+            "color": [
+              0.25,
+              0.8,
+              1
+            ],
+            "contacts": {
+              "green": [
+                -0.07,
+                0.1
+              ],
+              "red": [
+                0.07,
+                0.1
+              ]
+            }
+          }
+        },
+        "west": {
+          "network": {
+            "center": [
+              0,
+              0
+            ],
+            "color": [
+              0.25,
+              0.8,
+              1
+            ],
+            "contacts": {
+              "green": [
+                -0.1,
+                -0.07
+              ],
+              "red": [
+                -0.1,
+                0.07
+              ]
+            }
+          }
+        }
+      },
+      "width": 1
+    },
     "recipe_searcher": {
       "directions": {
         "east": {
@@ -935,6 +1032,6 @@
   "engine": "2.1.23",
   "source": {
     "path": "scripts/device-definitions.lua",
-    "sha256": "b109b6f9feaf65c14f580a4ae4264992946e841b477689065034e3da0471cdf8"
+    "sha256": "7f4be980fe706018749c200d4a4a16bf2845ef4c01efb0273d2ffd3860e482e5"
   }
 }

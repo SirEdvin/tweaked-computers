@@ -7,7 +7,7 @@ Make programmable devices behave as coherent Factorio entities with correct plac
 ## Requirements
 
 ### Requirement: Pinned engine and optional expansion
-The mod SHALL target Factorio 2.0.77 and operate with base alone or with Space Age enabled. Expansion materials/technology MUST NOT be required by its base recipes. Ordinary radar modems SHALL work without Space Age; the advanced radar entity, item, recipe and technology SHALL exist only with Space Age enabled. Signal and device quality identities SHALL remain correct in both configurations.
+The mod SHALL target Factorio 2.1.23 and operate with base alone or with Space Age enabled. Expansion materials/technology MUST NOT be required by its base recipes. Ordinary radar modems SHALL work without Space Age; the advanced radar entity, item, recipe and technology SHALL exist only with Space Age enabled. Signal and device quality identities SHALL remain correct in both configurations.
 
 #### Scenario: Base-only installation
 - **WHEN** the packaged mod is loaded with base and no expansion

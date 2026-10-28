@@ -331,9 +331,9 @@ function M.run()
       assert(#s.reference_entries==#help.topics and #r.topics.items==#help.topics)
       local combined=''; for _,topic in ipairs(help.topics) do if not (topic.id or ''):find('tutorial.',1,true) then combined=combined..topic.text end end
       assert(combined==help.text..'\n','categorized reference dropped or duplicated text')
-      select(r.filters.category,5); assert(#s.reference_entries==9)
+      select(r.filters.category,5); assert(#s.reference_entries==10)
       local titles={['Discovery and identity']=true,['Logic handler']=true,['KV database']=true,
-        Monitor=true,Configurator=true,['Recipe Searcher']=true,['Factoriopedia Interface']=true,['Radar modem']=true,['Programmable speaker']=true}
+        Monitor=true,Configurator=true,['Recipe Searcher']=true,['Factoriopedia Interface']=true,['Production Statistics']=true,['Radar modem']=true,['Programmable speaker']=true}
       for _,index in ipairs(s.reference_entries) do
         local title=help.topics[index].title; assert(titles[title]); titles[title]=nil
       end
@@ -344,7 +344,14 @@ function M.run()
       r.filters.search.text='playNote'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(#s.reference_entries==1 and reference_text(r):find('getSounds',1,true))
       r.filters.search.text='RECIPE SEARCHER'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
-      assert(#s.reference_entries==1 and reference_text(r):find('findRecipes',1,true))
+      assert(#s.reference_entries==2 and reference_text(r):find('findRecipes',1,true))
+      local recipe_matches={['Recipe Searcher']=true,['Production Statistics']=true}
+      for _,index in ipairs(s.reference_entries) do
+        local title=help.topics[index].title; assert(recipe_matches[title]); recipe_matches[title]=nil
+      end
+      assert(next(recipe_matches)==nil,'shared-unlock search must retain both families')
+      r.filters.search.text='PRODUCTION STATISTICS'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
+      assert(#s.reference_entries==1 and reference_text(r):find('getHistory',1,true) and reference_text(r):find('getTotals',1,true))
       r.filters.search.text='KV DATABASE'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(#s.reference_entries==1 and reference_text(r):find('hgetall',1,true))
       assert(not r.actions,'Reference has no action controls')
@@ -369,14 +376,14 @@ function M.run()
       r.filters.search.text='no-topic-here'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(#s.reference_entries==0 and reference_text(r):find('No matching topic',1,true))
     end)
-    group('workspace-context-help-all-eight-live-families-filter-clear-delay-no-effects',function()
+    group('workspace-context-help-all-nine-live-families-filter-clear-delay-no-effects',function()
       tab(f,2); local input=f.content.console.prompt.command
       input.text='help_kept={value=42}; help_alias=help_kept'
       editor.on_text{player_index=a.index,element=input,tick=tick}
       editor.on_confirmed{player_index=a.index,element=input,tick=tick}
       rec.power_checked_tick=tick; assert(scheduler.dispatch(rec,tick))
       assert(rec.shell and not rec.shell.diagnostic and #rec.shell.pending==0)
-      local devices={db,mon,build('logic',30,120),build('configurator',33,120),build('recipe_searcher',36,120),build('factoriopedia_interface',39,120)}
+      local devices={db,mon,build('logic',30,120),build('configurator',33,120),build('recipe_searcher',36,120),build('factoriopedia_interface',39,120),build('production_statistics',42,120)}
       for _,name in ipairs({'radar','programmable-speaker'}) do
         local body=assert(surface.create_entity{name=name,position={40+#devices*4,120},force='player'})
         devices[#devices+1]=assert(lifecycle.build(body))

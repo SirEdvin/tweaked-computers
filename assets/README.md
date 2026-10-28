@@ -12,7 +12,11 @@ The additive seventh device, **Factoriopedia Interface**, is an upright blue
 catalogue terminal with stepped reference cards and a brass side dial. Its 1×1
 body uses the same ground-projected Network contacts and compact status masks.
 It has its own MIT geometry in `service_rack.py`; no existing PNG is replaced.
-The expanded inventory has 207 PNGs, 80 contacts and seven distinct silhouettes.
+The additive eighth device, **Production Statistics**, is a brass-roller chart
+recorder with ruled paper, a blue trace and a raised twin-gauge head. Its original
+MIT mesh in `service_rack.py` uses the same materials/contacts/status convention;
+it is not a recolored catalogue terminal. No existing PNG is replaced.
+The expanded inventory has 236 PNGs, 88 contacts and eight distinct silhouettes.
 
 - Computer: folded-steel L desk, recessed display, separate keyboard apron and
   asymmetric cooling hump.
@@ -83,7 +87,7 @@ All image paths start `__tweaked-computers__/assets/`.
 
 | Device | Local footprint | Frame / ground pivot (high-resolution pixels) |
 | --- | --- | --- |
-| computer, kv, monitor, recipe_searcher | 1×1 | 160×160 / (80,80) |
+| computer, kv, monitor, recipe_searcher, factoriopedia_interface, production_statistics | 1×1 | 160×160 / (80,80) |
 | logic | 3×1 | 320×320 / (160,160) |
 | configurator | 2×1 | 320×320 / (160,160) |
 

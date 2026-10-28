@@ -7,7 +7,7 @@ Let players inspect physical peripherals directly through safe, read-only native
 ## Requirements
 
 ### Requirement: Native inspection for every peripheral family
-The mod SHALL provide a device-local inspector for KV Database, Monitor, Logic Handler, Configurator, Recipe Searcher and Factoriopedia Interface through normal entity opening. The window SHALL identify the logical device rather than a helper. Recipe Searcher and Factoriopedia Interface SHALL receive basic identity/status inspection, not recipe-search or catalogue interfaces. Computers SHALL retain their existing workspace.
+The mod SHALL provide a device-local inspector for KV Database, Monitor, Logic Handler, Configurator, Recipe Searcher, Factoriopedia Interface and Production Statistics through normal entity opening. The window SHALL identify the logical device rather than a helper. Recipe Searcher, Factoriopedia Interface and Production Statistics SHALL receive basic identity/status inspection, not recipe-search, catalogue or statistics-query interfaces. Computers SHALL retain their existing workspace.
 
 #### Scenario: Open each peripheral
 - **WHEN** an authorized player uses normal entity-open on any of these peripheral families
@@ -22,6 +22,11 @@ The mod SHALL provide a device-local inspector for KV Database, Monitor, Logic H
 - **WHEN** an authorized player normally opens a powered or unpowered Factoriopedia Interface
 - **THEN** the exact peripheral name is copyable and its type and availability are visible through the existing player-scoped inspector
 - **AND** opening or refreshing performs no item/fluid catalogue enumeration, metadata query, world mutation or guest execution.
+
+#### Scenario: Basic Production Statistics inspector
+- **WHEN** an authorized player opens a powered or unpowered statistics device
+- **THEN** its exact peripheral name remains selectable/copyable and its availability is explicit
+- **AND** opening or refreshing the inspector performs no production-statistics queries, exposes no force/surface selector and executes no guest program.
 
 ### Requirement: Exact copyable peripheral identity
 Every inspector SHALL show the localized device name, peripheral type, availability and exact name used by peripheral discovery. The API name SHALL be read-only and selectable, with an explicit action that selects it for native Copy. Copy selection SHALL contain only the identifier, without labels, quotes or added whitespace. Inspection SHALL NOT rename devices.
