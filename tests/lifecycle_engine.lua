@@ -12,6 +12,8 @@ local model=require('scripts.monitor-model')
 local logic=require('scripts.services.logic')
 local defs=require('scripts.device-definitions')
 local editor=require('scripts.ui.editor-model')
+local undo=require('scripts.computer-undo')
+local compiler=require('scripts.runtime.compiler')
 local M={}; local loaded=false
 local function nop() end
 local function f() return storage.tc12 end
@@ -19,6 +21,7 @@ local function group(name) f().groups=f().groups+1; log('TC_CONTRACT '..name) en
 local function build(kind,x,y,surface)
   local b=assert((surface or game.surfaces[1]).create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
   lifecycle.on_built{entity=b}; local r=assert(registry.by_entity(b)); lifecycle.power_entity(r).energy=defs.devices[kind].watts/30; r.powered=true
+  assert(r.body.minable_flag,'new '..kind..' must be mineable')
   return r
 end
 local function mine(rec)
@@ -98,6 +101,204 @@ local function fixture_state(rec)
   for _,k in ipairs({'state','state_bytes','state_nodes','state_entries','state_sizes','state_node_sizes'}) do rec[k]=c[k] end
   assert(rec.state_bytes==limits.state_bytes,'fixture must reach accepted state capacity')
 end
+local function undo_contract(legacy,case)
+  local real_game=game
+  local player={index=9999,force=game.forces.player,print=nop}
+  game=setmetatable({get_player=function(index) if index==player.index then return player end; return real_game.get_player(index) end},{__index=function(_,key) return real_game[key] end})
+  local ok,failure=pcall(function()
+  local surface=game.surfaces[1]
+  local overlap=assert(surface.create_entity{name=defs.devices.computer.entity_name,position={-24,4},force=player.force})
+  local staged_ghost=assert(surface.create_entity{name='entity-ghost',inner_name=overlap.name,position=overlap.position,force=player.force},'restoration ghost must be stageable before rollback')
+  assert(overlap.valid and staged_ghost.valid); overlap.destroy(); assert(staged_ghost.valid); staged_ghost.destroy()
+  local source_rec=build('computer',-20,0)
+  source_rec.saved_source=string.rep('s',limits.source_bytes); source_rec.saved_revision=3; source_rec.label='undo label'
+  source_rec.active={source=string.rep('a',limits.source_bytes),revision=2,api_version=1,compiler_version=1,storage_version=1,handlers={start=true}}
+  fixture_state(source_rec)
+  local payload={version=1,tick=game.tick,operation='fixture-undo',player=player.index,force=player.force.index,
+    surface=surface.index,name=source_rec.body.name,quality='normal',position={x=-19.5,y=.5},snapshot=snapshots.computer_snapshot(source_rec,false)}
+  lifecycle.remove(source_rec.id,'fixture',true)
+  local ghost=assert(surface.create_entity{name='entity-ghost',inner_name=payload.name,position=payload.position,force=player.force,tags={tc_computer_undo=payload,tc_computer=legacy,tc_computer_seen='private history marker'}})
+  local event={entity=ghost,player_index=player.index,tick=game.tick}
+  undo.on_ghost(event)
+  undo.on_applied{player_index=player.index,tick=game.tick,actions={{type='removed-entity',surface_index=surface.index,target={name=payload.name,position=payload.position},tags={tc_computer_undo=payload}}}}
+  assert(ghost.tags.tc_computer_ghost==ghost.unit_number and ghost.tags.tc_settings.computer.saved_source==payload.snapshot.saved_source)
+  local inv=game.create_inventory(1); inv[1].set_stack{name='blueprint',count=1}
+  local bp=inv[1]; local mapping=bp.create_blueprint{surface=surface,force=player.force,area={{-21,-1},{-18,2}}}
+  assert(blueprints.prepare(bp,mapping))
+  local entities=bp.get_blueprint_entities(); assert(#entities==1)
+  assert(entities[1].tags.tc_computer_undo==nil and entities[1].tags.tc_computer_ghost==nil and entities[1].tags.tc_computer==nil and entities[1].tags.tc_computer_seen==nil)
+  assert(entities[1].tags.tc_settings.computer.saved_source==payload.snapshot.saved_source and entities[1].tags.tc_settings.computer.state==nil)
+  local original=ghost.tags
+  for _,bad in ipairs({'malformed undo',{snapshot='malformed snapshot'},{snapshot={version=99}}}) do
+    ghost.tags={tc_computer_undo=bad}
+    mapping=bp.create_blueprint{surface=surface,force=player.force,area={{-21,-1},{-18,2}}}
+    assert(not pcall(blueprints.prepare,bp,mapping) and #(bp.get_blueprint_entities() or {})==0,'malformed recovery copy published blank or leaked undo data')
+  end
+  ghost.tags=original
+  local tags=ghost.tags
+  local robot=surface.create_entity{name='construction-robot',position={-14,0},force=player.force}
+  local material=game.create_inventory(1); material[1].set_stack{name='tc-computer',count=1}; material[1].tags={tc_computer=legacy}
+  for _,operation in ipairs({'ordinary','blueprint'}) do
+    local copy=assert(surface.create_entity{name=payload.name,position={-26,0},force=player.force})
+    lifecycle.on_built{entity=copy,robot=robot,consumed_items=material,tags=operation=='blueprint' and {tc_settings=snapshots.settings(source_rec)} or nil}
+    local r=assert(registry.by_entity(copy)); assert(r.status=='stopped' and not r.active and not r.run_id and next(r.state)==nil)
+    assert(r.saved_source==(operation=='blueprint' and payload.snapshot.saved_source or '') and r.label==(operation=='blueprint' and payload.snapshot.label or nil))
+    lifecycle.remove(r.id,'fixture',true)
+  end
+  local unrelated=assert(surface.create_entity{name=payload.name,position={-14,0},force=player.force})
+  lifecycle.on_built{entity=unrelated,robot=robot,consumed_items=material,tags=tags}
+  assert(not unrelated.valid and ghost.valid and robot.get_inventory(defines.inventory.robot_cargo).get_item_count('tc-computer')==1)
+  local refusals=1
+  for _,bad in ipairs({'malformed undo payload',{version=99},
+    {version=1,tick=payload.tick,operation=payload.operation,player=payload.player,force=payload.force,surface=payload.surface,name=payload.name,quality=payload.quality,position=payload.position,snapshot={version=99}}}) do
+    tags=ghost.tags; tags.tc_computer_undo=bad; ghost.destroy()
+    local failed=assert(surface.create_entity{name=payload.name,position=payload.position,force=player.force})
+    lifecycle.on_built{entity=failed,robot=robot,consumed_items=material,tags=tags}
+    assert(not failed.valid,'malformed restoration published a body'); refusals=refusals+1
+    local retained=surface.find_entities_filtered{type='entity-ghost',position=payload.position,force=player.force}
+    assert(#retained==1 and retained[1].tags.tc_computer_undo~=nil,'refusal discarded the recoverable ghost payload')
+    ghost=retained[1]; local repaired=ghost.tags; repaired.tc_computer_undo=payload; ghost.tags=repaired
+  end
+  local scope=game.create_surface('tc12-undo-scope-'..case); scope.request_to_generate_chunks({0,0},1); scope.force_generate_chunk_requests()
+  local scoped={}; for key,value in pairs(payload) do scoped[key]=value end; scoped.surface=scope.index
+  local expired=assert(scope.create_entity{name='entity-ghost',inner_name=payload.name,position=payload.position,force=player.force,tags={tc_computer_undo=scoped}})
+  undo.on_ghost{entity=expired,player_index=player.index,tick=game.tick}
+  undo.on_applied{player_index=player.index,tick=game.tick,actions={{type='removed-entity',surface_index=scope.index,target={name=payload.name,position=payload.position},tags={tc_computer_undo=scoped}}}}
+  f().expired_scopes=f().expired_scopes or {}
+  f().expired_scopes[#f().expired_scopes+1]={surface=scope,name=scope.name,index=scope.index,unit=expired.unit_number,tags=expired.tags}
+  game.delete_surface(scope)
+  local foreign=game.forces['tc12-undo-foreign'] or game.create_force('tc12-undo-foreign')
+  ghost.force=foreign; tags=ghost.tags; ghost.destroy()
+  local changed=assert(surface.create_entity{name=payload.name,position=payload.position,force=foreign})
+  lifecycle.on_built{entity=changed,robot=robot,consumed_items=material,tags=tags}; refusals=refusals+1
+  assert(not changed.valid and not registry.by_entity(changed))
+  ghost=assert(surface.find_entities_filtered{position=payload.position,type='entity-ghost',ghost_name=payload.name}[1])
+  assert(ghost.force==foreign and ghost.tags.tc_computer_undo.snapshot.state.k1==payload.snapshot.state.k1)
+  ghost.force=player.force
+  for _,failure in ipairs({'current-capacity','partial-placement'}) do
+    tags=ghost.tags; ghost.destroy()
+    local failed=assert(surface.create_entity{name=payload.name,position=payload.position,force=player.force})
+    local state_limit,normalize,staged_power=limits.state_bytes,lifecycle.normalize_power
+    if failure=='current-capacity' then limits.state_bytes=limits.state_bytes-1
+    else lifecycle.normalize_power=function(rec)
+      staged_power=rec.children.power; assert(staged_power.valid)
+      error({code='E_ENGINE',message='injected physical allocation refusal'},0)
+    end end
+    local accepted,reason=pcall(lifecycle.on_built,{entity=failed,robot=robot,consumed_items=material,tags=tags})
+    limits.state_bytes=state_limit; lifecycle.normalize_power=normalize; assert(accepted,reason)
+    assert(not failed.valid and (not staged_power or not staged_power.valid),'refused restoration published partial placement'); refusals=refusals+1
+    local retained=surface.find_entities_filtered{type='entity-ghost',position=payload.position,force=player.force}
+    assert(#retained==1 and retained[1].tags.tc_computer_undo.snapshot.state.k1==payload.snapshot.state.k1)
+    ghost=retained[1]
+  end
+  tags=ghost.tags; ghost.destroy()
+  local forged={tc_computer_ghost=tags.tc_computer_ghost,tc_computer_undo={}}
+  for key,value in pairs(payload) do forged.tc_computer_undo[key]=value end
+  forged.tc_computer_undo.position={x=-13.5,y=.5}
+  local replacement=assert(surface.create_entity{name=payload.name,position={-14,0},force=player.force})
+  lifecycle.on_built{entity=replacement,robot=robot,consumed_items=material,tags=forged}
+  assert(not replacement.valid and #surface.find_entities_filtered{type='entity-ghost',position={-13.5,.5}}==0,'forged scope stole original ghost authority'); refusals=refusals+1
+  local body=assert(surface.create_entity{name=payload.name,position=payload.position,force=player.force})
+  local compile=compiler.compile; compiler.compile=function() error('undo restoration must not compile source') end
+  local accepted,reason=pcall(lifecycle.on_built,{entity=body,robot=robot,consumed_items=material,tags=tags})
+  compiler.compile=compile; assert(accepted,reason)
+  local restored=assert(registry.by_entity(body)); assert(restored.id~=source_rec.id)
+  assert(restored.saved_source==payload.snapshot.saved_source and restored.active.source==payload.snapshot.active.source and restored.state_bytes==limits.state_bytes and restored.label==payload.snapshot.label)
+  assert(restored.status=='stopped' and not restored.run_id and not restored.shell and not restored.output_owner and next(restored.queue)==nil and next(restored.timers)==nil and next(restored.subscriptions)==nil)
+  restored.saved_source='later edit'; lifecycle.on_built{entity=body,tags=tags}; assert(restored.saved_source=='later edit')
+  assert(registry.get().computer_undo.ghosts[tags.tc_computer_ghost]==nil)
+  local refunds=robot.get_inventory(defines.inventory.robot_cargo).get_item_count('tc-computer')
+  for _,item in ipairs(surface.find_entities_filtered{type='item-entity',area={{-24,-3},{-10,3}}}) do
+    assert(item.stack.name=='tc-computer'); refunds=refunds+item.stack.count; item.destroy()
+  end
+  assert(refunds==refusals and material[1].count==1,'refused material conservation failed')
+  lifecycle.remove(restored.id,'fixture',true)
+  -- Refuse native ghost allocation before destroying the only owned recovery body.
+  ghost=assert(surface.create_entity{name='entity-ghost',inner_name=payload.name,position=payload.position,force=player.force,tags={tc_computer_undo=payload}})
+  undo.on_ghost{entity=ghost,player_index=player.index,tick=game.tick}
+  undo.on_applied{player_index=player.index,tick=game.tick,actions={{type='removed-entity',surface_index=surface.index,target={name=payload.name,position=payload.position},tags={tc_computer_undo=payload}}}}
+  tags=ghost.tags; ghost.destroy()
+  local held=assert(surface.create_entity{name=payload.name,position=payload.position,force=player.force})
+  local host_game,state_limit=game,limits.state_bytes
+  game=setmetatable({surfaces={[surface.index]={create_entity=function() if case=='malformed' then error('injected rollback allocation failure') end; return nil end}}},{__index=function(_,key) return host_game[key] end})
+  limits.state_bytes=limits.state_bytes-1
+  local refused,reason=pcall(lifecycle.on_built,{entity=held,robot=robot,consumed_items=material,tags=tags})
+  game=host_game; limits.state_bytes=state_limit; assert(refused,reason)
+  local ownership=registry.get().computer_undo.ghosts[held.unit_number]
+  assert(held.valid and not held.minable_flag and not registry.by_entity(held) and ownership.entity==held and ownership.payload.snapshot.state.k1==payload.snapshot.state.k1)
+  lifecycle.on_built{entity=held}
+  local recovered=assert(registry.by_entity(held)); assert(recovered.state_bytes==limits.state_bytes and recovered.saved_source==payload.snapshot.saved_source and recovered.status=='stopped')
+  assert(registry.get().computer_undo.ghosts[held.unit_number]==nil)
+  lifecycle.remove(recovered.id,'fixture',true); material.destroy(); robot.destroy(); inv.destroy()
+  end)
+  game=real_game; assert(ok,failure)
+  group('host-event-double-undo-max-source-state-ghost-sanitization-replay-refusal-duplicate-delivery-'..case)
+end
+local function history_contract()
+  local real_game=game; local players={}; local tick=game.tick; local reads=0
+  for _,index in ipairs({9001,9002}) do
+    local items={undo={},redo={}}; local stack={}
+    for _,side in ipairs({'undo','redo'}) do
+      local name=side
+      stack['get_'..name..'_item_count']=function() reads=reads+1; return #items[name] end
+      stack['get_'..name..'_item']=function(i) return items[name][i] end
+      stack['set_'..name..'_tag']=function(i,j,key,value) local a=items[name][i][j]; a.tags=a.tags or {}; a.tags[key]=value end
+    end
+    players[index]={index=index,force=game.forces.player,print=nop,undo_redo_stack=stack,items=items}
+  end
+  local host={tick=tick,get_player=function(index) return players[index] or real_game.get_player(index) end}
+  game=setmetatable(host,{__index=function(_,key) return real_game[key] end})
+  local ok,failure=pcall(function()
+    local a=build('computer',-38,0); local b=build('computer',-34,0)
+    a.state.marker='first player'; b.state.marker='second player'
+    local function action(rec) return {type='removed-entity',surface_index=rec.surface_index,target={name=rec.body.name,position=rec.body.position}} end
+    local first,second=players[9001],players[9002]
+    first.items.undo={{action(a)}}
+    undo.capture(a,{name=defines.events.on_player_mined_entity,player_index=first.index})
+    undo.capture(b,{name=defines.events.on_player_mined_entity,player_index=second.index})
+    table.insert(first.items.undo,1,{action(a)}); second.items.undo={{action(b)}}
+    undo.settle()
+    assert(first.items.undo[1][1].tags.tc_computer_undo.snapshot.state.marker=='first player')
+    assert(second.items.undo[1][1].tags.tc_computer_undo.snapshot.state.marker=='second player')
+    assert(not first.items.undo[2][1].tags.tc_computer_undo,'old same-coordinate action was tagged')
+    assert(#registry.get().computer_undo.pending==0)
+    local before_reads=reads; undo.maintain(tick); undo.maintain(tick+1); assert(reads==before_reads,'settled actions must not poll histories')
+    undo.on_marked{entity=b.body,player_index=second.index}
+    table.insert(second.items.undo,1,{action(b)}); undo.settle()
+    b.state.marker='changed after mark'
+    undo.capture(b,{name=defines.events.on_robot_mined_entity})
+    assert(second.items.undo[1][1].tags.tc_computer_undo.snapshot.state.marker=='changed after mark')
+    local identity,status,state=b.id,b.status,b.state
+    undo.on_cancelled{entity=b.body,player_index=second.index}
+    assert(b.undo_action==nil and b.id==identity and b.status==status and b.state==state)
+    undo.on_marked{entity=a.body,player_index=first.index}; first.items.undo={}; first.items.redo={}; host.tick=tick+1
+    undo.settle(); assert(#registry.get().computer_undo.pending==0)
+    undo.capture(a,{name=defines.events.on_robot_mined_entity})
+    assert(#first.items.undo==0 and #first.items.redo==0,'discarded history manufactured recovery')
+    undo.capture(b,{name=defines.events.on_entity_died,player_index=second.index})
+    undo.capture(b,{name=defines.events.script_raised_destroy,player_index=second.index})
+    assert(#registry.get().computer_undo.pending==0,'non-undo destruction manufactured history')
+    -- Applied-event double for undo arriving before deferred native tagging.
+    undo.capture(a,{name=defines.events.on_player_mined_entity,player_index=first.index})
+    local native=action(a); local surface=a.body.surface; local pos=a.body.position; local name=a.body.name
+    lifecycle.remove(a.id,'fixture',true)
+    local ghost=assert(surface.create_entity{name='entity-ghost',inner_name=name,position=pos,force=first.force})
+    undo.on_ghost{entity=ghost,player_index=first.index,tick=host.tick}
+    first.items.redo={{{type='built-entity',surface_index=surface.index,target={name='entity-ghost',position=pos}}}}
+    undo.on_applied{player_index=first.index,tick=host.tick,actions={native}}
+    local saved=first.items.redo[1][1].tags.tc_computer_undo
+    assert(saved.snapshot.state.marker=='first player' and ghost.tags.tc_computer_ghost==ghost.unit_number)
+    assert(#registry.get().computer_undo.pending==0)
+    local inverse=first.items.redo[1]; local unit=ghost.unit_number
+    undo.on_removed{entity=ghost}; ghost.destroy(); first.items.redo={}; first.items.undo={{native}}
+    undo.on_applied{player_index=first.index,tick=host.tick,actions=inverse}
+    assert(first.items.undo[1][1].tags.tc_computer_undo.operation==saved.operation)
+    lifecycle.remove(b.id,'fixture',true)
+    assert(registry.get().computer_undo.ghosts[unit]==nil)
+  end)
+  game=real_game; assert(ok,failure)
+  group('history-doubles-interleaved-players-exact-old-action-exclusion-no-polling-mark-time-discard-fast-undo-inverse-transfer')
+end
 script.on_event(defines.events.on_entity_cloned,lifecycle.on_cloned)
 script.on_event(defines.events.script_raised_revive,lifecycle.on_built)
 script.on_event(defines.events.script_raised_built,lifecycle.on_built)
@@ -119,20 +320,33 @@ end)
 function M.run()
   registry.initialize(); storage.tc12={groups=0,phase='start'}
   monitor_stacks()
+  local surface=game.surfaces[1]; local material=game.create_inventory(1)
+  material[1].set_stack{name='tc-kv',count=1}; material[1].tags={tc_kv={version=99}}
+  local robot=assert(surface.create_entity{name='construction-robot',position={-28,0},force='player'})
+  local body=assert(surface.create_entity{name=defs.devices.kv.entity_name,position={-28,0},force='player'})
+  lifecycle.on_built{entity=body,robot=robot,consumed_items=material}
+  local cargo=robot.get_inventory(defines.inventory.robot_cargo)
+  assert(not body.valid and cargo.get_item_count('tc-kv')==1 and cargo[1].tags.tc_kv.version==99 and material[1].count==1)
+  material.destroy(); robot.destroy(); group('malformed-kv-material-still-refused-and-original-refunded')
+  for _,case in ipairs({{name='valid',payload={version=1,saved_source='legacy forbidden',saved_revision=1,state={secret='not imported'}}},{name='malformed',payload='malformed legacy'},{name='unsupported',payload={version=99}}}) do undo_contract(case.payload,case.name) end
+  history_contract()
   local c=build('computer',0,0); runtime.save(c.id,source,0); assert(runtime.activate(c.id,game.tick))
   assert(scheduler.dispatch(c,game.tick)); assert(c.state.boots==1 and next(c.timers))
   runtime.save(c.id,saved,c.saved_revision); c.label='private literal label'
   fixture_state(c)
   local root=registry.get(); root.player_drafts[1]={documents={[c.id]={source='unsaved recoverable draft',base_source=saved,base_revision=c.saved_revision}},session={id=c.id,token=1}}
-  local inv=mine(c); local s=inv[1].tags.tc_computer
-  assert(s.saved_source==saved and s.active.source==source and s.label==c.label and s.state.k1==c.state.k1)
+  local inv=mine(c)
+  assert(inv[1].tags.tc_computer==nil,'computer mining must produce plain hardware')
   assert(root.player_drafts[1].documents[c.id].source=='unsaved recoverable draft')
   local restored=replace(inv,0,0)
   assert(restored.id~=c.id and restored.status=='stopped' and not restored.run_id and next(restored.queue)==nil and next(restored.timers)==nil and next(restored.subscriptions)==nil)
-  assert(restored.state_bytes==65536 and restored.active.source==source and restored.saved_source==saved)
+  assert(next(restored.state)==nil and restored.active==nil and restored.saved_source=='' and restored.label==nil)
   assert(not lifecycle.remove(c.id,'stale',true) and restored.body.valid)
+  -- The same inert validated snapshot remains available for operation-owned undo.
+  snapshots.restore_computer(restored,snapshots.computer_snapshot(c,false),false)
+  assert(restored.state_bytes==65536 and restored.active.source==source and restored.saved_source==saved)
   inv.destroy(); f().restored=restored.id
-  group('maximum-state-distinct-source-material-item-new-identity-stopped-draft-recovery')
+  group('maximum-state-plain-material-item-new-identity-stopped-draft-recovery')
   local player={valid=true,index=7,force=restored.body.force,surface=restored.body.surface,can_reach_entity=function() return true end}
   local session,draft=editor.open(player,restored.id)
   editor.action(player,session.token,'review-active',game.tick)
@@ -244,6 +458,25 @@ function M.on_tick(event)
   loaded=false
   assert(event.tick<x.start_tick+1800,'compact lifecycle scenario deadline exceeded')
   if x.phase=='start' then
+    for _,scope in ipairs(x.expired_scopes) do
+      if game.surfaces[scope.index] or registry.get().computer_undo.ghosts[scope.unit] then return end
+    end
+    for _,scope in ipairs(x.expired_scopes) do
+      assert(not scope.surface.valid)
+      local fresh=game.create_surface(scope.name); fresh.request_to_generate_chunks({0,0},1); fresh.force_generate_chunk_requests()
+      scope.tags.tc_computer_undo.surface=fresh.index
+      local pos=scope.tags.tc_computer_undo.position
+      local wrong=assert(fresh.create_entity{name=defs.devices.computer.entity_name,position=pos,force='player'})
+      local material=game.create_inventory(1); material[1].set_stack{name='tc-computer',count=1}
+      lifecycle.on_built{entity=wrong,tags=scope.tags,consumed_items=material}; assert(not wrong.valid)
+      local drops=fresh.find_entities_filtered{type='item-entity'}; assert(#drops==1 and drops[1].stack.name=='tc-computer' and drops[1].stack.count==1 and material[1].count==1)
+      material.destroy()
+      local replacement=build('computer',pos.x,pos.y,fresh); assert(replacement.saved_source=='' and next(replacement.state)==nil)
+      replacement.saved_source='later ordinary placement'; lifecycle.on_built{entity=replacement.body,tags=scope.tags}
+      assert(replacement.saved_source=='later ordinary placement' and replacement.body.valid)
+      game.delete_surface(fresh)
+    end
+    log('TC_NATIVE_UNDO_DELETED_RECREATED_SURFACES_OK '..#x.expired_scopes); x.expired_scopes=nil
     -- Genuine on_tick clone events, all six families, including native area helper clones.
     x.clones={}
     for _,kind in ipairs(defs.order) do
@@ -340,6 +573,7 @@ function M.on_tick(event)
     local cargo=x.chest.get_inventory(defines.inventory.chest)
     assert(cargo.insert{name='tc-monitor',count=50}==50)
     assert(surf.create_entity{name='entity-ghost',inner_name=defs.devices.monitor.entity_name,position={2,16},force='player'})
+    x.robot_snapshot=snapshots.computer_snapshot(r,false)
     assert(r.body.order_deconstruction('player')); x.phase='mining'
   elseif x.phase=='mining' then
     -- Finish the fresh-stack construction first, so the robot cannot choose
@@ -363,8 +597,10 @@ function M.on_tick(event)
     x.monitor_inventory=game.create_inventory(2)
     assert(x.monitor_inventory[1].transfer_stack(plain) and x.monitor_inventory[2].transfer_stack(tagged))
     log('TC_NATIVE_MONITOR_ROBOT_COUNTS_OK fresh=49 built=1 mined-tagged=1')
-    assert(inventory.get_item_count('tc-computer')==1 and stack.tags.tc_computer.state.k1 and #stack.tags.tc_computer.saved_source==limits.source_bytes)
+    assert(inventory.get_item_count('tc-computer')==1 and stack.tags.tc_computer==nil)
     local r=replace({[1]=stack},4,12)
+    assert(next(r.state)==nil and r.saved_source=='' and r.active==nil and r.status=='stopped')
+    snapshots.restore_computer(r,x.robot_snapshot,false)
     assert(r.state_bytes==65536 and r.status=='stopped' and r.active.source==x.expected_active and next(r.timers)==nil)
     x.robot_id=r.id; x.alias=r; x.state_alias=r.state; x.active_alias=r.active
     stack.clear(); x.generator.power_production=0

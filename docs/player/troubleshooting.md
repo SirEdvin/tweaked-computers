@@ -18,9 +18,27 @@ save before manual repair; redact secrets or private source literals before repo
   needs repair; `E_BUDGET` needs less per-callback work, not pcall/busy loops or
   increased caps. Divide useful work across named timers. A healthy neighbor's
   scheduling does not imply your callback can do unlimited work.
-- Lost draft: recovery action with no selected computer opens retained drafts.
-  Copy a selected old identity into a new draft; Save and Run separately. Eight
-  slots are bounded; forgetting is explicit. Save the game for durable recovery.
+- Lost draft: Ctrl+left-click another accessible computer, open Maintenance and
+  review/copy the retained old identity's draft; Save and Run separately. Empty
+  ground does not open recovery. Eight slots are bounded; forgetting is explicit.
+  Save the game for durable recovery.
+- Empty replacement after pickup: computer items are plain hardware. Ordinary
+  replacement is blank and stopped; use a source-only blueprint/clipboard copy or
+  qualifying native undo. Undo restores saved source/label/state into a **new stopped
+  identity**, never the removed program's execution. Private drafts remain under
+  the original identity; review/copy them through another accessible computer.
+- Old programmed items after update: all old `tc_computer` payloads are ignored,
+  including malformed/unsupported ones. There is no item-data recovery. This does
+  not reset placed computers, active programs, drafts, KV data/deadlines or monitors.
+  Restore the complete pre-update save and matching old mod archive to roll back;
+  a mod-only downgrade cannot recover discarded item contents.
+- Undo unavailable/refused: recovery follows native per-player history and the
+  exact original restoration ghost, not coordinates or a permanent archive. Keep
+  valid history/ghost data and the refusal diagnostic. Old history without a
+  snapshot cannot recover earlier removals; cancelling a mark before removal only
+  cancels the order. If rollback cannot allocate a ghost, keep the inert,
+  non-mineable body and save for host repair. Do not erase data or activate source
+  to force recovery.
 - State seems stale: edits/Stop/Apply retain state intentionally. Stop then confirm
   Reset State only when you want to delete that computer's application state.
 

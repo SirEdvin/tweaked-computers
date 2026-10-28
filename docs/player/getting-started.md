@@ -19,6 +19,14 @@
    names require their corresponding installed prototypes. This guide does not
    claim later Factorio engines or arbitrary mod combinations are verified.
 
+**Unreleased computer-storage change:** computer items are plain hardware.
+Ordinary pickup/replacement loses computer contents, and old programmed item
+payloads are ignored without import or recovery. Placed computers, active programs,
+private drafts and KV/monitor data are not reset. Back up the complete save and
+matching mod archive first; restore both for rollback, not just the old mod.
+Use [source-only copies or qualifying stopped undo](lifecycle.md#undo-and-redo)
+when preserving a program or a removed computer's saved state.
+
 Verification on 2.1.23 is **headless-only**. Keep the pre-conversion save, 2.0.77
 engine and matching mod ZIP for rollback; do not downgrade a converted save.
 The following graphical, audio and connected-client checks were performed on

@@ -6,6 +6,10 @@ script.on_event(defines.events.on_runtime_mod_setting_changed,budgets.refresh)
 local registry = require('scripts.registry')
 -- All trusted imports and hook registration occur at control parsing time.
 local scheduler = require('scripts.scheduler')
+if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixture']
+  and settings.startup['tc-smoke-production-fixture'].value=='tests.monitor_demand_engine' then
+  require('tests.monitor_demand_observer')
+end
 local lifecycle = require('scripts.lifecycle')
 local peripheral = require('scripts.services.peripheral')
 local editor = require('scripts.ui.editor')
@@ -19,6 +23,10 @@ local modem = require('scripts.services.modem')
 local speaker = require('scripts.services.speaker')
 local snapshots = require('scripts.lifecycle-data')
 local blueprints = require('scripts.blueprints')
+local computer_undo = require('scripts.computer-undo')
+script.on_event(defines.events.on_marked_for_deconstruction,computer_undo.on_marked)
+script.on_event(defines.events.on_cancelled_deconstruction,computer_undo.on_cancelled)
+script.on_event({defines.events.on_undo_applied,defines.events.on_redo_applied},computer_undo.on_applied)
 local device_art = require('scripts.device-art')
 editor.register_inspector(require('scripts.ui.network-inspector'))
 script.on_event(defines.events.on_gui_opened,interaction.on_opened)
@@ -43,7 +51,7 @@ script.on_event(defines.events.on_player_setup_blueprint,blueprints.on_setup)
 script.on_event(defines.events.on_entity_settings_pasted,blueprints.on_pasted)
 script.on_event({defines.events.on_pre_surface_deleted,defines.events.on_pre_surface_cleared},lifecycle.on_surface_removed)
 script.on_event(defines.events.on_forces_merging,lifecycle.on_forces_merging)
-script.on_event(defines.events.on_object_destroyed,lifecycle.on_object_destroyed)
+script.on_event(defines.events.on_object_destroyed,function(event) lifecycle.on_object_destroyed(event); computer_undo.on_destroyed(event) end)
 
 local configurator = require('scripts.services.configurator')
 script.on_event({defines.events.on_built_entity,defines.events.on_robot_built_entity,
@@ -58,7 +66,8 @@ script.on_event(defines.events.on_tick,function(event) scheduler.tick(event.tick
 -- same lifecycle in a second mod would create duplicate physical helpers.
 if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixture'] then
   local name=settings.startup['tc-smoke-production-fixture'].value
-  local monitor_state_fixture={['tests.monitor_state_waiting']=true,['tests.monitor_state_preparing']=true,
+  local monitor_state_fixture={['tests.monitor_demand_engine']=true,['tests.monitor_state_idle']=true,['tests.monitor_state_pending']=true,
+    ['tests.monitor_state_waiting']=true,['tests.monitor_state_preparing']=true,
     ['tests.monitor_state_ready']=true,['tests.monitor_state_retiring']=true,
     ['tests.acceptance_monitor_engine']=true,['tests.editor_reference_client_engine']=true,['tests.peripheral_inspector_engine']=true,
     ['tests.peripheral_inspector_client_engine']=true,['tests.peripheral_inspector_upgrade_engine']=true,['tests.ui_live_client_engine']=true,
@@ -149,8 +158,8 @@ if script.active_mods['tc-buffer-upgrade'] and settings.startup['tc-buffer-upgra
   end)
   script.on_load(test.on_load)
   script.on_event(defines.events.on_tick,test.on_tick)
-  script.on_configuration_changed(function()
+  script.on_configuration_changed(function(event)
     registry.initialize(); lifecycle.upgrade_existing(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
-    test.on_configuration_changed()
+    test.on_configuration_changed(event)
   end)
 end

@@ -6,6 +6,7 @@ local limits=require('scripts.runtime.limits')
 local data=require('scripts.runtime.data')
 local errors=require('scripts.runtime.errors')
 local model=require('scripts.monitor-model')
+local monitor=require('scripts.services.monitor')
 local M={computer_snapshot_bytes=131072}
 local MAX=9007199254740991
 local function fail(message) errors.raise('E_ARGUMENT',message) end
@@ -45,7 +46,7 @@ local function state_copy(state)
 end
 function M.import_computer(s,settings_only)
   shape(s,{version=true,saved_source=true,saved_revision=true,active=true,state=true,label=true},6)
-  if s.version~=1 then errors.raise('E_UNSUPPORTED','unsupported computer item; original data retained') end
+  if s.version~=1 then errors.raise('E_UNSUPPORTED','unsupported computer snapshot; original data retained') end
   local c={saved_source=text(s.saved_source,limits.source_bytes),saved_revision=integer(s.saved_revision),label=s.label and text(s.label,limits.identifier_bytes) or nil}
   if s.label~=nil then c.label=text(s.label,limits.identifier_bytes) end
   if not settings_only then
@@ -56,6 +57,11 @@ function M.import_computer(s,settings_only)
   local bytes=#c.saved_source+(c.active and #c.active.source or 0)+(c.state_bytes or 16)+limits.state_entries*80+8192
   if bytes>M.computer_snapshot_bytes then errors.raise('E_CAPACITY','computer snapshot metadata reservation exceeded') end
   return c
+end
+function M.computer_settings(s)
+  if type(s)~='table' or getmetatable(s)~=nil then fail('plain computer snapshot required') end
+  local c=M.import_computer({version=s.version,saved_source=s.saved_source,saved_revision=s.saved_revision,label=s.label},true)
+  return {version=1,saved_source=c.saved_source,saved_revision=c.saved_revision,label=c.label}
 end
 function M.computer_snapshot(rec,settings_only)
   if rec.schema_version~=1 then errors.raise('E_UNSUPPORTED','unsupported computer schema; source and state retained') end
@@ -125,10 +131,11 @@ function M.apply_settings(rec,s)
     M.restore_monitor(rec,settings)
     local root=registry.get(); local state=root.monitors; local g=state and state.groups[state.membership[rec.id]]
     if g then
-      local m=g.model
-      model.scale(m,g.width_tiles,g.height_tiles,function() end,settings.scale)
+      local m=g.model; local scale=m.scale
+      local resized,w,h=model.scale(m,g.width_tiles,g.height_tiles,function() end,settings.scale)
       m.fg=settings.fg; m.bg=settings.bg; m.blink=settings.blink; m.palette=settings.palette; m.revision=m.revision+1
       model.invalidate(m)
+      monitor.settings_changed(rec,g,resized,w,h,scale~=m.scale)
     end
   elseif s.computer~=nil or s.monitor~=nil then fail('unexpected family settings') end
 end
@@ -148,7 +155,6 @@ function M.initialize_existing()
     if rec and rec.kind=='computer' and rec.body.valid then M.initialize_computer(rec) end
   end
 end
-lifecycle.register_item_adapter('computer',{initialize=M.initialize_computer,snapshot=function(rec) return M.computer_snapshot(rec,false) end,
-  restore=function(rec,s) return M.restore_computer(rec,s,false) end,tag='tc_computer'})
+lifecycle.register_computer_initializer(M.initialize_computer)
 lifecycle.register_item_adapter('monitor',{initialize=function() end,snapshot=M.monitor_snapshot,restore=M.restore_monitor,tag='tc_monitor'})
 return M
