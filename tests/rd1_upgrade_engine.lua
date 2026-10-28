@@ -172,8 +172,9 @@ function M.on_tick(event)
     local stack=x.inventory[2]
     local body=assert(game.surfaces[1].create_entity{name=defs.devices.computer.entity_name,position={30,0},force='player'})
     lifecycle.on_built{entity=body,consumed_items={[1]=stack}}
-    local item=assert(registry.by_entity(body)); assert(item.saved_source==program and item.state.boots==1 and item.status=='stopped' and not item.run_id)
-    assert(next(item.timers)==nil and next(item.queue)==nil,'material item resumed an obsolete run')
+    local item=assert(registry.by_entity(body)); assert(item.saved_source=='' and next(item.state)==nil and item.status=='stopped' and not item.run_id and not item.active)
+    assert(next(item.timers)==nil and next(item.queue)==nil,'legacy computer item resumed an obsolete run')
+    assert(x.inventory[2].tags.tc_computer.saved_source==program,'fixture must retain a genuine old computer-item payload')
     retained(); x.phase='done'; log('TC_UPGRADE_OK alpha-save-exact-data-wires-refusal-old-rotated-blueprint-tagged-item-no-start-replay')
   end
 end

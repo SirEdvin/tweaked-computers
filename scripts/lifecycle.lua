@@ -9,16 +9,22 @@ local wires=require('scripts.physical-wires')
 local radar=require('scripts.radar')
 local speaker=require('scripts.speaker')
 local M={}
--- Fixed host-only item adapters. The computer lifecycle milestone can install
--- its own adapter without importing services into this ownership module.
+-- Material transport is family-specific; computers own data on their entity.
 local item_adapters={}
-local blueprint_adapter
+local initialize_computer
+function M.register_computer_initializer(fn)
+  assert(not initialize_computer and type(fn)=='function'); initialize_computer=fn
+end
+local blueprint_adapter,undo_adapter
+function M.register_undo_adapter(adapter)
+  assert(not undo_adapter); undo_adapter=adapter
+end
 function M.register_blueprint_adapter(adapter)
   assert(not blueprint_adapter and type(adapter.after_build)=='function' and type(adapter.on_ghost)=='function')
   blueprint_adapter=adapter
 end
 function M.register_item_adapter(kind,adapter)
-  assert((kind=='kv' or kind=='computer' or kind=='monitor') and not item_adapters[kind])
+  assert((kind=='kv' or kind=='monitor') and not item_adapters[kind])
   assert(type(adapter.initialize)=='function' and type(adapter.snapshot)=='function'
     and type(adapter.restore)=='function' and type(adapter.tag)=='string')
   item_adapters[kind]=adapter
@@ -162,10 +168,8 @@ function M.build(body,token)
     rec.powered=M.has_power(rec)
     rec.power_checked_tick=game.tick
     M.normalize_power(rec)
-    -- The later data-bearing lifecycle milestone owns mined snapshots. Until
-    -- then, do not expose a mining path which could discard committed source,
-    -- application state or future KV data. Destruction remains explicit loss.
-    if item_adapters[kind] then item_adapters[kind].initialize(rec)
+    if kind=='computer' and initialize_computer then initialize_computer(rec)
+    elseif item_adapters[kind] then item_adapters[kind].initialize(rec)
     elseif kind=='computer' or kind=='kv' then
       body.minable_flag=false; rec.mining_guard='awaiting-data-bearing-snapshots'
     end
@@ -378,13 +382,21 @@ function M.on_built(event)
   local body=event.entity
   -- Native bodies acquire identities only from a computer-rooted physical proof.
   if speaker.supports(body) or radar.supports(body) then return end
+  if undo_adapter then undo_adapter.on_ghost(event) end
   if blueprint_adapter and blueprint_adapter.on_ghost(event) then return end
   if not body or not body.valid or not defs.by_name[body.name] then return end
   if registry.by_entity(body) then return end -- duplicate build must not replay item data
   local token=event.tags and event.tags.tc_body_token
   if type(token)~='string' or #token>128 then token=nil end
-  local rec,e,retained=M.build(body,token)
-  local material_restored=false
+  local prepared,undo_payload=true,nil
+  if undo_adapter and defs.by_name[body.name]=='computer' then prepared,undo_payload=pcall(undo_adapter.prepare,event) end
+  local rec,e,retained
+  if prepared then rec,e,retained=M.build(body,token) else e=undo_payload; undo_payload=nil end
+  if rec and undo_payload then
+    local ok,err=pcall(undo_adapter.apply,rec,undo_payload)
+    if not ok then e=err; retained=not M.remove(rec.id,'undo_restore_refused',false); rec=nil end
+  end
+  local material_restored=undo_payload~=nil
   if rec and item_adapters[rec.kind] then
     local adapter=item_adapters[rec.kind]; local stack=consumed(event,body)
     -- Only a material item carries data. Blueprint/ghost/script tags must not
@@ -409,13 +421,20 @@ function M.on_built(event)
   end
   if rec and rec.layout_version~=2 then M.upgrade(rec) end
   if not rec then
-    if not retained then refund(event,body); body.destroy() end
+    if not retained then
+      local recovery=undo_adapter and undo_adapter.recovery(event,body)
+      if recovery~=false then refund(event,body); body.destroy() end
+    elseif undo_payload then body.minable_flag=false end
     log('TC placement refused: '..(e and e.message or 'unknown failure'))
+    local player=event.player_index and game.get_player(event.player_index)
+    if player then player.print('Placement refused: '..(e and e.message or 'unknown failure')) end
   end
 end
 function M.on_removed(event)
+  if undo_adapter then undo_adapter.on_removed(event) end
   local rec,role=registry.by_entity(event.entity)
   if rec and rec.physical_version and role=='body' then
+    if undo_adapter then undo_adapter.capture(rec,event) end
     local adapter=item_adapters[rec.kind]
     if event.buffer and adapter then
       -- The engine still owns the body and its temporary mining buffer here.

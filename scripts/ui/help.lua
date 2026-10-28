@@ -40,14 +40,22 @@ Maintenance holds reviewed revision resolution, retained drafts and stopped-only
 Type/paste into the source box. Validate checks the draft without effects.
 Save commits source, but does not change the active run. Run/Apply validates and
 activates the displayed saved revision only. Save first if the draft is dirty.
-Invalid replacements preserve the old run. State survives replacement.
+Invalid candidates preserve the old run. Successful Run/Apply retains state.
+Computer items are plain hardware: ordinary pickup/replacement loses their source/state.
+Clipboard/blueprint/clone copies include saved source/label only and start stopped.
+Native undo restores pre-removal source/label/state into a new stopped identity, not a run.
+Formerly active source is reviewed recovery text; private drafts keep their old identity.
+Old computer-item payloads are ignored with no item-data recovery. Placed records/drafts,
+KV contents/deadlines and monitor data retain their existing save/item policies.
+Undo history/its original ghost is not permanent backup; keep complete save/mod backups.
 Stop cancels callbacks/timers and clears only this run's still-owned logic output.
 Reset State requires Stop and a separate confirmation; it never clears a KV.
 Close/Escape retains the draft. Reopen the same body to recover it.
 Conflict: Review opens Maintenance; read current source, then Rebase (retain draft) or
 Reload (discard your draft). The revision is checked again on either action.
 Eight bounded recovery drafts per player; no automatic dirty-draft eviction.
-Ctrl+left-click (rebindable), empty cursor/no GUI, opens a computer or recovery.
+Ctrl+left-click (rebindable), empty cursor/no GUI, opens an actual computer.
+Review retained drafts through Maintenance; empty-ground clicks do nothing.
 Ordinary opening of a composite peripheral opens its read-only local inspector;
 radars and programmable speakers keep their native configuration windows.
 No computer or running program is required. Select name for copy selects only the API ID;

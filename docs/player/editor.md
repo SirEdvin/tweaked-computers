@@ -106,10 +106,14 @@ native Copy, or confirm forgetting a reviewed slot before reopening the computer
 No automatic clipboard access is claimed. This capacity viewer cannot run a
 computer or reset application data.
 
-A mined computer item contains committed source/state, not your private draft.
-Replacement is stopped with a new ID. **Review active snapshot** and **Copy snapshot
-to draft** in Maintenance recover formerly active source without saving or running.
-See [lifecycle](lifecycle.md).
+A mined computer item is plain hardware: ordinary placement is blank and stopped,
+with a new ID. Native undo of an eligible removal restores saved source/label and
+explicit state into a new stopped identity, not the old process. **Review active
+snapshot** and **Copy snapshot to draft** in Maintenance recover different formerly
+active source without saving or running. Private drafts remain tied to their old
+identity; undo does not replace or adopt them. Blueprint/clipboard copies carry only
+saved source/label, never application state or active source. Old computer-item
+payloads are ignored, with no item-data recovery. See [lifecycle](lifecycle.md).
 
 ## Diagnostics and discovery
 

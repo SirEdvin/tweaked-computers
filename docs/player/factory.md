@@ -89,9 +89,12 @@ Close/Escape retains unsaved text; conflicts require reviewed Rebase or Reload.
 Stop before confirming Reset State.
 
 Ordinary cold load retains source/state/deadlines/subscriptions and the display
-without replaying `start`. Mining preserves committed computer/KV data in items,
-but replacement is a new stopped identity. Blueprints/clones do not copy database
-contents/runtime output. Player changes to native inserter settings remain until
+without replaying `start`. Computer items are plain hardware: ordinary mining and
+replacement loses that computer's source/state. Qualifying native undo restores
+saved source/label/state into a new stopped identity, not its execution. KV items
+still retain contents and absolute deadlines. Blueprints/clipboard copies/clones
+carry saved computer source/label but no application state, database contents or
+runtime output. Player changes to native inserter settings remain until
 another explicit configuration write; read/reconnect does not enforce old settings.
 
 ## Troubleshooting
