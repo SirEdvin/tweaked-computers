@@ -21,9 +21,10 @@ end
 local program="return {api_version=1,handlers={start=function(e) computer.setState('boots',(computer.getState('boots') or 0)+1); computer.every(1000,'timer'); local l=peripheral.find('logic_handler','red'); assert(l); l.setOutput({{signal={type='virtual',name='signal-C'},count=13}}) end,timer=function(e) computer.setState('timers',(computer.getState('timers') or 0)+1) end}}"
 function M.run()
   assert(not defs.devices.computer.entity_name,'old fixture must run on the pinned alpha source')
-  storage.rd1_upgrade={phase='old',records={},parts={},start=game.tick}
+  storage.rd1_upgrade={phase='old',records={},parts={},order={},start=game.tick}
   local s=game.surfaces[1]; local x=f()
   for i,kind in ipairs(defs.order) do
+    x.order[i]=kind
     local body=assert(s.create_entity{name=defs.devices[kind].name,position={i*3,0},force='player'})
     lifecycle.on_built{entity=body}; local rec=assert(registry.by_entity(body)); x.records[kind]=rec
     body.energy=defs.devices[kind].watts/30; rec.powered=true
@@ -116,9 +117,10 @@ function M.on_configuration_changed()
   x.refused.children.targets=x.missing
   assert(lifecycle.upgrade(x.refused)); retained()
   for _,part in ipairs(x.parts) do assert(not part.valid,'old physical object survived successful upgrade') end
+  -- Preserve every edge from the old world's graph, not newly added families.
   for _,color in ipairs({'red','green'}) do
-    for i=2,#defs.order do
-      local a=x.records[defs.order[i-1]]; local b=x.records[defs.order[i]]; local c=lifecycle.connector(a,'network',color); local found=false
+    for i=2,#x.order do
+      local a=x.records[x.order[i-1]]; local b=x.records[x.order[i]]; local c=lifecycle.connector(a,'network',color); local found=false
       for _,connection in ipairs(c.real_connections) do if connection.target==lifecycle.connector(b,'network',color) then found=true end end
       assert(found,'upgrade lost exact role/color edge')
     end
@@ -163,7 +165,7 @@ function M.on_tick(event)
         assert(revived[kind] and not ghost.valid,'old blueprint body revival failed '..kind..' at '..pos.x..','..pos.y)
       elseif ghost.valid and not defs.port_role(ghost.ghost_name) then assert(select(2,ghost.revive{raise_revive=true})) end
     end
-    for _,kind in ipairs(defs.order) do assert(revived[kind] and revived[kind].layout_version==2,'old blueprint not converted '..kind) end
+    for _,kind in ipairs(x.order) do assert(revived[kind] and revived[kind].layout_version==2,'old blueprint not converted '..kind) end
     local c=revived.computer; local db=revived.kv; local l=revived.logic
     assert(c.saved_source==program and c.status=='stopped' and next(c.state)==nil and next(db.database.entries)==nil)
     assert(lifecycle.connector(c,'network','red').real_connection_count==1)
