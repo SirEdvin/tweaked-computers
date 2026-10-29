@@ -26,7 +26,7 @@ class PackageInventoryTests(unittest.TestCase):
         tutorials = (build.ROOT / 'scripts/ui/tutorials.lua').read_text()
         bindings = re.findall(r"source='([^']+)',code=require\('examples\.([^']+)'\)", tutorials)
         self.assertEqual({name for name, _ in bindings}, {
-            'reference-speaker', 'logic-controller', 'reference-recipe', 'reference-factory', 'shared-telemetry'})
+            'reference-speaker', 'logic-controller', 'reference-recipe', 'reference-factory', 'shared-telemetry', 'production-statistics-program'})
         for name, module in bindings:
             self.assertEqual(name, module)
         self.assertIn("prelude=require('examples.reference-writer')", tutorials)
@@ -59,6 +59,10 @@ getName(facade)
 getWire(facade)
 setMonitorSyncGroup(members)
 getMonitorSyncGroup()''',
+            'PRODUCTION STATISTICS': '''getTotals(kind)
+getRates(kind, window)
+getHistory(kind, name, window [, quality])
+getLimits()''',
             'SPEAKER': '''getInstruments()
 getNotes(instrument)
 playNote(instrument, volume?, pitch?)
@@ -144,7 +148,7 @@ getLimits()''',
         reference = re.search(r'  text=\[\[(.*?)\]\]', source, re.S)
         assert reference is not None, 'missing packaged reference'
         text = reference[1]
-        self.assertEqual(sum(len(signatures.splitlines()) for signatures in expected.values()), 88)
+        self.assertEqual(sum(len(signatures.splitlines()) for signatures in expected.values()), 92)
         for heading, signatures in expected.items():
             found = re.search(r'^' + re.escape(heading) + r'\n(.*?)(?=^[A-Z][A-Z ]+\n|\Z)',
                               text, re.M | re.S)
@@ -253,7 +257,7 @@ getLimits()''',
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
                 self.assertEqual(set(planning), set(build.CONTRACT_FILES))
-                self.assertEqual(len(build.CONTRACT_FILES), 38)
+                self.assertEqual(len(build.CONTRACT_FILES), 40)
                 self.assertFalse(any(name.startswith('openspec/changes/') for name in planning))
                 for relative in ('openspec/specs/program-source/spec.md',
                                  'openspec/specs/program-source/lua-api.md'):
@@ -262,7 +266,11 @@ getLimits()''',
                                  'docs/player/api/recipe-searcher.md', 'assets/icons/recipe_searcher.png',
                                  'scripts/services/factoriopedia-interface.lua', 'examples/factoriopedia-program.lua',
                                  'docs/player/api/factoriopedia-interface.md', 'assets/icons/factoriopedia_interface.png',
-                                 'openspec/specs/factoriopedia-interface/spec.md', 'openspec/specs/factoriopedia-interface/lua-api.md'):
+                                 'openspec/specs/factoriopedia-interface/spec.md', 'openspec/specs/factoriopedia-interface/lua-api.md',
+                                 'scripts/services/production-statistics.lua', 'examples/production-statistics-program.lua',
+                                 'examples/production-statistics-monitor.lua', 'docs/player/api/production-statistics.md',
+                                 'assets/icons/production_statistics.png', 'openspec/specs/production-statistics/spec.md',
+                                 'openspec/specs/production-statistics/lua-api.md'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 for relative in ('settings.lua', 'scripts/runtime/budget-settings.lua',
                                  'locale/en/settings.cfg', 'tests/runtime_budget_engine.lua',

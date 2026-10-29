@@ -83,7 +83,7 @@ Alternative: sorted arrays of `{name, quality, produced, consumed}` rows. Reject
 
 Map the eight documented precision strings to the pinned `defines.flow_precision_index` symbols. Factorio 2.1 uses the `category` string argument; do not copy a legacy `input=true` call from older examples. For these non-electric categories, rates and historical samples are already per-minute; copy them without an extra unit conversion. Totals come from native counters, not integrated rates or a sum over chart samples.
 
-`tick` records the query tick, not an invented bucket boundary. Keep the engine's update timing, partial-window behavior and reset semantics. Do not fold unmerged current-tick samples into a query. Native UI display rounding is separate from the unrounded API values.
+`tick` records the query tick, not an invented bucket boundary. Keep the engine's update timing, partial-window behavior and reset semantics. Do not fold unmerged current-tick samples into a query. Native UI rounding, sample boundaries and verified pinned-engine graph smoothing are presentation-only comparison concerns: retain the burst fixture and compare every raw API sample directly with `get_flow_count`; never smooth API data.
 
 Pollution is the native surface statistic, including the active pollutant behavior on Space Age surfaces. Do not hard-code Nauvis, assume every surface emits ordinary pollution, omit sinks whose native key lacks an entity prototype, or substitute `get_total_pollution()`/chunk scans. Pin native fixtures for these identities and the available pollutant modes before treating the mapping as verified.
 

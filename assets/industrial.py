@@ -234,8 +234,8 @@ def body(kind,direction,size,layout):
 
 def status(kind,direction,size,state,frame=0):
     p=Drawing(size,direction)
-    h={'computer':.08,'kv':.355,'monitor':0,'logic':.14,'configurator':.16,'recipe_searcher':.13,'factoriopedia_interface':.1}[kind]
-    x,z=(.28,.48) if kind=='monitor' else ({'computer':-.34,'kv':.34,'logic':.40,'configurator':-.13,'recipe_searcher':-.27,'factoriopedia_interface':-.3}[kind],.30)
+    h={'computer':.08,'kv':.355,'monitor':0,'logic':.14,'configurator':.16,'recipe_searcher':.13,'factoriopedia_interface':.1,'production_statistics':.12}[kind]
+    x,z=(.28,.48) if kind=='monitor' else ({'computer':-.34,'kv':.34,'logic':.40,'configurator':-.13,'recipe_searcher':-.27,'factoriopedia_interface':-.3,'production_statistics':-.35}[kind],.30)
     cx,cy=p.point(x,z,h)
     if kind=='monitor':
         # Bezel width is two units: compact line symbols along the edge.

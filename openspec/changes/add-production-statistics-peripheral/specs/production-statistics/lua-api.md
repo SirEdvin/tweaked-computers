@@ -107,7 +107,7 @@ The item ID passed to the engine is a plain `{name=..., quality=...}` identity. 
 ## Freshness, safety and limits
 
 - Resolve live scope and statistics on each call. Do not cache counts or native handles across callbacks, persist a collector, or re-create authoritative data during load.
-- Preserve the engine's update timing. Current-tick input/output samples may not yet be merged into totals/history; do not manually add them. Comparisons to the native UI must account for its display rounding and sample boundaries.
+- Preserve the engine's update timing. Current-tick input/output samples may not yet be merged into totals/history; do not manually add them. Comparisons to the native UI account for display rounding, sample boundaries and verified pinned-engine GUI smoothing only in verification/presentation comparison. Every raw API sample remains exact; retain the burst comparison.
 - A returned table is detached. Mutating it never alters native statistics, another caller's result or a subsequent read. Saving it through ordinary state/KV APIs is subject to those independent capacity limits.
 - All entries are returned on success, including modded names and qualities. There is no top-N cutoff, arbitrary statistics entry ceiling, pagination or statistics-specific setting.
 - Existing Data node/depth/string/table/result-byte and shared callback work/allocation protections remain. Large native inventories can therefore refuse as a whole; “all entries” is not a promise of unbounded success. No existing limit is raised and no native-circuit transport exception is generalized for this feature.

@@ -7,6 +7,97 @@ factory managers; keep the described topology. Runtime effects were exercised by
 the implementation harness; documentation checks compile these blocks without
 claiming graphical keyboard/focus/touch delivery.
 
+## production-statistics-program
+
+Research Recipe Searcher, craft and power a Production Statistics device and connect Network red to the computer. Validate, Save and Run. Logs local native item/fluid/pollution totals and rates, then newest/oldest iron history in both directions. Empty input and complete-result E_LIMIT refusal are distinct; work/allocation exhaustion remains fatal. This small Console example is not an unlimited export.
+
+```lua
+return {api_version=1,handlers={start=function()
+  local stats=peripheral.find("production_statistics","red")
+  assert(stats,"Connect a powered Production Statistics device on red")
+  local function report()
+    for _,kind in ipairs({"item","fluid","pollution"}) do
+      local totals=stats.getTotals(kind)
+      local rates=stats.getRates(kind,"one_minute")
+      local count=0
+      if kind=="item" then
+        for quality,items in pairs(totals.input) do
+          for name,amount in pairs(items) do
+            count=count+1
+            computer.log(quality.." "..name.." produced="..tostring(amount).." /min="..tostring(rates.input[quality][name]))
+          end
+        end
+      else
+        for name,amount in pairs(totals.input) do
+          count=count+1
+          computer.log(kind.." "..name.." input="..tostring(amount).." /min="..tostring(rates.input[name]))
+        end
+      end
+      if count==0 then computer.log(kind..": no recorded input") end
+    end
+    local h=stats.getHistory("item","iron-plate","one_minute")
+    computer.log("Iron produced/min newest="..tostring(h.input[1]).." oldest="..tostring(h.input[300]))
+    computer.log("Iron consumed/min newest="..tostring(h.output[1]).." oldest="..tostring(h.output[300]))
+  end
+  local ok,e=pcall(report)
+  if not ok then
+    if type(e)=="table" and e.code=="E_LIMIT" then computer.log("Complete statistics query exceeds shared Data limits")
+    else error(e) end
+  end
+  computer.setState("statistics_example",true)
+end}}
+```
+
+## production-statistics-monitor
+
+Connect a powered Production Statistics device and monitor on red; use a display of at least 14 columns and 7 rows. Validate, Save and Run, then wait 120 ticks. Displays one-minute iron rates and both 300-sample native histories, oldest-left/newest-right with a shared peak scale. No history is accumulated. Query refused means E_LIMIT, not empty data; No activity means both native series are zero.
+
+```lua
+return {api_version=1,handlers={
+start=function() computer.every(120,"draw") end,
+draw=function()
+  local stats=peripheral.find("production_statistics","red")
+  local screen=peripheral.find("monitor","red")
+  assert(stats and screen,"Connect powered statistics and monitor devices on red")
+  local width,height=screen.getSize()
+  assert(width>=14 and height>=7,"Use a monitor with at least 14 columns and 7 rows")
+  local function draw()
+    local rates=stats.getRates("item","one_minute")
+    local h=stats.getHistory("item","iron-plate","one_minute")
+    local input=rates.input.normal or {}
+    local output=rates.output.normal or {}
+    local peak=0
+    for i=1,300 do peak=math.max(peak,h.input[i],h.output[i]) end
+    local function trace(values)
+      local chars=".:-=+*#@"
+      local text=""
+      for x=1,width do
+        -- Native newest-first stays unchanged; only the display runs oldest left.
+        local i=301-math.floor(1+(x-1)*299/(width-1))
+        local level=peak>0 and math.floor(values[i]/peak*7) or 0
+        text=text..string.sub(chars,level+1,level+1)
+      end
+      return text
+    end
+    screen.clear()
+    screen.setCursorPos(1,1); screen.write("Iron /min 1m")
+    screen.setCursorPos(1,2); screen.write("In "..tostring(input["iron-plate"] or 0))
+    screen.setCursorPos(1,3); screen.write("Out "..tostring(output["iron-plate"] or 0))
+    screen.setCursorPos(1,4); screen.write("older -> newer")
+    screen.setCursorPos(1,5); screen.write(trace(h.input))
+    screen.setCursorPos(1,6); screen.write(trace(h.output))
+    screen.setCursorPos(1,7); screen.write(peak==0 and "No activity" or "Rows: in / out")
+  end
+  local ok,e=pcall(draw)
+  if not ok then
+    if type(e)=="table" and e.code=="E_LIMIT" then
+      screen.clear(); screen.setCursorPos(1,1); screen.write("Query refused")
+    else error(e) end
+  end
+  computer.setState("statistics_monitor",true)
+end}}
+```
+
 ## factoriopedia-program
 
 Research Recipe Searcher, craft a Factoriopedia Interface and supply 30 kW. Connect its Network to a computer on red. Validate, Save and Run the complete document. Logs item reference rocket capacity, water bounds and both complete name lists (or E_LIMIT); no live silo/tank feasibility is inferred.

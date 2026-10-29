@@ -50,11 +50,11 @@ local function stock_scene(c,x,combined)
 end
 function M.run()
   local s=game.surfaces[1];s.request_to_generate_chunks({75,0},6);s.force_generate_chunk_requests();s.always_day=true
-  local tiles={};for x=-12,170 do for y=-10,12 do tiles[#tiles+1]={name='landfill',position={x,y}} end end;s.set_tiles(tiles)
-  for _,e in ipairs(s.find_entities_filtered{area={{-12,-10},{170,12}},type={'tree','simple-entity','cliff'}}) do e.destroy() end
+  local tiles={};for x=-12,210 do for y=-10,12 do tiles[#tiles+1]={name='landfill',position={x,y}} end end;s.set_tiles(tiles)
+  for _,e in ipairs(s.find_entities_filtered{area={{-12,-10},{210,12}},type={'tree','simple-entity','cliff'}}) do e.destroy() end
   local x={phase='boot',since=game.tick,origin=game.tick,programs={},results={}}
   storage.tc_reference_tutorials=x
-  for i,id in ipairs({'starter','speaker','logic','recipe','factory','shared'}) do
+  for i,id in ipairs({'starter','speaker','logic','recipe','factory','shared','statistics'}) do
     local px=(i-1)*30;local c=build('computer',px,0)
     x.programs[#x.programs+1]={id=id,computer=c.id,code=help.tutorials[id].prelude or help.tutorials[id].code}
     assert(s.create_entity{name='substation',position={px+4,4},force='player'})
@@ -68,6 +68,8 @@ function M.run()
       local encyclopedia=build('factoriopedia_interface',px+9,0);connect(search,encyclopedia,'red')
       local radar=assert(lifecycle.build(assert(s.create_entity{name='radar',position={px+6,0},force='player'})))
       connect(c,radar,'red')
+    elseif id=='statistics' then
+      local stats=build('production_statistics',px+3,0); connect(c,stats,'red'); x.statistics=stats.id
     elseif id=='logic' or id=='factory' then x[id]=stock_scene(c,px,id=='factory')
     elseif id=='shared' then
       local db=build('kv',px+3,0);local independent=build('kv',px+3,-3);local observer=build('computer',px,-3)
@@ -120,9 +122,9 @@ local function inventory(x,tick)
       end
     end
   end
-  for _,kind in ipairs({'speaker','modem','monitor','logic_handler','configurator','recipe_searcher','factoriopedia_interface','kv_database'}) do assert(seen[kind],kind) end
+  for _,kind in ipairs({'speaker','modem','monitor','logic_handler','configurator','recipe_searcher','factoriopedia_interface','production_statistics','kv_database'}) do assert(seen[kind],kind) end
   helpers.write_file('reference-coverage.json',helpers.table_to_json{topics=help.topics,inventory=ledger},false)
-  report('live-discovery-computer-and-eight-service-inventories-match-help')
+  report('live-discovery-computer-and-nine-service-inventories-match-help')
 end
 function M.on_tick(event)
   local x=storage.tc_reference_tutorials
@@ -165,6 +167,8 @@ function M.on_tick(event)
     assert(registry.record(x.shared.db).database.entries.observer.value==observer.id)
     assert(registry.record(x.shared.independent).database.entries.observer.value=='private')
     assert(observer.logs[1].text=='FILLING / private=private');report('two-computer-shared-and-physically-independent-storage')
+    assert(registry.record(x.programs[#x.programs].computer).state.statistics_example)
+    report('statistics-exact-embedded-example')
     inventory(x,event.tick)
     x.phase='high';x.since=event.tick
   elseif x.phase=='high' and event.tick-x.since>=120 then

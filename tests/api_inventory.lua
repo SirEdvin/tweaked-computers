@@ -15,6 +15,7 @@ return [[return {api_version=1,handlers={start=function(event)
     modem={'open','isOpen','close','closeAll','transmit','isWireless','getLimits'},
     recipe_searcher={'findRecipes','getLimits'},
     factoriopedia_interface={'getItem','getFluid','listItems','listFluids','getLimits'},
+    production_statistics={'getTotals','getRates','getHistory','getLimits'},
     kv_database={'get','set','del','exists','type','hget','hset','hdel','hexists','hgetall','hlen','expire','ttl','persist','getLimits'},
     logic_handler={'readSignal','readSignals','getInputStatus','getOutput','setOutput','clearOutput','subscribe','unsubscribe','getLimits'},
     configurator={'getDevices','getDevice','getCapabilities','getConfiguration','setConfiguration','getLimits','getSections','addSection','setSection','removeSection'},

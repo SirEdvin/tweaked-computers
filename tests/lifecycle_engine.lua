@@ -400,9 +400,11 @@ function M.run()
   assert(lifecycle.connector(db,'network','red').connect_to(lifecycle.connector(l,'network','red')))
   local searcher=registry.record(f().recipe_searcher)
   assert(lifecycle.connector(l,'network','green').connect_to(lifecycle.connector(searcher,'network','green')))
+  local statistics=registry.record(f().production_statistics)
+  assert(lifecycle.connector(searcher,'network','green').connect_to(lifecycle.connector(statistics,'network','green')))
   local target=assert(surf.create_entity{name='constant-combinator',position={l.position.x+3,9},force='player'})
   assert(lifecycle.connector(l,'output','green').connect_to(target.get_wire_connector(defines.wire_connector_id.circuit_green,true)))
-  local mapping=bp.create_blueprint{surface=surf,force='player',area={{2,8},{28,16}}}
+  local mapping=bp.create_blueprint{surface=surf,force='player',area={{2,8},{36,16}}}
   assert(blueprints.prepare(bp,mapping)); assert(bp.blueprint_description:find(blueprints.disclosure,1,true))
   local entities=bp.get_blueprint_entities(); local ports=0
   for _,e in ipairs(entities) do if defs.port_role(e.name) then ports=ports+1 end
@@ -486,6 +488,18 @@ function M.on_tick(event)
       if kind=='computer' then assert(clone.saved_source==source and clone.status=='stopped' and not clone.active and next(clone.state)==nil and next(clone.timers)==nil)
       elseif kind=='kv' then assert(next(clone.database.entries)==nil) end
       x.clones[#x.clones+1]=clone.id
+      if kind=='production_statistics' then
+        local helper=lifecycle.power_entity(clone); local id=clone.id
+        local native=clone.body.force.get_item_production_statistics(clone.body.surface)
+        local before=serpent.line(native.input_quality_counts)
+        local inventory=mine(clone)
+        assert(inventory.get_item_count('tc-production-statistics')==1 and not helper.valid and not registry.record(id))
+        assert(serpent.line(native.input_quality_counts)==before,'mining statistics reset native counters')
+        local rebuilt=replace(inventory,clone.position.x,clone.position.y); inventory.destroy()
+        assert(rebuilt.id~=id and not rebuilt.statistics and not rebuilt.history)
+        assert(lifecycle.remove(rebuilt.id,'fixture',true))
+        log('TC_STAT_NATIVE_MINING one-drop-helper-cleanup-no-history-reset')
+      end
     end
     local surf=game.surfaces[1]
     surf.clone_area{source_area={{2,8},{24,16}},destination_area={{2,48},{24,56}},clone_entities=true,clone_tiles=true,clone_decoratives=false,clear_destination_entities=false,expand_map=true}
@@ -513,7 +527,9 @@ function M.on_tick(event)
     end
     local bc=registry.record(x.revived.computer); local bd=registry.record(x.revived.kv); local bl=registry.record(x.revived.logic)
     local bs=assert(registry.record(x.revived.recipe_searcher))
-    assert(lifecycle.connector(bs,'network','green').connection_count==1,'blueprint lost Recipe Searcher wire')
+    assert(lifecycle.connector(bs,'network','green').connection_count==2,'blueprint lost Recipe Searcher wires')
+    local statistics=assert(registry.record(x.revived.production_statistics))
+    assert(lifecycle.connector(statistics,'network','green').connection_count==1 and not statistics.history)
     assert(bc and bd and bl)
     local red=lifecycle.connector(bc,'network','red')
 
