@@ -5,15 +5,16 @@ local runtime=require('scripts.runtime.computer')
 local scheduler=require('scripts.scheduler')
 local defs=require('scripts.device-definitions')
 local M={}; local loaded=false
-local source=[[return {api_version=1,handlers={start=function(e) computer.every(15,'query') end,
-query=function(e)
+local source=[[function start(e) computer.every(15,'query') end
+
+function query(e)
   local s=peripheral.find('recipe_searcher','red'); assert(s)
   local a=s.findRecipes('item','advanced-circuit')
   local b=peripheral.find('recipe_searcher','green').findRecipes('item','advanced-circuit')
   assert(#a==#b)
   for i,v in ipairs(a) do assert(v.name==b[i].name and v.enabled==b[i].enabled) end
   computer.setState('recipes',a); computer.setState('queries',(computer.getState('queries') or 0)+1)
-end}}]]
+end]]
 local function f() return storage.tc_recipe_client end
 local function equal(a,b)
   if type(a)~=type(b) then return false end

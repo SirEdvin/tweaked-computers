@@ -7,19 +7,15 @@ Normative companion to [spec.md](spec.md); shared types, errors and scheduling: 
 A computer contains one source document, not files. Its only module-level executable construct is a literal returned descriptor:
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      local boots = computer.getState("boots") or 0
-      computer.setState("boots", boots + 1)
-      computer.every(60, "sample")
-    end,
-    sample = function(event)
-      computer.log("Sampling at tick " .. tostring(event.tick))
-    end
-  }
-}
+function start(event)
+  local boots = computer.getState("boots") or 0
+  computer.setState("boots", boots + 1)
+  computer.every(60, "sample")
+end
+
+function sample(event)
+  computer.log("Sampling at tick " .. tostring(event.tick))
+end
 ```
 
 `handlers` maps unique names to function declarations. `start` is optional; it receives `{name="start", ...BaseEvent}` once on explicit Run/Apply. No function/table initialization at module scope may touch the factory, inspect the clock, register events or mutate state. Local helper functions are permitted inside handlers within the documented bounded subset. Every dispatch constructs a fresh ephemeral descriptor environment: locals/globals/closures are not a hidden second persistence mechanism. Handler names are case-sensitive strings and must exist when registered.
@@ -85,26 +81,21 @@ Recurring events use the first due deadline as `scheduled_tick`, report interval
 Approved globals include protected `pcall` for ordinary API errors. A protected call never returns a host object or the private quota/stop sentinel.
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      local db = peripheral.find("kv_database", "red")
-      if not db then
-        computer.log("Connect a database with a complete red path")
-        return
-      end
-      local ok, value = pcall(db.get, "counter")
-      if ok then
-        computer.log(value or "No counter yet")
-      elseif type(value) == "table" then
-        computer.log(value.code .. ": " .. value.message)
-      else
-        computer.log(tostring(value))
-      end
-    end
-  }
-}
+function start(event)
+  local db = peripheral.find("kv_database", "red")
+  if not db then
+    computer.log("Connect a database with a complete red path")
+    return
+  end
+  local ok, value = pcall(db.get, "counter")
+  if ok then
+    computer.log(value or "No counter yet")
+  elseif type(value) == "table" then
+    computer.log(value.code .. ": " .. value.message)
+  else
+    computer.log(tostring(value))
+  end
+end
 ```
 
 An uncaught error faults this run, retaining source/state/logs and prior successful calls. Execution-budget failure and `computer.stop()` always leave guest execution; user protection cannot resume effects afterward. The next explicit Run starts a new run generation. Recovery is never an automatic VM fallback, reset or source rerun.

@@ -83,11 +83,11 @@ local function check_wires()
     assert(lifecycle.connector(rec,'network','red').network_id~=lifecycle.connector(rec,'targets','red').network_id)
   end
 end
-local source=[[return {api_version=1,handlers={
-start=function(e) computer.setState('boots',(computer.getState('boots') or 0)+1); computer.setState('restores',0); computer.on('power_restored','restore'); computer.every(100,'timer') end,
-restore=function(e) computer.setState('restores',computer.getState('restores')+1) end,
-timer=function(e) computer.setState('timers',(computer.getState('timers') or 0)+1) end
-}}]]
+local source=[[function start(e) computer.setState('boots',(computer.getState('boots') or 0)+1); computer.setState('restores',0); computer.on('power_restored','restore'); computer.every(100,'timer') end
+
+function restore(e) computer.setState('restores',computer.getState('restores')+1) end
+
+function timer(e) computer.setState('timers',(computer.getState('timers') or 0)+1) end]]
 function M.run()
   registry.initialize()
   storage.tc04_fixture={phase='warming',groups=0,logic_ids={},config_ids={},ids={},grids={}}
@@ -211,7 +211,7 @@ function M.run()
   f.power_sensor=assert(p.create_entity{name='constant-combinator',position={7,2},force='player'})
   wire(logic.children.output,f.power_sensor,'red'); wire(logic.children.output,f.power_sensor,'green')
   runtime.save(good.id,source,0); assert(runtime.activate(good.id,game.tick))
-  runtime.save(bad.id,'return {api_version=1,handlers={start=function(e) pcall(function() while true do end end) end}}',0)
+  runtime.save(bad.id,'function start(e) pcall(function() while true do end end) end',0)
   assert(runtime.activate(bad.id,game.tick))
   local protected_inventory=game.create_inventory(1)
   assert(not good.body.mine{inventory=protected_inventory,raise_destroyed=false})

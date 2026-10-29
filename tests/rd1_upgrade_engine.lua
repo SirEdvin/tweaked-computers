@@ -18,7 +18,7 @@ local function connect(a,ar,b,br,color)
   local cid=defines.wire_connector_id['circuit_'..color]
   assert(endpoint(a,ar).get_wire_connector(cid,true).connect_to(endpoint(b,br).get_wire_connector(cid,true),false))
 end
-local program="return {api_version=1,handlers={start=function(e) computer.setState('boots',(computer.getState('boots') or 0)+1); computer.every(1000,'timer'); local l=peripheral.find('logic_handler','red'); assert(l); l.setOutput({{signal={type='virtual',name='signal-C'},count=13}}) end,timer=function(e) computer.setState('timers',(computer.getState('timers') or 0)+1) end}}"
+local program="function start(e) computer.setState('boots',(computer.getState('boots') or 0)+1); computer.every(1000,'timer'); local l=peripheral.find('logic_handler','red'); assert(l); l.setOutput({{signal={type='virtual',name='signal-C'},count=13}}) end\n\nfunction timer(e) computer.setState('timers',(computer.getState('timers') or 0)+1) end"
 function M.run()
   assert(not defs.devices.computer.entity_name,'old fixture must run on the pinned alpha source')
   storage.rd1_upgrade={phase='old',records={},parts={},order={},start=game.tick}

@@ -46,28 +46,29 @@ local function settle()
 end
 local function group(tile) return assert(monitor.resolve(tile)) end
 local function guest(c,text)
-  local source='return {api_version=1,handlers={start=function(e) '..text..' end}}'
+  local source='function start(e) '..text..' end'
   local ctx=admission.context(admission.new(),c.id,0); local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
   local ok,diagnostic=compiler.run(plan,'start',{},function(g) return runtime.services(c,game.tick,g) end,ctx)
   assert(ok,serpent.line(diagnostic))
 end
-local source=[[return {api_version=1,handlers={
-start=function(e)
+local source=[[function start(e)
   computer.setState('boots',(computer.getState('boots') or 0)+1)
   computer.on('monitor_resize','resized'); computer.on('monitor_touch','touched')
   local m=peripheral.find('monitor','red'); assert(m)
   computer.setState('monitor',peripheral.getName(m)); m.setCursorPos(1,1); m.write('COLD')
-end,
-resized=function(e)
+end
+
+function resized(e)
   local m=peripheral.wrap(e.peripheral,e.wire); local w,h=m.getSize()
   assert(w==e.width and h==e.height); computer.setState('resize',e)
-end,
-touched=function(e) computer.setState('touch',e) end,
-check=function(e)
+end
+
+function touched(e) computer.setState('touch',e) end
+
+function check(e)
   local m=peripheral.wrap(computer.getState('monitor'),'red'); assert(m)
   m.setCursorPos(1,2); m.write('RESUMED'); computer.setState('checked',true)
-end
-}}]]
+end]]
 function M.run()
   registry.initialize(); storage.tc09_fixture={groups=0,phase='armed'}
   local m=model.new(1,1); local called={}

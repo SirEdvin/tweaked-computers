@@ -7,20 +7,19 @@ local logic=require('scripts.services.logic')
 local defs=require('scripts.device-definitions')
 local M={}; local loaded=false
 local function f() return storage.tc_circuit_upgrade end
-local program=[[return {api_version=1,handlers={
-  start=function(e)
-    computer.setState('boots',(computer.getState('boots') or 0)+1)
-    local p=peripheral.find('logic_handler','red')
-    p.setOutput({{signal={type='virtual',name='signal-A'},count=13}})
-    p.subscribe({input='red',initial=true},'changed')
-  end,
-  changed=function(e)
-    assert(#e.current==1 and e.current[1].signal.name=='iron-plate')
-    if e.initial then computer.setState('first',e.current[1].count) end
-    computer.setState('last',e.current[1].count)
-    computer.setState('events',(computer.getState('events') or 0)+1)
-  end
-}}]]
+local program=[[function start(e)
+  computer.setState('boots',(computer.getState('boots') or 0)+1)
+  local p=peripheral.find('logic_handler','red')
+  p.setOutput({{signal={type='virtual',name='signal-A'},count=13}})
+  p.subscribe({input='red',initial=true},'changed')
+end
+
+function changed(e)
+  assert(#e.current==1 and e.current[1].signal.name=='iron-plate')
+  if e.initial then computer.setState('first',e.current[1].count) end
+  computer.setState('last',e.current[1].count)
+  computer.setState('events',(computer.getState('events') or 0)+1)
+end]]
 local function put(n)
   f().source.get_control_behavior().get_section(1).set_slot(1,{value={type='item',name='iron-plate',quality='normal'},min=n})
 end

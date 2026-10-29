@@ -33,22 +33,21 @@ local function put(entity,entries)
   end
   section.filters=filters; cb.enabled=true
 end
-local source=[[return {api_version=1,handlers={
-  start=function(e)
-    computer.setState('boots',(computer.getState('boots') or 0)+1)
-    local p=peripheral.find('logic_handler','red')
-    local id=p.subscribe({input='red',signals={{type='recipe',name='iron-plate'}},initial=true},'changed')
-    computer.setState('subscription',id)
-    p.setOutput({{signal={type='recipe',name='iron-plate'},count=7},{signal={type='item',name='iron-plate'},count=3}})
-  end,
-  changed=function(e)
-    computer.setState('events',(computer.getState('events') or 0)+1)
-    computer.setState('last',e)
-  end
-}}]]
+local source=[[function start(e)
+  computer.setState('boots',(computer.getState('boots') or 0)+1)
+  local p=peripheral.find('logic_handler','red')
+  local id=p.subscribe({input='red',signals={{type='recipe',name='iron-plate'}},initial=true},'changed')
+  computer.setState('subscription',id)
+  p.setOutput({{signal={type='recipe',name='iron-plate'},count=7},{signal={type='item',name='iron-plate'},count=3}})
+end
+
+function changed(e)
+  computer.setState('events',(computer.getState('events') or 0)+1)
+  computer.setState('last',e)
+end]]
 local function probe(c,text)
   local ctx=admission.context(admission.new(),c.id,0)
-  local plan,problem=compiler.compile('return {api_version=1,handlers={start=function(e) local p=peripheral.find("logic_handler","red"); '..text..' end}}',ctx)
+  local plan,problem=compiler.compile('function start(e) local p=peripheral.find("logic_handler","red"); '..text..' end',ctx)
   assert(plan,problem and problem.message)
   local ok,err=compiler.run(plan,'start',{name='start'},function(g) return runtime.services(c,game.tick,g) end,ctx)
   assert(ok,err and serpent.line(err))

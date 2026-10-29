@@ -10,7 +10,7 @@ local monitor=require('scripts.services.monitor')
 local M={}; local loaded=false
 local function nop() end
 local function f() return storage.tc_inspector_upgrade end
-local program='return {api_version=1,handlers={start=function(e) computer.setState("boots",(computer.getState("boots") or 0)+1); local io=peripheral.find("logic_handler","red"); assert(io); io.setOutput({{signal={type="virtual",name="signal-A"},count=13}}) end}}'
+local program='function start(e) computer.setState("boots",(computer.getState("boots") or 0)+1); local io=peripheral.find("logic_handler","red"); assert(io); io.setOutput({{signal={type="virtual",name="signal-A"},count=13}}) end'
 function M.run()
   storage.tc_inspector_upgrade={records={},parts={},phase='boot'}
   local s=game.surfaces[1]

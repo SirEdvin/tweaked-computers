@@ -91,7 +91,7 @@ local function monitor_stacks()
   source.destroy(); mined.destroy()
   group('monitor-multi-item-placement-mining-and-single-item-refund-both-event-shapes')
 end
-local source="return {api_version=1,handlers={start=function(e) computer.setState('boots',(computer.getState('boots') or 0)+1); computer.after(600,'wake') end,wake=function(e) computer.setState('wakes',1) end}}"
+local source="function start(e) computer.setState('boots',(computer.getState('boots') or 0)+1); computer.after(600,'wake') end\n\nfunction wake(e) computer.setState('wakes',1) end"
 local saved='-- saved but not applied\n'..source
 local function fixture_state(rec)
   -- Exactly the public state capacity, independently admitted by the importer.
@@ -562,7 +562,7 @@ function M.on_tick(event)
     local writer=build('computer',40,0); local output=build('logic',44,0)
     assert(lifecycle.connector(writer,'network','red').connect_to(lifecycle.connector(output,'network','red')))
     lifecycle.sample_power(writer,event.tick,nop); lifecycle.sample_power(output,event.tick,nop)
-    local program="return {api_version=1,handlers={start=function(e) local l=peripheral.find('logic_handler','red'); assert(l); l.setOutput({{signal={type='virtual',name='signal-A'},count=9}}) end}}"
+    local program="function start(e) local l=peripheral.find('logic_handler','red'); assert(l); l.setOutput({{signal={type='virtual',name='signal-A'},count=9}}) end"
     runtime.save(writer.id,program,0); assert(runtime.activate(writer.id,event.tick)); assert(scheduler.dispatch(writer,event.tick))
     assert(output.output_owner and output.output_owner.computer_id==writer.id,'native output writer missing')
     local child=lifecycle.endpoint(writer,'network'); writer.active.compiler_version=99

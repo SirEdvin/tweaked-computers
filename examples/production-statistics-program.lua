@@ -1,5 +1,5 @@
 -- Complete guest document. Native maps may be empty; refusal is not zero data.
-return [[return {api_version=1,handlers={start=function()
+return [[function start()
   local stats=peripheral.find("production_statistics","red")
   assert(stats,"Connect a powered Production Statistics device on red")
   local function report()
@@ -32,4 +32,4 @@ return [[return {api_version=1,handlers={start=function()
     else error(e) end
   end
   computer.setState("statistics_example",true)
-end}}]]
+end]]

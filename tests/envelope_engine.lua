@@ -151,7 +151,7 @@ function M.on_tick(event)
     local id=x.computers[x.next_computer]
     if id then
       local c=registry.computer(id); local target=x.logic[x.next_computer]
-      local source="return {api_version=1,handlers={start=function(e) computer.setState('subscriptions',0); computer.every(1,'work') end, changed=function(e) computer.setState('signals',e.sample_tick) end, work=function(e) local n=computer.getState('subscriptions'); if n<"..profile.subscriptions.." then local io=peripheral.wrap("..string.format('%q',target)..",'red'); io.subscribe({input='red',initial=false},'changed'); computer.setState('subscriptions',n+1) end; local sum=0; for i=1,128 do sum=sum+i end; computer.setState('sum',sum) end}}"
+      local source="function start(e) computer.setState('subscriptions',0); computer.every(1,'work') end; function changed(e) computer.setState('signals',e.sample_tick) end; function work(e) local n=computer.getState('subscriptions'); if n<"..profile.subscriptions.." then local io=peripheral.wrap("..string.format('%q',target)..",'red'); io.subscribe({input='red',initial=false},'changed'); computer.setState('subscriptions',n+1) end; local sum=0; for i=1,128 do sum=sum+i end; computer.setState('sum',sum) end"
       local ok,err=runtime.save(c.id,source,c.saved_revision); assert(ok,serpent.line(err))
       local activated,why=runtime.activate(c.id,event.tick)
       if not activated then gate('combined-activation',false,{computer=x.next_computer,diagnostic=why}); x.phase='done'; log('TC_COLD_OK envelope-diagnostic-complete'); return end

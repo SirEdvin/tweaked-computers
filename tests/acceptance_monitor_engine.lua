@@ -26,17 +26,18 @@ local function configure(p)
   p.game_view_settings.show_entity_tooltip=false
   p.game_view_settings.show_quickbar=false; p.game_view_settings.show_shortcut_bar=false
 end
-local source=[[return {api_version=1,handlers={
-start=function(e)
+local source=[[function start(e)
   computer.setState('starts',(computer.getState('starts') or 0)+1)
   computer.on('monitor_touch','touch')
   computer.every(120,'draw'); computer.after(1,'draw')
-end,
-touch=function(e)
+end
+
+function touch(e)
   computer.setState('touch',{player=e.player_index,x=e.x,y=e.y,name=e.peripheral,wire=e.wire,wires=e.wires})
   computer.setState('touches',(computer.getState('touches') or 0)+1)
-end,
-draw=function(e)
+end
+
+function draw(e)
   if computer.getState('draw_refs') then return end
   if (computer.getState('frame') or 0)>=6 and e.name~='test_paint' then return end
   local refs={}
@@ -48,8 +49,9 @@ draw=function(e)
   -- Scale changes reset the whole round; repaint its last participant first.
   computer.setState('resize_cursor',1); computer.setState('paint_cursor',#refs)
   computer.after(1,'resize')
-end,
-resize=function(e)
+end
+
+function resize(e)
   local refs=computer.getState('draw_refs'); local i=computer.getState('resize_cursor')
   local ref=refs[i]
   if ref then
@@ -57,8 +59,9 @@ resize=function(e)
     if m.getTextScale()~=desired then m.setTextScale(desired) end
     computer.setState('resize_cursor',i+1); computer.after(1,'resize')
   else computer.after(1,'paint') end
-end,
-paint=function(e)
+end
+
+function paint(e)
   local refs=computer.getState('draw_refs'); local i=computer.getState('paint_cursor')
   local ref=refs[i]; local n=computer.getState('frame')
   local m=peripheral.wrap(ref.name,ref.wire)
@@ -72,7 +75,7 @@ paint=function(e)
     computer.deleteState('draw_refs'); computer.deleteState('draw_scale')
     computer.deleteState('resize_cursor'); computer.deleteState('paint_cursor')
   end
-end}}]]
+end]]
 function M.run()
   if remote.interfaces.freeplay then remote.call('freeplay','set_skip_intro',true); remote.call('freeplay','set_disable_crashsite',true) end
   local surface=game.surfaces[1]

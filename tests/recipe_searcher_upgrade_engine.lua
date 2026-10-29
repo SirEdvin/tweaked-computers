@@ -7,10 +7,10 @@ local defs=require('scripts.device-definitions')
 local M={}; local loaded=false
 local function f() return storage.tc_recipe_upgrade end
 local function nop() end
-local source=[[return {api_version=1,handlers={start=function(e)
+local source=[[function start(e)
   computer.setState('boots',(computer.getState('boots') or 0)+1)
   computer.setState('factory','retained')
-end}}]]
+end]]
 local function retained()
   local x=f(); local c=registry.record(x.c); local db=registry.record(x.db)
   assert(c==x.saved.c and c.state==x.saved.state and c.active==x.saved.active and c.run_id==x.saved.run)

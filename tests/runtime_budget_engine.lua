@@ -23,7 +23,7 @@ local function change(kind,value)
   assert(limits[keys[kind]]==effective,'live setting not applied: '..kind)
 end
 local function source(body)
-  return 'return {api_version=1,handlers={start=function(event) '..body..' end}}'
+  return 'function start(event) '..body..' end'
 end
 local function fresh()
   storage.tweaked_computers=nil

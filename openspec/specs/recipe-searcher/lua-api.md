@@ -137,35 +137,30 @@ Ordinary cold reload preserves existing physical identity and computer state wit
 Illustrative source for the existing descriptor/handler runtime; acceptance must execute this exact maintained example through the packaged compiler and services on a real powered Network connection.
 
 ```lua
-return {
-    api_version = 1,
-    handlers = {
-        start = function(event)
-            local searcher = peripheral.find("recipe_searcher", "red")
-            assert(searcher, "Connect a Recipe Searcher with a red Network wire")
+function start(event)
+    local searcher = peripheral.find("recipe_searcher", "red")
+    assert(searcher, "Connect a Recipe Searcher with a red Network wire")
 
-            local limits = searcher.getLimits()
-            assert(limits.recipe_search_results == 50)
+    local limits = searcher.getLimits()
+    assert(limits.recipe_search_results == 50)
 
-            local ok, recipes = pcall(searcher.findRecipes, "item", "iron-plate")
-            if not ok then
-                if type(recipes) ~= "table" or recipes.code ~= "E_LIMIT" then
-                    error(recipes)
-                end
-                recipes = searcher.findRecipes("item", "iron-plate", "smelting")
-            end
-            for _, recipe in ipairs(recipes) do
-                computer.log(recipe.name .. " / " .. recipe.category
-                    .. " / seconds=" .. tostring(recipe.energy)
-                    .. " / enabled=" .. tostring(recipe.enabled))
-            end
-
-            local fluids = searcher.findRecipes("fluid", "petroleum-gas", "chemistry")
-            computer.setState("recipe_count", #recipes)
-            computer.setState("fluid_recipe_count", #fluids)
+    local ok, recipes = pcall(searcher.findRecipes, "item", "iron-plate")
+    if not ok then
+        if type(recipes) ~= "table" or recipes.code ~= "E_LIMIT" then
+            error(recipes)
         end
-    }
-}
+        recipes = searcher.findRecipes("item", "iron-plate", "smelting")
+    end
+    for _, recipe in ipairs(recipes) do
+        computer.log(recipe.name .. " / " .. recipe.category
+            .. " / seconds=" .. tostring(recipe.energy)
+            .. " / enabled=" .. tostring(recipe.enabled))
+    end
+
+    local fluids = searcher.findRecipes("fluid", "petroleum-gas", "chemistry")
+    computer.setState("recipe_count", #recipes)
+    computer.setState("fluid_recipe_count", #fluids)
+end
 ```
 
 The bounded fallback is illustrative, not a promise that every `E_LIMIT` is count overflow or that every modpack has a small smelting set. Applications should select a relevant known category and allow repeated refusal to surface. There is no same-callback unbounded retry loop. Boundary fixtures must separately prove exactly-50 success, 51-match refusal, and category refinement of an oversized set.

@@ -111,7 +111,7 @@ function M.new(context, services, shell)
     G.spend(n+1)
     return ...
   end
-  function G.prepare_descriptor(n)
+  function G.prepare_handlers(n)
     integer(n,0,limits.handler_names); G.spend(n+1); allocate(n*2+1)
   end
   function G.closure(fn) allocate(1); G.spend(1); callable[fn]='guest function'; return fn end

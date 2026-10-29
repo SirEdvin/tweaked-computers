@@ -61,7 +61,7 @@ function M.setup()
   local relay=assert(surface.create_entity{name='small-electric-pole',position={5,3},force='player'})
   wire(target,cfg,'targets','red'); wire(target,cfg,'targets','green'); wire(relay,cfg,'targets','green')
   state().target=target
-  local source='return {api_version=1,handlers={start=function(e) computer.setState("starts",(computer.getState("starts") or 0)+1); local io=peripheral.find("logic_handler","red"); assert(io); io.setOutput({{signal={type="virtual",name="signal-A",quality="normal"},count=5}}); computer.every(30,"beat") end,beat=function(e) computer.setState("beats",(computer.getState("beats") or 0)+1) end}}'
+  local source='function start(e) computer.setState("starts",(computer.getState("starts") or 0)+1); local io=peripheral.find("logic_handler","red"); assert(io); io.setOutput({{signal={type="virtual",name="signal-A",quality="normal"},count=5}}); computer.every(30,"beat") end\n\nfunction beat(e) computer.setState("beats",(computer.getState("beats") or 0)+1) end'
   runtime.save(c.id,source,0); assert(runtime.activate(c.id,game.tick))
   kv.methods.set(nil,db,nil,game.tick,nop,'','')
   kv.methods.set(nil,db,nil,game.tick,nop,'binary\0\255','\0\255\\"\n[img=item/iron-plate]')

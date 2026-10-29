@@ -134,24 +134,19 @@ Upgrading the grouping policy reevaluates existing walls through paid synchroniz
 This start handler selects all discovered logical monitors, within the queried limits. It does not itself draw or implement an animation. After selecting, the program's drawing handler uses the existing monitor methods, touches every group member per round, and computes one shared animation phase. The exact example and a real plotted update must be exercised during implementation; it is not claimed runnable on 0.1.4.
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      local members, seen = {}, {}
-      for _, wire in ipairs({"red", "green"}) do
-        for _, name in ipairs(peripheral.getNames(wire)) do
-          if not seen[name] and peripheral.getType(name, wire) == "monitor" then
-            seen[name] = true
-            members[#members + 1] = {name = name, wire = wire}
-          end
-        end
+function start(event)
+  local members, seen = {}, {}
+  for _, wire in ipairs({"red", "green"}) do
+    for _, name in ipairs(peripheral.getNames(wire)) do
+      if not seen[name] and peripheral.getType(name, wire) == "monitor" then
+        seen[name] = true
+        members[#members + 1] = {name = name, wire = wire}
       end
-      peripheral.setMonitorSyncGroup(members)
-      computer.log("Selected synchronized monitors")
     end
-  }
-}
+  end
+  peripheral.setMonitorSyncGroup(members)
+  computer.log("Selected synchronized monitors")
+end
 ```
 
 Acceptance mapping: every rectangle/scale/orientation and mixed-size allocation → monitor-display geometry scenarios; automatic unchanged-method behavior and multi-callback limitation → automatic/compatibility scenarios; group barrier, no-op participation and credit refusal → synchronized/bounded scenarios; dual-color deduplication, mixed-size selection, shared writers, rejection atomicity and defensive readback → peripheral-network scenarios; outage/resize/revocation/stop, policy-upgrade regrouping and cold progress → lifecycle/upgrade requirement sets. Native-client visual acceptance remains separate from all headless assertions.

@@ -8,7 +8,7 @@ local limits=require('scripts.runtime.limits')
 local help=require('scripts.ui.help')
 local M={}
 local function source(value)
-  return 'return {api_version=1,handlers={start=function(e) computer.setState("value",'..value..'); computer.log("started") end}}'
+  return 'function start(e) computer.setState("value",'..value..'); computer.log("started") end'
 end
 local function refused(fn,code)
   local ok,e=pcall(fn); assert(not ok and type(e)=='table' and e.code==code,'expected '..code)
@@ -191,7 +191,7 @@ function M.run()
   end)
   group('editor-invalid-replacement-preserves-generation-state',function()
     local run=rec.run_id; local active=rec.active
-    for _,candidate in ipairs({'return {','return {api_version=1,handlers={start=function(e) game.print("escape") end}}'}) do
+    for _,candidate in ipairs({'return {','function start(e) game.print("escape") end'}) do
       tick=tick+1; model.edit(a,sa.token,candidate); model.action(a,sa.token,'save',tick)
       local value,e=model.action(a,sa.token,'apply',tick)
       assert(not value and type(e)=='table' and rec.active==active and rec.run_id==run and rec.status=='running' and rec.state.value==7)
@@ -316,7 +316,7 @@ function M.run()
   if not ok then error(e,0) end
   group('editor-malicious-active-source-faults-healthy-peer-continues',function()
     local bad=make(40); local good=make(45)
-    runtime.save(bad.id,'return {api_version=1,handlers={start=function(e) pcall(function() while true do end end) end}}',0)
+    runtime.save(bad.id,'function start(e) pcall(function() while true do end end) end',0)
     runtime.save(good.id,source(31),0)
     assert(runtime.activate(bad.id,tick)); assert(runtime.activate(good.id,tick))
     assert(scheduler.dispatch(bad,tick+1)); assert(bad.status=='faulted' and bad.diagnostic.code=='E_BUDGET')

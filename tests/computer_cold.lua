@@ -7,25 +7,26 @@ local admission = require('scripts.runtime.admission')
 local limits = require('scripts.runtime.limits')
 local M = {}
 local loaded=false
-local origin_source=[[return {api_version=1,handlers={
-  start=function(e)
-    local data={}; rawset(data,'ready',false); computer.setState('raw_data',data)
-    print(_VERSION,false,nil,3)
-    computer.setState('boots',(computer.getState('boots') or 0)+1)
-    computer.setState('once',0); computer.setState('restores',0)
-    local payload={false,'',3}
-    computer.setState('timer',computer.after(7,'once',payload)); payload[3]=99
-    computer.every(3,'periodic')
-    computer.on('power_restored','restore')
-  end,
-  once=function(e)
-    assert(e.payload[1]==false and e.payload[2]=='' and e.payload[3]==3)
-    computer.setState('once',computer.getState('once')+1)
-    computer.log('one-shot')
-  end,
-  periodic=function(e) computer.setState('periods',(computer.getState('periods') or 0)+1) end,
-  restore=function(e) computer.setState('restores',computer.getState('restores')+1) end
-}}]]
+local origin_source=[[function start(e)
+  local data={}; rawset(data,'ready',false); computer.setState('raw_data',data)
+  print(_VERSION,false,nil,3)
+  computer.setState('boots',(computer.getState('boots') or 0)+1)
+  computer.setState('once',0); computer.setState('restores',0)
+  local payload={false,'',3}
+  computer.setState('timer',computer.after(7,'once',payload)); payload[3]=99
+  computer.every(3,'periodic')
+  computer.on('power_restored','restore')
+end
+
+function once(e)
+  assert(e.payload[1]==false and e.payload[2]=='' and e.payload[3]==3)
+  computer.setState('once',computer.getState('once')+1)
+  computer.log('one-shot')
+end
+
+function periodic(e) computer.setState('periods',(computer.getState('periods') or 0)+1) end
+
+function restore(e) computer.setState('restores',computer.getState('restores')+1) end]]
 local declaration_source=[[
 local function increment(n) return n+1 end
 function start(e)
@@ -197,7 +198,7 @@ function M.on_tick(event)
     assert(rec.status=='running',rec.diagnostic and rec.diagnostic.message)
     assert(rec.state.boots==1)
     -- Keep committed editor source different from the active run snapshot.
-    runtime.save(rec.id,'return {api_version=1,handlers={start=function(e) error("saved-only source executed") end}}',rec.saved_revision)
+    runtime.save(rec.id,'function start(e) error("saved-only source executed") end',rec.saved_revision)
     runtime.emit(rec.id,'power_restored',{outage_start_tick=0,restored_tick=event.tick},event.tick)
     if fixture.declaration then
       local plain=registry.computer(fixture.declaration)

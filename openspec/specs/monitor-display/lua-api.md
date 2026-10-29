@@ -102,37 +102,34 @@ Resize notification is queued after new geometry is committed, so getSize agrees
 ## Example: a touchable status display
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      computer.on("monitor_touch", "touched")
-      computer.on("monitor_resize", "resized")
-      local m = peripheral.find("monitor", "red")
-      if m then
-        m.setBackgroundColor(colors.black)
-        m.setTextColor(colors.lime)
-        m.clear()
-        m.setCursorPos(1, 1)
-        m.write("READY")
-      end
-    end,
-    touched = function(event)
-      local m = peripheral.wrap(event.peripheral, event.wire)
-      if m then
-        m.setCursorPos(1, 1)
-        m.write(tostring(event.x) .. "," .. tostring(event.y))
-      end
-    end,
-    resized = function(event)
-      local m = peripheral.wrap(event.peripheral, event.wire)
-      if m then
-        m.setCursorPos(1, 1)
-        m.write("RESIZED")
-      end
-    end
-  }
-}
+function start(event)
+  computer.on("monitor_touch", "touched")
+  computer.on("monitor_resize", "resized")
+  local m = peripheral.find("monitor", "red")
+  if m then
+    m.setBackgroundColor(colors.black)
+    m.setTextColor(colors.lime)
+    m.clear()
+    m.setCursorPos(1, 1)
+    m.write("READY")
+  end
+end
+
+function touched(event)
+  local m = peripheral.wrap(event.peripheral, event.wire)
+  if m then
+    m.setCursorPos(1, 1)
+    m.write(tostring(event.x) .. "," .. tostring(event.y))
+  end
+end
+
+function resized(event)
+  local m = peripheral.wrap(event.peripheral, event.wire)
+  if m then
+    m.setCursorPos(1, 1)
+    m.write("RESIZED")
+  end
+end
 ```
 
 Required cases: negative/offscreen cursor clipping; nil/invalid color and blit atomicity; palette repaint; positive/negative/large scroll; all scales; merge/split/rotation identity and geometry; same-color reach through non-anchor tiles; touch on borders/corners; power restoration; cold retained display; glyph/rich-text safety; real-client maximum supported render latency.

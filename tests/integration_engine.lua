@@ -109,8 +109,9 @@ local function touch()
   local state=registry.get().monitors; local job=state.touches[#state.touches]
   assert(monitor.deliver(job,g,registry.computer(f().c),game.tick,nop,p)); state.touches={}
 end
-local busy_source=[[return {api_version=1,handlers={start=function(e) computer.every(10,'work') end,
-  work=function(e) local sum=0; for i=1,128 do sum=sum+i end; computer.setState('sum',sum); computer.setState('tick',e.tick) end}}]]
+local busy_source=[[function start(e) computer.every(10,'work') end
+
+function work(e) local sum=0; for i=1,128 do sum=sum+i end; computer.setState('sum',sum); computer.setState('tick',e.tick) end]]
 function M.on_tick(event)
   local x=f(); if x.phase=='done' then return end
   if x.phase=='frozen' then

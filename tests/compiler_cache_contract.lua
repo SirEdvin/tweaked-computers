@@ -3,12 +3,12 @@ local compiler=require('scripts.runtime.compiler')
 local admission=require('scripts.runtime.admission')
 local limits=require('scripts.runtime.limits')
 local M={}
-local source='return {api_version=1,handlers={start=function(e) local t={1,2,3}; for i,v in ipairs(t) do assert(i==v) end end}}'
+local source='function start(e) local t={1,2,3}; for i,v in ipairs(t) do assert(i==v) end end'
 local serial=0
 local function evict()
   for i=1,9 do
     serial=serial+1
-    local text='return {api_version=1,handlers={start=function(e) local n='..serial..' end}}'
+    local text='function start(e) local n='..serial..' end'
     assert(compiler.compile(text,admission.context(admission.new(),'evict',0)))
   end
 end
@@ -72,7 +72,7 @@ function M.run()
   assert(ok,problem and problem.message)
   local safe=assert(compiler.compile(source,admission.context(admission.new(),'readback',0)))
   assert(safe.handlers.start and safe.generated~='error("caller executable trusted")' and safe.nodes>0)
-  for _,text in ipairs({'false','x=5; local y=6','return {api_version=1,handlers={}}'}) do
+  for _,text in ipairs({'false','x=5; local y=6','return {answer=false}'}) do
     for _,available in ipairs({0,1,100,1000,limits.compile_work}) do
       assert(compiler.compile(text,admission.context(admission.new(),'shell-warm',0),'shell'))
       local warm=context(available); local a,ae=compiler.compile(text,warm,'shell')
@@ -83,7 +83,7 @@ function M.run()
       count=count+1
     end
   end
-  local text='return {api_version=1,handlers={}}'
+  local text='function idle() end'
   local program=assert(compiler.compile(text,admission.context(admission.new(),'mode-program',0)))
   local shell=assert(compiler.compile(text,admission.context(admission.new(),'mode-shell',0),'shell'))
   assert(program.mode==nil and shell.mode=='shell' and program.generated~=shell.generated,'compiler modes shared an executable proof')

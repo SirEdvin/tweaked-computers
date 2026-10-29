@@ -131,29 +131,25 @@ No callback runs inside the GUI handler. Use the existing scheduled subscription
 This proposed example must become an executed fixture/example during implementation; it is not evidence of a passing compiler or UI test.
 
 ```lua
-return {
-    api_version = 1,
-    handlers = {
-        start = function(event)
-            local panel = peripheral.find("dashboard", "red")
-            assert(panel, "Connect a powered Dashboard on red")
-            panel.setTab(1, {
-                title = "Overview",
-                content = {type = "column", id = "root", children = {
-                    {type = "label", id = "status", text = "Ready"},
-                    {type = "button", id = "ack", text = "Acknowledge"}
-                }}
-            })
-            panel.subscribe("clicked")
-        end,
-        clicked = function(event)
-            local panel = peripheral.wrap(event.peripheral, event.wire)
-            if event.tab == 1 and event.button == "ack" then
-                panel.setText(1, "status", "Acknowledged")
-            end
-        end
-    }
-}
+function start(event)
+    local panel = peripheral.find("dashboard", "red")
+    assert(panel, "Connect a powered Dashboard on red")
+    panel.setTab(1, {
+        title = "Overview",
+        content = {type = "column", id = "root", children = {
+            {type = "label", id = "status", text = "Ready"},
+            {type = "button", id = "ack", text = "Acknowledge"}
+        }}
+    })
+    panel.subscribe("clicked")
+end
+
+function clicked(event)
+    local panel = peripheral.wrap(event.peripheral, event.wire)
+    if event.tab == 1 and event.button == "ack" then
+        panel.setText(1, "status", "Acknowledged")
+    end
+end
 ```
 
 A separate maintained chart example must inspect the method inventory, demonstrate a mixed tab, append enough vectors to wrap its chosen capacity while nobody views it, then reopen it and replace a duration-bar dataset. It must state line units, sample-order X semantics and library limitations rather than simulate unsupported production-graph features.

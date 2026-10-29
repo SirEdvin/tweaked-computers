@@ -11,17 +11,17 @@ local defs=require('scripts.device-definitions')
 local M={}; local loaded=false
 local function f() return storage.tc_monitor_upgrade end
 local function nop() end
-local source=[[return {api_version=1,handlers={
-start=function(e)
+local source=[[function start(e)
  computer.setState('boots',(computer.getState('boots') or 0)+1)
  computer.on('peripheral_detach','detached'); computer.on('monitor_resize','resized')
-end,
-detached=function(e) local t=computer.getState('detaches') or {}; t[e.peripheral]=true; computer.setState('detaches',t) end,
-resized=function(e)
+end
+
+function detached(e) local t=computer.getState('detaches') or {}; t[e.peripheral]=true; computer.setState('detaches',t) end
+
+function resized(e)
  computer.setState('resizes',(computer.getState('resizes') or 0)+1)
  local t=computer.getState('resized_names') or {}; t[e.peripheral]=true; computer.setState('resized_names',t)
-end
-}}]]
+end]]
 local function build(kind,x,y)
  local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
  local r=assert(lifecycle.build(body)); lifecycle.power_entity(r).energy=100000; r.powered=true; return r

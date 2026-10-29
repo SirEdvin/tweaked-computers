@@ -27,18 +27,14 @@ There is no guest API to read other players' drafts, inject editor input, run an
 ## Minimal in-game program
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      computer.log("Controller started")
-      computer.on("peripheral_attach", "attached")
-    end,
-    attached = function(event)
-      computer.log(event.peripheral .. " attached on " .. event.wire)
-    end
-  }
-}
+function start(event)
+  computer.log("Controller started")
+  computer.on("peripheral_attach", "attached")
+end
+
+function attached(event)
+  computer.log(event.peripheral .. " attached on " .. event.wire)
+end
 ```
 
 Acceptance must type/paste this through the real editor, save and run that saved text, wire a peripheral and observe the output. Executing an untouched bundled fixture is not proof that the editor-to-program path works. Repeat with a syntax error, unsupported feature, conflicting second editor, dirty close, native text-field focus and Stop/Run buttons. Verify source and state through a cold save/load with both an active old revision and a different saved revision.

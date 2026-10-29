@@ -219,7 +219,7 @@ local function source(index)
   elseif group=='churn' and variant=='register-cancel' then
     work=work.."local t=computer.after(600,'work'); assert(computer.cancelTimer(t)); local s=computer.on('peripheral_attach','work'); assert(computer.off(s)); "
   end
-  return 'return {api_version=1,handlers={start=function(e) '..start..' end,work=function(e) '..work..' end,changed=function(e) '..changed..' end}}'
+  return 'function start(e) '..start..' end; function work(e) '..work..' end; function changed(e) '..changed..' end'
 end
 local function activate(c,index)
   if c.saved_revision==0 then

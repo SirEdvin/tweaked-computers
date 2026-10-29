@@ -227,92 +227,49 @@ local function emit(main,mode,expression)
     if #output>limits.generated_source_bytes then reject(nil,'generated source too large','E_LIMIT') end
     return output,{},nodes
   end
-  local first=main.body.first
-  while first and first.node_type=='empty' do parsing.enter(1); first=first.next end
-  if not first or first.node_type~='retstat' then
-    -- Discover the complete public inventory without executing any candidate
-    -- code. Only parser-global reads of these names gain forward resolution;
-    -- local/upvalue references keep the parser's lexical declaration order.
-    local names,seen,count,key_work={}, {},0,0
-    local stat=main.body.first
-    while stat do
-      parsing.enter(1)
-      local kind=stat.node_type
-      if kind~='empty' then
-        local node
-        if kind=='funcstat' and global(stat.name) and not stat.func_def.is_method then node=stat.name.suffix
-        elseif kind=='localfunc' then node=stat.name
-        else reject(stat,'declaration document permits only simple function declarations') end
-        local name=identifier(node.value or node.name,node)
-        parsing.enter(#name+1)
-        if globals[name] or forbidden[name] or declaration_reserved[name] then reject(node,'reserved declaration name: '..name) end
-        if seen[name] then reject(node,'duplicate declaration name: '..name) end
-        seen[name]=true
-        if kind=='funcstat' then
-          count=count+1; names[name]=true
-          key_work=key_work+#name+1
-          if count>limits.handler_names then reject(node,'handler count exceeded','E_LIMIT') end
-        end
-      end
-      stat=stat.next
-    end
-    if count==0 then reject(first,'exported function required') end
-    exports=names
-    -- Descriptor admission in run prepays the static bindings; new prepays
-    -- the complete bounded private table. Neither table nor its write path is
-    -- available to guest code. Each exported value is a registered closure.
-    local out={text('__tc.spend('..key_work..'); local __tc_functions=__tc.new('..count..',function() return {} end);')}
-    stat=main.body.first
-    while stat do
-      parsing.enter(1)
-      if stat.node_type=='funcstat' then
-        visit(stat)
-        local name=stat.name.suffix.value
-        out[#out+1]=leave(text('__tc_functions['..string.format('%q',name)..']=__tc.closure('..func(stat.func_def)..');'))
-      else out[#out+1]=statement(stat) end
-      stat=stat.next
-    end
-    out[#out+1]=text('return __tc_functions')
-    local output=table.concat(out,'\n')
-    parsing.enter(#output)
-    if #output>limits.generated_source_bytes then reject(first,'generated source too large','E_LIMIT') end
-    return output,names,nodes
-  end
-  local ret, stat = nil, main.body.first
+  -- Discover all exports before emission; private helpers retain lexical order.
+  local names,seen,count,key_work={}, {},0,0
+  local stat=main.body.first
   while stat do
-    if stat.node_type ~= 'empty' then
-      if ret or stat.node_type ~= 'retstat' then reject(stat,'document must only return a literal descriptor') end
-      ret = stat
+    parsing.enter(1)
+    local kind=stat.node_type
+    if kind~='empty' then
+      local node
+      if kind=='funcstat' and global(stat.name) and not stat.func_def.is_method then node=stat.name.suffix
+      elseif kind=='localfunc' then node=stat.name
+      else reject(stat,'declaration document permits only simple function declarations') end
+      local name=identifier(node.value or node.name,node)
+      parsing.enter(#name+1)
+      if globals[name] or forbidden[name] or declaration_reserved[name] then reject(node,'reserved declaration name: '..name) end
+      if seen[name] then reject(node,'duplicate declaration name: '..name) end
+      seen[name]=true
+      if kind=='funcstat' then
+        count=count+1; names[name]=true
+        key_work=key_work+#name+1
+        if count>limits.handler_names then reject(node,'handler count exceeded','E_LIMIT') end
+      end
     end
-    stat = stat.next
+    stat=stat.next
   end
-  if not ret or #ret.exp_list ~= 1 or ret.exp_list[1].node_type ~= 'constructor' then reject(ret,'literal descriptor required') end
-  local descriptor, seen = {}, {}
-  for _,f in ipairs(ret.exp_list[1].fields) do
-    if f.type == 'list' or f.key.node_type ~= 'string' or seen[f.key.value] then reject(ret,'invalid or duplicate descriptor key') end
-    seen[f.key.value] = true; descriptor[f.key.value] = f.value
+  if count==0 then reject(main.body.first,'exported function required') end
+  exports=names
+  -- Run admission prepays bindings; new prepays the private closure inventory.
+  local out={text('__tc.spend('..key_work..'); local __tc_functions=__tc.new('..count..',function() return {} end);')}
+  stat=main.body.first
+  while stat do
+    parsing.enter(1)
+    if stat.node_type=='funcstat' then
+      visit(stat)
+      local name=stat.name.suffix.value
+      out[#out+1]=leave(text('__tc_functions['..string.format('%q',name)..']=__tc.closure('..func(stat.func_def)..');'))
+    else out[#out+1]=statement(stat) end
+    stat=stat.next
   end
-  local count = 0
-  for name in pairs(seen) do
-    count = count + 1
-    if name ~= 'api_version' and name ~= 'handlers' then reject(ret,'unknown descriptor key') end
-  end
-  if count ~= 2 or not seen.api_version or not seen.handlers then reject(ret,'descriptor requires api_version and handlers') end
-  if descriptor.api_version.node_type ~= 'number' or descriptor.api_version.value ~= 1 then reject(ret,'unsupported api_version') end
-  if descriptor.handlers.node_type ~= 'constructor' then reject(ret,'literal handlers required') end
-  local handlers, names = {}, {}
-  for _,f in ipairs(descriptor.handlers.fields) do
-    if f.type == 'list' or f.key.node_type ~= 'string' or f.value.node_type ~= 'func_proto' then reject(ret,'literal named function handler required') end
-    local name = identifier(f.key.value, f.key)
-    if not name:match('^[a-zA-Z_][a-zA-Z_0-9]*$') or names[name] then reject(f.key,'invalid or duplicate handler name') end
-    names[name] = true
-    handlers[#handlers+1] = '['..string.format('%q',name)..']='..func(f.value.func_def)
-    if #handlers > limits.handler_names then reject(ret,'handler count exceeded','E_LIMIT') end
-  end
-  local output = 'return {'..table.concat(handlers,',\n')..'}'
-  if #output > limits.generated_source_bytes then reject(ret,'generated source too large','E_LIMIT') end
+  out[#out+1]=text('return __tc_functions')
+  local output=table.concat(out,'\n')
   parsing.enter(#output)
-  return output, names, nodes
+  if #output>limits.generated_source_bytes then reject(main.body.first,'generated source too large','E_LIMIT') end
+  return output,names,nodes
 end
 
 function M.compile(source, context, mode)
@@ -402,7 +359,7 @@ function M.run(plan, name, event, services, context, circuit)
     guard.step(1)
     local count = 0
     for _ in pairs(executable.handlers) do count = count + 1 end
-    guard.prepare_descriptor(count)
+    guard.prepare_handlers(count)
     local handlers = factory()
     return guard.call(handlers[name],circuit and guard.circuit_event(event) or guard.snapshot(event))
   end)

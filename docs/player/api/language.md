@@ -29,19 +29,15 @@ optional exported `start` once. Other names do not subscribe to events implicitl
 The existing literal descriptor remains supported, with no source conversion:
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      computer.log("Ready")
-      computer.every(60, "sample")
-    end,
-    sample = function(event)
-      local n = computer.getState("samples") or 0
-      computer.setState("samples", n + 1)
-    end
-  }
-}
+function start(event)
+  computer.log("Ready")
+  computer.every(60, "sample")
+end
+
+function sample(event)
+  local n = computer.getState("samples") or 0
+  computer.setState("samples", n + 1)
+end
 ```
 
 In both forms `start` is optional. Registrations take declared public names as

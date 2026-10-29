@@ -80,26 +80,21 @@ This complete program logs a string key or a catchable WRONGTYPE diagnostic with
 assuming every error is a table. It leaves any existing key untouched.
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      local db = peripheral.find("kv_database", "red")
-      if not db then
-        computer.log("Connect a database on red NETWORK")
-        return
-      end
-      local ok, value = pcall(db.get, "counter")
-      if ok then
-        computer.log(value or "No counter yet")
-      elseif type(value) == "table" then
-        computer.log(value.code .. ": " .. value.message)
-      else
-        computer.log(tostring(value))
-      end
-    end
-  }
-}
+function start(event)
+  local db = peripheral.find("kv_database", "red")
+  if not db then
+    computer.log("Connect a database on red NETWORK")
+    return
+  end
+  local ok, value = pcall(db.get, "counter")
+  if ok then
+    computer.log(value or "No counter yet")
+  elseif type(value) == "table" then
+    computer.log(value.code .. ": " .. value.message)
+  else
+    computer.log(tostring(value))
+  end
+end
 ```
 
 ## Mining and shared storage
