@@ -140,7 +140,10 @@ function M.on_tick(event)
     for i,id in ipairs(x.computers) do local c=registry.computer(id); assert(runtime.save(id,x.sources[i],0)); assert(runtime.activate(id,event.tick)) end
     x.phase='running'; log('TC_ACCEPTANCE_MONITORS_STARTED')
   elseif x.phase=='running' then
-    for _,id in ipairs(x.computers) do local c=registry.computer(id); assert(c.status=='running',serpent.line(c.diagnostic)) end
+    for _,id in ipairs(x.computers) do local c=registry.computer(id)
+      assert(c.status=='running' or config.allow_stop and c.status=='stopped' and not c.diagnostic,serpent.line(c.diagnostic))
+    end
+    if registry.get().monitors.job then return end -- Native removal must finish bounded regrouping before resolving its new view.
     for i,wall in ipairs(x.walls) do
       local g=assert(monitor.resolve(registry.record(wall[1]))); local r=g.render
       if r and r.presented_revision~=x.observed[i] then
@@ -189,17 +192,27 @@ function M.on_tick(event)
       for _,p in pairs(game.connected_players) do view.peers[#view.peers+1]=p.index end; table.sort(view.peers)
       for _,id in ipairs(x.computers) do local c=registry.computer(id)
         local selection=c.monitor_sync; local lane=selection and registry.get().monitors.presentation.lanes[selection.key]
-        view.computers[#view.computers+1]={id=id,state=c.state,run=c.run_id,
+        view.computers[#view.computers+1]={id=id,state=c.state,run=c.run_id,status=c.status,
           sequence=lane and lane.presented_sequence,presented_tick=lane and lane.presented_tick}
       end
       for _,wall in ipairs(x.walls) do local g=monitor.resolve(registry.record(wall[1])); local r=g and g.render
-        local marked=0; for _,id in ipairs(wall) do if registry.record(id).body.to_be_deconstructed('player') then marked=marked+1 end end
+        local marked,tiles=0,0; for _,id in ipairs(wall) do local rec=registry.record(id)
+          if rec and rec.body.valid then
+            tiles=tiles+1; if rec.body.to_be_deconstructed('player') then marked=marked+1 end
+          end
+        end
         view.walls[#view.walls+1]={id=g.id,width=g.model.width,height=g.model.height,
           left=g.left,top=g.top,direction=g.direction,world_width=g.world_width,world_height=g.world_height,
-          width_tiles=g.width_tiles,height_tiles=g.height_tiles,scale=g.model.scale,marked=marked,
+          width_tiles=g.width_tiles,height_tiles=g.height_tiles,scale=g.model.scale,marked=marked,tiles=tiles,
           presented_tick=r and r.presented_tick,sequence=r and r.presented_sequence,
-          cells=r and r.snapshot.cells,palette=r and r.snapshot.palette}
+          cells=r and r.snapshot.cells,palette=r and r.snapshot.palette,
+          cursor=r and {x=r.snapshot.x,y=r.snapshot.y,blink=r.snapshot.blink}}
       end
+      local presentation=registry.get().monitors.presentation; view.presentation={}
+      for _,key in ipairs({'jobs','work','orphans','retired'}) do
+        local n=0; for _ in pairs(presentation[key] or {}) do n=n+1 end; view.presentation[key]=n
+      end
+      for _,key in ipairs({'staging_cells','pending_cells','retired_cells'}) do view.presentation[key]=presentation[key] or 0 end
       helpers.write_file('acceptance-monitor-world.json',helpers.table_to_json(view),false,0)
       for _,p in pairs(game.connected_players) do helpers.write_file('acceptance-monitor-world.json',helpers.table_to_json(view),false,p.index) end
     end

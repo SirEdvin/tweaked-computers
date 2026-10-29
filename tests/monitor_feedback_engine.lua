@@ -25,6 +25,7 @@ end
 local function resolve(row) return assert(monitor.resolve(registry.record(row.ids[1]))) end
 local function settle()
   for _=1,200 do
+    lifecycle.power_losses(game.tick,nop); lifecycle.reconcile(game.tick,nop)
     monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
     local s=registry.get().monitors; local p=s.presentation
     local ready=not s.job and (not p or #p.jobs==0 and #p.orphans==0 and #p.retired==0 and p.pending_cells==0)
@@ -99,6 +100,7 @@ function M.run()
     model.calls.setCursorBlink(g.model,nop,true)
     model.calls.write(g.model,nop,'NATIVE X')
     model.calls.setCursorPos(g.model,nop,2,2)
+    renderer.participate(g)
   end
   settle()
   for _,row in ipairs(f().rows) do
@@ -133,12 +135,14 @@ function M.run()
     assert(marked.body.order_deconstruction('player'))
     model.calls.setCursorPos(g.model,nop,1,2); model.calls.write(g.model,nop,'LIVE')
     model.calls.setPaletteColor(g.model,nop,2,0xAB3412)
+    renderer.participate(g)
     model.capture(g.model,nop)
     local expected=terminal(g.model)
     settle(); assert(equal(terminal(g.model),expected)); capture(row); unchanged(row); properties(g)
     assert(marked.body.to_be_deconstructed('player'))
     -- Power hides/restores presentation without changing committed content.
     local p=lifecycle.power_entity(marked); p.energy=0; marked.powered=false
+    lifecycle.power_losses(game.tick,nop); lifecycle.reconcile(game.tick,nop)
     monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
     assert(g.render.hidden and not g.render.panel.visible); unchanged(row)
     p.energy=100000; marked.powered=true
@@ -171,6 +175,7 @@ function M.run()
   r.panel.destroy(); r.panel=rendering.draw_rectangle{surface=s,left_top={47.5,-0.5},right_bottom={49.5,1.5},color={0,0,0},filled=true}
   for _,c in ipairs(r.cells) do if c.glyph then c.glyph.render_layer='light-effect' end end
   r.layer_version=nil; r.version=nil
+  renderer.changed(legacy)
   local count=#rendering.get_all_objects(); local before=copy(legacy.model)
   local ok=pcall(renderer.tick,game.tick,function() error('fixture-zero-credit',0) end)
   assert(not ok and legacy.render==r and r.panel.valid and equal(before,legacy.model) and #rendering.get_all_objects()==count)

@@ -112,3 +112,99 @@ matched sparse/full-row benchmarks and longer simulated soak runs. It reports
 whole-scheduler timings, distinct image changes, retained-object ownership and
 cold reload, rather than equating two-tick publication with acceptable CPU cost.
 The performance changes ship in 0.1.7, not in the unchanged published 0.1.6 archive.
+
+### Matched maintenance scenes
+
+`tools/monitor_performance.py --scene zero|idle|one|all` selects the no-monitor
+control, 144 stopped/settled tiles, one updating screen among four independent
+6×6 walls, or the original four-screen producer. `--workload sparse|full-blit`
+selects changed-row or full-row submission; it does not change the image. All
+scenes retain the same computer/bridge setup. The zero control removes only
+monitor bodies/helpers; the idle scene stops its writer after warmup. The one
+scene restricts the chart's selected references to its first discovered screen.
+The other screens retain complete fronts without a continuous producer.
+
+Run paired archives serially with identical scene, layout, workload, tick count,
+engine and mode. Each run creates a separate-process cold boundary, rewarms, then
+records exactly `--ticks` scheduler samples per requested content mode. Live tile
+counts/power and the expected running/stopped producer are checked outside the
+timed scheduler call. Summary mean/median/p95/max are whole-scheduler Lua CPU,
+not client FPS or a numerical pass/fail speed threshold. Instrumented structural
+counters and phase attribution must be reported separately. Test-only payload
+and guest hashes are in `provenance.json`; the input archive remains immutable.
+`python tools/test_monitor_performance.py` checks scene plumbing, exact receipt
+inventories and unchanged nonfixture payloads with mocked processes, not native
+performance or cold behavior.
+
+### Demand-driven maintenance and structural counters
+
+Terminal methods still complete synchronously. Successful mutations wake their
+existing singleton or selected lane; repeated notifications share that lane's
+bounded work entry. An admitted immutable frame finishes before later pending
+writes replace it. Incomplete participation and known member outages park work;
+new participation or live restoration wakes it. Pending admission, preparation,
+publication and retirement retain the existing fair cursors and budgets.
+Getters do not wake rendering. Native cursor blink does not require a redraw.
+
+Stable topology is not rediscovered each tick. The physical lifecycle observes
+body/helper validity, ownership, power, geometry and scope once per actual tick,
+then notifies changes. This is not cached permission: actual calls, touch and
+publication still prove fresh authority, including native changes in one event.
+Generic monitor proofs and repeated status-name construction are skipped when
+unchanged; ordinary neighboring device families keep their existing paths.
+Necessary circuit/path maintenance remains separately visible as residual work.
+
+Run `tools/monitor_demand.py` with the same `--factorio`, `--archive`, `--output`
+and `--mode` arguments as the other packaged wrappers. It explicitly instruments
+only topology/proof entry and native visibility assignments in a copied archive,
+installs observers before backend/authority capture, and verifies every other
+nonfixture byte against the input. Do not use that instrumented ZIP for timings.
+The registered `tests.monitor_demand_engine` also supports production-context
+cold smoke directly, but full topology/proof/visibility acceptance uses the
+instrumented wrapper. Host instrumentation guards are tested by
+`python tools/test_monitor_demand.py`.
+
+| Counter | Actual boundary observed |
+| --- | --- |
+| `observation` | Physical monitor observation visits, exactly 144 per measured tick |
+| `topology` | Complete tile-signature construction, not an unused public wrapper |
+| `full_proofs` | Availability proofs after the operation-local positive-reuse check |
+| `presentation_proof_requests` | Presenter requests, including safe operation-local reuse |
+| `connector`, `has_power` | Monitor endpoint/power checks, including necessary network/service work |
+| `capture`, `frame`, `cell`, `cursor` | Immutable capture and renderer preparation entry points |
+| `native_create`, `native_retire`, `visibility` | Monitor sprite allocation, actual backend retirement and native visibility assignments |
+| `clear_cell`, `art_create` | Retirement-cell visits and separately classified status-art allocation |
+
+The fixture checks settled/stopped, ordinary cold idle, outage/restoration, one
+independent updating screen and four updating screens on actual scheduler ticks.
+It checks powered tile inventory and real producer progress, unchanged-peer
+front identity, drained retained work and zero unnecessary passive presentation.
+Separate native mutations exercise silent movement, rotation, force changes,
+cross-surface clone/retirement and helper loss/restoration, preserving unrelated fronts. Same-event
+proof probes are distinguished from subsequent actual-tick reconciliation.
+The pinned engine does not support same-body surface teleport for combinators;
+cross-surface cloning therefore proves fresh identities and retirement rather
+than pretending a monitor body can make that unsupported transfer.
+
+### Save compatibility and rollback
+
+Scheduling bookkeeping is versioned alongside existing presentation state.
+Missing older bookkeeping is enrolled once during synchronized maintenance;
+configuration changes also invalidate grouping policy. Ordinary `on_load` does
+not reconstruct work, create objects, change storage or execute guest source.
+Valid fronts, models, selections, partial participation, admitted frames, paid
+progress and same-tick credits stay retained. Unsupported bookkeeping versions
+or index representations are refused rather than reset as empty work.
+
+`tools/monitor_upgrade.py --baseline-version 0.1.16` verifies the immutable release
+hash and a real old/new mod-version transition on matching 2.1.23 data in both
+content modes, followed by an ordinary cold process. While this branch retains
+its release version, explicitly pass `--test-version 0.1.17`: only a private copy's
+version/name metadata and matching package manifest change; production payloads
+are compared byte-for-byte. No source version or published archive is mutated.
+The default historical 0.1.4 path still uses 2.0.77 to create the old save and
+2.1.23 for upgrade; that history is not new-client acceptance.
+
+Back up the save and old archive before upgrading. Rollback restores that
+pre-upgrade save together with its matching old mod and engine/content mode;
+an in-place downgrade of a newly saved scheduling representation is not promised.

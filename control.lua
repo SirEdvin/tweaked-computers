@@ -6,6 +6,10 @@ script.on_event(defines.events.on_runtime_mod_setting_changed,budgets.refresh)
 local registry = require('scripts.registry')
 -- All trusted imports and hook registration occur at control parsing time.
 local scheduler = require('scripts.scheduler')
+if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixture']
+  and settings.startup['tc-smoke-production-fixture'].value=='tests.monitor_demand_engine' then
+  require('tests.monitor_demand_observer')
+end
 local lifecycle = require('scripts.lifecycle')
 local peripheral = require('scripts.services.peripheral')
 local editor = require('scripts.ui.editor')
@@ -59,7 +63,8 @@ script.on_event(defines.events.on_tick,function(event) scheduler.tick(event.tick
 -- same lifecycle in a second mod would create duplicate physical helpers.
 if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixture'] then
   local name=settings.startup['tc-smoke-production-fixture'].value
-  local monitor_state_fixture={['tests.monitor_state_waiting']=true,['tests.monitor_state_preparing']=true,
+  local monitor_state_fixture={['tests.monitor_demand_engine']=true,['tests.monitor_state_idle']=true,['tests.monitor_state_pending']=true,
+    ['tests.monitor_state_waiting']=true,['tests.monitor_state_preparing']=true,
     ['tests.monitor_state_ready']=true,['tests.monitor_state_retiring']=true,
     ['tests.acceptance_monitor_engine']=true,['tests.editor_reference_client_engine']=true,['tests.peripheral_inspector_engine']=true,
     ['tests.peripheral_inspector_client_engine']=true,['tests.peripheral_inspector_upgrade_engine']=true,['tests.ui_live_client_engine']=true,
@@ -166,8 +171,8 @@ if script.active_mods['tc-buffer-upgrade'] and settings.startup['tc-buffer-upgra
   end)
   script.on_load(test.on_load)
   script.on_event(defines.events.on_tick,test.on_tick)
-  script.on_configuration_changed(function()
+  script.on_configuration_changed(function(event)
     registry.initialize(); lifecycle.upgrade_existing(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
-    test.on_configuration_changed()
+    test.on_configuration_changed(event)
   end)
 end

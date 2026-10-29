@@ -21,6 +21,7 @@ function M.run()
     for _,rec in ipairs(records) do
       rec.powered=state~='unpowered'; rec.status=state=='blinking' and 'running' or 'stopped'
       rec.physical_error=state=='fault' and 'fixture fault' or nil
+      if rec.kind=='monitor' then rec.monitor_art_dirty=true end
     end
     art.tick(tick,nop)
     for _,rec in ipairs(records) do

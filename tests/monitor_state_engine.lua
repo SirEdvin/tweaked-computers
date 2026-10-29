@@ -13,7 +13,7 @@ local defs=require('scripts.device-definitions')
 local M={}
 local function nop() end
 local function f() return storage.tc_monitor_state end
-local function graph(roots)
+local function graph(roots,monitor_only)
   local seen,records={},{}
   local function visit(t)
     if type(t)~='table' or rawget(t,'__self') or seen[t] then return end
@@ -25,7 +25,11 @@ local function graph(roots)
   end
   for _,root in ipairs(roots) do visit(root) end
   local native={}
-  for _,o in pairs(rendering.get_all_objects()) do native[#native+1]={object=o,visible=o.visible} end
+  for _,o in pairs(rendering.get_all_objects()) do
+    if not monitor_only or o.type=='sprite' and (o.sprite=='tc-monitor-fill' or o.sprite:sub(1,9)=='tc-glyph-') then
+      native[#native+1]={object=o,visible=o.visible}
+    end
+  end
   return {records=records,native=native}
 end
 local function unchanged(saved)
@@ -220,26 +224,45 @@ function M.new(kind)
     elseif x.phase=='first' and idle() and l.presented_sequence>0 then
       selection_contract(c)
       x.hold=kind=='ready'; x.phase='capture'; x.sequence=lane(c).presented_sequence
-      if kind=='waiting' then
+      if kind=='idle' then paint(c,'A')
+      elseif kind=='waiting' then
         local ref=c.monitor_sync.members[1]
         guest(c,"peripheral.call("..string.format('%q',ref.name)..",'red','setCursorPos',2,1)")
       else paint(c,'B') end
     elseif x.phase=='capture' then
+      if kind=='pending' and l.job and not l.job.ready and not x.pending_write then
+        paint(c,'C'); assert(l.pending==nil); x.pending_write=true; return
+      end
       local ready=kind=='waiting' and l.status=='waiting' and next(l.participation)
+        or kind=='idle' and idle() and l.presented_sequence>0
+        or kind=='pending' and l.job and l.pending
         or kind=='preparing' and l.job and not l.job.ready
         or kind=='ready' and x.refused and l.job and l.job.ready
         or kind=='retiring' and #s.presentation.retired>0
       if ready then
         if kind=='preparing' then paint(c,'C'); assert(l.pending==nil) end
+        if kind=='idle' then
+          x.sequence=l.presented_sequence
+          x.idle_saved=graph({s.groups,c.monitor_sync,s.presentation.lanes,s.presentation.work},true)
+        end
         x.phase='frozen'; x.tick=e.tick; x.spent=root.scheduler.maintenance_spent
         x.saved=graph({root}); loaded=false
         game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
       end
     elseif x.phase=='resuming' then
+      if kind=='idle' then
+        unchanged(x.idle_saved); assert(l.presented_sequence==x.sequence and c.state.boots==1)
+        if e.tick-x.changed<20 then return end
+        x.phase='done'; log('TC_MONITOR_STATE_IDLE_UNCHANGED'); log('TC_COLD_OK'); return
+      end
       if kind=='waiting' and e.tick-x.changed<5 then assert(l.presented_sequence==x.sequence); return end
       if kind=='waiting' and not x.completed_round then paint(c,'D'); x.completed_round=true end
       if idle() then
         assert(c.state.boots==1 and l.presented_sequence>x.sequence)
+        if kind=='pending' then
+          for _,r in ipairs(c.monitor_sync.members) do assert(s.groups[r.name].render.snapshot.cells[1][1]==67) end
+          log('TC_MONITOR_STATE_PENDING_RETAINED')
+        end
         if kind~='ready' then x.phase='done'; log('TC_COLD_OK'); return end
         x.actions={'cable','stop','fault','apply','remove-owner','remove-member','foreign-force','rotate'}
         x.action=1; x.phase='arm'
