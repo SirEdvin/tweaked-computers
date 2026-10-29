@@ -1,4 +1,4 @@
-"""Exercise the actual CI change detector against isolated Git histories."""
+"""Exercise CI change detection, suite routing and the required aggregate gate."""
 import os
 from pathlib import Path
 import subprocess
@@ -12,8 +12,12 @@ WORKFLOW = yaml.load(
     (Path(__file__).resolve().parents[1] / '.github/workflows/ci.yml').read_text(),
     Loader=yaml.BaseLoader,
 )
-STEPS = WORKFLOW['jobs']['validate']['steps']
+STEPS = WORKFLOW['jobs']['checks']['steps']
 DETECTOR = next(step['run'] for step in STEPS if step.get('id') == 'changes')
+SUITES = {
+    'Check packaged sandbox and cold factory integration': 'factory',
+    'Check buffered presentation and released-save migration': 'monitor',
+}
 
 
 class CIChangeTests(unittest.TestCase):
@@ -132,9 +136,44 @@ class CIChangeTests(unittest.TestCase):
         for step in STEPS[start + 2:]:
             with self.subTest(step=step.get('name', step.get('uses'))):
                 expected = "steps.changes.outputs.changed == 'true'"
+                if step.get('name') in SUITES:
+                    expected += f" && matrix.suite == '{SUITES[step['name']]}'"
                 if 'actions/upload-artifact@' in step.get('uses', ''):
                     expected = '${{ always() && ' + expected + ' }}'
                 self.assertEqual(step['if'], expected)
+
+
+class CIJobTests(unittest.TestCase):
+    def test_independent_suites_preserve_limits_and_evidence(self):
+        self.assertIn('checks', WORKFLOW['jobs'])
+        checks = WORKFLOW['jobs']['checks']
+        self.assertEqual(checks['strategy'], {
+            'fail-fast': 'false', 'matrix': {'suite': ['factory', 'monitor']},
+        })
+        self.assertEqual(checks['timeout-minutes'], '35')
+        for name, suite in SUITES.items():
+            step, = (step for step in checks['steps'] if step.get('name') == name)
+            self.assertEqual(step['if'],
+                             "steps.changes.outputs.changed == 'true' && "
+                             f"matrix.suite == '{suite}'")
+        upload, = (step for step in checks['steps']
+                   if 'actions/upload-artifact@' in step.get('uses', ''))
+        self.assertEqual(upload['with']['name'],
+                         'mod-validation-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.suite }}')
+
+    def test_required_gate_rejects_failed_cancelled_and_skipped_suites(self):
+        gate = WORKFLOW['jobs']['validate']
+        self.assertEqual(gate.get('needs'), 'checks')
+        self.assertEqual(gate['if'], '${{ always() }}')
+        step, = gate['steps']
+        self.assertEqual(step['env']['RESULT'], '${{ needs.checks.result }}')
+        for outcome in ('success', 'failure', 'cancelled', 'skipped', '', 'unknown'):
+            with self.subTest(outcome=outcome):
+                result = subprocess.run(['bash', '-e', '-c', step['run']],
+                                        env=dict(os.environ, RESULT=outcome),
+                                        text=True, capture_output=True)
+                self.assertEqual(result.returncode == 0, outcome == 'success',
+                                 result.stdout + result.stderr)
 
 
 if __name__ == '__main__':
