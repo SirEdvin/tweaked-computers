@@ -1,7 +1,7 @@
 # Bounded native Lua language
 
-A saved computer program uses exactly one of two forms. Plain named functions
-are the simpler form; API version 1 is implicit:
+A saved computer program contains named function declarations only; API version
+1 is implicit:
 
 ```lua
 local function increment(value)
@@ -26,32 +26,15 @@ callbacks. `increment` is private and cannot be registered as a callback.
 Validate/Save do not execute the source; Run activates it. Activation queues the
 optional exported `start` once. Other names do not subscribe to events implicitly.
 
-The existing literal descriptor remains supported, with no source conversion:
-
-```lua
-function start(event)
-  computer.log("Ready")
-  computer.every(60, "sample")
-end
-
-function sample(event)
-  local n = computer.getState("samples") or 0
-  computer.setState("samples", n + 1)
-end
-```
-
-In both forms `start` is optional. Registrations take declared public names as
-strings, never function values or private helper names. An explicitly empty legacy
-handler table is valid; a declaration document must export at least one function.
-Only comments/empty statements may surround the legacy descriptor return; dynamic
-descriptor keys and extra descriptor keys remain forbidden. Legacy handlers do
-not gain implicit references to their sibling handlers.
+`start` is optional. Registrations take declared public names as strings, never
+function values or private helper names. A document must export at least one
+function, even when it deliberately performs no work.
 
 ## Declaration scope and calls
 
 Declaration documents permit only simple `function name(...) ... end` exports,
 optional `local function helper(...) ... end`, comments and semicolons at top
-level. Do not mix a descriptor with declarations. Top-level calls, variable
+level. Top-level returns, calls, variable
 initializers, assignments, loops, conditionals, `do` blocks, dotted declarations
 and colon methods are rejected before activation. Declarations do not execute
 their bodies during compilation or reconstruction.
@@ -84,8 +67,7 @@ computer state. Function values cannot enter durable Data, including via
 `computer.setState`. No player code executes on load; the exact active source is
 reconstructed at synchronized dispatch. Later saved-but-unapplied edits do not
 replace it, and reload does not replay startup. The live Console never inherits
-these function bindings. Downgrading after adopting new syntax requires a backup
-or explicit conversion/reapplication under a compatible runtime.
+these function bindings. Keep complete save/mod backups before changing runtimes.
 
 Inside handlers: local declarations/assignment, literals/tables, `if/elseif/else`,
 `do`, `return`, `break`, numeric/generic `for`, `while`, `repeat`, local helpers and
@@ -99,7 +81,7 @@ Nonfinite values cannot cross state/API boundaries. Use dot calls everywhere.
 The [live Console](../console.md) is a separate, bounded evaluation mode: it also
 accepts statements/expressions and nonreserved scratch-global assignments, and
 provides `print(...)`. Its save-backed values are not saved-program locals.
-The saved-program forms and global-write prohibition still
+The saved-program grammar and global-write prohibition still
 apply to saved handler programs. Both modes use the same guards and tick ledger.
 
 Globals in both modes: `assert`, `error`, `ipairs`, `pairs`, `next`, `pcall`,
@@ -238,7 +220,7 @@ a guest handler as private control values. No protection rolls back earlier stat
 printing or peripheral effects. Console still cannot call `computer.stop()`.
 
 New built-ins are reserved public/private top-level declaration names, not ordinary
-locals/parameters or legacy descriptor handler keys. An older colliding active
+locals/parameters. An older colliding active
 source faults only on synchronized reconstruction, with exact source/state retained;
 rename it and explicitly Save/Run. Noncolliding old sources retain API 1/compiler 2/
 storage 1, without startup replay. A colliding old Console root reports named

@@ -4,7 +4,7 @@ Normative companion to [spec.md](spec.md). The editor deliberately does not intr
 
 ## Source entry and lifecycle
 
-Use the descriptor in [computer-runtime/lua-api.md](../computer-runtime/lua-api.md): `return { api_version=1, handlers={...} }`. The editor supplies templates and API help, not hidden startup files. Source is compiled/validated only through the approved native pipeline.
+Use the function-declaration grammar in [program-source/lua-api.md](../program-source/lua-api.md). The editor supplies templates and API help, not hidden startup files. Source is compiled/validated only through the approved native pipeline.
 
 | Player action | Source effect | Execution effect | Persistent data |
 | --- | --- | --- | --- |

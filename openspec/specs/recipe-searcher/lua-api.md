@@ -134,7 +134,7 @@ Ordinary cold reload preserves existing physical identity and computer state wit
 
 ## Example: search, refine and read metadata
 
-Illustrative source for the existing descriptor/handler runtime; acceptance must execute this exact maintained example through the packaged compiler and services on a real powered Network connection.
+Illustrative source for the named-handler runtime; acceptance must execute this exact maintained example through the packaged compiler and services on a real powered Network connection.
 
 ```lua
 function start(event)

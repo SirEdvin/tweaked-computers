@@ -3,6 +3,7 @@ local registry=require('scripts.registry')
 local lifecycle=require('scripts.lifecycle')
 local runtime=require('scripts.runtime.computer')
 local scheduler=require('scripts.scheduler')
+local data=require('scripts.runtime.data')
 local defs=require('scripts.device-definitions')
 local M={}; local loaded=false
 local function f() return storage.tc_recipe_upgrade end
@@ -15,6 +16,7 @@ local function retained()
   local x=f(); local c=registry.record(x.c); local db=registry.record(x.db)
   assert(c==x.saved.c and c.state==x.saved.state and c.active==x.saved.active and c.run_id==x.saved.run)
   assert(c.state.boots==1 and c.saved_source==source and c.state.factory=='retained')
+  assert(c.status=='stopped' and not c.active and not c.run_id and next(c.queue)==nil and next(c.timers)==nil)
   assert(db==x.saved.db and db.database==x.saved.database)
   assert(lifecycle.connector(c,'network','red').connection_count==1)
 end
@@ -31,7 +33,13 @@ function M.run()
   supply.power_production=100000000; supply.power_usage=0
   assert(game.surfaces[1].create_entity{name='substation',position={3,3},force='player'})
   game.forces.player.technologies['tc-circuit-computers'].researched=true
-  assert(runtime.save(c.id,source,0)); assert(runtime.activate(c.id,game.tick))
+  assert(runtime.save(c.id,source,0))
+  -- Pre-declaration baseline: explicit host data, not fabricated execution.
+  for key,value in pairs({boots=1,factory='retained'}) do
+    local copied,stats=data.copy(value,nop); local size=stats.bytes+#key+16
+    c.state[key]=copied; c.state_sizes[key]=size; c.state_node_sizes[key]=stats.nodes
+    c.state_entries=c.state_entries+1; c.state_bytes=c.state_bytes+size; c.state_nodes=c.state_nodes+stats.nodes
+  end
 end
 function M.on_load()
   loaded=true
@@ -65,13 +73,13 @@ function M.on_tick(event)
     return
   end
   loaded=false; scheduler.tick(event.tick)
-  local c=registry.record(x.c); assert(c.status=='running',serpent.line(c.diagnostic))
+  local c=registry.record(x.c); assert(c.status=='stopped' and not c.active)
   assert(event.tick-x.start<120)
   if c.state.boots==1 then
 
     local db=registry.record(x.db)
     x.saved={c=c,state=c.state,active=c.active,run=c.run_id,db=db,database=db.database}
-    x.phase='legacy-frozen'; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
+    x.phase='legacy-frozen'; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED stopped-host-data-not-running-continuity')
   end
 end
 return M

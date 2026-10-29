@@ -35,8 +35,8 @@ ordinary guest/persistence budgets remain.
 Version 0.1.11 added [peripheral inspectors](inspectors.md),
 [radar modems](api/modem.md), [vanilla speaker audio](api/speaker.md),
 [guarded Lua globals](api/language.md#printing-raw-helpers-and-error-transformation)
-and a complete contextual in-game Reference. Plain function programs, legacy
-descriptors, the live maintenance setting and Service Rack artwork remain.
+and a complete contextual in-game Reference. Plain function programs,
+the live maintenance setting and Service Rack artwork remain.
 The maintenance default stays 200000; no production safety ceiling is raised.
 
 1. [Install the alpha and craft the devices](getting-started.md).

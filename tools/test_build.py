@@ -439,6 +439,22 @@ class CanonicalContractTests(unittest.TestCase):
             ('logic-handler', 'Bounded live signal observation'): '88df9636300ccab501411a2379f693aa5f27d1d9538bcaa771439243edb44ef4',
             ('peripheral-inspection', 'Bounded and honest refresh'): 'b1397186cf812339b3a8b16ac708d1d65cb728eae63bef4972df305f52db216c',
         }
+        # Source-only replacements must match the complete approved delta.
+        source_changes = [build.ROOT / 'openspec/changes/function-only-programs']
+        source_changes += list(archives.glob('*-function-only-programs'))
+        source_change = next(p for p in source_changes if p.is_dir())
+        source_replacements = {
+            'Declaration-only reconstruction boundary': 'Declaration-only document boundary',
+            'Compatible source lifecycle': 'Function-program source lifecycle',
+            'Expanded globals in saved function bodies': 'Approved globals in saved functions',
+            'Compatibility of newly reserved source names': 'Reserved names in saved programs',
+        }
+        source_blocks = {}
+        for delta in (source_change / 'specs').glob('*/spec.md'):
+            for section in re.split(r'^## ', delta.read_text(), flags=re.M):
+                if section.startswith(('MODIFIED Requirements', 'ADDED Requirements')):
+                    for name, body in re.findall(r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|\Z)', section, re.M | re.S):
+                        source_blocks[delta.parent.name, name] = body.strip()
         for change in changes:
             folder = archives / change
             self.assertTrue((folder / '.openspec.yaml').is_file(), change)
@@ -450,10 +466,20 @@ class CanonicalContractTests(unittest.TestCase):
                     with self.subTest(change=change, capability=delta.parent.name, requirement=name):
                         if (delta.parent.name,name)==('device-lifecycle','Mining preserves user data'):
                             name='Device-specific mining data policy'
+                        if delta.parent.name == 'program-source':
+                            name = source_replacements.get(name, name)
                         found = re.search(r'^### Requirement: ' + re.escape(name) +
                                           r'\n(.*?)(?=^### Requirement:|\Z)', canonical, re.M | re.S)
                         self.assertIsNotNone(found)
                         assert found is not None
+                        source_body = source_blocks.get((delta.parent.name, name))
+                        if source_body is not None:
+                            self.assertEqual(found[1].strip(), source_body)
+                            old_names = set(re.findall(r'^#### Scenario: ([^\n]+)', body, re.M))
+                            old_names = {'Print from a saved function' if n == 'Print from either saved format' else n for n in old_names}
+                            new_names = set(re.findall(r'^#### Scenario: ([^\n]+)', source_body, re.M))
+                            self.assertLessEqual(old_names, new_names)
+                            continue
                         expected = native_evolved.get((delta.parent.name, name))
                         if expected:
                             self.assertEqual(hashlib.sha256(found[1].strip().encode()).hexdigest(), expected)

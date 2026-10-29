@@ -4,6 +4,7 @@ local registry=require('scripts.registry')
 local scheduler=require('scripts.scheduler')
 local lifecycle=require('scripts.lifecycle')
 local runtime=require('scripts.runtime.computer')
+local data=require('scripts.runtime.data')
 local model=require('scripts.monitor-model')
 local monitor=require('scripts.services.monitor')
 local renderer=require('scripts.rendering')
@@ -101,7 +102,7 @@ end
 function M.run()
  if script.active_mods['tweaked-computers']=='0.1.16' then return maintenance_run() end
  assert(model.limits.width_tiles==4,'legacy fixture must originate in the released four-tile runtime')
- local x={phase='legacy',walls={},steps=0}; storage.tc_monitor_upgrade=x
+ local x={phase='legacy',walls={},steps=0,stopped_setup=true,boots=1}; storage.tc_monitor_upgrade=x
  local c=build('computer',-3,0); x.computer=c.id
  for i,shape in ipairs({{3,6,0},{6,6,10}}) do
   local wall={}; x.walls[i]=wall
@@ -123,7 +124,12 @@ function M.run()
  wire(registry.record(x.walls[2][1]),registry.record(x.walls[2][6]))
  wire(registry.record(x.walls[2][1]),registry.record(x.walls[2][31]))
  wire(registry.record(x.walls[2][31]),registry.record(x.walls[2][36]))
- assert(runtime.save(c.id,source,c.saved_revision)); assert(runtime.activate(c.id,game.tick))
+ assert(runtime.save(c.id,source,c.saved_revision))
+ -- Released 0.1.4 has no declaration compiler; retain explicit stopped data.
+ local value,stats=data.copy(1,nop)
+ c.state.boots=value; c.state_sizes.boots=stats.bytes+#'boots'+16
+ c.state_entries=1; c.state_bytes=c.state_bytes+c.state_sizes.boots
+ c.state_nodes=stats.nodes; c.state_node_sizes.boots=stats.nodes
  x.survivors={}; x.survivor_anchors={}; x.absorbed={}
  for i,wall in ipairs(x.walls) do
   local groups={}; local survivor
@@ -145,7 +151,7 @@ function M.on_load()
  end
  if x.saved then
   local c=registry.computer(x.computer); local g=monitor.resolve(registry.record(x.unaffected))
-  assert(c.run_id==x.saved.run_id and c.state.boots==1)
+  assert(c.run_id==(x.candidate_run or x.saved.run_id) and c.state.boots==(x.boots or 1))
   assert(g.id==x.saved.id and g.model==x.saved.model and g.model.cells==x.saved.cells)
  end
 end
@@ -164,6 +170,12 @@ function M.on_configuration_changed(event)
  assert(model.limits.width_tiles==6 and f().phase=='legacy-frozen')
  local x=f(); local g=monitor.resolve(registry.record(x.unaffected))
  assert(g.render==x.saved.render and x.saved.glyph.valid and x.saved.glyph.visible)
+ -- Candidate-only activation retains the original notification/effect checks,
+ -- not running-source continuity from the pre-declaration release.
+ local c=registry.computer(x.computer)
+ assert(c.status=='stopped' and not c.active and not c.run_id and c.state.boots==1)
+ fuel(); x.candidate_run=assert(runtime.activate(c.id,game.tick)); assert(scheduler.dispatch(c,game.tick))
+ x.boots=2; assert(c.state.boots==x.boots)
  x.changed=true; x.phase='upgrading'; log('TC_MONITOR_UPGRADE_CONFIGURATION')
 end
 function M.on_tick(event)
@@ -174,7 +186,7 @@ function M.on_tick(event)
   if loaded then
    local g=monitor.resolve(registry.record(x.unaffected))
    assert(x.candidate_signature==registry.get().monitors.signature and g.model.cells==x.saved.cells)
-   assert(x.saved.glyph.valid and x.saved.glyph.visible and registry.computer(x.computer).state.boots==1)
+   assert(x.saved.glyph.valid and x.saved.glyph.visible and registry.computer(x.computer).state.boots==x.boots)
    fuel(); scheduler.tick(event.tick)
    local s=registry.get().monitors
    assert(not s.job and s.signature==x.candidate_signature,'ordinary reload repeated policy regrouping')
@@ -184,10 +196,11 @@ function M.on_tick(event)
   return
  end
  fuel(); scheduler.tick(event.tick); x.steps=x.steps+1; assert(x.steps<300)
- local c=registry.computer(x.computer); assert(c.status=='running',serpent.line(c.diagnostic))
+ local c=registry.computer(x.computer)
+ assert(c.status==(x.phase=='legacy' and 'stopped' or 'running'),serpent.line(c.diagnostic))
  local s=registry.get().monitors; local ready=not s.job
  for _,id in ipairs(s.order) do local g=s.groups[id]; if not g.render or g.render.presented_revision~=g.model.revision then ready=false end end
- if x.phase=='legacy' and ready and c.state.boots==1 then
+ if x.phase=='legacy' and ready and c.state.boots==x.boots then
   local g=monitor.resolve(registry.record(x.unaffected))
   local partial=monitor.resolve(registry.record(x.partial)); local old=partial.render
   model.calls.setCursorPos(partial.model,nop,1,1); model.calls.write(partial.model,nop,'MIXED')
@@ -206,7 +219,7 @@ function M.on_tick(event)
   x.saved={id=g.id,model=g.model,cells=g.model.cells,render=g.render,glyph=g.render.cells[1].glyph,run_id=c.run_id}
   x.phase='legacy-frozen'; loaded=false; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
  elseif x.phase=='upgrading' then
-  assert(x.changed and c.run_id==x.saved.run_id and c.state.boots==1)
+  assert(x.changed and c.run_id==x.candidate_run and c.state.boots==x.boots)
   local u=monitor.resolve(registry.record(x.unaffected))
   assert(u.id==x.saved.id and u.model==x.saved.model and u.model.cells==x.saved.cells)
   assert(x.saved.glyph.valid and x.saved.glyph.visible,'unaffected image was hidden or destroyed')

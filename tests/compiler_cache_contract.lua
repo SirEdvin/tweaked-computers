@@ -137,6 +137,21 @@ function sample(a,b,n) assert(a==false and b==nil); return increment(n) end
   assert(not compiler.run(shell_declaration,'start',{}, {},admission.context(admission.new(),'declaration-mode-run',0)))
   local variant=assert(compiler.compile(declaration..'-- exact second source',admission.context(admission.new(),'exact-source',0)))
   assert(variant.source~=safe_declaration.source and variant.handlers.start)
-  log('TC_COMPILER_CACHE_OK comparisons='..count..' exact-credits caller-isolation bounded-eviction mode-separated-shell-fallback')
+  -- Top-level fragments must fit the unchanged output ceiling before joining.
+  local fragmented='local function helper() '..string.rep(';',200)..' end\nfunction start() helper() end'
+  local ceiling=limits.generated_source_bytes
+  local full=assert(compiler.compile(fragmented,context(limits.compile_work)))
+  evict()
+  limits.generated_source_bytes=#full.generated
+  local checked,problem=pcall(function()
+    assert(compiler.compile(fragmented,context(limits.compile_work)))
+    evict()
+    limits.generated_source_bytes=#full.generated-1
+    local refused,diagnostic=compiler.compile(fragmented,context(limits.compile_work))
+    assert(not refused and diagnostic.code=='E_LIMIT' and diagnostic.message=='generated source too large')
+  end)
+  limits.generated_source_bytes=ceiling
+  assert(checked,problem)
+  log('TC_COMPILER_CACHE_OK comparisons='..count..' exact-credits caller-isolation bounded-eviction mode-separated-shell-fallback fragment-output-boundary')
 end
 return M

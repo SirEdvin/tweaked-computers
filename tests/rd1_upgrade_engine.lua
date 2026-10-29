@@ -4,7 +4,7 @@ local registry=require('scripts.registry')
 local defs=require('scripts.device-definitions')
 local lifecycle=require('scripts.lifecycle')
 local runtime=require('scripts.runtime.computer')
-local scheduler=require('scripts.scheduler')
+local data=require('scripts.runtime.data')
 local kv=require('scripts.services.kv')
 local monitor=require('scripts.services.monitor')
 local model=require('scripts.monitor-model')
@@ -43,8 +43,17 @@ function M.run()
   assert(x.records.logic.children.output.get_wire_connector(cid,true).connect_to(x.sink.get_wire_connector(cid,true)))
   -- Retain an unsupported vanilla network cable too, without granting traversal.
   assert(input.get_wire_connector(cid,true).connect_to(x.records.kv.children.network.get_wire_connector(cid,true)))
-  runtime.save(x.records.computer.id,program,0); assert(runtime.activate(x.records.computer.id,game.tick))
-  assert(scheduler.dispatch(x.records.computer,game.tick)); assert(x.records.computer.state.boots==1)
+  -- The immutable alpha cannot compile declarations: seed data, never an active run.
+  local c=x.records.computer
+  runtime.save(c.id,program,0)
+  local value,stats=data.copy(1,nop)
+  c.state.boots=value; c.state_sizes.boots=stats.bytes+#'boots'+16
+  c.state_entries=1; c.state_bytes=c.state_bytes+c.state_sizes.boots
+  c.state_nodes=stats.nodes; c.state_node_sizes.boots=stats.nodes
+  local io=x.records.logic
+  io.output_bank={{signal={type='virtual',name='signal-C',quality='normal'},count=13}}
+  local output=io.children.output.get_or_create_control_behavior()
+  output.add_section().set_slot(1,{value={type='virtual',name='signal-C',quality='normal'},min=13}); output.enabled=true
   kv.methods.set(nil,x.records.kv,'red',game.tick,nop,'secret','retained string')
   kv.methods.hset(nil,x.records.kv,'red',game.tick,nop,'hash','field','retained hash')
   kv.methods.expire(nil,x.records.kv,'red',game.tick,nop,'secret',6000)
@@ -70,13 +79,14 @@ function M.run()
   assert(x.staged_refused.children.output.get_wire_connector(cid,true).connect_to(x.sink.get_wire_connector(cid,true),false))
   extra.power_usage=0
   for _,rec in pairs(x.records) do rec.body.power_usage=0 end
-  log('TC_CONTRACT genuine-alpha-source-populated-save-running-source-state-kv-screen-wires-blueprint-tagged-item')
+  log('TC_CONTRACT genuine-alpha-stopped-host-data-kv-screen-wires-blueprint-tagged-item')
   log('TC_CONTRACT_TOTAL 1')
 end
 local function retained()
   local x=f(); local c=x.records.computer
   assert(registry.record(c.id)==c and c.state==x.state and c.active==x.active and c.timers==x.timers and c.queue==x.queue)
   assert(c.run_id==x.run and c.generation==x.generation and c.state.boots==1 and not c.state.timers and c.saved_source==program)
+  assert(c.status=='stopped' and not c.active and not c.run_id and next(c.timers)==nil and next(c.queue)==nil)
   assert(x.records.kv.database==x.database and x.database.entries.secret.value=='retained string')
   assert(x.database.entries.hash.fields.field=='retained hash' and x.database.entries.secret.deadline==x.deadline)
   assert(monitor.resolve(x.records.monitor)==x.group and x.group.model==x.screen and x.screen.cells[1][1]==75)
@@ -132,7 +142,7 @@ function M.on_configuration_changed()
   assert(out.enabled and out.get_section(1).get_slot(1).min==13,'output section lost during replacement')
   for _,rec in pairs(x.records) do lifecycle.power_entity(rec).power_usage=0 end
   x.upgraded=true; x.phase='verify'; x.tick=game.tick
-  log('TC_RD1_UPGRADE_DATA_WIRES_REFUSAL_OK no-reboot logical-aliases-and-old-endpoints-retired')
+  log('TC_RD1_UPGRADE_DATA_WIRES_REFUSAL_OK stopped-host-setup logical-aliases-and-old-endpoints-retired')
 end
 function M.on_tick(event)
   local x=f(); if x.phase=='done' then return end

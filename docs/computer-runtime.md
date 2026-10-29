@@ -4,14 +4,12 @@ Target: Factorio 2.0.77. Native named callbacks only: no interpreter, OS,
 filesystem, coroutine suspension or host-object API. The normative contracts
 are `openspec/api/{common,native-language}.md`
 and `openspec/specs/computer-runtime/lua-api.md` in the source repository.
-The additive `openspec/specs/program-source/{spec,lua-api}.md`
-contract supersedes the earlier descriptor-only source restriction.
+The `openspec/specs/program-source/{spec,lua-api}.md` contract defines the saved-program grammar.
 
 ## Player contract
 
-One saved source document either declares exported `function name(...) ... end`
-functions (API 1 implicit) or returns the legacy `{api_version=1, handlers={...}}`
-descriptor. Do not mix forms or run module-level effects/initializers. Optional
+One saved source document declares exported `function name(...) ... end`
+functions (API 1 implicit). No top-level returns, effects or initializers. Optional
 top-level `local function` helpers have ordinary lexical scope and are not exports.
 Public bindings are immutable; genuine locals/parameters may shadow them.
 
@@ -145,11 +143,9 @@ and declared handler names, not executable functions/generated text. Compiler
 ABI is 2; incompatible headers fault with source/state retained. Reconstruction
 revalidates retained source under identical warm/cold costs. No on_load handler
 runs, mutates queues, changes credits or recreates start registrations.
-Both forms retain API 1/compiler 2/storage 1 and reconstruct only the exact active
-source, even when newer source has been saved but not applied. Supported legacy
-descriptor records require no rewrite or restart. There is no migration or
-execution bridge for downgrades: an older descriptor-only compiler cannot execute
-new declaration source. Back up saves or explicitly convert/apply before rollback.
+Supported declarations retain API 1/compiler 2/storage 1 and reconstruct only the
+exact active source, even when newer source has been saved but not applied. Keep
+complete save/mod backups before changing runtimes.
 
 ### Scheduler: scripts.scheduler
 
@@ -190,7 +186,7 @@ The maximum accepted table-width computation and maximum nil-containing tuple
 are isolated compiler semantics/cost checks, not factory latency benchmarks.
 
 Use the existing archive harness with `--fixture tests.computer_cold --cold`.
-The fixture initializes legacy and declaration sources, runs start once on a real tick, keeps saved
+The fixture initializes independent declaration programs, runs start once on a real tick, keeps saved
 source different from active source, admits an event and retains timers/credits,
 then freezes until the queued save is readable. A second engine process verifies
 unchanged on_load state before synchronized source reconstruction, consumes the
@@ -198,9 +194,8 @@ queued event and fires the one-shot exactly once. Servers bind localhost, disabl
 LAN/public visibility and shut down through acknowledged console quit.
 Declaration checks also compare complete active/state/log/queue/timer and shared
 ledger/scheduler snapshots, alias identity, two queued events in FIFO order and
-one immediate plus one timed call. The legacy-only reload branch also accepts
-authentic snapshots produced by the baseline 0.1.9 archive; an external harness
-must actually produce that baseline save before claiming upgrade evidence.
+one immediate plus one timed call. Historical running-source upgrade evidence
+requires a genuine function-capable baseline and separate before/after receipts.
 
 Headless contracts use actual numbered vanilla fixture bodies, not the later
 powered composite prototypes. Power transitions are host-hook contract evidence;

@@ -35,7 +35,7 @@ Each computer SHALL have one shell environment shared by its authorized players 
 - **THEN** the shell retains that value without replacing the program or its callbacks, timers, subscriptions, locals, or explicit application state.
 
 ### Requirement: Guarded native command language
-The shell SHALL accept Lua statements, expressions, and shell-global assignments without a handler descriptor, using the existing bounded native language and the approved globals/libraries shared with saved programs, including `print`. Locals SHALL be scoped to one submission. Host globals, dynamic loading, coroutines, unguarded execution, and overwriting reserved API names SHALL remain forbidden. Saved-program syntax SHALL remain unchanged.
+The shell SHALL accept Lua statements, expressions and shell-global assignments using the existing bounded native language and approved globals/libraries shared with saved programs, including `print`. Locals SHALL be scoped to one submission. Host globals, dynamic loading, coroutines, unguarded execution and overwriting reserved API names SHALL remain forbidden. Console syntax SHALL be independent of the declaration-only saved-program grammar and SHALL NOT relax it.
 
 #### Scenario: Globals survive and locals do not
 - **WHEN** `x = 5; local y = 6` succeeds and the next line is `print(x, y)`
@@ -55,6 +55,11 @@ The shell SHALL accept Lua statements, expressions, and shell-global assignments
 - **WHEN** a command assigns to any added built-in global, including `_VERSION`, rather than a genuine lexical local
 - **THEN** compilation rejects the write before execution
 - **AND** ordinary local/parameter shadowing remains allowed without modifying the built-in.
+
+#### Scenario: Console values remain ordinary Lua values
+- **WHEN** a Console command evaluates a table expression, assigns a scratch table, or calls an ephemeral local function within the same submission
+- **THEN** the existing expression/statement, guest-table and guarded-call behavior remains available
+- **AND** the unchanged retention validator still rejects executable values in the committed shell graph.
 
 ### Requirement: Visible ordered results and diagnostics
 Submitted commands, printed output, expression return values, and shell errors SHALL appear in the bounded selectable Console in execution order and be distinguishable from program diagnostics.

@@ -53,6 +53,7 @@ def main():
                 assert original.read(name) == patched.read(name), name
     cases = []
     summary = dict(legacy_sha256=LEGACY_SHA256, candidate_sha256=digest(args.archive),
+                   source_setup='stopped host data; no running-program continuity',
                    fixture_sha256=hashlib.sha256(fixture).hexdigest(),
                    instrumentation='Legacy only: opt-in control hook plus fixture; all other original bytes unchanged. Candidate ZIP unchanged.', cases=cases)
     for mode in ('base', 'space-age'):

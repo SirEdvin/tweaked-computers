@@ -82,11 +82,10 @@ values, mixed map/array keys, sparse arrays and nonfinite numbers.
 
 ## Compiler and sandbox safety
 
-Saved program mode accepts either the unchanged literal api_version=1 /
-named-function handlers descriptor or a declaration-only document with at least
-one simple exported `function name(...)` and optional private `local function`
-helpers. Comments and empty statements are allowed. The formats cannot mix;
-top-level effects, variable initialization, ordinary assignment, control flow,
+Saved program mode accepts only a declaration document with at least one simple
+exported `function name(...)` and optional private `local function` helpers.
+API version 1 is implicit. Comments and empty statements are allowed;
+top-level returns, effects, variable initialization, ordinary assignment, control flow,
 dotted declarations and methods are rejected. The live Console is a separate mode
 and never inherits saved-program exports.
 
@@ -100,7 +99,7 @@ that table. Only parser-global reads matching the export inventory resolve throu
 guarded table lookup, so forward/mutual public calls work without general globals.
 Parser-resolved locals/upvalues preserve ordinary shadowing and private helper
 declaration order/self-recursion. Unshadowed export assignment/redefinition stays
-forbidden; legacy handlers gain no implicit sibling bindings.
+forbidden.
 
 Direct calls use existing native body/call instrumentation in the current run,
 with supplied arguments, table aliases and bounded Lua result/nil arity. Exported

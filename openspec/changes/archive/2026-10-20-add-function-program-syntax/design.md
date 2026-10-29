@@ -6,14 +6,13 @@ See `proposal.md` for motivation and `specs/program-source/{spec,lua-api}.md` fo
 
 Observed roots of the current restriction:
 
-- `scripts/runtime/compiler.lua:222-255` accepts only a sole literal descriptor return and emits a table of native handlers. This is an explicit source-shape restriction, not a Factorio limitation.
 - The pinned parser already represents ordinary declarations as `funcstat` and local helpers as `localfunc` (`vendor/phobos/parser.lua:1196-1220,1292-1309`). Bare unresolved names are marked global-style `index` nodes, whereas lexical locals/upvalues have their own nodes.
 - `compiler.lua:84-214` already instruments function bodies, calls, local closures, assignment and loops. Its global-read allowlist and global-write rejection must not become generally permissive.
 - `compiler.run` (`compiler.lua:321-347`) recompiles/revalidates exact source, reserves reconstruction, creates a new sandbox/factory, and calls the selected table entry. There is no persisted executable environment.
-- `sandbox.lua:89-132` validates callable values, registers guest closures, and admits argument/return work and call depth. Existing top-level descriptor functions are not registered through `G.closure`; simply exposing those raw functions as ordinary values would miss callable validation.
+- `sandbox.lua:89-132` validates callable values, registers guest closures, and admits argument/return work and call depth. All exported function values require callable validation.
 - `computer.lua:67-93` activates a plain source/version/handler-name record and queues optional `start`. Timers/subscriptions validate names against that record. `scripts/lifecycle-data.lua:20-31` accepts a closed active-record shape, so an unnecessary new persisted format discriminator would also affect transport.
-- `scripts/ui/editor-model.lua:81-99` already feeds both draft validation and saved activation through the compiler. `scripts/ui/help.lua:3-14,45-54` contains the descriptor-only inserted starter and language guidance.
-- `openspec list --specs` returns no canonical capabilities. The descriptor-exclusive contract is currently in the in-flight `add-native-circuit-computers/api/native-language.md:5-9`; the new `program-source` capability extends that restriction without copying or weakening the broader runtime requirements.
+- `scripts/ui/editor-model.lua:81-99` already feeds both draft validation and saved activation through the compiler. `scripts/ui/help.lua:3-14,45-54` contains the inserted starter and language guidance.
+- `openspec list --specs` returns no canonical capabilities. The source contract is currently in the in-flight `add-native-circuit-computers/api/native-language.md:5-9`; the new `program-source` capability extends that restriction without copying or weakening the broader runtime requirements.
 
 ### Feasibility evidence
 
@@ -57,7 +56,7 @@ Alternatives rejected: textual/regex wrapping would mishandle strings, comments,
 
 Create a compiler-private function table before constructing bodies. Populate each exported name with its instrumented native closure, and return that same table as the scheduler's handler table after all declarations have been constructed. In the new form only, a parsed global-style read that matches a declared export becomes a checked read from that table. Leave parser-resolved lexical references untouched, so parameters/locals shadow exports normally. Non-export reads still pass the existing approved-global checks; all guest global writes still fail.
 
-Use one private table rather than a separate captured native local for every export, avoiding extra per-closure native upvalue pressure at the supported exported inventory. The table is an implementation detail and must not be exposed as `_G`, `_ENV` or a guest namespace. It can reuse `G.new`/`G.get` ownership and lookup admission. Statically emitted population is bounded by the inventoried exports and must be completely prepaid with the existing descriptor/guard accounting before mutation; no user expression computes keys or values other than constructing guarded closures. Prefer reuse over a new registry API, and avoid adding a sandbox helper unless existing guards cannot express the required admission cleanly.
+Use one private table rather than a separate captured native local for every export, avoiding extra per-closure native upvalue pressure at the supported exported inventory. The table is an implementation detail and must not be exposed as `_G`, `_ENV` or a guest namespace. It can reuse `G.new`/`G.get` ownership and lookup admission. Statically emitted population is bounded by the inventoried exports and must be completely prepaid with the existing guard accounting before mutation; no user expression computes keys or values other than constructing guarded closures. Prefer reuse over a new registry API, and avoid adding a sandbox helper unless existing guards cannot express the required admission cleanly.
 
 Every exported function must pass through `G.closure`, not merely appear as an unregistered raw native handler. This preserves `type`, `tostring`, returns, aliases, temporary tables and `pcall` through the existing callable-value validation. Function bodies and all calls continue through the existing `func` emitter and `G.call`; do not route a direct call through `compiler.run` or enqueue it.
 
@@ -77,7 +76,7 @@ Alternative rejected: bumping the compiler version solely for additive syntax wo
 
 ### 4. Additive authoring rollout, not mass conversion
 
-Change `scripts/ui/help.lua`'s inserted starter and language section, and add a shipped minimal example demonstrating `sample()` followed by `computer.every(..., "sample")`. Update the primary language/computer/example documentation plus descriptor-only claims in current runtime and Console docs. Keep existing descriptor examples and their fixtures as the regression corpus; do not rewrite historical planning artifacts or generated OpenWiki pages.
+Change `scripts/ui/help.lua`'s inserted starter and language section, and add a shipped minimal example demonstrating `sample()` followed by `computer.every(..., "sample")`. Update the primary language/computer/example documentation plus source-language claims in current runtime and Console docs.
 
 The editor model should need no source-format branch because it already invokes the compiler. Extend its contracts to exercise insertion and same-tick Validate/Save/Run using the exact maintained example under unchanged limits. A text-only starter/reference change does not require redesigning or screenshot-testing the editor layout; do not describe mocked editor actions as native input delivery.
 
@@ -97,7 +96,6 @@ Run packaged tests through `tools/smoke.py` in both base and Space Age for chang
 - [Native limits or reconstruction overhead shrink the usable envelope] → Use a shared private table, test the supported maximum exports and realistic starter on unchanged limits, and reject unsupported native/source envelopes with source-located diagnostics. No performance improvement is claimed.
 - [Cache or retained metadata disagrees between cold and warm peers] → Keep exact source authoritative and prove equal charge traces/refusal prefixes; serialize only the unchanged plain inventory/source shape.
 - [Too broad a convenience feature becomes a module system] → Keep top-level values/effects and cross-document/Console calls explicitly out of scope.
-- [Historical in-flight language contract still says descriptor-only] → Record this intentional extension in the new capability and update maintained user/runtime docs during apply; do not silently mutate another change's historical plan.
 
 ## Migration Plan
 

@@ -92,7 +92,7 @@ Date: 2026-10-21
 Version: 0.1.10
 Date: 2026-10-20
   Features:
-    - Author saved programs as exported function declarations with private local helpers and ordinary guarded direct calls; legacy descriptors remain supported and Console bindings stay separate.
+    - Author saved programs as exported function declarations with private local helpers and ordinary guarded direct calls; Console bindings stay separate.
     - Add a live world-maintenance Map setting with retained same-tick spending and cold-save accounting; the default remains 200000 within unchanged shared host work.
   Graphics:
     - Adopt the selected Service Rack family for all six devices, with matching item icons and two new 256px research icons. Footprints, sockets, monitor interiors and gameplay are unchanged.

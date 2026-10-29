@@ -87,13 +87,20 @@ local function emit(main,mode,expression)
     for i,n in ipairs(xs) do out[i] = expr(n) end
     return table.concat(out, ',')
   end
-  function func(n)
+  function func(n,out,prefix)
     visit(n)
     if n.is_method then reject(n, 'colon declarations are not supported') end
     local names = {}
     for i,p in ipairs(n.params) do names[i] = identifier(p.name,p) end
     if #names > limits.tuple_entries then reject(n, 'parameter width exceeded', 'E_LIMIT') end
     if n.is_vararg then names[#names+1] = '...' end
+    if out then
+      -- Keep top-level bodies as paid fragments, not a second whole-function copy.
+      out[#out+1]=text(prefix..'function('..table.concat(names,',')..') __tc.enter('..coordinates(n)..','..#n.params..'); ')
+      body(n,out)
+      out[#out+1]=text('end);')
+      return leave()
+    end
     local result = 'function('..table.concat(names, ',')..') __tc.enter('..coordinates(n)..','..#n.params..'); '..body(n)..' end'
     return leave(result)
   end
@@ -150,10 +157,10 @@ local function emit(main,mode,expression)
     if n.force_single_result then s = '('..s..')' end
     return leave(text(s))
   end
-  function body(scope)
-    local out, stat = {}, scope.body.first
+  function body(scope,fragments)
+    local out, stat = fragments or {}, scope.body.first
     while stat do out[#out+1] = statement(stat); stat = stat.next end
-    return table.concat(out, '\n')
+    if not fragments then return table.concat(out, '\n') end
   end
   function statement(n)
     visit(n)
@@ -261,14 +268,22 @@ local function emit(main,mode,expression)
     if stat.node_type=='funcstat' then
       visit(stat)
       local name=stat.name.suffix.value
-      out[#out+1]=leave(text('__tc_functions['..string.format('%q',name)..']=__tc.closure('..func(stat.func_def)..');'))
+      func(stat.func_def,out,'__tc_functions['..string.format('%q',name)..']=__tc.closure(')
+      leave()
+    elseif stat.node_type=='localfunc' then
+      visit(stat)
+      local name=identifier(stat.name.name,stat.name)
+      func(stat.func_def,out,'__tc.step('..coordinates(stat)..'); local '..name..'; '..name..'=__tc.closure(')
+      leave()
     else out[#out+1]=statement(stat) end
     stat=stat.next
   end
   out[#out+1]=text('return __tc_functions')
+  local bytes=#out-1
+  for _,part in ipairs(out) do bytes=bytes+#part end
+  parsing.enter(bytes)
+  if bytes>limits.generated_source_bytes then reject(main.body.first,'generated source too large','E_LIMIT') end
   local output=table.concat(out,'\n')
-  parsing.enter(#output)
-  if #output>limits.generated_source_bytes then reject(main.body.first,'generated source too large','E_LIMIT') end
   return output,names,nodes
 end
 

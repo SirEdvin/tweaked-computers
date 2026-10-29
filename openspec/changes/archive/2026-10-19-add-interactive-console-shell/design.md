@@ -7,7 +7,7 @@ See [proposal.md](proposal.md) for motivation and confirmed product choices; see
 Source inspection found these relevant boundaries:
 
 - `scripts/ui/editor.lua:271` builds an output-only Console. `owned` at line 311 validates the exact opened UI, token, visible subtree, and authority. `editor-model.lua:15` checks real entity binding, force, surface, reach, and permissions. Source drafts and presentation state already persist separately from program state.
-- `runtime/compiler.lua:197` accepts only a literal handler descriptor. Global reads use an allowlist; global assignments are rejected at line 163. It already emits guarded native Lua, and its exact-source cache replays identical charges. `runtime/sandbox.lua` owns the library, object/proxy, quota, and protected-call boundaries.
+- `runtime/compiler.lua:197` accepts only a named-function inventory. Global reads use an allowlist; global assignments are rejected at line 163. It already emits guarded native Lua, and its exact-source cache replays identical charges. `runtime/sandbox.lua` owns the library, object/proxy, quota, and protected-call boundaries.
 - `runtime/computer.lua:171` and `services/peripheral.lua:96` bind services to a currently running program. A wrapper contains closures private to that invocation. Merely saving the wrapper or allowing global assignment cannot implement this feature safely.
 - `scheduler.lua:109` dispatches at most one program callback per computer per tick, using durable shared credits. GUI validation already shares those credits; shell submission must not bypass them.
 - Logic output ownership uses computer/run IDs (`services/logic.lua:150`); the output authority sweep verifies a running program (`services/peripheral.lua:305`). Monitor synchronization keeps a single program-owned selection (`monitor-presentation.lua:66`). All three need shell-aware ownership, not a forged running computer record.
@@ -113,7 +113,7 @@ Draft state and the native caret are private to each viewer. Refresh/layout chan
 
 1. Leave old saves with absent shell fields valid. Initialize additive shell state only during admitted synchronized actions/configuration; no source execution or graph mutation in `on_load`.
 2. Version shell records and any new ownership tag. Treat untagged existing owners as program owners. Refuse an unknown shell version with recoverable data intact, without preventing ordinary program execution.
-3. Update player language/peripheral/editor documentation to distinguish shell bindings from callback-local facades and the saved descriptor language. Add the new contract paths explicitly to `tools/build.py` and its inventory tests; current packaging only includes selected change contracts.
+3. Update player language/peripheral/editor documentation to distinguish shell bindings from callback-local facades and the saved-program language. Add the new contract paths explicitly to `tools/build.py` and its inventory tests; current packaging only includes selected change contracts.
 4. Reconcile the earlier in-flight no-shell statements when those capabilities are promoted, preserving their saved-program constraints. Do not fabricate canonical MODIFIED deltas for nonexistent main specs or archive incomplete changes.
 5. For rollback, use a pre-upgrade backup or a tested compatibility path that releases shell-owned resources before returning to an older build. Do not claim that arbitrary downgrade of a save with new ownership/session data is verified.
 

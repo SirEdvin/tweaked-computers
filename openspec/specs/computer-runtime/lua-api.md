@@ -4,9 +4,9 @@ Normative companion to [spec.md](spec.md); shared types, errors and scheduling: 
 
 ## Source document
 
-A computer contains one source document, not files. It accepts declaration-form programs or the legacy literal returned descriptor below. The [program-source companion](../program-source/lua-api.md) defines the declaration-only top level, private helpers, export scope and ordinary guarded direct calls; API 1 is implicit for that form.
+A computer contains one declaration-only source document, not files. The [program-source companion](../program-source/lua-api.md) defines its top level, private helpers, export scope and ordinary guarded direct calls; API 1 is implicit.
 
-This section describes saved-program mode. The independent [Console](../console-shell/lua-api.md) accepts bounded statements and expressions without a descriptor, but cannot borrow handlers, register background work or change this source shape. Its retained scratch graph and symbolic bindings do not make callback locals, closures or ordinary Data durable.
+This section describes saved-program mode. The independent [Console](../console-shell/lua-api.md) accepts bounded statements and expressions, but cannot borrow handlers, register background work or change this source shape. Its retained scratch graph and symbolic bindings do not make callback locals, closures or ordinary Data durable.
 
 ```lua
 function start(event)
@@ -20,7 +20,7 @@ function sample(event)
 end
 ```
 
-In the legacy form, `handlers` maps unique names to function declarations; declaration-form exports populate the same named inventory. `start` is optional; it receives `{name="start", ...BaseEvent}` once on explicit Run/Apply. No module-level initialization may touch the factory, inspect the clock, register events or mutate state. Local helpers follow the selected form's lexical rules. Every dispatch constructs fresh ephemeral functions and locals: closures are not hidden persistence. Handler names are case-sensitive strings and must exist when registered; direct calls do not create another run or synthesize an event.
+Exports populate the named-handler inventory. `start` is optional; it receives `{name="start", ...BaseEvent}` once on explicit Run/Apply. No module-level initialization may touch the factory, inspect the clock, register events or mutate state. Local helpers follow ordinary lexical order. Every dispatch constructs fresh ephemeral functions and locals: closures are not hidden persistence. Handler names are case-sensitive strings and must exist when registered; direct calls do not create another run or synthesize an event.
 
 Save commits source only; Run/Apply validates and activates a saved revision. Replacing a run cancels its timers/subscriptions/pending events and clears its still-owned logic outputs, then creates a new run generation and queues `start`. Explicit state survives unless the user chooses Reset State. A compile/validation failure before activation does not retire the old run. An error in the newly started handler faults that new run; it does not secretly restart the old revision.
 
@@ -106,7 +106,7 @@ An uncaught error faults this run, retaining source/state/logs and prior success
 
 The complete [base-global contract](base-globals-api.md) is normative alongside the inventory below, including argument/result adjustment, ordinary and fatal errors, retained-name recovery and compatibility exclusions. It extends rather than replaces the computer methods, events and scheduling above.
 
-The same guarded globals are available in declaration/descriptor callbacks and Console. `_VERSION` is the fixed string `Lua 5.2`, a language-family label rather than unrestricted standard-library compatibility. No new namespace members, host facilities, Data domains or persistence schema are introduced; API 1/compiler 2/storage 1 remain unchanged.
+The same guarded globals are available in saved-function callbacks and Console. `_VERSION` is the fixed string `Lua 5.2`, a language-family label rather than unrestricted standard-library compatibility. No new namespace members, host facilities, Data domains or persistence schema are introduced; API 1/compiler 2/storage 1 remain unchanged.
 
 | Signature | Result and contract |
 | --- | --- |
@@ -124,7 +124,7 @@ Print uses stable descriptions (table, guest function, API handle or approved ca
 
 Both xpcall operands must be approved functions. Forward exactly the supplied trailing arguments, retaining nil holes and aliases. Status counts toward tuple width. On ordinary failure pass exactly one safe error to the handler: guest references retain identity; host-origin records become defensive snapshots. Native message-handler re-entry is bounded by existing work/depth limits; exact error-in-handler wording is not promised. Fatal work/allocation/depth/tuple exhaustion and saved-program stop bypass nested pcall/xpcall and never reach guest message code as private control values. A fatal function suppresses the handler; a fatal handler suppresses later handlers/effects. Console still cannot stop the program. Earlier state/printing/peripheral effects are not rolled back.
 
-New names are reserved top-level public/private declarations and immutable Console globals. Ordinary lexical locals/parameters and legacy descriptor handler keys retain their rules. Old active-name collisions fault on synchronized reconstruction, retaining exact source/state; loading does not execute or rewrite source. Rename and explicitly Save/Run. Old Console root collisions report named E_UNSUPPORTED before effects and retain their graph until explicit confirmed Reset Shell; nested fields are ordinary data.
+New names are reserved top-level public/private declarations and immutable Console globals. Ordinary lexical locals/parameters retain their rules. Old active-name collisions fault on synchronized reconstruction, retaining exact source/state; loading does not execute or rewrite source. Rename and explicitly Save/Run. Old Console root collisions report named E_UNSUPPORTED before effects and retain their graph until explicit confirmed Reset Shell; nested fields are ordinary data.
 
 Acceptance program (Validate/Save must emit nothing; activation emits the two raw entries once; ordinary reload must not replay them):
 

@@ -82,7 +82,7 @@ local function retained(rec)
 end
 local function complete_snapshot()
   local f=storage.tc03_fixture; local r=registry.get()
-  return {legacy=retained(registry.computer(f.id)),declaration=retained(registry.computer(f.declaration)),
+  return {primary=retained(registry.computer(f.id)),declaration=retained(registry.computer(f.declaration)),
     collision=f.collision and retained(registry.computer(f.collision)),
     ledger=clone(r.ledger),scheduler=clone(r.scheduler),sequence=r.next_sequence}
 end
@@ -184,11 +184,11 @@ function M.on_tick(event)
       assert(equal(complete_snapshot(),fixture.expected),'same-tick cold dispatch replayed work')
       log('TC_COLD_DECLARATION_FROZEN exact-active-source aliases full-ledger FIFO no-load-work')
     else
-      -- An authentic baseline 0.1.9 fixture has no declaration peer. Its original
+      -- An authentic function-capable baseline may omit the second peer. Its
       -- active record must pass unchanged, not be synthesized or reactivated.
       assert(rec.active.api_version==1 and rec.active.compiler_version==2 and rec.active.storage_version==1)
       assert(fixture.baseline_expected,'baseline acceptance requires authentic external before-snapshot observer')
-      log('TC_COLD_LEGACY_BASELINE_COMPATIBLE original-source-run-body-credits')
+      log('TC_COLD_SUPPORTED_BASELINE_COMPATIBLE original-source-run-body-credits')
     end
     loaded=false; fixture.phase='resumed'
     log('TC_COLD_RECONSTRUCT_BEGIN')

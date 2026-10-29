@@ -1,6 +1,6 @@
 # Expanded Lua base-global contract
 
-Normative companion to the [runtime specification](spec.md) and [computer API](lua-api.md). Applies to saved declaration/descriptor callbacks and the live Console in Factorio 2.0.77, base and Space Age. Acceptance receipts distinguish execution evidence from illustrative source. Existing computer methods, events, service errors, scheduling and persistent Data contracts are unchanged.
+Normative companion to the [runtime specification](spec.md) and [computer API](lua-api.md). Applies to saved saved-function callbacks and the live Console in Factorio 2.0.77, base and Space Age. Acceptance receipts distinguish execution evidence from illustrative source. Existing computer methods, events, service errors, scheduling and persistent Data contracts are unchanged.
 
 ## Compatibility target and inventory
 
@@ -73,7 +73,7 @@ Both functions refuse protected namespaces, peripheral facades and host tables a
 - Fatal execution/depth/allocation/tuple failures use existing `E_BUDGET` diagnostics; saved-program stop uses existing `E_STOP`. Native ordinary error payloads retain current protected-call conventions, not a newly imposed string-only format.
 - Guest helpers are ephemeral and reconstructed only during admitted synchronized execution. They add no events, deadlines, stored function objects or new persistence schema. Keep API 1/compiler representation 2/storage 1 when the generated helper ABI remains unchanged.
 - Saved source/state/logs and admitted pending work keep their existing lifecycle. A pre-update declaration name collision faults on reconstruction with source/state retained; a pre-update shell root collision refuses evaluation before effects, retains its graph and points to explicit Reset Shell. Noncolliding nested table keys are unaffected.
-- Newly exposed names are reserved as API globals/top-level declaration names. Lexical locals/parameters retain ordinary shadowing. Legacy descriptor handler keys are not global bindings and are not newly forbidden.
+- Newly exposed names are reserved as API globals/top-level declaration names. Lexical locals/parameters retain ordinary shadowing.
 
 ## Explicit compatibility exclusions
 

@@ -4,7 +4,7 @@ Normative companion to [spec.md](spec.md); shared types, errors and scheduling: 
 
 ## Source document
 
-A computer contains one source document, not files. Its only module-level executable construct is a literal returned descriptor:
+A computer contains one source document, not files. It contains exported function declarations with optional private local-function helpers:
 
 ```lua
 function start(event)
@@ -18,7 +18,7 @@ function sample(event)
 end
 ```
 
-`handlers` maps unique names to function declarations. `start` is optional; it receives `{name="start", ...BaseEvent}` once on explicit Run/Apply. No function/table initialization at module scope may touch the factory, inspect the clock, register events or mutate state. Local helper functions are permitted inside handlers within the documented bounded subset. Every dispatch constructs a fresh ephemeral descriptor environment: locals/globals/closures are not a hidden second persistence mechanism. Handler names are case-sensitive strings and must exist when registered.
+Exports populate the named-handler inventory. `start` is optional; it receives `{name="start", ...BaseEvent}` once on explicit Run/Apply. No function/table initialization at module scope may touch the factory, inspect the clock, register events or mutate state. Local helper functions are permitted inside handlers within the documented bounded subset. Every dispatch constructs a fresh ephemeral function environment: locals/globals/closures are not a hidden second persistence mechanism. Handler names are case-sensitive strings and must exist when registered.
 
 Save commits source only; Run/Apply validates and activates a saved revision. Replacing a run cancels its timers/subscriptions/pending events and clears its still-owned logic outputs, then creates a new run generation and queues `start`. Explicit state survives unless the user chooses Reset State. A compile/validation failure before activation does not retire the old run. An error in the newly started handler faults that new run; it does not secretly restart the old revision.
 

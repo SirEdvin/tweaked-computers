@@ -32,6 +32,8 @@ Keep existing forward export resolution, private-helper ordering, protected name
 
 Reusing this path is smaller and safer than a new frontend or compatibility switch. There is no reason to alter scheduler, editor, shell or computer lifecycle interfaces: they already converge on the compiler. Verify these call paths instead of introducing call-site workarounds.
 
+The unchanged sort-capacity workload exposed redundant whole-function assembly after conversion. The maintainer approved a scoped bounded-emitter refactor on 2026-10-29: append top-level function headers, already-paid body statements and terminators to the existing final fragment vector instead of assembling and charging a second whole-function string. Preserve nested emission, lexical order, function/statement guards, source locations and all production ceilings. Compute and admit final output length before joining; retain cumulative fragment accounting and exact warm/cold charge-prefix parity. This is construction deduplication, not permission to remove resource protection or weaken a workload.
+
 ### 2. State the accepted grammar positively, including in tests
 
 Use `function start(...) ... end` and sibling/private declarations in valid fixtures. Reuse existing local source-body builders rather than adding a generic conversion tool. A deliberate idle program exports a no-op function; blank drafts remain editable but are not valid runnable documents.

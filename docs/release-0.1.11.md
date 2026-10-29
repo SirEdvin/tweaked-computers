@@ -64,7 +64,7 @@ native devices to force adoption. Shared work/Data/transport/audio limits still
 apply, and no production safety ceiling is raised.
 
 New built-ins reserve public/private **top-level function declaration names**,
-not ordinary locals/parameters, legacy descriptor handler keys or nested scratch
+not ordinary locals/parameters or nested scratch
 fields. An older colliding active declaration faults only during synchronized
 reconstruction, retaining exact source/state: rename the declaration, then
 explicitly Save/Run. An old Console root with a newly reserved name reports named
