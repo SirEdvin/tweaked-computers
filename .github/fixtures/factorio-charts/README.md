@@ -1,4 +1,4 @@
-# Exact optional dependency for CI
+# Exact optional dependency for local tests
 
 This directory is **test-only**. `tools/build.py` packages an explicit runtime
 inventory that does not include `.github/`; the chart mod is not embedded in
@@ -18,6 +18,6 @@ as `LICENSE` and remains inside the ZIP.
   LF rather than CRLF; the published changelog has different release date/text.
   This archive was not rebuilt from the Git tag.
 
-CI verifies the SHA-256 before explicitly installing this ZIP only in
+The local package tests verify the SHA-256 before the harness installs this ZIP only in
 present-library cases. This avoids a Portal download login or an additional
 release/hosting dependency. Absence cases do not install or enable it.

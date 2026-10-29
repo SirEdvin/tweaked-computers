@@ -91,6 +91,9 @@ The release source is [alpha-0.1.17](https://github.com/SirEdvin/tweaked-compute
 
 ## Development
 
+Validation runs locally, not in GitHub CI. Follow the [local checks](docs/documentation-maintenance.md#required-local-validation);
+documentation publishing and optional OpenWiki updates remain automated.
+
 The finalized radar integration provides [locally wired native radar modems](docs/player/api/modem.md)
 and an optional Space Age interplanetary tier. Native hidden radio links do not
 grant discovery authority; the seven-method API has bounded channel datagrams.

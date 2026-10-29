@@ -46,39 +46,52 @@ repeat full factory/runtime matrices. Existing implementation fixtures own effec
 
 Dependencies are version/hash locked for the Linux build. To refresh deliberately,
 use pip-tools on Python 3.12 with `mkdocs==1.6.1` as input, inspect the full lockfile
-diff and re-run hosted validation. Do not replace hashes with unpinned installs.
+diff and re-run local validation. Do not replace hashes with unpinned installs.
 
-## Required validation
+## Required local validation
 
-`.github/workflows/ci.yml`, named **Mod CI**, emits the stable **Mod validation**
-check on every pull request and every branch push, without path filters. Branch
-pushes provide evidence on the exact head SHA as well as the PR merge candidate.
-The `main` ruleset requires this check from the GitHub Actions integration; do
-not rename the job without updating that rule. No administrator bypass is needed
-to merge a passing PR. Tags are not CI or publication triggers.
+Tests run locally; GitHub no longer runs mod CI or pull-request documentation
+checks, and `main` no longer requires the hosted **Mod validation** check. Keep
+the existing tests and runtime budgets: removing hosted execution does not remove
+the obligation to verify changes before pushing or releasing. Do not restore
+GitHub test workflows or required hosted checks without maintainer authorization.
 
-Only changes to Lua files, `info.json`, `scripts/`, `prototypes/`, `locale/`,
-`vendor/`, `assets/`, `examples/`, `tests/`, `tools/`, this CI workflow,
-`mkdocs.yml` or `requirements-docs.txt` run the full validation steps. Spec-only,
-wiki-only and documentation-only changes instead pass the required check with an
-explicit skip message, without installing dependencies or downloading Factorio.
-The separate player-documentation workflow still checks its own inputs.
-PRs compare against their merge base; branch pushes compare against the default
-branch's merge base so a documentation follow-up cannot hide earlier code changes.
-Default-branch pushes compare against the previous head. Manual dispatch always
-runs the full suite; unavailable history never counts as a safe skip.
+From the repository root, with the locked documentation dependencies installed
+and that Python environment active, run the package/tooling regressions and
+generated-document checks:
 
-The read-only job reuses the existing package regressions, generated-contract and
-player-documentation checks, then downloads the official Factorio **2.0.77**
-headless archive and verifies its pinned SHA-256 before execution. The packaged
-sandbox runs in base mode; the existing factory integration and separate-process
-save/reload checks run with base and Space Age. Reports and failure logs are kept
-as short-lived Actions artifacts; no release is uploaded or replaced. This is
-not graphical/client, multiplayer-join, stress or real-time latency acceptance.
+    WORK=$(mktemp -d "${TMPDIR:?}/tc-local-check-XXXXXX")
+    python -m unittest discover -s tools -p 'test_*.py'
+    python tools/planning_examples.py --check
+    python tools/configuration_catalog.py --check
+    python -m mkdocs build --strict --site-dir "$WORK/site"
+    python tools/player_docs.py --check --site "$WORK/site" --report "$WORK/player-docs.json"
+    python tools/build.py --output "$WORK/package" > "$WORK/package.json"
 
-The required check is deliberately separate from the path-filtered Pages
-workflow below. Making only the latter required would leave runtime-only PRs
-without a check. CI needs no Factorio publishing credentials or model API keys.
+For artwork changes, install `assets/requirements.txt` on Python 3.13+ and run
+`python assets/check.py --output "$WORK/art"`. Use the same unchanged artwork
+checks before a release.
+
+For runtime changes, test the exact built archive with the relevant existing
+`tools/smoke.py` fixtures and specialized harnesses in base and Space Age, including
+separate-process cold reload where applicable. Current source pins Factorio
+**2.1.23** in `info.json`; old-save migration checks additionally need their original
+engine and immutable old mod archive. The current local engines are:
+
+- Headless: `gameitself/headless-2.1.23/factorio/bin/x64/factorio`.
+- Base client: `gameitself/base-2.1.23/factorio/bin/x64/factorio`.
+- Space Age client: `gameitself/space-age-2.1.23/factorio/bin/x64/factorio`.
+
+Confirm `--version` and `--help`, then follow the isolated-run procedures in
+[AGENTS.md](../AGENTS.md), substituting these paths for its historical 2.0.77 paths.
+The optional chart ZIP remains under `.github/fixtures/factorio-charts/` for
+present/absent dependency tests; it is not shipped in the mod.
+
+Preserve package hashes, command exits, summaries and complete failure logs outside
+git. Local tooling/headless passes are not proof of native UI, rendering, audibility,
+connected multiplayer or representative GPU performance; run those checks when
+affected and disclose anything unrun. Historical release reports and generated
+OpenWiki may describe the former CI setup; this section is the current policy.
 
 The optional model-backed OpenWiki workflow remains dormant unless repository
 variable `OPENWIKI_ENABLED` is explicitly `true`. Configure its provider secrets
@@ -88,9 +101,9 @@ and does not affect reading the already-generated developer wiki.
 ## Hosted workflow
 
 `.github/workflows/docs.yml`, named **Player documentation**, builds changed player
-docs/configuration/dependencies on pull requests and pushes to `main`. PR builds
-have read-only contents permissions, no publishing secrets, no Pages upload or
-deployment. Only the separate deployment job receives Pages write and OIDC rights.
+docs/configuration/dependencies on pushes to `main` or an explicit manual dispatch;
+it does not run on pull requests. The build has read-only contents permissions and
+no publishing secrets. Only the separate deployment job receives Pages write and OIDC rights.
 All actions are pinned to official release commit SHAs; build checks out without
 persisted credentials. The `github-pages` environment permits only workflow runs
 from `main`, with serialized deployments. No environment publishing secrets exist.
@@ -129,7 +142,7 @@ The user authorized a public repository, full player docs, separate developer
 OpenWiki and actual Factorio alpha. This supersedes the original local-ZIP-only
 endpoint. A ZIP remains the upload artifact. Publishing an alpha does not by
 itself authorize merging its implementation PR or archiving OpenSpec; merge only
-after explicit maintainer authorization, review and passing required checks.
+after explicit maintainer authorization, review and passing relevant local checks.
 
 - TC14 / `t_6534a3be`: public repository and documentation infrastructure.
 - TC15 / `t_0645d3ca`: complete player guide and public API reference.
