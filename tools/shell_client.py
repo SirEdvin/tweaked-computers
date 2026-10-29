@@ -12,12 +12,13 @@ import shutil
 import socket
 import subprocess
 import zipfile
+from smoke import chart_archive
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def prepare(archive, engine, client, output, mode, config_template=None, fixture_module='tests.shell_client_engine', data_fixture=None):
-    if fixture_module not in ('tests.production_statistics_client_engine', 'tests.factoriopedia_client_engine', 'tests.ui_live_client_engine', 'tests.editor_reference_client_engine', 'tests.speaker_client_engine', 'tests.radar_client_engine', 'tests.peripheral_inspector_client_engine', 'tests.shell_client_engine', 'tests.recipe_searcher_client_engine', 'tests.acceptance_client_engine', 'tests.acceptance_monitor_engine'):
+def prepare(archive, engine, client, output, mode, config_template=None, fixture_module='tests.shell_client_engine', data_fixture=None, charts=None):
+    if fixture_module not in ('tests.dashboard_client_engine', 'tests.production_statistics_client_engine', 'tests.factoriopedia_client_engine', 'tests.ui_live_client_engine', 'tests.editor_reference_client_engine', 'tests.speaker_client_engine', 'tests.radar_client_engine', 'tests.peripheral_inspector_client_engine', 'tests.shell_client_engine', 'tests.recipe_searcher_client_engine', 'tests.acceptance_client_engine', 'tests.acceptance_monitor_engine'):
         raise ValueError('fixed native client fixture required')
     output = output.resolve()
     if output.exists() or output.is_relative_to(ROOT):
@@ -36,6 +37,9 @@ def prepare(archive, engine, client, output, mode, config_template=None, fixture
     copied = mods / archive.name
     shutil.copy2(archive, copied)
     assert copied.read_bytes() == archive.read_bytes()
+    chart_info=chart_archive(charts) if charts else None
+    if charts:
+        shutil.copy2(charts,mods/'factorio-charts_1.2.0.zip')
     fixture = mods / 'tc-smoke_0.0.1'
     fixture.mkdir()
     (fixture / 'info.json').write_text(json.dumps(dict(name='tc-smoke', version='0.0.1', title='Isolated Console client fixture', author='test fixture', factorio_version='2.1', dependencies=['base', info['name']])))
@@ -45,6 +49,7 @@ def prepare(archive, engine, client, output, mode, config_template=None, fixture
     value=json.dumps(fixture_module)
     (fixture / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value="+value+",allowed_values={"+value+"}}}\n")
     enabled = [dict(name=n, enabled=True) for n in ('base', info['name'], 'tc-smoke')]
+    enabled.append(dict(name='factorio-charts',enabled=charts is not None))
     enabled += [dict(name=n, enabled=mode == 'space-age') for n in ('space-age', 'quality', 'elevated-rails', 'recycler')]
     (mods / 'mod-list.json').write_text(json.dumps(dict(mods=enabled)))
     configs = {}
@@ -84,6 +89,7 @@ def prepare(archive, engine, client, output, mode, config_template=None, fixture
             commands['singleplayer'] = command + ['--load-game', str(save)]
     (output / 'commands.json').write_text(json.dumps(commands, indent=2) + '\n')
     provenance = dict(engine_version=version, client_version=client_version, mode=mode,
+                      charts=chart_info,
                       archive_sha256=hashlib.sha256(archive.read_bytes()).hexdigest(),
                       save_sha256=hashlib.sha256(save.read_bytes()).hexdigest(),
                       prepared_only=True, client_acceptance=False, multiplayer_acceptance=False)
@@ -100,9 +106,10 @@ def main():
     parser.add_argument('--mode', required=True, choices=('base', 'space-age'))
     parser.add_argument('--config-template', type=Path, help='engine-generated matching-version template if distribution has none')
     parser.add_argument('--data-fixture', help='Packaged companion data module, as in smoke.py')
-    parser.add_argument('--fixture', default='tests.shell_client_engine', choices=('tests.production_statistics_client_engine', 'tests.factoriopedia_client_engine', 'tests.ui_live_client_engine', 'tests.editor_reference_client_engine', 'tests.speaker_client_engine', 'tests.radar_client_engine', 'tests.peripheral_inspector_client_engine', 'tests.shell_client_engine', 'tests.recipe_searcher_client_engine', 'tests.acceptance_client_engine', 'tests.acceptance_monitor_engine'))
+    parser.add_argument('--chart-archive',type=Path,help='Explicit local factorio-charts 1.2.0 ZIP')
+    parser.add_argument('--fixture', default='tests.shell_client_engine', choices=('tests.dashboard_client_engine', 'tests.production_statistics_client_engine', 'tests.factoriopedia_client_engine', 'tests.ui_live_client_engine', 'tests.editor_reference_client_engine', 'tests.speaker_client_engine', 'tests.radar_client_engine', 'tests.peripheral_inspector_client_engine', 'tests.shell_client_engine', 'tests.recipe_searcher_client_engine', 'tests.acceptance_client_engine', 'tests.acceptance_monitor_engine'))
     args = parser.parse_args()
-    print(json.dumps(prepare(args.archive.resolve(), args.factorio.resolve(), args.client.resolve(), args.output, args.mode, args.config_template, args.fixture, args.data_fixture), indent=2))
+    print(json.dumps(prepare(args.archive.resolve(), args.factorio.resolve(), args.client.resolve(), args.output, args.mode, args.config_template, args.fixture, args.data_fixture, args.chart_archive), indent=2))
 
 
 if __name__ == '__main__':

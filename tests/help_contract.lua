@@ -11,7 +11,7 @@ function M.run()
       assert(block.kind=='heading' or block.kind=='prose' or block.kind=='signature' or block.kind=='code')
     end
   end
-  for _,id in ipairs({'starter','speaker','logic','recipe','factory','shared','statistics'}) do
+  for _,id in ipairs({'starter','speaker','logic','recipe','factory','shared','statistics','dashboard','dashboard_charts'}) do
     local tutorial=assert(help.tutorials[id],'missing self-contained tutorial '..id)
     for _,key in ipairs({'purpose','setup','steps','expected','failures','code'}) do
       assert(type(tutorial[key])=='string' and #tutorial[key]>0,id..' missing '..key)
@@ -52,7 +52,7 @@ function M.run()
     end
     assert(count>0); total=total+count; family_count=family_count+1
   end
-  assert(family_count==10,'discovery plus all nine shipped families required')
+  assert(family_count==11,'discovery plus all ten shipped families required')
   for _,kind in ipairs({'MONITOR','Monitor','radar','kv','unknown','monitor_extra',''}) do assert(not help.peripheral_topic(kind)) end
   assert(not help.peripheral_topic(nil))
   for _,topic in ipairs(help.topics) do

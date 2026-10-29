@@ -1,7 +1,7 @@
 -- Isolated asset registration fixture ONLY; not a production data entry point.
 local art = require("assets.sprites")
 local directions = {"north", "east", "south", "west"}
-local kinds = {"computer", "kv", "monitor", "logic", "configurator", "recipe_searcher", "factoriopedia_interface", "production_statistics"}
+local kinds = {"computer", "kv", "monitor", "logic", "configurator", "recipe_searcher", "factoriopedia_interface", "production_statistics", "dashboard"}
 local states = {"off", "unpowered", "powered", "fault", "blinking"}
 local count = 0
 local function register(name, sprite, frame)
@@ -29,5 +29,5 @@ for _, kind in ipairs(kinds) do
   end
 end
 for byte = 0, 255 do register("tc-art-glyph-" .. byte, art.glyphs[byte]) end
-assert(count == 584, "complete artwork fixture inventory")
+assert(count == 625, "complete artwork fixture inventory")
 log("TC_ART_DATA_OK " .. count)

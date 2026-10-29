@@ -27,7 +27,7 @@ local old=data.raw.technology['tc-circuit-computers']
 assert(equal(old.prerequisites,{'circuit-network','advanced-circuit'}))
 assert(equal(old.unit,{count=100,ingredients={{'automation-science-pack',1},{'logistic-science-pack',1}},time=30}))
 local expected={}
-for _,kind in ipairs({'computer','kv','monitor','logic','configurator'}) do
+for _,kind in ipairs({'computer','kv','monitor','logic','configurator','dashboard'}) do
   local d=defs.devices[kind]; assert(d.technology==old.name)
   expected[#expected+1]={type='unlock-recipe',recipe=d.name}
 end

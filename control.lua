@@ -14,6 +14,8 @@ local lifecycle = require('scripts.lifecycle')
 local peripheral = require('scripts.services.peripheral')
 local editor = require('scripts.ui.editor')
 local interaction = require('scripts.ui.interaction')
+local dashboard_ui = require('scripts.ui.dashboard')
+local dashboard_charts = require('scripts.ui.dashboard-charts')
 local inspector = require('scripts.ui.peripheral-inspector')
 local logic = require('scripts.services.logic')
 local kv = require('scripts.services.kv')
@@ -21,6 +23,7 @@ local monitor = require('scripts.services.monitor')
 local recipe_searcher = require('scripts.services.recipe-searcher')
 local factoriopedia_interface = require('scripts.services.factoriopedia-interface')
 local production_statistics = require('scripts.services.production-statistics')
+local dashboard = require('scripts.services.dashboard')
 local modem = require('scripts.services.modem')
 local speaker = require('scripts.services.speaker')
 local snapshots = require('scripts.lifecycle-data')
@@ -32,21 +35,22 @@ script.on_event({defines.events.on_undo_applied,defines.events.on_redo_applied},
 local device_art = require('scripts.device-art')
 editor.register_inspector(require('scripts.ui.network-inspector'))
 script.on_event(defines.events.on_gui_opened,interaction.on_opened)
-script.on_event(defines.events.on_gui_closed,function(event) editor.on_closed(event); inspector.on_closed(event) end)
-script.on_event(defines.events.on_gui_click,function(event) editor.on_click(event); inspector.on_click(event) end)
+script.on_event(defines.events.on_gui_closed,function(event) editor.on_closed(event); inspector.on_closed(event); dashboard_ui.on_closed(event) end)
+script.on_event(defines.events.on_gui_click,function(event) editor.on_click(event); inspector.on_click(event); dashboard_ui.on_click(event) end)
 script.on_event(defines.events.on_gui_text_changed,editor.on_text)
 script.on_event(defines.events.on_gui_confirmed,editor.on_confirmed)
-script.on_event(defines.events.on_gui_selected_tab_changed,editor.on_tab)
+script.on_event(defines.events.on_gui_selected_tab_changed,function(event) editor.on_tab(event); dashboard_ui.on_tab(event) end)
 script.on_event(defines.events.on_gui_selection_state_changed,editor.on_selection)
 script.on_event(defines.events.on_gui_checked_state_changed,editor.on_checked)
 script.on_event('tc-interact',interaction.on_input)
 script.on_event({'tc-rotate','tc-reverse-rotate'},interaction.on_rotate)
 script.on_event({defines.events.on_player_left_game,defines.events.on_player_died,
   defines.events.on_player_changed_force,defines.events.on_player_changed_surface},function(event)
-    editor.on_player_unavailable(event); inspector.on_player_unavailable(event)
+    editor.on_player_unavailable(event); inspector.on_player_unavailable(event); dashboard_ui.on_player_unavailable(event)
   end)
 script.on_event({defines.events.on_player_display_resolution_changed,
-  defines.events.on_player_display_scale_changed},function(event) editor.on_size(event); inspector.on_size(event) end)
+  defines.events.on_player_display_scale_changed},function(event) editor.on_size(event); inspector.on_size(event); dashboard_ui.on_size(event) end)
+script.on_event(defines.events.on_force_created,function(event) dashboard_charts.hide_from_force(event.force) end)
 script.on_init(function() registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing() end)
 script.on_configuration_changed(function() registry.initialize(); lifecycle.upgrade_existing(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing() end)
 script.on_event(defines.events.on_player_setup_blueprint,blueprints.on_setup)
@@ -68,7 +72,7 @@ script.on_event(defines.events.on_tick,function(event) scheduler.tick(event.tick
 -- same lifecycle in a second mod would create duplicate physical helpers.
 if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixture'] then
   local name=settings.startup['tc-smoke-production-fixture'].value
-  local monitor_state_fixture={['tests.monitor_demand_engine']=true,['tests.monitor_state_idle']=true,['tests.monitor_state_pending']=true,
+  local monitor_state_fixture={['tests.dashboard_lifecycle_engine']=true,['tests.dashboard_client_engine']=true,['tests.dashboard_engine']=true,['tests.dashboard_dependency_engine']=true,['tests.monitor_demand_engine']=true,['tests.monitor_state_idle']=true,['tests.monitor_state_pending']=true,
     ['tests.monitor_state_waiting']=true,['tests.monitor_state_preparing']=true,
     ['tests.monitor_state_ready']=true,['tests.monitor_state_retiring']=true,
     ['tests.acceptance_monitor_engine']=true,['tests.editor_reference_client_engine']=true,['tests.peripheral_inspector_engine']=true,
@@ -94,6 +98,21 @@ if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixt
     script.on_event({defines.events.on_player_created,defines.events.on_player_joined_game},test.on_player_joined)
   end
 end
+-- Isolated Dashboard installation driver.
+if script.active_mods['tc-dashboard-upgrade'] then
+  local test=require('tests.dashboard_upgrade_engine')
+  script.on_init(function()
+    registry.initialize(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
+    test.run(); log('TC_SMOKE_OK')
+  end)
+  script.on_load(test.on_load)
+  script.on_event(defines.events.on_tick,test.on_tick)
+  script.on_configuration_changed(function()
+    registry.initialize(); lifecycle.upgrade_existing(); lifecycle.unlocks(); kv.initialize_existing(); snapshots.initialize_existing()
+    test.on_configuration_changed()
+  end)
+end
+-- End isolated Dashboard installation driver.
 -- Isolated Production Statistics installation driver.
 if script.active_mods['tc-statistics-upgrade'] then
   local test=require('tests.production_statistics_upgrade_engine')

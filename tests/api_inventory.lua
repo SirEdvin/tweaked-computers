@@ -16,6 +16,7 @@ return [[return {api_version=1,handlers={start=function(event)
     recipe_searcher={'findRecipes','getLimits'},
     factoriopedia_interface={'getItem','getFluid','listItems','listFluids','getLimits'},
     production_statistics={'getTotals','getRates','getHistory','getLimits'},
+    dashboard={'setTab','getTab','removeTab','setText','setEnabled','subscribe','unsubscribe','getLimits'},
     kv_database={'get','set','del','exists','type','hget','hset','hdel','hexists','hgetall','hlen','expire','ttl','persist','getLimits'},
     logic_handler={'readSignal','readSignals','getInputStatus','getOutput','setOutput','clearOutput','subscribe','unsubscribe','getLimits'},
     configurator={'getDevices','getDevice','getCapabilities','getConfiguration','setConfiguration','getLimits','getSections','addSection','setSection','removeSection'},
@@ -28,8 +29,9 @@ return [[return {api_version=1,handlers={start=function(event)
     local device=peripheral.find(kind,'red')
     -- Legacy factory scenes have no radar; the native modem fixture separately
     -- requires and exercises this same closed seven-method inventory.
-    if kind~='modem' and kind~='speaker' or device then
+    if kind~='modem' and kind~='speaker' and kind~='dashboard' or device then
       assert(device)
+      if kind=='dashboard' and device.appendSample then list[#list+1]='appendSample'; list[#list+1]='setBars'; list[#list+1]='clearChart' end
       local methods=peripheral.getMethods(peripheral.getName(device),'red')
       table.sort(list); assert(#list==#methods)
       for i,name in ipairs(list) do assert(name==methods[i] and type(device[name])=='function') end

@@ -18,10 +18,10 @@ def check(output):
     manifest = json.loads((ROOT / 'manifest.json').read_text())
     records = manifest['outputs']
     paths = [r['path'] for r in records]
-    assert len(paths) == len(set(paths)) == 236
+    assert len(paths) == len(set(paths)) == 265
     # Frozen independent digest from every original selected-preview PNG,
     # including untouched statuses/glyphs/shadows, not from the new manifest.
-    preview_paths=sorted(r['path'] for r in records if r['layer']!='technology' and r.get('device') not in ('factoriopedia_interface','production_statistics'))
+    preview_paths=sorted(r['path'] for r in records if r['layer']!='technology' and r.get('device') not in ('factoriopedia_interface','production_statistics','dashboard'))
     assert len(preview_paths)==176
     preview_inventory=''.join(p+' '+digest((ROOT.parent/p).read_bytes())+'\n' for p in preview_paths)
     assert digest(preview_inventory.encode())=='84f730ba63f28fd7aa6e451dafd1bbc2bf0c99a3ce446aded2650fb889dee29c', 'selected B PNG bytes changed'
@@ -101,8 +101,8 @@ def check(output):
                     assert 1<=len(lit)<=9
                     if kind=='monitor':
                         assert all(-32<=x<=31 and -32<=y<=31 and not (-30<=x<30 and -30<=y<30) for x,y in lit), (direction,state)
-    assert contacts==88
-    assert len(set(silhouettes.values()))==8, 'family must not reuse the same silhouette'
+    assert contacts==96
+    assert len(set(silhouettes.values()))==9, 'family must not reuse the same silhouette'
     for name,entry in manifest['technologies'].items():
         w,h,pixels=png_read((ROOT/entry['icon']).read_bytes())
         assert (w,h)==(256,256) and entry['icon_size']==256

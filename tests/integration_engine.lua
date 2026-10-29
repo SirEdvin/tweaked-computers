@@ -62,6 +62,7 @@ function M.run()
   local searcher=build('recipe_searcher',6,3); connect(cfg,searcher,'red')
   local encyclopedia=build('factoriopedia_interface',9,3); connect(searcher,encyclopedia,'red')
   local statistics=build('production_statistics',12,3); connect(encyclopedia,statistics,'red')
+  local dashboard=build('dashboard',15,3); connect(statistics,dashboard,'red')
   local tiles0={}; for y=4,5 do for x=0,1 do tiles0[#tiles0+1]=build('monitor',x,y).id end end
   connect(db,registry.record(tiles0[1]),'red')
   local observer=build('computer',0,-3); local private=build('kv',-3,-3)

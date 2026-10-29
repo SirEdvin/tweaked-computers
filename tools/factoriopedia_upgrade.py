@@ -22,13 +22,11 @@ def payload(archive):
         return {n.removeprefix(prefix): package.read(n) for n in package.namelist()}
 
 def main(feature='factoriopedia'):
-    statistics = feature == 'production-statistics'
-    assert feature in ('factoriopedia', 'production-statistics')
-    title = 'Production Statistics' if statistics else 'Factoriopedia'
-    module = 'production_statistics' if statistics else 'factoriopedia'
-    companion_name = 'tc-statistics-upgrade' if statistics else 'tc-factoriopedia-upgrade'
-    installed_name = 'tc-stat-installed' if statistics else 'tc-fp-installed'
-    later_marker = 'TC_STAT_LATER_RECONCILIATION_OK' if statistics else 'TC_FACT_LATER_RECONCILIATION_OK'
+    title,module,companion_name,installed_name,later_marker = {
+        'factoriopedia': ('Factoriopedia','factoriopedia','tc-factoriopedia-upgrade','tc-fp-installed','TC_FACT_LATER_RECONCILIATION_OK'),
+        'production-statistics': ('Production Statistics','production_statistics','tc-statistics-upgrade','tc-stat-installed','TC_STAT_LATER_RECONCILIATION_OK'),
+        'dashboard': ('Dashboard','dashboard','tc-dashboard-upgrade','tc-dashboard-installed','TC_DASHBOARD_LATER_RECONCILIATION_OK'),
+    }[feature]
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('factorio', 'legacy', 'archive', 'output'):
         parser.add_argument('--'+name, type=Path, required=True)

@@ -13,7 +13,7 @@ SOURCES = ('api/examples.md',) + tuple(
     f'specs/{cap}/lua-api.md' for cap in (
         'computer-runtime', 'device-configurator', 'device-lifecycle',
         'kv-database', 'logic-handler', 'monitor-display',
-        'peripheral-network', 'program-editor', 'production-statistics'))
+        'peripheral-network', 'program-editor', 'production-statistics', 'dashboard-interface'))
 DEST = ROOT / 'examples/planning-programs.lua'
 
 def quote(s):

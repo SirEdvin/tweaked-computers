@@ -61,6 +61,23 @@ Monitor material items retain scale, palette, text/background colors and blink,
 not an obsolete merged image or cursor. Ordinary save/load, unlike mining, keeps
 the complete display model. See [monitor identities](api/monitor.md#geometry-identity-and-power).
 
+## Dashboard items and configuration copies
+
+Dashboard mining produces one tagged item retaining the accepted layout, rolling
+sample order and latest duration-bar dataset, including metadata at full admitted
+capacity. Replacement has a new identity and no old subscriptions, viewers or
+render resources. Blueprints/clones copy definitions with empty charts; settings
+copy onto an existing Dashboard preserves only its own compatible chart history,
+never the source's samples. Invalid snapshots refuse placement without truncation
+or a silently empty replacement.
+
+Removing `factorio-charts` preserves those contents and item restoration; base
+labels/buttons still work and chart regions show unavailable. Reinstalling it
+restores chart presentation without replaying producer startup. This is **not** a
+promise that downgrading the main mod to a version without Dashboard prototypes
+preserves the device: restore the complete backup and matching archive instead.
+See [Dashboard windows](dashboard.md).
+
 ## Undo and redo
 
 Ctrl+Z of an eligible player removal, or a completed player-marked robot removal,

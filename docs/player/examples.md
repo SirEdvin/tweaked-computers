@@ -7,6 +7,80 @@ factory managers; keep the described topology. Runtime effects were exercised by
 the implementation harness; documentation checks compile these blocks without
 claiming graphical keyboard/focus/touch delivery.
 
+## dashboard-program
+
+Research Native circuit computers; build and power a Dashboard (15 kW) and computer. Connect Network red. Validate, Save and Run, then close the computer, normally open the Dashboard and left-click Acknowledge. The status changes from Ready to Acknowledged through the saved clicked handler. No chart library is required; Console cannot subscribe.
+
+```lua
+return {
+    api_version = 1,
+    handlers = {
+        start = function(event)
+            local panel = peripheral.find("dashboard", "red")
+            assert(panel, "Connect a powered Dashboard on red")
+            panel.setTab(1, {
+                title = "Overview",
+                content = {type = "column", id = "root", children = {
+                    {type = "label", id = "status", text = "Ready"},
+                    {type = "button", id = "ack", text = "Acknowledge"}
+                }}
+            })
+            panel.subscribe("clicked")
+        end,
+        clicked = function(event)
+            local panel = peripheral.wrap(event.peripheral, event.wire)
+            if event.tab == 1 and event.button == "ack" then
+                panel.setText(1, "status", "Acknowledged")
+            end
+        end
+    }
+}
+```
+
+## dashboard-charts
+
+Use the same powered red-wired Dashboard setup. Optionally enable unmodified factorio-charts 1.2.0 for rolling lines and seconds-only duration bars; without it labels/buttons still work. Twelve startup samples wrap an eight-slot line before opening. Scroll Overview for both charts, switch among six tabs and acknowledge a button. Live label updates preserve the selected tab and unchanged identity selection. X positions mean sample order, not wall time; this is not the native production widget.
+
+```lua
+return {api_version=1,handlers={
+start=function()
+  local p=peripheral.find('dashboard','red'); assert(p,'Connect a powered Dashboard on red')
+  local available=false
+  for _,name in ipairs(peripheral.getMethods(peripheral.getName(p),'red')) do if name=='appendSample' then available=true end end
+  local children={{type='label',id='status',text='Ready — explicit samples, duration bars in seconds'},
+    {type='button',id='ack',text='Acknowledge'},
+    {type='label',id='heartbeat',text='Updates 0'}}
+  if available then
+    children[4]={type='line',id='trend',series={'input','output'},capacity=8,format='number'}
+    children[5]={type='stacked_bars',id='durations',phases={'work','wait'}}
+  end
+  p.setTab(1,{title='Overview',content={type='column',id='root',children=children}})
+  for slot=2,6 do p.setTab(slot,{title='Panel '..slot,content={type='column',id='root',children={
+    {type='label',id='note',text='Independent viewer tab '..slot},
+    {type='button',id='ack',text='Acknowledge'}}}}) end
+  if available then
+    for i=1,12 do p.appendSample(1,'trend',{input=i,output=i/2}) end
+    p.setBars(1,'durations',{{work=1,wait=2},{work=3,wait=1},{work=2,wait=0}})
+  end
+  p.subscribe('clicked')
+  computer.every(60,'refresh')
+  computer.setState('boots',(computer.getState('boots') or 0)+1)
+end,
+refresh=function()
+  local p=peripheral.find('dashboard','red')
+  local n=(computer.getState('updates') or 0)+1
+  computer.setState('updates',n)
+  p.setText(1,'heartbeat','Updates '..n)
+end,
+clicked=function(event)
+  local p=peripheral.wrap(event.peripheral,event.wire)
+  local count=(computer.getState('clicks') or 0)+1
+  computer.setState('clicks',count)
+  p.setText(1,'status','Acknowledged '..count)
+end
+}}
+```
+
 ## production-statistics-program
 
 Research Recipe Searcher, craft and power a Production Statistics device and connect Network red to the computer. Validate, Save and Run. Logs local native item/fluid/pollution totals and rates, then newest/oldest iron history in both directions. Empty input and complete-result E_LIMIT refusal are distinct; work/allocation exhaustion remains fatal. This small Console example is not an unlimited export.

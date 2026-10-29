@@ -7,11 +7,11 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from generate import ROOT, DIRECTIONS
 
-KINDS=('computer','kv','monitor','logic','configurator','recipe_searcher','factoriopedia_interface','production_statistics')
+KINDS=('computer','kv','monitor','logic','configurator','recipe_searcher','factoriopedia_interface','production_statistics','dashboard')
 NAMES={'computer':'Operator console','kv':'Cartridge database','monitor':'Flat monitor',
        'logic':'Three-bay logic instrument','configurator':'Two-bay configurator',
        'recipe_searcher':'Recipe archive scanner','factoriopedia_interface':'Factoriopedia catalogue terminal',
-       'production_statistics':'Production statistics chart recorder'}
+       'production_statistics':'Production statistics chart recorder','dashboard':'Dashboard control panel'}
 
 
 def font(size):

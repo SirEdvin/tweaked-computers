@@ -15,12 +15,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate:
-    name: Mod validation
+  checks:
+    name: Mod checks (${{ matrix.suite }})
     runs-on: ubuntu-24.04
-    # The complete cold/upgrade/chart matrices can exceed 25m on slower hosted
-    # runners. Keep every assertion, fixture tick deadline and game budget.
+    # Independent suites must not consume each other's job deadline.
     timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [factory, monitor]
     env:
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
@@ -53,7 +56,7 @@ jobs:
             # Missing history must run validation, never silently skip it.
             if git diff --quiet "$base" "$HEAD" -- \
               '*.lua' info.json scripts/ prototypes/ locale/ vendor/ assets/ \
-              examples/ tests/ tools/ .github/workflows/ci.yml \
+              examples/ tests/ tools/ .github/fixtures/ .github/workflows/ci.yml \
               mkdocs.yml requirements-docs.txt; then
               changed=false
             fi
@@ -85,6 +88,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/tc-ci/reports"
           python tools/test_ci.py
           python tools/test_build.py
+          python tools/test_smoke.py
           python tools/test_monitor_animation.py
           python tools/test_monitor_performance.py
           python tools/test_monitor_demand.py
@@ -119,12 +123,35 @@ jobs:
             "$RUNNER_TEMP/tc-ci/legacy-engine/factorio.tar.xz" | sha256sum --check --strict
           tar -xf "$RUNNER_TEMP/tc-ci/legacy-engine/factorio.tar.xz" -C "$RUNNER_TEMP/tc-ci/legacy-engine"
       - name: Check packaged sandbox and cold factory integration
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.changes.outputs.changed == 'true' && matrix.suite == 'factory'
         shell: bash
         run: |
           set -euo pipefail
           archive="$(jq -er '.path' "$RUNNER_TEMP/tc-ci/reports/package.json")"
           engine="$RUNNER_TEMP/tc-ci/factorio/bin/x64/factorio"
+          charts="$GITHUB_WORKSPACE/.github/fixtures/factorio-charts/factorio-charts_1.2.0.zip"
+          printf '%s  %s\n' \
+            32b1683912281812c122d6b414d15ab553e943138ceb2b27fe52a38ee6512815 \
+            "$charts" | sha256sum --check --strict
+          for dependency in present absent; do
+            optional=()
+            if [[ "$dependency" == present ]]; then optional=(--chart-archive "$charts"); fi
+            for fixture in dashboard_dependency_engine dashboard_engine; do
+              python tools/smoke.py --factorio "$engine" --archive "$archive" \
+                --output "$RUNNER_TEMP/tc-ci/dashboard-$dependency-$fixture" --mode both \
+                --fixture "tests.$fixture" --production-context --cold "${optional[@]}"
+            done
+          done
+          python tools/dashboard_lifecycle.py --factorio "$engine" --archive "$archive" \
+            --chart-archive "$charts" --output "$RUNNER_TEMP/tc-ci/dashboard-lifecycle" --mode both
+          mkdir "$RUNNER_TEMP/tc-ci/dashboard-baseline-source"
+          git archive 3b5667a6e4868b99b6123a16a83abe5e551602cb | \
+            tar -x -C "$RUNNER_TEMP/tc-ci/dashboard-baseline-source"
+          python "$RUNNER_TEMP/tc-ci/dashboard-baseline-source/tools/build.py" \
+            --output "$RUNNER_TEMP/tc-ci/dashboard-baseline-package"
+          python tools/dashboard_upgrade.py --factorio "$engine" --archive "$archive" \
+            --legacy "$RUNNER_TEMP/tc-ci/dashboard-baseline-package/tweaked-computers_0.1.16.zip" \
+            --output "$RUNNER_TEMP/tc-ci/dashboard-install"
           for fixture in kv_engine configurator_engine configurator_full_engine; do
             data=()
             if [[ "$fixture" == configurator_full_engine ]]; then data+=(--data-fixture tests.configurator_full_data); fi
@@ -268,7 +295,7 @@ jobs:
             --legacy "$RUNNER_TEMP/tc-ci/legacy_0.1.10.zip" --output "$RUNNER_TEMP/tc-ci/speaker-install"
 
       - name: Check buffered presentation and released-save migration
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.changes.outputs.changed == 'true' && matrix.suite == 'monitor'
         shell: bash
         run: |
           set -euo pipefail
@@ -320,7 +347,7 @@ jobs:
         if: ${{ always() && steps.changes.outputs.changed == 'true' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: mod-validation-${{ github.run_id }}-${{ github.run_attempt }}
+          name: mod-validation-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.suite }}
           path: |
             ${{ runner.temp }}/tc-art/regeneration-differences.json
             ${{ runner.temp }}/tc-art/regeneration-environment.json
@@ -352,3 +379,15 @@ jobs:
           retention-days: 14
           overwrite: false
           include-hidden-files: false
+
+  validate:
+    name: Mod validation
+    needs: checks
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every validation suite
+        env:
+          RESULT: ${{ needs.checks.result }}
+        run: test "$RESULT" = success

@@ -16,6 +16,7 @@ nav:
       - First inserter controller: first-controller.md
       - Editor and recovery: editor.md
       - Peripheral inspectors: inspectors.md
+      - Dashboard windows: dashboard.md
       - Live Console: console.md
       - Combined factory controller: factory.md
       - Runnable programs: examples.md
@@ -34,6 +35,7 @@ nav:
       - Recipe Searcher: api/recipe-searcher.md
       - Factoriopedia Interface: api/factoriopedia-interface.md
       - Production Statistics: api/production-statistics.md
+      - Dashboard: api/dashboard.md
       - Radar modem: api/modem.md
       - Programmable speaker: api/speaker.md
       - Supported settings: api/settings.md

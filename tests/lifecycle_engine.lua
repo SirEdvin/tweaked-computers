@@ -36,7 +36,7 @@ local function monitor_stacks()
   local inv=game.create_inventory(8)
   assert(prototypes.item['tc-monitor'].stack_size==50 and prototypes.item['tc-monitor'].type=='item-with-tags')
   for _,kind in ipairs(defs.order) do
-    assert(prototypes.item[defs.devices[kind].name].stack_size==((kind=='computer' or kind=='kv') and 1 or 50))
+    assert(prototypes.item[defs.devices[kind].name].stack_size==((kind=='computer' or kind=='kv' or kind=='dashboard') and 1 or 50))
   end
   assert(inv.insert{name='tc-monitor',count=50}==50 and inv[1].count==50 and not inv[2].valid_for_read)
   assert(inv.insert{name='tc-monitor',count=1}==1 and inv[1].count==50 and inv[2].count==1)
@@ -510,9 +510,10 @@ function M.on_tick(event)
     log('TC_NATIVE_ALL_FAMILY_CLONES_OK area-helper-ownership')
     -- Blueprint ghosts are native; engine preserves endpoint wires through rotation.
     local bp=x.blueprint_inventory[1]
-    local tiles={}; for y=16,48 do for xx=64,96 do tiles[#tiles+1]={name='landfill',position={xx,y}} end end
+    -- The ninth body's rotated footprint extends beyond the old cleared edge.
+    local tiles={}; for y=16,50 do for xx=64,96 do tiles[#tiles+1]={name='landfill',position={xx,y}} end end
     game.surfaces[1].set_tiles(tiles)
-    for _,entity in ipairs(game.surfaces[1].find_entities_filtered{area={{64,16},{96,48}},type={'tree','simple-entity'}}) do entity.destroy() end
+    for _,entity in ipairs(game.surfaces[1].find_entities_filtered{area={{64,16},{96,50}},type={'tree','simple-entity'}}) do entity.destroy() end
     local ghosts=bp.build_blueprint{surface=game.surfaces[1],force='player',position={80,32},direction=defines.direction.east,raise_built=true,skip_fog_of_war=false,build_mode=defines.build_mode.forced}
     assert(#ghosts>0)
 

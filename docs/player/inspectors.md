@@ -16,6 +16,12 @@ Long explanations are available in tooltips and Reference rather than repeated
 above the data. An older saved window may close once after the 0.1.12 upgrade;
 reopen it without losing device data or computer drafts.
 
+A [Dashboard](dashboard.md) instead opens its configured interactive tabs through
+normal opening, with copyable identity and availability above those tabs. Opening,
+closing or selecting a tab does not activate a button or subscribe a computer.
+Each viewer keeps their own selected tab and scroll position; live text updates
+leave unchanged controls and identity selection in place.
+
 Computers keep their [workspace](editor.md): Ctrl-click with an empty cursor.
 Ctrl-click a monitor to deliver a touch instead of opening an inspector.
 Native inventory transfers and normal rotation are unchanged. Private role pads

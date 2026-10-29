@@ -13,6 +13,17 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
+def chart_archive(path):
+    """Identify the one supported optional library without extracting its files."""
+    with zipfile.ZipFile(path) as archive:
+        manifests = [n for n in archive.namelist() if n.endswith('/info.json')]
+        if manifests != ['factorio-charts_1.2.0/info.json'] or 'factorio-charts_1.2.0/charts.lua' not in archive.namelist():
+            raise ValueError('expected a single factorio-charts 1.2.0 archive with charts.lua')
+        info = json.loads(archive.read(manifests[0]))
+        if (info.get('name'), info.get('version'), info.get('factorio_version')) != ('factorio-charts', '1.2.0', '2.1'):
+            raise ValueError('exact factorio-charts 1.2.0 for Factorio 2.1 required')
+    return {'version': info['version'], 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+
 def cold_phase(engine, cfg, mods, save, folder, name, marker, snapshot=None, timeout=90):
     """Bounded localhost-only cold phase; freeze fixture, then verified console quit."""
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
@@ -83,6 +94,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--factorio', required=True, type=Path)
     ap.add_argument('--archive', required=True, type=Path)
+    ap.add_argument('--chart-archive', type=Path, help='Explicit local unmodified factorio-charts 1.2.0 ZIP; omitted means disabled')
     ap.add_argument('--output', required=True, type=Path)
     ap.add_argument('--mode', choices=['base', 'space-age', 'both'], default='both')
     ap.add_argument('--fixture', default='tests.runtime_contract', help='Packaged Lua module exposing run()')
@@ -93,6 +105,7 @@ def main():
     ap.add_argument('--cold-timeout', type=int, help='Explicit wall deadline per cold phase for sustained fixtures (1..1800 seconds)')
     ap.add_argument('--upgrade-fixture', action='store_true', help='After ordinary cold reload, change only test mod version and verify researched migration in another process')
     args = ap.parse_args()
+    charts = chart_archive(args.chart_archive) if args.chart_archive else None
     if args.cold_timeout is not None and not 1 <= args.cold_timeout <= 1800:
         ap.error('--cold-timeout must be 1..1800 seconds')
     args.output = args.output.resolve()
@@ -107,12 +120,15 @@ def main():
         info_path = next(n for n in archive.namelist() if n.endswith('/info.json'))
         info = json.loads(archive.read(info_path))
     summary = {'engine': '2.1.23', 'archive_sha256': hashlib.sha256(args.archive.read_bytes()).hexdigest(), 'cases': []}
+    summary['charts'] = charts
     for mode in (['base','space-age'] if args.mode=='both' else [args.mode]):
         folder = args.output / mode
         mods,write = folder / 'mods',folder / 'write'
         mods.mkdir(parents=True); write.mkdir()
         (write / 'saves').mkdir()
         shutil.copy2(args.archive, mods / args.archive.name)
+        if args.chart_archive:
+            shutil.copy2(args.chart_archive, mods / 'factorio-charts_1.2.0.zip')
         fixture = mods / 'tc-smoke_0.0.1'
         fixture.mkdir()
         (fixture / 'info.json').write_text(json.dumps({'name':'tc-smoke','version':'0.0.1','title':'TC isolated smoke', 'author':'test fixture','factorio_version':'2.1','dependencies':['base',info['name']]}))
@@ -126,7 +142,7 @@ def main():
                 ap.error('--upgrade-fixture requires --cold')
             control += 'script.on_configuration_changed(test.on_configuration_changed)\n'
         if args.production_context:
-            if args.fixture not in ('tests.factoriopedia_large_engine', 'tests.factoriopedia_engine', 'tests.native_circuit_engine', 'tests.reference_tutorials_engine', 'tests.peripheral_inspector_engine', 'tests.speaker_competition_engine', 'tests.speaker_engine', 'tests.speaker_client_engine', 'tests.modem_competition_engine', 'tests.radar_engine', 'tests.modem_engine', 'tests.monitor_state_waiting', 'tests.monitor_state_preparing', 'tests.monitor_state_ready', 'tests.monitor_state_retiring', 'tests.logic_recipe_engine', 'tests.recipe_searcher_engine', 'tests.shell_cold', 'tests.lifecycle_engine', 'tests.integration_engine', 'tests.redesign_engine', 'tests.monitor_feedback_engine', 'tests.rd1_upgrade_engine', 'tests.monitor_budget_engine', 'tests.monitor_presentation_engine', 'tests.monitor_plot_baseline_engine', 'tests.runtime_budget_engine', 'tests.monitor_animation_engine', 'tests.monitor_state_idle', 'tests.monitor_state_pending', 'tests.monitor_demand_engine', 'tests.production_statistics_timing_engine', 'tests.production_statistics_large_engine', 'tests.production_statistics_engine') or not args.cold:
+            if args.fixture not in ('tests.dashboard_lifecycle_engine', 'tests.dashboard_engine', 'tests.dashboard_dependency_engine', 'tests.monitor_state_idle', 'tests.monitor_state_pending', 'tests.monitor_demand_engine', 'tests.production_statistics_timing_engine', 'tests.production_statistics_large_engine', 'tests.production_statistics_engine', 'tests.factoriopedia_large_engine', 'tests.factoriopedia_engine', 'tests.native_circuit_engine', 'tests.reference_tutorials_engine', 'tests.peripheral_inspector_engine', 'tests.speaker_competition_engine', 'tests.speaker_engine', 'tests.speaker_client_engine', 'tests.modem_competition_engine', 'tests.radar_engine', 'tests.modem_engine', 'tests.monitor_state_waiting', 'tests.monitor_state_preparing', 'tests.monitor_state_ready', 'tests.monitor_state_retiring', 'tests.logic_recipe_engine', 'tests.recipe_searcher_engine', 'tests.shell_cold', 'tests.lifecycle_engine', 'tests.integration_engine', 'tests.redesign_engine', 'tests.monitor_feedback_engine', 'tests.rd1_upgrade_engine', 'tests.monitor_budget_engine', 'tests.monitor_presentation_engine', 'tests.monitor_plot_baseline_engine', 'tests.runtime_budget_engine', 'tests.monitor_animation_engine') or not args.cold:
                 ap.error('--production-context requires a fixed supported fixture and --cold')
             control = '-- Native lifecycle fixture runs once in production context.\n'
             (fixture / 'settings.lua').write_text("data:extend{{type='string-setting',name='tc-smoke-production-fixture',setting_type='startup',default_value="+json.dumps(args.fixture)+",allowed_values={"+json.dumps(args.fixture)+"}}}\n")
@@ -136,6 +152,7 @@ def main():
         if args.final_data_fixture:
             (fixture / 'data-final-fixes.lua').write_text('require('+json.dumps('__'+info['name']+'__.'+args.final_data_fixture)+')\n')
         enabled = [{'name':'base','enabled':True},{'name':info['name'],'enabled':True},{'name':'tc-smoke','enabled':True}]
+        enabled.append({'name':'factorio-charts','enabled':charts is not None})
         enabled += [{'name':name,'enabled':mode=='space-age'} for name in ('space-age','quality','elevated-rails','recycler')]
         (mods / 'mod-list.json').write_text(json.dumps({'mods':enabled}))
         cfg = folder / 'config.ini'
