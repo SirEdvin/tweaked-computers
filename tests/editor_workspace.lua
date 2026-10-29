@@ -281,6 +281,28 @@ function M.run()
       end
       assert(not layout.measure({width=1000,height=600},1.5,false).supported)
     end)
+    group('workspace-console-recorded-elapsed-map-time',function()
+      local logs,bytes,truncated=rec.logs,rec.log_bytes,rec.log_truncated
+      rec.logs={}; rec.log_bytes=0; rec.log_truncated=false
+      local cases={{0,'00:00:00'},{59,'00:00:00'},{60,'00:00:01'},
+        {3599,'00:00:59'},{3600,'00:01:00'},{215999,'00:59:59'},{216000,'01:00:00'},
+        {5184000,'24:00:00'},{5846940,'27:04:09'},{21600000,'100:00:00'}}
+      local expected={}
+      for i,case in ipairs(cases) do
+        runtime.log(rec,'entry '..i,case[1]); expected[i]='['..case[2]..'] entry '..i
+      end
+      local stored=serpent.line(rec.logs); local retained_bytes=rec.log_bytes
+      tab(f,2); local output=f.content.console.output; local writes=output.text_writes
+      assert(output.text==table.concat(expected,'\n'),'Console must render completed elapsed map time')
+      editor.refresh(a,nil,tick+21600000)
+      assert(output.text_writes==writes and serpent.line(rec.logs)==stored and rec.log_bytes==retained_bytes)
+      editor.on_closed{player_index=a.index,element=f}; assert(editor.open(a,rec.id)); f=a.gui.screen[editor.frame_name]; c=f.content.editor; source_widget=c.source
+      tab(f,2); assert(f.content.console.output.text==table.concat(expected,'\n'))
+      assert(runtime.stop(rec.id)); assert(runtime.activate(rec.id,tick+1,rec.saved_revision))
+      editor.refresh(a)
+      assert(f.content.console.output.text==table.concat(expected,'\n') and serpent.line(rec.logs)==stored and rec.log_bytes==retained_bytes)
+      rec.logs,rec.log_bytes,rec.log_truncated=logs,bytes,truncated
+    end)
     group('workspace-console-follow-off-live-without-scroll-or-unchanged-text-churn',function()
       tab(f,2); local output=f.content.console.output; local text=output.text; local writes=output.text_writes; local scrolls=output.scrolls
       local follow=f.content.console.follow; follow.state=false
