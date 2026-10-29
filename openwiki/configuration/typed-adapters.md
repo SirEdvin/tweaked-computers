@@ -3,9 +3,6 @@ type: integration
 title: Typed configurator adapters and extension seams
 description: Current target authorization, generated pinned schemas, preflight/readback transactions and shared-section safety for native control behaviors.
 tags: [configurator, adapters, validation, transactions, extension]
-verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-15T06:41:57.498Z
 sources:
   - id: openwiki-source-494356088c062b02493311a3
     resource: repo://scripts/configuration/adapters.lua
@@ -19,14 +16,17 @@ sources:
     resource: repo://scripts/services/configurator.lua
   - id: openwiki-source-1cab5c906bc8c125f01e07d3
     resource: repo://tools/configuration_catalog.py
-generated: { by: "hermes", at: "2026-10-15T06:41:57.498Z" }
+generated: { by: "hermes", at: "2026-10-29T22:50:29.161Z" }
+verified:
+  - by: openwiki/0.7.1
+    at: 2026-10-29T22:50:29.161Z
 ---
 
 # Typed configurator adapters and extension seams
 
 ## Two authorization layers
 
-A guest first reaches a configurator through the mod-only peripheral network. Every configurator method then traverses its physically separate `targets` port with an explicit red/green wire. Target IDs are host native-object registration identities, not coordinates or network IDs. Every call rebuilds current target reachability before reading or writing. Mod-owned entities can appear in discovery but carry `protected=true`; adapters do not forward writes into their implementation components.
+A guest first reaches a configurator through the mod-only peripheral network. Every configurator method then traverses its physically separate `targets` port with an explicit red/green wire. Target IDs are host native-object registration identities, not coordinates or network IDs. Every call rebuilds current target reachability before reading or writing. Custom composite devices can appear in discovery but carry `protected=true`; native radar/speaker carriers are not made protected merely by adoption. Adapters do not forward writes into protected implementation components.
 
 `services/configurator.lua` binds ten methods to the peripheral type. Description combines copied prototype/type/position/surface/direction/quality data with connected connector IDs and adapter summary. Read-only inspection uses `get_control_behavior`, never creating a native behavior merely to discover it.
 

@@ -3,13 +3,13 @@ type: service
 title: KV atomic staging, expiry and carried data
 description: Physical-local byte-string/hash storage with whole-command publication, absolute simulation expiry, bounded reclamation and validated item snapshots.
 tags: [kv, persistence, expiry, staging, services]
-verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-15T06:41:57.498Z
 sources:
   - id: openwiki-source-44e1570dfd85eaa2de9f98b0
     resource: repo://scripts/services/kv.lua
 generated: { by: "hermes", at: "2026-10-15T06:41:57.498Z" }
+verified:
+  - by: openwiki/0.7.1
+    at: 2026-10-29T22:50:29.161Z
 ---
 
 # KV atomic staging, expiry and carried data

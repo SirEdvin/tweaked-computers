@@ -1,42 +1,38 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:20297b0fcdeec1634f889bbced36ac1f1ae52eeada865071f96793837540e2e5",
+  "pageVersion": "sha256:ee58437a958184bac0859926ceb6b0fff6ee2c857563ea9cce2f060a360f6881",
   "claims": [
     {
       "id": "claim_dab12af2f4e8413c8ab762df79436683",
-      "statement": "Compilation admits only a bounded literal API-version/named-handler descriptor and verifies emitted native syntax without executing a candidate.",
+      "statement": "Saved-program compilation admits only simple exported function declarations, optional lexical local-function helpers and empty statements, rejects effects/reserved or duplicate declarations before emission, implies API 1 and verifies generated syntax without executing it; Console is a separate mode.",
       "evidence": [
         {
-          "resource": "repo://scripts/runtime/compiler.lua#L188-L260",
-          "version": "repo-lines-v1:sha256:0efa14568f4616b09bd6fe08e630657455ec6628692ed07958e592fba4cd4949:eyJzZWxlY3RlZExpbmVDb3VudCI6NzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiYmUwZWViOWVlMWZiYzhmN2NmNmFiNzNiMmMzZDE4MWVmNDUyNDJjMmUyNjhjMDI0YzY1Zjk0YmJjMGQyNmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzY2MzYjljYmMzMjcyMzQ0OWViYzRjZDM5MmIwYWUxNzA0OGY0ZGFhMzNhNzMxNDZlZmU0YzBmOWZlOWNkNjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIxZTY0NGIyM2JmNjFjOWY4YmE1ODM5ZDE4MzFhNjMxN2Y3ZWJmMmI5MzNlYzcyNDIzZmZlYmFiNjUwZGYwNGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4NzM4Njg3YjZjYmEyNmMxY2UzOWQwMTk1ODA4NjA4NGU5MTFmOGI4MTUyOGU2YTQzOTg4YTE0NGQwYzliNjAifQ"
+          "resource": "repo://scripts/runtime/compiler.lua#L237-L287",
+          "version": "repo-lines-v1:sha256:2130091d5c4fdc930af4c95de09a5a44c3359920a7003a22ced3e86181e12d4d:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiYjM4NzE0ZmQ5YzZmYzc5NDIzMGRkNThhNmRjNTQyZWE3MjU4OTFhYzlmOWM1MDU4OWY3ZGI3OTliM2JhNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwNGEwMGQyYjZlZWVmOTlkMzk2ZGYyMjI3ZmI3NzUwZWVmNmQwZmU0MjA2YTM5ZTAzN2FkNDI5NjJhNzc0MGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNmOTE2YTMxMjIxZWZhNjdmYmNlYjljNzNjNDhlYjlmNzQzODI3ZjMxZjQyMzBjZTkzMWU5Yjk5ZDc0NWViYTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdjYzNkMTY4YjU0MjRkY2U4NDlkODc4YzM3MDNkY2M3OTAzNjQ2MTI2ODU3MDRhM2FjY2VmODc1MzIyYjZlNjgifQ"
         },
         {
-          "resource": "repo://scripts/runtime/compiler.lua#L9-L31",
-          "version": "repo-lines-v1:sha256:5a7a7ad11d1df0c48e1bbb3a24b57f183427e12e6062ff2fdf869f6bcb6b74c9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1Y2ExNjRlZTM4NzI1NzNmMDRmYzljY2Y2MmNhMjMwY2UwODhjZjY1N2RjMTg0Njc5Y2VlZDJiZDU5MzcwZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3OTgxMWM1ZmJlMjVjM2Q0ZTVmM2QxZmQzNWFiOWRhNmJjZjhhNjhjNWVkZjlkNmJhOTdmNjg2ODZjMzk2ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIxZDNjZWYxZjFhZjI0OGE1ZjU2ZDBmZmQ5NjczNDZmNWM3ODE4ZDcwZWExMWRmYjM0ZGRkOTZlOGNkYWI1OTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlNTQ1YmFkNWQ5ODVkZmZhM2UxOGUzMmVmYjdlODE4ZjY4YmI2Y2FlZjNlMDQ2NmVjMGM3ODhlYWZkMTYyMTQifQ"
+          "resource": "repo://scripts/runtime/compiler.lua#L290-L342",
+          "version": "repo-lines-v1:sha256:aec2a0363408a780617695a1755e22d29408434b29550163eb1f457fb78799bf:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjZmNkM2U2ZDY3YWY1M2RjYTlkMzcxYWNjNzUyNDI4M2IxZTM5ZmM3MzI1NmE4NjNmOGMzMzNkODkxMWE5MGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0MTllZDA0ZmE1NWZmNzliOTQxMGJiNjM3ZGQ4NjMyY2M3ZTk0Zjk1ZjViNDhjMGZiNTMyN2E3NDFhMDhlMWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc2OGZhYzdlYjBhY2FkZDE3NzQ1NzA3ZmFlYmYyYjdmMDlhZWVmYjU5M2QwOTc3MmU1NDFmNTBiNTU0NTQ0NmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQzNGZiYzZkNWZmZGM1ZmNiZDIwYTQ4MjU0OGI5NTE2YjdiYzA5ODZkZGEyNDE0ZDQ3M2FjMjdkOWY4ZDhlYzEifQ"
         }
       ]
     },
     {
       "id": "claim_2e25c769c1354ff985c622d352072a61",
-      "statement": "Accepted syntax is emitted as native Lua with guarded expression/call/constructor/assignment/loop boundaries; globals and colon syntax are restricted rather than using an interpreter.",
+      "statement": "Accepted syntax emits native Lua with guarded expressions, calls, constructors, assignment and loop boundaries; globals and colon syntax are restricted rather than using an interpreter.",
       "evidence": [
         {
-          "resource": "repo://scripts/runtime/compiler.lua#L127-L186",
-          "version": "repo-lines-v1:sha256:86d4c590c5e4f38bedc8c999de4059c8b7a62f14ddaecd88a12fb1d8e7179ba3:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5YjE3NmIwODI2OGQyZGI0YzhlMzA4ZmRhYzVkODQ0ZWViNDNmNDAxZjlkZGMxNzg1YjkyMThiM2I2MmU5MWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0MGViYWUyODhlYWZkMjVkZjE5YWRiYmQ4NGQyYTk5N2Y0NTYzMTg3ZTVjMzFiMDIwZmNmMmFjYTNkMzljMjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIyNTliZWE5NmQ3NDliZjVkMzNiZmY5MmZmYjEzNjc0MzM3NWZkYjFhOGM4Y2FjNjhlMGQ5MTA5YzRmODBiMGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc4N2U5OTkzMmE2YzM1OGQ0YTNhNjIyN2FjYjlkOGQyOGQwNzFhOGQ5OGJlM2M2MjQxYTZhMzE0ZDJlYmNkZGMifQ"
-        },
-        {
-          "resource": "repo://scripts/runtime/compiler.lua#L62-L118",
-          "version": "repo-lines-v1:sha256:6bca1aac791b38f747014493b512852ca3776968df201f96b662b263b1932869:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgxZjExZTgxZjIwMWU1MTNmY2E3MzhkZmY5ZDkwNmYxYmNlOGNiMmFiNGMxNDFlYzY2MzQ1MjgxOGI0ZmE2ZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzMGViNDBlMzUwZjJhYmVjMTY2MzIyZjk5OWFmODE5YTg0YWViN2RhMGNjMDkwZjU4ZWMyNTE0MWFhNDFiOTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg1N2I3Yzc4MjZmM2JkMDgwODc2YmQ4Y2UzZTFjYjU4NmI4ZjFiN2M2ZGE2NWFlNWExMDlmYTYyZTRjNjI2MGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdiYjZkYWZlZGE2ZjViMzM0ODFjZjBhNjNlMzA3NTZiMzQ1MzQyNWFjYTFjMmQ1ZGFjZDkwNTRiMWFkZTRlYzAifQ"
+          "resource": "repo://scripts/runtime/compiler.lua#L107-L229",
+          "version": "repo-lines-v1:sha256:be3e47550cd15dd755118c647e0eeb106c678788febb306583d0b73098d3aa1d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIzZDQwNTczYTYxMzNmZmZkM2I5OTY4ZjljYjc0ZmUyNDI3NTYyMjc1MWU5Y2Q3Mjk0NjVkNjg2NjdiMzIyY2E5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI4NDBlYmFlMjg4ZWFmZDI1ZGYxOWFkYmJkODRkMmE5OTdmNDU2MzE4N2U1YzMxYjAyMGZjZjJhY2EzZDM5YzIyIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI4MzM5OGFiYTZmNzU1OWY5MDg1YzRmMzNjYWZmZTBkZWExYzJjZTU0MDA2NTFlMTAwOTYxZjBjNzdlMGVlNWE1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI2YWQyNWI2MWFkODA1NjM1N2M5ZWU4N2Q4NzZjNjU3ZDI3YjlhYjIwNTg2ZTBmZTE4YzMyNjUxNWFjMDM0OGY4In0"
         }
       ]
     },
     {
       "id": "claim_67c38557733f43f3bc5aaa52c4f5412f",
-      "statement": "Run recompiles exact source and builds a fresh sandbox/native handler table each dispatch, ignoring retained generated text and reserving reconstruction admission.",
+      "statement": "Dispatch revalidates or replays exact-source proof and builds a fresh prepaid sandbox/native handler table, ignoring caller-retained generated text and reserving reconstruction admission.",
       "evidence": [
         {
-          "resource": "repo://scripts/runtime/compiler.lua#L263-L290",
-          "version": "repo-lines-v1:sha256:f221bf946c366afd250ac8cd3b44fa49e208bdd138113276b8dba64d7d691497:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MzgyZDNlZTM0YjMxNTQwMTM4MTc2MDcyNWE3ZTQwOWVhYjVhYzRmZjU3YmMwNjA5ZDhhOGI0M2MzNmZhYjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwODU1MWNiYmFiZGVhZDRiYjc5ZTkxNjI2ZjJiMGRkNWJmMGRmZTU3YmZiNTlhNjQxZTUwNmMxNjJkYTJjMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1MmMwM2Y5NGQ3MDI5NDBmN2FlODQxNmY0MjQ3NzBiOGU3Y2MyZDMwZjFmMmQ0MTdjYTE0MWRiYzEzZTkzMjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZWZhMGM5MjQ3YzczMzdkMDdlODIzY2M1Mzg3YTZhZWI1MzE3OTBlOWFlOTBmYzdkMmEwNThmODA4OTdmYzkifQ"
+          "resource": "repo://scripts/runtime/compiler.lua#L356-L381",
+          "version": "repo-lines-v1:sha256:6db62aa488d06bff543b0eccdd0c98ee6e7250367ce48d72bf316f26029ada96:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2OTQwZjdlMmYyOGQ2ZmNjNjliN2M1MWQzZGZmNzhkZGIxOWM4ZTNiMmQ5ZDM4NGViYjRjMjFmNjRlYzVhYjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyMzNlNWFhYzZhMWEzMzViYjJjMDkyNzMyOTUzOTA4YmM5NjI5MDcxNmNlZGJkNWU2Mzg1YjJkZGY3ZDYxMmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1MmMwM2Y5NGQ3MDI5NDBmN2FlODQxNmY0MjQ3NzBiOGU3Y2MyZDMwZjFmMmQ0MTdjYTE0MWRiYzEzZTkzMjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2ZDljYjI5YTYwNjE5NjE5OTcxNzQ5ZDY1ZTA4NDM2MTg0ZjY1Y2Q4ZjMyNjZiYmNlZjYwNmMwNDZkMjIxYTMifQ"
         }
       ]
     },
@@ -45,12 +41,12 @@
       "statement": "A private fatal poison sentinel survives guest pcall, preventing caught budget exhaustion from resuming guarded work or effects.",
       "evidence": [
         {
-          "resource": "repo://scripts/runtime/sandbox.lua#L292-L299",
-          "version": "repo-lines-v1:sha256:0f857614ff732eb014618fdb8bebddaa0b7f52519b490e6fb40cdc958e305bd5:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjY0MmY4NTQzODEzM2I2OGVlN2ZmZWMzYzUyMzIwMmIyYzNlZWUyNTI3ZGM5YjJkNDcxYzBmYmVhNmUyMjUyZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDU0N2U5MDVlOTlkOGE1NDdhMDkyOWRmNjc5YThhZWU2ZWJmOTE0YzMxNGNkY2ZiZjE5ZmNjODJjYWQ3NDc1MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDQ3MTlmNDIxMmI1ZjdmYzkzYWIxZDFiYjY1YjQ5Y2Y2M2QwOTdjMDdmMTk1ZjYwMDJmNmYwYTIyMThiNDg2OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2ExZTU0Nzk2MzA1OGY4ZWQzZDAzNTM4MGVhNDQ0MjlkYTFlMDNiNzc1NWI4NDIyNmRmNDk2MzNiOGZkNDFlNiJ9"
+          "resource": "repo://scripts/runtime/sandbox.lua#L28-L69",
+          "version": "repo-lines-v1:sha256:0d89cce9c040f17c96a70b993826e159bd48c0b19c564e9acc96c048fad4296b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjMmY3YmExZGQzOWE2NmRmODE1Y2RmMTNjM2RiNDgxYjRlODZjZjc0NWIxMzQ0OTgwNGZiOGIyYWRiODk3OGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjMjk3YmZhMmMyNDk1ZjBjY2U5ZmFjODBiYzA5OTQ2YmYwMTQ0OGYxNzQ4YmYyMWIxNjYxNjJjMTRjZDRiZGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ1NmM3NzJmY2JhN2FiNTljNjBjZDRhMTEyNTE5ZDBkNTBmM2UxMzBlNjRiZTU4M2RjMTFlNDhhMTNhMDQ4ZTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJmMjcwZmRkN2FjNDJhYWNiMTJiNzU4N2E4ZWQ5ZDk4YjdiMzUzYmI3OTI0Mzg1MTU2NzNiYmIzMDIxNTQ4ZmIifQ"
         },
         {
-          "resource": "repo://scripts/runtime/sandbox.lua#L6-L30",
-          "version": "repo-lines-v1:sha256:99a22cf8a1550eddd57027aa23cd40fa0d0e90a96414676a0347587882c6021a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhMGEwNDI4YTExZjhhODQxNjIyMTIwMmUyOTE0OGU1YzY1OGIzMTFkN2NhY2RiMGY0ODdmZWYyNGE4ODVhNzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3ZTliYTQ0Y2FlMzM5MzZkNzk3ZWQ1YTYyMDQ2MmQyMjk4OGUyOTFmYWQzY2Q2OWM5NzQzNWI5Nzk5NmY3NTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYzZTk2ZDc0NjcyMjI3MmNjODUwNDVlNmE0ZTI0Y2JhYzI2MjA5OTIzODIyNzg2NzgwMDA2ZGYyMjA5NTIwNzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVjMzJlZGE4MGZiZDIzYmRlZWMzMjhhOWUxMmE0MTBiYjBlZjRiZDFlNTFmOTQ4NmE1NmYzMWQwNTQ1MzVlYWYifQ"
+          "resource": "repo://scripts/runtime/sandbox.lua#L395-L420",
+          "version": "repo-lines-v1:sha256:b441db73a831159d90daa20b21ce4c07da3b3fb421e0e8444cbc8c7b86f25db5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI2NDJmODU0MzgxMzNiNjhlZTdmZmVjM2M1MjMyMDJiMmMzZWVlMjUyN2RjOWIyZDQ3MWMwZmJlYTZlMjI1MmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxMjExMzQ2NzU4YmMzZDU4NGM4ZWViYWQ2NTUxOTFiNjE1NjIwMGQ4YTQ1NGU5MmUyYjVlNWI4M2U0ZDJhMTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ0NzE5ZjQyMTJiNWY3ZmM5M2FiMWQxYmI2NWI0OWNmNjNkMDk3YzA3ZjE5NWY2MDAyZjZmMGEyMjE4YjQ4NjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ2MTA5MDUxMDdhNDI4YmRkYTlmOTE3NjYzNDJhZTg3ZWEyYzczYjJmNDNlZDY4Mzc0NTNjN2Q0ZTk0YzU4NzEifQ"
         }
       ]
     },
@@ -59,12 +55,16 @@
       "statement": "Boundary snapshots copy bounded plain acyclic Data and reject protected handles as stored values; trusted service entry checks/spends before effects and copies ordinary arguments/results.",
       "evidence": [
         {
-          "resource": "repo://scripts/runtime/data.lua#L5-L45",
-          "version": "repo-lines-v1:sha256:1749f8b9426cd449e76ef54b6346abe606b87a0f84ab5e4fddb1a56b3a0bf9f9:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiYWViMDRiMmM2MWY4YjBlNTM4NTE0ODk0OGJhNGI5ZGQ1ODZiYTAxM2ZlODA1YzdiZmU0YTE1NzJkYjQ4OWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzOTA2Y2M5YmRhZDM4YjFlNWEyMWIxM2Y0MTg5NWVkZTRhZTAwYzBjMzM4MmNlNTI5MjJiZjJlNGRmYzI5MDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY3OWU2ODU0OWEwZDZlMDAzODRlNzZlMzZlNGM1MGUyMDQ3NGRhZGUwNmEzMjAxM2NlNmJkMzYxYjUxNWQzZjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjZmE2YmVlNGEzNzgzNmNiYjZhNzM5ODBjMjgxZmZhYmI3YWFhYjg2YjU3ODBjMDA4NDkyOGY0OWJmMDE2ZDIifQ"
+          "resource": "repo://scripts/runtime/data.lua#L5-L46",
+          "version": "repo-lines-v1:sha256:92e1715a6918aca526813885e9b7c55cecd28073ce1f176b214299d1ec1f5829:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmZDM1YjRkZDg1ODQ4NjAzMjRjMGU3OGIxODdkNTAxMzFkMTUyZmRhYzdmYTZmMjIwYWVkYTc1MWNhNmE3ZGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzOTA2Y2M5YmRhZDM4YjFlNWEyMWIxM2Y0MTg5NWVkZTRhZTAwYzBjMzM4MmNlNTI5MjJiZjJlNGRmYzI5MDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY3OWU2ODU0OWEwZDZlMDAzODRlNzZlMzZlNGM1MGUyMDQ3NGRhZGUwNmEzMjAxM2NlNmJkMzYxYjUxNWQzZjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwNTg5MTVkMGNlNzQ0MmFkMzUxMmNmYjEzZTdhZTQ1ZWQ4OGY4NjdjZDBhYmNmYjczNTA2ZWI5ZmIzOTQzMTEifQ"
         },
         {
-          "resource": "repo://scripts/runtime/sandbox.lua#L207-L265",
-          "version": "repo-lines-v1:sha256:7d9d4835f5ab41e75d173a63a7916b6cbeb482c69cbdaa3f7f395031b78491cd:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjViZDRkZGE3MGRiMzJjNWRhMTQzNjE2ZDViMjc0YjZiNjEzYjMzMTU5OGQ2NjNmZmFlOWNlNGFlZDdjNDFhYjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFjYTcwNTIzZGIwMTMyZjhlYjg1YzRkM2NmMzA2YmFhZmRmZTFmM2VjOTlhNTA0NDkwZmUxMmQ3Mzg5Y2NlNDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5OGVjYzUzZTk4ODIwNTc1ZGEzMjhiZmQ0ZGU1MjAyOGMzZmJkMjczMGFmNjJhMDUwYjY5MWQ2MmUxYTA0NmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhNDYxY2U0YzIwZmFhNGNlZjdmNGU5NjJkMmI3NzFlOTkxMzJkYjNiNjY2MzI1OWEwMjQwYjYwYTBhYTkzZWYifQ"
+          "resource": "repo://scripts/runtime/sandbox.lua#L248-L283",
+          "version": "repo-lines-v1:sha256:1ab5d5cd6e3a6cf1f18642a833b2bc42e6f4683787b3548546537cacb10ff5a3:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjViZDRkZGE3MGRiMzJjNWRhMTQzNjE2ZDViMjc0YjZiNjEzYjMzMTU5OGQ2NjNmZmFlOWNlNGFlZDdjNDFhYjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3OTgxMWM1ZmJlMjVjM2Q0ZTVmM2QxZmQzNWFiOWRhNmJjZjhhNjhjNWVkZjlkNmJhOTdmNjg2ODZjMzk2ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5OGVjYzUzZTk4ODIwNTc1ZGEzMjhiZmQ0ZGU1MjAyOGMzZmJkMjczMGFmNjJhMDUwYjY5MWQ2MmUxYTA0NmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE0YWMzMWRhMWU3NDcxZjhlNzcyODgzOWIyOGI0NTUxZDI4ZWZiMGRkNmM0YTRiNmFiY2E1MmY5NWFmZGMwZjIifQ"
+        },
+        {
+          "resource": "repo://scripts/runtime/sandbox.lua#L335-L369",
+          "version": "repo-lines-v1:sha256:18c6037020bb9735f3f2cd3ade58afcf54f9e0955df220877bffcb778f048833:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjN2NjNWFmN2QzOThhNjk4ZjljMjQ1NjE5YTU3NTM3Y2FkYWM2NDg5ZDI5NTY3MmQ5OGIzYzdkNTNiOTJlMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4Y2Y0NTY4MTgzOTk3YWU2OWVmYTkzOTZiZDM0YzYwYTAzMDQyYWU0OGY0YmEwYzhkNDU5NmQ0NThmZTQ1YmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4YTRhZGMxYTNmNGUwYTJkMzA2ZThhN2JmZDFiOGQwZDJiNzRkNWQ1ZWIyMzkyNTlkYTdlMDgxN2E5MTlkZjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0MmUxNmVjNzZkODBhMzUxN2M4NTg5OTMwNmY3YjJiNzE1YTUwMWNmODkyY2UzZmRlYTBjYWYyZTc2MDNkYmIifQ"
         }
       ]
     },
@@ -73,18 +73,32 @@
       "statement": "Sandbox indexing avoids host string metatables, indexed assignment preflights targets before writes, and concatenation bounds complete output before native allocation.",
       "evidence": [
         {
-          "resource": "repo://scripts/runtime/sandbox.lua#L126-L174",
-          "version": "repo-lines-v1:sha256:e63ccbc36da3e3b50675c0e5d47ffae3d607b15511f7e48ad7402db3e010f2e4:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1NDJkOTNiMWY4ZGFjZjNmY2MxY2IyZjJmNDM5NTZkNjNjYjUyNDAwZTRkNWU4ZmY0ZTg0ZmZiMmUwNzRkMzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3OTgxMWM1ZmJlMjVjM2Q0ZTVmM2QxZmQzNWFiOWRhNmJjZjhhNjhjNWVkZjlkNmJhOTdmNjg2ODZjMzk2ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg2MGZjZGExYjI0MDA2MjA4YmY2NDgzMTU1Y2MyOGZiYzcyNjAzNGY0ZWQ3NGIzZWFmNjA1Y2U0MTk3OTJhMzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2NWVhM2Q1YjExZWJmMmM0OTc2OTNjOTIyN2MyMjNhNjdiZDc2YjY5Zjg1NjU2ZDdjODc3N2RiNzZlZDgyYmUifQ"
+          "resource": "repo://scripts/runtime/sandbox.lua#L164-L246",
+          "version": "repo-lines-v1:sha256:af810b63132a7271933a312e658741105a53c55d8014689fca1bcc30798155db:eyJzZWxlY3RlZExpbmVDb3VudCI6ODMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1NDJkOTNiMWY4ZGFjZjNmY2MxY2IyZjJmNDM5NTZkNjNjYjUyNDAwZTRkNWU4ZmY0ZTg0ZmZiMmUwNzRkMzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkY2Y1MzZmOTdjNzdjY2VjZGJlNjJlNzk0ZWVjMzYyNmI3ZTE4NzcxODNlNWJhODk4YmUxNTAwMGNlNGEwY2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg2MGZjZGExYjI0MDA2MjA4YmY2NDgzMTU1Y2MyOGZiYzcyNjAzNGY0ZWQ3NGIzZWFmNjA1Y2U0MTk3OTJhMzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhYmYyYmQ3YmViMzZjNzFkOWMwNGNiM2EzN2Q1MmMxZTU1NDdlYzkxMzRiZmU0Y2Q3ZDE3ZmU0YzhiZGNmMDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6ce5eed6e9774a85bf51c5e2b5b51ad7",
+      "statement": "Top-level emission appends paid headers/body statements/terminators to one final fragment vector and admits its joined length before concatenation, retaining nested guards and prepare_handlers construction prepayment; private mode-separated exact-source caching replays original charges.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/runtime/compiler.lua#L263-L304",
+          "version": "repo-lines-v1:sha256:7c7064d44c1756fdca5fe8a49373fc6075db398f84b0459183ddb4f3510e760e:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhNTk1NThmMTI3NTE2MjE3YzE2Y2E0NzA2YWY5M2MzMjJkZDNmZTkyYjdhN2U1YmY2MTAxYjIyZGY2MGQ4ZWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0ZDM4OTdhMGY5ZDY5YzlkYjgxYmM5Nzc0MTVlNDBiNzIyYTVkNDRkZGU1YmQ4ZjcyNjQ1MWJhZWQyNDhhNDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZlNzE4NjYzNTQ3YjFlNmI3NThiYjBmOWFjOGQ1NzliODIxYjQzMWZjMjFmZWMxMTcxYjVjNTQwMTUxZWI3OWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYyZjY2MTY5MTdlNDE1NmVkNDA2OGNlZjM3YTY5NmY4ZjYxMzg4NWE0YWZkMDMwN2YxOGY4ZmFmM2FiZDFkZWQifQ"
         },
         {
-          "resource": "repo://scripts/runtime/sandbox.lua#L193-L205",
-          "version": "repo-lines-v1:sha256:ec0ed8c8173114f4a5908e57e95923be76e8fe3737f847966e96fef044d765ab:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhZWFlYmI5MTYwOWQ4ZDE5OGY3MGQ0ZDE1Njk1MDY4NzI2MTBhNGY0NDQ5NWExYjBmZWUwNWQ4OWQ1OGQ4N2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkY2Y1MzZmOTdjNzdjY2VjZGJlNjJlNzk0ZWVjMzYyNmI3ZTE4NzcxODNlNWJhODk4YmUxNTAwMGNlNGEwY2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM5YjllMmM3MDg1M2ExM2VhOGIxZDU3ZjY3YjQxN2NiZDdmNzgxNTA2ODMyNTA1Mjk5ZGRjYjQzOGQ0MTIwNjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhYmYyYmQ3YmViMzZjNzFkOWMwNGNiM2EzN2Q1MmMxZTU1NDdlYzkxMzRiZmU0Y2Q3ZDE3ZmU0YzhiZGNmMDMifQ"
+          "resource": "repo://scripts/runtime/compiler.lua#L349-L379",
+          "version": "repo-lines-v1:sha256:718c7ab1c884dfcfde3aea2fcebee2fc3c38c80d0400cd36eda89574edfda108:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0Yzk1M2VkNjJlOGNmODc3YTUzNjRmNTllYjE1NjYwNjEzY2NlZmE0NjVlMjVmMTY3MDg1YzI0ZjNkMWM1NDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkZGRiNjczOTFkYzIyMDY1NTYzNzhlYTQ3MzVhYTRiNDE3NDk3Mjc2ZjUyNDMwY2Q4YzkwMDVlZWRiNTcxNTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlkZGQzMDE2YmQ5YTA3Mzg0MjE3Y2FhZDFlZWZmMzI2NzViZGM2ZmEwNGVmOTFjNWM5MjNhYTI5MWY5MTY5YzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIyN2QzNjI1NDhiZjRmMGIwYmQ1OWQwZjkyNjJmYzE5ZTZmYjZmMGFhZDMwM2UzMDY5NGNkNWRkYjg1NTQ4MjkifQ"
+        },
+        {
+          "resource": "repo://scripts/runtime/compiler.lua#L90-L105",
+          "version": "repo-lines-v1:sha256:0ccfd614c87c17f21bb34892b8227a0507379acc7732084c4cf57ddd43d9d257:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlZDM3NWJiYWMxM2JiYjU1MWY3MzVlODYwMWZkYjlmYzUzYWZkMTE1ODhhYWIyODE5ODcwZTA1MjhhY2ZlMTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzNWU4OWZlZTNmY2U5NzM1N2ZiNGNiMGM4NDhhZGEzMjBhY2NjMTczNTNlOWZiNTcxYzhkMWIyYTBkZmRlZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg1N2I3Yzc4MjZmM2JkMDgwODc2YmQ4Y2UzZTFjYjU4NmI4ZjFiN2M2ZGE2NWFlNWExMDlmYTYyZTRjNjI2MGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA0MTczYjNmZjY1MzI4MGYyNzhiNDgzYzAwZWZjYWM1Y2IwODk0MWViNDc5ZmJmZTYzYzY1NzllOGRkNzk1NzEifQ"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.1",
-    "at": "2026-10-15T06:41:57.498Z"
+    "at": "2026-10-29T22:50:29.161Z"
   }
 }

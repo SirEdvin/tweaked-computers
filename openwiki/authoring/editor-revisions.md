@@ -4,18 +4,20 @@ title: Editor revisions, authority and recovery
 description: The native GUI and plain editor model keep drafts, saved revisions and active execution separate while rechecking player and entity authority.
 tags: [editor, revisions, authorization, recovery]
 sources:
+  - id: openwiki-source-4cee717286544161165260f8
+    resource: repo://scripts/runtime/compiler.lua
   - id: openwiki-source-0ddacafef71462f8b63089cd
     resource: repo://scripts/runtime/computer.lua
-  - id: openwiki-source-92ddf1aa156aebd2c038aa1c
-    resource: repo://scripts/ui/editor-layout.lua
   - id: openwiki-source-9bdd101d2a3d48be3d3699c7
     resource: repo://scripts/ui/editor-model.lua
   - id: openwiki-source-56946c7bbf28112aad8ee479
     resource: repo://scripts/ui/editor.lua
-generated: { by: "hermes", at: "2026-10-15T13:11:13.133Z" }
+  - id: openwiki-source-ba48e2377e7e04e1ead90f25
+    resource: repo://scripts/ui/interaction.lua
+generated: { by: "hermes", at: "2026-10-29T22:50:29.161Z" }
 verified:
   - by: openwiki/0.7.1
-    at: 2026-10-15T13:11:13.133Z
+    at: 2026-10-29T22:50:29.161Z
 ---
 
 # Editor revisions, authority and recovery
@@ -24,7 +26,7 @@ verified:
 
 The model in `scripts/ui/editor-model.lua` owns per-player documents under `root.player_drafts`; the GUI in `scripts/ui/editor.lua` is a view/controller, not a guest service. A draft records `source`, `base_source` and `base_revision`. The computer separately owns `saved_source`/`saved_revision` and its active source snapshot. These are deliberately independent:
 
-- Validate compiles the draft using the computer's shared admission context; it does not save or execute it.
+- Validate compiles the declaration-only draft using the computer's shared admission context; it does not save or execute it. The independent Console accepts its own bounded expression/statement syntax.
 - Save calls `runtime.save` with the draft's base revision, then updates that baseline. Running code is unchanged.
 - Run/Apply require the draft baseline to equal the current saved revision and its text to equal saved text. They activate that saved revision, never unseen edits.
 - A failed candidate validation occurs before retiring the old generation. Successful activation gives a new run ID and cleans up the old run's outputs and registrations.
@@ -51,7 +53,7 @@ Reset also has a two-step model transition. The GUI requires `stopped`, captures
 
 `editor.lua` creates a native tabbed pane with Editor, Console, Peripherals, Reference and Maintenance. The source stays mounted across navigation, Focus and routine refresh; only an explicit reviewed source replacement changes its text. Editor has one Validate/Save/contextual Run-or-Apply/Stop row. Focus hides supporting navigation and remembers the prior tab. `editor-layout.lua` clamps physical window position using GUI scale; the minimum supported effective size is 760×480 GUI units. Four resolution/scale calculations and schema-aware table-backed construction are not native visual acceptance.
 
-Console Follow off retains its selectable snapshot until explicit Refresh/resume. Peripherals performs real selected-color inspection and separates refused/pending from empty inventories. Reference uses bounded search/category/topic state and native text selection; the starter inserts only into an empty draft. Maintenance holds reviewed saved/active/retained source and identity-specific destructive confirmations. New tab/selection/checkbox routes pass through the same owned-frame envelope and exact widget checks as clicks/text.
+Console Follow controls scrolling, not acquisition: output keeps updating while Follow is off, unchanged text is not reassigned, and changed text can clear native selection. Peripherals performs real selected-color inspection and separates refused/pending from empty inventories. Reference uses bounded search/category/topic state and native text selection; the declaration starter inserts only into an empty draft. Maintenance holds reviewed saved/active/retained source and identity-specific destructive confirmations. New tab/selection/checkbox routes pass through the same owned-frame envelope and exact widget checks as clicks/text.
 
 ## Refresh and extension seams
 
@@ -59,6 +61,6 @@ Live status/output refresh is registered in the render phase every 15 ticks and 
 
 The optional network inspector is registered during control parsing and reports red/green results independently. Help and template insertion remain host authoring aids; a template only replaces an empty draft. They do not enlarge guest authority.
 
-`tests/editor_contract.lua`, `tests/editor_workspace.lua` and `tests/editor_cold.lua` exercise revision/recovery, tab/focus/ownership/layout and cold retention; integration/lifecycle fixtures cover Save/Run and material recovery. The [integrated candidate](../../docs/rd5-candidate.md) identifies exact packaged checks. Native typing, paste/focus, button delivery, graphical layout and multiplayer editing remain user-owned client checks; headless and GUI mocks do not pass them.
+`tests/editor_contract.lua`, `tests/editor_workspace.lua` and `tests/editor_cold.lua` exercise revision/recovery, tab/focus/ownership/layout and cold retention; integration/lifecycle fixtures cover Save/Run and material recovery. The [integrated candidate](../../docs/rd5-candidate.md) records historical packaged checks, not acceptance of a later candidate. Native typing, paste/focus, button delivery, graphical layout and multiplayer editing require separate full-client checks; headless and GUI mocks do not pass them.
 
 Related: [runtime activation](../architecture/runtime-and-state.md), [material lifecycle](../devices/ownership-and-lifecycle.md), [operations and verification boundaries](../operations/build-test-and-assets.md).

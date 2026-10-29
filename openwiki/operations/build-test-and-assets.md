@@ -4,8 +4,6 @@ title: Build, targeted tests, artwork and documentation operations
 description: Reproducible external-output packaging, exact-engine focused smoke, asset/parser provenance and the separate player-site deployment boundary.
 tags: [build, testing, assets, licenses, operations, documentation]
 sources:
-  - id: openwiki-source-164e2da859b5277df81c7d94
-    resource: repo://.github/workflows/ci.yml
   - id: openwiki-source-d558e38ccd1b08e055e4f3f5
     resource: repo://.github/workflows/docs.yml
   - id: openwiki-source-6d4b4e707b8d60b6ccfa3425
@@ -14,8 +12,8 @@ sources:
     resource: repo://AGENTS.md
   - id: openwiki-source-f28cbc9af274024b9716994f
     resource: repo://assets/README.md
-  - id: openwiki-source-c579e13e7a45ccc214422220
-    resource: repo://docs/rd5-candidate.md
+  - id: openwiki-source-07d715e49cf874c39cd8c81f
+    resource: repo://docs/documentation-maintenance.md
   - id: openwiki-source-757f2a5291d89612677f740d
     resource: repo://mkdocs.yml
   - id: openwiki-source-ed1a70dfaf29a8bea3029be3
@@ -26,17 +24,17 @@ sources:
     resource: repo://tools/smoke.py
   - id: openwiki-source-08ded4ecd7f943b2b7d08274
     resource: repo://vendor/phobos/NOTICE.md
-generated: { by: "hermes", at: "2026-10-15T13:11:13.133Z" }
+generated: { by: "hermes", at: "2026-10-29T22:50:29.161Z" }
 verified:
   - by: openwiki/0.7.1
-    at: 2026-10-15T13:11:13.133Z
+    at: 2026-10-29T22:50:29.161Z
 ---
 
 # Build, targeted tests, artwork and documentation operations
 
 ## Package actual reviewed source
 
-The target is exactly Factorio 2.0.77, base with optional Space Age. The scaffold version in `info.json` is package input, not a reservation of a future portal release version. This is an alpha with provisional limits and deferred client QA.
+The current harness target is exactly Factorio 2.1.23, base with optional Space Age. Genuine historical upgrade creation additionally uses its original engine. The version in `info.json` is package input, not a reservation of a future portal release version. Limits remain provisional; headless execution never replaces required client QA.
 
 From the repository root, use an absolute external destination:
 
@@ -73,13 +71,13 @@ python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
   --production-context --cold --upgrade-fixture
 ```
 
-The closed production-context allowlist accepts `tests.lifecycle_engine`, `tests.integration_engine`, `tests.redesign_engine`, `tests.monitor_feedback_engine` and `tests.rd1_upgrade_engine`, always with cold mode. This lets one production registry own native entity events; loading lifecycle again in a second mod would create duplicate helpers and invalidate the evidence. `tools/rd1_upgrade.py` separately creates a populated pinned 0.1.1 save, ordinarily reloads it, then loads the exact 0.1.2 candidate after a test-mod version change. Old/new archive filenames must match their respective internal roots. Select affected fixtures rather than rerunning broad matrices for each documentation edit.
+The closed production-context allowlist in `tools/smoke.py` requires cold mode and covers explicit integration, lifecycle, monitor, device-service and dashboard fixtures. This lets one production registry own native entity events; loading lifecycle again in a second mod would create duplicate helpers and invalidate evidence. `tools/rd1_upgrade.py` separately creates a populated pinned alpha save, ordinarily reloads it, then loads exact candidate bytes. Its pre-declaration baseline uses stopped host-data setup, not fabricated running continuity. Running-source continuity needs a genuinely function-capable baseline, such as the supported monitor-upgrade lane. Old/new archive filenames must match their respective internal roots. Check the complete changed-fixture inventory before calling a matrix complete.
 
 Useful focused coverage: runtime/compiler (`runtime_contract`), computer (`computer_contract`, `computer_cold`), authoring (`editor_contract`, `editor_cold`), network (`network_engine`), signals (`logic_engine`), KV (`kv_engine`), monitors (`monitor_engine`), typed adapters (`configurator_engine`, `configurator_full_engine` with its data fixture), physical lifecycle (`device_engine`, `lifecycle_engine`). Check each fixture's exported hooks before adding `--cold`.
 
 ## Artwork and parser provenance
 
-The five redesigned silhouettes are original MIT work in `assets/industrial.py`, exported by `generate.py`; they do not sample the historical Greg Flavored models/textures. `socket-layout.json` is exported from the exact production geometry, not independently drawn contacts. Manifest v2 records source/output/decoded RGBA/alpha hashes and tool versions for 147 PNGs, including the independent glyph atlas and additive opaque display-fill pixel. `contact_sheet.py` produces ordinary/enlarged cardinal bodies, socket overlays, icons and all 160 status samples; these composites are not native screenshots. The historical approved Greg Flavored inputs remain pinned to `ac6cafc3993c902e2ca95d85b501d3c7e172570c`. Preserve their exact original bytes, `Copyright (c) 2024 BirbIrl`, full MIT notice and project notice. No speculative licensing gate is introduced.
+The selected Service Rack silhouettes are original MIT meshes in `assets/service_rack.py`, exported by `generate.py` with shared contact/status helpers; they do not sample historical Greg Flavored inputs. `assets/README.md` identifies nine silhouettes, 265 generated PNGs and 96 contacts. `socket-layout.json` derives from production geometry rather than independently drawn contacts. The manifest records source/output/decoded RGBA/alpha hashes and tool versions, including independent glyph/fill pixels. Contact sheets are not native screenshots. Historical approved Greg Flavored inputs remain pinned to `ac6cafc3993c902e2ca95d85b501d3c7e172570c`; preserve their exact original bytes, copyright and full MIT/project notices.
 
 The glyph source `assets/glyphs.txt` is independently authored 5×7 stroke data, not imported CC:Tweaked/Greg Flavored/system font pixels. The generated atlas has 256 byte slots; ASCII, mosaic and replacement-box behavior is recorded in the asset contract. `assets.sprites` returns descriptions that consumers copy; prototypes/runtime registration remain separate. Do not rotate preprojected sprites a second time or confuse visual role cues with topology authorization.
 
@@ -95,12 +93,12 @@ Asset checking regenerates into an external destination and validates output/pro
 
 `mkdocs.yml` builds only `docs/player/` into ignored `site/`, with navigation for the complete player guide and Lua API reference. `requirements-docs.txt` locks docs dependencies with hashes. Follow [documentation maintenance](../../docs/documentation-maintenance.md) for local installation and trusted-ref dispatch. `python -m mkdocs build --strict` validates the player site; it does not generate or index OpenWiki.
 
-The existing `.github/workflows/docs.yml` validates player docs on relevant PRs and main pushes. Its read-only build checks out the selected immutable source, builds strictly and records `site/source-commit.txt`. PRs do not upload/deploy Pages artifacts. Deployment is a separate main-workflow job with only Pages/id-token write permissions, serialized protected `github-pages` environment and no source checkout. Manual dispatch must run workflow code from main and accepts only main, the exact authorized publication branch or `alpha-*` tags; it can publish a review branch without merging it. Wiki-only changes do not trigger those player-doc path filters, and this card does not redeploy the live site or alter that player-doc automation.
+The existing `.github/workflows/docs.yml` runs on relevant main pushes and trusted manual dispatch, not pull requests. Its read-only build checks out the selected immutable source, builds strictly and records `site/source-commit.txt` before uploading a Pages artifact. Deployment is a separate main-workflow job with Pages/id-token write permissions and a serialized `github-pages` environment. Manual dispatch must run workflow code from main and accepts only main, the exact authorized publication branch or `alpha-*` tags. Wiki-only changes do not trigger the player-doc path filters. Reading or regenerating the wiki does not establish that live deployment succeeded.
 
 OpenWiki finish also installs a separate `.github/workflows/openwiki-update.yml` and a managed block in `AGENTS.md`. The generated updater is daily/manual, checks out full history, installs pinned OpenWiki/optional rendering packages, runs a model-backed update and proposes an `openwiki/update` pull request. It deliberately preserves completed-page progress even after an update failure and then propagates the failure status. Its write permissions are limited to contents/pull requests; it has no pull-request event trigger and does not deploy Pages. The generated model/provider configuration and secret references need maintainer review before enabling hosted model-backed updates; wiki generation here used Hermes MCP instead. No hosted run of this generated updater, model-secret configuration or claim of scheduled automation success is part of this wiki handoff.
 
-OpenWiki uses its resumable begin/plan/page-submit/finish lifecycle with source-evidenced Claims; generated indexes, Claims, provenance and setup blocks are tool-owned. Keep its workflow separate from the player content pipeline. RD5 refreshes affected pages alongside the [integrated candidate](../../docs/rd5-candidate.md); exact new engine results are in its external evidence, not inferred from historical reports. GUI focus/typing, real touch/zoom/GPU alignment, genuine red-X visibility, audible output, multiplayer joining and maximum-world performance remain deferred; model service ticks are not client-visible latency guarantees.
+OpenWiki uses its resumable begin/plan/page-submit/finish lifecycle with source-evidenced Claims; generated indexes, Claims, provenance and setup blocks are tool-owned. Keep its workflow separate from player content. Historical candidate reports such as [RD5](../../docs/rd5-candidate.md) do not certify a later package. GUI focus/typing, touch/zoom, visible effects, audibility and connected joining require their own real-client evidence; model service ticks are not client-visible latency guarantees.
 
-`Mod CI` emits the stable `Mod validation` check on every branch push/PR without path filters. It is separate from Pages and optional model-backed wiki maintenance. The latter is gated by `OPENWIKI_ENABLED == true`; no hosted model execution is claimed here. RD5 prepares the installable 0.1.2 ALPHA candidate without publishing, merging main or altering protections. RD6 owns exact-archive public release, immutable source and live documentation deployment. Deferred client review is not an additional publication gate.
+Tests run locally under [documentation maintenance](../../docs/documentation-maintenance.md); hosted mod CI and pull-request documentation checks were removed. Their removal does not waive tests, budgets, independent review or required native acceptance. Optional model-backed wiki maintenance remains gated by `OPENWIKI_ENABLED == true`. Source inspection is not a live workflow, branch-protection or publication receipt; verify those externally when a delivery role requires them. This wiki update neither publishes a release nor changes repository policy.
 
 Related: [developer task routing](../quickstart.md), [sandbox boundaries](../runtime/compiler-and-sandbox.md), [adapter extension](../configuration/typed-adapters.md).

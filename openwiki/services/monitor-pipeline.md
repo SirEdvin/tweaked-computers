@@ -8,6 +8,8 @@ sources:
     resource: repo://docs/rd4-verification.md
   - id: openwiki-source-6cb73c4f41436e6fd8ec0717
     resource: repo://scripts/monitor-model.lua
+  - id: openwiki-source-96739bd2f2e9d09643e1a6ec
+    resource: repo://scripts/monitor-presentation.lua
   - id: openwiki-source-cf29203f009f2866aa4dd8f4
     resource: repo://scripts/network.lua
   - id: openwiki-source-562ddd59792f21328a7d3825
@@ -18,10 +20,10 @@ sources:
     resource: repo://scripts/services/monitor.lua
   - id: openwiki-source-c19d5636b19952e9b43975ab
     resource: repo://tests/monitor_feedback_engine.lua
-generated: { by: "hermes", at: "2026-10-15T13:11:13.133Z" }
+generated: { by: "hermes", at: "2026-10-29T22:50:29.161Z" }
 verified:
   - by: openwiki/0.7.1
-    at: 2026-10-15T13:11:13.133Z
+    at: 2026-10-29T22:50:29.161Z
 ---
 
 # Monitor grouping, retained rendering and input
@@ -44,15 +46,15 @@ A cell is not rich text or a native GUI string. The renderer selects the indepen
 
 ## Retained dirty presentation
 
-`rendering.lua` reserves maintenance headroom and keeps host render-object handles with the group. It compares cell byte/color/palette values plus native handle validity before replacing draw objects. A model revision triggers a bounded sweep; `sweep_cursor`/`sweep_revision` survive save/load. When a model changes during a sweep, completion restarts against the new revision instead of falsely marking it presented.
+`rendering.lua` supplies native object creation to `monitor-presentation.lua`, which owns retained snapshot/staging/front/retirement jobs. Immutable cells and copy-on-write roots let snapshots retain an exact model. Damage-aware staging compares byte/color/palette values and handle validity, borrowing unchanged components without destroying the visible front. A fully admitted commit changes visibility and acknowledges only captured damage; later writes stay pending instead of being falsely marked presented.
 
-The same per-tick cell allowance covers retired-object cleanup before new presentation. A fair group cursor shares that allowance; geometry/scale changes retire old grids once and build new panels. Unpowered groups hide native draw objects and preserve model contents for restoration. Cursor blink is a separate retained draw object. These are bounded model/presentation mechanisms, not proof of GPU resource rendering, normal-zoom legibility or a measured player-input-to-visible latency bound.
+The same per-tick cell allowance covers retired-object cleanup and new staging. Retained presentation lanes share that allowance; geometry/scale changes invalidate staged contexts and retire old grids. Host writers must call `participate` after model mutation, just as the service methods do. Unpowered groups hide native draw objects and preserve model contents for restoration. Cursor blink is a separate retained draw object. These are bounded model/presentation mechanisms, not proof of GPU resource rendering, normal-zoom legibility or a measured player-input-to-visible latency bound.
 
 ## Explicit world-feedback layers
 
 All content uses supported sprite layers: panel `higher-object-under` (126), backgrounds `higher-object-above` (127), glyphs `train-stop-top` (128), cursor `item-in-inserter-hand` (129). These lie above the body/object (124) and below wires (131), entity-info-icon (153) and selection (187). The authored opaque 1×1 fill replaces rectangles; glyphs no longer use light-effect. No fake X or mark/cancel handler changes cells, palette, cursor or grouping. The real visible shell receives native deconstruction orders.
 
-Retained rendering graphs use `layer_version=2`. Admitted synchronized rendering retires legacy graphs through existing bounded cleanup; load performs no draw/state mutation. The 60000 maintenance reservation, 1024-cell/tick allowance and one-object-per-fill policy stay unchanged. `tests.monitor_feedback_engine` checks native mark/cancel subsets, cold aliases/marks, actual draw properties and actual robot removal. These prove state/layer properties, not genuine red-X visibility; see the [integrated playtest](../../docs/player/editor.md#integrated-redesign-playtest).
+Current retained frames use `version=1`, `layer_version=3`. Synchronized presentation can adopt compatible complete legacy fronts or retire old graphs through bounded cleanup; load performs no draw/state mutation. The base 60000 maintenance reservation, 1024-cell/tick allowance and one-object-per-fill policy remain explicit limits, with additional bounded presenter demand handled by the scheduler. `tests.monitor_feedback_engine` checks native mark/cancel subsets, cold aliases/marks, actual draw properties and actual robot removal. These prove state/layer properties, not genuine red-X visibility; see the [integrated playtest](../../docs/player/editor.md#integrated-redesign-playtest).
 
 ## Authorized touch and coalesced resize
 
