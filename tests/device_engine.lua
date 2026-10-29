@@ -5,6 +5,8 @@ local registry=require('scripts.registry')
 local lifecycle=require('scripts.lifecycle')
 local scheduler=require('scripts.scheduler')
 local runtime=require('scripts.runtime.computer')
+require('scripts.lifecycle-data')
+local kv_service=require('scripts.services.kv')
 local geometry=require('tests.device_contract')
 local M={}
 local loaded=false
@@ -16,7 +18,7 @@ local function group(name)
   local f=storage.tc04_fixture; f.groups=f.groups+1; log('TC_CONTRACT '..name)
 end
 local function body(surface,kind,pos,direction)
-  local entity=assert(surface.create_entity{name=defs.devices[kind].name,position=pos,direction=direction,force='player'})
+  local entity=assert(surface.create_entity{name=defs.devices[kind].entity_name,position=pos,direction=direction,force='player'})
   lifecycle.on_built{entity=entity}
   local rec=assert(registry.by_entity(entity),'public build path did not bind body')
   assert(lifecycle.build(entity)==rec,'duplicate build created a new identity')
@@ -53,15 +55,23 @@ local function check_geometry(rec)
   local cw=collision.right_bottom.x-collision.left_top.x; local ch=collision.right_bottom.y-collision.left_top.y
   assert(math.abs(cw-(horizontal and def.width-0.2 or 0.8))<0.02 and math.abs(ch-(horizontal and 0.8 or def.width-0.2))<0.02,'collision rotation mismatch')
   for i,role in ipairs(def.roles) do
-    local p=assert(rec.children[role]); local x,y=defs.offset(rec.kind,i,b.direction)
+    local p=assert(lifecycle.endpoint(rec,role)); local x,y=defs.offset(rec.kind,i,b.direction)
+    if role=='network' then x,y=0,0 end
     assert(p.position.x==b.position.x+x and p.position.y==b.position.y+y,'role position mismatch')
-    assert(not p.minable and not p.destructible and not p.operable and not p.rotatable)
-    assert(p.prototype.selection_priority>b.prototype.selection_priority)
+    if role=='network' then assert(p==b and p.minable_flag and p.destructible and p.rotatable)
+    else
+      assert(not p.minable_flag and not p.destructible and not p.operable and not p.rotatable)
+      assert(p.prototype.selection_priority>b.prototype.selection_priority)
+    end
     assert(p.force==b.force and p.surface==b.surface)
-    local owner,bound=registry.by_entity(p); assert(owner==rec and bound==role)
+    local owner,bound=registry.by_entity(p); assert(owner==rec and bound==(role=='network' and 'body' or role))
     for _,color in ipairs({'red','green'}) do assert(lifecycle.connector(rec,role,color)) end
     if role~='output' then assert(p.get_control_behavior().sections_count==0 and not p.get_control_behavior().enabled) end
   end
+  local p=assert(lifecycle.power_entity(rec))
+  assert(p~=b and p.valid and p.position.x==b.position.x and p.position.y==b.position.y)
+  assert(not p.minable_flag and not p.destructible and not p.operable and not p.rotatable and not p.prototype.selectable_in_game)
+  local owner,role=registry.by_entity(p); assert(owner==rec and role=='power' and p.force==b.force and p.surface==b.surface)
 end
 local function check_wires()
   local f=storage.tc04_fixture
@@ -69,8 +79,8 @@ local function check_wires()
     local rec=registry.record(id)
     assert(value(rec.children.input,'red','signal-A')==7)
     assert(value(rec.children.input,'red','signal-B')==0 and value(rec.children.input,'red','signal-C')==0)
-    assert(value(rec.children.network,'red','signal-B')==11)
-    assert(value(rec.children.network,'red','signal-A')==0 and value(rec.children.network,'red','signal-C')==0)
+    assert(value(lifecycle.endpoint(rec,'network'),'red','signal-B')==11)
+    assert(value(lifecycle.endpoint(rec,'network'),'red','signal-A')==0 and value(lifecycle.endpoint(rec,'network'),'red','signal-C')==0)
     assert(value(rec.children.output,'red','signal-C')==13 and value(rec.children.output,'green','signal-C')==13)
     assert(value(rec.children.output,'red','signal-A')==0 and value(rec.children.output,'red','signal-B')==0)
     local input=lifecycle.connector(rec,'input','red'); local network=lifecycle.connector(rec,'network','red'); local output=lifecycle.connector(rec,'output','red')
@@ -78,7 +88,7 @@ local function check_wires()
   end
   for _,id in ipairs(f.config_ids) do
     local rec=registry.record(id)
-    assert(value(rec.children.network,'red','signal-A')==3 and value(rec.children.network,'red','signal-B')==0)
+    assert(value(lifecycle.endpoint(rec,'network'),'red','signal-A')==3 and value(lifecycle.endpoint(rec,'network'),'red','signal-B')==0)
     assert(value(rec.children.targets,'red','signal-B')==5 and value(rec.children.targets,'red','signal-A')==0)
     assert(lifecycle.connector(rec,'network','red').network_id~=lifecycle.connector(rec,'targets','red').network_id)
   end
@@ -107,7 +117,7 @@ function M.run()
         local red=assert(surface.create_entity{name='constant-combinator',position={pos.x-3,pos.y+2},force='player'})
         local green=assert(surface.create_entity{name='constant-combinator',position={pos.x+3,pos.y+2},force='player'})
         signal(input,'signal-A',7); signal(network,'signal-B',11)
-        wire(input,rec.children.input,'red'); wire(network,rec.children.network,'red')
+        wire(input,rec.children.input,'red'); wire(network,lifecycle.endpoint(rec,'network'),'red')
         wire(rec.children.output,red,'red'); wire(rec.children.output,green,'green')
       elseif kind=='configurator' then
         f.config_ids[#f.config_ids+1]=rec.id
@@ -115,7 +125,7 @@ function M.run()
         local network=assert(surface.create_entity{name='constant-combinator',position={pos.x-3,pos.y-3},force='player'})
         local targets=assert(surface.create_entity{name='constant-combinator',position={pos.x+3,pos.y-3},force='player'})
         signal(network,'signal-A',3); signal(targets,'signal-B',5)
-        wire(network,rec.children.network,'red'); wire(targets,rec.children.targets,'red')
+        wire(network,lifecycle.endpoint(rec,'network'),'red'); wire(targets,rec.children.targets,'red')
       end
     end
   end
@@ -123,14 +133,14 @@ function M.run()
   -- Real rotation retains exact native children (not rebuilding them or wires).
   for _,kind in ipairs({'logic','configurator','recipe_searcher'}) do
     local rec=body(surface,kind,{x=16,y=100+(kind=='logic' and 0 or 12)},0)
-    local child=rec.children.network; local unit=child.unit_number
+    local child=lifecycle.endpoint(rec,'network'); local unit=child.unit_number
     local external=assert(surface.create_entity{name='constant-combinator',position={x=16,y=rec.body.position.y-3},force='player'})
     wire(child,external,'red')
     assert(lifecycle.connector(rec,'network','red').connection_count==1)
     for _,direction in ipairs({4,8,12,0}) do
       local previous=rec.body.direction; rec.body.direction=direction
       lifecycle.on_rotated{entity=rec.body,previous_direction=previous}
-      assert(rec.body.direction==direction and rec.children.network==child and child.unit_number==unit)
+      assert(rec.body.direction==direction and lifecycle.endpoint(rec,'network')==child and child.unit_number==unit)
       assert(lifecycle.connector(rec,'network','red').connection_count==1,'rotation lost native wire')
       check_geometry(rec)
     end
@@ -147,9 +157,9 @@ function M.run()
   end
   group('native_rotation_identity_one_drop_and_exact_removal')
   -- Host-only failure injection: first child is real, second allocation refuses.
-  local failed=assert(surface.create_entity{name='tc-logic',position={32,100},force='player'})
+  local failed=assert(surface.create_entity{name=defs.devices.logic.entity_name,position={32,100},force='player'})
   local created={}; local calls=0
-  local proxy={name=failed.name,valid=true,direction=failed.direction,position=failed.position,force=failed.force,quality=failed.quality,
+  local proxy={name=failed.name,type=failed.type,valid=true,direction=failed.direction,position=failed.position,force=failed.force,quality=failed.quality,
     surface={create_entity=function(args) calls=calls+1; if calls==2 then return nil end; local p=surface.create_entity(args); created[#created+1]=p; return p end}}
   local rec,e=lifecycle.build(proxy)
   assert(not rec and e.code=='E_ENGINE' and #created==1 and not created[1].valid and failed.valid)
@@ -165,7 +175,7 @@ function M.run()
   consumed.destroy(); robot.destroy()
   group('real_partial_allocation_rollback_no_orphan_robot_refund')
   local mine=body(surface,'kv',{x=32,y=112},0)
-  local child=mine.children.network
+  local child=lifecycle.power_entity(mine)
   f.cleanup_refusal=mine.id
   assert(not lifecycle.remove(mine.id,'refusal',true) and mine.body.valid and child.valid and registry.record(mine.id)==mine)
   f.cleanup_refusal=nil; assert(lifecycle.remove(mine.id,'retry',true)); assert(not child.valid)
@@ -213,20 +223,40 @@ function M.run()
   runtime.save(good.id,source,0); assert(runtime.activate(good.id,game.tick))
   runtime.save(bad.id,'function start(e) pcall(function() while true do end end) end',0)
   assert(runtime.activate(bad.id,game.tick))
-  local protected_inventory=game.create_inventory(1)
-  assert(not good.body.mine{inventory=protected_inventory,raise_destroyed=false})
-  assert(not kv.body.mine{inventory=protected_inventory,raise_destroyed=false})
+  for _,kind in ipairs({'computer','kv'}) do
+    local old=body(p,kind,{x=kind=='computer' and -8 or 8,y=-8},0)
+    if kind=='computer' then runtime.save(old.id,source,0); assert(runtime.activate(old.id,game.tick))
+    else kv_service.methods.set(nil,old,'red',game.tick,function() end,'retained','value') end
+    local inventory=game.create_inventory(1)
+    assert(old.body.minable_flag)
+    local children={}; for _,part in pairs(old.children) do children[#children+1]=part end
+    -- Mining-event buffer double; actual one-drop mining is checked above.
+    inventory[1].set_stack{name=defs.devices[kind].name,count=1}
+    lifecycle.on_removed{entity=old.body,buffer=inventory,tick=game.tick}; old.body.destroy()
+    assert(not registry.record(old.id) and inventory.get_item_count(defs.devices[kind].name)==1)
+    for _,part in ipairs(children) do assert(not part.valid) end
+    if kind=='computer' then assert(inventory[1].tags.tc_computer==nil)
+    else assert(inventory[1].tags.tc_kv) end
+    local replacement=assert(p.create_entity{name=defs.devices[kind].entity_name,position=old.position,force='player'})
+    lifecycle.on_built{entity=replacement,consumed_items=inventory}
+    local current=assert(registry.by_entity(replacement))
+    assert(current.id~=old.id and not lifecycle.remove(old.id,'stale',true) and current.body.valid)
+    if kind=='computer' then
+      assert(current.saved_source=='' and current.status=='stopped' and not current.active and not current.run_id)
+      assert(next(current.state)==nil and next(current.queue)==nil and next(current.timers)==nil and next(current.subscriptions)==nil)
+    else assert(kv_service.methods.get(nil,current,'red',game.tick,function() end,'retained')=='value') end
+    inventory.destroy(); assert(lifecycle.remove(current.id,'fixture',true))
+  end
   assert(good.body.valid and kv.body.valid and good.saved_source==source and registry.record(good.id)==good)
-  assert(protected_inventory.is_empty()); protected_inventory.destroy()
-  group('interim_snapshot_guard_refuses_destructive_plain_mining')
+  group('mining_event_double_plain_computer_retained_kv_new_identity_no_replay')
   f.start_tick=game.tick
   log('TC_CONTRACT_TOTAL '..f.groups)
 end
 local function frozen_check()
   local f=storage.tc04_fixture; local saved=f.snapshot; local rec=registry.record(f.good)
-  assert(rec.id==saved.id and rec.body.unit_number==saved.unit and rec.children.network.unit_number==saved.port)
+  assert(rec.id==saved.id and rec.body.unit_number==saved.unit and lifecycle.endpoint(rec,'network').unit_number==saved.port and lifecycle.power_entity(rec).unit_number==saved.power)
   assert(rec.run_id==saved.run_id and rec.active.source==source and rec.state.boots==1 and rec.state.restores==1)
-  assert(rec.powered==saved.powered and rec.body.energy==saved.energy)
+  assert(rec.powered==saved.powered and lifecycle.power_entity(rec).energy==saved.energy)
   local root=registry.get()
   assert(root.ledger.tick==saved.tick and root.ledger.total==saved.total and root.scheduler.last_tick==saved.scheduler_tick)
   for _,id in ipairs(f.ids) do check_geometry(registry.record(id)) end
@@ -283,17 +313,18 @@ function M.on_tick(event)
     -- Check steady draw in joules/tick using the native power usage and buffer.
     for _,id in ipairs(f.power_ids) do
       local rec=registry.record(id); local watts=defs.devices[rec.kind].watts
-      assert(math.abs(rec.body.power_usage-watts/60)<0.001 and math.abs(rec.body.electric_buffer_size-watts/30)<0.001)
+      local power=lifecycle.power_entity(rec)
+      assert(math.abs(power.power_usage-watts/60)<0.001 and math.abs(power.electric_buffer_size-watts/30)<0.001)
     end
     f.draw_energy={}
-    for _,id in ipairs(f.power_ids) do f.draw_energy[id]=registry.record(id).body.energy end
+    for _,id in ipairs(f.power_ids) do f.draw_energy[id]=lifecycle.power_entity(registry.record(id)).energy end
     f.power_grid.pole.destroy() -- Isolate real buffers for a one-tick consumption readback.
     f.power_grid.source.power_production=0; f.power_grid.source.energy=0
     f.phase='outage'; f.phase_tick=event.tick
   elseif f.phase=='outage' and event.tick==f.phase_tick+1 then
     for _,id in ipairs(f.power_ids) do
       local rec=registry.record(id); local expected=defs.devices[rec.kind].watts/60
-      local consumed=f.draw_energy[id]-rec.body.energy
+      local consumed=f.draw_energy[id]-lifecycle.power_entity(rec).energy
       assert(math.abs(consumed-expected)<0.02,'native per-tick consumption mismatch '..rec.kind..': '..consumed..' vs '..expected)
     end
     log('TC_NATIVE_CONSUMPTION_OK computer=1000J kv=500J monitor=250J logic=250J configurator=500J per-tick')
@@ -314,13 +345,13 @@ function M.on_tick(event)
     -- No electrical participant can consume/refill a body after expected capture.
     for _,grid in ipairs(f.grids) do grid.source.power_production=0; grid.source.energy=0; grid.pole.destroy() end
     f.power_grid.source.power_production=0; f.power_grid.source.energy=0; f.power_grid.pole.destroy()
-    for _,rec in pairs(registry.get().computers) do if rec.physical_version then rec.body.power_usage=0 end end
-    for _,rec in pairs(registry.get().devices) do if rec.physical_version then rec.body.power_usage=0 end end
+    for _,rec in pairs(registry.get().computers) do if rec.physical_version then lifecycle.power_entity(rec).power_usage=0 end end
+    for _,rec in pairs(registry.get().devices) do if rec.physical_version then lifecycle.power_entity(rec).power_usage=0 end end
     -- Deliberately stale unlocks separate ordinary reload from config migration.
     for _,kind in ipairs(defs.order) do game.forces.player.recipes[defs.devices[kind].name].enabled=false end
     local root=registry.get()
-    f.snapshot={id=good.id,unit=good.body.unit_number,port=good.children.network.unit_number,run_id=good.run_id,
-      powered=good.powered,energy=good.body.energy,tick=root.ledger.tick,total=root.ledger.total,scheduler_tick=root.scheduler.last_tick}
+    f.snapshot={id=good.id,unit=good.body.unit_number,port=lifecycle.endpoint(good,'network').unit_number,power=lifecycle.power_entity(good).unit_number,run_id=good.run_id,
+      powered=good.powered,energy=lifecycle.power_entity(good).energy,tick=root.ledger.tick,total=root.ledger.total,scheduler_tick=root.scheduler.last_tick}
     f.phase='frozen'; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
   end
 end

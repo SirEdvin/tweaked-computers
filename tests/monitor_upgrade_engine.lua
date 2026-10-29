@@ -7,6 +7,7 @@ local runtime=require('scripts.runtime.computer')
 local data=require('scripts.runtime.data')
 local model=require('scripts.monitor-model')
 local monitor=require('scripts.services.monitor')
+local peripheral=require('scripts.services.peripheral')
 local renderer=require('scripts.rendering')
 local defs=require('scripts.device-definitions')
 local M={}; local loaded=false
@@ -174,7 +175,12 @@ function M.on_configuration_changed(event)
  -- not running-source continuity from the pre-declaration release.
  local c=registry.computer(x.computer)
  assert(c.status=='stopped' and not c.active and not c.run_id and c.state.boots==1)
- fuel(); x.candidate_run=assert(runtime.activate(c.id,game.tick)); assert(scheduler.dispatch(c,game.tick))
+ fuel(); lifecycle.sample_power(c,game.tick,nop)
+ local run,reason=runtime.activate(c.id,game.tick); assert(run,serpent.line(reason)); x.candidate_run=run
+ local dispatched,dispatch_error=scheduler.dispatch(c,game.tick); assert(dispatched,serpent.line(dispatch_error or c.diagnostic))
+ -- Establish a paid observation before regrouping, not a fabricated old run.
+ peripheral.reconcile_one(c,'red',game.tick,scheduler.maintenance(registry.get(),game.tick))
+ for id in pairs(x.absorbed) do assert(c.network_views.red.inventory[id],'pre-regroup observation missing '..id) end
  x.boots=2; assert(c.state.boots==x.boots)
  x.changed=true; x.phase='upgrading'; log('TC_MONITOR_UPGRADE_CONFIGURATION')
 end
@@ -195,7 +201,7 @@ function M.on_tick(event)
   end
   return
  end
- fuel(); scheduler.tick(event.tick); x.steps=x.steps+1; assert(x.steps<300)
+ fuel(); scheduler.tick(event.tick); x.steps=x.steps+1; assert(x.steps<300,serpent.line{phase=x.phase,state=registry.computer(x.computer).state,groups=#registry.get().monitors.order,job=registry.get().monitors.job~=nil})
  local c=registry.computer(x.computer)
  assert(c.status==(x.phase=='legacy' and 'stopped' or 'running'),serpent.line(c.diagnostic))
  local s=registry.get().monitors; local ready=not s.job
