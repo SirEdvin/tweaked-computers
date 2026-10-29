@@ -6,7 +6,7 @@ See `proposal.md` for motivation and approved scope. This is a deletion/consolid
 
 Observed in the current checkout:
 
-- `scripts/runtime/compiler.lua:224-315` separates Console emission, declaration discovery/emission and another saved-source branch selected by the first meaningful statement. Declaration discovery already validates names, builds exports, preserves lexical private helpers and emits guarded functions.
+- `scripts/runtime/compiler.lua` separates explicit Console emission from saved declaration discovery/emission. Declaration discovery validates names, builds exports, preserves lexical private helpers and emits guarded functions.
 - `compiler.compile` is called by `scripts/runtime/computer.lua:70` and `scripts/ui/editor-model.lua:84`; `scripts/runtime/shell.lua:78` explicitly selects `shell`. `scripts/scheduler.lua:166` dispatches through `compiler.run`, which revalidates the exact active source rather than trusting caller-supplied generated code.
 - `scripts/runtime/sandbox.lua:114` and its caller at `compiler.lua:405` prepay handler construction. The helper is shared accounting, not disposable execution protection.
 - `tests/runtime_contract.lua` already exercises declarations, lexical behavior, tuples, source diagnostics, protected calls, globals and bounds. Other behavioral fixtures still construct their guest source through reusable body wrappers or inline strings.

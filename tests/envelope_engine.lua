@@ -6,6 +6,7 @@ local scheduler=require('scripts.scheduler')
 local runtime=require('scripts.runtime.computer')
 local monitor=require('scripts.services.monitor')
 local model=require('scripts.monitor-model')
+local renderer=require('scripts.rendering')
 local defs=require('scripts.device-definitions')
 local profile = {computers=4,subscriptions=1,maximum=false} -- ENVELOPE_PROFILE
 local M={}; local loaded=false
@@ -116,6 +117,7 @@ function M.on_tick(event)
   if x.phase=='initial' and not s.job and #s.order==(profile.maximum and 12 or 2) then
     for _,id in ipairs(s.order) do local g=s.groups[id]; model.scale(g.model,g.width_tiles,g.height_tiles,nop,0.5)
       for y=1,g.model.height do model.calls.setCursorPos(g.model,nop,1,y); model.calls.write(g.model,nop,string.rep('A',g.model.width)) end
+      renderer.participate(g)
     end
     x.phase='maximum-grid'; x.changed=event.tick
     log('TC_ENVELOPE_MAXIMUM '..helpers.table_to_json(metrics()))
@@ -126,6 +128,7 @@ function M.on_tick(event)
     -- Trusted host writer isolates renderer cost; not guest callback acceptance.
     for _,id in ipairs(s.order) do local g=s.groups[id]
       model.calls.setCursorPos(g.model,nop,1,1); model.calls.write(g.model,nop,string.rep(event.tick%2==0 and 'B' or 'C',g.model.width))
+      renderer.participate(g)
     end
     if event.tick-x.changed>=64 then x.phase='quiescence'; x.changed=event.tick end
   elseif x.phase=='quiescence' and (ready(m) or event.tick-x.changed>=256) then

@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Let players author saved computer programs as named functions as named function declarations, while preserving bounded native execution, ordinary intra-program calls.
+Let players author saved computer programs as named function declarations, preserving bounded native execution and ordinary intra-program calls.
 
 ## ADDED Requirements
 
 ### Requirement: Declaration-form saved programs
-The system SHALL accept declaration-form documents containing one or more exported `function name(...) ... end` declarations, optional top-level `local function` helpers, comments and empty statements. It SHALL derive the existing API-v1 named-handler inventory without requiring a returned table. Declaration names SHALL be unique across the top level and follow the naming rules in `lua-api.md`.
+The system SHALL accept documents containing one or more exported `function name(...) ... end` declarations, optional top-level `local function` helpers, comments and empty statements. It SHALL derive the existing API-v1 named-handler inventory from those declarations. Declaration names SHALL be unique across the top level and follow the naming rules in `lua-api.md`.
 
 #### Scenario: Run a document without a wrapper
 - **WHEN** the player validates, saves and runs a declaration-form document with `start` and `sample`

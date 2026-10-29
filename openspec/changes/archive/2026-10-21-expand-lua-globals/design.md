@@ -34,7 +34,7 @@ Non-goals:
 
 Add the named globals to the existing compiler/global-environment definitions. Remove their treatment as excluded raw facilities where applicable, while preserving top-level name reservations and Console write protection. Keep host/global escape bans closed. Make `_VERSION` a fixed language-family string and `unpack` the very same wrapper function as `table.unpack`; initialize stable callable descriptions once so alias registration order cannot make function descriptions differ between peers.
 
-Tests must compare availability, reservation and behavior in both saved formats and Console. There is no reason to add a plugin registry or generate another API table for this small surface; a focused parity test is sufficient to catch compiler/environment drift.
+Tests must compare availability, reservation and behavior in saved functions and Console. There is no reason to add a plugin registry or generate another API table for this small surface; a focused parity test is sufficient to catch compiler/environment drift.
 
 Alternative rejected: expose Factorio's entire `_G` or native standard libraries. Presence in the host does not imply guest ownership, paid work or appropriate authority. Metatables would affect every indexed/operator/call path, not just add two functions; patterns, binary packing and randomness also need their own resource/state contracts. They remain separate work.
 
@@ -103,7 +103,7 @@ No generated OpenWiki page is hand-edited. The separate inspector and radar prop
 
 Extend existing fixtures rather than create another runner:
 
-- `tests/runtime_contract.lua`: both saved forms, global parity/aliases, native raw/tuple/error semantics, forbidden sources/protected targets, fatal protection and warm/cold admission.
+- `tests/runtime_contract.lua`: saved functions, global parity/aliases, native raw/tuple/error semantics, forbidden sources/protected targets, fatal protection and warm/cold admission.
 - `tests/computer_contract.lua` and `tests/editor_contract.lua`: real validate/save/activate logging, exact entry/return behavior, starter source and failed replacement.
 - `tests/shell_contract.lua`: interactive helpers, expression display, prefixes, immutable names, transient versus retained functions, collisions, output failure and Follow-off behavior.
 - `tests/computer_cold.lua` and `tests/shell_cold.lua`: completed output not replayed, helper-produced data/aliases, exact old active source, retained collision records and same-tick spent credits in separate engine processes.

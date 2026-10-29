@@ -17,16 +17,16 @@ Plain named declarations expose named callbacks while allowing the same function
 
 ### New Capabilities
 
-- `program-source`: Accepted saved-program source forms, automatic handler export, intra-program function calls, and compatible source validation/reconstruction.
+- `program-source`: Function-declaration saved programs, automatic handler export, intra-program function calls, and source validation/reconstruction.
 
 ### Modified Capabilities
 
-None. `openspec list --specs` currently reports no canonical specs. The in-flight `add-native-circuit-computers` change owns the broader `computer-runtime` capability; this narrower capability extends its source-authoring boundary rather than copying its lifecycle, scheduling and peripheral requirements. here.
+None. At planning time, the in-flight `add-native-circuit-computers` change owned the broader `computer-runtime` capability; this narrower capability extended its source-authoring boundary rather than copying lifecycle, scheduling and peripheral requirements.
 
 ## Impact
 
 - Primary implementation: `scripts/runtime/compiler.lua`, with narrowly scoped reuse/adaptation of closure admission in `scripts/runtime/sandbox.lua` if necessary. Preserve the existing active source/handler inventory consumed by `scripts/runtime/computer.lua` and the scheduler.
 - User entry points: `scripts/ui/help.lua`, the existing editor-model compiler calls, `docs/player/api/language.md`, `docs/player/api/computer.md`, `docs/player/examples.md`, and source-language statements in runtime/Console documentation.
 - Verification: extend the packaged runtime, compiler-cache, computer cold-reload and editor contracts; retain the shell regressions. Use existing package/smoke tooling and unchanged production limits.
-- No new runtime dependencies, interpreter, guest loader, filesystem, Console bridge or persistent functions. Keep API version 1, compiler representation version 2 and storage version 1 because the retained source/inventory contract and legacy reconstruction remain compatible; verify that assumption explicitly.
+- No new runtime dependencies, interpreter, guest loader, filesystem, Console bridge or persistent functions. Keep API version 1, compiler representation version 2 and storage version 1 for the supported retained source/inventory contract; verify reconstruction explicitly.
 - Feasibility is supported by source inspection and a planning-only Factorio 2.0.77 probe in base and Space Age. Both passed 31 contract groups using unchanged production payloads plus an isolated fixture. The probe exercises current guarded native lexical-function building blocks, not an implemented new frontend, editor path, cold reload or multiplayer feature. Evidence: `/home/siredvin/artifacts/tweaked-computers/function-program-proposal-2026-10-19/`.

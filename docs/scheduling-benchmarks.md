@@ -63,7 +63,7 @@ identical total entity count across unrelated cases.
 | Empty | `empty/no-devices` | Same powered map, no mod devices |
 | Idle | `idle/computer`, `kv`, `monitor`, `logic`, `configurator`, `recipe_searcher`, `factoriopedia_interface`, `production_statistics`, `dashboard` | Settled family, no guest program; physical maintenance remains |
 | Native idle | `idle/native-radar`, `idle/native-speaker` | Unconnected native entities; power/existence checked, no computer discovery interest |
-| Computer | `computer/stopped`, `computer/waiting` | Stopped versus running empty handler table; no timer, subscription or queued work |
+| Computer | `computer/stopped`, `computer/waiting` | Stopped versus a running idle declaration program; no timer, subscription or queued work |
 | Dispatch | `dispatch/one`, `one-plus-idle`, `all` | Fixed one-ready producer versus increasing idle population, then ready fan-out; actual completions and enqueue-to-handler latency |
 | Console | `dispatch/console`, `arbitration` | Native Console alone or alongside program work; both completion counts retained |
 | Timer | `timer/future`, `sparse`, `staggered`, `burst` | Future deadlines, one due stream, distributed deadlines, simultaneous deadlines; callback lateness and retained timers |
