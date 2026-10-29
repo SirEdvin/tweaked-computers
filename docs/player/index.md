@@ -11,10 +11,19 @@ Factorio objects, and no command history.
 
 ## Start here
 
-**0.1.15 ALPHA** migrates to **Factorio 2.1.23**, base alone or optional Space Age.
-This release has **headless-only** verification. Earlier graphical, audio and
-connected-client results below apply to 2.0.77, not 2.1. Back up before converting
-your save; keep 0.1.14 if you remain on Factorio 2.0.77.
+**0.1.17 ALPHA** targets **Factorio 2.1.23**, base alone or optional Space Age.
+It adds [Dashboards](dashboard.md) with optional `factorio-charts`, native-only
+[Factoriopedia catalogues](api/factoriopedia-interface.md) and
+[Production Statistics](api/production-statistics.md), elapsed [Console](console.md)
+time and demand-driven [monitor maintenance](monitor-animation.md).
+**Breaking:** computer items are plain hardware; ordinary pickup/replacement loses
+their contents, with no legacy item import. Placed computers and private drafts are
+not reset. [Back up the complete save and matching mods before upgrading](lifecycle.md#compatibility-break-and-rollback);
+restore both for rollback. Keep 0.1.14 if you remain on Factorio 2.0.77.
+
+Controlled 2.1.23 base/Space Age native-client and connected-peer cases cover the
+new features, cold resume and retained data. They do not certify arbitrary mod
+packs or GPU performance. Historical results below retain their original scope.
 
 Version 0.1.14 exposes complete fresh [native circuit signals](api/logic.md)
 without mod-defined signal/filter/output-slot ceilings. Reads retain native order

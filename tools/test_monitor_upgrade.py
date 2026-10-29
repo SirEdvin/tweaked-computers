@@ -8,9 +8,23 @@ import zipfile
 
 import build
 import monitor_upgrade
+import factoriopedia_upgrade
+from unittest.mock import patch
 
 
 class UpgradeCandidateTests(unittest.TestCase):
+    def test_installation_uses_real_release_bytes_and_versions_only_same_version_builds(self):
+        archive, output = Path('candidate.zip'), Path('private')
+        for version in ('0.1.17', '0.1.18'):
+            with patch.object(factoriopedia_upgrade, 'payload', return_value={'info.json': json.dumps({'version': version})}), patch.object(factoriopedia_upgrade, 'version_candidate') as private:
+                self.assertEqual(factoriopedia_upgrade.installation_candidate(archive, output), archive)
+                private.assert_not_called()
+        with patch.object(factoriopedia_upgrade, 'payload', return_value={'info.json': b'{"version":"0.1.16"}'}), patch.object(factoriopedia_upgrade, 'version_candidate', return_value=output) as private:
+            self.assertEqual(factoriopedia_upgrade.installation_candidate(archive, output), output)
+            private.assert_called_once_with(archive, output, '0.1.17')
+        with patch.object(factoriopedia_upgrade, 'payload', return_value={'info.json': b'{"version":"0.1.15"}'}), self.assertRaises(AssertionError):
+            factoriopedia_upgrade.installation_candidate(archive, output)
+
     def test_private_version_has_matching_name_manifest_and_only_metadata_changes(self):
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
             root = Path(directory)
