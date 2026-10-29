@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import zipfile
 from smoke import cold_phase
+from monitor_upgrade import version_candidate
 
 ROOT = Path(__file__).resolve().parents[1]
 BASELINE_SHA256 = '95fa7ef48ade7d1494a2f00ccb1ef75a943a87f92699205106ade6ad772ce826'
@@ -20,6 +21,13 @@ def payload(archive):
     with zipfile.ZipFile(archive) as package:
         prefix = next(n[:-len('info.json')] for n in package.namelist() if n.endswith('/info.json'))
         return {n.removeprefix(prefix): package.read(n) for n in package.namelist()}
+
+def installation_candidate(archive, output):
+    version = json.loads(payload(archive)['info.json'])['version']
+    if version == '0.1.16':
+        return version_candidate(archive, output, '0.1.17')
+    assert tuple(map(int, version.split('.'))) > (0, 1, 16), 'candidate must advance baseline'
+    return archive
 
 def main(feature='factoriopedia'):
     title,module,companion_name,installed_name,later_marker = {
@@ -55,21 +63,15 @@ def main(feature='factoriopedia'):
     assert set(instrumented)-set(baseline) == {fixture_path}
     assert [name for name in baseline if baseline[name] != instrumented[name]] == ['control.lua']
     assert instrumented['control.lua'] == baseline['control.lua']+b'\n'+hook
-    # Test-only version distinction; production info.json and immutable packages are untouched.
-    info = json.loads(candidate['info.json']); info['version'] = '0.1.17'
-    modified = dict(candidate); modified['info.json'] = (json.dumps(info, indent=2)+'\n').encode()
-    manifest = json.loads(candidate['package-manifest.json']); manifest['version'] = info['version']
-    manifest['payload_sha256']['info.json'] = hashlib.sha256(modified['info.json']).hexdigest()
-    modified['package-manifest.json'] = (json.dumps(manifest, indent=2, sort_keys=True)+'\n').encode()
-    versioned = args.output / 'tweaked-computers_0.1.17.zip'
-    with zipfile.ZipFile(versioned, 'w', zipfile.ZIP_DEFLATED) as package:
-        for name, value in sorted(modified.items()): package.writestr('tweaked-computers_0.1.17/'+name, value)
-    assert payload(versioned) == modified
-    assert sorted(name for name in candidate if candidate[name] != modified[name]) == ['info.json','package-manifest.json']
+    # Unreleased same-version builds need private metadata; real releases use exact supplied bytes.
+    versioned = installation_candidate(args.archive, args.output / 'candidate')
+    modified = payload(versioned)
+    differences = sorted(name for name in candidate if candidate[name] != modified[name])
+    assert set(candidate) == set(modified) and set(differences) <= {'info.json','package-manifest.json'}
     summary = dict(baseline_sha256=BASELINE_SHA256,candidate_sha256=digest(args.archive),
                    baseline_instrumented_sha256=digest(legacy_test),versioned_sha256=digest(versioned),
                    fixture_sha256=hashlib.sha256(fixture).hexdigest(),
-                   test_only_candidate_differences=['ZIP prefix/version 0.1.17','info.json version','package-manifest version/info hash'],cases=[])
+                   test_only_candidate_differences=differences,cases=[])
     for mode in ('base','space-age'):
         folder=args.output/mode; mods=folder/'mods'; write=folder/'write'
         mods.mkdir(parents=True); (write/'saves').mkdir(parents=True)

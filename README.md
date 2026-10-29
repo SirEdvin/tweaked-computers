@@ -8,11 +8,16 @@ Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. No interpreter,
 OS, gameplay filesystem or dynamic guest loader is shipped; there is no command history.
 
-Version **0.1.15 ALPHA** migrates to Factorio 2.1.23 while preserving guest programs,
-saved data and safety budgets. See [0.1.15 release notes](docs/release-0.1.15.md).
-Verification for this engine is **headless-only**; the graphical/audio/connected-client
-checks described below are historical 2.0.77 evidence, not 2.1 acceptance.
-Keep 0.1.14 if you remain on Factorio 2.0.77, and back up before converting a save.
+Version **0.1.17 ALPHA** adds Dashboards (optional `factorio-charts`), native-only
+Factoriopedia/Production Statistics, elapsed Console time and demand-driven monitor
+maintenance. **Breaking:** computer items are plain hardware; ordinary pickup and
+replacement loses their contents, and legacy item payloads are not imported.
+Placed records/active programs/private drafts are not reset. Back up the complete
+save and matching mod set first; restore both for rollback, never downgrade in place.
+See [0.1.17 release notes](docs/release-0.1.17.md) for all six changes and exact
+verification scope. Controlled 2.1.23 base/Space Age client and connected-peer
+acceptance is available; software rendering is not a representative GPU benchmark.
+Keep 0.1.14 if you remain on Factorio 2.0.77.
 
 Version 0.1.14 exposes complete fresh native circuit signals and native
 own-output configuration, without mod-defined signal/filter/output-slot ceilings.
@@ -81,7 +86,7 @@ earlier workload separately; current matched results accompany the release.
 Version 0.1.8 retains those monitor/live-budget features and adds bounded Console
 commands with live effects, shared save-backed values and confirmed reset, but no
 retained user functions or command history. See the [release notes](docs/console-shell-release.md).
-The release source is [alpha-0.1.15](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.15);
+The release source is [alpha-0.1.17](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.17);
 [0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development

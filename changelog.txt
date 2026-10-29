@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.17
+Date: 2026-10-29
+  Features:
+    - Add elapsed simulation-time prefixes to retained Console entries, including hours above 99, without changing selection/copy or Follow behavior.
+    - Add the powered, wired Factoriopedia Interface for read-only installed native catalogues; no projected recipes or inferred factory data.
+    - Add powered, wired Production Statistics with exact native production/consumption counts and all 300 raw samples per history side; GUI smoothing is not applied to API data.
+    - Add powered, wired Dashboards with retained tabs, labels, buttons and datasets. Optional factorio-charts >= 1.2.0 supplies upstream line charts and duration bars; labels/buttons and retained data survive its absence.
+  Changes:
+    - Make monitor maintenance demand-driven for unchanged and continuously updating screens without raising budgets or weakening publication/ownership checks.
+    - BREAKING: computer items are plain hardware. Ordinary pickup/replacement loses source, label and state; old programmed item payloads are ignored with no import or recovery. Placement is blank and stopped with a new identity.
+    - Keep placed computer records, active programs, private drafts and other device data. Source-only blueprint/clipboard copies and qualifying stopped native Undo remain; Undo does not resume old run work or replay effects.
+  Info:
+    - ALPHA for exactly Factorio 2.1.23, base or optional Space Age. Back up the complete save, matching engine/mod set and old ZIPs before upgrading. Roll back by restoring all of them, never by downgrading a newly saved world in place.
+    - Native client/connected-peer acceptance covers controlled base/Space Age scenes, not every mod pack. Software rendering and publication cadence are not representative GPU FPS. API 1, compiler 2 and storage 1 remain unchanged.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.16
 Date: 2026-10-27
   Bugfixes:

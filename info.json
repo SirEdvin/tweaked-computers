@@ -1,10 +1,10 @@
 {
   "name": "tweaked-computers",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "title": "Tweaked Computers (ALPHA)",
   "author": "Tweaked Computers contributors",
   "factorio_version": "2.1",
-  "description": "ALPHA: bounded native Lua programs and Console, peripheral inspectors, radar modems, vanilla speaker audio, monitors, KV databases, circuit logic, configurators and Recipe Searcher. Back up saves. Factorio 2.1.23; not stable or a GPU performance guarantee.",
+  "description": "ALPHA: bounded native Lua, Console, dashboards, native Factoriopedia and production statistics, monitors, KV, circuits, configurators, recipes, radars and speakers. Computer items are plain hardware: back up saves before upgrading. Factorio 2.1.23; not stable.",
   "homepage": "https://siredvin.github.io/tweaked-computers/",
   "dependencies": ["base = 2.1.23", "? space-age = 2.1.23", "? factorio-charts >= 1.2.0"]
 }

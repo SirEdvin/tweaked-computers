@@ -11,10 +11,10 @@ calls, not a catalogue GUI. No item/fluid input is needed.
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot; removal/destruction of a device is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
-   the Mod Portal, select **0.1.15 ALPHA**, enable it, and restart when prompted.
+   the Mod Portal, select **0.1.17 ALPHA**, enable it, and restart when prompted.
    This version targets Factorio 2.1.23. Stay on 0.1.14 for Factorio 2.0.77.
-3. For manual installation, download `tweaked-computers_0.1.15.zip` from the
-   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.15)
+3. For manual installation, download `tweaked-computers_0.1.17.zip` from the
+   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.17)
    and place it in your Factorio
    user-data `mods` directory without unpacking it. Remove conflicting duplicate
    versions, enable the mod, and restart. The ZIP's internal folder must match its
@@ -25,13 +25,22 @@ calls, not a catalogue GUI. No item/fluid input is needed.
    names require their corresponding installed prototypes. This guide does not
    claim later Factorio engines or arbitrary mod combinations are verified.
 
-**Unreleased computer-storage change:** computer items are plain hardware.
+**0.1.17 breaking computer-storage change:** computer items are plain hardware.
 Ordinary pickup/replacement loses computer contents, and old programmed item
 payloads are ignored without import or recovery. Placed computers, active programs,
 private drafts and KV/monitor data are not reset. Back up the complete save and
 matching mod archive first; restore both for rollback, not just the old mod.
 Use [source-only copies or qualifying stopped undo](lifecycle.md#undo-and-redo)
 when preserving a program or a removed computer's saved state.
+
+0.1.17 also adds elapsed Console time, demand-driven monitor maintenance,
+native-only Factoriopedia/Production Statistics and [Dashboards](dashboard.md).
+Optional `factorio-charts >= 1.2.0` provides upstream line charts and duration bars;
+without it, Dashboard labels/buttons work and accepted datasets remain retained.
+Controlled 2.1.23 base/Space Age native-client and connected-peer checks supplement
+packaged/cold/upgrade checks; they are not exhaustive mod-pack or GPU certification.
+Keep the pre-upgrade save and matching mod ZIPs together for rollback. Do not
+downgrade a newly saved world; synchronizing an old save can reselect its old mod.
 
 The historical migration evidence summarized here is **headless-only** on 2.1.23. Keep the pre-conversion save, 2.0.77
 engine and matching mod ZIP for rollback; do not downgrade a converted save.
