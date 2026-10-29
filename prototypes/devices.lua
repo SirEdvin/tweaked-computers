@@ -49,9 +49,9 @@ for _,kind in ipairs(defs.order) do
     energy_source={type='electric',usage_priority='secondary-input',buffer_capacity=(def.watts/30)..'J',
       input_flow_limit=(def.watts*2)..'W',output_flow_limit='0W',drain='0W'},
     energy_usage=def.watts..'W',energy_production='0W'},
-    {type=(kind=='computer' or kind=='kv' or kind=='monitor') and 'item-with-tags' or 'item',name=def.name,
+    {type=(kind=='computer' or kind=='kv' or kind=='monitor' or kind=='dashboard') and 'item-with-tags' or 'item',name=def.name,
       icon=icon,icon_size=64,subgroup='circuit-network',order='z[tc]-'..kind,
-      place_result=def.entity_name,stack_size=(kind=='computer' or kind=='kv') and 1 or 50},
+      place_result=def.entity_name,stack_size=(kind=='computer' or kind=='kv' or kind=='dashboard') and 1 or 50},
     {type='recipe',name=def.name,enabled=false,energy_required=2,
       ingredients=(function() local out={}; for _,v in ipairs(def.ingredients) do out[#out+1]={type='item',name=v[1],amount=v[2]} end; return out end)(),
       results={{type='item',name=def.name,amount=1}},auto_recycle=false}}

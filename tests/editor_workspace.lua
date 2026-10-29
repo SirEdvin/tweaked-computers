@@ -281,6 +281,28 @@ function M.run()
       end
       assert(not layout.measure({width=1000,height=600},1.5,false).supported)
     end)
+    group('workspace-console-recorded-elapsed-map-time',function()
+      local logs,bytes,truncated=rec.logs,rec.log_bytes,rec.log_truncated
+      rec.logs={}; rec.log_bytes=0; rec.log_truncated=false
+      local cases={{0,'00:00:00'},{59,'00:00:00'},{60,'00:00:01'},
+        {3599,'00:00:59'},{3600,'00:01:00'},{215999,'00:59:59'},{216000,'01:00:00'},
+        {5184000,'24:00:00'},{5846940,'27:04:09'},{21600000,'100:00:00'}}
+      local expected={}
+      for i,case in ipairs(cases) do
+        runtime.log(rec,'entry '..i,case[1]); expected[i]='['..case[2]..'] entry '..i
+      end
+      local stored=serpent.line(rec.logs); local retained_bytes=rec.log_bytes
+      tab(f,2); local output=f.content.console.output; local writes=output.text_writes
+      assert(output.text==table.concat(expected,'\n'),'Console must render completed elapsed map time')
+      editor.refresh(a,nil,tick+21600000)
+      assert(output.text_writes==writes and serpent.line(rec.logs)==stored and rec.log_bytes==retained_bytes)
+      editor.on_closed{player_index=a.index,element=f}; assert(editor.open(a,rec.id)); f=a.gui.screen[editor.frame_name]; c=f.content.editor; source_widget=c.source
+      tab(f,2); assert(f.content.console.output.text==table.concat(expected,'\n'))
+      assert(runtime.stop(rec.id)); assert(runtime.activate(rec.id,tick+1,rec.saved_revision))
+      editor.refresh(a)
+      assert(f.content.console.output.text==table.concat(expected,'\n') and serpent.line(rec.logs)==stored and rec.log_bytes==retained_bytes)
+      rec.logs,rec.log_bytes,rec.log_truncated=logs,bytes,truncated
+    end)
     group('workspace-console-follow-off-live-without-scroll-or-unchanged-text-churn',function()
       tab(f,2); local output=f.content.console.output; local text=output.text; local writes=output.text_writes; local scrolls=output.scrolls
       local follow=f.content.console.follow; follow.state=false
@@ -331,9 +353,9 @@ function M.run()
       assert(#s.reference_entries==#help.topics and #r.topics.items==#help.topics)
       local combined=''; for _,topic in ipairs(help.topics) do if not (topic.id or ''):find('tutorial.',1,true) then combined=combined..topic.text end end
       assert(combined==help.text..'\n','categorized reference dropped or duplicated text')
-      select(r.filters.category,5); assert(#s.reference_entries==8)
+      select(r.filters.category,5); assert(#s.reference_entries==11)
       local titles={['Discovery and identity']=true,['Logic handler']=true,['KV database']=true,
-        Monitor=true,Configurator=true,['Recipe Searcher']=true,['Radar modem']=true,['Programmable speaker']=true}
+        Monitor=true,Dashboard=true,Configurator=true,['Recipe Searcher']=true,['Factoriopedia Interface']=true,['Production Statistics']=true,['Radar modem']=true,['Programmable speaker']=true}
       for _,index in ipairs(s.reference_entries) do
         local title=help.topics[index].title; assert(titles[title]); titles[title]=nil
       end
@@ -344,7 +366,14 @@ function M.run()
       r.filters.search.text='playNote'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(#s.reference_entries==1 and reference_text(r):find('getSounds',1,true))
       r.filters.search.text='RECIPE SEARCHER'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
-      assert(#s.reference_entries==1 and reference_text(r):find('findRecipes',1,true))
+      assert(#s.reference_entries==2 and reference_text(r):find('findRecipes',1,true))
+      local recipe_matches={['Recipe Searcher']=true,['Production Statistics']=true}
+      for _,index in ipairs(s.reference_entries) do
+        local title=help.topics[index].title; assert(recipe_matches[title]); recipe_matches[title]=nil
+      end
+      assert(next(recipe_matches)==nil,'shared-unlock search must retain both families')
+      r.filters.search.text='PRODUCTION STATISTICS'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
+      assert(#s.reference_entries==1 and reference_text(r):find('getHistory',1,true) and reference_text(r):find('getTotals',1,true))
       r.filters.search.text='KV DATABASE'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(#s.reference_entries==1 and reference_text(r):find('hgetall',1,true))
       assert(not r.actions,'Reference has no action controls')
@@ -369,14 +398,14 @@ function M.run()
       r.filters.search.text='no-topic-here'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(#s.reference_entries==0 and reference_text(r):find('No matching topic',1,true))
     end)
-    group('workspace-context-help-all-seven-live-families-filter-clear-delay-no-effects',function()
+    group('workspace-context-help-all-ten-live-families-filter-clear-delay-no-effects',function()
       tab(f,2); local input=f.content.console.prompt.command
       input.text='help_kept={value=42}; help_alias=help_kept'
       editor.on_text{player_index=a.index,element=input,tick=tick}
       editor.on_confirmed{player_index=a.index,element=input,tick=tick}
       rec.power_checked_tick=tick; assert(scheduler.dispatch(rec,tick))
       assert(rec.shell and not rec.shell.diagnostic and #rec.shell.pending==0)
-      local devices={db,mon,build('logic',30,120),build('configurator',33,120),build('recipe_searcher',36,120)}
+      local devices={db,mon,build('logic',30,120),build('configurator',33,120),build('recipe_searcher',36,120),build('factoriopedia_interface',39,120),build('production_statistics',42,120),build('dashboard',45,120)}
       for _,name in ipairs({'radar','programmable-speaker'}) do
         local body=assert(surface.create_entity{name=name,position={40+#devices*4,120},force='player'})
         devices[#devices+1]=assert(lifecycle.build(body))

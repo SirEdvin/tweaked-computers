@@ -9,7 +9,7 @@ local errors=require('scripts.runtime.errors')
 local data=require('scripts.runtime.data')
 local principal=require('scripts.runtime.principal')
 local M={}
-local types={kv='kv_database',monitor='monitor',logic='logic_handler',configurator='configurator',recipe_searcher='recipe_searcher',radar='modem',speaker='speaker'}
+local types={dashboard='dashboard',kv='kv_database',monitor='monitor',logic='logic_handler',configurator='configurator',recipe_searcher='recipe_searcher',factoriopedia_interface='factoriopedia_interface',production_statistics='production_statistics',radar='modem',speaker='speaker'}
 local bindings={}; local revocations={}
 local monitor_sync
 function M.register_monitor_sync(binding)
@@ -157,6 +157,12 @@ function M.services(computer,tick,guard,execution)
     end
     if rec.kind=='speaker' and (method=='playNote' or method=='playSound') then guard.prepare_boolean_result() end
     if rec.kind=='radar' and method=='transmit' then guard.prepare_empty_result() end
+    if rec.kind=='dashboard' then
+      if method=='subscribe' then
+        guard.prepare_string_result(computer.run_id..'/sub-'..string.format('%.0f',registry.get().next_sequence))
+      elseif method=='removeTab' or method=='unsubscribe' then guard.prepare_boolean_result()
+      elseif method~='getTab' and method~='getLimits' then guard.prepare_empty_result() end
+    end
     if rec.kind=='logic' and (method=='readSignals' or method=='getOutput') and guard.circuit_result then
       return guard.circuit_result(fn(computer,rec,wire,tick,spend,execution,...))
     end
@@ -248,11 +254,16 @@ function M.services(computer,tick,guard,execution)
       or (d.wire~='red' and d.wire~='green') then errors.raise('E_ARGUMENT','invalid retained peripheral identity') end
     spend(#d.name+32)
     if d.method then
-      if type(d.method)~='string' or not bindings[d.kind].methods[d.method] then errors.raise('E_ARGUMENT','invalid retained peripheral method') end
+      local available=bindings[d.kind].methods[d.method]
+      local removed_chart=d.kind=='dashboard' and (d.method=='appendSample' or d.method=='setBars' or d.method=='clearChart')
+      if type(d.method)~='string' or not available and not removed_chart then errors.raise('E_ARGUMENT','invalid retained peripheral method') end
       if parent then
         local identity=handles[parent]
         if not identity or identity.name~=d.name or identity.wire~=d.wire or identity.generation~=d.generation then errors.raise('E_ARGUMENT','captured method/facade identity mismatch') end
-        return guard.get(parent,d.method)
+        if available then return guard.get(parent,d.method) end
+        -- Keep an old captured method callable-to-refuse without poisoning unrelated Console values.
+        guard.host_work(#d.name+#d.method+64,#d.name+#d.method+64)
+        d={name=d.name,wire=d.wire,generation=d.generation,kind=d.kind,method=d.method,facade=parent}
       end
       local fn=guard.service(function(...) return invoke(d.name,d.wire,d.generation,d.method,...) end,d.kind=='logic')
       guard.bind_value(fn,d); return fn

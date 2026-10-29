@@ -7,6 +7,210 @@ factory managers; keep the described topology. Runtime effects were exercised by
 the implementation harness; documentation checks compile these blocks without
 claiming graphical keyboard/focus/touch delivery.
 
+## dashboard-program
+
+Research Native circuit computers; build and power a Dashboard (15 kW) and computer. Connect Network red. Validate, Save and Run, then close the computer, normally open the Dashboard and left-click Acknowledge. The status changes from Ready to Acknowledged through the saved clicked handler. No chart library is required; Console cannot subscribe.
+
+```lua
+return {
+    api_version = 1,
+    handlers = {
+        start = function(event)
+            local panel = peripheral.find("dashboard", "red")
+            assert(panel, "Connect a powered Dashboard on red")
+            panel.setTab(1, {
+                title = "Overview",
+                content = {type = "column", id = "root", children = {
+                    {type = "label", id = "status", text = "Ready"},
+                    {type = "button", id = "ack", text = "Acknowledge"}
+                }}
+            })
+            panel.subscribe("clicked")
+        end,
+        clicked = function(event)
+            local panel = peripheral.wrap(event.peripheral, event.wire)
+            if event.tab == 1 and event.button == "ack" then
+                panel.setText(1, "status", "Acknowledged")
+            end
+        end
+    }
+}
+```
+
+## dashboard-charts
+
+Use the same powered red-wired Dashboard setup. Optionally enable unmodified factorio-charts 1.2.0 for rolling lines and seconds-only duration bars; without it labels/buttons still work. Twelve startup samples wrap an eight-slot line before opening. Scroll Overview for both charts, switch among six tabs and acknowledge a button. Live label updates preserve the selected tab and unchanged identity selection. X positions mean sample order, not wall time; this is not the native production widget.
+
+```lua
+return {api_version=1,handlers={
+start=function()
+  local p=peripheral.find('dashboard','red'); assert(p,'Connect a powered Dashboard on red')
+  local available=false
+  for _,name in ipairs(peripheral.getMethods(peripheral.getName(p),'red')) do if name=='appendSample' then available=true end end
+  local children={{type='label',id='status',text='Ready — explicit samples, duration bars in seconds'},
+    {type='button',id='ack',text='Acknowledge'},
+    {type='label',id='heartbeat',text='Updates 0'}}
+  if available then
+    children[4]={type='line',id='trend',series={'input','output'},capacity=8,format='number'}
+    children[5]={type='stacked_bars',id='durations',phases={'work','wait'}}
+  end
+  p.setTab(1,{title='Overview',content={type='column',id='root',children=children}})
+  for slot=2,6 do p.setTab(slot,{title='Panel '..slot,content={type='column',id='root',children={
+    {type='label',id='note',text='Independent viewer tab '..slot},
+    {type='button',id='ack',text='Acknowledge'}}}}) end
+  if available then
+    for i=1,12 do p.appendSample(1,'trend',{input=i,output=i/2}) end
+    p.setBars(1,'durations',{{work=1,wait=2},{work=3,wait=1},{work=2,wait=0}})
+  end
+  p.subscribe('clicked')
+  computer.every(60,'refresh')
+  computer.setState('boots',(computer.getState('boots') or 0)+1)
+end,
+refresh=function()
+  local p=peripheral.find('dashboard','red')
+  local n=(computer.getState('updates') or 0)+1
+  computer.setState('updates',n)
+  p.setText(1,'heartbeat','Updates '..n)
+end,
+clicked=function(event)
+  local p=peripheral.wrap(event.peripheral,event.wire)
+  local count=(computer.getState('clicks') or 0)+1
+  computer.setState('clicks',count)
+  p.setText(1,'status','Acknowledged '..count)
+end
+}}
+```
+
+## production-statistics-program
+
+Research Recipe Searcher, craft and power a Production Statistics device and connect Network red to the computer. Validate, Save and Run. Logs local native item/fluid/pollution totals and rates, then newest/oldest iron history in both directions. Empty input and complete-result E_LIMIT refusal are distinct; work/allocation exhaustion remains fatal. This small Console example is not an unlimited export.
+
+```lua
+return {api_version=1,handlers={start=function()
+  local stats=peripheral.find("production_statistics","red")
+  assert(stats,"Connect a powered Production Statistics device on red")
+  local function report()
+    for _,kind in ipairs({"item","fluid","pollution"}) do
+      local totals=stats.getTotals(kind)
+      local rates=stats.getRates(kind,"one_minute")
+      local count=0
+      if kind=="item" then
+        for quality,items in pairs(totals.input) do
+          for name,amount in pairs(items) do
+            count=count+1
+            computer.log(quality.." "..name.." produced="..tostring(amount).." /min="..tostring(rates.input[quality][name]))
+          end
+        end
+      else
+        for name,amount in pairs(totals.input) do
+          count=count+1
+          computer.log(kind.." "..name.." input="..tostring(amount).." /min="..tostring(rates.input[name]))
+        end
+      end
+      if count==0 then computer.log(kind..": no recorded input") end
+    end
+    local h=stats.getHistory("item","iron-plate","one_minute")
+    computer.log("Iron produced/min newest="..tostring(h.input[1]).." oldest="..tostring(h.input[300]))
+    computer.log("Iron consumed/min newest="..tostring(h.output[1]).." oldest="..tostring(h.output[300]))
+  end
+  local ok,e=pcall(report)
+  if not ok then
+    if type(e)=="table" and e.code=="E_LIMIT" then computer.log("Complete statistics query exceeds shared Data limits")
+    else error(e) end
+  end
+  computer.setState("statistics_example",true)
+end}}
+```
+
+## production-statistics-monitor
+
+Connect a powered Production Statistics device and monitor on red; use a display of at least 14 columns and 7 rows. Validate, Save and Run, then wait 120 ticks. Displays one-minute iron rates and both 300-sample native histories, oldest-left/newest-right with a shared peak scale. No history is accumulated. Query refused means E_LIMIT, not empty data; No activity means both native series are zero.
+
+```lua
+return {api_version=1,handlers={
+start=function() computer.every(120,"draw") end,
+draw=function()
+  local stats=peripheral.find("production_statistics","red")
+  local screen=peripheral.find("monitor","red")
+  assert(stats and screen,"Connect powered statistics and monitor devices on red")
+  local width,height=screen.getSize()
+  assert(width>=14 and height>=7,"Use a monitor with at least 14 columns and 7 rows")
+  local function draw()
+    local rates=stats.getRates("item","one_minute")
+    local h=stats.getHistory("item","iron-plate","one_minute")
+    local input=rates.input.normal or {}
+    local output=rates.output.normal or {}
+    local peak=0
+    for i=1,300 do peak=math.max(peak,h.input[i],h.output[i]) end
+    local function trace(values)
+      local chars=".:-=+*#@"
+      local text=""
+      for x=1,width do
+        -- Native newest-first stays unchanged; only the display runs oldest left.
+        local i=301-math.floor(1+(x-1)*299/(width-1))
+        local level=peak>0 and math.floor(values[i]/peak*7) or 0
+        text=text..string.sub(chars,level+1,level+1)
+      end
+      return text
+    end
+    screen.clear()
+    screen.setCursorPos(1,1); screen.write("Iron /min 1m")
+    screen.setCursorPos(1,2); screen.write("In "..tostring(input["iron-plate"] or 0))
+    screen.setCursorPos(1,3); screen.write("Out "..tostring(output["iron-plate"] or 0))
+    screen.setCursorPos(1,4); screen.write("older -> newer")
+    screen.setCursorPos(1,5); screen.write(trace(h.input))
+    screen.setCursorPos(1,6); screen.write(trace(h.output))
+    screen.setCursorPos(1,7); screen.write(peak==0 and "No activity" or "Rows: in / out")
+  end
+  local ok,e=pcall(draw)
+  if not ok then
+    if type(e)=="table" and e.code=="E_LIMIT" then
+      screen.clear(); screen.setCursorPos(1,1); screen.write("Query refused")
+    else error(e) end
+  end
+  computer.setState("statistics_monitor",true)
+end}}
+```
+
+## factoriopedia-program
+
+Research Recipe Searcher, craft a Factoriopedia Interface and supply 30 kW. Connect its Network to a computer on red. Validate, Save and Run the complete document. Logs item reference rocket capacity, water bounds and both complete name lists (or E_LIMIT); no live silo/tank feasibility is inferred.
+
+```lua
+return {
+  api_version = 1,
+  handlers = {
+    start = function(event)
+      local encyclopedia = peripheral.find("factoriopedia_interface", "red")
+      assert(encyclopedia, "Connect a powered Factoriopedia Interface on red")
+      local item = encyclopedia.getItem("iron-plate")
+      computer.log(item.name .. " stack size=" .. tostring(item.stack_size))
+      if item.rocket_capacity ~= nil then
+        computer.log("Reference items per rocket=" .. tostring(item.rocket_capacity))
+      else
+        computer.log("No finite mass-limited rocket count")
+      end
+      local fluid = encyclopedia.getFluid("water")
+      computer.log(fluid.name .. " temperature=" .. tostring(fluid.default_temperature)
+        .. ".." .. tostring(fluid.max_temperature) .. " C")
+      local function reportNames(method, label)
+        local ok, result = pcall(method)
+        if ok then
+          computer.log(label .. ": " .. tostring(#result))
+        elseif type(result) == "table" and result.code == "E_LIMIT" then
+          computer.log(label .. ": complete list exceeds shared Data limits")
+        else
+          error(result)
+        end
+      end
+      reportNames(encyclopedia.listItems, "Installed item names")
+      reportNames(encyclopedia.listFluids, "Installed fluid names")
+      computer.setState("factoriopedia_example", true)
+    end
+  }
+}
+```
+
 ## reference-speaker
 
 The in-game Reference → Examples → One speaker note tutorial includes complete research, power, red-wire setup, execution steps and expected results. This is the same small program, not an external prerequisite.

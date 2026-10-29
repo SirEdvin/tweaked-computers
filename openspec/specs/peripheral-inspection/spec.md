@@ -7,16 +7,35 @@ Let players inspect physical peripherals directly through safe, read-only native
 ## Requirements
 
 ### Requirement: Native inspection for every peripheral family
-The mod SHALL provide a device-local inspector for KV Database, Monitor, Logic Handler, Configurator and Recipe Searcher through normal entity opening. The window SHALL identify the logical device rather than a helper. Recipe Searcher SHALL receive basic identity/status inspection, not a recipe-search interface. Computers SHALL retain their existing workspace.
+The mod SHALL provide a device-local inspector for KV Database, Monitor, Logic Handler, Configurator, Recipe Searcher, Factoriopedia Interface and Production Statistics through normal entity opening.
+
+#### Scenario: Family-specific opening surface
+- **WHEN** the player normally opens a peripheral or computer
+- **THEN** The window SHALL identify the logical device rather than a helper. Recipe Searcher, Factoriopedia Interface and Production Statistics SHALL receive basic identity/status inspection, not recipe-search, catalogue or statistics-query interfaces. Computers SHALL retain their existing workspace. A Dashboard SHALL instead open its configured interactive window, with the same exact copyable identity and explicit availability outside its user-configured tabs; it is not a read-only inspector.
 
 #### Scenario: Open each peripheral
-- **WHEN** an authorized player uses normal entity-open on any of the five peripheral families
+- **WHEN** an authorized player uses normal entity-open on any of these peripheral families
 - **THEN** its inspector opens without exposing the carrier's native configuration controls
 - **AND** no computer connection or running program is required to inspect the device locally.
 
 #### Scenario: Existing device after upgrade
 - **WHEN** a supported existing save is upgraded without replacing its peripherals
 - **THEN** the same devices support ordinary inspector opening while retaining identities, wires, data and output ownership.
+
+#### Scenario: Basic Factoriopedia Interface inspector
+- **WHEN** an authorized player normally opens a powered or unpowered Factoriopedia Interface
+- **THEN** the exact peripheral name is copyable and its type and availability are visible through the existing player-scoped inspector
+- **AND** opening or refreshing performs no item/fluid catalogue enumeration, metadata query, world mutation or guest execution.
+
+#### Scenario: Basic Production Statistics inspector
+- **WHEN** an authorized player opens a powered or unpowered statistics device
+- **THEN** its exact peripheral name remains selectable/copyable and its availability is explicit
+- **AND** opening or refreshing the inspector performs no production-statistics queries, exposes no force/surface selector and executes no guest program.
+
+#### Scenario: Open a configured dashboard
+- **WHEN** an authorized player opens a Dashboard
+- **THEN** its interactive mixed-tab window appears instead of a read-only inspector or carrier configuration dialog
+- **AND** identity/status occupy the window shell rather than consuming one of its six configurable tabs.
 
 ### Requirement: Exact copyable peripheral identity
 Every inspector SHALL show the localized device name, peripheral type, availability and exact name used by peripheral discovery. The API name SHALL be read-only and selectable, with an explicit action that selects it for native Copy. Copy selection SHALL contain only the identifier, without labels, quotes or added whitespace. Inspection SHALL NOT rename devices.
@@ -31,7 +50,11 @@ Every inspector SHALL show the localized device name, peripheral type, availabil
 - **THEN** its name and status can be inspected and copied without invoking a recipe query or offering crafting/storage controls.
 
 ### Requirement: Inspection and existing gestures remain distinct
-Normal peripheral opening SHALL inspect rather than emit a monitor touch. Ctrl-click monitor touches, guarded Ctrl-click computer-body editing, native inventory transfers and cardinal rotation SHALL retain their existing behavior. Empty-ground clicks SHALL NOT open computer UI, even with retained drafts. Draft recovery SHALL remain accessible through another computer's Maintenance or the capacity viewer when opening a computer with all draft slots occupied. Owned helper dialogs SHALL remain inaccessible, and unrelated entity windows SHALL NOT be replaced.
+Normal peripheral opening SHALL inspect, or open a Dashboard's configured window, rather than emit a monitor touch.
+
+#### Scenario: Existing gestures and recovery access
+- **WHEN** the player uses device opening, Ctrl-click, transfer, rotation or draft recovery
+- **THEN** Ctrl-click monitor touches, guarded Ctrl-click computer-body editing, native inventory transfers and cardinal rotation SHALL retain their existing behavior. Empty-ground clicks SHALL NOT open computer UI, even with retained drafts. Draft recovery SHALL remain accessible through another computer's Maintenance or the capacity viewer when opening a computer with all draft slots occupied. Owned helper dialogs SHALL remain inaccessible, and unrelated entity windows SHALL NOT be replaced.
 
 #### Scenario: Inspect then touch a monitor
 - **WHEN** a player normally opens a monitor, closes the inspector and then Ctrl-clicks a valid display cell
@@ -40,6 +63,11 @@ Normal peripheral opening SHALL inspect rather than emit a monitor touch. Ctrl-c
 #### Scenario: Existing computer and native controls
 - **WHEN** a player Ctrl-clicks a computer, rotates a peripheral or uses Ctrl with vanilla inventory controls
 - **THEN** those actions keep their established behavior without duplicate rotation, lost drafts or an unwanted peripheral window.
+
+#### Scenario: Dashboard buttons do not replace native gestures
+- **WHEN** a player opens/closes a Dashboard or changes its selected tab without activating a button
+- **THEN** no button or monitor-touch event is emitted
+- **AND** subsequently opening another machine closes the dashboard session without the dashboard reopening over it.
 
 ### Requirement: Player-scoped read authority
 Opening, refreshing and acting on an inspector SHALL revalidate the player, exact device identity, same force, same surface, reach and applicable permissions. Each window SHALL belong to one player's current session. Stale, forged, foreign or replacement-target events SHALL fail closed without exposing new data or mutating device state.
@@ -69,7 +97,11 @@ Inspectors SHALL NOT execute guest code, edit data/configuration, create subscri
 - **THEN** database values/deadlines, factory settings, output ownership, program state and monitor model revisions remain unchanged by inspection.
 
 ### Requirement: Bounded and honest refresh
-Inspectors SHALL poll automatically with coalesced scheduling, preserve selections and unchanged mounted content, and stop detail polling when closed. They SHALL show meaningful pending/unavailable states, not incomplete results as complete. Logic observations SHALL use direct native reads without inventory ceilings or revalidation; presentation scheduling SHALL not limit accessible signals. Other families retain their existing allowances. Refresh buttons and numeric tick trackers SHALL remain absent.
+Inspectors SHALL poll automatically with coalesced scheduling, preserve selections and unchanged mounted content, and stop detail polling when closed.
+
+#### Scenario: Honest inspector observations
+- **WHEN** an inspector refreshes or closes
+- **THEN** They SHALL show meaningful pending/unavailable states, not incomplete results as complete. Logic observations SHALL use direct native reads without inventory ceilings or revalidation; presentation scheduling SHALL not limit accessible signals. Other families retain their existing allowances. Refresh buttons and numeric tick trackers SHALL remain absent.
 
 #### Scenario: Repeated refresh under contention
 - **WHEN** multiple players inspect peripherals while programs and monitors are active

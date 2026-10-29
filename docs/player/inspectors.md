@@ -1,6 +1,6 @@
 # Peripheral inspectors
 
-Open a KV Database, Monitor, Logic Handler, Configurator or Recipe Searcher
+Open a KV Database, Monitor, Logic Handler, Configurator, Recipe Searcher, Factoriopedia Interface or Production Statistics
 normally to inspect it locally. You do not need a computer connection or running
 program. These are read-only windows, not the underlying combinator's controls.
 The localized device title, peripheral type, exact API name and availability
@@ -16,6 +16,12 @@ Long explanations are available in tooltips and Reference rather than repeated
 above the data. An older saved window may close once after the 0.1.12 upgrade;
 reopen it without losing device data or computer drafts.
 
+A [Dashboard](dashboard.md) instead opens its configured interactive tabs through
+normal opening, with copyable identity and availability above those tabs. Opening,
+closing or selecting a tab does not activate a button or subscribe a computer.
+Each viewer keeps their own selected tab and scroll position; live text updates
+leave unchanged controls and identity selection in place.
+
 Computers keep their [workspace](editor.md): Ctrl-click with an empty cursor.
 Ctrl-click a monitor to deliver a touch instead of opening an inspector.
 Native inventory transfers and normal rotation are unchanged. Private role pads
@@ -23,6 +29,11 @@ have no inspector or editable native dialog. Unrelated vanilla dialogs remain
 native dialogs.
 
 ## Copy an exact peripheral name
+
+Recipe Searcher, Factoriopedia Interface and Production Statistics show identity and power/status only.
+Opening them never enumerates a catalogue, queries statistics or executes a program. Use the
+[Factoriopedia API](api/factoriopedia-interface.md) or
+[Production Statistics API](api/production-statistics.md) from a wired computer for queries.
 
 Choose **Select name**, then use native Copy (normally Ctrl+C).
 Paste into your computer draft or another text field. The selection is only the

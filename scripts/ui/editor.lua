@@ -64,7 +64,10 @@ end
 local function console(rec)
   local lines={}
   if rec.diagnostic then lines[#lines+1]='Active: '..diagnostic(rec.diagnostic) end
-  for _,entry in ipairs(rec.logs) do lines[#lines+1]='['..entry.tick..'] '..entry.text end
+  for _,entry in ipairs(rec.logs) do
+    local seconds=math.floor(entry.tick/60)
+    lines[#lines+1]=string.format('[%02d:%02d:%02d] %s',math.floor(seconds/3600),math.floor(seconds/60)%60,seconds%60,entry.text)
+  end
   -- Native text boxes show tabs as missing glyphs. Normalize only the display,
   -- one byte for one byte, preserving stored logs, newlines and output quotas.
   return (string.gsub(table.concat(lines,'\n'),'\t',' '))
@@ -130,7 +133,7 @@ local function refresh_reference(c,s)
   local width=c.reference_text.style.minimal_width or 700
   reference.show(c.reference_text,topic,width)
 end
-local icons={monitor='item/tc-monitor',kv_database='item/tc-kv',logic_handler='item/tc-logic',configurator='item/tc-configurator',recipe_searcher='item/tc-recipe-searcher',modem='item/radar',speaker='item/programmable-speaker'}
+local icons={monitor='item/tc-monitor',kv_database='item/tc-kv',logic_handler='item/tc-logic',configurator='item/tc-configurator',recipe_searcher='item/tc-recipe-searcher',factoriopedia_interface='item/tc-factoriopedia-interface',production_statistics='item/tc-production-statistics',dashboard='item/tc-dashboard',modem='item/radar',speaker='item/programmable-speaker'}
 local function peripheral_details(c,s)
   local inventory=s.inventory; local selected=s.peripheral; local found
   if inventory and inventory.items then

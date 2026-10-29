@@ -21,6 +21,7 @@ function M.run()
     for _,rec in ipairs(records) do
       rec.powered=state~='unpowered'; rec.status=state=='blinking' and 'running' or 'stopped'
       rec.physical_error=state=='fault' and 'fixture fault' or nil
+      if rec.kind=='monitor' then rec.monitor_art_dirty=true end
     end
     art.tick(tick,nop)
     for _,rec in ipairs(records) do
@@ -47,8 +48,8 @@ function M.run()
     assert(registry.remove(rec.id,'art fixture done') and not old.valid)
     for _,entity in ipairs(parts) do if entity.valid then entity.destroy() end end
   end
-  assert(cases==192 and #registry.get().order==0)
-  log('TC_RD2_STATUS_SELECTION_OK cases='..cases..' twenty-four-native-shells-and-cleanup')
+  assert(cases==288 and #registry.get().order==0)
+  log('TC_RD2_STATUS_SELECTION_OK cases='..cases..' thirty-six-native-shells-and-cleanup')
   -- assets.run emitted its own single-group total; do not invent a second total.
 end
 return M

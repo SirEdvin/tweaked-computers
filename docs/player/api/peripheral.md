@@ -34,7 +34,9 @@ or `"both"`. Names/types are strings, and calls use dots with strict arity.
 | `peripheral.getMonitorSyncGroup()` | Exactly one defensive status table; does not drive rendering |
 
 Types: `monitor`, `kv_database`, `logic_handler`, `configurator`,
-[`recipe_searcher`](recipe-searcher.md), [`modem`](modem.md), [`speaker`](speaker.md). Unknown string
+[`recipe_searcher`](recipe-searcher.md), [`factoriopedia_interface`](factoriopedia-interface.md),
+[`production_statistics`](production-statistics.md), [`dashboard`](dashboard.md),
+[`modem`](modem.md), [`speaker`](speaker.md). Unknown string
 types yield zero find matches. `local m = peripheral.find("monitor", "red")`
 selects the first; `{peripheral.find("monitor", "red")}` collects all. More than
 128 results fails before creating a partial tuple: enumerate names and wrap.

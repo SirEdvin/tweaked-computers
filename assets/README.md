@@ -1,12 +1,25 @@
 # Service Rack device artwork and independent glyphs
 
-Service Rack (AR2 candidate B) is the user-selected six-device family. All 176
+Service Rack (AR2 candidate B) is the user-selected family. All 176
 pre-existing generated PNGs match the selected preview byte-for-byte, including
 all status masks, glyphs and flat-monitor shadows. Two new 256×256 technology
 icons depict its computer and Recipe Searcher. Research costs, prerequisites,
 unlocks, recipes and runtime behavior are unchanged.
 
-## Identify the six devices
+## Identify the nine devices
+
+The additive seventh device, **Factoriopedia Interface**, is an upright blue
+catalogue terminal with stepped reference cards and a brass side dial. Its 1×1
+body uses the same ground-projected Network contacts and compact status masks.
+It has its own MIT geometry in `service_rack.py`; no existing PNG is replaced.
+The additive eighth device, **Production Statistics**, is a brass-roller chart
+recorder with ruled paper, a blue trace and a raised twin-gauge head. Its original
+MIT mesh in `service_rack.py` uses the same materials/contacts/status convention;
+it is not a recolored catalogue terminal. No existing PNG is replaced.
+The additive ninth device, **Dashboard**, is a low control console with a blue
+screen and raised brass controls, using the same original MIT mesh pipeline.
+All three additions have a 1×1 footprint. The expanded inventory has 265 PNGs,
+96 contacts and nine distinct silhouettes.
 
 - Computer: folded-steel L desk, recessed display, separate keyboard apron and
   asymmetric cooling hump.
@@ -68,7 +81,7 @@ repository files excluded from the gameplay ZIP.
 
 `socket-layout.json` is the exact-engine export of production
 `scripts/device-definitions.lua` coordinates, transforms and role colors.
-`export_layout.py` uses Factorio 2.0.77 and retains 17 significant digits.
+`export_layout.py` uses Factorio 2.1.23 and retains 17 significant digits.
 Regeneration refuses a changed definition hash; `tests/art_data.lua` compares
 all coordinates with the real native prototypes.
 
@@ -77,7 +90,7 @@ All image paths start `__tweaked-computers__/assets/`.
 
 | Device | Local footprint | Frame / ground pivot (high-resolution pixels) |
 | --- | --- | --- |
-| computer, kv, monitor, recipe_searcher | 1×1 | 160×160 / (80,80) |
+| computer, kv, monitor, recipe_searcher, factoriopedia_interface, production_statistics, dashboard | 1×1 | 160×160 / (80,80) |
 | logic | 3×1 | 320×320 / (160,160) |
 | configurator | 2×1 | 320×320 / (160,160) |
 
@@ -134,9 +147,9 @@ glyph and monitor-shadow outputs retain RGBA8 filter-0 zlib-level-9 encoding.
       --fixture tests.art_engine --data-fixture tests.art_data
 
 Only re-export socket layout when production definitions change. Static checks
-verify 178 outputs, all source/output/decoded hashes, transparent margins,
-72 exact socket pixels, six distinct silhouettes, full monitor alpha/interior,
-192 compact status frames, all 256 glyphs, both research images, byte-exact
+verify 265 outputs, all source/output/decoded hashes, transparent margins,
+96 exact socket pixels, nine distinct silhouettes, full monitor alpha/interior,
+288 compact status frames, all 256 glyphs, both research images, byte-exact
 regeneration and package notices/inventory. Contact sheets are generated asset
 composites with explicitly labelled vanilla footprint outlines, not native
 screenshots. Actual graphical acceptance and software-rendering limitations are

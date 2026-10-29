@@ -10,6 +10,32 @@ import build
 
 
 class PackageInventoryTests(unittest.TestCase):
+    def test_optional_chart_ci_fixture_is_exact_and_not_shipped(self):
+        import smoke
+        path=build.ROOT/'.github/fixtures/factorio-charts/factorio-charts_1.2.0.zip'
+        self.assertEqual(smoke.chart_archive(path)['sha256'],
+                         '32b1683912281812c122d6b414d15ab553e943138ceb2b27fe52a38ee6512815')
+        with zipfile.ZipFile(path) as charts:
+            self.assertEqual(charts.read('factorio-charts_1.2.0/LICENSE'),path.with_name('LICENSE').read_bytes())
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            with zipfile.ZipFile(build.build(output)) as package:
+                self.assertFalse(any('/.github/' in name or name.endswith('.zip') for name in package.namelist()))
+                contracts={'openspec/specs/dashboard-interface/spec.md','openspec/specs/dashboard-interface/lua-api.md'}
+                self.assertTrue(contracts.issubset(build.CONTRACT_FILES))
+                prefix=next(name[:-len('info.json')] for name in package.namelist() if name.endswith('/info.json'))
+                for relative in (*contracts,'examples/dashboard-program.lua','examples/dashboard-charts.lua'):
+                    self.assertEqual(package.read(prefix+relative),(build.ROOT/relative).read_bytes())
+
+    def test_documented_peripheral_types_match_provider(self):
+        import re
+        provider = (build.ROOT / 'scripts/services/peripheral.lua').read_text()
+        types = set(re.findall(r"='([^']+)'", re.findall(r'local types=\{([^}]+)\}', provider)[0]))
+        companion = (build.ROOT / 'openspec/specs/peripheral-network/lua-api.md').read_text()
+        guide = (build.ROOT / 'docs/player/api/peripheral.md').read_text()
+        self.assertEqual(set(re.findall(r'`([^`]+)`', re.findall(r'One of (.*?); nil', companion)[0])), types)
+        self.assertEqual(set(re.findall(r'"([^"]+)"', re.findall(r'  type = ([^\n]+)', companion)[0])), types)
+        self.assertEqual(set(re.findall(r'`([^`]+)`', re.findall(r'Types: (.*?)Unknown string', guide, re.S)[0])), types)
+
     def test_console_companion_matches_live_follow_contract(self):
         companion = (build.ROOT / 'openspec/specs/console-shell/lua-api.md').read_text()
         spec = (build.ROOT / 'openspec/specs/console-shell/spec.md').read_text()
@@ -26,7 +52,7 @@ class PackageInventoryTests(unittest.TestCase):
         tutorials = (build.ROOT / 'scripts/ui/tutorials.lua').read_text()
         bindings = re.findall(r"source='([^']+)',code=require\('examples\.([^']+)'\)", tutorials)
         self.assertEqual({name for name, _ in bindings}, {
-            'reference-speaker', 'logic-controller', 'reference-recipe', 'reference-factory', 'shared-telemetry'})
+            'reference-speaker', 'logic-controller', 'reference-recipe', 'reference-factory', 'shared-telemetry', 'production-statistics-program', 'dashboard-program', 'dashboard-charts'})
         for name, module in bindings:
             self.assertEqual(name, module)
         self.assertIn("prelude=require('examples.reference-writer')", tutorials)
@@ -59,6 +85,21 @@ getName(facade)
 getWire(facade)
 setMonitorSyncGroup(members)
 getMonitorSyncGroup()''',
+            'DASHBOARD': '''setTab(slot, definition)
+getTab(slot)
+removeTab(slot)
+setText(slot, id, text)
+setEnabled(slot, id, enabled)
+subscribe(handler_name)
+unsubscribe(subscription_id)
+getLimits()
+appendSample(slot, id, values)
+setBars(slot, id, bars)
+clearChart(slot, id)''',
+            'PRODUCTION STATISTICS': '''getTotals(kind)
+getRates(kind, window)
+getHistory(kind, name, window [, quality])
+getLimits()''',
             'SPEAKER': '''getInstruments()
 getNotes(instrument)
 playNote(instrument, volume?, pitch?)
@@ -144,7 +185,7 @@ getLimits()''',
         reference = re.search(r'  text=\[\[(.*?)\]\]', source, re.S)
         assert reference is not None, 'missing packaged reference'
         text = reference[1]
-        self.assertEqual(sum(len(signatures.splitlines()) for signatures in expected.values()), 88)
+        self.assertEqual(sum(len(signatures.splitlines()) for signatures in expected.values()), 103)
         for heading, signatures in expected.items():
             found = re.search(r'^' + re.escape(heading) + r'\n(.*?)(?=^[A-Z][A-Z ]+\n|\Z)',
                               text, re.M | re.S)
@@ -253,13 +294,20 @@ getLimits()''',
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
                 self.assertEqual(set(planning), set(build.CONTRACT_FILES))
-                self.assertEqual(len(build.CONTRACT_FILES), 36)
+                self.assertEqual(len(build.CONTRACT_FILES), 42)
                 self.assertFalse(any(name.startswith('openspec/changes/') for name in planning))
                 for relative in ('openspec/specs/program-source/spec.md',
                                  'openspec/specs/program-source/lua-api.md'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 for relative in ('scripts/services/recipe-searcher.lua', 'examples/recipe-searcher-program.lua',
-                                 'docs/player/api/recipe-searcher.md', 'assets/icons/recipe_searcher.png'):
+                                 'docs/player/api/recipe-searcher.md', 'assets/icons/recipe_searcher.png',
+                                 'scripts/services/factoriopedia-interface.lua', 'examples/factoriopedia-program.lua',
+                                 'docs/player/api/factoriopedia-interface.md', 'assets/icons/factoriopedia_interface.png',
+                                 'openspec/specs/factoriopedia-interface/spec.md', 'openspec/specs/factoriopedia-interface/lua-api.md',
+                                 'scripts/services/production-statistics.lua', 'examples/production-statistics-program.lua',
+                                 'examples/production-statistics-monitor.lua', 'docs/player/api/production-statistics.md',
+                                 'assets/icons/production_statistics.png', 'openspec/specs/production-statistics/spec.md',
+                                 'openspec/specs/production-statistics/lua-api.md'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 for relative in ('settings.lua', 'scripts/runtime/budget-settings.lua',
                                  'locale/en/settings.cfg', 'tests/runtime_budget_engine.lua',
@@ -329,6 +377,8 @@ class CanonicalContractTests(unittest.TestCase):
         # Every other historical scenario remains byte-for-byte checked below;
         # this is not a blanket name-only exception for modified requirements.
         evolved = {
+            ('peripheral-inspection', 'Native inspection for every peripheral family', 'Open each peripheral'):
+                ('any of the five peripheral families', 'any of these peripheral families'),
             # Empty-ground recovery is deliberately retired. Keep the exact
             # replacement workflow checked, not a name-only archive exemption.
             ('program-editor', 'Accessible bounded supporting tabs', 'Recover without an accessible computer'):
@@ -372,9 +422,13 @@ class CanonicalContractTests(unittest.TestCase):
                 ('its previously opened channels are cleared.',
                  'its previously opened channels are cleared before participation in the new scope.'),
         }
-        # Exact reviewed direct-native-circuit replacements, not name-only exemptions.
+        # Exact reviewed circuit/storage replacements, not name-only exemptions.
         # Hash the complete trimmed requirement body; retain every historical scenario.
         native_evolved = {
+            ('device-lifecycle', 'Coherent composite lifecycle'): 'c58a4e821fcdc9f5948781f45a26e60b454e91f8a8d2bff8887c53043a8ee903',
+            ('device-lifecycle', 'Device-specific mining data policy'): '5f0e3349fbcbf10c1a40827598658c50ed264597bb058b5ea5d875761038b206',
+            ('device-lifecycle', 'Blueprint and clone isolation'): '06064247e28b455b5eb6ec3872ec7c1ccc55a0c750c4dc0b93b2c70e86e3d283',
+            ('device-lifecycle', 'Blueprint and item continuity across shell changes'): '1c42f7fd22c1327c9cb482ce080c080a390250d5bbbc24f13e07298d79ff5d1e',
             ('computer-runtime', 'Bounded native work'): '9d05602eeb7a4d90163fed7c6069eaf3331404f5c1bef1f7aed63b23e40a1d02',
             ('computer-runtime', 'Guest trust boundary'): '16a8460cfff7643614b925648c11a15e4448debf77c2fc9b04086b7f5b02b6d8',
             ('computer-runtime', 'Simulation timers and bounded queues'): '74b50cac17b7d56b2df832b9d7b1e5ea0cad51f02bbe575cb5ab5b4cb8b90085',
@@ -383,7 +437,7 @@ class CanonicalContractTests(unittest.TestCase):
             ('logic-handler', 'Tick-sampled change subscriptions'): '3c331da021078833c3d25129460f3dc927003dc7a0299b1d30c272bff87a60c2',
             ('logic-handler', 'Faithful signal identities and counts'): 'b615fa16400875c16614ec0f79e630c759b9de09db06af3151bf1944b0ccc27c',
             ('logic-handler', 'Bounded live signal observation'): '88df9636300ccab501411a2379f693aa5f27d1d9538bcaa771439243edb44ef4',
-            ('peripheral-inspection', 'Bounded and honest refresh'): 'bdab1570ade89d62b6a66667b7a2cbaf81538c34f4a0099e10ecb1aaf72cad1d',
+            ('peripheral-inspection', 'Bounded and honest refresh'): 'b1397186cf812339b3a8b16ac708d1d65cb728eae63bef4972df305f52db216c',
         }
         for change in changes:
             folder = archives / change
@@ -394,6 +448,8 @@ class CanonicalContractTests(unittest.TestCase):
                         r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|^## |\Z)',
                         delta.read_text(), re.M | re.S):
                     with self.subTest(change=change, capability=delta.parent.name, requirement=name):
+                        if (delta.parent.name,name)==('device-lifecycle','Mining preserves user data'):
+                            name='Device-specific mining data policy'
                         found = re.search(r'^### Requirement: ' + re.escape(name) +
                                           r'\n(.*?)(?=^### Requirement:|\Z)', canonical, re.M | re.S)
                         self.assertIsNotNone(found)
@@ -413,6 +469,30 @@ class CanonicalContractTests(unittest.TestCase):
                             if replacement:
                                 text = text.replace(*replacement)
                             self.assertIn(text, found[1])
+
+    def test_six_feature_contract_union_survives_promotion(self):
+        import re
+        changes = ('show-console-elapsed-time', 'demand-driven-monitor-maintenance',
+                   'add-factoriopedia-interface', 'entity-owned-computer-storage',
+                   'add-production-statistics-peripheral', 'add-dashboard-peripheral')
+        root = build.ROOT / 'openspec/changes'
+        pattern = r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|^## |\Z)'
+        for change in changes:
+            candidates = [root / change, root / 'archive' / ('2026-10-29-' + change)]
+            found = [p for p in candidates if p.is_dir()]
+            self.assertEqual(len(found), 1, change)
+            self.assertTrue((found[0] / '.openspec.yaml').is_file())
+            for delta in sorted((found[0] / 'specs').glob('*/spec.md')):
+                canonical = dict(re.findall(pattern, (build.ROOT / 'openspec/specs' /
+                                      delta.parent.name / 'spec.md').read_text(), re.M | re.S))
+                for name, body in re.findall(pattern, delta.read_text(), re.M | re.S):
+                    with self.subTest(change=change, capability=delta.parent.name, requirement=name):
+                        self.assertIn(name, canonical)
+                        self.assertEqual(body.split('#### Scenario:', 1)[0].strip(),
+                                         canonical[name].split('#### Scenario:', 1)[0].strip())
+                        for scenario in re.findall(r'^#### Scenario: .*?(?=^#### Scenario:|\Z)',
+                                                   body, re.M | re.S):
+                            self.assertIn(scenario.strip(), canonical[name])
 
     def test_native_carrier_union_and_unique_canonical_scenarios(self):
         import re

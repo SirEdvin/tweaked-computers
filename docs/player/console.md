@@ -57,6 +57,14 @@ wrap returns nil. Earlier successful writes are not replayed on loading.
   Direct calls between exports belong inside that saved program. A Console local
   function with the same name is only a new, unrelated function for that submission.
 
+Every entry starts with elapsed map time `[HH:MM:SS]`, using completed seconds
+at 60 simulation ticks per second. Tick 59 is `[00:00:00]`; tick 60 is
+`[00:00:01]`. Hours accumulate: `[24:00:00]`, `[27:04:09]` and `[100:00:00]`
+do not wrap at midnight. This is simulation progress, not your PC clock or
+computer uptime: pauses stop it and game speed changes its real-time pace.
+Reopening the Console, restarting the computer or loading a save does not change
+the timestamps of retained entries.
+
 Each command echo identifies its sequence and submitting player index. Results
 and diagnostics are marked **Shell**, not confused with saved-source errors.
 **Go to source line** remains for saved-program/draft diagnostics, not a shell

@@ -1,14 +1,14 @@
 # Moving, copying and recovering devices
 
-Target: Factorio 2.0.77, base or Space Age. This is alpha implementation; native client editing, wire selection, visuals and multiplayer usability remain user-deferred.
+Target: Factorio 2.1.23, base or Space Age. Native-client/connected-peer acceptance is separate from headless contracts; see the change's artifact-bound verification receipts.
 
 ## One physical device
 
 The visible shell is the Network endpoint. The body owns its private power carrier and any exact Input/Output/Factory targets sockets. Rotate the body, not a helper. Mining produces one logical device item; helpers have no mining drops. Rotation retains existing helper identities and native role wires. Destruction is data loss, not mining. Stale identities never remove a replacement at the same position.
 
-Computer, KV and monitor items have tags and stack singly. A computer item contains saved source/revision, formerly active source/revision/version metadata, label and copied explicit state. It contains no active run, callbacks, queues, timers, subscriptions or output ownership. Replacement creates a fresh stopped identity. Save and Run remain separate. Maintenance → Review active snapshot shows the formerly active snapshot and Copy snapshot to draft recovers it without saving or running. Player drafts remain associated with their old identity in the bounded recovery UI; they are not the item's committed source.
+Computer items are plain hardware and keep their existing single-item stack size. Ordinary mining/replacement loses that computer's source, label and explicit state; a replacement is blank/stopped with a fresh identity. Native undo of an eligible removal instead carries the pre-removal validated snapshot through its per-player history and exact restoration ghost. It restores saved source/label/state and different formerly active recovery text, never execution, timers, callbacks, Console sessions, queues or old output ownership. Private drafts remain under their old identities. Clipboard/blueprint/clone copies carry saved source/label only, with empty state. See the [player lifecycle policy](player/lifecycle.md), including legacy-item discard and rollback.
 
-The computer format reserves 131072 conservative byte units, independently of the 65536-unit application-state allowance and each 16384-byte source limit. State is validated and its accounting reconstructed before publication. Unknown/malformed item formats are refused with the material item refunded, not truncated or silently reset. Unsupported retained representations remain guarded for host recovery. Back up the save before any manual repair.
+The undo snapshot format reuses the existing 131072 conservative byte-unit envelope, 65536-unit state allowance and 16384-byte source limits without new capacity settings. Validation precedes publication; refusal retains the recoverable native history/ghost instead of truncation or a successful blank restoration. Old `tc_computer` item payloads are simply ignored, with no import/recovery. KV/monitor malformed-item protections and unsupported placed-data guards remain intact.
 
 KV items preserve all accepted contents and absolute simulation-tick deadlines, including carried time. No timer restarts on replacement. A synchronized retained-state audit requires the key index and content inventory to match one-to-one; corrupt data is kept inert, never reclaimed or mined through a partial index. Monitor items preserve scale, palette, foreground/background colors and blink setting, not an obsolete merged-screen image or cursor. New grouping creates a blank image. Existing ordinary saves preserve live display models and logical identities.
 
@@ -22,9 +22,11 @@ been staged. Data, absolute KV deadlines, live monitor contents, active runs and
 unsaved recovery drafts are retained; conversion does not run startup again.
 Existing editor sessions must be reopened against the new physical body.
 
-Old tagged material items still restore their committed data into a fresh stopped
-identity. Old blueprints still restore saved source/settings and native wires,
-not application state or database contents. No extra socket items are required.
+Old computer-item contents are ignored on use; there is no item-data migration or
+recovery. Placed records, active programs and private drafts remain intact. Old
+blueprints still restore saved source/settings and native wires, not application
+state or database contents. KV contents/deadlines and monitor tile settings retain
+their existing item behavior. No extra socket items are required.
 
 If conversion is refused, the old device/data/wires remain and an upgrade
 refusal diagnostic is logged. Keep the backup and report the error; do not mine,
@@ -49,7 +51,7 @@ Force changes and force merging revoke prior run authority and stop affected com
 
 Use the deterministic archive with the existing harness:
 
-    python3 tools/smoke.py --factorio /path/to/factorio --archive /outside/repo/tweaked-computers_0.1.0.zip --output /outside/repo/fresh-lifecycle --fixture tests.lifecycle_engine --production-context --cold --upgrade-fixture
+    python3 tools/smoke.py --factorio /path/to/factorio-2.1.23 --archive /outside/repo/tweaked-computers_0.1.16.zip --output /outside/repo/fresh-lifecycle --fixture tests.lifecycle_engine --data-fixture tests.candidate_data --production-context --cold --mode both
 
 Production-context mode loads this fixed fixture at control parsing only when the isolated tc-smoke mod and its explicit startup setting are present. Exactly one mod registry owns the native build/clone/revival events; no guest loader or remote API is added. Ordinary gameplay has no on_load handler and executes no player source on load. The fixture's on_load only checks retained aliases/counters.
 

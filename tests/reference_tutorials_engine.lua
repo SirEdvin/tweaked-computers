@@ -10,6 +10,7 @@ local logic=require('scripts.services.logic')
 local help=require('scripts.ui.help')
 local defs=require('scripts.device-definitions')
 local peripheral=require('scripts.services.peripheral')
+local dashboard=require('scripts.dashboard-model')
 local M={}; local loaded=false
 local function build(kind,x,y)
   return assert(lifecycle.build(assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})))
@@ -49,12 +50,12 @@ local function stock_scene(c,x,combined)
   return scene
 end
 function M.run()
-  local s=game.surfaces[1];s.request_to_generate_chunks({75,0},6);s.force_generate_chunk_requests();s.always_day=true
-  local tiles={};for x=-12,170 do for y=-10,12 do tiles[#tiles+1]={name='landfill',position={x,y}} end end;s.set_tiles(tiles)
-  for _,e in ipairs(s.find_entities_filtered{area={{-12,-10},{170,12}},type={'tree','simple-entity','cliff'}}) do e.destroy() end
+  local s=game.surfaces[1];s.request_to_generate_chunks({90,0},7);s.force_generate_chunk_requests();s.always_day=true
+  local tiles={};for x=-12,270 do for y=-10,12 do tiles[#tiles+1]={name='landfill',position={x,y}} end end;s.set_tiles(tiles)
+  for _,e in ipairs(s.find_entities_filtered{area={{-12,-10},{270,12}},type={'tree','simple-entity','cliff'}}) do e.destroy() end
   local x={phase='boot',since=game.tick,origin=game.tick,programs={},results={}}
   storage.tc_reference_tutorials=x
-  for i,id in ipairs({'starter','speaker','logic','recipe','factory','shared'}) do
+  for i,id in ipairs({'starter','speaker','logic','recipe','factory','shared','statistics','dashboard','dashboard_charts'}) do
     local px=(i-1)*30;local c=build('computer',px,0)
     x.programs[#x.programs+1]={id=id,computer=c.id,code=help.tutorials[id].prelude or help.tutorials[id].code}
     assert(s.create_entity{name='substation',position={px+4,4},force='player'})
@@ -65,8 +66,14 @@ function M.run()
       connect(c,speaker,'red');x.speaker=speaker.id
     elseif id=='recipe' then
       local search=build('recipe_searcher',px+3,0);connect(c,search,'red');x.recipe=search.id
+      local encyclopedia=build('factoriopedia_interface',px+9,0);connect(search,encyclopedia,'red')
       local radar=assert(lifecycle.build(assert(s.create_entity{name='radar',position={px+6,0},force='player'})))
       connect(c,radar,'red')
+    elseif id=='statistics' then
+      local stats=build('production_statistics',px+3,0); connect(c,stats,'red'); x.statistics=stats.id
+      x.statistics_computer=c.id
+    elseif id=='dashboard' or id=='dashboard_charts' then
+      local panel=build('dashboard',px+3,0); connect(c,panel,'red'); x[id]=panel.id
     elseif id=='logic' or id=='factory' then x[id]=stock_scene(c,px,id=='factory')
     elseif id=='shared' then
       local db=build('kv',px+3,0);local independent=build('kv',px+3,-3);local observer=build('computer',px,-3)
@@ -94,7 +101,10 @@ local function inventory(x,tick)
     end
     local names={}
     for name in pairs(methods) do assert(signatures[name],'undocumented live method '..name);names[#names+1]=name end
-    for name in pairs(signatures) do assert(methods[name] or name=='find','stale documented method '..name) end
+    for name in pairs(signatures) do
+      local optional=topic.id=='peripheral.dashboard' and not dashboard.charts and (name=='appendSample' or name=='setBars' or name=='clearChart')
+      assert(methods[name] or name=='find' or optional,'stale documented method '..name)
+    end
     table.sort(names);ledger[topic.title]=names
   end
   -- Host-only read inventory, not a latency/budget benchmark. Real traversal,
@@ -119,9 +129,9 @@ local function inventory(x,tick)
       end
     end
   end
-  for _,kind in ipairs({'speaker','modem','monitor','logic_handler','configurator','recipe_searcher','kv_database'}) do assert(seen[kind],kind) end
+  for _,kind in ipairs({'speaker','modem','monitor','logic_handler','configurator','recipe_searcher','factoriopedia_interface','production_statistics','kv_database','dashboard'}) do assert(seen[kind],kind) end
   helpers.write_file('reference-coverage.json',helpers.table_to_json{topics=help.topics,inventory=ledger},false)
-  report('live-discovery-computer-and-seven-service-inventories-match-help')
+  report('live-discovery-computer-and-ten-service-inventories-match-help')
 end
 function M.on_tick(event)
   local x=storage.tc_reference_tutorials
@@ -164,6 +174,16 @@ function M.on_tick(event)
     assert(registry.record(x.shared.db).database.entries.observer.value==observer.id)
     assert(registry.record(x.shared.independent).database.entries.observer.value=='private')
     assert(observer.logs[1].text=='FILLING / private=private');report('two-computer-shared-and-physically-independent-storage')
+    assert(registry.record(x.statistics_computer).state.statistics_example)
+    report('statistics-exact-embedded-example')
+    assert(dashboard.widget(registry.record(x.dashboard).dashboard.tabs['1'],'status').text=='Ready')
+    local panel=registry.record(x.dashboard_charts)
+    assert(panel.dashboard.tabs['6'].definition.title=='Panel 6')
+    if dashboard.charts then
+      local ring=panel.dashboard.tabs['1'].charts.trend
+      assert(#ring.data==8 and ring.index==4 and ring.sum.input==68)
+    end
+    report('dashboard-exact-embedded-programs-and-optional-chart-wrap')
     inventory(x,event.tick)
     x.phase='high';x.since=event.tick
   elseif x.phase=='high' and event.tick-x.since>=120 then

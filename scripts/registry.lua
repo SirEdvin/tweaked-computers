@@ -57,6 +57,21 @@ function M.initialize()
   return root
 end
 function M.get() return storage.tweaked_computers end
+function M.monitor_changed(rec,topology)
+  local root=M.get()
+  if topology then root.monitor_topology_dirty=true end
+  local s=root.monitors
+  local g=s and s.version==1 and s.groups[s.membership[rec.id]]
+  if not g then return end
+  g.observation_dirty=true
+  s.availability_dirty=true
+  local p=s.presentation
+  if type(p)=='table' and p.version==1 and p.demand_version==1 and type(p.lanes)=='table'
+    and type(p.members)=='table' and type(p.work)=='table' then
+    local lane=p.members[g.id] or p.lanes[g.id]
+    if type(lane)=='table' and p.lanes[lane.key]==lane then p.work[lane.key]=lane end
+  end
+end
 function M.supported(root)
   return root and root.schema_version==limits.storage_version and root.tracking_version==1
     and errors.integer(root.retained_count,0,9007199254740991) and type(root.radar_destructions)=='table'
@@ -114,6 +129,7 @@ function M.register(kind,body)
   root.entities[body.unit_number]={id=id,role='body',generation=rec.generation}
   root.retained_count=root.retained_count+1
   if kind~='radar' then root.order[#root.order+1]=id end
+  if kind=='monitor' then M.monitor_changed(rec,true) end
   return rec
 end
 function M.bind_child(id,role,entity)
@@ -150,6 +166,7 @@ function M.replace_physical(rec,body,children)
   for _,child in pairs(children) do assert(child.valid and not root.entities[child.unit_number]) end
   for unit,binding in pairs(root.entities) do if binding.id==rec.id then root.entities[unit]=nil end end
   rec.body=body; rec.children=children; rec.layout_version=2
+  if rec.kind=='monitor' then M.monitor_changed(rec,true) end
   root.entities[body.unit_number]={id=rec.id,role='body',generation=rec.generation}
   for role,child in pairs(children) do root.entities[child.unit_number]={id=rec.id,role=role,generation=rec.generation} end
 end
@@ -177,6 +194,7 @@ function M.remove(id,reason)
     rec.status='faulted'; rec.diagnostic=errors.new('E_ENGINE','cleanup failed; entity/data retained for recovery')
     return false
   end
+  if rec.kind=='monitor' then M.monitor_changed(rec,true) end
   rec.status='removed'; rec.queue={}; rec.timers={}; rec.subscriptions={}
   for unit,binding in pairs(root.entities) do if binding.id==id then root.entities[unit]=nil end end
   root.computers[id]=nil; root.devices[id]=nil

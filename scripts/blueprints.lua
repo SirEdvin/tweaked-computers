@@ -28,6 +28,7 @@ function M.prepare(blueprint,mapping)
       local token='tc-blueprint-'..string.format('%.0f',registry.sequence())
       e.name=defs.devices[rec.kind].entity_name
       e.tags=e.tags or {}; e.tags.tc_settings=snapshots.settings(rec); e.tags.tc_body_token=token
+      if rec.kind=='computer' then e.tags.tc_computer=nil; e.tags.tc_computer_undo=nil; e.tags.tc_computer_ghost=nil; e.tags.tc_computer_seen=nil end
       e.power_usage=nil; e.power_production=nil; e.buffer_size=nil; e.wires={}
       local network=lifecycle.endpoint(rec,'network')
       byunit[network.unit_number]=e.entity_number
@@ -40,7 +41,24 @@ function M.prepare(blueprint,mapping)
           direction=rec.direction,quality=rec.body.quality.name,tags={tc_port={version=1,token=token,role=r,body=e.name}},wires={}}
         endpoints[#endpoints+1]={entry=entry,port=port}; output[#output+1]=entry; byunit[port.unit_number]=number
       end end
-    elseif (not rec or rec.native_carrier) and not port_role(e.name) and not defs.power_kind(e.name) then output[#output+1]=e end
+    elseif (not rec or rec.native_carrier) and not port_role(e.name) and not defs.power_kind(e.name) then
+      if native and native.valid and native.type=='entity-ghost' and defs.by_name[native.ghost_name]=='computer' then
+        local tags=e.tags or {}; local undo=tags.tc_computer_undo
+        local s=type(undo)=='table' and type(undo.snapshot)=='table' and undo.snapshot
+          or type(tags.tc_settings)=='table' and tags.tc_settings.computer
+        tags.tc_computer=nil; tags.tc_computer_undo=nil; tags.tc_computer_ghost=nil; tags.tc_computer_seen=nil; tags.tc_settings=nil
+        if undo~=nil or s~=nil then
+          local ok,c=pcall(snapshots.computer_settings,s)
+          if not ok then
+            blueprint.set_blueprint_entities({})
+            errors.raise('E_ARGUMENT','computer ghost source refused; undo data excluded from copy')
+          end
+          tags.tc_settings={version=1,kind='computer',computer=c}
+        end
+        e.tags=tags; selected=selected+1
+      end
+      output[#output+1]=e
+    end
   end
   if selected==0 then return false end
   local wire_count=0

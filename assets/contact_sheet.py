@@ -7,10 +7,11 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from generate import ROOT, DIRECTIONS
 
-KINDS=('computer','kv','monitor','logic','configurator','recipe_searcher')
+KINDS=('computer','kv','monitor','logic','configurator','recipe_searcher','factoriopedia_interface','production_statistics','dashboard')
 NAMES={'computer':'Operator console','kv':'Cartridge database','monitor':'Flat monitor',
        'logic':'Three-bay logic instrument','configurator':'Two-bay configurator',
-       'recipe_searcher':'Recipe archive scanner'}
+       'recipe_searcher':'Recipe archive scanner','factoriopedia_interface':'Factoriopedia catalogue terminal',
+       'production_statistics':'Production statistics chart recorder','dashboard':'Dashboard control panel'}
 
 
 def font(size):
@@ -64,7 +65,7 @@ def main(output,vanilla):
     def save(name,image):
         path=output/name; image.save(path,compress_level=9)
         products.append({'path':name,'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'size':list(image.size)})
-    ordinary=background(1000,810)
+    ordinary=background(1000,234+len(KINDS)*96)
     label(ordinary,(20,14),'Original industrial family / 32 pixels per tile (ordinary scale)',22)
     label(ordinary,(20,46),'Asset compositing only. Columns north, east, south, west. No native-client acceptance.',14)
     for row,kind in enumerate(KINDS):
@@ -72,9 +73,9 @@ def main(output,vanilla):
         label(ordinary,(16,y-28),NAMES[kind],14)
         for col,direction in enumerate(DIRECTIONS):
             place(ordinary,composite(kind,direction),360+col*165,y,.5)
-    reference(ordinary,80,745,32)
+    reference(ordinary,80,ordinary.height-65,32)
     save('family-ordinary.png',ordinary)
-    enlarged=background(1800,3260)
+    enlarged=background(1800,440+len(KINDS)*470)
     label(enlarged,(24,18),'Industrial family / 128 pixels per tile (4x ordinary)',25)
     label(enlarged,(24,54),'North                         East                          South                         West',20)
     for row,kind in enumerate(KINDS):
@@ -82,7 +83,7 @@ def main(output,vanilla):
         label(enlarged,(24,y-235),NAMES[kind],22)
         for col,direction in enumerate(DIRECTIONS):
             place(enlarged,composite(kind,direction),225+col*450,y,2)
-    reference(enlarged,200,3120,64)
+    reference(enlarged,200,enlarged.height-140,64)
     if vanilla:
         # Separately labelled illustration: wiki promotional framing is not a
         # calibrated world sprite and must not masquerade as a scale sample.
@@ -91,7 +92,7 @@ def main(output,vanilla):
         enlarged.alpha_composite(image,(1100,2610))
         label(enlarged,(1000,2740),'Wiki arithmetic illustration (not scale-calibrated)',13)
     save('family-enlarged.png',enlarged)
-    sockets=background(1600,1965)
+    sockets=background(1600,255+len(KINDS)*285)
     label(sockets,(24,18),'Wire/contact audit / 64 pixels per tile',25)
     label(sockets,(24,54),'Lines end at exported native contacts. Role pad bounds are thin blue outlines. Not client wiring.',16)
     for row,kind in enumerate(KINDS):
@@ -111,10 +112,10 @@ def main(output,vanilla):
                     px,py=cx+x*64,cy+z*64
                     draw.line((px+dx*40,py+dz*40,px,py),fill='#f28477' if color=='red' else '#a8ce8a',width=1)
                     draw.ellipse((px-2,py-2,px+2,py+2),outline='#eee8d5')
-    reference(sockets,160,1895,32)
+    reference(sockets,160,sockets.height-70,32)
     save('socket-overlay.png',sockets)
     states=('off','unpowered','powered','fault','blinking','blinking','blinking','blinking')
-    state_sheet=background(1920,4120)
+    state_sheet=background(1920,160+len(KINDS)*4*165)
     label(state_sheet,(24,16),'Every device / direction / status frame, 64 pixels per tile',24)
     for col,state in enumerate(states):
         label(state_sheet,(col*240+20,62),state+(str(col-4) if col>=4 else ''),16)
@@ -127,7 +128,7 @@ def main(output,vanilla):
             place(state_sheet,composite(kind,direction,state,frame),120+col*240,cy,1)
             inventory.append([kind,direction,state,frame])
     save('all-status-frames.png',state_sheet)
-    icons=background(1200,350)
+    icons=background(len(KINDS)*200,350)
     label(icons,(24,16),'Inventory icons / 32, 64 and 128 pixels',22)
     for col,kind in enumerate(KINDS):
         image=Image.open(ROOT/f'icons/{kind}.png').convert('RGBA')

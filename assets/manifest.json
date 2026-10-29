@@ -2,7 +2,7 @@
   "authored_inputs": [
     {
       "path": "assets/generate.py",
-      "sha256": "91dde5368eb91b67519b8ebca4a82941eb6a31e691d462f717eeae20d15874e1"
+      "sha256": "e6e26b69fda9c25a5ea979ad0a6216b6bd6a2ca99fb1794dd86937cfb77173a4"
     },
     {
       "path": "assets/glyphs.txt",
@@ -10,7 +10,7 @@
     },
     {
       "path": "assets/export_layout.py",
-      "sha256": "841b6524246e8b3de7fa2905b8c41bbdd4f18a02cc3e1ca655d76e9adbdcfca8"
+      "sha256": "9664f4260c22f037322de55ab50c7e8de38319afdb28e161220c65ffa47d9b93"
     },
     {
       "path": "assets/foundry.py",
@@ -18,7 +18,7 @@
     },
     {
       "path": "assets/industrial.py",
-      "sha256": "845492581cf2bda20986e2eaf14c7fa5cde6809d1fc80ccd27f49a64c8fc3df8"
+      "sha256": "d1d36f400bd99e901eccbc393a5226d913007e7debbc76077bd21d3e5beae0b7"
     },
     {
       "path": "assets/layout-data.lua",
@@ -30,15 +30,15 @@
     },
     {
       "path": "assets/service_rack.py",
-      "sha256": "cdbdf5352c5f822457e30c0b978b9d263bdafd073a790079cc92fd797caa3bb6"
+      "sha256": "21835bd1ced7e3fd948c8035a09d4788e5e8bc0fd2af9162a2c624192a381da7"
     },
     {
       "path": "assets/socket-layout.json",
-      "sha256": "eb7f534bef9fa06ea62137b76d03d323eb544647740d9c5fb3e0249c5cc6d163"
+      "sha256": "f6d8530e1ba216668b4460f5326ecdb8f2a8fd2ce17b53408375f5b75d662456"
     },
     {
       "path": "scripts/device-definitions.lua",
-      "sha256": "f69158936fde8661e2e87b53c7221890bdbe1496c861b75c50384d5b574347f3"
+      "sha256": "521ae35343fc6eeb2ba624d2182ad109da10e68ae4d461b7f1d270a02336f6a9"
     }
   ],
   "deferred": [
@@ -482,6 +482,360 @@
         1
       ],
       "icon": "icons/configurator.png"
+    },
+    "dashboard": {
+      "directions": {
+        "east": {
+          "body": "sprites/dashboard-east-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  0.1,
+                  0.07
+                ],
+                "red": [
+                  0.1,
+                  -0.07
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/dashboard-east-shadow.png",
+          "states": {
+            "blinking": "sprites/dashboard-east-blinking.png",
+            "fault": "sprites/dashboard-east-fault.png",
+            "off": "sprites/dashboard-east-off.png",
+            "powered": "sprites/dashboard-east-powered.png",
+            "unpowered": "sprites/dashboard-east-unpowered.png"
+          }
+        },
+        "north": {
+          "body": "sprites/dashboard-north-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  0.07,
+                  -0.1
+                ],
+                "red": [
+                  -0.07,
+                  -0.1
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/dashboard-north-shadow.png",
+          "states": {
+            "blinking": "sprites/dashboard-north-blinking.png",
+            "fault": "sprites/dashboard-north-fault.png",
+            "off": "sprites/dashboard-north-off.png",
+            "powered": "sprites/dashboard-north-powered.png",
+            "unpowered": "sprites/dashboard-north-unpowered.png"
+          }
+        },
+        "south": {
+          "body": "sprites/dashboard-south-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  -0.07,
+                  0.1
+                ],
+                "red": [
+                  0.07,
+                  0.1
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/dashboard-south-shadow.png",
+          "states": {
+            "blinking": "sprites/dashboard-south-blinking.png",
+            "fault": "sprites/dashboard-south-fault.png",
+            "off": "sprites/dashboard-south-off.png",
+            "powered": "sprites/dashboard-south-powered.png",
+            "unpowered": "sprites/dashboard-south-unpowered.png"
+          }
+        },
+        "west": {
+          "body": "sprites/dashboard-west-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  -0.1,
+                  -0.07
+                ],
+                "red": [
+                  -0.1,
+                  0.07
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/dashboard-west-shadow.png",
+          "states": {
+            "blinking": "sprites/dashboard-west-blinking.png",
+            "fault": "sprites/dashboard-west-fault.png",
+            "off": "sprites/dashboard-west-off.png",
+            "powered": "sprites/dashboard-west-powered.png",
+            "unpowered": "sprites/dashboard-west-unpowered.png"
+          }
+        }
+      },
+      "footprint": [
+        1,
+        1
+      ],
+      "icon": "icons/dashboard.png"
+    },
+    "factoriopedia_interface": {
+      "directions": {
+        "east": {
+          "body": "sprites/factoriopedia_interface-east-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  0.1,
+                  0.07
+                ],
+                "red": [
+                  0.1,
+                  -0.07
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/factoriopedia_interface-east-shadow.png",
+          "states": {
+            "blinking": "sprites/factoriopedia_interface-east-blinking.png",
+            "fault": "sprites/factoriopedia_interface-east-fault.png",
+            "off": "sprites/factoriopedia_interface-east-off.png",
+            "powered": "sprites/factoriopedia_interface-east-powered.png",
+            "unpowered": "sprites/factoriopedia_interface-east-unpowered.png"
+          }
+        },
+        "north": {
+          "body": "sprites/factoriopedia_interface-north-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  0.07,
+                  -0.1
+                ],
+                "red": [
+                  -0.07,
+                  -0.1
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/factoriopedia_interface-north-shadow.png",
+          "states": {
+            "blinking": "sprites/factoriopedia_interface-north-blinking.png",
+            "fault": "sprites/factoriopedia_interface-north-fault.png",
+            "off": "sprites/factoriopedia_interface-north-off.png",
+            "powered": "sprites/factoriopedia_interface-north-powered.png",
+            "unpowered": "sprites/factoriopedia_interface-north-unpowered.png"
+          }
+        },
+        "south": {
+          "body": "sprites/factoriopedia_interface-south-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  -0.07,
+                  0.1
+                ],
+                "red": [
+                  0.07,
+                  0.1
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/factoriopedia_interface-south-shadow.png",
+          "states": {
+            "blinking": "sprites/factoriopedia_interface-south-blinking.png",
+            "fault": "sprites/factoriopedia_interface-south-fault.png",
+            "off": "sprites/factoriopedia_interface-south-off.png",
+            "powered": "sprites/factoriopedia_interface-south-powered.png",
+            "unpowered": "sprites/factoriopedia_interface-south-unpowered.png"
+          }
+        },
+        "west": {
+          "body": "sprites/factoriopedia_interface-west-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  -0.1,
+                  -0.07
+                ],
+                "red": [
+                  -0.1,
+                  0.07
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/factoriopedia_interface-west-shadow.png",
+          "states": {
+            "blinking": "sprites/factoriopedia_interface-west-blinking.png",
+            "fault": "sprites/factoriopedia_interface-west-fault.png",
+            "off": "sprites/factoriopedia_interface-west-off.png",
+            "powered": "sprites/factoriopedia_interface-west-powered.png",
+            "unpowered": "sprites/factoriopedia_interface-west-unpowered.png"
+          }
+        }
+      },
+      "footprint": [
+        1,
+        1
+      ],
+      "icon": "icons/factoriopedia_interface.png"
     },
     "kv": {
       "directions": {
@@ -1182,6 +1536,183 @@
       ],
       "icon": "icons/monitor.png"
     },
+    "production_statistics": {
+      "directions": {
+        "east": {
+          "body": "sprites/production_statistics-east-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  0.1,
+                  0.07
+                ],
+                "red": [
+                  0.1,
+                  -0.07
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/production_statistics-east-shadow.png",
+          "states": {
+            "blinking": "sprites/production_statistics-east-blinking.png",
+            "fault": "sprites/production_statistics-east-fault.png",
+            "off": "sprites/production_statistics-east-off.png",
+            "powered": "sprites/production_statistics-east-powered.png",
+            "unpowered": "sprites/production_statistics-east-unpowered.png"
+          }
+        },
+        "north": {
+          "body": "sprites/production_statistics-north-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  0.07,
+                  -0.1
+                ],
+                "red": [
+                  -0.07,
+                  -0.1
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/production_statistics-north-shadow.png",
+          "states": {
+            "blinking": "sprites/production_statistics-north-blinking.png",
+            "fault": "sprites/production_statistics-north-fault.png",
+            "off": "sprites/production_statistics-north-off.png",
+            "powered": "sprites/production_statistics-north-powered.png",
+            "unpowered": "sprites/production_statistics-north-unpowered.png"
+          }
+        },
+        "south": {
+          "body": "sprites/production_statistics-south-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  -0.07,
+                  0.1
+                ],
+                "red": [
+                  0.07,
+                  0.1
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/production_statistics-south-shadow.png",
+          "states": {
+            "blinking": "sprites/production_statistics-south-blinking.png",
+            "fault": "sprites/production_statistics-south-fault.png",
+            "off": "sprites/production_statistics-south-off.png",
+            "powered": "sprites/production_statistics-south-powered.png",
+            "unpowered": "sprites/production_statistics-south-unpowered.png"
+          }
+        },
+        "west": {
+          "body": "sprites/production_statistics-west-body.png",
+          "frame_size": [
+            160,
+            160
+          ],
+          "pivot": [
+            80,
+            80
+          ],
+          "roles": {
+            "network": {
+              "center": [
+                0,
+                0
+              ],
+              "color": [
+                0.25,
+                0.8,
+                1
+              ],
+              "contacts": {
+                "green": [
+                  -0.1,
+                  -0.07
+                ],
+                "red": [
+                  -0.1,
+                  0.07
+                ]
+              }
+            }
+          },
+          "shadow": "sprites/production_statistics-west-shadow.png",
+          "states": {
+            "blinking": "sprites/production_statistics-west-blinking.png",
+            "fault": "sprites/production_statistics-west-fault.png",
+            "off": "sprites/production_statistics-west-off.png",
+            "powered": "sprites/production_statistics-west-powered.png",
+            "unpowered": "sprites/production_statistics-west-unpowered.png"
+          }
+        }
+      },
+      "footprint": [
+        1,
+        1
+      ],
+      "icon": "icons/production_statistics.png"
+    },
     "recipe_searcher": {
       "directions": {
         "east": {
@@ -1364,7 +1895,7 @@
   "generated_metadata": [
     {
       "path": "assets/sprites.lua",
-      "sha256": "2cd3b234071d33db0e11f4333503b2686431450af39115b703292df54871acaf"
+      "sha256": "62bc014706ea05a7dcad21164e7d4cdf8947a62b953e8f3627cf3bfdd5337e18"
     }
   ],
   "glyphs": {
@@ -3900,6 +4431,2218 @@
       "path": "assets/icons/configurator.png",
       "rgba_sha256": "a09352f2fb710ef3012da707474a302f1189c070050018cb6148584ee17e4b3c",
       "sha256": "8f6ec4698b5c24e2d3a06348494e3e81a3162e8a4ee40c27f55fd07c71aa96c7",
+      "width": 64
+    },
+    {
+      "alpha_sha256": "5e120708bfff22682452974c74dd52f6f4cbed24abeb666463352ef6e2a62008",
+      "device": "dashboard",
+      "direction": "north",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-north-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "38694054e59af55f13ce82dac2812d96539660adc100bb98a0db64ab440a604e",
+      "scale": 0.5,
+      "sha256": "5b20a948991444b11ae510db7bcbf7f2a2bab332bcf3e23b1e9ba5bfb4f83a67",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1781fcc32b8d63ba4f85e233918899d36da3c6760d3b38f0b4f5737343108a19",
+      "device": "dashboard",
+      "direction": "north",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-north-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "1b080be70891b559746effdffb49f1f372dfad7d18e201b904419bd38551a662",
+      "scale": 0.5,
+      "sha256": "5803ca47ae9ed1374832f3ff85bd81abd68c75cf3442c802735a9be59cfcfabb",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "a62c228b55f21bd93eaa0813264f3614395aa2b9dff389bbc6997a3b61fe28d0",
+      "device": "dashboard",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-north-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "b285a76e3833b59e22ad907dac2e55cd368b962ac512e728a6ae3389931f3e44",
+      "scale": 0.5,
+      "sha256": "0cb1446c4f0387a26d3d76c67cc06831b774544325b2cd0d456da6cb3ee78a58",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "3b86c12638d6bd98f58e24928a8363b9b2abae71bf0cb10d64f966c9412f42e2",
+      "device": "dashboard",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-north-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "60ee3138e2a71f27da2792b1f6deebd71bd30ad08ed36cd5a0525752c4def9c8",
+      "scale": 0.5,
+      "sha256": "13aff0ddfd852624e36f03c5616db852def086cf4e8ce43864528003952c59a0",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "8e2ea0a542571233f551cc531cebea40c56cb5b14233cf7a69fd580ef9fb7e2c",
+      "device": "dashboard",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-north-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e216914332ba582a0ba0dc7167231706e44e26de86cb7de23a57f4e767a212b2",
+      "scale": 0.5,
+      "sha256": "5620e06ed26e226046822299d46c972a354d299a307699b60e4839b29fed1a1e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "b74aa37a3be4889d0df8a3199a65b7a46aa4a1c5bcba40f424ef31c291bb6b31",
+      "device": "dashboard",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-north-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "55d453753abf7576b9f76bd6a34914ff18dd9f6aba0b49304ddd4eca010ad1ba",
+      "scale": 0.5,
+      "sha256": "b7e94ae29e06110e6f642d72aa2d5bdee3266ebbbca325e3946060803f65b988",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "f17ad6de5005402faf65c965dc30b23a215a5d4c53d724669312c807d520aca6",
+      "device": "dashboard",
+      "direction": "north",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-north-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "b704994bc9d34652dd86adaeb7bcb43843d6513bc56e97bdbd65d3e35f63fd07",
+      "scale": 0.5,
+      "sha256": "dfd7568b4ec8730001cfa9d9d88f58ca90c1b3d602bf59641b2c620547f17361",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "165de66d39747beae85054a06e0569168a4c80c0a799c450f63eff6af99c1fb5",
+      "device": "dashboard",
+      "direction": "east",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-east-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "7a9979e748020130ad8c2330ecaab859fbc3d1f7f144d925c5c6a83acfd72612",
+      "scale": 0.5,
+      "sha256": "7583775d608f6211881cbd08990997caa521998d6c415eb76ef9373b428233d9",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "984b65176c302da19145d0318a471751cfaaeff9cc3c3ce2be91d67ea23397fe",
+      "device": "dashboard",
+      "direction": "east",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-east-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "26f9afbc9b6ecf71dfaa9a7b3e5ec1ce2de1551ac69c0b60be2b3a62e0a1f9d7",
+      "scale": 0.5,
+      "sha256": "ce3b191da8e84259963504f61d810d0f0577a5088226975d346e42b51dba78c3",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "303a5d8465143070d280f1885fc10bc69e05bbde6bc84ff148401be10af7fe4a",
+      "device": "dashboard",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-east-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "a86e3bac0424bec7f6d7a1e5fb97309033d84cf5e93070fcbc404d4f525eabe8",
+      "scale": 0.5,
+      "sha256": "8d2bc9c7ca4eeb9462e45074dcc478ec8323d1bd7fbdaa045687cb75943664ad",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "89aad4e21dbffdead1acc862aeeed13bfbf08f7bdaa3cc1465f4cc57956e4de5",
+      "device": "dashboard",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-east-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "405dd52c312d0eea49a23020b6c29fab379b2a1b1475ed259a3bd67acc7a1a5a",
+      "scale": 0.5,
+      "sha256": "847a633dfce64bee45ec9f5a8243c138b82a46d978e78a0a1483b46b45f1d7b2",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "6f8b97a01d479d62252c47ab8fc64dc032929349b015f59e78c90b58e6663648",
+      "device": "dashboard",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-east-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "78f32540a50ee1cf604455a4f459c3718d128ee04da51bd434ea007358b7bf6e",
+      "scale": 0.5,
+      "sha256": "ee814adfab424d15eea8436b615198de22b5362528e5fcc87d01a1b6c0b69f1c",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "233b557582568cb2b3d98655b5d7198df39399df91f9585867e88a80d8c0b374",
+      "device": "dashboard",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-east-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "d7b50221f8c144d9456dfae47fd3710d0ed125d8ace74de2cabed2bd80a36c80",
+      "scale": 0.5,
+      "sha256": "605d676e3c126704d9a19159147379cd2948ec4e598f0dd528350c5453c22cca",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "46ae3542bb4ac613b1f7931bc7adf6466a1d81e092bc312fa7f7347d8a03f2da",
+      "device": "dashboard",
+      "direction": "east",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-east-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "eeb0e61ed2ae5003c6f7d885450d66b2246950d325638cb267c3a0fc60b5b3c9",
+      "scale": 0.5,
+      "sha256": "497ebe4c53b9b2a091ff1a08987909ef2befc06158917cf0d9960b026a923b60",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "af7280f5e5210d8c40193334799815a3cff1416e9123cafd10e9be8951fff201",
+      "device": "dashboard",
+      "direction": "south",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-south-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "4b8b17f7d35fa499c6660d9af363bfa37c40c12ebe40223a33bafaa3e56c6c29",
+      "scale": 0.5,
+      "sha256": "d78c27d0f0114f9334768e8e77f44f62809ce4c46498dc8813f97aacb2d9a8db",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "219ca144f8966be11b6f724207ab4a64a1034e1d194e04249dc623afec7b1565",
+      "device": "dashboard",
+      "direction": "south",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-south-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e88553ec71fac4ddcef5385436e8a9a178503bcd02c23232aebe6e928072782e",
+      "scale": 0.5,
+      "sha256": "b0cd652472329cef4b6f7385f257e2101d579626d0d3b2de2140b66c43a65f2c",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "ea714e30320640d5c4bb9f501f6a2c2d90a911a8c51699b256a7e8b0fa0d01b7",
+      "device": "dashboard",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-south-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f16dd58234ff1c35db54b4eafdddd57925887de26391e43067bcb319fbf2388c",
+      "scale": 0.5,
+      "sha256": "08ff902852a47165e8b13aff84e0066b3fb919cb18e6129b4094a700553534ee",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "62b3ae5f74f9f0d573913d6007f7409e227b7e6f1c2cbdf805f64faa5f49cdd3",
+      "device": "dashboard",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-south-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "9ca2ec9e0918811ed21ba024a59c2272e6e03b77dbdbbc0646d521a85f65745b",
+      "scale": 0.5,
+      "sha256": "2db84bbcf44fae31ad6abf41b8a708aa672e6aeff84529def83c023f8f17bd81",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "6b608b7557a419b85a64f8a7c3b76a897255cebfe3347dcbf25bdf2fb7b672f3",
+      "device": "dashboard",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-south-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "de4814585258b2f622e805e11ffcd56b10ae375286cb968757ccb8b1d1657351",
+      "scale": 0.5,
+      "sha256": "ddf16adcfe913ad313cf54a5cfd55602f8765c1283189c73b34845aa83f80e40",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "eba9c7226df70e93d0d139f1b366fc6a40b4a34307f9b7309f85f4db8799f3be",
+      "device": "dashboard",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-south-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f9951aba160668b7fc3870933db10c5df428a5fdcd0d173607adbcc1f0d40c6d",
+      "scale": 0.5,
+      "sha256": "d0e29e509dcfe7b55349acd5c7edf0a988e693a9f180439fc461ee7be64f6f3d",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "d0011340d12e36363c1155108f282cb650366ea0f1f5b00919aaabdea5ba93fc",
+      "device": "dashboard",
+      "direction": "south",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-south-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e0c71144b73644c7a5dcb9de7940e3531c783622056287796f71209cfeb0d0ca",
+      "scale": 0.5,
+      "sha256": "8a387c1873fcd2b11d86f29cd1dd5bc46aec709a281cdb30f2ab32eeb4f95d71",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "d2542b2b7b1481d5d92b2470bc1d6a2339924526e818c8f00bd4c47e4e3ff580",
+      "device": "dashboard",
+      "direction": "west",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-west-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "a7e38922bee8a556e4423bb5d8bca9724b3dde0cf83dc8572030c6bbe51ea48f",
+      "scale": 0.5,
+      "sha256": "700f4bca539d4e18fca65f1031ff324be8e5b1065f0b18c55827d6f0c852d748",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "a1cecc83d3ec98ea16222ea10a2ea72021c1f28674231555f63018f060b9ac94",
+      "device": "dashboard",
+      "direction": "west",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-west-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "c9bc8f40d1d5bce205fa2ae4c3353814ccab5af69d4e7027ee777be32699ade4",
+      "scale": 0.5,
+      "sha256": "5b5e6ae40fc7c36adcf93e5dffd79b1d17934d9ea2387c6acdec4761dfb88093",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "091d7edc6a959aa02d9da1418c8d0af07a5c7d1d8db1ef052cf2887bf9211517",
+      "device": "dashboard",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-west-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "04018f159d26f0d865f65c5d94d0d22ec2a562cb4822eec801a0a3864c1c3a73",
+      "scale": 0.5,
+      "sha256": "c426123f4de4e1239338ae10ebb390bc8d964e053148da56794cf0c1fd88ee29",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "9a60eddec5107f85aac81be08c4d8daebb7ec5c6cd5515d93d253539fa7c88f3",
+      "device": "dashboard",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-west-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "6402a2f019fe3ab767935bb68c0c4061f35e5cac6edc38690c5a1dc7be6ec898",
+      "scale": 0.5,
+      "sha256": "ae9f6692b158037537f19a6b644b5dbb37e80f8085818e4ca3f131b2a890f0ca",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "4a074fef1477cdca4084fc3931654cfc3639f342889205aee4c642edbaf68e75",
+      "device": "dashboard",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-west-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "70efd91ade3317f424f1ee31a9419cc9052e3585e3976f1b4485f28a9ac7960c",
+      "scale": 0.5,
+      "sha256": "6caded78b4c0473dad8283764209aea84bf27ecbef290440314fc382caceef4b",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "16e2e1a2acb3776042ece63a4871eba7501e63eebaffc73cd8892abdcc4cb9e3",
+      "device": "dashboard",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-west-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "c4b03e43841f03bb2bdb352d36146543f069dbf1245d79c8edb6eb26eb4b275b",
+      "scale": 0.5,
+      "sha256": "adc83f56734bfd459c7c915153179a3c1b548eb47bcd0d88b75c9fcfc853f2be",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "6fed138bbfd153453f8205247aabda10639751ec740e820c77c85f0c3bd72add",
+      "device": "dashboard",
+      "direction": "west",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/dashboard-west-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "3051aa8cb416484dedba4cb7db84ccb023134e2b54a9d713919da6c1e924e812",
+      "scale": 0.5,
+      "sha256": "e7db8989a8abd2a084a8a48d1a44fdd0003ea93dccfe4d3a7fefa9a23352bae9",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "cf9a657e47532c03b52e8cfe2a1aadd34e0fa2208051adc3137db6292fb81d9d",
+      "device": "dashboard",
+      "height": 64,
+      "icon_size": 64,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "icon",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/icons/dashboard.png",
+      "rgba_sha256": "1221412e1cb25c4dbc50a1049bf15071d8f9e0972bb40504a07501cb055d3d23",
+      "sha256": "42ba076b227a09061f2ef07701a8ccaa90d6bbf0e6a24a17f40dd89a4fc7bb75",
+      "width": 64
+    },
+    {
+      "alpha_sha256": "f222b3dbd3f5b92fa29cd3b6d29a132b6a36bc6ee513482e1df96f85277a95a2",
+      "device": "factoriopedia_interface",
+      "direction": "north",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-north-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "3ec4ffec7614cdd28d1546f0f7d01d8d36e0bdc5cc9d74a70986663939893cf1",
+      "scale": 0.5,
+      "sha256": "0d828634b5581be641ca5cf2ea2b9d8be0c229471a70d7a35968d5007b3c11eb",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "b612a13e2626166b0009850f61d07b96fa10a5d6378667cc67c6d3adbb73eb83",
+      "device": "factoriopedia_interface",
+      "direction": "north",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-north-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "4ed9d5267de2055ecd44ef24415887c05aee82611ce736696d1414ddea7ec3c1",
+      "scale": 0.5,
+      "sha256": "37fe2d7784bb7e73731e403f0c7609b08bb3a00dd88e44158543b2899f7b3e25",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "618398253fa6c1c76f11f2d3fc6d83d00ab51464e2bf022c6505d46e13a8dea2",
+      "device": "factoriopedia_interface",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-north-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "c9d57057aa83969850112394a1cd829029c376adffb568621a86ca42af3dba1a",
+      "scale": 0.5,
+      "sha256": "167859a477ba95e709274f6bdc1c354ddb7af6bf89c503b34527f55e4acd3189",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "712e9f64b15358bdda85c3acdbe3f18d7dbd1a24baa67abe1c3ec1a0d655d6c0",
+      "device": "factoriopedia_interface",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-north-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "ceff07c10b8020a213aa1bbbb231d3cfaad727b9ad9937b70c52aed8dc387759",
+      "scale": 0.5,
+      "sha256": "d17b575bb2c112a3d41b48c2d3bf786f386379dae666ee1e6545442be0a4e78a",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1ff00320a6ffcdf56b8038c46d3a92fe9c72fdc3e9254281d02253da4c3eaeac",
+      "device": "factoriopedia_interface",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-north-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "bb830db73c89d28ae0767311bacc42d3ab9cc2e79ca5ea00a480efeba9934f6f",
+      "scale": 0.5,
+      "sha256": "23c09131a6814c3ca443b3620d639c8007309192938f403cefefc18b909d6581",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "bd56f2d759541c1b5f0d70fa1e52479cecd4c17fa194a9fb60948fa985683b02",
+      "device": "factoriopedia_interface",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-north-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "b07f0a8621af89a3b5f0bbb200710f0f1da8781d8db435be15fd089d8504af6d",
+      "scale": 0.5,
+      "sha256": "f96f086370cd9040710b1b5f918c118eb470c8717811b5b7c057f914a62e1422",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "9c56d9dea95fd98e6d64edc7ea7d00a662c78db6d2d5898eebfe7355d75368eb",
+      "device": "factoriopedia_interface",
+      "direction": "north",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-north-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "864e492bbed69bc570174db714ea959b15d0abccf9fbf5a83d624f0d7aec2753",
+      "scale": 0.5,
+      "sha256": "36cbb6d2ee223c80a45c583fb09d75b9042ee774eedbed2849a2f15dd3b89ff8",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "26c2abefef537f9039529b4653773e837e40f554c016cf4666d5970bc8b9cf17",
+      "device": "factoriopedia_interface",
+      "direction": "east",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-east-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "9a2695ee3ec7142d78573a7f5e4c3f4f27b82d4dedc3e4c6d8f65f3565625f16",
+      "scale": 0.5,
+      "sha256": "00d5b1c57d874c204ff1a50da31e3b3a9fffaa4e9f6aa73bac700f6d678561a6",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "7b6b1e3cc2c17b487a562f173eeb63e75097381e5d1079e7e80f1c62570c5f66",
+      "device": "factoriopedia_interface",
+      "direction": "east",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-east-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "22fbd0b6a999d0bec67010cc4ea56c348ad332b10c4543b64329a38b813606e2",
+      "scale": 0.5,
+      "sha256": "41757d2e8571168f3b6ff9aac3316fd959931e53cb1f6ad07bfbcc7db66378c4",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c03745005eba99a696f39f468cb45eed8086f7550d61778f42de92ef5215dd81",
+      "device": "factoriopedia_interface",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-east-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "7c510a55ca7966bac98240d6f1b44d6a1dc5b0724e42de74a2de3541eb8738bc",
+      "scale": 0.5,
+      "sha256": "da055da5f69b7146f6f550ac8b56e665c3a17774f7cfeca4397e2def06a08547",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "f0707417a7d383b607d34c483cf7ee73cb8cf4c3f43d749245149742b9205ab9",
+      "device": "factoriopedia_interface",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-east-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "bda479f299fb4de35b29424f7c79fd39dced1907f48361f05b000908d423b1a4",
+      "scale": 0.5,
+      "sha256": "1dae629d382b55b4f759bf0fdaa7d799482d16c1a1532900a598ddf5d916d9a7",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "0fb96fb3724cdf1b80a7f51201a113a75d7209e28a0a8a9d0b105136dd926bbe",
+      "device": "factoriopedia_interface",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-east-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "5f114e174682375cb955606fda3ddaaa03d4592b5df6cf38420882ae5f5f5f77",
+      "scale": 0.5,
+      "sha256": "3ef527dd197ee92eb2e19ce589ec1be9c342fdccd769c07d282295866ff53af2",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "3bb9e72e2200c7208eb2478e8dda58fd0b791b2fccdf996a8a03ea3d3908abe7",
+      "device": "factoriopedia_interface",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-east-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "6293d48541a4ec0e342dd89da79bb392eea39c02e8e3cca684703a1baa8e740d",
+      "scale": 0.5,
+      "sha256": "873aa43d86031fd96bebb4ff61f95da13475e90be0e273d15afc06bc56489610",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "2d71fece254221784ea9b2d84ec982a5502c99aa85701032a5ada417d2522db9",
+      "device": "factoriopedia_interface",
+      "direction": "east",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-east-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "8afe9e495554e5f7793ea145d36cf964ebbde9cf12b28fb0d727df0ea1794b56",
+      "scale": 0.5,
+      "sha256": "be8680c344749d30f749163a7f3c828a0ecbd6177b7c212817a1f06b48c784a4",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "5310935a2971ea07e1deeeb0b4b5919117e5b16caa91bf1e558808831c059f8a",
+      "device": "factoriopedia_interface",
+      "direction": "south",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-south-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "6a398e241101d8bda73e21fc2ad1fa26f87af283f1d72664321a1596f26592a9",
+      "scale": 0.5,
+      "sha256": "2893ded79ece9fae2272dc4cb8b4389ab35d5bc24a2107067b2b69e203851998",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1265577c9b77f5f9368b972db0d52302fbe48391a64141402c4d477de6bb29c3",
+      "device": "factoriopedia_interface",
+      "direction": "south",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-south-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "2bf8a16a8153e8d23d9f38b0e6571790e2c21769b96b0147b87edbd023346ce4",
+      "scale": 0.5,
+      "sha256": "4c5cd138da2b7d595456d4aab22a8fa0f972be5155d411846f0a8f54d253f8fe",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "5207bbb33c736d2fa5dd2df51d59590372f288e36edf4fa45ad945367ebac6a3",
+      "device": "factoriopedia_interface",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-south-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "711bff74f6b2bf63e23968710712c946b9cef0430af2d6021f253faf95317b18",
+      "scale": 0.5,
+      "sha256": "16ebeda013efaa20853ffd338ed5994f74ad245bda518cac3d3a522ae8f42b84",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "173828e19e99c0d07f8f31527710b93d3997bf8eda12b41b710babc6b625dc5d",
+      "device": "factoriopedia_interface",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-south-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "2be5bd01e277227022eb439b9c8937c8fb5dec583dcf189a08ae8cc17620b275",
+      "scale": 0.5,
+      "sha256": "318b1e3106524fb4bf72be693a249a1f99d69bf3ca46c1489877710741de54ac",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "69c24958a15f288fb7fe03dceb3bbcde4b4db9348f7df95862ac6d9e390d4a8d",
+      "device": "factoriopedia_interface",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-south-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "56a4dd809c8684b973dea644d8ca2f513e9d0a031ab7e5547e82c8c11a98cab2",
+      "scale": 0.5,
+      "sha256": "86c9f47b6af6a0a3c43645b77aabadac54cd31bbe0778ed7e4b666788ab955a8",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "5caa75a8d8f3965c6deaae5114b47060a2a0baf3e3e4f7538f0f9d953f5d993e",
+      "device": "factoriopedia_interface",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-south-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "d309a7f54a1d36595bae43c167dd3b4481c2aa3a735bf16fd0d30082c86fcd28",
+      "scale": 0.5,
+      "sha256": "853b4ff1e4b15277a4e5cef54ae917c2bd214cc8e168ac8c6d7265b77673625b",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "76f13753ca84c5941b7dabbd2b6c56dcbcfdf2cc81136cb4f4a0d61d4f91d2af",
+      "device": "factoriopedia_interface",
+      "direction": "south",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-south-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "093d4004ae0b53b55d1227b38344cc52cb290503c12cd1a03fbaba3657cea2f7",
+      "scale": 0.5,
+      "sha256": "ced98ff796c759d5085d14bf4cb7f368bca4baae937a2c71a0bc8da9cb28f03d",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "5e3c438bba520d9e210a23eb9cf200ace49349d1f2307f648e1e2f63460ab2f6",
+      "device": "factoriopedia_interface",
+      "direction": "west",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-west-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "a333274a6c5fcc34fbd4cf8a434afdbe37f08e060d2b585774b4fd156213e361",
+      "scale": 0.5,
+      "sha256": "50c6d60721c8702b6cfdd57aed14d3367cb5724f2216edd7f5ae41c03e687470",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1f288885c5e6414b3c8d1c12fa6411ec94340ad76a41f4d6d86a8174b5fd176d",
+      "device": "factoriopedia_interface",
+      "direction": "west",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-west-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "7533dd566a66a53e13d62170cc04b4316363d31a5602d611a5d08a61f1dc3872",
+      "scale": 0.5,
+      "sha256": "76c16e2f7b30eb07a5243ddcb5085675fe85d5710066e7d7ba43fbe861b45783",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "b03c876ad7863b2a825590c14ba78e753dde455ea65be3ead218ecf820a55419",
+      "device": "factoriopedia_interface",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-west-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "58ca483cd8c95375a78367b45bc981499ac20e353435185dd28dfc3b313afb32",
+      "scale": 0.5,
+      "sha256": "6de34cf6b4690cce59c621eec3ac35ff0687f1a6876f95a60f62e3d0a1aa72ec",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "552133d7711e77a7884b59d67b8844be6bf10519f40257ba0f898e299ae536d3",
+      "device": "factoriopedia_interface",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-west-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "d9c9eaa52c2262638a8842e1e00621b02e860a0c1055709da0f620b7ce9b383f",
+      "scale": 0.5,
+      "sha256": "cd1fe11d73181c0a072ca0ef235b22c5e675172721fcc720bdd7f46ab5d00444",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "d42d1e825545e1e97febfe71aa50b4146e58a72adaf58027f86bfc1436532d45",
+      "device": "factoriopedia_interface",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-west-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "d6c53273929f5120e77aa7be02227d744e4edbe3534e33ca820d3ed8f227232b",
+      "scale": 0.5,
+      "sha256": "bd7951a9be6797062fba8810001ffb1aa918fc2968a365afef70a6cfaba7b2a3",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "d247aaf4003ba125892b0313475274591b70c5d5290f914e5d29161771b13504",
+      "device": "factoriopedia_interface",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-west-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "f5057b2116de8969e8a6ab99a353a1127f0ae92da3c62e7d03b22e87ccf621ad",
+      "scale": 0.5,
+      "sha256": "b1718a43ae4c41610ea98a952cd6d599353b7065a3d118d25a8a2969bcea98ff",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "49011c912b591fcaa1aca5f31318a3c54a7ef2116040fdbacc63211f3eeb6626",
+      "device": "factoriopedia_interface",
+      "direction": "west",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/factoriopedia_interface-west-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "959806a3af453329384c79da855d55f01a913a7ee5476ae21fd88995133d0205",
+      "scale": 0.5,
+      "sha256": "67e918067b15e423d192dd73d2fdf0380cbbb6e891bf42dce3d1c2f72e24b0a0",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "543334979c3471174a271fc95ed9daafa6987b821adbb73474142c7abc31109a",
+      "device": "factoriopedia_interface",
+      "height": 64,
+      "icon_size": 64,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "icon",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/icons/factoriopedia_interface.png",
+      "rgba_sha256": "a4b6f50a7ceeca220b94ba1dab3c8ac509b597272fb366c597865112e2d65b7f",
+      "sha256": "667bf5cd2f20dfc15fd00aecfea232c26108f3452d459380a5bcfd9062640df7",
       "width": 64
     },
     {
@@ -7221,6 +9964,1112 @@
       "width": 64
     },
     {
+      "alpha_sha256": "b6178f9e5ddf37f7652b67eeff25d555676e3a98d244f6a3db1df2484876cb4f",
+      "device": "production_statistics",
+      "direction": "north",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-north-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "1491e0a4c7b6e9f6b4602c896c61cd031d013572081cb089979a01c11f45d3dd",
+      "scale": 0.5,
+      "sha256": "eef53b42c6969c10c5f599ac3191cd0b584914b4613dd2c87625491351a8dd63",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "78651043eda2513e9241b1cb9a7dbff29946227bb023039223e5669c7ae0ab3c",
+      "device": "production_statistics",
+      "direction": "north",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-north-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "17be9b8dc3ead6a280cc9d6ae06b10b15765740f71ac999bf498df1ad93521d3",
+      "scale": 0.5,
+      "sha256": "19b494ebaf70665476fc04965789ad7938754fca0cf86bc02e208053582e4c61",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "ee61f3ad38597ba68be4853b179264c29077cde09dc7fe91352b54f8422e42b9",
+      "device": "production_statistics",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-north-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "ea50cddeb4a3eef8b052f3dbfd09e36c62d9efb07181841e11a54c6830ad40ce",
+      "scale": 0.5,
+      "sha256": "14381de787bd48d8a9f7a26f0e8ef9b97c74e48df77c08284cc445e35fe89586",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1ed543cd15673c13998a79b8e5f1c011b54341a42045ac85d3148e0b768d201e",
+      "device": "production_statistics",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-north-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "23d23ad87a246a449840a6e7a5db9b39c5e24de8feb5f1b243c131bdb92865fa",
+      "scale": 0.5,
+      "sha256": "eeccb55f2641f41c9603247176b0384bbb6c384e9ebe1f4006b0fd1978fc3fa4",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "816ef6a9b22fba3af9d66b26be954edd9d19f2ded92a77a50b8aaf5ac86bebec",
+      "device": "production_statistics",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-north-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "07d9bb5f1626d245056b8d3792197b70b2689a0904d8b00a618b940461d8d260",
+      "scale": 0.5,
+      "sha256": "766314652229b91c7b931f1af6fbfcea5a4174287d965328553d0240740dc971",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "0e56a01d447c442fb1ea12dd6404b13a76627b23c97a8666521a2f2b2ef02a8c",
+      "device": "production_statistics",
+      "direction": "north",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-north-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "a8527858190938591c61b97711ad74fb68e15d46968122e4cb96c2f6b3257de4",
+      "scale": 0.5,
+      "sha256": "32f9be962ba055c178c9e2fe2b677ac8a5729ea66cb6f59d2a7ccd9e9c07f555",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "4d702d468038098df302c36f76a16d81d123c11663e289b17f1c2fe839466f83",
+      "device": "production_statistics",
+      "direction": "north",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-north-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "2ed840ad60ea795b31371c2918280e5357f26d778c632f2c538d90742cdd13a2",
+      "scale": 0.5,
+      "sha256": "b446e3da936847c66f76938ddae6e9e47619b6abe65d633fbd29af0627f746c8",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "14b26f51cd46ffaa63fc5d8908253189ee0b44cd4403da4bf5bd8c8e3fcde4a6",
+      "device": "production_statistics",
+      "direction": "east",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-east-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "1a3797bdfc2de34e571a176b7266b32256bf2df33ddb74469a279a147eaf75d3",
+      "scale": 0.5,
+      "sha256": "b95a530ab685ccbcc35058b54ce4fd2baf58e52153ad093151e73dfdc8c4b596",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "acc3dfa5adae75ce7478781994c0ffcd53e321de45bc7f8bfd83b9b70f0a3fc1",
+      "device": "production_statistics",
+      "direction": "east",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-east-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "9ab60d9f28b36b000f6e08c33f262136bf82b51ad6b15b34dfe23b13f0cd9a18",
+      "scale": 0.5,
+      "sha256": "d5b5772495eead867654b0718388fed23eea6d0024e9566895781318c590425e",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "8bc59e1d405ea8a4a2446f9114f24b2271d8d6ae991808ee9c66e95b405f57d4",
+      "device": "production_statistics",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-east-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "72c75686d5ff7f61dad9c5979ade96c45bba310a1311b937c92de9ce35afb88f",
+      "scale": 0.5,
+      "sha256": "430ead03b01a33a6745f2f9e5dd5b935e299db857545cc2e1874d9cff4f97576",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "e0e8ba00bdcf82414026bfecc11cec9775855846feb6b52b2b66906f4b72da8d",
+      "device": "production_statistics",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-east-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "280b298e772e50034479b411fad912c8a0dc63648c96e4aee84735d367cce56a",
+      "scale": 0.5,
+      "sha256": "9719f174b616687d683d717f03efed7e171f2dfb4131e263663d4e11bcb98bcb",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "2c6e5576fd1bc00022450f79a9a9199343bc155b9b09cebabd473db2318f4502",
+      "device": "production_statistics",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-east-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "1e1c3e74b2ae7cc888834a1ed6a798a5a025b7416efe84df4d09d8079c4248e2",
+      "scale": 0.5,
+      "sha256": "1d84f7507cfeeeb19307a259fa424eab3bcf90ef503e0fe07bd4fee90bfa8503",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "accfac76335ca3faeb2750fc12899befc8590a02c5f496c1471b963f154ce9b5",
+      "device": "production_statistics",
+      "direction": "east",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-east-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "c8c9e2b2ca8792f19250a7d37d6573a289cfa8be6e25bc97cd28a685b278ea79",
+      "scale": 0.5,
+      "sha256": "697687fe03b96148edb13b598e174b3e9b62951105c61b915e489c691d49a123",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "a67f899c68035e4e28e6093bd8fcc2d55c5c355203cec9bbb920dacbe22deadc",
+      "device": "production_statistics",
+      "direction": "east",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-east-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "dc45bdd28b3c732a727731cc630a8c522b8adf01b531961d441ae254a9ca8eb9",
+      "scale": 0.5,
+      "sha256": "10a00c9a7a9d8012a0cb9d045dfddbcd33043c0f9819102446bd7d1f825abd1e",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "06b8b1de92b2a8a2c743a8a45d5fb22bbb9239f11e69633f4152d8cf66c256a8",
+      "device": "production_statistics",
+      "direction": "south",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-south-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "29722ca51b204119eecb417a79b02abcb863453bad854dde2696e6d3364a88bf",
+      "scale": 0.5,
+      "sha256": "39a7d09a18203c8a1179a746c55ac84ccfebd22c95b0394bed0a48aba2fc35a6",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "eb62ebb12b4284c79c846e20d3f1c4c9bbd74b1ee5ca012e14efcc4a3972d64b",
+      "device": "production_statistics",
+      "direction": "south",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-south-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "8442c1344355ac38c184af7679fa45d6515e797049e43ec52157d2a9eb88d7d9",
+      "scale": 0.5,
+      "sha256": "1341f2fa702a7d2cee4ddafc7bac1236bcb8fe70087a03772dd36dbbe27a4428",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "c09a94ad2339d8b0b27f84ec4f35f8be84c9f7630636658762c54087c2c305aa",
+      "device": "production_statistics",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-south-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "70f5449acdc9c622c81ad309a0b1e15a9f7d1bf66f774b886f4773b079ee9702",
+      "scale": 0.5,
+      "sha256": "f5dab353ab0db2d98b195ad5564989408705f570548172f6821ca95681f1d0f4",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "24934161213c1fa3f35688bc02924b58714878f7f292431c11b2b2e21ac769bf",
+      "device": "production_statistics",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-south-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "94811ee563745c89f044670593a7d67668e4f9c600c8b5e4bf2f3e7bd948b0bd",
+      "scale": 0.5,
+      "sha256": "e2cd19d36f2c1863366a0340f04541577a18dee978adf1cd987f86749ea8801c",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "45243417c6ba47849798a46f5104f9a726e6182481b448c7d851109d1c0a332d",
+      "device": "production_statistics",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-south-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "74798f3517de3a0f63a8c75607f5e073d2c8c1137bdef946884606e0b4cd2a43",
+      "scale": 0.5,
+      "sha256": "169c9e19e1d33c4c22595a2ef9b2c0e8a8792788d7bf0aceefa3c6dbf4df2df6",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "87ae4c81bcfc8dc158d491aa61a036f39674418e25e4fa15e1293bbb4cded169",
+      "device": "production_statistics",
+      "direction": "south",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-south-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "e89c8eed5128bec613a0db1d2d11edc56040de24bf8d8628178dec11ee26671e",
+      "scale": 0.5,
+      "sha256": "828c22d891454b41bfd0155faeccd6ed1de0033b0852417d98860630891167f9",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "2bc5f035063d401ca84975a62af9d5e351736705a61faab411fa526b25e6a625",
+      "device": "production_statistics",
+      "direction": "south",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-south-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "a27c9dcd83dd2db0597b56ddeed0816b9d51e65bc370c0cf2e61368269724614",
+      "scale": 0.5,
+      "sha256": "691cedd893493b11af328c579a734cc81e0213992329c88f79dc77bc76439c58",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "09f64b45e85ed3dd73e2ce3daeae0dadca9b68cf8e275ace1842b2bb8462bc26",
+      "device": "production_statistics",
+      "direction": "west",
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "body",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-west-body.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "206ffcf5e4545ca14e7365f8c7afe7f03d601877d0dcd982d5dfdd2ed8aae674",
+      "scale": 0.5,
+      "sha256": "a6385dc258f15fadf549705f6c7cd8c5446a23066759d9c522ddef0785972f16",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "79c276be7c94b43339cbfd5345e6d39d0308883d8a181d36f8652c2c63f3ff6f",
+      "device": "production_statistics",
+      "direction": "west",
+      "draw_as_shadow": true,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "shadow",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-west-shadow.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "6d479a51e19359277f7da365f444903a53475366f442bda4aaeae653b129d986",
+      "scale": 0.5,
+      "sha256": "8c0a26875ae4c31d5b107cadae65ed13b08e3b4a227195d4d32ab3295ed58361",
+      "shift": [
+        0,
+        0
+      ],
+      "width": 160
+    },
+    {
+      "alpha_sha256": "6051b7ada32f4b9061dcaaef1a33ef38d1e62c29fce67791d7ded26e5878f1aa",
+      "device": "production_statistics",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-west-off.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "05fdad09f86c9bba3d52a605689fbb652c79c74fbcc1783e0cf9613411a1ae73",
+      "scale": 0.5,
+      "sha256": "43fec43c0a3da7fda3f6f6383988edc594721ce44174db8f9a110fc5d5ddf46f",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "off",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1aef4d3b895971fca132b048c807512dfa0f48929331fb10e68ec075b5533af1",
+      "device": "production_statistics",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-west-unpowered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "673d7fcf60a65c8ffda25452f0280ecf5c87c127e656cdc3ca551c0f3b16f95f",
+      "scale": 0.5,
+      "sha256": "a282c086107e23ba63cc391fcbbf399dbfceb5fab966c4f023272795b9d8e520",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "unpowered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "5c1349fcd9ace703928dfafd69ae07af13474c6a4d5629f05c9ac71bc90e0dd8",
+      "device": "production_statistics",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-west-powered.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "feaa23c7d54658632ddd819e738f033c01affbeda907756b5430b658a4b1a096",
+      "scale": 0.5,
+      "sha256": "7454de3416377c33451197ff541ed034284d91633016a5d58a75a38497cc8ca3",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "powered",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "d46fefc0515fee81d79ac16fcb7f6ee5cd63bcc936471dccc780e2e7ffd3c605",
+      "device": "production_statistics",
+      "direction": "west",
+      "frame_count": 1,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-west-fault.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "a8d7ce894feb173c5567bb5c8a70bae552685c680fa57a7b8334de6cb971e63c",
+      "scale": 0.5,
+      "sha256": "7f43928c282087ef5d3f013d542639595013450ddc34a1898c65694553e2a886",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "fault",
+      "width": 160
+    },
+    {
+      "alpha_sha256": "1b5eba005f3197cf81f5c6ebad236aae11cf0a841eeccf6be5f719f65660249a",
+      "device": "production_statistics",
+      "direction": "west",
+      "frame_count": 4,
+      "frame_height": 160,
+      "frame_width": 160,
+      "height": 160,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "status",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/sprites/production_statistics-west-blinking.png",
+      "pivot": [
+        80,
+        80
+      ],
+      "rgba_sha256": "1c205761b53d87c407190f58e6638d32ece7a95b61ef24b9a0b96d602c9a906f",
+      "scale": 0.5,
+      "sha256": "f37ea8db30903cb33028b6c3516be0ea20962beeb3d9558c181d0f3b6ea364fc",
+      "shift": [
+        0,
+        0
+      ],
+      "state": "blinking",
+      "width": 640
+    },
+    {
+      "alpha_sha256": "bd4eea0e73d1b55e407ad5d7032f19ff81e4bce6b8d52aebf379f7fc4455af60",
+      "device": "production_statistics",
+      "height": 64,
+      "icon_size": 64,
+      "input_paths": [
+        "assets/export_layout.py",
+        "assets/foundry.py",
+        "assets/generate.py",
+        "assets/industrial.py",
+        "assets/layout-data.lua",
+        "assets/requirements.txt",
+        "assets/service_rack.py",
+        "assets/socket-layout.json",
+        "scripts/device-definitions.lua"
+      ],
+      "layer": "icon",
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/icons/production_statistics.png",
+      "rgba_sha256": "0070e6ebaba023b01e754db34e0bdf601721bd74a77e3ebbffb2e59ac6bce381",
+      "sha256": "ba32c81f6358ad3490bce9d248a2f92f4c57624ae723d5f84c87fbae9726b132",
+      "width": 64
+    },
+    {
       "alpha_sha256": "fe3c70967b369ea1a986b14704fd09572e9221d231793f9b8068ada075b44a37",
       "device": "recipe_searcher",
       "direction": "north",
@@ -8511,7 +12360,7 @@
     }
   },
   "transform": {
-    "contacts": "socket-layout.json exported from production defs.contact/offset in Factorio 2.0.77; projected at ground coordinates",
+    "contacts": "socket-layout.json exported from production defs.contact/offset in Factorio 2.1.23; projected at ground coordinates",
     "encoder": "RGBA8 Pillow compress_level=9 for selected bodies/icons/mesh shadows; filter 0 zlib 9 for unchanged glyph/status/monitor shadow",
     "monitor": "unchanged 64x64 tile/touch area and 60x60 interior; two-unit inner bezel plus four-unit exterior mechanical skirt; 72x72 chamfered artwork; unchanged ground pivot",
     "numpy_version": "2.4.2",
@@ -8520,6 +12369,6 @@
     "sampling": "3x depth-buffered barycentric rasterization, fixed forward math.fma three-vector reductions, world-fixed normals/light and deterministic grain; Lanczos downsample; nearest-neighbour icon fitting; exact retained monitor foundation",
     "shadow": "geometry projected toward world southeast; alpha 86 before Gaussian blur and Lanczos; monitor retained alpha 85",
     "status": "grey dash stopped; amber slash unpowered; green powered; red fault cross; amber/steel four-frame activity",
-    "zlib_version": "1.3.2"
+    "zlib_version": "1.3.1"
   }
 }

@@ -30,6 +30,21 @@ transaction is introduced. A first write after capture pays for a copy-on-write
 cell root; clear/scroll already replace their roots. Rejected calls preserve both
 the model and its snapshot/participation bookkeeping.
 
+Presentation is demand-driven. A settled display keeps its complete image and
+native cursor blink without recurring snapshot/cell preparation. A writer on an
+independent screen does not wake unchanged peers. Successful no-op setters still
+participate in selected rounds; getters do not enqueue presentation. Incomplete
+rounds and unpowered displays wait for the corresponding participation or power
+transition, while admitted preparation, backpressure retries and retirement keep
+their existing bounded fair service.
+
+Placement/removal, physical changes, settings paste, power and ownership changes
+also wake the necessary work; a dummy drawing call is not required. Stable walls
+do not repeatedly rebuild topology signatures. One live physical observation
+pass remains each simulation tick, and calls, touch and publication still prove
+fresh authority. An earlier observation never authorizes a later same-tick call.
+There is no new polling delay, frame API, queue limit or budget setting.
+
 For several independently grouped screens, optionally use
 `peripheral.setMonitorSyncGroup(members)` and `peripheral.getMonitorSyncGroup()`;
 see [selection and status](peripheral.md#synchronized-monitor-presentation).
@@ -136,6 +151,8 @@ still independent. Current authority and recipient run are checked at delivery.
   `reason="tiles"/"scale"`. Commit geometry before notification. Coalescing keeps
   first old dimensions and latest current dimensions, refreshed before dispatch.
   getSize agrees in the callback. New groups attach; surviving groups resize.
+  Native settings paste also queues this notification when its scale change
+  changes character dimensions; it does not fabricate guest round participation.
 
 Resize waits through outages. Touch is transient and drops if display/player
 no longer qualifies. Removed identities discard jobs. Computer queue overflow

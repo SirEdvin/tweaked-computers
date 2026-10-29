@@ -162,27 +162,29 @@ function M.run()
   report('native-owned-tile-rotation-retains-anchor-identity')
   display=group(b0); model.calls.setCursorPos(display.model,nop,1,1)
   model.calls.setPaletteColor(display.model,nop,1,0xABCDEF); model.calls.write(display.model,nop,'PALETTE')
-  renderer.tick(game.tick,nop); assert(display.render.presented_revision==display.model.revision)
+  renderer.participate(display); renderer.tick(game.tick,nop); assert(display.render.presented_revision==display.model.revision)
   local object=display.render.cells[1].glyph; assert(object and object.valid and object.sprite=='tc-glyph-80')
   assert(math.abs(object.color.r-0xAB/255)<0.01)
-  model.calls.write(display.model,nop,'LATEST'); renderer.tick(game.tick,nop)
+  model.calls.write(display.model,nop,'LATEST'); renderer.participate(display); renderer.tick(game.tick,nop)
   assert(display.render.presented_revision==display.model.revision)
   local root=registry.get(); root.scheduler.maintenance_tick=game.tick; root.scheduler.maintenance_spent=limits.maintenance_work_per_tick-60000
   assert(not scheduler.try_maintenance(function() scheduler.maintenance(root,game.tick)(1) end))
   model.calls.setCursorPos(display.model,nop,1,1); model.calls.write(display.model,nop,'PALETTE')
-  renderer.tick(game.tick,scheduler.maintenance(root,game.tick,true))
+  renderer.participate(display); renderer.tick(game.tick,scheduler.maintenance(root,game.tick,true))
   assert(display.render.presented_revision==display.model.revision)
   root.scheduler.maintenance_spent=0 -- Isolated fixture, not a production clock reset.
-  b0.body.energy=0; monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
+  b0.body.energy=0; registry.monitor_changed(b0,false); monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
   assert(display.render.hidden and not object.visible and display.model.cells[1][1]==80)
   guest(c,"local m=peripheral.find('monitor','red'); local ok,e=pcall(m.write,'bad'); assert(not ok and e.code=='E_UNPOWERED')")
-  b0.body.energy=500; b0.powered=true; monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
+  b0.body.energy=500; b0.powered=true; registry.monitor_changed(b0,false); monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
   assert(not display.render.hidden and object.visible and display.model.cells[1][1]==80)
   local retained_model=display.model
   b0.physical_error='fixture-owned-port-fault'
+  registry.monitor_changed(b0,false)
   monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
   assert(group(b0)==display and display.model==retained_model and display.render.hidden)
   b0.physical_error=nil
+  registry.monitor_changed(b0,false)
   monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
   assert(display.model==retained_model and not display.render.hidden)
   report('actual-world-glyph-objects-palette-dirty-revision-power-blank-and-restore')
@@ -249,8 +251,9 @@ function M.run()
     local bytes={}; for byte=row*64,row*64+63 do bytes[#bytes+1]=string.char(byte) end
     model.calls.setCursorPos(maxg.model,nop,1,row+1); model.calls.write(maxg.model,nop,table.concat(bytes))
   end
-  renderer.tick(game.tick,nop); assert(not maxg.render or maxg.render.presented_revision~=maxg.model.revision)
+  renderer.participate(maxg); renderer.tick(game.tick,nop); assert(not maxg.render or maxg.render.presented_revision~=maxg.model.revision)
   model.calls.setPaletteColor(maxg.model,nop,1,0x112233)
+  renderer.participate(maxg)
   local count=0
   repeat count=count+1; renderer.tick(game.tick,nop) until maxg.render and maxg.render.presented_revision==maxg.model.revision or count>30
   assert(count<=30)
@@ -311,6 +314,7 @@ function M.on_tick(event)
     -- Actual partially prepared/coalesced cold state is covered by the full-world
     -- monitor_presentation_engine fixture, not by inventing a second tick here.
     model.calls.setCursorPos(g.model,nop,1,1); model.calls.write(g.model,nop,'COLD')
+    renderer.participate(g)
     local spent=registry.get().scheduler.maintenance_spent; local front=g.render
     renderer.tick(event.tick,scheduler.maintenance(registry.get(),event.tick,true))
     assert(registry.get().scheduler.maintenance_spent==spent and g.render==front and g.render.presented_revision~=g.model.revision)

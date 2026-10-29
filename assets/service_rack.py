@@ -150,6 +150,33 @@ def service(kind):
         m.dial(-.46,.045,.22,.16)
         m.box(.17,-.03,.79,.26,.04,.09,'ceramic')
         for x in (.29,.46,.63): m.bolt(x,.12,.09)
+    elif kind=='factoriopedia_interface':
+        # Upright catalogue terminal with stepped reference cards and side dial.
+        m.box(-.39,-.34,.39,.34,.04,.10,'iron')
+        m.box(-.35,-.31,-.12,.26,.10,.42,'blue')
+        m.display(-.29,-.25,-.17,.14,.425)
+        for i in range(3):
+            h=.11+i*.075
+            m.box(-.08,-.26+i*.045,.31,.22,h,h+.055,'paper')
+            m.box(.24,-.23+i*.045,.34,-.12+i*.045,h+.055,h+.07,'brass')
+        m.dial(.12,.22,.105,.335)
+    elif kind=='production_statistics':
+        # Chart recorder: brass rollers, ruled paper and a raised twin-gauge head.
+        m.box(-.40,-.34,.40,.34,.04,.12,'iron')
+        m.box(-.35,-.31,.35,-.05,.12,.34,'green')
+        m.dial(-.17,-.18,.115,.34)
+        m.dial(.17,-.18,.115,.34)
+        m.box(-.27,.01,.27,.29,.12,.14,'paper')
+        for y in (.05,.12,.19,.26): m.box(-.25,y,.25,y+.008,.14,.143,'ceramic',0)
+        m.cable([(-.24,.24,.15),(-.12,.17,.15),(0,.20,.15),(.12,.07,.15),(.24,.04,.15)],.012,'blue')
+        for y in (0,.30): m.tube((-.32,y,.16),(.32,y,.16),.035,'brass')
+    elif kind=='dashboard':
+        m.box(-.41,-.35,.41,.35,.04,.10,'blue')
+        m.box(-.36,-.31,.36,.02,.10,.27,'blue')
+        m.display(-.29,-.25,.29,-.04,.275)
+        for x,material in ((-.23,'green'),(0,'brass'),(.23,'ceramic')):
+            m.cylinder(x,.20,.075,.10,.14,material,12)
+        m.box(-.34,.30,.34,.34,.10,.13,'iron')
     elif kind=='recipe_searcher':
         for x in (-.36,.36): m.box(x-.045,-.36,x+.045,.33,.04,.10,'iron')
         m.box(-.29,-.30,.29,.31,.04,.08,'paper')

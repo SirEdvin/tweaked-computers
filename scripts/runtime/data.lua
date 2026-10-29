@@ -2,7 +2,7 @@
 local limits = require('scripts.runtime.limits')
 local errors = require('scripts.runtime.errors')
 local M = {}
-function M.copy(value, spend, ceiling)
+function M.copy(value, spend, ceiling, measuring)
   local stats, seen = {bytes=0,nodes=0}, {}
   local function charge(n)
     if spend then spend(n) end
@@ -24,7 +24,7 @@ function M.copy(value, spend, ceiling)
     elseif typ~='table' or getmetatable(v)~=nil then errors.raise('E_ARGUMENT','plain nonnil Data required') end
     if seen[v] then errors.raise('E_ARGUMENT','cyclic Data is not persistable') end
     seen[v]=true; charge(16)
-    local result,kind,count,max={},nil,0,0
+    local result,kind,count,max=not measuring and {} or nil,nil,0,0
     for k,x in pairs(v) do
       count=count+1
       if count>limits.table_entries then errors.raise('E_LIMIT','Data entry limit exceeded') end
@@ -36,13 +36,18 @@ function M.copy(value, spend, ceiling)
         max=math.max(max,k); charge(8)
       else errors.raise('E_ARGUMENT','Data keys must be strings or dense indexes') end
       if kind and kind~=kt then errors.raise('E_ARGUMENT','Data arrays and maps cannot mix') end
-      kind=kt; result[k]=visit(x,depth+1)
+      kind=kt; local copied=visit(x,depth+1)
+      if not measuring then result[k]=copied end
     end
     if kind=='number' and max~=count then errors.raise('E_ARGUMENT','Data array must be dense') end
     seen[v]=nil; return result
   end
   local result=visit(value,0)
   return result,stats
+end
+function M.measure(value,spend,ceiling)
+  local _,stats=M.copy(value,spend,ceiling,true)
+  return stats
 end
 function M.key(key)
   if type(key)~='string' or #key==0 or #key>limits.identifier_bytes then errors.raise('E_ARGUMENT','bounded nonempty state key required') end

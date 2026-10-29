@@ -133,7 +133,11 @@ Transmission and reception SHALL require a live, active, electrically supplied r
 - **THEN** the event follows the runtime's transient-event discard policy and is not replayed after restoration.
 
 ### Requirement: Durable transport state without replay
-Ordinary cold save/load SHALL preserve radar identities, open channels, registered handlers, admitted event order and spent same-tick transport credits without re-transmitting packets or replaying startup. This includes dormant radar identity/channel data without restarting recurring work for it. Mining, replacement, cloning and blueprint placement SHALL NOT transfer open channels or message queues. Radar force/surface reassignment SHALL revoke old authority and reset channels before participation in the new scope.
+Ordinary cold save/load SHALL preserve radar identities, open channels, registered handlers, admitted event order and spent same-tick transport credits without re-transmitting packets or replaying startup.
+
+#### Scenario: Retained transport and scope changes
+- **WHEN** radar transport is loaded, copied or reassigned
+- **THEN** This includes dormant radar identity/channel data without restarting recurring work for it. Mining, replacement, cloning and blueprint placement SHALL NOT transfer open channels or message queues. Radar force/surface reassignment SHALL revoke old authority and reset channels before participation in the new scope.
 
 #### Scenario: Reload with queued communication
 - **WHEN** a save with open channels and undelivered modem events is loaded in a separate engine process

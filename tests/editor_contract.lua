@@ -22,16 +22,17 @@ local function names(text)
 end
 local common_style=names('height width size minimal_height maximal_height minimal_width maximal_width horizontally_stretchable')
 local text_style=names('label text-box textfield button tab checkbox')
-local common_args=names('type name caption tooltip enabled visible style tags index')
+local common_args=names('type name caption tooltip enabled visible style tags index ignored_by_interaction')
 local type_args={
   flow=names('direction'),frame=names('direction'),label={},button=names('mouse_button_filter'),
   ['text-box']=names('text'),textfield=names('text'),['empty-widget']={},
   ['tabbed-pane']={},tab={},['scroll-pane']=names('horizontal_scroll_policy vertical_scroll_policy'),
+  camera=names('position surface_index zoom'),
   ['drop-down']=names('items selected_index'),checkbox=names('state'),sprite=names('sprite'),
   ['table']=names('column_count'),['sprite-button']=names('sprite number quality')}
 local style_types={tc_editor_text='text-box',tc_editor_button='button',tc_editor_frame='frame',
   tc_editor_tabs='tabbed-pane',tc_editor_tab='tab',draggable_space_header='empty-widget',
-  deep_scroll_pane='scroll-pane',slot_table='table'}
+  deep_scroll_pane='scroll-pane',slot_table='table',tc_dashboard_tab_caption='label'}
 for _,kind in ipairs({'heading','prose','signature','code'}) do style_types['tc_reference_'..kind]='text-box' end
 for _,style in ipairs({'compact_slot','red_circuit_network_content_slot','green_circuit_network_content_slot'}) do style_types[style]='sprite-button' end
 local reserved=names([[
@@ -52,6 +53,7 @@ local function style_supported(spec,key)
   if key=='font' then return text_style[spec.type] end
   if key=='single_line' then return spec.type=='label' end
   if key=='rich_text_setting' then return spec.type=='label' or spec.type=='text-box' or spec.type=='textfield' end
+  if key=='font_color' then return spec.type=='label' end
   if key=='horizontal_spacing' then return spec.type=='table' or (spec.type=='flow' and spec.direction~='vertical') end
   if key=='vertical_spacing' then return spec.type=='table' or spec.type=='tabbed-pane' or (spec.type=='flow' and spec.direction=='vertical') end
   error('unaudited LuaStyle property '..key)
@@ -104,6 +106,10 @@ local function gui(parent,spec)
   function e.focus() e.focused=true end
   function e.clear() for i=#e.children,1,-1 do e.children[i].destroy() end end
   function e.add_tab(tab,content) e.tabs[#e.tabs+1]={tab=tab,content=content} end
+  function e.remove_tab(tab)
+    for i,entry in ipairs(e.tabs) do if entry.tab==tab then table.remove(e.tabs,i); return end end
+    error('tab does not belong to pane')
+  end
   function e.scroll_to_bottom() e.scrolls=(e.scrolls or 0)+1 end
   function e.scroll_to_top() e.top_scrolls=(e.top_scrolls or 0)+1 end
   function e.scroll_to_left() e.left_scrolls=(e.left_scrolls or 0)+1 end

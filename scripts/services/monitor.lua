@@ -26,7 +26,9 @@ end
 function M.resolve(tile)
   local state=root()
   if state and state.version~=1 then errors.raise('E_UNSUPPORTED','unsupported retained monitor state; data preserved') end
-  if state and state.presentation and state.presentation.version~=1 then errors.raise('E_UNSUPPORTED','unsupported retained presentation; data preserved') end
+  if state and (not presentation.supported(state.presentation) or state.topology_version~=nil and state.topology_version~=1) then
+    errors.raise('E_UNSUPPORTED','unsupported retained presentation; data preserved')
+  end
   if state and state.job then errors.raise('E_NETWORK_PENDING','monitor regrouping is not yet committed') end
   return state and state.groups[state.membership[tile.id]] or nil
 end
@@ -167,19 +169,28 @@ local function queue_resize(g,w,h,reason,receivers)
     pending.recipients=receivers
   else state.resizes[g.id]={payload=resize_payload(g,w,h,reason),cursor=1,recipients=receivers} end
 end
+function M.settings_changed(tile,g,resized,w,h,scale_changed)
+  if scale_changed then presentation.changed(g) else registry.monitor_changed(tile,false) end
+  if resized then queue_resize(g,w,h,'scale',recipients()) end
+end
 function M.reconcile(tick,spend)
-  local r=registry.get(); spend(limits.registry_entries*4+1)
-  local tiles={}
-  for _,id in ipairs(r.order) do
-    local rec=r.devices[id]
-    if rec and rec.kind=='monitor' and rec.physical_version and rec.body.valid then tiles[#tiles+1]=rec end
-  end
-  if #tiles>model.limits.tiles then return end -- incompatible saved growth stays retained/inert
-  spend(#tiles*128+1)
-  local sig=signature(tiles); local state=r.monitors
+  local r=registry.get(); local state=r.monitors
   if state and state.version~=1 then return end
-  if state and state.presentation and state.presentation.version~=1 then return end
+  if state and (not presentation.supported(state.presentation) or state.topology_version~=nil and state.topology_version~=1) then return end
   if not state then state={version=1,groups={},membership={},resizes={},touches={},signature='',order={}}; r.monitors=state end
+  local sig=state.job and state.job.signature or state.signature
+  local tiles
+  if r.monitor_topology_dirty or not state.topology_version then
+    spend(limits.registry_entries*4+1)
+    tiles={}
+    for _,id in ipairs(r.order) do
+      local rec=r.devices[id]
+      if rec and rec.kind=='monitor' and rec.physical_version and rec.body.valid then tiles[#tiles+1]=rec end
+    end
+    if #tiles>model.limits.tiles then return end -- incompatible saved growth stays retained/inert
+    spend(#tiles*128+1)
+    sig=signature(tiles); r.monitor_topology_dirty=true; state.topology_version=1
+  end
   if state.job and state.job.signature~=sig then state.job=nil end
   if sig~=state.signature then
     -- Bound teardown generations before staging another replacement. Both old
@@ -189,6 +200,7 @@ function M.reconcile(tick,spend)
         spend(16)
         state.job={signature=sig,partition=partition_job(tiles),cursor=1,groups={},membership={},resizes={},order={}}
       end
+      r.monitor_topology_dirty=nil
       local job=state.job; local processed=0
       if job.partition then
         if not partition_step(job.partition,spend) then return end
@@ -235,13 +247,24 @@ function M.reconcile(tick,spend)
         end
         state.groups=job.groups; state.membership=job.membership; state.signature=job.signature
         state.order=job.order; state.job=nil
+        state.availability_dirty=true
+        for _,g in pairs(state.groups) do g.observation_dirty=true end
         for id in pairs(state.resizes) do if not state.groups[id] then state.resizes[id]=nil end end
         for id,old in pairs(job.resizes) do queue_resize(state.groups[id],old.old_width,old.old_height,'tiles',receivers) end
       end
     end
+  else r.monitor_topology_dirty=nil end
+  if state.availability_dirty then
+    spend(model.limits.tiles*16+1)
+    for _,g in pairs(state.groups) do if g.observation_dirty then
+      local powered=true
+      for _,id in ipairs(g.members) do local rec=registry.record(id)
+        if not rec or not rec.powered then powered=false; break end
+      end
+      g.powered=powered; g.observation_dirty=nil
+    end end
+    state.availability_dirty=nil
   end
-  spend(#tiles*16+1)
-  for _,g in pairs(state.groups) do g.powered=M.available(g,function() end) end
 end
 local methods={}
 for name,fn in pairs(model.calls) do

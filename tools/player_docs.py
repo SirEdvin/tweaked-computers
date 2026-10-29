@@ -17,6 +17,11 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs/player'
 CONTRACT = ROOT / 'openspec'
 EXAMPLES = {
+    'dashboard-program': 'Research Native circuit computers; build and power a Dashboard (15 kW) and computer. Connect Network red. Validate, Save and Run, then close the computer, normally open the Dashboard and left-click Acknowledge. The status changes from Ready to Acknowledged through the saved clicked handler. No chart library is required; Console cannot subscribe.',
+    'dashboard-charts': 'Use the same powered red-wired Dashboard setup. Optionally enable unmodified factorio-charts 1.2.0 for rolling lines and seconds-only duration bars; without it labels/buttons still work. Twelve startup samples wrap an eight-slot line before opening. Scroll Overview for both charts, switch among six tabs and acknowledge a button. Live label updates preserve the selected tab and unchanged identity selection. X positions mean sample order, not wall time; this is not the native production widget.',
+    'production-statistics-program': 'Research Recipe Searcher, craft and power a Production Statistics device and connect Network red to the computer. Validate, Save and Run. Logs local native item/fluid/pollution totals and rates, then newest/oldest iron history in both directions. Empty input and complete-result E_LIMIT refusal are distinct; work/allocation exhaustion remains fatal. This small Console example is not an unlimited export.',
+    'production-statistics-monitor': 'Connect a powered Production Statistics device and monitor on red; use a display of at least 14 columns and 7 rows. Validate, Save and Run, then wait 120 ticks. Displays one-minute iron rates and both 300-sample native histories, oldest-left/newest-right with a shared peak scale. No history is accumulated. Query refused means E_LIMIT, not empty data; No activity means both native series are zero.',
+    'factoriopedia-program': 'Research Recipe Searcher, craft a Factoriopedia Interface and supply 30 kW. Connect its Network to a computer on red. Validate, Save and Run the complete document. Logs item reference rocket capacity, water bounds and both complete name lists (or E_LIMIT); no live silo/tank feasibility is inferred.',
     'reference-speaker': 'The in-game Reference → Examples → One speaker note tutorial includes complete research, power, red-wire setup, execution steps and expected results. This is the same small program, not an external prerequisite.',
     'reference-recipe': 'The in-game Find iron plate recipes tutorial connects one powered Recipe Searcher on red and prints actual smelting matches. This supplementary copy uses the exact same source.',
     'reference-factory': 'The in-game Small factory dashboard tutorial includes the exact four-peripheral and chest/inserter setup, red discovery/INPUT and green TARGETS/OUTPUT separation. It teaches one inserter, a three-second KV hash and a two-line monitor; use its complete in-game setup.',
@@ -299,12 +304,15 @@ def inventory():
               'logic_handler': methods(text('scripts/services/logic.lua')),
               'configurator': methods(text('scripts/services/configurator.lua')), 'monitor': monitor,
               'recipe_searcher': set(re.findall(r'function methods\.([A-Za-z]+)\(', text('scripts/services/recipe-searcher.lua'))),
+              'factoriopedia_interface': set(re.findall(r'function methods\.([A-Za-z]+)\(', text('scripts/services/factoriopedia-interface.lua'))),
+              'production_statistics': set(re.findall(r'function methods\.([A-Za-z]+)\(', text('scripts/services/production-statistics.lua'))),
+              'dashboard': methods(text('scripts/services/dashboard.lua')),
               'speaker': set(re.findall(r'function M\.methods\.([A-Za-z]+)\(', text('scripts/services/speaker.lua'))),
               'modem': set(re.findall(r'function M\.methods\.([A-Za-z]+)\(', text('scripts/services/modem.lua')))}
     expected = {'computer': names['computer'], 'peripheral': names['peripheral'], **maps}
     pages = {'computer': 'api/computer.md', 'peripheral': 'api/peripheral.md', 'kv_database': 'api/kv.md',
              'logic_handler': 'api/logic.md', 'configurator': 'api/configurator.md', 'monitor': 'api/monitor.md',
-             'recipe_searcher': 'api/recipe-searcher.md', 'modem': 'api/modem.md', 'speaker': 'api/speaker.md'}
+             'recipe_searcher': 'api/recipe-searcher.md', 'factoriopedia_interface': 'api/factoriopedia-interface.md', 'production_statistics': 'api/production-statistics.md', 'dashboard': 'api/dashboard.md', 'modem': 'api/modem.md', 'speaker': 'api/speaker.md'}
     for namespace, exports in actual.items():
         if exports != set(expected[namespace]):
             raise ValueError(f'export inventory drift {namespace}: {exports ^ set(expected[namespace])}')
@@ -332,7 +340,7 @@ def inventory():
     for name in names['colors'] + manifest['events']:
         if name not in all_docs:
             raise ValueError('undocumented color/event: ' + name)
-    capability_pages = {'speaker-peripheral': ['api/speaker.md'], 'radar-modem': ['api/modem.md', 'radar-native-assets.md'],
+    capability_pages = {'dashboard-interface': ['dashboard.md', 'api/dashboard.md'], 'production-statistics': ['api/production-statistics.md'], 'factoriopedia-interface': ['api/factoriopedia-interface.md'], 'speaker-peripheral': ['api/speaker.md'], 'radar-modem': ['api/modem.md', 'radar-native-assets.md'],
                         'computer-runtime': ['api/computer.md', 'api/language.md', 'api/common.md'],
                         'program-editor': ['editor.md'], 'device-lifecycle': ['lifecycle.md'],
                         'peripheral-network': ['api/peripheral.md'], 'monitor-display': ['api/monitor.md'],

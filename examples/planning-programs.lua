@@ -157,6 +157,29 @@ return {
   assert(ok == false)
   print(message)
 end]=]},
+  {name=[=[specs/dashboard-interface/lua-api.md:1]=],sha256=[=[677a2479eff74b56bd484863fa8c7a155350a82a8483b20509e8a040e4050ced]=],source=[=[return {
+    api_version = 1,
+    handlers = {
+        start = function(event)
+            local panel = peripheral.find("dashboard", "red")
+            assert(panel, "Connect a powered Dashboard on red")
+            panel.setTab(1, {
+                title = "Overview",
+                content = {type = "column", id = "root", children = {
+                    {type = "label", id = "status", text = "Ready"},
+                    {type = "button", id = "ack", text = "Acknowledge"}
+                }}
+            })
+            panel.subscribe("clicked")
+        end,
+        clicked = function(event)
+            local panel = peripheral.wrap(event.peripheral, event.wire)
+            if event.tab == 1 and event.button == "ack" then
+                panel.setText(1, "status", "Acknowledged")
+            end
+        end
+    }
+}]=]},
   {name=[=[specs/device-configurator/lua-api.md:1]=],sha256=[=[f93d4dccf94db93dbf2d5496a830b23b0da53de9eb3a117019028491cbee8fd2]=],source=[=[return {
   api_version = 1,
   handlers = {
@@ -277,6 +300,29 @@ end]=]},
           end
         end
       end
+    end
+  }
+}]=]},
+  {name=[=[specs/production-statistics/lua-api.md:1]=],sha256=[=[6454af123624702fb34da6afa1f2db1d0cffcff7ce5b11a04ba801173afcf436]=],source=[=[return {
+  api_version = 1,
+  handlers = {
+    start = function()
+      local stats = peripheral.find("production_statistics", "red")
+      assert(stats, "Connect a Production Statistics device with red wire")
+      local items = stats.getTotals("item")
+      local normal = items.input.normal or {}
+      computer.log("Iron produced: " .. tostring(normal["iron-plate"] or 0))
+
+      local fluids = stats.getRates("fluid", "one_minute")
+      computer.log("Water consumed/min: " .. tostring(fluids.output.water or 0))
+
+      local pollution = stats.getTotals("pollution")
+      for name, amount in pairs(pollution.input) do
+        computer.log(name .. " emitted " .. tostring(amount))
+      end
+
+      local history = stats.getHistory("item", "iron-plate", "one_minute", "normal")
+      computer.log("Newest iron production/min: " .. tostring(history.input[1]))
     end
   }
 }]=]},

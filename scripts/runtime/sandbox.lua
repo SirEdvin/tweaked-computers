@@ -326,6 +326,12 @@ function M.new(context, services, shell)
     prepare_return(service.wrapper)
     service.empty_result=true
   end
+  function G.prepare_string_result(value)
+    local service=assert(service_frames[#service_frames],'string admission requires a trusted service')
+    assert(type(value)=='string' and not service.string_result)
+    G.snapshot(value); prepare_return(service.wrapper,value)
+    service.string_result=value
+  end
   function G.service(fn,circuit)
     local wrapper
     wrapper=function(...)
@@ -348,6 +354,8 @@ function M.new(context, services, shell)
       if result.n>limits.tuple_entries then fatal('service result width exceeded') end
       if frame.empty_result then
         if result.n~=0 then fatal('trusted empty service contract violated') end
+      elseif frame.string_result then
+        if result.n~=1 or result[1]~=frame.string_result then fatal('trusted string service contract violated') end
       elseif frame.boolean_result then
         if result.n~=1 or type(result[1])~='boolean' then fatal('trusted boolean service contract violated') end
       else
