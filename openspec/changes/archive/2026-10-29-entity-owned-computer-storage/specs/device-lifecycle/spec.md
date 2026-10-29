@@ -24,7 +24,11 @@ A composite device SHALL place, rotate, mine, destroy, clone and revive as one l
 - **THEN** the logical device receives the order, its marker is visible and internal parts cannot remain as independently usable devices after removal.
 
 ### Requirement: Device-specific mining data policy
-Mining a computer SHALL produce plain hardware without source snapshots, explicit application state or a computer label. Ordinary replacement SHALL create a blank, stopped computer with a new identity. KV items SHALL retain contents and absolute deadlines, and monitor items SHALL retain their existing settings. Runtime callbacks, queues, timers and ownership MUST NOT travel in items. Undo restoration SHALL use the separate undo contract.
+Mining a computer SHALL produce plain hardware without source snapshots, explicit application state or a computer label.
+
+#### Scenario: Family-specific retained item contents
+- **WHEN** a device is mined, replaced or restored through Undo
+- **THEN** Ordinary replacement SHALL create a blank, stopped computer with a new identity. KV items SHALL retain contents and absolute deadlines, and monitor items SHALL retain their existing settings. Dashboard items SHALL retain accepted layout and chart data. Runtime callbacks, queues, timers and ownership MUST NOT travel in items. Undo restoration SHALL use the separate undo contract.
 
 #### Scenario: Mine a working computer with unsaved editor changes
 - **WHEN** mining is requested while a player's editor holds an unsaved draft
@@ -46,8 +50,17 @@ Mining a computer SHALL produce plain hardware without source snapshots, explici
 - **THEN** the same plain-item policy applies without a hidden computer snapshot or an extra drop
 - **AND** KV deadlines and monitor item settings remain governed by their unchanged family-specific policies.
 
+#### Scenario: Replace a populated dashboard
+- **WHEN** a player or robot mines and replaces a dashboard containing a wrapped rolling window and a bar dataset
+- **THEN** the new identity retains that layout/data and no old computer binding, subscription, GUI session or render object is transferred
+- **AND** restoration remains possible with the chart dependency absent.
+
 ### Requirement: Blueprint and clone isolation
-Blueprints, clipboard copies, entity clones and settings copy SHALL carry applicable saved source, label and configuration only, not computer application state, event registrations, KV contents, output ownership or active execution. Newly created computers SHALL start stopped, databases empty and logic outputs zero. Computer item contents MUST NOT override the captured source/settings. Existing-destination settings copy SHALL retain its existing state policy.
+Blueprints, clipboard copies, entity clones and settings copy SHALL carry applicable saved source, label and configuration only, not computer application state, event registrations, KV contents, output ownership or active execution.
+
+#### Scenario: Copied device initialization
+- **WHEN** a blueprint, clipboard, clone or settings-copy operation creates or updates a device
+- **THEN** Newly created computers SHALL start stopped, databases empty and logic outputs zero. Computer item contents MUST NOT override the captured source/settings. Existing-destination settings copy SHALL retain its existing state policy. New dashboards SHALL copy definitions but start with empty charts and no subscribers or viewers.
 
 #### Scenario: Blueprint a functioning controller
 - **WHEN** its blueprint is built elsewhere
@@ -72,6 +85,11 @@ Blueprints, clipboard copies, entity clones and settings copy SHALL carry applic
 - **WHEN** a computer is cloned or its settings are copied onto an existing computer
 - **THEN** a clone receives a new stopped identity with copied saved source and empty application state
 - **AND** settings copy stops the destination and replaces saved source/label without copying source application state or erasing the destination's existing application state.
+
+#### Scenario: Copy a dashboard configuration
+- **WHEN** a populated dashboard is blueprinted, cloned or used as the source of settings copy
+- **THEN** only layout, widget configuration and configured rolling capacities are copied, never source histories, bar datasets or computer subscriptions
+- **AND** settings copy onto an existing dashboard follows ordinary tab-replacement compatibility rules for the destination's own chart data.
 
 ### Requirement: Blueprint and item continuity across shell changes
 Existing blueprint, ghost and clone paths SHALL remain supported across a physical-shell change. Internal power helpers MUST NOT add user-visible costs or extra drops. New placed computers SHALL remain stopped and blueprint copies MUST NOT acquire application state or KV contents. Existing non-computer data-bearing items SHALL retain their approved restoration behavior; legacy computer-item payloads SHALL follow the explicit discard policy.

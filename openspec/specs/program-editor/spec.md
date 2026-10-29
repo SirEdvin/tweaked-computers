@@ -69,7 +69,11 @@ The editor SHALL support native text entry/paste, visible keyboard focus, scalab
 - **THEN** the UI distinguishes red and green paths, device types and disconnected/pending status and provides names usable by the Lua API.
 
 ### Requirement: Code-first editor and focus layout
-The Editor tab SHALL contain the source, one compact action row, concise dirty/run status and contextual diagnostics. Saved/base/active revision trackers SHALL NOT be displayed, including in Maintenance; internal revisions, generation checks and conflict-safe review SHALL remain unchanged. Console output, peripheral inventories, full reference text and recovery lists MUST NOT occupy the normal editing surface. A reversible focus layout SHALL keep essential controls accessible while removing nonessential navigation chrome.
+The Editor tab SHALL contain the source, one compact action row, concise dirty/run status and contextual diagnostics.
+
+#### Scenario: Editor surface and internal safeguards
+- **WHEN** the normal editor or focus layout is displayed
+- **THEN** Saved/base/active revision trackers SHALL NOT be displayed, including in Maintenance; internal revisions, generation checks and conflict-safe review SHALL remain unchanged. Console output, peripheral inventories, full reference text and recovery lists MUST NOT occupy the normal editing surface. A reversible focus layout SHALL keep essential controls accessible while removing nonessential navigation chrome.
 
 #### Scenario: Open a normal editing session
 - **WHEN** the Editor tab opens at a supported display size
@@ -91,7 +95,11 @@ Save SHALL remain separate from activation. The UI SHALL show one contextual Run
 - **THEN** the current draft survives, a compact conflict notice offers reviewed resolution, and no automatic reload, save or activation occurs.
 
 ### Requirement: Accessible bounded supporting tabs
-Console SHALL retain bounded selectable output with a user-controlled follow mode. Peripherals SHALL use meaningful rows with explicit channel and availability. Console and Peripherals SHALL update automatically while open under existing admission bounds, without Refresh controls or numeric update/sample trackers. Hidden/closed panels SHALL NOT poll discovery; automatic updates SHALL preserve identity/selection, unchanged rows, source focus and scrolling. Reference SHALL expose complete existing help and examples by topic. Maintenance SHALL retain every existing recovery/reset action. Text and symbols SHALL supplement color; all essential actions SHALL remain accessible at supported GUI scales.
+Console SHALL retain bounded selectable output with a user-controlled follow mode.
+
+#### Scenario: Supporting tab accessibility and acquisition
+- **WHEN** a supporting tab is opened, refreshed or closed
+- **THEN** Peripherals SHALL use meaningful rows with explicit channel and availability. Console and Peripherals SHALL update automatically while open under existing admission bounds, without Refresh controls or numeric update/sample trackers. Hidden/closed panels SHALL NOT poll discovery; automatic updates SHALL preserve identity/selection, unchanged rows, source focus and scrolling. Reference SHALL expose complete existing help and examples by topic. Maintenance SHALL retain every existing recovery/reset action. Text and symbols SHALL supplement color; all essential actions SHALL remain accessible at supported GUI scales.
 
 #### Scenario: Review logs without scroll fighting
 - **WHEN** the player disables Console follow and new output arrives
@@ -129,7 +137,11 @@ The optional Console Lua input SHALL follow the independent `console-shell` cont
 - **THEN** the command follows the Console admission and ownership rules without saving, activating or overwriting the player's source draft.
 
 ### Requirement: Method-isolated peripheral reference
-The in-game Reference SHALL document each general peripheral discovery method and each shipped device-specific method in its own visibly separated native section. Each entry SHALL distinguish its literal signature from wrapped results, arguments and relevant caveats. Aliases SHALL have separate entries; overloads SHALL remain together. Shared device guidance SHALL remain distinct from method sections. Readability SHALL be structural, not dependent on a count of blank lines in a plain text box, and existing API caveats SHALL remain available.
+The in-game Reference SHALL document each general peripheral discovery method and each shipped device-specific method in its own visibly separated native section.
+
+#### Scenario: Separated method documentation
+- **WHEN** a peripheral method is presented in Reference
+- **THEN** Each entry SHALL distinguish its literal signature from wrapped results, arguments and relevant caveats. Aliases SHALL have separate entries; overloads SHALL remain together. Shared device guidance SHALL remain distinct from method sections. Readability SHALL be structural, not dependent on a count of blank lines in a plain text box, and existing API caveats SHALL remain available.
 
 #### Scenario: Read the discovery API
 - **WHEN** a player opens the general peripheral discovery topic
@@ -147,7 +159,11 @@ The in-game Reference SHALL document each general peripheral discovery method an
 - **AND** native text selection/copy, existing examples and non-peripheral topics remain available.
 
 ### Requirement: Consistent selectable Reference documents
-Every topic, including Workflow, Language, Computer, Safety and examples, SHALL use native heading hierarchy, short wrapped paragraphs or lists, and distinct literal code. Prose SHALL NOT require horizontal scrolling at supported effective widths. Useful headings, prose, signatures and code SHALL remain manually selectable/copyable with native controls. Code SHALL retain exact whitespace and literal bracket bytes without rich-text or Markdown interpretation. Reference SHALL have no Select text or Insert starter action buttons; the unrelated empty-draft Editor starter and recovery controls SHALL remain available. Browsing SHALL NOT edit drafts, save/activate/stop/reset code, reset shell values or mutate peripheral data.
+Every topic, including Workflow, Language, Computer, Safety and examples, SHALL use native heading hierarchy, short wrapped paragraphs or lists, and distinct literal code.
+
+#### Scenario: Literal and side-effect-free Reference browsing
+- **WHEN** the player reads or copies Reference content
+- **THEN** Prose SHALL NOT require horizontal scrolling at supported effective widths. Useful headings, prose, signatures and code SHALL remain manually selectable/copyable with native controls. Code SHALL retain exact whitespace and literal bracket bytes without rich-text or Markdown interpretation. Reference SHALL have no Select text or Insert starter action buttons; the unrelated empty-draft Editor starter and recovery controls SHALL remain available. Browsing SHALL NOT edit drafts, save/activate/stop/reset code, reset shell values or mutate peripheral data.
 
 #### Scenario: Read and copy a complete tutorial
 - **WHEN** a player opens any embedded starter, speaker, logic, Recipe Searcher, factory or shared-data tutorial
@@ -209,3 +225,53 @@ Contextual navigation SHALL reveal the requested device topic despite prior filt
 #### Scenario: Reject stale or foreign clicks
 - **WHEN** a click references a destroyed/replaced row widget, another player's session or a computer the player cannot access
 - **THEN** it does not change selection, navigate Reference or cause program/peripheral effects.
+
+### Requirement: Elapsed map timestamps in Console
+Each Console log entry SHALL display its recorded map tick as `[HH:MM:SS]`, using completed simulation seconds at 60 ticks per second. Hours SHALL be cumulative and padded to at least two digits; minutes and seconds SHALL have exactly two digits. The prefix SHALL describe when the entry occurred, not its age, local wall-clock time or time since the computer started.
+
+#### Scenario: Zero and subsecond entries
+- **WHEN** entries recorded at ticks 0, 59 and 60 are displayed
+- **THEN** their prefixes are `[00:00:00]`, `[00:00:00]` and `[00:00:01]` respectively
+- **AND** entries sharing a displayed second retain their original order.
+
+#### Scenario: Minute and hour rollover
+- **WHEN** entries recorded at ticks 3599, 3600, 215999 and 216000 are displayed
+- **THEN** their prefixes are `[00:00:59]`, `[00:01:00]`, `[00:59:59]` and `[01:00:00]` respectively.
+
+#### Scenario: Long-running maps do not wrap or truncate hours
+- **WHEN** entries recorded at ticks 5184000, 5846940 and 21600000 are displayed
+- **THEN** their prefixes are `[24:00:00]`, `[27:04:09]` and `[100:00:00]` respectively
+- **AND** no day field or daily rollover replaces the cumulative hour count.
+
+#### Scenario: Computer and interface lifecycle do not reset the origin
+- **WHEN** the Console is reopened or the computer is stopped and restarted
+- **THEN** retained entries keep the same elapsed timestamp
+- **AND** new entries use their occurrence on the same map timeline rather than a new computer-session origin.
+
+#### Scenario: Simulation timing is not a wall clock
+- **WHEN** the simulation is paused, its speed changes, or an old entry is viewed later
+- **THEN** the entry's prefix remains derived only from its recorded map tick
+- **AND** neither real-world waiting time nor the viewing player's clock changes that prefix.
+
+### Requirement: Display-only timestamp compatibility
+Timestamp formatting SHALL preserve stored log ticks and text, ordering, retention bounds and truncation behavior. Program output, shell echoes/results and logged errors SHALL share the same timestamp format without losing attribution or diagnostics. Existing tab-to-space display normalization, literal selectable output, Follow behavior and suppression of unchanged-text writes SHALL remain intact. No save migration SHALL be required.
+
+#### Scenario: Existing saved history remains readable
+- **WHEN** a save containing retained tick-based log entries is loaded and its Console is opened
+- **THEN** the retained entries display elapsed map timestamps without rewriting their ticks or text, changing retained byte accounting or replaying the logged actions
+- **AND** saving and loading again preserves the same history and displayed timestamps.
+
+#### Scenario: Program and shell output use one format
+- **WHEN** program messages, shell command echoes, shell results and logged failures are displayed together
+- **THEN** every retained entry uses the elapsed timestamp format in its existing position
+- **AND** message text, shell command attribution, diagnostic details, newlines and tab-to-space display normalization remain otherwise unchanged.
+
+#### Scenario: Refresh without new output
+- **WHEN** the current map tick advances but retained Console entries and diagnostics have not changed
+- **THEN** timestamp formatting does not change the displayed text or trigger another text assignment
+- **AND** existing native selection and copying remain available between actual output updates.
+
+#### Scenario: Follow and bounded history remain unchanged
+- **WHEN** new entries arrive while Follow is disabled and existing retention bounds evict old output
+- **THEN** the Console displays the retained entries with elapsed timestamps without forcing a scroll to the newest entry
+- **AND** truncation remains visible and enabling Follow resumes the existing tailing behavior.

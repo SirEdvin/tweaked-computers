@@ -30,7 +30,11 @@ The mod SHALL provide one tier of 1×1 computers, KV devices, monitor tiles and 
 - **THEN** it remains one independent 1×1 peripheral with correctly positioned native red/green network contacts.
 
 ### Requirement: Device-specific mining data policy
-Mining a computer SHALL produce plain hardware without source snapshots, explicit application state or a computer label. Ordinary replacement SHALL create a blank, stopped computer with a new identity. KV items SHALL retain contents and absolute deadlines, and monitor items SHALL retain their existing settings. Dashboard items SHALL retain accepted layout and chart data. Runtime callbacks, queues, timers and ownership MUST NOT travel in items. Undo restoration SHALL use the separate undo contract.
+Mining a computer SHALL produce plain hardware without source snapshots, explicit application state or a computer label.
+
+#### Scenario: Family-specific retained item contents
+- **WHEN** a device is mined, replaced or restored through Undo
+- **THEN** Ordinary replacement SHALL create a blank, stopped computer with a new identity. KV items SHALL retain contents and absolute deadlines, and monitor items SHALL retain their existing settings. Dashboard items SHALL retain accepted layout and chart data. Runtime callbacks, queues, timers and ownership MUST NOT travel in items. Undo restoration SHALL use the separate undo contract.
 
 #### Scenario: Mine a working computer with unsaved editor changes
 - **WHEN** mining is requested while a player's editor holds an unsaved draft
@@ -58,7 +62,11 @@ Mining a computer SHALL produce plain hardware without source snapshots, explici
 - **AND** restoration remains possible with the chart dependency absent.
 
 ### Requirement: Blueprint and clone isolation
-Blueprints, clipboard copies, entity clones and settings copy SHALL carry applicable saved source, label and configuration only, not computer application state, event registrations, KV contents, output ownership or active execution. Newly created computers SHALL start stopped, databases empty and logic outputs zero. Computer item contents MUST NOT override the captured source/settings. Existing-destination settings copy SHALL retain its existing state policy. New dashboards SHALL copy definitions but start with empty charts and no subscribers or viewers.
+Blueprints, clipboard copies, entity clones and settings copy SHALL carry applicable saved source, label and configuration only, not computer application state, event registrations, KV contents, output ownership or active execution.
+
+#### Scenario: Copied device initialization
+- **WHEN** a blueprint, clipboard, clone or settings-copy operation creates or updates a device
+- **THEN** Newly created computers SHALL start stopped, databases empty and logic outputs zero. Computer item contents MUST NOT override the captured source/settings. Existing-destination settings copy SHALL retain its existing state policy. New dashboards SHALL copy definitions but start with empty charts and no subscribers or viewers.
 
 #### Scenario: Blueprint a functioning controller
 - **WHEN** its blueprint is built elsewhere

@@ -3,7 +3,11 @@
 ## MODIFIED Requirements
 
 ### Requirement: Native inspection for every peripheral family
-The mod SHALL provide a device-local inspector for KV Database, Monitor, Logic Handler, Configurator, Recipe Searcher, Factoriopedia Interface and Production Statistics through normal entity opening. The window SHALL identify the logical device rather than a helper. Recipe Searcher, Factoriopedia Interface and Production Statistics SHALL receive basic identity/status inspection, not recipe-search, catalogue or statistics-query interfaces. Computers SHALL retain their existing workspace. A Dashboard SHALL instead open its configured interactive window, with the same exact copyable identity and explicit availability outside its user-configured tabs; it is not a read-only inspector.
+The mod SHALL provide a device-local inspector for KV Database, Monitor, Logic Handler, Configurator, Recipe Searcher, Factoriopedia Interface and Production Statistics through normal entity opening.
+
+#### Scenario: Family-specific opening surface
+- **WHEN** the player normally opens a peripheral or computer
+- **THEN** The window SHALL identify the logical device rather than a helper. Recipe Searcher, Factoriopedia Interface and Production Statistics SHALL receive basic identity/status inspection, not recipe-search, catalogue or statistics-query interfaces. Computers SHALL retain their existing workspace. A Dashboard SHALL instead open its configured interactive window, with the same exact copyable identity and explicit availability outside its user-configured tabs; it is not a read-only inspector.
 
 #### Scenario: Open each peripheral
 - **WHEN** an authorized player uses normal entity-open on any of these peripheral families
@@ -30,7 +34,11 @@ The mod SHALL provide a device-local inspector for KV Database, Monitor, Logic H
 - **AND** identity/status occupy the window shell rather than consuming one of its six configurable tabs.
 
 ### Requirement: Inspection and existing gestures remain distinct
-Normal peripheral opening SHALL inspect, or open a Dashboard's configured window, rather than emit a monitor touch. Ctrl-click monitor touches, guarded Ctrl-click computer-body editing, native inventory transfers and cardinal rotation SHALL retain their existing behavior. Empty-ground clicks SHALL NOT open computer UI, even with retained drafts. Draft recovery SHALL remain accessible through another computer's Maintenance or the capacity viewer when opening a computer with all draft slots occupied. Owned helper dialogs SHALL remain inaccessible, and unrelated entity windows SHALL NOT be replaced.
+Normal peripheral opening SHALL inspect, or open a Dashboard's configured window, rather than emit a monitor touch.
+
+#### Scenario: Existing gestures and recovery access
+- **WHEN** the player uses device opening, Ctrl-click, transfer, rotation or draft recovery
+- **THEN** Ctrl-click monitor touches, guarded Ctrl-click computer-body editing, native inventory transfers and cardinal rotation SHALL retain their existing behavior. Empty-ground clicks SHALL NOT open computer UI, even with retained drafts. Draft recovery SHALL remain accessible through another computer's Maintenance or the capacity viewer when opening a computer with all draft slots occupied. Owned helper dialogs SHALL remain inaccessible, and unrelated entity windows SHALL NOT be replaced.
 
 #### Scenario: Inspect then touch a monitor
 - **WHEN** a player normally opens a monitor, closes the inspector and then Ctrl-clicks a valid display cell

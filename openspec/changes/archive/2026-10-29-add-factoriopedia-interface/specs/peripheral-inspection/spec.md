@@ -1,9 +1,13 @@
-# Peripheral Inspection Spec Delta
+# Peripheral Inspection Specification Delta
 
 ## MODIFIED Requirements
 
 ### Requirement: Native inspection for every peripheral family
-The mod SHALL provide a device-local inspector for KV Database, Monitor, Logic Handler, Configurator, Recipe Searcher, Factoriopedia Interface and Production Statistics through normal entity opening. The window SHALL identify the logical device rather than a helper. Recipe Searcher, Factoriopedia Interface and Production Statistics SHALL receive basic identity/status inspection, not recipe-search, catalogue or statistics-query interfaces. Computers SHALL retain their existing workspace.
+The mod SHALL provide a device-local inspector for KV Database, Monitor, Logic Handler, Configurator, Recipe Searcher, Factoriopedia Interface and Production Statistics through normal entity opening.
+
+#### Scenario: Family-specific opening surface
+- **WHEN** the player normally opens a peripheral or computer
+- **THEN** The window SHALL identify the logical device rather than a helper. Recipe Searcher, Factoriopedia Interface and Production Statistics SHALL receive basic identity/status inspection, not recipe-search, catalogue or statistics-query interfaces. Computers SHALL retain their existing workspace. A Dashboard SHALL instead open its configured interactive window, with the same exact copyable identity and explicit availability outside its user-configured tabs; it is not a read-only inspector.
 
 #### Scenario: Open each peripheral
 - **WHEN** an authorized player uses normal entity-open on any of these peripheral families
@@ -23,3 +27,8 @@ The mod SHALL provide a device-local inspector for KV Database, Monitor, Logic H
 - **WHEN** an authorized player opens a powered or unpowered statistics device
 - **THEN** its exact peripheral name remains selectable/copyable and its availability is explicit
 - **AND** opening or refreshing the inspector performs no production-statistics queries, exposes no force/surface selector and executes no guest program.
+
+#### Scenario: Open a configured dashboard
+- **WHEN** an authorized player opens a Dashboard
+- **THEN** its interactive mixed-tab window appears instead of a read-only inspector or carrier configuration dialog
+- **AND** identity/status occupy the window shell rather than consuming one of its six configurable tabs.
