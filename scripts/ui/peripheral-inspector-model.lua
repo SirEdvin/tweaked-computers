@@ -8,7 +8,7 @@ local logic=require('scripts.services.logic')
 local monitor=require('scripts.services.monitor')
 local scheduler=require('scripts.scheduler')
 local M={version=4}
-local kinds={kv=true,monitor=true,logic=true,configurator=true,recipe_searcher=true}
+local kinds={kv=true,monitor=true,logic=true,configurator=true,recipe_searcher=true,factoriopedia_interface=true}
 function M.supports(kind) return kinds[kind]==true end
 function M.authorized(player,rec)
   if not player or not player.valid or not rec or not kinds[rec.kind] or not rec.body.valid then return false end

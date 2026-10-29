@@ -218,6 +218,19 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/recipe-searcher" --mode both \
             --fixture tests.recipe_searcher_engine --data-fixture tests.recipe_searcher_data \
             --production-context --cold --upgrade-fixture
+          for fixture in factoriopedia factoriopedia-large factoriopedia-lift; do
+            module=tests.factoriopedia_engine
+            data=tests.factoriopedia_data
+            if [[ "$fixture" == factoriopedia-large ]]; then
+              module=tests.factoriopedia_large_engine
+              data=tests.factoriopedia_large_data
+            elif [[ "$fixture" == factoriopedia-lift ]]; then
+              data=tests.factoriopedia_lift_data
+            fi
+            python tools/smoke.py --factorio "$engine" --archive "$archive" \
+              --output "$RUNNER_TEMP/tc-ci/$fixture" --mode both \
+              --fixture "$module" --data-fixture "$data" --production-context --cold
+          done
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/device-art" --mode both \
             --fixture tests.art_engine --data-fixture tests.art_data

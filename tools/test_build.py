@@ -253,13 +253,16 @@ getLimits()''',
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
                 self.assertEqual(set(planning), set(build.CONTRACT_FILES))
-                self.assertEqual(len(build.CONTRACT_FILES), 36)
+                self.assertEqual(len(build.CONTRACT_FILES), 38)
                 self.assertFalse(any(name.startswith('openspec/changes/') for name in planning))
                 for relative in ('openspec/specs/program-source/spec.md',
                                  'openspec/specs/program-source/lua-api.md'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 for relative in ('scripts/services/recipe-searcher.lua', 'examples/recipe-searcher-program.lua',
-                                 'docs/player/api/recipe-searcher.md', 'assets/icons/recipe_searcher.png'):
+                                 'docs/player/api/recipe-searcher.md', 'assets/icons/recipe_searcher.png',
+                                 'scripts/services/factoriopedia-interface.lua', 'examples/factoriopedia-program.lua',
+                                 'docs/player/api/factoriopedia-interface.md', 'assets/icons/factoriopedia_interface.png',
+                                 'openspec/specs/factoriopedia-interface/spec.md', 'openspec/specs/factoriopedia-interface/lua-api.md'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 for relative in ('settings.lua', 'scripts/runtime/budget-settings.lua',
                                  'locale/en/settings.cfg', 'tests/runtime_budget_engine.lua',
@@ -329,6 +332,8 @@ class CanonicalContractTests(unittest.TestCase):
         # Every other historical scenario remains byte-for-byte checked below;
         # this is not a blanket name-only exception for modified requirements.
         evolved = {
+            ('peripheral-inspection', 'Native inspection for every peripheral family', 'Open each peripheral'):
+                ('any of the five peripheral families', 'any of these peripheral families'),
             # Empty-ground recovery is deliberately retired. Keep the exact
             # replacement workflow checked, not a name-only archive exemption.
             ('program-editor', 'Accessible bounded supporting tabs', 'Recover without an accessible computer'):

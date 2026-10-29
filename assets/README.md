@@ -1,12 +1,18 @@
 # Service Rack device artwork and independent glyphs
 
-Service Rack (AR2 candidate B) is the user-selected six-device family. All 176
+Service Rack (AR2 candidate B) is the user-selected family. All 176
 pre-existing generated PNGs match the selected preview byte-for-byte, including
 all status masks, glyphs and flat-monitor shadows. Two new 256×256 technology
 icons depict its computer and Recipe Searcher. Research costs, prerequisites,
 unlocks, recipes and runtime behavior are unchanged.
 
 ## Identify the six devices
+
+The additive seventh device, **Factoriopedia Interface**, is an upright blue
+catalogue terminal with stepped reference cards and a brass side dial. Its 1×1
+body uses the same ground-projected Network contacts and compact status masks.
+It has its own MIT geometry in `service_rack.py`; no existing PNG is replaced.
+The expanded inventory has 207 PNGs, 80 contacts and seven distinct silhouettes.
 
 - Computer: folded-steel L desk, recessed display, separate keyboard apron and
   asymmetric cooling hump.
@@ -68,7 +74,7 @@ repository files excluded from the gameplay ZIP.
 
 `socket-layout.json` is the exact-engine export of production
 `scripts/device-definitions.lua` coordinates, transforms and role colors.
-`export_layout.py` uses Factorio 2.0.77 and retains 17 significant digits.
+`export_layout.py` uses Factorio 2.1.23 and retains 17 significant digits.
 Regeneration refuses a changed definition hash; `tests/art_data.lua` compares
 all coordinates with the real native prototypes.
 

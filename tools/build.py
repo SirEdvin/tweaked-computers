@@ -40,6 +40,8 @@ CONTRACT_FILES = (
     'openspec/specs/program-editor/lua-api.md',
     'openspec/specs/recipe-searcher/spec.md',
     'openspec/specs/recipe-searcher/lua-api.md',
+    'openspec/specs/factoriopedia-interface/spec.md',
+    'openspec/specs/factoriopedia-interface/lua-api.md',
     'openspec/specs/program-source/spec.md',
     'openspec/specs/program-source/lua-api.md',
     'openspec/specs/peripheral-inspection/spec.md',

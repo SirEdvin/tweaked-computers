@@ -150,6 +150,16 @@ def service(kind):
         m.dial(-.46,.045,.22,.16)
         m.box(.17,-.03,.79,.26,.04,.09,'ceramic')
         for x in (.29,.46,.63): m.bolt(x,.12,.09)
+    elif kind=='factoriopedia_interface':
+        # Upright catalogue terminal with stepped reference cards and side dial.
+        m.box(-.39,-.34,.39,.34,.04,.10,'iron')
+        m.box(-.35,-.31,-.12,.26,.10,.42,'blue')
+        m.display(-.29,-.25,-.17,.14,.425)
+        for i in range(3):
+            h=.11+i*.075
+            m.box(-.08,-.26+i*.045,.31,.22,h,h+.055,'paper')
+            m.box(.24,-.23+i*.045,.34,-.12+i*.045,h+.055,h+.07,'brass')
+        m.dial(.12,.22,.105,.335)
     elif kind=='recipe_searcher':
         for x in (-.36,.36): m.box(x-.045,-.36,x+.045,.33,.04,.10,'iron')
         m.box(-.29,-.30,.29,.31,.04,.08,'paper')

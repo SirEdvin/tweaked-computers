@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs/player'
 CONTRACT = ROOT / 'openspec'
 EXAMPLES = {
+    'factoriopedia-program': 'Research Recipe Searcher, craft a Factoriopedia Interface and supply 30 kW. Connect its Network to a computer on red. Validate, Save and Run the complete document. Logs item reference rocket capacity, water bounds and both complete name lists (or E_LIMIT); no live silo/tank feasibility is inferred.',
     'reference-speaker': 'The in-game Reference → Examples → One speaker note tutorial includes complete research, power, red-wire setup, execution steps and expected results. This is the same small program, not an external prerequisite.',
     'reference-recipe': 'The in-game Find iron plate recipes tutorial connects one powered Recipe Searcher on red and prints actual smelting matches. This supplementary copy uses the exact same source.',
     'reference-factory': 'The in-game Small factory dashboard tutorial includes the exact four-peripheral and chest/inserter setup, red discovery/INPUT and green TARGETS/OUTPUT separation. It teaches one inserter, a three-second KV hash and a two-line monitor; use its complete in-game setup.',
@@ -299,12 +300,13 @@ def inventory():
               'logic_handler': methods(text('scripts/services/logic.lua')),
               'configurator': methods(text('scripts/services/configurator.lua')), 'monitor': monitor,
               'recipe_searcher': set(re.findall(r'function methods\.([A-Za-z]+)\(', text('scripts/services/recipe-searcher.lua'))),
+              'factoriopedia_interface': set(re.findall(r'function methods\.([A-Za-z]+)\(', text('scripts/services/factoriopedia-interface.lua'))),
               'speaker': set(re.findall(r'function M\.methods\.([A-Za-z]+)\(', text('scripts/services/speaker.lua'))),
               'modem': set(re.findall(r'function M\.methods\.([A-Za-z]+)\(', text('scripts/services/modem.lua')))}
     expected = {'computer': names['computer'], 'peripheral': names['peripheral'], **maps}
     pages = {'computer': 'api/computer.md', 'peripheral': 'api/peripheral.md', 'kv_database': 'api/kv.md',
              'logic_handler': 'api/logic.md', 'configurator': 'api/configurator.md', 'monitor': 'api/monitor.md',
-             'recipe_searcher': 'api/recipe-searcher.md', 'modem': 'api/modem.md', 'speaker': 'api/speaker.md'}
+             'recipe_searcher': 'api/recipe-searcher.md', 'factoriopedia_interface': 'api/factoriopedia-interface.md', 'modem': 'api/modem.md', 'speaker': 'api/speaker.md'}
     for namespace, exports in actual.items():
         if exports != set(expected[namespace]):
             raise ValueError(f'export inventory drift {namespace}: {exports ^ set(expected[namespace])}')
@@ -332,7 +334,7 @@ def inventory():
     for name in names['colors'] + manifest['events']:
         if name not in all_docs:
             raise ValueError('undocumented color/event: ' + name)
-    capability_pages = {'speaker-peripheral': ['api/speaker.md'], 'radar-modem': ['api/modem.md', 'radar-native-assets.md'],
+    capability_pages = {'factoriopedia-interface': ['api/factoriopedia-interface.md'], 'speaker-peripheral': ['api/speaker.md'], 'radar-modem': ['api/modem.md', 'radar-native-assets.md'],
                         'computer-runtime': ['api/computer.md', 'api/language.md', 'api/common.md'],
                         'program-editor': ['editor.md'], 'device-lifecycle': ['lifecycle.md'],
                         'peripheral-network': ['api/peripheral.md'], 'monitor-display': ['api/monitor.md'],
