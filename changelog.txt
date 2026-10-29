@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.18
+Date: 2026-10-29
+  Changes:
+    - Accept any Factorio 2.1 version of base and optional Space Age instead of requiring exactly 2.1.23.
+  Info:
+    - Metadata-only compatibility release; runtime code and save behavior are unchanged from 0.1.17. Verification remains on 2.1.23, not every 2.1 patch. Back up saves before upgrading.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.17
 Date: 2026-10-29
   Features:
