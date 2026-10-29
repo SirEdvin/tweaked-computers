@@ -217,6 +217,9 @@ jobs:
             --output "$RUNNER_TEMP/tc-ci/lifecycle" --mode both \
             --fixture tests.lifecycle_engine --data-fixture tests.candidate_data \
             --production-context --cold
+          python tools/rd1_upgrade.py --factorio "$engine" \
+            --legacy-factorio "$RUNNER_TEMP/tc-ci/legacy-engine/factorio/bin/x64/factorio" \
+            --archive "$archive" --output "$RUNNER_TEMP/tc-ci/lifecycle-alpha-upgrade" --mode both
           python tools/smoke.py --factorio "$engine" --archive "$archive" \
             --output "$RUNNER_TEMP/tc-ci/recipe-searcher" --mode both \
             --fixture tests.recipe_searcher_engine --data-fixture tests.recipe_searcher_data \

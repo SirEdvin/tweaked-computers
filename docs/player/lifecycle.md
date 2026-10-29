@@ -14,9 +14,11 @@ been staged. Data, absolute KV deadlines, live monitor contents, active runs and
 unsaved recovery drafts are retained; conversion does not run startup again.
 Existing editor sessions must be reopened against the new physical body.
 
-Old tagged material items still restore their committed data into a fresh stopped
-identity. Old blueprints still restore saved source/settings and native wires,
-not application state or database contents. No extra socket items are required.
+Computer items are plain hardware, including old tagged items: ordinary placement
+is blank and stopped with a new identity. KV contents/deadlines and monitor tile
+settings retain their existing item policy. Old blueprints still restore saved
+source/settings and native wires, not application state or database contents.
+No extra socket items are required.
 
 If conversion is refused, the old device/data/wires remain and an upgrade
 refusal diagnostic is logged. Keep the backup and report the error; do not mine,
@@ -35,19 +37,22 @@ old mod, not loading an upgraded save in the old version.
 | Stop/fault | Source/state/logs remain; run work canceled | Unchanged | Image remains | Still-owned bank clears; target settings remain |
 | Computer outage | Pause; keep state/registrations/timers; discard transient history and resync on restoration | Deadlines continue with simulation | Retained | Owned output clears; target settings remain |
 | Peripheral outage | Active services refuse | Retain data/deadlines | Hide presentation, keep model | Handler bank clears; target settings remain |
-| Mine/re-place | Tagged source/state; new stopped identity, no run/timers/subscriptions | Tagged contents/deadlines; new identity | Tile settings retained, new blank grouping | New logic bank zero/unowned; surviving targets unchanged |
+| Mine/re-place | Plain hardware: new blank stopped identity, empty state/source and no label | Tagged contents/deadlines; new identity | Tile settings retained, new blank grouping | New logic bank zero/unowned; surviving targets unchanged |
+| Native undo of removal | Pre-removal saved source/label/state and different formerly active recovery source; new stopped identity, no run work | Existing item policy | Existing item policy | Old output ownership and earlier factory effects are not restored |
 | Blueprint / clone | Saved source/label, new stopped identity, empty state/work | Empty | Applicable settings, new blank model | Zero/unowned; configurator retains no old target list |
 | Destruction | That device's committed data destroyed; old player drafts remain recoverable | That physical database's data destroyed | Regroup/remove display | Remove/clear bank; surviving targets unchanged |
 
-Computer/KV/monitor items stack singly with tags. A computer item retains both saved
-and formerly active source if different, label and copied explicit state. It does
-not carry active execution. The editor can review/copy formerly active source into
-a draft. Unsaved per-player drafts live separately, tied to their old identities.
+Computer and KV items retain their existing single-item stack size; monitors retain
+50-item stacks. Computer items carry no computer source, label or application
+state. **Ordinary pickup and replacement loses the removed computer's contents.**
+Use source-only blueprints/clipboard copies for reusable programs, or native undo
+for a qualifying removal. Unsaved per-player drafts remain separately recoverable,
+tied to their old identities; a new body never silently adopts an old draft.
 
 KV whole-key expiry uses absolute simulation ticks even while the tagged item is
 carried. Replacing it never renews TTL. Only the actual consumed material item
 carries contents: a blueprint, ghost tag or clone does not duplicate the database.
-Unknown/malformed item formats refuse placement and refund the original material
+Unknown/malformed KV or monitor item formats refuse placement and refund the original material
 item rather than silently creating an empty device. Unsupported retained formats
 remain inert/guarded for recovery, not truncated or reset. Do not manually delete
 retained data to bypass this protection.
@@ -55,6 +60,37 @@ retained data to bypass this protection.
 Monitor material items retain scale, palette, text/background colors and blink,
 not an obsolete merged image or cursor. Ordinary save/load, unlike mining, keeps
 the complete display model. See [monitor identities](api/monitor.md#geometry-identity-and-power).
+
+## Undo and redo
+
+Ctrl+Z of an eligible player removal, or a completed player-marked robot removal,
+restores a native ghost. Supply a computer item or let a robot construct it. Saved
+source, label and explicit state come from immediately before removal, even if
+edited after the deconstruction mark. The restored computer is **stopped with a
+new identity**: no startup, timers, callbacks, subscriptions, Console session or
+old output ownership resumes. If saved/active source differed, Maintenance can
+review/copy the formerly active source into a draft without executing it.
+
+Undoing a mark before removal only cancels the order; it does not reset or stop
+the live computer. Repeated native undo/redo and cold saves retain the applicable
+snapshot while its native history or original ghost remains valid. Copying a
+restoration ghost still copies only saved source/label, not state or undo authority.
+History expiry, discarded history and cancelled ghosts are **not permanent backup**.
+Old native history created without a snapshot cannot retroactively recover data.
+Refusal preserves the snapshot in valid history/ghost and reports failure instead
+of publishing a blank successful restoration; do not delete that recovery ghost.
+If even the recovery ghost cannot be allocated, the exact inert, non-mineable body
+retains the payload for host repair. Keep that body, save and diagnostic.
+
+## Compatibility break and rollback
+
+Old `tc_computer` item contents are ignored on use, whether valid, malformed or
+unsupported. There is **no legacy item import or item-data recovery**. Upgrade does
+not clear placed-computer records, active programs, private drafts, KV contents or
+monitor models/settings. Back up the complete save and matching old mod archive
+before updating. Restore both to roll back; downgrading the mod alone cannot
+recover discarded item contents or contents lost by newly mining/replacing a
+computer normally.
 
 ## Marking a monitor for removal
 
