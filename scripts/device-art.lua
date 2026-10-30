@@ -1,6 +1,7 @@
 -- Bounded host-only status presentation. Native prototypes own body/shadow art.
 local registry=require('scripts.registry')
 local scheduler=require('scripts.scheduler')
+local lifecycle=require('scripts.lifecycle')
 local M={}
 local directions={[0]='north',[4]='east',[8]='south',[12]='west'}
 local function clear(rec)
@@ -18,7 +19,7 @@ function M.tick(tick,spend)
     if refresh and not rec.native_carrier and rec.physical_version==1 and rec.body.valid then
       local state='powered'
       if rec.physical_error or rec.status=='faulted' or rec.mining_guard=='unsupported-database' then state='fault'
-      elseif not rec.powered then state='unpowered'
+      elseif not lifecycle.available(rec) then state='fault'
       elseif rec.kind=='computer' then state=rec.status=='running' and 'blinking' or 'off' end
       local direction=directions[rec.kind=='monitor' and rec.direction or rec.body.direction]
       if direction then

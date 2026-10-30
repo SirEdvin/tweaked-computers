@@ -1,16 +1,16 @@
 # Physical devices and initial progression (TC04)
 
-Target: exactly Factorio 2.0.77, base alone or optional Space Age. This is a
-integrated alpha candidate; graphical/client verification is deferred. No VM,
+Target: exactly Factorio 2.1.23, base alone or optional Space Age. This is an
+integrated alpha candidate; native-client acceptance is separate from headless contracts. No VM,
 interpreter, OS or gameplay filesystem is introduced.
 
 ## Placement and wiring
 
 The visible device is now the native red/green Network endpoint, not an invisible
 NETWORK tile layered over a separate body. Computer, KV, monitor and Recipe Searcher occupy 1×1;
-logic occupies 3×1 and configurator 2×1. A hidden, nonselectable electric carrier
-supplies each shell at the unchanged wattage. It has no collision, item, mining
-result, blueprint entry, independent deconstruction or native GUI.
+logic occupies 3×1 and configurator 2×1. All nine custom families, including
+Factoriopedia, Production Statistics and Dashboard, need no electricity or power
+helper. Native radar and programmable-speaker retain their vanilla electricity.
 
 For logic, Input / Network / Output run left to right when north-facing. Only
 Input and Output need small device-specific auxiliary sockets. Configurator has
@@ -19,7 +19,7 @@ both cable colors. East rotates clockwise, south reverses, west counterclockwise
 The body owns ordinary selection, rotation, mining and deconstruction; auxiliary
 sockets expose only their named role, never a generic NETWORK identity.
 
-All roles remain electrically independent, with no internal wires. Network
+All roles remain circuit-independent, with no internal wires. Network
 shells, Input and Factory targets have zero combinator sections and are disabled
 and inoperable. Output contributes its single controlled bank to both colors.
 Opening a computer requires Ctrl + left-click with an empty cursor; ordinary
@@ -63,13 +63,13 @@ asset inspection, not native-client screenshots.
 All recipes make one item in 2 seconds; no expansion materials are required.
 These figures are initial tuning, not a measured gameplay optimum.
 
-| Device | Iron plates | Copper plates | Electronic circuits | Advanced circuits | Demand | Buffer |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Computer | 10 | 5 | 10 | 2 | 60 kW | 2 kJ |
-| KV database | 8 | 0 | 5 | 2 | 30 kW | 1 kJ |
-| Monitor tile | 4 | 2 | 5 | 0 | 15 kW | 500 J |
-| Logic handler | 6 | 0 | 8 | 0 | 15 kW | 500 J |
-| Configurator | 8 | 0 | 8 | 2 | 30 kW | 1 kJ |
+| Original device | Iron plates | Copper plates | Electronic circuits | Advanced circuits |
+| --- | ---: | ---: | ---: | ---: |
+| Computer | 10 | 5 | 10 | 2 |
+| KV database | 8 | 0 | 5 | 2 |
+| Monitor tile | 4 | 2 | 5 | 0 |
+| Logic handler | 6 | 0 | 8 | 0 |
+| Configurator | 8 | 0 | 8 | 2 |
 
 `tc-circuit-computers` requires `circuit-network` and the pinned engine's
 `advanced-circuit` technology. It costs 100 automation + logistic science pairs,
@@ -78,36 +78,37 @@ unlocks for already-researched forces. Ordinary reload performs no such mutation
 Recipes explicitly disable automatic recycling and remain base-material recipes
 with Space Age enabled. Future balance changes need review before release.
 
-The unreleased Recipe Searcher is independently owned by `tc-recipe-searcher`
+The Recipe Searcher is independently owned by `tc-recipe-searcher`
 technology. Its exact prerequisites are `tc-circuit-computers` and
 `utility-science-pack`; research is 200 red/green/utility sets at 60 seconds each.
 One item takes 2 seconds, 10 steel plates, 5 advanced circuits and 2 processing
-units. It draws 30 kW, has one Network endpoint and no product inventory/fluid box.
+units. It needs no electricity, has one Network endpoint and no product inventory/fluid box.
 Both prototype effects and additive configuration reconciliation consult the same
 per-device `technology` metadata; Circuit Computers alone cannot grant it on upgrade.
 See the [player API](player/api/recipe-searcher.md) and
 [separate candidate evidence](recipe-searcher-validation.md).
 
-The energy source consumes at secondary-input priority, produces nothing,
-exports no energy and can refill at twice demand. A complete device has active
-power only when its real buffer has at least one tick's demand. The two-tick
-buffer is short brownout tolerance, not stored long-term service availability.
-Electrical/integrity loss is checked in a prepaid critical lifecycle pass before
-restoration notifications can defer. Computer callbacks pause, transient history
-is discarded by the runtime, state/timers survive and restoration keeps the same
-run, requests input resync and sends retained restoration subscriptions. Native
-logic output is disabled/cleared on a peripheral outage. Passive connectors stay
-present. Downstream KV/configurator methods must reject unavailable services;
-monitor rendering must blank presentation without discarding its model.
+Custom electrical cycling never pauses callbacks, discards queued work, clears
+owned outputs or blanks a monitor. The legacy `power_restored` registration name
+is accepted but produces no new events. Already accepted events remain historical
+queue entries. On upgrade, only exactly owned old electrical helpers are retired;
+their inert compatibility prototypes remain loadable for old saves/blueprints.
 
-Normal reconciliation/restoration uses a persistent fair cursor and the existing
-maintenance budget. A computer cannot dispatch using an old positive power
-observation. Actual model/graph/rendering capacities remain development limits;
+Live identity, exact role ownership, geometry, direction, force, surface and
+selected wire authority still gate operations. Stop/fault/removal and invalid
+authority retain their fail-safe cleanup; physical unavailability can hide a
+monitor without erasing its model. Native radar/speaker electricity is checked
+at use time, including real modem receiver eligibility, not by idle power polling.
+`PeripheralInfo.powered` remains a boolean: physical availability for custom
+devices and live native electrical/operational availability for native carriers.
+
+Physical reconciliation uses existing maintenance admission. A computer cannot
+dispatch on stale physical authority. Actual model/graph/rendering capacities remain development limits;
 no release latency/maximum-world guarantee is asserted by these logical charges.
 
 ## Host integration: scripts.lifecycle
 
-Import at control parsing time. This module registers two lifecycle phase hooks;
+Import at control parsing time. This module registers lifecycle work;
 do not replace the existing scheduler's on_tick handler. Production control.lua
 registers player/robot/script build/revive, mined/death/script removal and native
 player rotation events. These functions are host-only, not guest capabilities:
@@ -127,27 +128,28 @@ player rotation events. These functions are host-only, not guest capabilities:
   is exactly red/green. It creates no connector, returns no synthetic graph and
   deliberately does NOT require power: discovery topology remains passive.
 - `clear_output(record)`: disable and remove this physical logic endpoint's
-  sections/bank on a peripheral outage. Downstream logic owns generation-specific
+  sections/bank when its non-power authority is lost. Downstream logic owns generation-specific
   writer retirement via `registry.register_cleanup`; use the same endpoint and
   coordinate native output configuration and `output_owner`/recovery metadata
   with this function; no reusable output mirror is retained.
-- `power_losses`, `reconcile`, `sample_power`, `unlocks`: admitted scheduler or
+- `reconcile`, `observe_monitor`, `unlocks`: admitted scheduler or
   synchronized initialization/configuration helpers, never on_load.
 
 Physical records retain `physical_version=1`; new shells have `layout_version=2`.
-The body is bound as `body`, while children contain `power` plus Input/Output or
-Factory targets as applicable. Do not index `children.network` for new devices:
-use `endpoint(rec,role)` or `connector`. `power_entity(rec)` resolves the current
-carrier; `has_power(rec)` validates its exact ownership/scope/location and buffer.
-All service consumers use those seams, including monitor-member power checks.
+The body is bound as `body`, while children contain only Input/Output or Factory
+targets as applicable. `availability_version=1` identifies the power-free layout;
+unknown representations remain inert for recovery. Do not index `children.network`
+for new devices: use `endpoint(rec,role)` or `connector`. `available(rec)` validates
+live ownership/scope/geometry; the old host `has_power` name aliases that check.
+All active consumers revalidate these proofs, including monitor members.
 The graph admits a body only when its exact connector is the layout-2 Network
 endpoint. It never grants discovery merely because an entity is a body or shares
 a native circuit-network ID.
 
 `upgrade(rec)` and `upgrade_existing()` perform synchronized staged conversion
 from the retained old named EEI prototypes. They snapshot every native role/color
-wire (including unsupported and ghost connections), allocate distinct shell/power/
-pads, copy current power/output sections and validate all connections before
+wire (including unsupported and ghost connections), allocate distinct shells and
+required role pads, copy current output sections and validate all connections before
 `registry.replace_physical` publishes ownership. Only then are old components
 retired. Logical record/state/database/model/run/generation/queue/timer aliases
 remain intact; no guest activation occurs. Monitor anchor body references are
@@ -160,14 +162,15 @@ Legacy prototype `placeable_by` still accepts the logical item so old blueprint
 EEI ghosts can revive. New blueprints wire the shell directly and add only the
 required auxiliary ghosts. Both new and old rotated/mirrored helper wires transfer
 onto the already-owned endpoint; no generic helper is adopted into the new layout.
-Private power never appears in blueprints. Area-cloned power duplicates and
-unmatched socket clones are removed, without replacing the new owner's parts.
+No power helper is created by blueprints. Only clones of exactly owned obsolete
+electrical helpers are removed; unrelated inert entities survive. Unmatched role
+socket clones are handled without replacing the new owner's parts.
 
 ## Focused verification boundaries
 
 See [rd1-verification.md](rd1-verification.md) for exact reproducible commands and
 scope. `tests.redesign_engine` and `tests.redesign_data` exercise the installed
-layout/points, twenty cardinal native shells, private drain, passive role signals,
+layout/points, all nine families in four cardinal directions without electricity, passive role signals,
 mark/cancel state and allocation/wire rollback. `tests.network_engine` retains
 its real graph, authority and compiled facade contracts. `tests.lifecycle_engine`
 exercises snapshots, rotation, native clones/blueprints, destruction, force/surface

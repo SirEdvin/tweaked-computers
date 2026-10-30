@@ -7,10 +7,10 @@ Normative companion to [spec.md](spec.md). Shared types/errors: [common.md](../.
 | Signature | Returns | Semantics |
 | --- | --- | --- |
 | `peripheral.getNames(wire)` | `string[]` | Complete sorted unique names on explicit `"red"` or `"green"`; empty is a successful complete empty result |
-| `peripheral.isPresent(name, wire)` | boolean | Physical current reachability; an unpowered device can still be present |
+| `peripheral.isPresent(name, wire)` | boolean | Physical current reachability; an unpowered native carrier can still be present |
 | `peripheral.getType(name, wire)` | string or nil | One of `monitor`, `kv_database`, `logic_handler`, `configurator`, `recipe_searcher`, `factoriopedia_interface`, `production_statistics`, `dashboard`, `modem`, `speaker`; nil if not present |
 | `peripheral.getMethods(name, wire)` | `string[]` or nil | Sorted public method names; includes declared aliases |
-| `peripheral.describe(name, wire)` | `PeripheralInfo` or nil | Current public metadata, even while unpowered |
+| `peripheral.describe(name, wire)` | `PeripheralInfo` or nil | Current public metadata, including native unpowered availability |
 | `peripheral.wrap(name, wire)` | wrapped table or nil | Ephemeral dot-call method facade bound to name, entity generation and selected channel |
 | `peripheral.call(name, wire, method, ...)` | method returns | Equivalent to a current checked wrapped-method call; unknown method is E_ARGUMENT |
 | `peripheral.find(type_name, wire)` | zero or more wrapped tables | Multiple returns in sorted-name order, not one array; `{ peripheral.find(...) }` collects them |
@@ -37,7 +37,7 @@ PeripheralInfo = {
 
 Positions use Factorio world coordinates, not integer tile guesses. Monitor position/footprint describe its current logical rectangular group; footprint width/height are axis-aligned world extents, whereas terminal dimensions use display-local axes. Labels are descriptive and need not be unique. No API enumerates all force-wide computers or bypasses wires via coordinates.
 
-Every device exposes `getLimits()` for its documented effective capacities. This static metadata method is available while unpowered if the binding is reachable; active read/write methods otherwise throw E_UNPOWERED. There is no generic raw property accessor or arbitrary method forwarding.
+Every device exposes `getLimits()` for its documented effective capacities. All nine custom families need no electricity; `powered:boolean` now reports their live physical availability. Native radar/speaker retain electrical/operational availability and `E_UNPOWERED` for active methods, while reachable metadata/getLimits remain available. There is no generic raw property accessor or arbitrary method forwarding.
 
 ## Reachability rules
 
@@ -47,7 +47,7 @@ A merged monitor is one service identity discoverable through any reachable memb
 
 A wrapper is not durable Data. Retain its opaque name and selected wire in computer state if needed, then wrap again in a later callback. A captured method is legal only within a callback and still revalidates authority at every call. Removing and replacing a device produces a new identity, even at the same position or with the same label. A topology cache must fail closed until current authority is proved.
 
-The [Console-only exception](../console-shell/lua-api.md) retains authentic wrappers/captured peripheral methods through private symbolic descriptors, never saved functions or ordinary Data. Each use still proves live identity, generation, wire, power and scope. [Monitor synchronization selection](../monitor-display/buffering-api.md) adds the strict `setMonitorSyncGroup` / `getMonitorSyncGroup` dot calls, without granting discovery or exclusive drawing authority.
+The [Console-only exception](../console-shell/lua-api.md) retains authentic wrappers/captured peripheral methods through private symbolic descriptors, never saved functions or ordinary Data. Each use still proves live identity, generation, wire, geometry/ownership and scope; native carriers also require their own electricity. [Monitor synchronization selection](../monitor-display/buffering-api.md) adds the strict `setMonitorSyncGroup` / `getMonitorSyncGroup` dot calls, without granting discovery or exclusive drawing authority.
 
 ## Attachment events
 
@@ -88,4 +88,4 @@ end
 
 ## Required cases
 
-Same-color chain; red-to-green nonpath; vanilla/ghost/foreign-force relay refusal; both-color duplicate identity; powered versus unpowered discovery; invalidation between lookup/call; incomplete traversal refusal; monitor merge/split wrapper invalidation; saved names after new entity placement; shared writes; no signals encoded on discovery ports.
+Same-color chain; red-to-green nonpath; vanilla/ghost/foreign-force relay refusal; both-color duplicate identity; power-free custom and powered/unpowered native discovery; invalidation between lookup/call; incomplete traversal refusal; monitor merge/split wrapper invalidation; saved names after new entity placement; shared writes; no signals encoded on discovery ports.

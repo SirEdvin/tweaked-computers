@@ -122,7 +122,7 @@ function M.select(c,tick,spend,input,execution)
     local g,path=authority.lookup(c,ref.name,ref.wire,spend)
     if not g then errors.raise('E_UNREACHABLE','monitor reference unreachable') end
     if g.kind~='monitor' then errors.raise('E_WRONGTYPE','monitor required') end
-    if not authority.available(g,spend) then errors.raise('E_UNPOWERED','selected monitor is unpowered') end
+    if not authority.available(g,spend) then errors.raise('E_UNREACHABLE','selected monitor is physically unavailable') end
     if not refs[g.id] then count=count+1; total=total+g.model.width*g.model.height end
     if not refs[g.id] or ref.wire=='red' then refs[g.id]={name=g.id,wire=ref.wire,generation=g.generation,path=path} end
   end
@@ -254,9 +254,9 @@ local function context(g,snapshot)
     world_height=g.world_height,width_tiles=g.width_tiles,height_tiles=g.height_tiles,surface_index=g.surface_index}
 end
 local function blocked(lane,code,message)
-  lane.status='blocked'; lane.diagnostic=errors.new(code,message); lane.power_blocked=code=='E_UNPOWERED' or nil
+  lane.status='blocked'; lane.diagnostic=errors.new(code,message); lane.power_blocked=code=='E_UNREACHABLE' or nil
 end
-local function qualify(s,lane,spend,proofs,paths_only)
+local function qualify(s,lane,spend,proofs)
   if s.job then blocked(lane,'E_NETWORK_PENDING','monitor topology pending'); return false end
   local owner=lane.owner and registry.record(lane.owner)
   local execution=lane.owner and {kind=lane.owner_kind or 'program',id=lane.run_id}
@@ -266,7 +266,7 @@ local function qualify(s,lane,spend,proofs,paths_only)
       if c then release(c,errors.new('E_NOT_FOUND','selecting owner retired'),execution) else cancel(s.presentation,lane); s.presentation.lanes[lane.key]=nil end
       return false
     end
-    if not c.powered or not lifecycle.has_power(c) then blocked(lane,'E_UNPOWERED','selecting computer unpowered'); return false end
+    if not principal.available(c) then blocked(lane,'E_UNREACHABLE','selecting computer physically unavailable'); return false end
   end
   local total=0
   for _,ref in ipairs(lane.members) do
@@ -276,8 +276,8 @@ local function qualify(s,lane,spend,proofs,paths_only)
       return false
     end
     total=total+g.model.width*g.model.height
-    if paths_only and g.powered==false or not paths_only and not authority.available(g,spend,proofs) then
-      blocked(lane,'E_UNPOWERED','monitor unpowered'); return false
+    if not authority.available(g,spend,proofs) then
+      blocked(lane,'E_UNREACHABLE','monitor physically unavailable'); return false
     end
     -- Shells have no program subscriptions/topology sweep, and can remain live
     -- while stopped. Revoke their idle selections too, not only ready jobs.
@@ -508,7 +508,7 @@ function M.tick(tick,spend)
   local remaining=L.render_cells_per_tick
   invalidate(p,spend)
   remaining=cleanup(p,spend,math.floor(remaining/2)) + math.ceil(L.render_cells_per_tick/2)
-  for _,lane in pairs(p.shells) do qualify(s,lane,spend,proofs,true) end
+  for _,lane in pairs(p.shells) do qualify(s,lane,spend,proofs) end
   local order={}
   for key,lane in pairs(p.work) do
     if p.lanes[key]==lane then order[#order+1]=lane else p.work[key]=nil end
@@ -568,11 +568,7 @@ principal.register_cleanup('monitor-sync',function(c,p,reason)
 end)
 registry.register_cleanup('monitor-sync',function(c,run,reason)
   if c.kind=='computer' and c.monitor_sync and c.monitor_sync.run_id==run then
-    if reason=='power_loss' then
-      local s=registry.get().monitors; local p=s and s.presentation
-      local lane=p and p.version==1 and p.lanes[c.monitor_sync.key]
-      if lane then wake(p,lane) end
-    else release(c,errors.new('E_NOT_FOUND','monitor selection released: '..reason)) end
+    release(c,errors.new('E_NOT_FOUND','monitor selection released: '..reason))
   end
 end)
 return M

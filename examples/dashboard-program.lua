@@ -1,6 +1,6 @@
 return [[function start(event)
     local panel = peripheral.find("dashboard", "red")
-    assert(panel, "Connect a powered Dashboard on red")
+    assert(panel, "Connect a Dashboard on red")
     panel.setTab(1, {
         title = "Overview",
         content = {type = "column", id = "root", children = {

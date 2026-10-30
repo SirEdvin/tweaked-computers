@@ -122,7 +122,7 @@ end
 function M.prepare_event(rec,name,payload,tick,spend,metadata)
   if rec.status~='running' then return false,'inactive' end
   handler(rec,name)
-  if not rec.powered and payload.name~='timer' and payload.name~='start' then return false,'unpowered' end
+
   local circuit=metadata and metadata.circuit==true
   local envelope=payload
   if circuit then
@@ -169,7 +169,7 @@ end
 function M.emit(id,event_name,payload,tick,spend)
   local rec=registry.computer(id)
   if not general[event_name] then errors.raise('E_ARGUMENT','unsupported general event') end
-  if rec.status~='running' or not rec.powered then return false end
+  if rec.status~='running' or event_name=='power_restored' then return false end
   if spend then spend(#rec.queue+limits.subscriptions^2+limits.subscriptions+1) end
   local subscriptions={}
   for _,sub in pairs(rec.subscriptions) do if sub.event_name==event_name then subscriptions[#subscriptions+1]=sub end end
@@ -181,30 +181,6 @@ function M.emit(id,event_name,payload,tick,spend)
   if spend then spend(#subscriptions*(stats.bytes+stats.nodes*2+#event_name+32)) end
   for _,sub in ipairs(subscriptions) do
     if not M.enqueue(rec,sub.handler,copied,tick,nil) then return false end
-  end
-  return true
-end
-function M.set_power(id,powered,tick,spend)
-  root()
-  local rec=registry.computer(id)
-  if type(powered)~='boolean' then errors.raise('E_ARGUMENT','boolean power state required') end
-  if rec.powered==powered then return false end
-  -- Reserve bounded restoration notification copies before the power change.
-  if spend then spend(#rec.queue+1+(powered and limits.subscriptions*512+limits.subscriptions^2 or 0)) end
-  rec.powered=powered
-  if not powered then
-    rec.outage_start_tick=tick
-    if not registry.cleanup(rec,rec.run_id,'power_loss') then M.retire(rec,'faulted','cleanup_failure') end
-    local retained={}; local bytes=0
-    for _,item in ipairs(rec.queue) do
-      if item.event.name=='timer' or item.event.name=='start' then retained[#retained+1]=item; bytes=bytes+item.bytes end
-    end
-    rec.queue=retained; rec.queue_bytes=bytes
-    registry.ready_changed(rec)
-  else
-    rec.needs_input_resync=true -- Host logic sampling consumes this before dispatch.
-    if rec.status=='running' then M.emit(id,'power_restored',{outage_start_tick=rec.outage_start_tick,restored_tick=tick},tick) end
-    rec.outage_start_tick=nil
   end
   return true
 end

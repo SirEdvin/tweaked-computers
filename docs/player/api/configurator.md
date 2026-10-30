@@ -134,8 +134,8 @@ Initial limits: target_nodes=256 connector vertices, target_edges=512,
 configuration_bytes=16384, configuration_nodes=4096, patch_fields=32,
 sections=32, section_filters=128. Common return/callback/allocation bounds also
 apply; maxima cannot necessarily be combined in one callback. Pending/limit
-errors are not an empty target inventory. Active service needs configurator power;
-getLimits still works if reachable and unpowered.
+errors are not an empty target inventory. The configurator needs no electricity;
+active service still requires exact physical identity and current Targets authority.
 
 Run [configurator-program](../examples.md#configurator-program) with one inserter
 on green TARGETS to set its condition, or

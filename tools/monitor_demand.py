@@ -93,7 +93,7 @@ def main():
                 physical += re.findall(r'TC_DEMAND_PHYSICAL_PASS case=(\S+)', path.read_text())
         receipts.append({'mode': mode, 'passes': passes, 'physical': physical})
     complete = all(sorted(r['passes']) == sorted((p, '8', '144') for p in ('idle', 'cold-idle', 'outage', 'restored', 'one', 'all')) for r in receipts)
-    complete = complete and all(sorted(r['physical']) == sorted(('move', 'rotate', 'force', 'surface-clone', 'helper')) for r in receipts)
+    complete = complete and all(sorted(r['physical']) == sorted(('move', 'rotate', 'force', 'surface-clone', 'ownership')) for r in receipts)
     code = result.returncode or (0 if complete else 1)
     record.update(exit_code=code, receipts=receipts)
     (folder / 'summary.json').write_text(json.dumps(record, indent=2) + '\n')

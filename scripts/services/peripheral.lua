@@ -107,7 +107,7 @@ function M.services(computer,tick,guard,execution)
   local function current()
     guard.check()
     if not principal.live(computer,execution)
-      or not computer.powered or not authorized and not lifecycle.connector(computer,'network','red') then
+      or not principal.available(computer) or not authorized and not lifecycle.connector(computer,'network','red') then
       errors.raise('E_NOT_FOUND','computer run no longer authorized')
     end
     authorized=true
@@ -148,12 +148,11 @@ function M.services(computer,tick,guard,execution)
     -- Unknown/test/other providers invalidate proofs even if they later throw.
     if not bindings[rec.kind].callback_stable then inventories={}; availability={}; authorized=false end
     if method=='getLimits' and select('#',...)~=0 then errors.raise('E_ARGUMENT','getLimits expects no arguments') end
-    -- Logical providers prove all current members themselves. Their cached
-    -- aggregate powered flag can lag paid topology maintenance after restoration.
+    -- Availability is live physical authority; only native carriers need power.
     local available=bindings[rec.kind].available
-    if method~='getLimits' and ((available and not available(rec,spend,availability))
-      or (not available and (not rec.powered or not lifecycle.has_power(rec)))) then
-      errors.raise('E_UNPOWERED','peripheral is unpowered')
+    if (method~='getLimits' or not rec.native_carrier) and ((available and not available(rec,spend,availability))
+      or (not available and not lifecycle.available(rec))) then
+      errors.raise(rec.native_carrier and 'E_UNPOWERED' or 'E_UNREACHABLE','peripheral is unavailable')
     end
     if rec.kind=='speaker' and (method=='playNote' or method=='playSound') then guard.prepare_boolean_result() end
     if rec.kind=='radar' and method=='transmit' then guard.prepare_empty_result() end
@@ -213,11 +212,11 @@ function M.services(computer,tick,guard,execution)
     local b=rec.body; local def=defs.devices[rec.kind]
     local horizontal=rec.direction==0 or rec.direction==8
     local width=rec.native_carrier=='speaker' and 1 or rec.native_carrier=='radar' and (rec.modem_tier=='surface' and 3 or 5) or nil
-    local info={name=rec.id,type=types[rec.kind],label=rec.label,powered=rec.powered,
+    local info={name=rec.id,type=types[rec.kind],label=rec.label,powered=lifecycle.available(rec),
       position={x=b.position.x,y=b.position.y},surface={index=b.surface.index,name=b.surface.name},
       quality=b.quality.name,direction=directions[width and b.direction or rec.direction],
       footprint={width=width or (horizontal and def.width or 1),height=width or (horizontal and 1 or def.width)},wire=wire}
-    if width then info.modem_tier=rec.modem_tier; info.powered=lifecycle.has_power(rec) end
+    if width then info.modem_tier=rec.modem_tier end
     if bindings[rec.kind].describe then info=bindings[rec.kind].describe(rec,wire,info) end
     return (data.copy(info,spend))
   end)
@@ -375,9 +374,9 @@ function M.check_outputs(tick,spend)
     local rec=registry.record(id); local owner=rec and rec.kind=='logic' and rec.output_owner
     if owner then
       local computer=type(owner)=='table' and root.computers[owner.computer_id]; local valid=false
-      if computer and principal.live(computer,{kind=owner.kind or 'program',id=owner.run_id}) and computer.powered then
+      if computer and principal.live(computer,{kind=owner.kind or 'program',id=owner.run_id}) and principal.available(computer) then
         local safe,admitted,result=pcall(scheduler.try_maintenance,function()
-          if owner.wire~='red' and owner.wire~='green' then return false end
+          if owner.wire~='red' and owner.wire~='green' or not lifecycle.available(rec) then return false end
           if owner.path and network.validate_witness(computer,owner.wire,owner.path,spend) then
             return owner.path[#owner.path]==rec.id
           end
@@ -405,7 +404,7 @@ principal.register_cleanup('logic-output',function(c,p)
 end)
 registry.register_cleanup('network-owned-output',function(computer,run_id,reason)
   if computer.kind~='computer' then return end
-  if reason~='power_loss' and reason~='authority_changed' then computer.network_views=nil end
+  if reason~='authority_changed' then computer.network_views=nil end
   local root=registry.get()
   for _,id in ipairs(root.order) do
     local rec=registry.record(id); local owner=rec and rec.kind=='logic' and rec.output_owner

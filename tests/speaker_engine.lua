@@ -28,7 +28,7 @@ local function conn(b,color) return assert(b.get_wire_connector(defines.wire_con
 local function connect(a,b,color) assert(conn(a,color).connect_to(conn(b,color),false)) end
 local function build(kind,x,y)
   local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
-  lifecycle.on_built{entity=b}; local r=assert(registry.by_entity(b)); lifecycle.power_entity(r).energy=1000000; r.powered=true; return r
+  lifecycle.on_built{entity=b}; local r=assert(registry.by_entity(b)); assert(not r.children.power); return r
 end
 local function native(x,y)
   return assert(game.surfaces[1].create_entity{name='programmable-speaker',position={x,y},force='player'})
@@ -44,8 +44,8 @@ local function guest(c,body)
 end
 local function call(c,r,method,...) return speaker.methods[method](c,r,'red',game.tick,nop,...) end
 local function power()
-  for _,id in ipairs(registry.get().order) do local r=registry.record(id)
-    if r.body.valid then lifecycle.power_entity(r).energy=1000000; r.powered=true end
+  for _,r in pairs(registry.get().devices) do
+    if r.native_carrier and r.body.valid then r.body.energy=1000000 end
   end
 end
 local function catalogue_oracle()

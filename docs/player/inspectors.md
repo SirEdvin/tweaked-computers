@@ -30,7 +30,7 @@ native dialogs.
 
 ## Copy an exact peripheral name
 
-Recipe Searcher, Factoriopedia Interface and Production Statistics show identity and power/status only.
+Recipe Searcher, Factoriopedia Interface and Production Statistics show identity and physical availability/status only.
 Opening them never enumerates a catalogue, queries statistics or executes a program. Use the
 [Factoriopedia API](api/factoriopedia-interface.md) or
 [Production Statistics API](api/production-statistics.md) from a wired computer for queries.
@@ -112,7 +112,7 @@ inputs do not require a native signal-list query. The own bank is an independent
 observation too. Unchanged slots and their scrolling survive polling.
 The panel does not capture every pulse between samples. It creates no program
 subscription, writer or output publication.
-Existing power/writer cleanup remains responsible for fail-safe output removal.
+Existing authority/writer cleanup remains responsible for fail-safe output removal.
 
 ## Monitor: logical tiles and character cells
 
@@ -127,14 +127,16 @@ Pending regrouping has no copyable current identity. Replacing the selected tile
 does not retarget the old session to a new entity at the same position. Inspection
 does not change the saved model, framebuffer or world presentation.
 
-## Recipe Searcher, power and access
+<a id="recipe-searcher-power-and-access"></a>
+
+## Recipe Searcher, availability and access
 
 Recipe Searcher deliberately ends at identity/status; recipe searches remain
 computer API calls, not a dedicated search interface.
 
-Identity stays readable without power. Committed monitor geometry is also
-readable while its display is blank. Unpowered KV contents, target inventories
-and live logic inputs are unavailable rather than fabricated empty results.
+Custom devices need no electricity. Committed monitor geometry remains readable
+while presentation is unavailable. Physically invalid KV devices, target paths
+and logic inputs remain unavailable rather than fabricated empty results.
 
 Every interaction rechecks the exact device, force, surface, reach and player
 permissions. Losing access closes the window or removes details on the next

@@ -20,7 +20,7 @@ end
 local function build(kind,x,y)
   local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
   lifecycle.on_built{entity=b}; local rec=assert(registry.by_entity(b))
-  lifecycle.power_entity(rec).energy=1000000; return rec
+  assert(not rec.children.power); return rec
 end
 local function native(x,y,raised)
   local b=assert(game.surfaces[1].create_entity{name='radar',position={x,y},force='player'})
@@ -72,7 +72,7 @@ function M.run()
   end
   assert(found and rec.modem.channels[7] and a.valid and a.operable)
   blueprints.on_pasted{source=a,destination=b}
-  local energy=a.energy; lifecycle.normalize_power(rec); lifecycle.reset_network(rec)
+  local energy=a.energy; lifecycle.reset_network(rec)
   assert(a.energy==energy and a.active and a.operable and rec.modem.channels[7])
   selection.destroy()
   report('mixed-native-blueprint-settings-paste-and-power-guards-preserve-native-state')

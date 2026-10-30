@@ -49,7 +49,7 @@ local function guest(c,text)
 end
 local function build(kind,x,y,d)
   local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},direction=d or 0,force='player'})
-  local r=assert(lifecycle.build(body)); lifecycle.power_entity(r).energy=100000; r.powered=true
+  local r=assert(lifecycle.build(body)); assert(not r.children.power and lifecycle.available(r))
   return r
 end
 local function wire(a,b,color)
@@ -57,7 +57,7 @@ local function wire(a,b,color)
 end
 local function fuel()
   for _,id in ipairs(registry.get().order) do local r=registry.record(id)
-    if r and r.body.valid then lifecycle.power_entity(r).energy=100000 end
+    if r and r.body.valid then assert(not r.children.power) end
   end
 end
 local source=[[function start(e)
@@ -142,12 +142,11 @@ local function selection_contract(c)
   local foreign=monitor.resolve(registry.record(f().foreign))
   guest(c,"local ok,e=pcall(peripheral.setMonitorSyncGroup,{{name="..string.format('%q',foreign.id)..",wire='red'}}); assert(not ok and e.code=='E_UNREACHABLE')")
   unchanged(saved)
-  local tile=registry.record(f().walls[1][1]); local power=lifecycle.power_entity(tile)
-  local energy=power.energy; power.energy=0; tile.powered=false
+  local tile=registry.record(f().walls[1][1]); tile.physical_error='fixture physical failure'
   saved=graph({s,c.monitor_sync})
   guest(c,[[local refs=peripheral.getMonitorSyncGroup().members
-    local ok,e=pcall(peripheral.setMonitorSyncGroup,refs); assert(not ok and e.code=='E_UNPOWERED')]])
-  unchanged(saved); power.energy=energy; tile.powered=true
+    local ok,e=pcall(peripheral.setMonitorSyncGroup,refs); assert(not ok and e.code=='E_UNREACHABLE')]])
+  unchanged(saved); tile.physical_error=nil
   guest(c,[[for _,ref in ipairs(peripheral.getMonitorSyncGroup().members) do
     peripheral.call(ref.name,ref.wire,'setTextScale',0.5) end]])
   saved=graph({s,c.monitor_sync})
@@ -185,7 +184,7 @@ function M.new(kind)
     local x=f(); local c=build('computer',-3,0); x.computer=c.id
     local surface=game.create_surface('monitor-fixture',{width=32,height=32})
     local body=assert(surface.create_entity{name=defs.devices.monitor.entity_name,position={0,0},force='player'})
-    local remote=assert(lifecycle.build(body)); lifecycle.power_entity(remote).energy=100000; remote.powered=true; x.foreign=remote.id
+    local remote=assert(lifecycle.build(body)); assert(not remote.children.power and lifecycle.available(remote)); x.foreign=remote.id
     for i,shape in ipairs({{3,6,0},{6,6,8}}) do
       local wall={}; x.walls[i]=wall
       for y=0,shape[2]-1 do for col=0,shape[1]-1 do wall[#wall+1]=build('monitor',shape[3]+col,y,(i-1)*4).id end end

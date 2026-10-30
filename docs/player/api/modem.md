@@ -10,7 +10,7 @@ other mods' radar prototypes are not automatically enrolled.
 
 A radar is enrolled only through a physical path rooted at a placed computer.
 Placement, cloning, revival or a standalone peripheral component does not enroll
-it. A stopped, faulted or unpowered computer still supplies a physical root;
+it. A stopped or faulted computer still supplies a physical root; custom computers need no electricity;
 running a program is not required for discovery. The complete path must stay on
 one wire color, force and surface. Hidden radio links and adjacent monitor tiles
 do not extend that path.
@@ -138,7 +138,7 @@ After acceptance, a full recipient queue visibly faults that run, discards its
 remaining deliveries and continues other recipients. The sender is not given a
 retryable partial-send error. There is no ACK, retry, delivery guarantee or offline
 mailbox. Closing/detaching a radar after queue admission does not recall accepted
-data. Computer Stop/fault/removal/power loss can cancel transient queued messages.
+data. Computer Stop/fault/removal can cancel transient queued messages; electrical cycling cannot.
 Missed outage traffic is never replayed. Current peripheral calls always require
 new local authority, even inside an accepted event handler.
 

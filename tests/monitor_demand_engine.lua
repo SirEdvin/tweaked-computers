@@ -11,7 +11,7 @@ local M={}; local resumed=false
 local function fixture() return storage.tc_monitor_demand end
 local function build(kind,x,y,d)
   local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},direction=d or 0,force='player'})
-  local r=assert(lifecycle.build(body)); lifecycle.power_entity(r).energy=100000; r.powered=true; return r
+  local r=assert(lifecycle.build(body)); assert(not r.children.power and lifecycle.available(r)); return r
 end
 local function wire(a,b)
   assert(lifecycle.connector(a,'network','red').connect_to(lifecycle.connector(b,'network','red')))
@@ -78,9 +78,7 @@ end
 function M.on_configuration_changed() error('unexpected configuration change') end
 local function physical_tick(event)
   local x=fixture(); local root=registry.get(); local test=x.physical
-  for _,id in ipairs(root.order) do local rec=registry.record(id); local power=lifecycle.power_entity(rec)
-    if power and power.valid then power.energy=100000 end
-  end
+  for _,id in ipairs(root.order) do assert(not registry.record(id).children.power) end
   scheduler.tick(event.tick)
   assert(event.tick-test.changed<256,'silent physical reconciliation deadline')
   local s=root.monitors; local p=s.presentation
@@ -99,7 +97,7 @@ local function physical_tick(event)
     local g=s.groups[id]; assert(g==old.group and g.model==old.model and g.render==old.front,'silent change rebuilt an unrelated display')
   end
   local rec=registry.record(test.tile)
-  local cases={'move','rotate','force','surface-clone','helper'}
+  local cases={'move','rotate','force','surface-clone','ownership'}
   local name=cases[test.index]
   if test.stage=='next' then
     local old=assert(monitor.resolve(rec)); assert(monitor.available(old,function() end))
@@ -112,7 +110,9 @@ local function physical_tick(event)
       local clone=assert(registry.by_entity(body)); assert(clone.id~=rec.id)
       test.retired=rec.id; test.tile=clone.id; x.tiles[36]=clone.id
       rec.body.destroy()
-    else lifecycle.power_entity(rec).destroy() end
+    else
+      test.binding=root.entities[rec.body.unit_number]; root.entities[rec.body.unit_number]=nil
+    end
     assert(not monitor.available(old,function() end),'same-event physical mutation reused authority: '..name)
     test.stage='changed'; test.changed=event.tick; return
   elseif test.stage=='changed' then
@@ -124,13 +124,9 @@ local function physical_tick(event)
       local clone=assert(registry.by_entity(body)); assert(clone.id~=rec.id)
       test.retired=rec.id; test.tile=clone.id; x.tiles[36]=clone.id
       rec.body.destroy()
-    elseif name=='helper' then
-      assert(not rec.powered and monitor.resolve(rec).render.hidden,'lost helper kept presentation live')
-      registry.unbind_child(rec.id,'power')
-      local power=assert(rec.body.surface.create_entity{name=defs.devices.monitor.power_name,position=rec.body.position,
-        direction=rec.direction,force=rec.body.force,create_build_effect_smoke=false})
-      power.minable_flag=false; power.destructible=false; power.operable=false; power.rotatable=false
-      registry.bind_child(rec.id,'power',power); lifecycle.normalize_power(rec); power.energy=100000
+    elseif name=='ownership' then
+      assert(not rec.powered and monitor.resolve(rec).render.hidden,'lost ownership kept presentation live')
+      root.entities[rec.body.unit_number]=test.binding; test.binding=nil
     else
       rec.body.force=test.force; rec.body.direction=test.direction
       assert(rec.body.surface==test.surface and rec.body.teleport(test.position))
@@ -139,7 +135,7 @@ local function physical_tick(event)
   elseif test.stage=='restored' then
     if not rec.powered then return end
     if name=='surface-clone' then assert(not registry.record(test.retired),'restored clone retargeted the old identity') end
-    for _,id in ipairs(x.tiles) do assert(lifecycle.has_power(registry.record(id)),'restoration lost live tile power') end
+    for _,id in ipairs(x.tiles) do assert(lifecycle.available(registry.record(id)),'restoration lost live tile availability') end
     assert(monitor.available(monitor.resolve(rec),function() end))
     log('TC_DEMAND_PHYSICAL_PASS case='..name)
     test.index=test.index+1; test.stage='next'; test.changed=event.tick
@@ -154,10 +150,14 @@ function M.on_tick(event)
     resumed=false; x.phase='cold-idle'; x.steps=180; x.measured=0
   end
   local root=registry.get(); local c=registry.computer(x.computer)
-  for _,id in ipairs(root.order) do local rec=registry.record(id); lifecycle.power_entity(rec).energy=id==x.outage and 0 or 100000 end
+  for _,id in ipairs(root.order) do local rec=registry.record(id)
+    assert(not rec.children.power)
+    if rec.id==x.outage then rec.physical_error='fixture physical failure'
+    elseif rec.physical_error=='fixture physical failure' then rec.physical_error=nil end
+  end
   assert(#x.tiles==144)
   for _,id in ipairs(x.tiles) do local rec=registry.record(id)
-    assert(rec and rec.body.valid and lifecycle.has_power(rec)==(id~=x.outage))
+    assert(rec and rec.body.valid and lifecycle.available(rec)==(id~=x.outage))
   end
   observer.begin(); scheduler.tick(event.tick); local counts=observer.finish()
   x.steps=x.steps+1

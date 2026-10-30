@@ -3,6 +3,8 @@ local runtime=require('scripts.runtime.computer')
 local admission=require('scripts.runtime.admission')
 local peripheral=require('scripts.services.peripheral')
 local errors=require('scripts.runtime.errors')
+local lifecycle=require('scripts.lifecycle')
+local monitor=require('scripts.services.monitor')
 return function(record,wire,tick)
   local ok,result=pcall(function()
     local context=runtime.context(record,tick)
@@ -16,7 +18,9 @@ return function(record,wire,tick)
     for _,name in ipairs(names) do
       spend(8); local rec=peripheral.resolve_inventory_item(inventory,name)
       if not rec then errors.raise('E_NETWORK_PENDING','discovered identity changed') end
-      result[#result+1]={name=name,type=inventory[name].type,powered=rec.powered}
+      local available
+      if rec.kind=='monitor' then available=monitor.available(rec,spend) else available=lifecycle.available(rec) end
+      result[#result+1]={name=name,type=inventory[name].type,powered=available}
     end
     return result
   end)

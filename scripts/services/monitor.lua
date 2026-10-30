@@ -56,9 +56,9 @@ function M.available(g,spend,proofs)
   if proofs and proofs[g]==g.members then return true end
   for _,id in ipairs(g.members) do
     local r=registry.record(id)
-    if not r or not r.powered
+    if not r
       or r.force_index~=g.force_index or r.surface_index~=g.surface_index or r.direction~=g.direction
-      or not lifecycle.has_power(r)
+      or not lifecycle.available(r)
       or not lifecycle.connector(r,'network','red') then return false end
     -- connector just proved live body position/direction/scope equal to this
     -- record. Re-reading them creates native proxy/position garbage per tile.
@@ -259,7 +259,7 @@ function M.reconcile(tick,spend)
     for _,g in pairs(state.groups) do if g.observation_dirty then
       local powered=true
       for _,id in ipairs(g.members) do local rec=registry.record(id)
-        if not rec or not rec.powered then powered=false; break end
+        if not rec or not lifecycle.available(rec) then powered=false; break end
       end
       g.powered=powered; g.observation_dirty=nil
     end end
@@ -306,7 +306,7 @@ end)
 -- One computer/subscription delivery regardless of paths, tiles or colors.
 function M.deliver(job,g,computer,tick,spend,player)
   local name=job.payload.name or 'monitor_resize'; local interested=false
-  if computer.status~='running' or not computer.powered then return true end
+  if computer.status~='running' or not lifecycle.available(computer) then return true end
   for _,sub in pairs(computer.subscriptions) do if sub.event_name==name then interested=true; break end end
   if not interested or (player and (computer.force_index~=player.force.index or computer.surface_index~=player.surface.index)) then return true end
   local wires={}
@@ -371,14 +371,14 @@ function M.notifications(tick,spend)
   local retained={}
   for _,job in ipairs(state.touches) do
     local g=state.groups[job.payload.peripheral]; local player=game.get_player(job.payload.player_index)
-    if g and g.powered and player and player.valid and player.force.index==g.force_index and player.surface.index==g.surface_index then
+    if g and M.available(g,spend) and player and player.valid and player.force.index==g.force_index and player.surface.index==g.surface_index then
       if not process(job,g,player) then retained[#retained+1]=job end
     end
   end
   state.touches=retained
   for _,id in ipairs(state.order) do
     local job=state.resizes[id]; local g=state.groups[id]
-    if job and (not g or g.powered and process(job,g)) then state.resizes[id]=nil end
+    if job and (not g or M.available(g,spend) and process(job,g)) then state.resizes[id]=nil end
   end
 end
 function M.activate_for_player(event,player)

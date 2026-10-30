@@ -25,7 +25,7 @@ When compatible factorio-charts is active, add exactly:
 | `setBars(slot, id, bars)` | Existing stacked-bar ID and ordered latest dataset | Zero |
 | `clearChart(slot, id)` | Existing chart ID | Zero |
 
-No separate GUI namespace, native handles, executable callback values, direct library access, global dashboard finder, timers, history-query API or arbitrary drawing/style interface is added. `getTab` returns configuration/current control text, not chart data or private render state. `getLimits` is allowed while the device is reachable but unpowered; other methods require power. Exact arities above apply; there are no implicit extra arguments or colon-call receivers.
+No separate GUI namespace, native handles, executable callback values, direct library access, global dashboard finder, timers, history-query API or arbitrary drawing/style interface is added. `getTab` returns configuration/current control text, not chart data or private render state. The custom dashboard needs no electricity or electrical helper; all methods retain live non-power identity/scope/path checks. Exact arities above apply; there are no implicit extra arguments or colon-call receivers.
 
 Absent chart methods are absent from `peripheral.getMethods` and new wrapped facades, not stubs. Existing unknown-method behavior applies to `peripheral.call`. A retained Console chart-method binding fails safely after library removal. `setTab` refuses a definition containing chart widgets while the library is absent; existing retained charts can still be inspected with `getTab`, removed, or accompanied by updates to their existing base controls. Trusted save/item/blueprint restoration preserves valid chart definitions even without the library.
 
@@ -58,7 +58,7 @@ Structural replacements invalidate old GUI button targets and queued events for 
 - `capacity` is a required integer of at least two (the upstream graph divides by `length - 1`). Admission must reserve the complete fixed-shape rolling capacity within the dashboard allowance and existing Data bounds, rather than accept an oversized empty buffer which will fail merely by filling.
 - `format` is `"number"` (default), `"percent"` or `"time"`. Percent and time use the library's built-ins, with time values in seconds and percentages already expressed in percent units. Number uses the library's existing formatter-function option bound to trusted host `tostring`; no guest formatter, formatting DSL, monkeypatch or custom renderer is introduced.
 - `values` is a plain map containing exactly the configured series names, each with a finite number. Extra/missing series, invalid numbers or nonfinite derived sums/ranges are rejected atomically. A rejected append cannot evict the old sample or change running totals.
-- Each accepted call appends one whole vector in synchronized order, advancing one position. At capacity it evicts exactly the oldest vector. All series advance together, including zero values. No samples are invented for closed windows, stopped programs, power gaps or missed timer events.
+- Each accepted call appends one whole vector in synchronized order, advancing one position. At capacity it evicts exactly the oldest vector. All series advance together, including zero values. No samples are invented for closed windows, stopped programs, native-target outages or missed timer events.
 - The horizontal position represents sample order. Callers choose sampling cadence using existing timers; there is no timestamp input, irregular-time interpolation, real-time X-axis guarantee or multiresolution selector. Samples from multiple writers follow accepted-call order.
 - `clearChart` resets samples/index/totals, preserving definition and reserved capacity. `setBars` on a line widget is invalid.
 - Line colors/order follow the unchanged library, including changes caused by its sum ordering. Any native legend must use that same returned ordering/colors, not promise independently stable colors. Empty or single-sample history may show no line; present honest empty/collecting status rather than manufacturing points.
@@ -93,7 +93,7 @@ Validate and admit candidate state and return values before mutation. Temporary 
 | Shared retained capacity exceeded | `E_CAPACITY`, old state/reservations intact |
 | Existing Data/call size envelope exceeded | Existing `E_LIMIT`, no partial update |
 | Subscription in Console or for an undeclared handler | Existing handler/Console refusal |
-| Lost identity/path/scope, pending proof or no power | Existing peripheral authority/power errors |
+| Lost identity/path/scope or pending proof | Existing non-power peripheral authority errors |
 | Guest work/allocation exhausted | Existing fatal `E_BUDGET`; no credit reset or weaker safety mode |
 | Native rendering failure/maintenance contention | Visible chart error/pending state; accepted application model retained |
 
@@ -114,14 +114,14 @@ A scheduled `dashboard_click` event carries the existing BaseEvent fields plus:
 | `button` | Stable widget ID |
 | `player_index` | Activating player |
 
-Only a normal left-button activation of an enabled native button is supported initially. Event `tick` is the activation tick; normal scheduled dispatch may occur later. A private layout-generation token accompanies the delivery for revalidation but is not guest authority. Validate the actual owned element/parent chain, current player session, exact physical identity, selected visible tab, permission, reach, enabled state and power before accepting an activation. Revalidate layout identity, subscription/run, computer path and applicable player/device authority before delivering queued work; an unavailable or unprovable target never executes a stale action.
+Only a normal left-button activation of an enabled native button is supported initially. Event `tick` is the activation tick; normal scheduled dispatch may occur later. A private layout-generation token accompanies the delivery for revalidation but is not guest authority. Validate the actual owned element/parent chain, current player session, exact physical identity, selected visible tab, permission, reach, enabled state and physical availability before accepting an activation. Revalidate layout identity, subscription/run, computer path and applicable player/device authority before delivering queued work; an unavailable or unprovable target never executes a stale action.
 
-No callback runs inside the GUI handler. Use the existing scheduled subscriptions/events and pressure policy, including existing recipient overflow fault/cleanup behavior; one recipient's refusal/fault cannot cancel other eligible registrations. Stopped/unpowered computers do not accumulate new transient clicks. Stop, activation replacement, cancellation and definitive detachment retire affected registrations/deliveries without erasing dashboard content. One subscription on two alternative physical paths still gets one event; two explicit subscriptions can intentionally get two.
+No callback runs inside the GUI handler. Use the existing scheduled subscriptions/events and pressure policy, including existing recipient overflow fault/cleanup behavior; one recipient's refusal/fault cannot cancel other eligible registrations. Stopped or physically unavailable computers do not accumulate new transient clicks. Stop, activation replacement, cancellation and definitive detachment retire affected registrations/deliveries without erasing dashboard content. One subscription on two alternative physical paths still gets one event; two explicit subscriptions can intentionally get two.
 
 ## Lifecycle and optional dependency
 
 - Ordinary save/reload preserves model, ring order/reservation and legitimate pending delivery state without startup replay. Revalidate native GUI/render sessions during gameplay, not `on_load`.
-- Closing windows or stopping/disconnecting a producer does not clear data. Unpowered dashboards show identity/status and refuse active controls/services; power restoration does not invent samples or clicks.
+- Closing windows or stopping/disconnecting a producer does not clear data. Custom electrical cycling has no effect on controls/services and invents no samples or clicks; physical invalidity still refuses stale actions.
 - Mining retains definitions/history/latest bars in a versioned data-bearing item; replacement receives a new identity without subscriptions, viewers or render resources. Snapshot metadata must fit in addition to the maximum accepted content. Malformed/unsupported snapshots remain recoverable rather than silently replaced with an empty panel.
 - Blueprints/clones/settings copy transfer definitions only. New devices start with empty charts. Existing targets preserve only their own compatible chart data through the ordinary `setTab` rule, never the source's samples.
 - Dependency removal preserves model/data and releases native presentation through host-owned cleanup that does not require the absent library. Existing chart areas show an unavailable message. Reinstallation rebuilds compatible presentation during gameplay; never rerun the producer to reconstruct history.
@@ -133,7 +133,7 @@ The maintained executable example is `examples/dashboard-program.lua`; its nativ
 ```lua
 function start(event)
     local panel = peripheral.find("dashboard", "red")
-    assert(panel, "Connect a powered Dashboard on red")
+    assert(panel, "Connect a Dashboard on red")
     panel.setTab(1, {
         title = "Overview",
         content = {type = "column", id = "root", children = {

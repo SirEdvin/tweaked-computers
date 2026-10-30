@@ -19,7 +19,7 @@ function M.run()
   local maintenance_limit=limits.maintenance_work_per_tick
   storage.tweaked_computers=nil; registry.initialize()
   local body=assert(real_game.surfaces[1].create_entity{name='tc-dashboard-shell',position={40,40},force='player'})
-  local rec=assert(lifecycle.build(body)); lifecycle.power_entity(rec).energy=500
+  local rec=assert(lifecycle.build(body)); assert(not rec.children.power and lifecycle.available(rec))
   model.set_tab(rec,1,definition(),function() end)
   model.set_tab(rec,2,{title='Second',content={type='label',id='only',text='Second viewer'}},function() end)
   local a,b=players.player(2001,body),players.player(2002,body)

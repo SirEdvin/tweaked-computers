@@ -1,6 +1,6 @@
 -- Lines are sample-order values, duration bars are seconds; no production-widget parity.
 return [[function start()
-  local p=peripheral.find('dashboard','red'); assert(p,'Connect a powered Dashboard on red')
+  local p=peripheral.find('dashboard','red'); assert(p,'Connect a Dashboard on red')
   local available=false
   for _,name in ipairs(peripheral.getMethods(peripheral.getName(p),'red')) do if name=='appendSample' then available=true end end
   local children={{type='label',id='status',text='Ready — explicit samples, duration bars in seconds'},

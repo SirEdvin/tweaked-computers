@@ -59,7 +59,7 @@ function M.run(report)
   local ok,e=pcall(graph.adopt,c,'red',function(n) if n==3*32 then error(refused,0) end end)
   assert(not ok and e==refused and registry.get().next_id==before and not registry.by_entity(a))
   for _,status in ipairs({'stopped','faulted'}) do
-    c.status=status; c.powered=false; lifecycle.power_entity(c).energy=0
+    c.status=status; c.powered=false
     graph.adopt(c,'red',nop); graph.adopt(c,'green',nop)
   end
   c.status='stopped'
@@ -69,7 +69,7 @@ function M.run(report)
   report('rooted-native-chain-stopped-faulted-unpowered-and-atomic-admission')
   report('no-mixed-color-standalone-cycle-pole-factory-ghost-force-or-monitor-bridge')
   br.modem={version=1,channels={[71]=true},count=1}
-  lifecycle.power_entity(c).energy=1000000; c.powered=true; b.energy=1000000; br.powered=false
+  c.powered=true; b.energy=1000000; br.powered=false
   console(c,"held=peripheral.wrap('"..br.id.."','red'); assert(held.isOpen(71)); assert(peripheral.describe('"..br.id.."','red').powered)")
   b.energy=0; br.powered=true
   console(c,"assert(not peripheral.describe('"..br.id.."','red').powered); assert(held.getLimits().open_channels==128); local ok,e=pcall(held.isOpen,71); assert(not ok and e.code=='E_UNPOWERED')")
@@ -132,7 +132,7 @@ function M.check_cleanup(x)
 end
 function M.detach(x)
   local c,r=registry.record(x.computer),registry.record(x.radar)
-  lifecycle.power_entity(c).energy=1000000; c.powered=true; r.body.energy=1000000
+  c.powered=true; r.body.energy=1000000
   console(c,"held=peripheral.wrap('"..r.id.."','red'); assert(held.isOpen(99))")
   peripheral.reconcile_one(c,'red',game.tick,nop)
   cut(c.body,r.body,'red'); cut(c.body,r.body,'green')
@@ -146,7 +146,7 @@ end
 function M.reconnect(x)
   M.check_dormant(x)
   local c,r=registry.record(x.computer),registry.record(x.radar)
-  lifecycle.power_entity(c).energy=1000000; c.powered=true; r.body.energy=1000000
+  c.powered=true; r.body.energy=1000000
   console(c,'local ok,e=pcall(held.getLimits); assert(not ok and e.code=="E_UNREACHABLE")')
   wire(c.body,r.body,'red'); wire(c.body,r.body,'green'); graph.adopt(c,'red',nop)
   console(c,'assert(held.isOpen(99))')

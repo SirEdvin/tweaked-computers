@@ -53,7 +53,7 @@ function M.submit(rec,source,player,token,tick,expected)
   if not source:find('%S') then return false end
   local s=M.session(rec)
   if expected~=(s and s.id or false) then errors.raise('E_BUSY','shell session changed; review before submitting') end
-  if not rec.powered or not rec.body.valid then errors.raise('E_UNPOWERED','computer must be powered') end
+  if not principal.available(rec) then errors.raise('E_UNREACHABLE','computer is physically unavailable') end
   if not authorize or not authorize(rec,player,token) then errors.raise('E_UNREACHABLE','opened Console authority required') end
   if s and (#s.pending>=limits.shell_pending_entries or s.pending_bytes+#source>limits.shell_pending_bytes) then errors.raise('E_CAPACITY','shell queue full; draft retained') end
   local ctx=runtime.context(rec,tick)
@@ -128,10 +128,10 @@ function M.dispatch(rec,tick)
   rec.last_dispatch_tick=tick
   table.remove(s.pending,1); s.pending_bytes=s.pending_bytes-#item.source
   registry.ready_changed(rec)
-  local valid=rec.powered and rec.body.valid and item.session==s.id and authorize and authorize(rec,item.player,item.token)
+  local valid=principal.available(rec) and item.session==s.id and authorize and authorize(rec,item.player,item.token)
   if not valid then
-    s.status='Canceled #'..item.id..': Console authority or power changed'
-    log(rec,item.id,'canceled','Console authority or power changed',tick); return true
+    s.status='Canceled #'..item.id..': Console authority changed'
+    log(rec,item.id,'canceled','Console authority changed',tick); return true
   end
   log(rec,item.id,'player '..item.player,item.source,tick)
   local ok,problem

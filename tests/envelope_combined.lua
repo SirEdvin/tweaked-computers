@@ -18,7 +18,7 @@ local function report(name,value) log('TC_COMBINED_'..name..' '..helpers.table_t
 local function gate(name,passed,detail) log('TC_ENVELOPE_GATE '..helpers.table_to_json{name=name,passed=passed,detail=detail}) end
 local function build(kind,x,y)
   local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
-  local r=assert(lifecycle.build(b)); lifecycle.power_entity(r).energy=100000; r.powered=true; return r
+  local r=assert(lifecycle.build(b)); assert(not r.children.power and lifecycle.available(r)); return r
 end
 local function wire(a,b,ar,br)
   assert(lifecycle.connector(a,ar or 'network','red').connect_to(lifecycle.connector(b,br or 'network','red')))
@@ -238,7 +238,7 @@ function M.on_tick(event)
     loaded=false; x.phase='sustained'; x.window=event.tick; x.resumed=true; x.change_at=event.tick+24
   else loaded=false end
   local root=registry.get()
-  for _,id in ipairs(root.order) do local r=registry.record(id); if r and r.body.valid then lifecycle.power_entity(r).energy=100000 end end
+  for _,id in ipairs(root.order) do local r=registry.record(id); if r and r.body.valid then assert(lifecycle.available(r)) end end
   if config.native then
     for _,player in pairs(game.players) do
       if not x.player_ready then

@@ -1129,6 +1129,6 @@
   "engine": "2.1.23",
   "source": {
     "path": "scripts/device-definitions.lua",
-    "sha256": "521ae35343fc6eeb2ba624d2182ad109da10e68ae4d461b7f1d270a02336f6a9"
+    "sha256": "d74af61b36bb74d63ef721b61272bf7d68d0707103d60b7efab768bc17d9beef"
   }
 }

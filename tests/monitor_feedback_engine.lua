@@ -25,7 +25,7 @@ end
 local function resolve(row) return assert(monitor.resolve(registry.record(row.ids[1]))) end
 local function settle()
   for _=1,200 do
-    lifecycle.power_losses(game.tick,nop); lifecycle.reconcile(game.tick,nop)
+    lifecycle.reconcile(game.tick,nop)
     monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
     local s=registry.get().monitors; local p=s.presentation
     local ready=not s.job and (not p or #p.jobs==0 and #p.orphans==0 and #p.retired==0 and p.pending_cells==0)
@@ -83,7 +83,7 @@ function M.run()
     for y=0,1 do for x=0,1 do
       local body=assert(s.create_entity{name=defs.devices.monitor.entity_name,position={index*12+x,y},direction=d,force='player'})
       lifecycle.on_built{entity=body}; local rec=assert(registry.by_entity(body))
-      local p=lifecycle.power_entity(rec); p.energy=100000; rec.powered=true
+      assert(not rec.children.power and lifecycle.available(rec))
       row.ids[#row.ids+1]=rec.id
     end end
     -- Real power for the ticks preceding the cold snapshot.
@@ -140,12 +140,12 @@ function M.run()
     local expected=terminal(g.model)
     settle(); assert(equal(terminal(g.model),expected)); capture(row); unchanged(row); properties(g)
     assert(marked.body.to_be_deconstructed('player'))
-    -- Power hides/restores presentation without changing committed content.
-    local p=lifecycle.power_entity(marked); p.energy=0; marked.powered=false
-    lifecycle.power_losses(game.tick,nop); lifecycle.reconcile(game.tick,nop)
+    -- Unsupported availability hides/restores without changing committed content.
+    marked.availability_version=99
+    lifecycle.reconcile(game.tick,nop)
     monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
     assert(g.render.hidden and not g.render.panel.visible); unchanged(row)
-    p.energy=100000; marked.powered=true
+    marked.availability_version=1
     settle(); unchanged(row); assert(not g.render.hidden and g.render.panel.visible)
     -- A real scale change makes the old front's grid obsolete immediately.
     -- Headless table-backed Ctrl-click must not map that still-visible image

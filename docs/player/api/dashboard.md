@@ -1,6 +1,6 @@
 # Dashboard API
 
-Type: `dashboard`. Connect its powered Network socket to a computer on explicit
+Type: `dashboard`. Connect its electricity-free Network socket to a computer on explicit
 `"red"` or `"green"`. Use dot calls on `peripheral.find("dashboard", "red")` or
 `peripheral.wrap(name, wire)`; calls revalidate exact identity, scope and path.
 See [building and opening a Dashboard](../dashboard.md) and the complete
@@ -24,7 +24,7 @@ Slots are integers **1–6**. Zero configured tabs and empty containers are vali
 Visible tabs follow occupied slot order; removing a selected tab selects the
 lowest remaining slot for that viewer. Programs do not choose a viewer's tab.
 `getTab` returns current configuration/control text, not chart history or native
-handles. All methods except `getLimits()` require power.
+handles. All methods revalidate their current non-power identity/scope/path requirements.
 
 ### Complete definitions
 
@@ -78,7 +78,7 @@ The scheduled `dashboard_click` event contains normal BaseEvent fields and:
 
 No callback runs inside the GUI handler. Delivery revalidates the exact physical
 Dashboard, layout/button, enabled state, player/session authority and recipient
-path/power. Stale/foreign/hidden or revoked actions do not execute. A full recipient
+path/physical availability. Stale/foreign/hidden or revoked actions do not execute. A full recipient
 queue follows existing overflow/fault cleanup without preventing another eligible
 recipient's delivery. There is no private retry backlog or replay of delivered
 factory actions. Stop, program replacement and cancellation retire registrations
@@ -156,7 +156,7 @@ Wrong arity/types/unknown fields are `E_ARGUMENT`; invalid slots, numeric/render
 domains and formats are `E_RANGE`; shared retained exhaustion is `E_CAPACITY`;
 ordinary Data/call bounds remain `E_LIMIT`. Unsupported/corrupt saved schemas
 raise `E_UNSUPPORTED` without replacing recoverable data. Existing identity,
-wire, scope, power and fatal `E_BUDGET` contracts are unchanged.
+wire, scope, physical validity and fatal `E_BUDGET` contracts are unchanged.
 
 Charts render only for selected open tabs, coalesced under existing maintenance
 allowances. Pending/error states identify non-current presentation while retaining

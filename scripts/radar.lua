@@ -74,6 +74,5 @@ function M.reconcile(rec,spend)
     registry.get().entities[b.unit_number].generation=rec.generation
     rec.modem={version=1,channels={},count=0}
   end
-  rec.powered=M.available(rec)
 end
 return M

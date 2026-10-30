@@ -55,7 +55,7 @@ initial defaults false. Handler name must be declared. Registrations persist by
 name/data, never saved functions, and bind the selected discovery color. Losing
 red cannot silently rebind green. IDs from another run/binding are invalid.
 
-One actual-tick sample per powered subscribed handler. Initial=false baselines
+One actual-tick sample per physically valid subscribed handler; no electricity is needed. Initial=false baselines
 current input without an event; true queues next sampling tick with empty
 previous and false previous connectivity. Notify only changed selected values or
 connectivity. A vanished nonzero signal has `current=0` in changes. An empty
@@ -83,7 +83,7 @@ update state; no immediate recursive effect or zero-latency propagation is promi
 
 ## Fail-safe ownership and persistence
 
-Stop, fault, power loss, removal, authority change or loss of the owner's selected
+Stop, fault, removal, physical invalidity, authority change or loss of the owner's selected
 path clears **only** that run's still-owned bank. A stopping old writer cannot
 clear a later writer's bank. Source failure cannot suppress cleanup. On restoration
 output remains empty until another successful write. Cold load retains a valid
@@ -129,5 +129,5 @@ pre-upgrade backup, not loading a newly saved world in the old package.
 Use [logic-controller](../examples.md#logic-controller) and the
 [first inserter tutorial](../first-controller.md). If reads stay zero, check chest
 read mode and INPUT color, distinguish disconnected getInputStatus from connected
-zero, and use exact quality. If output vanishes, inspect owner path/power/fault,
+zero, and use exact quality. If output vanishes, inspect owner path/physical validity/fault,
 not just native downstream condition. [Shared errors](common.md#errors) apply.

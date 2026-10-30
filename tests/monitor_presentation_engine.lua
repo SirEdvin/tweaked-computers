@@ -49,16 +49,20 @@ local function guest(c,text)
 end
 local function build(kind,x,y,d)
  local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},direction=d or 0,force='player'})
- local r=assert(lifecycle.build(body)); lifecycle.power_entity(r).energy=100000; r.powered=true
+ local r=assert(lifecycle.build(body)); assert(not r.children.power and lifecycle.available(r))
  return r
 end
 local function wire(a,b,color) assert(lifecycle.connector(a,'network',color).connect_to(lifecycle.connector(b,'network',color))) end
 local function fuel()
  for _,id in ipairs(registry.get().order) do local r=registry.record(id)
-  if r and r.body.valid then lifecycle.power_entity(r).energy=100000 end
+  if r and r.body.valid then
+   assert(not r.children.power)
+   if r.availability_version==99 then r.availability_version=1 end
+  end
  end
- if f().outage then local r=registry.record(f().outage); lifecycle.power_entity(r).energy=0 end
- if f().owner_outage then lifecycle.power_entity(registry.record(f().computer)).energy=0 end
+ -- Header refusal blocks availability without changing the selected physical path.
+ if f().outage then registry.record(f().outage).availability_version=99 end
+ if f().owner_outage then registry.record(f().computer).availability_version=99 end
 end
 scheduler.register_phase('render','00-presentation-pressure',function(tick,spend)
  local x=f(); if not x or x.phase~='dense' or x.pressured then return end
@@ -303,8 +307,8 @@ function M.on_tick(event)
  elseif x.phase=='outage' and s.groups[x.ids[1]] and not c.monitor_sync_diagnostic then
   local g=monitor.resolve(registry.record(x.outage))
   if g.render and g.render.hidden then
-   assert(lane.status=='blocked' and lane.diagnostic.code=='E_UNPOWERED')
-   guest(c,"local status=peripheral.getMonitorSyncGroup(); local m=peripheral.wrap(status.members[1].name,status.members[1].wire); assert(m.getLimits().cells==10584)")
+   assert(lane.status=='blocked' and lane.diagnostic.code=='E_UNREACHABLE')
+   guest(c,"local status=peripheral.getMonitorSyncGroup(); local r=status.members[1]; local ok,e=pcall(peripheral.call,r.name,r.wire,'write','unavailable'); assert(not ok and e.code=='E_UNREACHABLE')")
    x.outage=nil; x.phase='restoring'; x.changed_at=event.tick
   end
  elseif x.phase=='restoring' and settled(s,c) then
@@ -318,16 +322,20 @@ function M.on_tick(event)
   x.phase='complete-round'
  elseif x.phase=='complete-round' and settled(s,c) then
   assert(lane.presented_sequence>x.wait_sequence); log('TC_PRESENT_NOOP_BARRIER_OK')
+  -- Settled lanes do not poll owners; leave a real complete frame awaiting its proof.
+  guest(c,"for _,r in ipairs(peripheral.getMonitorSyncGroup().members) do peripheral.call(r.name,r.wire,'setCursorBlink',true) end")
   x.owner_outage=true; x.owner_selection=c.monitor_sync; x.changed_at=event.tick; x.phase='owner-outage'
  elseif x.phase=='owner-outage' and event.tick-x.changed_at>=5 then
-  assert(not c.powered and c.monitor_sync==x.owner_selection and lane.status=='blocked')
+  assert(not c.powered and c.monitor_sync==x.owner_selection and lane.status=='blocked',serpent.line{
+   cached=c.powered,available=lifecycle.available(c),same_selection=c.monitor_sync==x.owner_selection,
+   status=lane and lane.status,diagnostic=c.monitor_sync_diagnostic})
   x.owner_outage=nil; x.phase='owner-restoring'; x.changed_at=event.tick
  elseif x.phase=='owner-restoring' and c.powered and settled(s,c) then
   assert(c.monitor_sync==x.owner_selection and event.tick-x.changed_at<=256)
   guest(c,"assert(select('#',peripheral.setMonitorSyncGroup({}))==0); assert(peripheral.getMonitorSyncGroup().status=='none')")
   assert(not c.monitor_sync); x.phase='released'
  elseif x.phase=='released' and settled(s,c) then
-  log('TC_PRESENT_RELEASE_POWER_CLEANUP_OK')
+  log('TC_PRESENT_RELEASE_AVAILABILITY_CLEANUP_OK')
   runtime.stop(c.id); assert(runtime.save(c.id,plot_source,c.saved_revision)); assert(runtime.activate(c.id,event.tick))
   x.phase='plot'; x.plot_peak_work=0; x.plot_peak_allocations=0; x.plot_sample=0
  elseif x.phase=='plot' then

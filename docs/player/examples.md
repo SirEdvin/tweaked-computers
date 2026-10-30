@@ -9,12 +9,12 @@ claiming graphical keyboard/focus/touch delivery.
 
 ## dashboard-program
 
-Research Native circuit computers; build and power a Dashboard (15 kW) and computer. Connect Network red. Validate, Save and Run, then close the computer, normally open the Dashboard and left-click Acknowledge. The status changes from Ready to Acknowledged through the saved clicked handler. No chart library is required; Console cannot subscribe.
+Research Native circuit computers; build a Dashboard and computer; neither needs electricity. Connect Network red. Validate, Save and Run, then close the computer, normally open the Dashboard and left-click Acknowledge. The status changes from Ready to Acknowledged through the saved clicked handler. No chart library is required; Console cannot subscribe.
 
 ```lua
 function start(event)
     local panel = peripheral.find("dashboard", "red")
-    assert(panel, "Connect a powered Dashboard on red")
+    assert(panel, "Connect a Dashboard on red")
     panel.setTab(1, {
         title = "Overview",
         content = {type = "column", id = "root", children = {
@@ -35,11 +35,11 @@ end
 
 ## dashboard-charts
 
-Use the same powered red-wired Dashboard setup. Optionally enable unmodified factorio-charts 1.2.0 for rolling lines and seconds-only duration bars; without it labels/buttons still work. Twelve startup samples wrap an eight-slot line before opening. Scroll Overview for both charts, switch among six tabs and acknowledge a button. Live label updates preserve the selected tab and unchanged identity selection. X positions mean sample order, not wall time; this is not the native production widget.
+Use the same electricity-free red-wired Dashboard setup. Optionally enable unmodified factorio-charts 1.2.0 for rolling lines and seconds-only duration bars; without it labels/buttons still work. Twelve startup samples wrap an eight-slot line before opening. Scroll Overview for both charts, switch among six tabs and acknowledge a button. Live label updates preserve the selected tab and unchanged identity selection. X positions mean sample order, not wall time; this is not the native production widget.
 
 ```lua
 function start()
-  local p=peripheral.find('dashboard','red'); assert(p,'Connect a powered Dashboard on red')
+  local p=peripheral.find('dashboard','red'); assert(p,'Connect a Dashboard on red')
   local available=false
   for _,name in ipairs(peripheral.getMethods(peripheral.getName(p),'red')) do if name=='appendSample' then available=true end end
   local children={{type='label',id='status',text='Ready — explicit samples, duration bars in seconds'},
@@ -79,12 +79,12 @@ end
 
 ## production-statistics-program
 
-Research Recipe Searcher, craft and power a Production Statistics device and connect Network red to the computer. Validate, Save and Run. Logs local native item/fluid/pollution totals and rates, then newest/oldest iron history in both directions. Empty input and complete-result E_LIMIT refusal are distinct; work/allocation exhaustion remains fatal. This small Console example is not an unlimited export.
+Research Recipe Searcher, craft a Production Statistics device and connect Network red to the computer; neither needs electricity. Validate, Save and Run. Logs local native item/fluid/pollution totals and rates, then newest/oldest iron history in both directions. Empty input and complete-result E_LIMIT refusal are distinct; work/allocation exhaustion remains fatal. This small Console example is not an unlimited export.
 
 ```lua
 function start()
   local stats=peripheral.find("production_statistics","red")
-  assert(stats,"Connect a powered Production Statistics device on red")
+  assert(stats,"Connect a Production Statistics device on red")
   local function report()
     for _,kind in ipairs({"item","fluid","pollution"}) do
       local totals=stats.getTotals(kind)
@@ -120,7 +120,7 @@ end
 
 ## production-statistics-monitor
 
-Connect a powered Production Statistics device and monitor on red; use a display of at least 14 columns and 7 rows. Validate, Save and Run, then wait 120 ticks. Displays one-minute iron rates and both 300-sample native histories, oldest-left/newest-right with a shared peak scale. No history is accumulated. Query refused means E_LIMIT, not empty data; No activity means both native series are zero.
+Connect a Production Statistics device and monitor on red; neither needs electricity; use a display of at least 14 columns and 7 rows. Validate, Save and Run, then wait 120 ticks. Displays one-minute iron rates and both 300-sample native histories, oldest-left/newest-right with a shared peak scale. No history is accumulated. Query refused means E_LIMIT, not empty data; No activity means both native series are zero.
 
 ```lua
 function start() computer.every(120,"draw") end
@@ -128,7 +128,7 @@ function start() computer.every(120,"draw") end
 function draw()
   local stats=peripheral.find("production_statistics","red")
   local screen=peripheral.find("monitor","red")
-  assert(stats and screen,"Connect powered statistics and monitor devices on red")
+  assert(stats and screen,"Connect statistics and monitor devices on red")
   local width,height=screen.getSize()
   assert(width>=14 and height>=7,"Use a monitor with at least 14 columns and 7 rows")
   local function draw()
@@ -170,12 +170,12 @@ end
 
 ## factoriopedia-program
 
-Research Recipe Searcher, craft a Factoriopedia Interface and supply 30 kW. Connect its Network to a computer on red. Validate, Save and Run the complete document. Logs item reference rocket capacity, water bounds and both complete name lists (or E_LIMIT); no live silo/tank feasibility is inferred.
+Research Recipe Searcher and craft an electricity-free Factoriopedia Interface. Connect its Network to a computer on red. Validate, Save and Run the complete document. Logs item reference rocket capacity, water bounds and both complete name lists (or E_LIMIT); no live silo/tank feasibility is inferred.
 
 ```lua
 function start(event)
   local encyclopedia = peripheral.find("factoriopedia_interface", "red")
-  assert(encyclopedia, "Connect a powered Factoriopedia Interface on red")
+  assert(encyclopedia, "Connect a Factoriopedia Interface on red")
   local item = encyclopedia.getItem("iron-plate")
   computer.log(item.name .. " stack size=" .. tostring(item.stack_size))
   if item.rocket_capacity ~= nil then
@@ -218,7 +218,7 @@ end
 
 ## reference-recipe
 
-The in-game Find iron plate recipes tutorial connects one powered Recipe Searcher on red and prints actual smelting matches. This supplementary copy uses the exact same source.
+The in-game Find iron plate recipes tutorial connects one electricity-free Recipe Searcher on red and prints actual smelting matches. This supplementary copy uses the exact same source.
 
 ```lua
 function start(event)
@@ -371,7 +371,7 @@ end
 
 ## modem-sender
 
-Wire one powered computer to one native radar on red. Run modem-receiver on a different computer/radar on the same force and surface first. Sends on numeric channel 200 every 60 ticks and receives explicit replies on 201; these numbers are not wire colors.
+Wire one computer to one powered native radar on red. Run modem-receiver on a different computer/radar on the same force and surface first. Sends on numeric channel 200 every 60 ticks and receives explicit replies on 201; these numbers are not wire colors.
 
 ```lua
 function start(event)
@@ -403,7 +403,7 @@ end
 
 ## modem-receiver
 
-Wire a second powered computer to its own radar on red, without connecting the two discovery graphs. Start this receiver before modem-sender. Shares channel 200 on the physical radar, registers a named handler and replies explicitly; no ACK/retry guarantee or remote peripheral authority.
+Wire a second computer to its own powered native radar on red, without connecting the two discovery graphs. Start this receiver before modem-sender. Shares channel 200 on the physical radar, registers a named handler and replies explicitly; no ACK/retry guarantee or remote peripheral authority.
 
 ```lua
 function start(event)
@@ -430,7 +430,7 @@ end
 
 ## function-program
 
-Power a computer; no peripheral or wire is required. In an empty Editor draft, choose Insert starter (or paste this whole document), Validate, Save, then Run. Insertion and validation do not save or execute anything. The first dispatch calls `sample()` immediately and logs its returned count in Console; the `samples` value in explicit computer state increases once, then once more at the first 60-tick timer deadline. Private `increment` is declared before use and is not exported. `sample` is forward-visible and registration uses its string name, not its function value. Each callback has fresh locals/functions; reapplying keeps the explicit count, while ordinary reload does not replay `start`. These functions are not callable from the live Console.
+Place a computer; no electricity, peripheral or wire is required. In an empty Editor draft, choose Insert starter (or paste this whole document), Validate, Save, then Run. Insertion and validation do not save or execute anything. The first dispatch calls `sample()` immediately and logs its returned count in Console; the `samples` value in explicit computer state increases once, then once more at the first 60-tick timer deadline. Private `increment` is declared before use and is not exported. `sample` is forward-visible and registration uses its string name, not its function value. Each callback has fresh locals/functions; reapplying keeps the explicit count, while ordinary reload does not replay `start`. These functions are not callable from the live Console.
 
 ```lua
 local function increment(value)
@@ -452,7 +452,7 @@ end
 
 ## recipe-searcher-program
 
-Research Recipe Searcher separately, power it and connect its Network directly to a computer on red. Paste the whole document, Validate, Save and Run. Searches item/fluid products and refines E_LIMIT by exact category; a single category may still exceed 50 or other budgets.
+Research Recipe Searcher separately and connect its Network directly to a computer on red; neither needs electricity. Paste the whole document, Validate, Save and Run. Searches item/fluid products and refines E_LIMIT by exact category; a single category may still exceed 50 or other budgets.
 
 ```lua
 function start(event)
@@ -543,7 +543,7 @@ end
 
 ## kv-program
 
-Connect one powered database NETWORK on red. Save/Run; inspect the delayed status/TTL in Console.
+Connect one electricity-free database NETWORK on red. Save/Run; inspect the delayed status/TTL in Console.
 
 ```lua
 function start(event)
@@ -565,7 +565,7 @@ end
 
 ## monitor-program
 
-Connect a powered monitor NETWORK on red. Run, then activate a character cell; use matching adjacent tiles to test resize.
+Connect an electricity-free monitor NETWORK on red. Run, then activate a character cell; use matching adjacent tiles to test resize.
 
 ```lua
 function start(event)
@@ -594,7 +594,7 @@ end
 
 ## monitor-plot-program
 
-Connect up to four powered logical monitors on red/green. Uses one shared sine sample and replaces one complete row per screen, retaining older rows as a rolling trace. Startup discovery, geometry inspection, selection and clearing are deliberately sliced across callbacks. Checks at most eight names per color; red wins duplicate names. Resize/detach events restart discovery; unavailable screens are retried periodically. This is not a full-grid repaint or an unlimited factory/network benchmark.
+Connect up to four electricity-free logical monitors on red/green. Uses one shared sine sample and replaces one complete row per screen, retaining older rows as a rolling trace. Startup discovery, geometry inspection, selection and clearing are deliberately sliced across callbacks. Checks at most eight names per color; red wins duplicate names. Resize/detach events restart discovery; unavailable screens are retried periodically. This is not a full-grid repaint or an unlimited factory/network benchmark.
 
 ```lua
 function start(e)
@@ -696,7 +696,7 @@ end
 
 ## smooth-sine-chart
 
-Connect up to four powered logical monitors on red/green. Draws a connected green line using 2×3 mosaic subpixels instead of text markers, with a gray axis. Samples one phase and updates all selected screens every two ticks, submitting only rows whose glyphs or colors changed. Uses scale 2 when a footprint axis exceeds three tiles, otherwise scale 1, and bounds grids to 32 columns / 22 rows. Ships with version 0.1.7 and its runtime/presenter optimizations; older published archives retain their original example. Paste the complete source, then Validate, Save and Run. Do not run other content writers on the same screens with this row-cached example. See the [subpixel design and verification boundaries](monitor-animation.md).
+Connect up to four electricity-free logical monitors on red/green. Draws a connected green line using 2×3 mosaic subpixels instead of text markers, with a gray axis. Samples one phase and updates all selected screens every two ticks, submitting only rows whose glyphs or colors changed. Uses scale 2 when a footprint axis exceeds three tiles, otherwise scale 1, and bounds grids to 32 columns / 22 rows. Ships with version 0.1.7 and its runtime/presenter optimizations; older published archives retain their original example. Paste the complete source, then Validate, Save and Run. Do not run other content writers on the same screens with this row-cached example. See the [subpixel design and verification boundaries](monitor-animation.md).
 
 ```lua
 function start()

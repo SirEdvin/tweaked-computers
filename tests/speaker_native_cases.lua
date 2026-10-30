@@ -14,7 +14,7 @@ local function conn(body,color) return assert(body.get_wire_connector(defines.wi
 local function wire(a,b,color) if not conn(a,color).is_connected_to(conn(b,color)) then assert(conn(a,color).connect_to(conn(b,color),false)) end end
 local function build(kind,x,y)
   local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
-  lifecycle.on_built{entity=body}; local rec=assert(registry.by_entity(body)); lifecycle.power_entity(rec).energy=100000; rec.powered=true; return rec
+  lifecycle.on_built{entity=body}; local rec=assert(registry.by_entity(body)); assert(not rec.children.power); return rec
 end
 local function native(x,y) return assert(game.surfaces[1].create_entity{name='programmable-speaker',position={x,y},force='player'}) end
 local function adopt() for _=1,#registry.get().order*2+4 do graph.adopt_tick(game.tick,nop) end end

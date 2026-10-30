@@ -1,6 +1,7 @@
 -- Native task-oriented workspace. The model remains the only mutation authority.
 local model=require('scripts.ui.editor-model')
 local registry=require('scripts.registry')
+local lifecycle=require('scripts.lifecycle')
 local limits=require('scripts.runtime.limits')
 local help=require('scripts.ui.help')
 local reference=require('scripts.ui.reference')
@@ -141,8 +142,10 @@ local function peripheral_details(c,s)
   end
   local text
   if found then
-    text='API name: '..found.name..'\nType: '..found.type..'\nDiscovery wire: '..inventory.wire
-      ..'\n'..(found.powered and 'Powered' or 'Unpowered / service paused')
+    local native=found.type=='modem' or found.type=='speaker'
+    local availability=native and (found.powered and 'Native service powered' or 'Native service unpowered / unavailable')
+      or (found.powered and 'Available — no electricity required' or 'Physically unavailable')
+    text='API name: '..found.name..'\nType: '..found.type..'\nDiscovery wire: '..inventory.wire..'\n'..availability
   elseif inventory and inventory.error then
     text=(selected and ('Last selected name: '..selected..'\n') or '')..'Inventory unavailable; presence is not claimed.\n'..diagnostic(inventory.error)
   elseif selected then text=selected..'\nDisconnected / not present on this refreshed '..(inventory and inventory.wire or s.wire)..' path.'
@@ -185,7 +188,7 @@ local function inspect(c,s,rec,tick)
       end
       -- These are generated opaque IDs / fixed host type names, not guest labels.
       -- Button styles do not support rich_text_setting in the pinned engine.
-      row['peripheral_'..i].caption=item.name..' / '..item.type..(item.powered and ' / + powered' or ' / ! unpowered')
+      row['peripheral_'..i].caption=item.name..' / '..item.type..(item.powered and ' / available' or ' / ! unavailable')
       if row.get_index_in_parent()~=i then c.rows.swap_children(row.get_index_in_parent(),i) end
       if s.peripheral==item.name and s.peripheral_wire==wire then retained=true end
     end
@@ -218,7 +221,7 @@ function M.refresh(player,message,tick)
   local ok,rec,d=pcall(model.current,player,s.token)
   if not ok then f.title.status.caption='Unavailable'; f.title.status.tooltip=diagnostic(rec); return end
   local c=content(f,'editor'); local dirty=d.source~=d.base_source; local conflict=d.base_revision~=rec.saved_revision
-  local status=rec.status..(rec.powered and ' / powered' or ' / unpowered')
+  local status=rec.status..(lifecycle.available(rec) and '' or ' / physically unavailable')
   f.title.status.caption=status
   c.status.caption=dirty and 'Unsaved' or 'Saved'
   c.status.tooltip=rec.id..' | '..status..(conflict and ' | conflict: review the current saved source' or '')

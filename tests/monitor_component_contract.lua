@@ -11,7 +11,7 @@ local function nop() end
 local function f() return storage.tc_components end
 local function settle()
   for _=1,100 do
-    lifecycle.power_losses(game.tick,nop); lifecycle.reconcile(game.tick,nop)
+    lifecycle.reconcile(game.tick,nop)
     monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
     local p=registry.get().monitors.presentation
     if p and #p.jobs==0 and #p.retired==0 and #p.orphans==0 and p.pending_cells==0 then return end
@@ -34,7 +34,7 @@ end
 function M.run()
   registry.initialize()
   local body=assert(game.surfaces[1].create_entity{name=defs.devices.monitor.entity_name,position={0,0},force='player'})
-  local tile=assert(lifecycle.build(body)); lifecycle.power_entity(tile).energy=100000; tile.powered=true
+  local tile=assert(lifecycle.build(body)); assert(not tile.children.power and lifecycle.available(tile))
   settle(); local g=assert(monitor.resolve(tile))
   assert(monitor.available(g,nop))
   local at=body.position; assert(body.teleport({at.x+1,at.y}))
@@ -43,10 +43,11 @@ function M.run()
   body.direction=4; assert(not monitor.available(g,nop)); body.direction=0
   local foreign=game.create_force('tc-components-foreign')
   body.force=foreign; assert(not monitor.available(g,nop)); body.force='player'
-  local power=lifecycle.power_entity(tile); power.energy=0
-  assert(not monitor.available(g,nop)); power.energy=100000
+  local bindings=registry.get().entities; local binding=bindings[body.unit_number]
+  bindings[body.unit_number]={id='unrelated',role='body'}
+  assert(not monitor.available(g,nop)); bindings[body.unit_number]=binding
   assert(monitor.available(g,nop))
-  log('TC_COMPONENT_AUTHORITY_OK live-same-event-position-direction-force-power')
+  log('TC_COMPONENT_AUTHORITY_OK live-same-event-position-direction-force-ownership')
   local state=registry.get().monitors
   local settings=snapshots.settings(tile); settings.monitor.scale=2
   local width,height=g.model.width,g.model.height
@@ -87,14 +88,14 @@ function M.run()
   local staged=job.frames[1].cells[1]
   assert(staged.background==background and background.visible and staged.shared_background)
   assert(staged.glyph.valid and not staged.glyph.visible and glyph.visible)
-  power.energy=0; renderer.tick(game.tick,nop)
+  tile.physical_error='injected temporary physical unavailability'; renderer.tick(game.tick,nop)
   assert(not background.visible and not glyph.visible and not staged.glyph.visible)
   renderer.changed(g)
   -- Cancelled staging must never destroy borrowed objects. Cancelled guest
   -- content remains authoritative; restore the old image before a new seal.
   write(g,'B','0','1'); settle()
   assert(background.valid and glyph.valid and not staged.glyph.valid and not background.visible)
-  power.energy=100000; settle()
+  tile.physical_error=nil; settle()
   assert(background.valid and glyph.valid and g.render.cells[1].background==background and g.render.cells[1].glyph==glyph)
   assert(not staged.glyph.valid)
   write(g,' ' ,'4','1'); settle()
@@ -125,7 +126,7 @@ function M.on_tick(event)
   assert(x.background.valid and x.background.visible and x.glyph.valid and x.glyph.visible)
   local staged=x.job.frames[1].cells[1]
   assert(staged.background==x.background and not staged.glyph.visible)
-  lifecycle.power_entity(registry.record(x.tile)).energy=100000
+  assert(lifecycle.available(registry.record(x.tile)))
   settle()
   assert(g.render.cells[1].background==x.background and x.background.valid and x.background.visible)
   assert(not x.glyph.valid and g.render.cells[1].glyph.sprite=='tc-glyph-69')

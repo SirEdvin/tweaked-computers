@@ -13,7 +13,7 @@ Peripheral type: `recipe_searcher`. Use dots, never colons:
 ```lua
 function start(event)
     local searcher = peripheral.find("recipe_searcher", "red")
-    assert(searcher, "Connect a powered Recipe Searcher on red")
+    assert(searcher, "Connect a Recipe Searcher on red")
     local recipes = searcher.findRecipes("item", "iron-plate", "smelting")
     local limits = searcher.getLimits()
 end
@@ -114,10 +114,9 @@ reboot/research-cache invalidation. Earlier snapshots stay unchanged. Queries ne
 unlock recipes or mutate the world. Localized text, icons, native objects, machine
 lists and technology objects are deliberately outside this schema.
 
-Normal same-force/surface, explicit-color, live identity/generation and power checks
-apply before provider arguments. Reachable unpowered searchers remain discoverable,
-relay Network paths and allow `getLimits`, but searches fail `E_UNPOWERED`.
-Restored power allows new calls. Captured methods cannot retarget a replacement.
+Normal same-force/surface, explicit-color and live identity/generation/geometry checks
+apply before provider arguments. The searcher needs no electricity or power helper.
+Captured methods cannot retarget a replacement.
 There are no new events beyond ordinary peripheral attach/detach.
 
 Programs should retain name/wire and wrap again next callback, not save facades as
@@ -127,7 +126,7 @@ state limits permit. Ordinary cold load performs no query or source replay and
 renews no spent tick credits; later queries read the currently installed catalogue.
 
 The block follows ordinary rotation, mining, clone and wired-blueprint lifecycle,
-with one logical drop and nonselectable private power helper. Back up saves and
+with one logical drop and no electrical helper. Back up saves and
 matching mod ZIPs before upgrading: downgrading removes unknown new prototypes;
 restore a pre-upgrade backup for lossless rollback. Existing Circuit Computers
 research does not grant this separately researched recipe. Configuration repair
@@ -145,7 +144,7 @@ do not parse messages. Fatal resource controls remain noncatchable.
 | 51 filtered matches | `E_LIMIT`, `field="results"` |
 | Input/result shape, strings or bytes exceed common bounds | `E_LIMIT`, never partial data |
 | Metadata cannot be represented by the schema | `E_UNSUPPORTED` |
-| Unpowered active search | `E_UNPOWERED` |
+| Physically invalid searcher | `E_UNREACHABLE` |
 | Lost bound identity/path/force/surface | `E_UNREACHABLE` |
 | Incomplete/oversized proof | Existing `E_NETWORK_PENDING` / `E_LIMIT` |
 | Work/allocation exhausted | Fatal `E_BUDGET` |

@@ -25,7 +25,7 @@ Use dots, not colons. Every method returns exactly one fresh plain table.
 | `getTotals(kind)` | All native cumulative counters in `{tick,input,output}` |
 | `getRates(kind, window)` | Same complete map shape, native rates per minute |
 | `getHistory(kind, name, window [, quality])` | Two dense 300-sample arrays in `{tick,input,output}` |
-| `getLimits()` | Defensive effective common limits, even without peripheral power |
+| `getLimits()` | Defensive effective common limits |
 
 Arity is exactly 1, 2, 3-or-4 and 0. Explicit nil quality is omission, but other
 extra nil arguments are still extra arguments. `kind` is exactly `item`, `fluid`
@@ -93,12 +93,12 @@ renew them. A native call's fixed admission charge is not a hard C++ time or hea
 | Existing result/Data envelope cannot fit | `E_LIMIT`, no partial snapshot |
 | Unsupported/nonfinite native value | `E_UNSUPPORTED` |
 | Unexpected native access failure | `E_ENGINE`, never invented zero data |
-| Reachable but unpowered statistical method | `E_UNPOWERED` |
+| Physically invalid device | `E_UNREACHABLE`; custom devices need no electricity |
 | Removed/replaced/foreign/out-of-scope identity/path | `E_UNREACHABLE` |
 | Network proof pending or too expensive | `E_NETWORK_PENDING` / `E_LIMIT` |
 | Shared work/allocation exhausted | Fatal `E_BUDGET`, not catchable |
 
-Ordinary errors are plain catchable ApiErrors. Live facade authority/power and
+Ordinary errors are plain catchable ApiErrors. Live facade physical authority and
 shared resource checks can precede provider argument validation. Captured methods
 never retarget replacement devices; restored Console bindings keep live checks.
 Changing a returned map/sample cannot mutate native statistics or another result.
@@ -113,13 +113,13 @@ reads all three categories and prints input totals/rates and both iron histories
 Empty inputs are reported explicitly; `E_LIMIT` is reported as refusal. Console
 history itself is bounded, so this is not an unlimited factory export.
 
-For a dashboard, connect one powered monitor on the **same red discovery network**
+For a dashboard, connect one electricity-free monitor on the **same red discovery network**
 and run [production-statistics-monitor](../examples.md#production-statistics-monitor).
 Use at least **14 columns and 7 rows** (join monitor tiles if necessary). After
 120 ticks it displays iron production/consumption per minute and both native
 one-minute histories, with a shared peak scale and **older → newer** direction.
 The two traces are input above output. `No activity` means zero native series;
-`Query refused` means a whole-result limit refusal. Unpowered/missing devices
+`Query refused` means a whole-result limit refusal. Physically invalid/missing devices
 fault instead of pretending data is empty. No other program should write this screen.
 
 ## Save, upgrade and rollback

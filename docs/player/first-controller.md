@@ -6,7 +6,7 @@ This small factory uses only a computer and logic handler. The complete
 ## Build
 
 1. [Research and craft](getting-started.md) one computer and one logic handler.
-   Power both. For a north-facing logic handler, the three ports are INPUT,
+   Neither needs electricity. For a north-facing logic handler, the three ports are INPUT,
    NETWORK and OUTPUT from left to right.
 2. Place a supply chest with iron plates, an inserter and a destination chest.
    Aim the inserter from supply to destination and power it. Use a separate

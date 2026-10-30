@@ -71,8 +71,8 @@ function M.open(player,id)
   identity.select_name.enabled=rec.kind~='monitor'
   local types={kv='kv_database',logic='logic_handler',monitor='monitor',configurator='configurator',recipe_searcher='recipe_searcher',factoriopedia_interface='factoriopedia_interface',production_statistics='production_statistics'}
   label(f,tr('peripheral-type',types[rec.kind]))
-  local powered=lifecycle.has_power(rec)
-  f.add{type='label',name='availability',caption=tr(not powered and 'unpowered' or (rec.kind=='recipe_searcher' or rec.kind=='factoriopedia_interface' or rec.kind=='production_statistics') and 'available' or 'pending')}
+  local powered=lifecycle.available(rec)
+  f.add{type='label',name='availability',caption=tr(not powered and 'physical-unavailable' or (rec.kind=='recipe_searcher' or rec.kind=='factoriopedia_interface' or rec.kind=='production_statistics') and 'available' or 'pending')}
 
   f.add{type='scroll-pane',name='details',horizontal_scroll_policy='auto',vertical_scroll_policy='auto'}
   -- Structure and identity never wait for expensive data-query admission.
@@ -96,7 +96,7 @@ end
 local function prepare(s,spend)
   local snapshot=s.snapshot; local d=snapshot.details
   local view={signature='',kind=snapshot.kind}
-  if not d then view.message=snapshot.powered and tr('identity-only') or tr('unpowered'); return view end
+  if not d then view.message=snapshot.powered and tr('identity-only') or tr('physical-unavailable'); return view end
   if snapshot.kind=='kv' then
     local entries=d.entries; view.keys={}; local pages=math.max(1,math.ceil(#entries/8))
     s.page=math.min(s.page,pages); view.pages=pages
@@ -205,7 +205,7 @@ end
 draw_pending=function(f,s,rec,powered)
   local p=f.details; p.clear(); s.drawn=nil
   if rec.kind=='logic' then draw_logic(p,s,{connected={},errors={}}); return end
-  local reason=tr(not powered and rec.kind~='monitor' and 'unpowered' or 'pending')
+  local reason=tr(not powered and rec.kind~='monitor' and 'physical-unavailable' or 'pending')
   if rec.kind=='recipe_searcher' or rec.kind=='factoriopedia_interface' or rec.kind=='production_statistics' then reason=tr('identity-only')
   elseif rec.kind=='kv' then label(p,tr('keys')); p.tooltip=tr('kv-help')
   elseif rec.kind=='configurator' then
@@ -382,13 +382,13 @@ function M.tick(tick)
           spend(128)
           local ok,rec=pcall(model.current,player,s.token)
           if not ok then M.close(player); return end
-          local powered=lifecycle.has_power(rec)
+          local powered=lifecycle.available(rec)
           if s.snapshot and powered~=s.snapshot.powered then
             s.snapshot=nil; s.logic_partial=nil; s.pending=true
             draw_pending(f,s,rec,powered)
           end
           if not s.redraw or not s.snapshot then
-            s.pending=true; f.availability.caption=tr(not powered and 'unpowered' or s.snapshot and 'pending-stale' or 'pending')
+            s.pending=true; f.availability.caption=tr(not powered and 'physical-unavailable' or s.snapshot and 'pending-stale' or 'pending')
             local candidate,admitted
             local success,err=pcall(function()
               admitted=scheduler.try_maintenance(function() candidate=model.read(rec,tick,spend,s) end)
@@ -414,7 +414,7 @@ function M.tick(tick)
 
             if f.identity.api_name.text~=s.snapshot.name then f.identity.api_name.text=s.snapshot.name end
             f.identity.select_name.enabled=true
-            f.availability.caption=tr(not s.snapshot.powered and 'unpowered' or s.identity_changed and 'identity-changed' or 'available')
+            f.availability.caption=tr(not s.snapshot.powered and 'physical-unavailable' or s.identity_changed and 'identity-changed' or 'available')
             if view.kind=='logic' and view.signals and (not view.signals.red_tick or not view.signals.green_tick
               or next(view.signals.errors or {})) then f.availability.caption=tr('signals-pending') end
 

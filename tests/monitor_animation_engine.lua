@@ -29,7 +29,7 @@ end
 local function nop() end
 local function build(kind,x,y,d)
   local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},direction=d or 0,force='player'})
-  local r=assert(lifecycle.build(body)); lifecycle.power_entity(r).energy=100000; r.powered=true; return r
+  local r=assert(lifecycle.build(body)); assert(not r.children.power and lifecycle.available(r)); return r
 end
 local function wire(a,b,color)
   assert(lifecycle.connector(a,'network',color).connect_to(lifecycle.connector(b,'network',color)))
@@ -118,7 +118,12 @@ function M.on_tick(event)
     loaded=false; x.phase='drawing'; x.resumed=true; x.last_sample=nil
   end
   for _,id in ipairs(root.order) do
-    local r=registry.record(id); if r and r.body.valid then lifecycle.power_entity(r).energy=id==x.outage and 0 or 100000 end
+    local r=registry.record(id)
+    if r and r.body.valid then
+      assert(not r.children.power)
+      if r.id==x.outage then r.availability_version=99
+      elseif r.availability_version==99 then r.availability_version=1 end
+    end
   end
   if contention then contention.begin(event.tick) end
   local profiler=helpers.create_profiler()
@@ -179,7 +184,7 @@ function M.on_tick(event)
   elseif x.phase=='outage' and chart and #chart.views==3 and lane and lane.presented_sequence>=3 then
     x.outage=nil; x.phase='restoring'; x.changed=event.tick
   elseif x.phase=='restoring' and chart and #chart.views==4 and lane and lane.presented_sequence>=3 then
-    x.phase='done'; log('TC_COLD_OK animation-30Hz coherent-native-fronts retained-settings-and-credits power-recovery')
+    x.phase='done'; log('TC_COLD_OK animation-30Hz coherent-native-fronts retained-settings-and-credits availability-recovery')
   end
 end
 return M

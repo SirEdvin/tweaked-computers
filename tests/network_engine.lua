@@ -25,7 +25,7 @@ end
 local function build(surface,kind,x,y,force)
   local body=assert(surface.create_entity{name=defs.devices[kind].entity_name,position={x,y},force=force or 'player'})
   lifecycle.on_built{entity=body}
-  local rec=assert(registry.by_entity(body)); lifecycle.power_entity(rec).energy=defs.devices[kind].watts/30
+  local rec=assert(registry.by_entity(body)); assert(not rec.children.power and lifecycle.available(rec))
   rec.powered=true; return rec
 end
 local function inventory(c,wire) return peripheral.inventory(c,wire,nop) end
@@ -126,10 +126,10 @@ function M.run()
   guest(c,[[local n=peripheral.getNames('red'); assert(#n==2)
     local db=peripheral.find('kv_database','red'); assert(db)
     assert(peripheral.getType(peripheral.getName(db),'red')=='kv_database')
-    local info=peripheral.describe(peripheral.getName(db),'red'); assert(not info.powered)
+    local info=peripheral.describe(peripheral.getName(db),'red'); assert(info.powered)
     info.position.x=999; assert(peripheral.describe(peripheral.getName(db),'red').position.x~=999)
     assert(db.getLimits().fixture_entries==1)
-    local ok,e=pcall(db.testGet); assert(not ok and e.code=='E_UNPOWERED')
+    local ok,e=pcall(db.testGet); assert(ok and e==nil)
     assert(select('#',peripheral.find('unknown','green'))==0)
     local methods=peripheral.getMethods(peripheral.getName(db),'red'); assert(#methods==5)
     methods[1]='bad'; assert(peripheral.getMethods(peripheral.getName(db),'red')[1]~='bad')
@@ -138,7 +138,7 @@ function M.run()
     ok,e=pcall(peripheral.call,peripheral.getName(db),'red','unknown'); assert(not ok and e.code=='E_ARGUMENT')
     ok,e=pcall(db.getLimits,db); assert(not ok and e.code=='E_ARGUMENT')]])
   db.powered=true
-  report('compiled-discovery-metadata-copy-arity-unpowered-static-limits-and-zero-tuple')
+  report('compiled-discovery-metadata-copy-arity-power-free-static-limits-and-zero-tuple')
   local direct_source='function start(e) return peripheral.call('..string.format('%q',db.id)..',"red","testGet") end'
   local direct_work={}
   for i,classify in ipairs({false,true}) do
@@ -228,6 +228,21 @@ function M.run()
   disconnect(c,io,'red'); peripheral.check_outputs(game.tick,nop)
   assert(not io.output_owner and io.children.output.get_control_behavior().sections_count==0)
   connect(c,db,'red'); output(io,c,'red')
+  local port=io.children.output; local at=port.position
+  assert(port.teleport({at.x,at.y+1}))
+  peripheral.check_outputs(game.tick,nop)
+  assert(not io.output_owner and port.get_control_behavior().sections_count==0,'moved owned output retained its bank')
+  assert(port.teleport(at)); output(io,c,'red')
+  local unowned=assert(surface.create_entity{name='constant-combinator',position={6,12},force='player'})
+  local native=unowned.get_or_create_control_behavior(); native.enabled=true
+  for i=native.sections_count,1,-1 do native.remove_section(i) end
+  local section=native.add_section(); section.set_slot(1,{value={type='virtual',name='signal-Z',quality='normal'},min=33})
+  assert(native.enabled and native.sections_count==1 and section.get_slot(1).min==33)
+  io.children.output=unowned; lifecycle.clear_output(io)
+  assert(native.enabled and native.sections_count==1 and section.get_slot(1).min==33,'cleanup rewrote an unowned output')
+  local body=io.body; io.body=unowned; lifecycle.reset_network(io); io.body=body
+  assert(native.enabled and native.sections_count==1 and unowned.operable,'network reset rewrote an unowned body')
+  io.children.output=port; lifecycle.clear_output(io); unowned.destroy(); output(io,c,'red')
   -- An old writer's revocation cannot clear the newer ownership generation.
   io.output_owner.run_id='newer-writer'; peripheral.revoke(c,io.id,'red','wire_removed')
   assert(io.output_owner and io.output_owner.run_id=='newer-writer')

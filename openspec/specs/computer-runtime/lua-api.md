@@ -52,7 +52,7 @@ Supported general events: `peripheral_attach`, `peripheral_detach`, `monitor_res
 
 Logic input subscriptions are created by the logic-handler API, not by `computer.on("signal_changed", ...)`. Timers likewise address a named handler directly. `start`, `signal_changed` and `timer` are not registerable general-event names. There is no guest `on_tick`; recurring timers express periodic work under limits. There is no guest stop/fault cleanup callback on which safety depends.
 
-`power_restored` carries `outage_start_tick` and `restored_tick`. It is delivered once to retained registrations after actual power restoration, not cold load. No callback executes at power loss. General subscriptions are not automatically restricted to the peripheral that happened to exist at registration: they receive matching currently authorized devices and channel-qualified attach/detach transitions.
+`power_restored` is an inert legacy registration name: no new events are generated. Already admitted historical events retain their `outage_start_tick` and `restored_tick` payloads. Custom computers need no electricity, and electrical cycling never pauses execution or cancels accepted work. General subscriptions are not automatically restricted to the peripheral that happened to exist at registration: they receive matching currently authorized devices and channel-qualified attach/detach transitions.
 
 ## Timers
 
@@ -162,4 +162,4 @@ Expected raw entries: `Lua 5.2\tfalse\tnil\t3` and `handled: sample failure`.
 - Ordinary false/empty values versus missing state; copy isolation and invalid nested data refusal.
 - Save/load after a completed state write, pending one-shot and recurring timers; no duplicated `start` or registration.
 - Same-tick budget preservation, malicious loops/recursion, `pcall` quota swallowing, oversized helpers and a responsive neighboring computer.
-- Power-pause/resume timing, timer cancel after queue admission, stop cleanup and active/saved source separation.
+- Power-free execution, legacy paused-run upgrade without startup replay, timer cancel after queue admission, stop cleanup and active/saved source separation.

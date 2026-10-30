@@ -41,20 +41,16 @@ function M.run()
       local count=0
       for role,part in pairs(rec.children) do
         count=count+1; assert(registry.by_entity(part)==rec and not part.minable and not part.destructible and not part.operable)
-        if role=='power' then
-          assert(not part.prototype.selectable_in_game and part.prototype.has_flag('not-blueprintable'))
-          assert(part.prototype.has_flag('not-deconstructable') and not part.prototype.mineable_properties.minable)
-        else
+        assert(role~='power','new shell created an electrical helper')
           assert(part.name==defs.pad_name(kind,role) and part.localised_name[1]=='entity-name.'..part.name)
           local index; for i,r in ipairs(def.roles) do if r==role then index=i end end
           local x,y=defs.offset(kind,index,d)
           assert(part.position.x==b.position.x+x and part.position.y==b.position.y+y)
           assert(part.prototype.has_flag('not-deconstructable'))
-        end
       end
-      assert(count==#def.roles)
+      assert(count==#def.roles-1)
       for _,role in ipairs(def.roles) do for _,color in ipairs({'red','green'}) do assert(lifecycle.connector(rec,role,color)) end end
-      local p=lifecycle.power_entity(rec); p.energy=def.watts/30; lifecycle.sample_power(rec,game.tick,nop)
+      assert(lifecycle.available(rec))
       f().ids[#f().ids+1]=rec.id
       -- Body is the real mark/cancel target; helper state never substitutes for it.
       assert(b.order_deconstruction('player') and b.to_be_deconstructed('player')); b.cancel_deconstruction('player')
@@ -77,7 +73,7 @@ function M.run()
     local target=assert(s.create_entity{name='constant-combinator',position={28,row*12-4},force='player'})
     signal(target,'signal-D',17); wire(target,cfg.children.targets,'red')
   end
-  report('twenty-four-native-shells-cardinal-footprints-private-power-device-metadata-and-body-mark-cancel')
+  report('all-nine-native-shells-cardinal-footprints-no-power-helper-device-metadata-and-body-mark-cancel')
   report('direct-red-green-computer-monitor-logic-discovery')
   -- Refuse partial placement; only staged native objects are rolled back.
   local staged; local attempts=0; local before=#registry.get().order
@@ -93,10 +89,10 @@ function M.run()
   signal(shell,'signal-Z',99) -- Explicit hostile native-paste setup, not guest access.
   blueprints.on_pasted{destination=shell,source=fake}
   assert(shell.get_control_behavior().sections_count==0 and not shell.get_control_behavior().enabled)
-  local power_rec=registry.record(f().rows[1].kv); local retained_power=power_rec.children.power
-  power_rec.children.power=nil
-  assert(lifecycle.power_entity(power_rec)==nil and not lifecycle.has_power(power_rec),'missing private power fell back to the shell')
-  power_rec.children.power=retained_power
+  local rec=registry.record(f().rows[1].kv); local binding=registry.get().entities[rec.body.unit_number]
+  registry.get().entities[rec.body.unit_number]=nil
+  assert(not lifecycle.available(rec),'missing exact body ownership authorized the shell')
+  registry.get().entities[rec.body.unit_number]=binding
   -- A later refused wire restores an earlier tentative edge, preserving originals.
   local a=registry.record(f().rows[1].kv).body
   local b=assert(s.create_entity{name='constant-combinator',position={40,0},force='player'})
@@ -116,18 +112,18 @@ function M.on_tick(event)
   if x.phase=='frozen' then
     if not loaded then return end
     for _,id in ipairs(x.ids) do local rec=registry.record(id)
-      assert(rec.layout_version==2 and not rec.powered and lifecycle.connector(rec,'network','red'))
+      assert(rec.layout_version==2 and not rec.children.power and lifecycle.available(rec) and lifecycle.connector(rec,'network','red'))
     end
-    x.phase='done'; log('TC_COLD_OK native-shell-passive-outage-reload'); return
+    x.phase='done'; log('TC_COLD_OK native-shell-power-free-passive-reload'); return
   end
   loaded=false
   local elapsed=event.tick-x.start
   if elapsed==1 then
     for _,id in ipairs(x.ids) do
-      local rec=registry.record(id); local def=defs.devices[rec.kind]; local p=lifecycle.power_entity(rec)
-      assert(math.abs(p.energy-def.watts/60)<0.02,'private power draw mismatch '..rec.kind..' '..p.energy)
+      local rec=registry.record(id)
+      assert(not rec.children.power and lifecycle.available(rec))
     end
-    log('TC_RD1_NATIVE_PRIVATE_DRAIN_OK all-six-wattages')
+    log('TC_RD1_NATIVE_POWER_FREE_OK all-nine-families')
   elseif elapsed>=3 and x.phase=='signals' then
     for _,row in ipairs(x.rows) do
       local l=registry.record(row.logic); local m=registry.record(row.monitor)
@@ -144,9 +140,9 @@ function M.on_tick(event)
     x.phase='outage'; log('TC_RD1_NATIVE_PASSIVE_ISOLATION_OK all-cardinal red-green')
   elseif elapsed>=8 and x.phase=='outage' then
     for _,id in ipairs(x.ids) do local rec=registry.record(id)
-      lifecycle.sample_power(rec,event.tick,nop); assert(not rec.powered)
+      assert(lifecycle.available(rec) and not rec.children.power)
       assert(lifecycle.connector(rec,'network','red'),'outage removed passive network')
-      if rec.kind=='logic' then assert(rec.children.output.get_control_behavior().sections_count==0) end
+      if rec.kind=='logic' then assert(rec.children.output.get_control_behavior().sections_count==1 and value(rec,'output','red','signal-C')==13) end
     end
     x.phase='frozen'; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
   end

@@ -58,7 +58,7 @@ function M.escape(value,spend)
 end
 function M.read(rec,tick,spend,session)
   spend(64)
-  local powered=lifecycle.has_power(rec)
+  local powered=lifecycle.available(rec)
   local candidate={tick=tick,name=rec.id,kind=rec.kind,powered=powered}
   if rec.kind=='monitor' then
     candidate.details=monitor.inspect(rec,tick,spend); candidate.name=candidate.details.name

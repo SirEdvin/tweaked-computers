@@ -37,7 +37,7 @@ At successful `expire(key, seconds)`:
 - The key is logically absent at `current_tick >= deadline`; every command checks this before reading a live value/type. Background reclamation need not happen at that exact tick.
 - For a still-live key, TTL uses `floor((deadline - current_tick + 30) / 60)`, matching Redis's nearest-second rounding at a simulation-tick resolution. A live key can report zero shortly before its deadline. Never confuse zero with -2.
 - `set` clears TTL; mutation of hash fields preserves TTL; a successful new `expire` replaces its old deadline; `persist` removes it.
-- Real-world time, game speed and server downtime do not directly enter the deadline. Game pause stops simulation time. An unpowered/mined database retains the deadline, so simulation time while carried still counts.
+- Real-world time, game speed and server downtime do not directly enter the deadline. Game pause stops simulation time. A physically unavailable/mined database retains the deadline, so simulation time while carried still counts.
 
 All expirations affect whole keys. A newly created hash after expiry has no inherited fields or deadline. On cold load the original absolute deadline remains, not a reset duration. An expired value is never returned merely because a maintenance sweep has not run.
 
@@ -45,7 +45,7 @@ All expirations affect whole keys. A newly created hash after expiry has no inhe
 
 The command is the atomic boundary, not the entire callback. Validate total final capacity, per-command movement/copy cost, key type and all field/value inputs before committing. Overwrite/refusal retains the previous value and deadline; variadic HSET/HDEL cannot partially publish. Counts use the command's one simulation-tick observation.
 
-Returning/copying a large hash consumes bounded service work. E_BUSY/E_LIMIT is not a successful empty hash. E_WRONGTYPE is catchable through `pcall`; missing keys are the normal return values listed above. Active calls fail E_UNPOWERED while the device is unpowered; getLimits remains available as reachable static metadata.
+Returning/copying a large hash consumes bounded service work. E_BUSY/E_LIMIT is not a successful empty hash. E_WRONGTYPE is catchable through `pcall`; missing keys are the normal return values listed above. The database needs no electricity. Active calls retain live physical authority checks; getLimits remains reachable static metadata.
 
 Accepted content counts against a published live-content budget. Serialization metadata must have separately reserved room so maximum accepted databases can always be saved/mined. Maintenance may reclaim expired content incrementally but cannot resurrect it or silently truncate data to repair an accounting bug.
 
@@ -73,4 +73,4 @@ This is a contract example, not a deployed Redis service. The stored owner is a 
 
 ## Required cases
 
-All listed return types; empty/NUL strings; false/number/table refusal; duplicate variadic arguments; odd HSET arity; wrong-type reads and writes; SET replacing hashes/removing expiry; HSET retaining TTL; deleting the last hash field; zero/negative expiry; exact boundary and half-second TTL rounding; expired-but-unreclaimed capacity; copying snapshots; maximum accepted mining/save metadata; two computers observing one database; distinct databases; power loss and cold reload without TTL renewal.
+All listed return types; empty/NUL strings; false/number/table refusal; duplicate variadic arguments; odd HSET arity; wrong-type reads and writes; SET replacing hashes/removing expiry; HSET retaining TTL; deleting the last hash field; zero/negative expiry; exact boundary and half-second TTL rounding; expired-but-unreclaimed capacity; copying snapshots; maximum accepted mining/save metadata; two computers observing one database; distinct databases; physical unavailability and cold reload without TTL renewal.

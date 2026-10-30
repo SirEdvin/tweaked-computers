@@ -33,7 +33,7 @@ local function copy(t) if type(t)~='table' then return t end; local r={}; for k,
 local function atomic(m,code,fn) local old=copy(m); error_is(code,fn); assert(value_equal(old,m),'rejected terminal call mutated state') end
 local function build(kind,x,y,direction,force)
   local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].name,position={x,y},direction=direction or 0,force=force or 'player'})
-  local r=assert(lifecycle.build(body)); body.energy=defs.devices[kind].watts/30; r.powered=true; return r
+  local r=assert(lifecycle.build(body)); assert(not r.children.power and lifecycle.available(r)); return r
 end
 local function connect(a,b,wire) assert(lifecycle.connector(a,'network',wire).connect_to(lifecycle.connector(b,'network',wire))) end
 local function settle()
@@ -174,10 +174,10 @@ function M.run()
   renderer.participate(display); renderer.tick(game.tick,scheduler.maintenance(root,game.tick,true))
   assert(display.render.presented_revision==display.model.revision)
   root.scheduler.maintenance_spent=0 -- Isolated fixture, not a production clock reset.
-  b0.body.energy=0; registry.monitor_changed(b0,false); monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
-  assert(display.render.hidden and not object.visible and display.model.cells[1][1]==80)
-  guest(c,"local m=peripheral.find('monitor','red'); local ok,e=pcall(m.write,'bad'); assert(not ok and e.code=='E_UNPOWERED')")
-  b0.body.energy=500; b0.powered=true; registry.monitor_changed(b0,false); monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
+  b0.powered=false; registry.monitor_changed(b0,false); monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
+  assert(not display.render.hidden and object.visible and display.model.cells[1][1]==80)
+  guest(c,"local m=peripheral.find('monitor','red'); assert(peripheral.describe(peripheral.getName(m),'red').powered); m.write('NOPOWER')")
+  b0.powered=true; registry.monitor_changed(b0,false); monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
   assert(not display.render.hidden and object.visible and display.model.cells[1][1]==80)
   local retained_model=display.model
   b0.physical_error='fixture-owned-port-fault'

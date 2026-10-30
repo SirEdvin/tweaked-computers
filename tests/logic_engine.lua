@@ -19,8 +19,8 @@ local function f() return storage.tc07 end
 local function nop() end
 local function report(s) f().groups=f().groups+1; log('TC_CONTRACT '..s) end
 local function build(kind,x,y)
-  local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].name,position={x,y},force='player'})
-  local r=assert(lifecycle.build(b)); b.energy=100000; r.powered=true; return r
+  local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
+  local r=assert(lifecycle.build(b)); assert(not r.children.power and lifecycle.available(r)); return r
 end
 local function connector(r,wire,role) return assert(lifecycle.connector(r,role or 'network',wire)) end
 local function connect(a,b,wire,role,other) assert(connector(a,wire,role).connect_to(connector(b,wire,other))) end
@@ -255,14 +255,16 @@ function M.on_tick(event)
   elseif f().phase=='cessation' and event.tick-f().since>=90 then
     assert(f().dest.get_item_count('iron-plate')==f().count,'disabled inserter still transfers')
     report('actual-native-circuit-cessation')
-    -- Subscriptions survive power but obsolete samples do not.
+    -- Electrical cache changes do nothing; only the legacy upgrade requests resync.
     local sub; for _,v in pairs(c.subscriptions) do if v.event_name=='signal_changed' then sub=v end end
     assert(sub); local previous=sub.details.previous
-    runtime.set_power(c.id,false,event.tick,nop); assert(not io.output_owner)
-    assert(c.subscriptions[sub.id]==sub and sub.details.previous==previous and sub.details.resync)
-    runtime.set_power(c.id,true,event.tick,nop); logic.sample(event.tick,nop)
+    local owner=io.output_owner; local queued=#c.queue
+    c.powered=false; logic.sample(event.tick,nop)
+    assert(c.subscriptions[sub.id]==sub and sub.details.previous==previous and not sub.details.resync)
+    assert(io.output_owner==owner and #c.queue==queued)
+    c.availability_version=nil; lifecycle.upgrade_existing(); logic.sample(event.tick,nop)
     assert(c.queue[#c.queue].event.resync and c.queue[#c.queue].event.previous[1].count==120)
-    report('computer-outage-retained-admitted-baseline-and-current-resync')
+    report('computer-power-free-and-legacy-upgrade-retained-baseline-current-resync')
     put(f().red,{}); f().phase='disappearance'; f().since=event.tick
   elseif f().phase=='disappearance' then
     assert(event.tick-f().since<30,'disappearance deadline')
@@ -279,11 +281,12 @@ function M.on_tick(event)
       assert(#c.state.last_changes==0 and c.state.stock==0)
       report('native-empty-input-connectivity-only-event')
       local sub; for _,v in pairs(c.subscriptions) do if v.event_name=='signal_changed' then sub=v end end
-      io.body.energy=0; lifecycle.sample_power(io,event.tick,nop); logic.sample(event.tick,nop)
-      assert(c.subscriptions[sub.id]==sub and sub.details.resync and not io.output_owner)
-      io.body.energy=100000; lifecycle.sample_power(io,event.tick,nop); logic.sample(event.tick,nop)
-      assert(c.queue[#c.queue].event.resync and c.queue[#c.queue].event.current[1]==nil)
-      report('handler-power-loss-clears-bank-and-retains-resync-subscription')
+      local owner,previous,queued=io.output_owner,sub.details.previous,#c.queue
+      io.powered=false; logic.sample(event.tick,nop)
+      assert(c.subscriptions[sub.id]==sub and not sub.details.resync and io.output_owner==owner)
+      io.powered=true; logic.sample(event.tick,nop)
+      assert(sub.details.previous==previous and #c.queue==queued)
+      report('handler-power-free-retains-bank-baseline-subscription-and-queue')
       f().phase='cleanup'
     end
   elseif f().phase=='cleanup' then

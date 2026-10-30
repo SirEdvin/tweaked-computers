@@ -202,7 +202,7 @@ function M.on_tick(event)
     guest(c,prefix..cases[#cases][2]); assert(c.state.enabled==true)
     local foreign=build('computer',-4,0,game.forces['tc-rs-fresh']); local fs=build('recipe_searcher',-7,0,game.forces['tc-rs-fresh'])
     connect(foreign,fs,'red'); foreign.powered=true; fs.powered=true
-    lifecycle.power_entity(foreign).energy=2000; lifecycle.power_entity(fs).energy=1000
+    assert(lifecycle.available(foreign) and lifecycle.available(fs))
     foreign.status='running'; foreign.run_id='fixture-foreign'
     guest(foreign,prefix..cases[#cases][2]); assert(foreign.state.enabled==false)
     assert(not peripheral.inventory(c,'red',nop)[fs.id])
@@ -218,18 +218,18 @@ function M.on_tick(event)
       assert(specimen.direction==direction and lifecycle.connector(specimen,'network','red'))
     end
     local cloned_body=assert(specimen.body.clone{position={16,8},surface=game.surfaces[1],force='player'})
-    local cloned=assert(registry.by_entity(cloned_body)); assert(cloned.id~=specimen.id)
-    local helper=lifecycle.power_entity(cloned); local inventory=game.create_inventory(1)
+    local cloned=assert(registry.by_entity(cloned_body)); assert(cloned.id~=specimen.id and lifecycle.available(cloned))
+    local helper=lifecycle.endpoint(cloned,'network'); local inventory=game.create_inventory(1)
     lifecycle.on_removed{entity=cloned_body}
     assert(cloned_body.mine{inventory=inventory,raise_destroyed=false})
     assert(inventory.get_item_count('tc-recipe-searcher')==1 and not helper.valid and not registry.record(cloned.id))
     inventory.destroy(); assert(lifecycle.remove(specimen.id,'fixture',true))
     report('native-cardinal-clone-one-drop-and-helper-cleanup')
     assert(peripheral.inventory(c,'red',nop)[x.relay] and peripheral.inventory(c,'green',nop)[s.id])
-    lifecycle.power_entity(s).energy=0; s.powered=false
-    guest(c,prefix..[[assert(s.getLimits().recipe_search_results==50); refused('E_UNPOWERED',s.findRecipes,'item','iron-plate')]])
+    s.powered=false
+    guest(c,prefix..[[assert(s.getLimits().recipe_search_results==50); assert(#s.findRecipes('item','tc-rs-fifty')==50)]])
     assert(peripheral.inventory(c,'red',nop)[x.relay],'unpowered relay lost discovery')
-    lifecycle.power_entity(s).energy=1000; s.powered=true
+    s.powered=true
     guest(c,prefix..[[assert(#s.findRecipes('item','tc-rs-fifty')==50)]])
     -- Trusted shell evaluation exercises retained captured-method revalidation;
     -- GUI submission/focus is not part of this fixture's evidence.
@@ -245,7 +245,7 @@ function M.on_tick(event)
     assert(lifecycle.remove(cross.id,'fixture',true))
     local position=s.body.position; assert(lifecycle.remove(s.id,'fixture',true))
     local replacement=build('recipe_searcher',position.x,position.y); connect(c,replacement,'red'); connect(c,replacement,'green'); connect(replacement,registry.record(x.relay),'red')
-    x.s=replacement.id; lifecycle.power_entity(replacement).energy=1000; replacement.powered=true
+    x.s=replacement.id; assert(not replacement.children.power)
     ok,e=shell.evaluate(c,"local ok,e=pcall(captured,'item','iron-plate'); assert(not ok and e.code=='E_UNREACHABLE')",game.tick,2); assert(ok,serpent.line(e))
     assert(shell.reset(c,'fixture'))
     report('red-green-unpowered-limits-relay-restoration-captured-replacement')

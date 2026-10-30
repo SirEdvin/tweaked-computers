@@ -1,7 +1,7 @@
 -- Complete guest document; no imports or native prototype access.
 return [[function start(event)
   local encyclopedia = peripheral.find("factoriopedia_interface", "red")
-  assert(encyclopedia, "Connect a powered Factoriopedia Interface on red")
+  assert(encyclopedia, "Connect a Factoriopedia Interface on red")
   local item = encyclopedia.getItem("iron-plate")
   computer.log(item.name .. " stack size=" .. tostring(item.stack_size))
   if item.rocket_capacity ~= nil then

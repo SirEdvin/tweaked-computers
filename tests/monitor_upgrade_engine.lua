@@ -26,12 +26,12 @@ function resized(e)
 end]]
 local function build(kind,x,y)
  local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
- local r=assert(lifecycle.build(body)); lifecycle.power_entity(r).energy=100000; r.powered=true; return r
+ local r=assert(lifecycle.build(body)); assert(not r.children.power and lifecycle.available(r)); return r
 end
 local function wire(a,b) assert(lifecycle.connector(a,'network','red').connect_to(lifecycle.connector(b,'network','red'))) end
 local function fuel()
  for _,id in ipairs(registry.get().order) do local r=registry.record(id)
-  if r and r.body.valid then lifecycle.power_entity(r).energy=100000; r.powered=true end
+  if r and r.body.valid then assert(not r.children.power) end
  end
 end
 local function maintenance_run()

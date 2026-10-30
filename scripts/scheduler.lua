@@ -7,6 +7,7 @@ local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local budgets = require('scripts.runtime.budget-settings')
 local shell = require('scripts.runtime.shell')
+local principal = require('scripts.runtime.principal')
 local M = {}
 local hooks={lifecycle={},sample={},notifications={},render={}}
 local refusal={} -- Host-only ephemeral maintenance deferral identity.
@@ -102,7 +103,7 @@ local function phase(name,tick,spend)
   end
 end
 function M.advance_timers(rec,tick,spend)
-  if rec.status~='running' or not rec.powered then return end
+  if rec.status~='running' or not principal.available(rec) then return end
   spend(limits.timers*limits.timers+#rec.queue+1)
   local due={}
   for _,timer in pairs(rec.timers) do if timer.deadline<=tick then due[#due+1]=timer end end
@@ -129,10 +130,8 @@ function M.advance_timers(rec,tick,spend)
   registry.timers_changed(rec)
 end
 local function dispatch_program(rec,tick)
-  if rec.status~='running' or not rec.powered or #rec.queue==0 or rec.last_dispatch_tick==tick then return false end
-  -- Physical sampling can defer under maintenance pressure. Never dispatch from
-  -- an old positive power observation; standalone runtime fixtures have no tag.
-  if rec.physical_version and (rec.physical_error or rec.power_checked_tick~=tick) then return false end
+  if rec.status~='running' or #rec.queue==0 or rec.last_dispatch_tick==tick then return false end
+  if not principal.available(rec) then return false end
   if not runtime.check_active(rec) then
     runtime.fault(rec,errors.new('E_UNSUPPORTED','unsupported retained computer/source header; source/state retained'),tick)
     return false
@@ -182,9 +181,9 @@ local function dispatch_program(rec,tick)
   return true
 end
 function M.dispatch(rec,tick)
-  if not rec.powered or rec.last_dispatch_tick==tick then return false end
+  if rec.last_dispatch_tick==tick then return false end
   if not rec.body.valid then return dispatch_program(rec,tick) end
-  if rec.physical_version and (rec.physical_error or rec.power_checked_tick~=tick) then return false end
+  if not principal.available(rec) then return false end
   local root=registry.get()
   local maximum=math.min(limits.compile_work+limits.callback_work+limits.callback_allocations,
     admission.guest_ceiling(root.ledger,tick))

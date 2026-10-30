@@ -97,8 +97,8 @@ local function refresh(player,f,s,rec,spend)
         if node.type=='label' then if e.caption~=node.text then e.caption=node.text end
         elseif node.type=='button' then
           if e.plain_caption.caption~=node.text then e.plain_caption.caption=node.text end
-          e.enabled=node.enabled and lifecycle.has_power(rec)
-        elseif (node.type=='line' or node.type=='stacked_bars') and slot==selected and lifecycle.has_power(rec) then
+          e.enabled=node.enabled and lifecycle.available(rec)
+        elseif (node.type=='line' or node.type=='stacked_bars') and slot==selected and lifecycle.available(rec) then
           local height=math.max(180,math.min(700,f.style.minimal_height-360))
           local width=math.min(math.max(240,f.style.minimal_width-80),math.floor(height*900/700))
           e.chart.style.width=width; e.chart.style.height=math.floor(width*700/900)
@@ -120,7 +120,7 @@ local function refresh(player,f,s,rec,spend)
   if selected then
     for i,entry in ipairs(pane.tabs) do if entry.tab==s.tabs[tostring(selected)].tab then pane.selected_tab_index=i; break end end
   end
-  f.availability.caption=lifecycle.has_power(rec) and (#occupied>0 and '' or 'Unconfigured dashboard') or 'Unpowered — retained content'
+  f.availability.caption=lifecycle.available(rec) and (#occupied>0 and '' or 'Unconfigured dashboard') or 'Unavailable — retained content'
 end
 function M.open(player,id)
   local rec=registry.record(id); if not M.authorized(player,rec) then return end
@@ -157,7 +157,7 @@ end
 function M.on_click(event)
   local player,f,s,rec=owned(event); if not player then return end
   if event.element==s.dismiss then M.close(player); return end
-  if event.button~=defines.mouse_button_type.left or not s.selected or not lifecycle.has_power(rec) then return end
+  if event.button~=defines.mouse_button_type.left or not s.selected or not lifecycle.available(rec) then return end
   local tab=model.current(rec).tabs[tostring(s.selected)]; local view=s.tabs[tostring(s.selected)]
   if not tab or not view or view.generation~=tab.generation then return end
   for id,element in pairs(view.elements) do
@@ -215,7 +215,7 @@ end
 service.register_player_authority(function(index,rec,token,slot)
   local player=game.get_player(index); local s=sessions()[index]; local f=player and frame(player)
   return s and s.token==token and s.id==rec.id and s.selected==slot and current(player,s)==rec
-    and f and f.valid and player.opened==f and lifecycle.has_power(rec) or false
+    and f and f.valid and player.opened==f and lifecycle.available(rec) or false
 end)
 scheduler.register_phase('render','ui-dashboard',M.tick)
 registry.register_cleanup('dashboard-viewers',function(rec)

@@ -55,9 +55,9 @@ function M.tick(c,second,third,panel,guest,tick)
       s.c,s.second=counts(c,second)
       assert(activate())
       for _,rec in ipairs({panel,c}) do
-        local power=lifecycle.power_entity(rec); local energy=power.energy; power.energy=0
-        assert(not service.validate(c,c.queue[1],function() end),'dispatch accepted a native unpowered endpoint')
-        power.energy=energy
+        rec.availability_version=99
+        assert(not service.validate(c,c.queue[1],function() end),'dispatch accepted an unavailable endpoint')
+        rec.availability_version=1
       end
       lifecycle.connector(c,'network','green').disconnect_all()
       s.phase='path'

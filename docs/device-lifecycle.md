@@ -4,7 +4,7 @@ Target: Factorio 2.1.23, base or Space Age. Native-client/connected-peer accepta
 
 ## One physical device
 
-The visible shell is the Network endpoint. The body owns its private power carrier and any exact Input/Output/Factory targets sockets. Rotate the body, not a helper. Mining produces one logical device item; helpers have no mining drops. Rotation retains existing helper identities and native role wires. Destruction is data loss, not mining. Stale identities never remove a replacement at the same position.
+The visible shell is the Network endpoint. All nine custom families need no electricity or power helper. The body owns only its exact Input/Output/Factory targets sockets where applicable; native radar/speaker electricity is unchanged. Rotate the body, not a helper. Mining produces one logical device item; helpers have no mining drops. Rotation retains existing helper identities and native role wires. Destruction is data loss, not mining. Stale identities never remove a replacement at the same position.
 
 Computer items are plain hardware and keep their existing single-item stack size. Ordinary mining/replacement loses that computer's source, label and explicit state; a replacement is blank/stopped with a fresh identity. Native undo of an eligible removal instead carries the pre-removal validated snapshot through its per-player history and exact restoration ghost. It restores saved source/label/state and different formerly active recovery text, never execution, timers, callbacks, Console sessions, queues or old output ownership. Private drafts remain under their old identities. Clipboard/blueprint/clone copies carry saved source/label only, with empty state. See the [player lifecycle policy](player/lifecycle.md), including legacy-item discard and rollback.
 
@@ -17,7 +17,7 @@ KV items preserve all accepted contents and absolute simulation-tick deadlines, 
 Back up the entire save and old mod ZIP before upgrading. The redesigned devices
 use new circuit-capable shells without changing public Lua v1, logical IDs or
 recipe/item names. During the mod configuration change, existing bodies are
-converted only after replacement power, sockets and every role/color wire have
+converted only after replacement shells, required sockets and every role/color wire have
 been staged. Data, absolute KV deadlines, live monitor contents, active runs and
 unsaved recovery drafts are retained; conversion does not run startup again.
 Existing editor sessions must be reopened against the new physical body.

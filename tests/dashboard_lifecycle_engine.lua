@@ -166,13 +166,16 @@ function M.on_tick(event)
     evaluate(c,'assert(append==p.appendSample and base==p.getLimits)')
     assert(model.equal(panel.dashboard,x.expected.model) and c.state.boots==1 and not c.state.effects)
     local owned=draw(panel); assert(owned.objects[1].valid and x.world.valid)
-    x.phase='outage'; x.generation=panel.dashboard
+    x.phase='outage'; x.generation=panel.dashboard; x.outage_tick=event.tick
     x.generator.power_production=0; x.generator.energy=0
-    lifecycle.power_entity(panel).energy=0; lifecycle.power_entity(c).energy=0
+    assert(not panel.children.power and not c.children.power)
   elseif x.phase=='outage' then
-    if panel.powered or c.powered then return end
+    if event.tick-x.outage_tick<5 then return end
+    assert(lifecycle.available(panel) and lifecycle.available(c) and panel.powered and c.powered)
     assert(panel.dashboard==x.generation and c.state.boots==1 and not c.state.effects)
-    assert(next(root.dashboard_presentation.states)==nil and x.world.valid)
+    evaluate(c,"assert(append==p.appendSample and p.getTab(1).title=='Retained charts')")
+    assert(draw(panel).objects[1].valid and x.world.valid)
+    log('TC_DASHBOARD_LIFECYCLE custom-electricity-cycle-no-pause-no-data-loss')
     x.generator.power_production=100000000; x.phase='restore-power'
   elseif x.phase=='restore-power' then
     if not panel.powered or not c.powered then return end

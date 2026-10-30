@@ -34,11 +34,11 @@
     },
     {
       "path": "assets/socket-layout.json",
-      "sha256": "f6d8530e1ba216668b4460f5326ecdb8f2a8fd2ce17b53408375f5b75d662456"
+      "sha256": "4fca57e92370bfef9bb99aebc11cd2166e4f231d8c853036fa0398bc9683a26e"
     },
     {
       "path": "scripts/device-definitions.lua",
-      "sha256": "521ae35343fc6eeb2ba624d2182ad109da10e68ae4d461b7f1d270a02336f6a9"
+      "sha256": "d74af61b36bb74d63ef721b61272bf7d68d0707103d60b7efab768bc17d9beef"
     }
   ],
   "deferred": [

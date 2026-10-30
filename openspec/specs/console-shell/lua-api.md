@@ -67,10 +67,10 @@ All calls use dots. Existing signatures, argument validation, nil/tuple results,
 | `peripheral.call(name, wire, method, ...)` | Existing addressed synchronous operation and exact result arity; the exclusions below also apply through this route. |
 | `peripheral.getName(facade)`, `getWire(facade)` | Inspect an authentic restored facade without granting access to a disconnected target. |
 | `peripheral.setMonitorSyncGroup(members)`, `getMonitorSyncGroup()` | Existing behavior owned by this shell session, independent of the saved program. Existing cross-owner `E_BUSY` remains meaningful. |
-| Monitor, KV, logic read/output, and configurator synchronous methods | Real operations under their existing contracts, including normal native target protection and power requirements. |
+| Monitor, KV, logic read/output, and configurator synchronous methods | Real operations under their existing contracts, including normal native target protection and non-power physical authority. |
 | Logic `subscribe(...)`, `unsubscribe(...)` | `E_UNSUPPORTED` in the shell, including facade, captured-method, and `peripheral.call` routes. No program subscription can be edited. |
 
-Captured methods revalidate the computer, shell generation, bound peripheral generation, force/surface, selected wire, and current power/authority on every call. Rehydrating a stale descriptor does not retarget it. Missing fresh `wrap` returns nil; calling an existing stale wrapper reports the normal `E_UNREACHABLE`/unavailable diagnostic. `getLimits` retains its existing peripheral power exception, but the computer itself must be powered to execute shell code.
+Captured methods revalidate the computer, shell generation, bound peripheral generation, force/surface, selected wire, and current physical authority on every call. Rehydrating a stale descriptor does not retarget it. Missing fresh `wrap` returns nil; calling an existing stale wrapper reports the normal `E_UNREACHABLE`/unavailable diagnostic. Custom computers and peripherals need no electricity. Native radar/speaker retain their electrical availability checks and reachable `getLimits` exception.
 
 There are no shell callbacks/events, timers, handlers, files, imports, OS commands, or shell-driven background tasks. Monitor presentation still uses its existing host coordinator.
 
@@ -87,7 +87,7 @@ Each viewer keeps an independent unsubmitted draft and native caret. Tab changes
 | Successful Run/Apply or explicit computer Stop | Clear, new session generation | Cancel old-session work; release old shell-owned logic output/monitor selection. |
 | Confirmed Reset Shell | Clear | Cancel shell work/release shell resources only; leave the saved program running. |
 | Failed activation or automatic program fault | Retain | No blanket shell reset; do not confuse program cleanup with shell cleanup. |
-| Power loss | Retain | Cancel pending lines visibly; clear owned logic output and apply existing monitor power semantics. Do not replay canceled input on restoration. |
+| Custom electrical cycling | Retain | No execution pause, command cancellation, output clearing or display blanking. |
 | Computer removal, clone, blueprint, mining/replacement | No session transfer to a new identity | Clean up only the removed identity's resources. |
 
 Reset confirmation is tied to the current shell generation. Reset does not erase shared peripheral contents or historical Console logs. Shell variables are distinct from the application-state Reset action.
@@ -110,7 +110,7 @@ Graph accounting includes scalar/reference edges and private node/binding metada
 
 Ingress validates ownership and bounds before adding queue records. Commands execute through the normal scheduler, not on every text-change event. At most one executable work item per computer per tick is selected fairly between pending program and shell work. Pending input is bounded and labeled as queued; no shared budget is replenished to give a GUI command preferential execution.
 
-`E_ARGUMENT` identifies malformed ingress, invalid keys, or forged values; `E_LIMIT` size/shape excess; `E_CAPACITY` retained/pending capacity; `E_UNSUPPORTED` retained functions or handler-only operations; `E_PROGRAM` syntax/runtime failure; `E_BUDGET` exhausted guarded work. Existing service authority, power, and domain errors remain unchanged. Unknown retained shell versions are refused without deleting their data.
+`E_ARGUMENT` identifies malformed ingress, invalid keys, or forged values; `E_LIMIT` size/shape excess; `E_CAPACITY` retained/pending capacity; `E_UNSUPPORTED` retained functions or handler-only operations; `E_PROGRAM` syntax/runtime failure; `E_BUDGET` exhausted guarded work. Existing service physical authority, native radar/speaker electricity, and domain errors remain unchanged. Unknown retained shell versions are refused without deleting their data.
 
 A successful line atomically publishes its staged shell environment. Failure preserves the previous environment but not an imaginary rollback of completed API calls. An uncaught execution/commit failure releases this shell's transient output ownership; it does not fault the saved program. Compilation-only failure leaves existing ownership unchanged. Ordinary protected-call recovery behaves as in the current sandbox; fatal quotas remain uncatchable.
 

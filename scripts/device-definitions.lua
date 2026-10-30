@@ -2,23 +2,23 @@
 local M = {}
 M.order={'computer','kv','monitor','logic','configurator','recipe_searcher','factoriopedia_interface','production_statistics','dashboard'}
 M.devices={
-  computer={name='tc-computer',width=1,watts=60000,roles={'network'},icon='arithmetic-combinator',
+  computer={name='tc-computer',width=1,roles={'network'},icon='arithmetic-combinator',
     ingredients={{'iron-plate',10},{'copper-plate',5},{'electronic-circuit',10},{'advanced-circuit',2}}},
-  kv={name='tc-kv',width=1,watts=30000,roles={'network'},icon='steel-chest',
+  kv={name='tc-kv',width=1,roles={'network'},icon='steel-chest',
     ingredients={{'iron-plate',8},{'electronic-circuit',5},{'advanced-circuit',2}}},
-  monitor={name='tc-monitor',width=1,watts=15000,roles={'network'},icon='display-panel',
+  monitor={name='tc-monitor',width=1,roles={'network'},icon='display-panel',
     ingredients={{'iron-plate',4},{'copper-plate',2},{'electronic-circuit',5}}},
-  logic={name='tc-logic',width=3,watts=15000,roles={'input','network','output'},icon='decider-combinator',
+  logic={name='tc-logic',width=3,roles={'input','network','output'},icon='decider-combinator',
     ingredients={{'iron-plate',6},{'electronic-circuit',8}}},
-  configurator={name='tc-configurator',width=2,watts=30000,roles={'network','targets'},icon='constant-combinator',
+  configurator={name='tc-configurator',width=2,roles={'network','targets'},icon='constant-combinator',
     ingredients={{'iron-plate',8},{'electronic-circuit',8},{'advanced-circuit',2}}},
-  recipe_searcher={name='tc-recipe-searcher',width=1,watts=30000,roles={'network'},icon='lab',
+  recipe_searcher={name='tc-recipe-searcher',width=1,roles={'network'},icon='lab',
     technology='tc-recipe-searcher',ingredients={{'steel-plate',10},{'advanced-circuit',5},{'processing-unit',2}}},
-  factoriopedia_interface={name='tc-factoriopedia-interface',width=1,watts=30000,roles={'network'},icon='lab',
+  factoriopedia_interface={name='tc-factoriopedia-interface',width=1,roles={'network'},icon='lab',
     technology='tc-recipe-searcher',ingredients={{'steel-plate',10},{'advanced-circuit',5},{'processing-unit',2}}},
-  production_statistics={name='tc-production-statistics',width=1,watts=30000,roles={'network'},icon='lab',
+  production_statistics={name='tc-production-statistics',width=1,roles={'network'},icon='lab',
     technology='tc-recipe-searcher',ingredients={{'iron-plate',8},{'electronic-circuit',5},{'advanced-circuit',2}}},
-  dashboard={name='tc-dashboard',width=1,watts=15000,roles={'network'},icon='display-panel',
+  dashboard={name='tc-dashboard',width=1,roles={'network'},icon='display-panel',
     ingredients={{'iron-plate',4},{'copper-plate',2},{'electronic-circuit',5}}}
 }
 M.by_name={}

@@ -64,7 +64,7 @@ Do not parse message wording. Fatal quota/stop controls bypass `pcall`.
 | E_NOT_FOUND | Addressed identity/section is no longer available |
 | E_UNREACHABLE | Bound path/color/force/surface is no longer valid |
 | E_NETWORK_PENDING | Complete bounded topology proof is pending; retry later, never spin |
-| E_UNPOWERED | Reachable target's active service needs electricity |
+| E_UNPOWERED | Reachable native radar/speaker lacks electrical or operational availability |
 | E_UNSUPPORTED | Requested setting/mode is unavailable; inspect capabilities |
 | E_READ_ONLY | Observation or current native section/mode is not writable |
 | E_SHARED_SCOPE | Shared-group filter mutation exceeds target-local authority |
@@ -83,9 +83,11 @@ recovery data and refuses later writes. Fix with backup and diagnosis, not delet
 Candidate validation refusal preserves the old active run; active-run failure
 faults it and clears its still-owned logic output.
 
-## Scheduling and power
+<a id="scheduling-and-power"></a>
 
-Each actual tick processes lifecycle/power and authority revocation, signal samples,
+## Scheduling and availability
+
+Each actual tick processes physical lifecycle and authority revocation, signal samples,
 notifications/timers, fair callbacks, then display presentation/housekeeping. At
 most one program callback or Console command per computer per tick runs, with FIFO
 queues and a persisted rotation of ready computers. Empty queues leave that rotation;
@@ -107,16 +109,20 @@ Selected [monitor groups](peripheral.md#synchronized-monitor-presentation) wait
 for every member to participate; buffering cannot infer an application's
 multi-callback frame boundary.
 
-Queue overflow visibly faults the run and clears still-owned output. Outages
-retain durable state/registrations/timers but discard transient touch/signal history;
-restoration resyncs current inputs, not unseen history. Cold load does not replay
-`start` or fabricate `power_restored`. Source replacement/Stop/removal/load cannot
+Queue overflow visibly faults the run and clears still-owned output. All nine
+custom families need no electricity: electrical cycling never pauses programs,
+cancels accepted work, clears owned outputs or blanks monitors. Legacy
+`power_restored` registrations remain accepted but emit no new events; already
+accepted events remain historical queue items. Required legacy-upgrade resync
+observes current input, not unseen history. Cold load never replays `start`.
+Source replacement/Stop/removal/load cannot
 renew spent same-tick credits. Timers use ticks; KV EXPIRE uses simulation seconds
 at 60 ticks per second. Pausing stops ticks; wall-clock downtime is irrelevant.
 
-Unpowered relays still participate in physical discovery. Descriptions and a
-reachable peripheral's `getLimits()` work without power; other methods refuse.
-KV data/deadlines and display models survive outages. See [lifecycle](../lifecycle.md).
+Native unpowered radar/speaker still participate in physical discovery and allow
+reachable metadata/`getLimits()`; their other methods retain `E_UNPOWERED`.
+Every active operation still reproves identity, scope, geometry and selected wire.
+KV data/deadlines and display models survive physical unavailability. See [lifecycle](../lifecycle.md).
 
 ## Effective safety ceilings
 

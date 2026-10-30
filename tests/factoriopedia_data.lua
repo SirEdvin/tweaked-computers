@@ -8,13 +8,13 @@ local function equal(a,b)
   return true
 end
 local def=assert(defs.devices.factoriopedia_interface,'missing Factoriopedia Interface')
-assert(def.width==1 and def.watts==30000 and equal(def.roles,{'network'}))
+assert(def.width==1 and def.watts==nil and equal(def.roles,{'network'}))
 local body=data.raw['constant-combinator'][def.entity_name]
 assert(body.tile_width==1 and body.tile_height==1 and body.minable.result==def.name)
 assert(equal(body.circuit_wire_connection_points,defs.points('factoriopedia_interface','network',false)))
 assert(not body.inventory_size and not body.fluid_boxes)
 local power=data.raw['electric-energy-interface'][def.power_name]
-assert(not power.selectable_in_game and not power.minable and power.energy_usage=='30000W')
+assert(not power.selectable_in_game and not power.minable and power.energy_usage=='0W')
 local recipe=data.raw.recipe[def.name]
 local ingredients={{type='item',name='steel-plate',amount=10},{type='item',name='advanced-circuit',amount=5},{type='item',name='processing-unit',amount=2}}
 assert(recipe.energy_required==2 and recipe.enabled==false and equal(recipe.ingredients,ingredients))

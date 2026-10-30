@@ -24,7 +24,7 @@ local function nop() end
 local function report(name) log('TC_INTEGRATION '..name) end
 local function build(kind,x,y)
   local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
-  local rec=assert(lifecycle.build(body)); lifecycle.power_entity(rec).energy=defs.devices[kind].watts/30; return rec
+  local rec=assert(lifecycle.build(body)); assert(not rec.children.power and lifecycle.available(rec)); return rec
 end
 local function connect(a,b,color,ar,br)
   assert(lifecycle.connector(a,ar or 'network',color).connect_to(lifecycle.connector(b,br or 'network',color)))

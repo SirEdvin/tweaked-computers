@@ -284,7 +284,7 @@ function M.sample(tick,spend)
   local samples={}
   for _,name in ipairs(names) do
     local rec=registry.record(name)
-    if rec and rec.powered and rec.body.valid and lifecycle.has_power(rec) then
+    if rec and lifecycle.available(rec) then
       local ok,result=pcall(function()
         local admitted,value=scheduler.try_maintenance(function()
           local needs=devices[name]; local connected=status(rec); local red,green
@@ -305,10 +305,10 @@ function M.sample(tick,spend)
       local ok,result=pcall(function()
         local admitted=scheduler.try_maintenance(function()
           spend(#c.queue*2+limits.subscriptions+16)
-          if not c.powered then discard(c,sub); return end
+          if not lifecycle.available(c) then discard(c,sub); return end
           local target=peripheral.authority(c,d.peripheral,d.wire,spend)
           if target~=r or not r or r.generation~=d.generation then M.revoke(c,d.peripheral,d.wire); return end
-          if not r.powered or not samples[r.id] then discard(c,sub); return end
+          if not samples[r.id] then discard(c,sub); return end
           if samples[r.id].failure then error(samples[r.id].failure,0) end
           local s=samples[r.id]; local current,connected=project(s[d.input],s.connected,d.input,d.signals,spend)
           local previous=d.initial and {} or d.previous
@@ -334,9 +334,7 @@ function M.sample(tick,spend)
 end
 registry.register_cleanup('logic-subscriptions',function(rec,run,reason)
   if rec.kind=='computer' then
-    if reason=='power_loss' then
-      for _,sub in pairs(rec.subscriptions) do if sub.event_name=='signal_changed' then discard(rec,sub) end end
-    elseif reason=='authority_changed' then
+    if reason=='authority_changed' then
       local bindings={}
       for _,sub in pairs(rec.subscriptions) do
         if sub.event_name=='signal_changed' then bindings[#bindings+1]={name=sub.details.peripheral,wire=sub.details.wire} end

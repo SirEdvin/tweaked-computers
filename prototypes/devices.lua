@@ -36,8 +36,7 @@ for _,kind in ipairs(defs.order) do
   shell.circuit_wire_connection_points=defs.points(kind,'network',false)
   shell.circuit_wire_max_distance=9
   data:extend{shell}
-  -- The old named EEI remains loadable for staged upgrade/old blueprints.
-  -- A separate, truly nonselectable EEI carries electricity for new shells.
+  -- Inert compatibility prototypes load old saves/blueprints, never new helpers.
   data:extend{{type='electric-energy-interface',name=def.name,icon=icon,icon_size=64,
     localised_name={'entity-name.'..def.name},localised_description={'entity-description.tc-device'},
     flags={'placeable-neutral','player-creation'},minable={mining_time=0.3,result=def.name},
@@ -46,9 +45,9 @@ for _,kind in ipairs(defs.order) do
     tile_width=def.width,tile_height=1,selection_priority=40,
     collision_box={{-def.width/2+0.1,-0.4},{def.width/2-0.1,0.4}},
     selection_box={{-def.width/2,-0.5},{def.width/2,0.5}},pictures=pictures,
-    energy_source={type='electric',usage_priority='secondary-input',buffer_capacity=(def.watts/30)..'J',
-      input_flow_limit=(def.watts*2)..'W',output_flow_limit='0W',drain='0W'},
-    energy_usage=def.watts..'W',energy_production='0W'},
+    energy_source={type='electric',usage_priority='secondary-input',buffer_capacity='1J',
+      input_flow_limit='0W',output_flow_limit='0W',drain='0W',render_no_power_icon=false,render_no_network_icon=false},
+    energy_usage='0W',energy_production='0W'},
     {type=(kind=='computer' or kind=='kv' or kind=='monitor' or kind=='dashboard') and 'item-with-tags' or 'item',name=def.name,
       icon=icon,icon_size=64,subgroup='circuit-network',order='z[tc]-'..kind,
       place_result=def.entity_name,stack_size=(kind=='computer' or kind=='kv' or kind=='dashboard') and 1 or 50},

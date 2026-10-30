@@ -4,7 +4,7 @@ Place compatible monitor tiles adjacent with matching force, surface and cardina
 orientation. Every complete rectangle from 1×1 through 6×6 shares one screen, including 1×6, 3×6 and 6×3. Holes, L-shapes and
 oversized arrays partition deterministically: smallest world `(y,x,id)` tile first,
 largest complete anchored rectangle, equal area prefers world width then height.
-Power **every** member. Connect computer NETWORK red/green to any member NETWORK.
+No member needs electricity. Connect computer NETWORK red/green to any member NETWORK.
 Shared display content is not a wire bridge between unwired members or colors.
 
 In 0.1.9, monitor items stack to 50 while remaining item-with-tags. Native tags,
@@ -34,11 +34,11 @@ Presentation is demand-driven. A settled display keeps its complete image and
 native cursor blink without recurring snapshot/cell preparation. A writer on an
 independent screen does not wake unchanged peers. Successful no-op setters still
 participate in selected rounds; getters do not enqueue presentation. Incomplete
-rounds and unpowered displays wait for the corresponding participation or power
+rounds and unavailable displays wait for the corresponding participation or physical
 transition, while admitted preparation, backpressure retries and retirement keep
 their existing bounded fair service.
 
-Placement/removal, physical changes, settings paste, power and ownership changes
+Placement/removal, physical changes, settings paste and ownership changes
 also wake the necessary work; a dummy drawing call is not required. Stable walls
 do not repeatedly rebuild topology signatures. One live physical observation
 pass remains each simulation tick, and calls, touch and publication still prove
@@ -76,7 +76,7 @@ image; buffering cannot infer that later callbacks will finish the plot.
 | `m.getPaletteColor(color)` / `m.getPaletteColour(color)` | r, g, b in 0–1 |
 | `m.getTextScale()` | Number, initially 1 |
 | `m.setTextScale(scale)` | None. Half-steps 0.5,1,…,5; geometry recalculated |
-| `m.getLimits()` | Defensive common + monitor capacities; works reachable without power |
+| `m.getLimits()` | Defensive common + monitor capacities |
 
 There is no terminal global/redirection, newline, tab, escape, rich-text or Unicode
 interpretation. write/blit always consume one cell per byte, including unsupported
@@ -113,7 +113,9 @@ subtract 128; bits 0–4 select the first five row-major 3×3 foreground subcell
 bottom-right always background. Swap foreground/background for complementary
 patterns. Other bytes render one outlined replacement box. UTF-8 is not decoded.
 
-## Geometry, identity and power
+<a id="geometry-identity-and-power"></a>
+
+## Geometry, identity and availability
 
 Each tile is 64 logical display units, with a two-unit bezel per outer edge.
 Columns = max(1,floor((64×W−4)/(6×scale))); rows =
@@ -128,8 +130,10 @@ and inherit settings. Removed names do not alias replacements. Changed character
 dimensions clear the whole resulting image in current colors; same dimensions
 preserve cells. Cursor/blink stay even offscreen. New independent screens use defaults.
 
-All members must be powered. Outages hide presentation and refuse active methods,
-retaining model/settings/identity. Restoration redraws without fake resize. Stop
+All members must be physically valid; none needs electricity. Electrical cycling
+never blanks presentation or refuses custom methods. Physical unavailability can
+hide presentation while retaining model/settings/identity. Valid restoration
+redraws without fake resize; definitive path/identity loss releases a selection. Stop
 or cable removal does not clear the screen. Ordinary load retains model/render
 progress without executing user source. Mining retains tile settings, not the
 obsolete merged image. Pending regroup returns E_NETWORK_PENDING; retry later.
@@ -145,7 +149,7 @@ still independent. Current authority and recipient run are checked at delivery.
 - Touch adds `x:integer`, `y:integer`, `player_index:integer`, `sample_tick:Tick`.
   With empty cursor/no other GUI, Ctrl+left-click a cell (rebindable shared
   **Interact with computer / monitor** action). Clicked member must be in native reach and same
-  force/surface. Bezel, letterbox, GUI hover/focus, outside or unpowered activation
+  force/surface. Bezel, letterbox, GUI hover/focus, outside or physically invalid activation
   is ignored. No building/mining double action, mouse drag or keyboard API implied.
 - Resize adds `old_width`, `old_height`, `width`, `height` integers and
   `reason="tiles"/"scale"`. Commit geometry before notification. Coalescing keeps
@@ -183,7 +187,7 @@ coordinates/resize. For bounded whole-curve animation, use
 dirty-cell presentation, supported test layouts and why this is not a universal
 client-FPS guarantee. If text clips, query getSize, move cursor explicitly and avoid
 newlines. If grouping surprises you, inspect orientation, holes and 6×6 bounds.
-Power every tile; an unpowered member blanks the whole group without erasing data.
+Check every tile's physical validity; electricity has no effect on the custom display.
 For wrong touch coordinates check local rotation and actual cells rather than the
 bezel. Representative native Ctrl-click and monitor-touch cases are verified in
 base and Space Age; exhaustive layouts/platforms and busy-factory input latency

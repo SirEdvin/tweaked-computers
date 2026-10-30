@@ -4,7 +4,7 @@ return [[function start() computer.every(120,"draw") end
 function draw()
   local stats=peripheral.find("production_statistics","red")
   local screen=peripheral.find("monitor","red")
-  assert(stats and screen,"Connect powered statistics and monitor devices on red")
+  assert(stats and screen,"Connect statistics and monitor devices on red")
   local width,height=screen.getSize()
   assert(width>=14 and height>=7,"Use a monitor with at least 14 columns and 7 rows")
   local function draw()

@@ -9,7 +9,7 @@ is data loss, not an alternative to mining. Back up saves before upgrades or rep
 Back up the entire save and old mod ZIP before upgrading. The redesigned devices
 use new circuit-capable shells without changing public Lua v1, logical IDs or
 recipe/item names. During the mod configuration change, existing bodies are
-converted only after replacement power, sockets and every role/color wire have
+converted only after replacement shells, required sockets and every role/color wire have
 been staged. Data, absolute KV deadlines, live monitor contents, active runs and
 unsaved recovery drafts are retained; conversion does not run startup again.
 Existing editor sessions must be reopened against the new physical body.
@@ -115,7 +115,7 @@ Use the deconstruction planner on the visible monitor body. Marking/cancelling
 keeps the current cells, cursor, palette, scale and merged identity; it does not
 reset the display. Only actual robot mining/removal changes topology and invokes
 normal split/resize rules. You can cancel one tile before removal without losing
-the image. Power restoration reveals retained content, not a newly blank model.
+the image. Electrical cycling has no effect on custom monitor presentation.
 
 The renderer puts content below native world feedback rather than drawing a
 custom removal symbol. Native red-X visibility while the display changes is

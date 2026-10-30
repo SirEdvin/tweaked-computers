@@ -129,7 +129,7 @@ function M.run()
     function cancelled(e) error('cancelled timer executed') end
     function repeat_timer(e) computer.setState('missed',e.missed); computer.setState('scheduled',e.scheduled_tick) end
     function restored(e) computer.setState('restored',e.restored_tick); computer.setState('outage',e.outage_start_tick) end
-    function touch(e) error('obsolete touch executed') end
+    function touch(e) computer.setState('touches',(computer.getState('touches') or 0)+1) end
   ]]))
   scheduler.tick(0); scheduler.tick(2); assert(rec.state.order=='a')
   scheduler.tick(3); assert(rec.state.order=='ab' and rec.state.once==1)
@@ -137,13 +137,14 @@ function M.run()
   -- FIFO cancellation removes an admitted one-shot before its named handler runs.
   scheduler.tick(4); assert(rec.state.missed==1 and rec.state.scheduled==2)
   runtime.emit(rec.id,'monitor_touch',{x=1,y=1},4)
-  runtime.set_power(rec.id,false,5); scheduler.tick(10)
-  assert(rec.state.restored==nil and rec.powered==false)
-  runtime.set_power(rec.id,true,12); scheduler.tick(12)
-  assert(rec.state.restored==12 and rec.state.outage==5 and rec.state.once==1)
+  rec.powered=false; scheduler.tick(10)
+  assert(rec.state.restored==nil and rec.state.touches==1)
+  assert(not runtime.emit(rec.id,'power_restored',{},12))
+  rec.powered=true; scheduler.tick(12)
+  assert(rec.state.restored==nil and rec.state.outage==nil and rec.state.once==1)
   scheduler.tick(13); assert(rec.state.missed==3 and rec.state.scheduled==6 and rec.state.once==1)
-  assert(rec.needs_input_resync and rec.status=='running')
-  report('timer-FIFO-equal-deadlines-cancel-coalescence-and-power')
+  assert(not rec.needs_input_resync and rec.status=='running')
+  report('timer-FIFO-equal-deadlines-cancel-coalescence-inert-power-restored')
   root=fresh(); rec=computer(source('computer.setState("kept",true)','function event(e) end'))
   scheduler.tick(0)
   for i=1,limits.event_queue_entries do assert(runtime.enqueue(rec,'event',{name='timer'},1)) end
@@ -260,7 +261,7 @@ function start(e)
     assert(sample()==1)
     local payload={false,'',3}
     computer.setState('timer',computer.after(2,'sample',payload)); payload[3]=99
-    computer.on('power_restored','again')
+    computer.on('peripheral_attach','again')
     computer.log('plain-start')
   else
     e.changed=true
@@ -282,7 +283,7 @@ function sample(e)
   return n
 end
 function again(e)
-  assert(e.name=='power_restored' and e.payload.value==3)
+  assert(e.name=='peripheral_attach' and e.payload.value==3)
   local arg={name='ordinary'}
   local a,b,c=start(arg)
   assert(a==false and b==nil and c==arg and arg.changed)
@@ -326,7 +327,7 @@ end
   report('plain-save-validate-apply-immediate-call-and-closed-active-shape')
   local payload={payload={value=3},computer_id='forged',run_id='forged',sequence=-1,tick=-1}
   assert(runtime.emit(rec.id,'monitor_touch',{},1) and #rec.queue==0,'exports auto-subscribed')
-  assert(runtime.emit(rec.id,'power_restored',payload,1))
+  assert(runtime.emit(rec.id,'peripheral_attach',payload,1))
   local queued=rec.queue[1].event
   assert(queued~=payload and queued.payload~=payload.payload and queued.computer_id==rec.id
     and queued.run_id==run and queued.tick==1 and queued.sequence>0)

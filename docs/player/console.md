@@ -1,7 +1,7 @@
 # Live Console
 
 The Console can run a single bounded Lua line without editing or replacing your
-saved controller. Open a powered computer with an empty cursor and Ctrl + left
+saved controller. Open a computer with an empty cursor and Ctrl + left
 click, then choose **Console**. Type or paste into the bottom input and press
 **Enter** or **Execute**. The native field supports its normal caret and clipboard
 controls. There is **no command history**, multiline continuation, OS or filesystem.
@@ -16,7 +16,7 @@ does not schedule empty commands. Queue order and spent credits survive save/loa
 
 ## Try a monitor
 
-Wire a powered computer NETWORK socket to a powered monitor NETWORK socket on red.
+Wire a computer NETWORK socket to a monitor NETWORK socket on red; neither needs electricity.
 Use **Peripherals → Red** to find the automatically updated exact logical monitor
 name. Replace `tc-monitor-4` below with that name. Return to Console and submit
 these lines individually (do not paste the entire block at once):
@@ -110,7 +110,7 @@ Handler-based `on/off/after/every/cancelTimer/stop` and logic
 captured methods. Use a saved handler program or explicit UI lifecycle actions.
 
 Shell logic output and monitor synchronization selection have their own owner,
-separate from the program run. A stopped, powered computer can retain a shell
+separate from the program run. A stopped computer can retain a shell
 output. Normal monitor selection exclusivity also applies between a shell and
 its own program. Failure/reset releases only shell-owned transient resources,
 not a later program-owned output. Model/database contents are not erased.
@@ -123,7 +123,7 @@ not a later program-owned output. Model/database contents are not erased.
 | Successful Run / Apply or explicit Stop | Clear | Cancel old session and release its transient ownership |
 | Confirmed Reset Shell | Clear | Cancel shell work only; saved program/state/source keep running unchanged |
 | Failed activation or automatic program fault | Retain | No shell reset |
-| Power loss | Retain | Cancel pending commands and clear shell-owned outputs; no replay on restoration |
+| Custom electrical cycling | Retain | No cancellation, pause or output clearing; electricity is not an execution gate |
 | Mining/replacement, cloning, blueprint/settings transport | No transfer to new physical identity | New computer starts without the experiment |
 
 The two-step **Reset Shell → Confirm Reset Shell** is separate from Maintenance's

@@ -61,8 +61,8 @@ if model.charts then
   method('clearChart',2,function(c,r,w,t,spend,slot,id) model.clear(r,slot,id,spend) end)
 end
 local function authorized(c,r,sub,spend)
-  if not r or not r.body.valid or r.generation~=sub.details.generation or not lifecycle.has_power(r)
-    or c.status~='running' or not c.powered or not lifecycle.has_power(c) then return false end
+  if not r or not r.body.valid or r.generation~=sub.details.generation or not lifecycle.available(r)
+    or c.status~='running' or not lifecycle.available(c) then return false end
   local ok,target=pcall(peripheral.authority,c,r.id,sub.details.wire,spend)
   if not ok then if type(target)~='table' or not target.code then error(target,0) end; return false end
   return target==r

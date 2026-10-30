@@ -8,13 +8,13 @@ local function equal(a,b)
   return true
 end
 local def=defs.devices.recipe_searcher
-assert(def.width==1 and def.watts==30000 and equal(def.roles,{'network'}))
+assert(def.width==1 and def.watts==nil and equal(def.roles,{'network'}))
 local shell=data.raw['constant-combinator'][def.entity_name]
 assert(shell.tile_width==1 and shell.tile_height==1 and shell.minable.result==def.name)
 assert(equal(shell.circuit_wire_connection_points,defs.points('recipe_searcher','network',false)))
 assert(not shell.inventory_size and not shell.fluid_boxes)
 local power=data.raw['electric-energy-interface'][def.power_name]
-assert(not power.selectable_in_game and not power.minable and power.energy_usage=='30000W')
+assert(not power.selectable_in_game and not power.minable and power.energy_usage=='0W')
 local recipe=data.raw.recipe[def.name]
 assert(recipe.energy_required==2 and recipe.enabled==false and equal(recipe.ingredients,{
   {type='item',name='steel-plate',amount=10},{type='item',name='advanced-circuit',amount=5},{type='item',name='processing-unit',amount=2}}))
