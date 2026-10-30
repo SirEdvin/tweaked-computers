@@ -228,7 +228,10 @@ function M.tick(tick,spend)
         end
         visible_charts(player,f,s,rec,spend)
       end)
-      if not admitted then f.availability.caption='Dashboard update pending: maintenance allowance unavailable' end
+      if not admitted then f.availability.caption='Dashboard update pending: maintenance allowance unavailable'
+      elseif f.availability.caption=='Dashboard update pending: maintenance allowance unavailable' then
+        f.availability.caption=lifecycle.available(rec) and (s.selected and '' or 'Unconfigured dashboard') or 'Unavailable — retained content'
+      end
     end
   end
   -- Rotate the next starting viewer, not the end of the completed full walk.

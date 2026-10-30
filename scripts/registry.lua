@@ -439,13 +439,13 @@ function M.register_cleanup(name,fn)
   local n=0; for _ in pairs(cleanup) do n=n+1 end; assert(n<limits.host_hooks,'host cleanup capacity')
   cleanup[name]=fn
 end
-function M.cleanup(rec,run_id,reason)
+function M.cleanup(rec,run_id,reason,removing)
   -- Hooks cannot depend on compiling user code. Invoke every registered hook even
   -- when one adapter fails, and retain its recovery diagnostic for the host.
   local names={}; for name in pairs(cleanup) do names[#names+1]=name end; table.sort(names)
   local failures={}
   for _,name in ipairs(names) do
-    local ok,e=pcall(cleanup[name],rec,run_id,reason)
+    local ok,e=pcall(cleanup[name],rec,run_id,reason,removing)
     if not ok then failures[#failures+1]={adapter=name,message=type(e)=='string' and e:sub(1,256) or 'host cleanup failed'} end
   end
   if #failures>0 then rec.cleanup_failures=failures else rec.cleanup_failures=nil end
@@ -466,7 +466,7 @@ function M.remove(id,reason)
     local valid,problem=pcall(M.maintenance_clock,'art')
     if not valid then root.scheduling_diagnostic=problem; return false end
   end
-  if not M.cleanup(rec,rec.run_id,reason or 'removed') then
+  if not M.cleanup(rec,rec.run_id,reason or 'removed',true) then
     rec.status='faulted'; rec.diagnostic=errors.new('E_ENGINE','cleanup failed; entity/data retained for recovery')
     M.art_changed(rec)
     return false

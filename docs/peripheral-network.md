@@ -92,13 +92,15 @@ or `unavailable`. Simultaneous detachments precede attachments, each in sorted
 name order. A power outage alone is not a physical detach.
 
 The host retains plain per-run/channel inventories and bounded pending event
-jobs; deferral preserves the exact next transition. Attach/detach and
-`modem_message` registrations maintain interest in both physical colors; pending
+jobs; deferral preserves the exact next transition. Attach/detach,
+`modem_message` and Dashboard-click registrations maintain interest in both physical colors; pending
 reconciliation also retains its color until the job settles. Only those bindings
 enter the persisted rotation, with at most three channel inventories attempted
 per tick. Computers without interest or pending work are not searched to find
 notification work. Removing the last registration retires that interest without
-discarding accepted notifications or an unfinished host job. The 60-tick topology
+discarding accepted snapshot notifications or an unfinished host job. Definitive
+selected-wire Dashboard detachment also retires its registrations and queued clicks;
+incomplete discovery does not permanently retire a connected registration. The 60-tick topology
 ceiling is development tuning, not a measured maximum-world release guarantee;
 maintenance pressure is explicitly `E_NETWORK_PENDING`, never silent success.
 Queries and calls do not use this notification cache as authority. Every call

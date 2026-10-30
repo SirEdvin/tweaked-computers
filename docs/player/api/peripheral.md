@@ -122,10 +122,13 @@ inventories per tick fairly; the queried 60-tick topology ceiling is provisional
 not a guarantee under arbitrary world load. Shared calls use synchronized order,
 not exclusive locks or callback-wide transactions.
 
-Only attach/detach or `modem_message` registrations and unfinished reconciliation
-retain background topology interest. Idle computers are not searched to find
-that work. Removing the last relevant handler retires its interest after any
-pending host job settles, without recalling already queued notifications.
+Attach/detach, `modem_message` and Dashboard-click registrations, plus unfinished
+reconciliation, retain background topology interest. Idle computers are not
+searched to find that work. Removing the last relevant handler retires its
+interest after any pending host job settles, without recalling accepted snapshot
+notifications. Definitive selected-wire Dashboard detachment retires its
+registrations and queued clicks; incomplete discovery alone does not retire a
+connected Dashboard registration.
 Current output owners receive separate fail-safe checks; custom electricity
 changes neither create detach events nor clear a logic handler's output.
 

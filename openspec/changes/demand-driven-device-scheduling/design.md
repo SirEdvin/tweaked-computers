@@ -36,7 +36,7 @@ Use small retained structures under the existing versioned scheduling state:
 | Deadline entries | Timer changes, due physical/topology observations, UI cadence, status animation, KV expiry | Canceled/replaced deadline or no future demand |
 | Watched inputs and reverse subscribers | Accepted logic registration; key is physical identity/generation + input color | Last subscriber removed; run/binding/endpoint invalidated |
 | Owned-output safety | Successful output replacement, including empty-bank ownership if existing semantics retain it | Clear/replacement/owner retirement |
-| Topology interests and native adoption | Attach/detach subscribers, modem receive interests, active bindings, explicit discovery and open network UI | Last interest/pending request removed |
+| Topology interests and native adoption | Attach/detach subscribers, modem receive interests, Dashboard-click bindings, explicit discovery and open network UI | Last interest/pending request removed |
 | Dirty/pending service work | Physical invalidation, clone/undo work, grouping, touches/resizes, model changes, cleanup | Work committed/canceled/retired |
 | Open UI sessions | Open/close/tab/player-lifecycle events plus dirty content and existing cadence | Closed, unavailable or replaced exact session |
 
@@ -110,7 +110,7 @@ Retain the inert legacy `power_restored` registration name to avoid making other
 
 Physical movement/rotation/scope changes and circuit rewiring do not all have complete notifications. Use existing targeted notifications first, and due non-power physical observation within `topology_latency_ticks` for idle composites. Stagger due times deterministically; no new latency setting or longer release promise. An idle per-device check at an explicit due deadline is allowed; reconstructing the due set by visiting all devices every tick is not.
 
-Authority-bearing work is not idle: output owners retain `fail_safe_latency_ticks`, selected monitor groups retain their authority maintenance, and active signal subscriptions retain every-tick observation and fresh selected-path checks. Topology attach/detach watchers and modem receive interests own bounded discovery work, while an explicit discovery/call proves current access immediately even without a watcher. Pending/unavailable proof must remain explicit, never a false empty inventory or cached permission.
+Authority-bearing work is not idle: output owners retain `fail_safe_latency_ticks`, selected monitor groups retain their authority maintenance, and active signal subscriptions retain every-tick observation and fresh selected-path checks. Topology attach/detach watchers, modem receive interests and Dashboard-click registrations own bounded discovery work, while an explicit discovery/call proves current access immediately even without a watcher. Pending/unavailable proof must remain explicit, never a false empty inventory or cached permission.
 
 Retained static images can reflect a silent non-power physical change until due observation, but fresh calls, touches and publication must refuse invalid geometry immediately. This is the accepted delayed-idle-observation trade-off, not permission to weaken safety. Status animation remains due work even for a waiting running computer: preserving its existing 10-tick visual cue is not a hidden per-tick execution poll.
 

@@ -291,7 +291,10 @@ local function unchanged()
   assert(now.outputs==s.outputs and now.interests==s.interests and now.adoption==s.adoption,'cold membership aliases changed')
   assert(now.outputs.records[f().io].record==registry.record(f().io) and #now.interests.order==2)
   local pending=now.adoption.order[1]
-  assert(#now.adoption.order==1 and pending.computer==registry.record(f().stopped) and pending.wire=='red')
+  assert(#now.adoption.order==2 and pending.computer==registry.record(f().stopped) and pending.wire=='red')
+  local faulted=registry.computer(f().faulted_discovery)
+  assert(faulted.status=='faulted' and faulted.state.boots==1 and not registry.by_entity(f().speaker))
+  assert(now.adoption.entries[faulted.id..'/red'].computer==faulted)
   assert(pending.computer.status=='stopped' and pending.generation==pending.computer.generation and not registry.by_entity(f().native))
   assert(registry.record(f().io).output_owner.computer_id==f().c)
 end
@@ -333,6 +336,25 @@ function M.on_tick(event)
     error_is('E_NETWORK_PENDING',function() inventory(stopped,'red') end)
     assert(stopped.status=='stopped' and #root.native_adoption.order==1 and not registry.by_entity(native))
     fixture.stopped=stopped.id; fixture.native=native
+    local first=build(c.body.surface,'computer',52,30)
+    local native_speaker=assert(c.body.surface.create_entity{name='programmable-speaker',position={55,30},force='player'})
+    assert(connector(first,'red').connect_to(native_speaker.get_wire_connector(defines.wire_connector_id.circuit_red,true)))
+    runtime.save(first.id,[[function start()
+      computer.setState('boots',(computer.getState('boots') or 0)+1)
+      peripheral.find('speaker','red')
+    end]],0)
+    assert(runtime.activate(first.id,event.tick)); scheduler.dispatch(first,event.tick)
+    -- The first activation advances the real admission clock; retain paid current-tick credits too.
+    assert(admission.reserve(runtime.context(c,event.tick),'work',1))
+    assert(first.status=='faulted' and first.diagnostic.code=='E_NETWORK_PENDING')
+    assert(root.native_adoption.entries[first.id..'/red'],'first discovery fault canceled physical adoption')
+    local removed=build(c.body.surface,'computer',60,30)
+    assert(connector(removed,'red').connect_to(native_speaker.get_wire_connector(defines.wire_connector_id.circuit_red,true)))
+    error_is('E_NETWORK_PENDING',function() inventory(removed,'red') end)
+    assert(runtime.stop(removed.id) and root.native_adoption.entries[removed.id..'/red'])
+    assert(lifecycle.remove(removed.id,'fixture-discovery-removal',true))
+    assert(not root.native_adoption.entries[removed.id..'/red'],'removed root retained discovery demand')
+    fixture.faulted_discovery=first.id; fixture.speaker=native_speaker
     log('TC_CONTRACT membership-migration-preserves-accepted-state-and-stopped-native-discovery-pending')
     fixture.phase='frozen'; fixture.snapshot=snapshot()
     game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED'); return
@@ -345,6 +367,15 @@ function M.on_tick(event)
     local native=assert(registry.by_entity(fixture.native)); local stopped=registry.computer(fixture.stopped)
     assert(native.kind=='radar' and #registry.get().native_adoption.order==0 and stopped.status=='stopped' and not stopped.active)
     assert(inventory(stopped,'red')[native.id] and not inventory(stopped,'green')[native.id])
+    local first=registry.computer(fixture.faulted_discovery); local native_speaker=assert(registry.by_entity(fixture.speaker))
+    assert(first.status=='faulted' and first.state.boots==1 and inventory(first,'red')[native_speaker.id])
+    assert(runtime.activate(first.id,event.tick)); fixture.phase='retry-discovery'; return
+  end
+  if fixture.phase=='retry-discovery' and registry.computer(fixture.faulted_discovery).state.boots==2 then
+    local first=registry.computer(fixture.faulted_discovery)
+    assert(first.status=='running' and #first.queue==0 and #registry.get().native_adoption.order==0)
+    assert(runtime.stop(first.id))
+    log('TC_CONTRACT cold-first-discovery-fault-retains-adoption-no-replay-and-explicit-retry-succeeds')
     log('TC_CONTRACT cold-pending-native-discovery-adopted-once-from-stopped-root')
     local subscriptions={}; for id in pairs(c.subscriptions) do subscriptions[#subscriptions+1]=id end
     for _,id in ipairs(subscriptions) do assert(runtime.unsubscribe(c,id)) end

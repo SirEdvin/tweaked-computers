@@ -276,9 +276,9 @@ local function reason(computer,item)
   if not rec or rec.id~=item.name or rec.generation~=item.generation then return 'regrouped' end
   return 'wire_removed'
 end
-local function topology_state()
+local function topology_state(version)
   local s=registry.get().topology_interests
-  if type(s)~='table' or s.version~=1 or type(s.order)~='table' or type(s.computers)~='table'
+  if type(s)~='table' or s.version~=(version or 2) or type(s.order)~='table' or type(s.computers)~='table'
     or not errors.integer(s.cursor,1,math.max(1,#s.order)) then
     errors.raise('E_UNSUPPORTED','unsupported topology interest membership; observations retained')
   end
@@ -337,17 +337,20 @@ local function topology_subscription(c,sub,adding,spend)
     end
   end
 end
-for _,event in ipairs({'peripheral_attach','peripheral_detach','modem_message'}) do
+for _,event in ipairs({'peripheral_attach','peripheral_detach','modem_message','dashboard_click'}) do
   runtime.register_subscription_lifecycle(event,topology_subscription)
 end
 registry.register_initializer('topology-interests',function(root)
-  if not registry.supported(root) or root.topology_interests~=nil then return end
-  root.topology_interests={version=1,order={},computers={},cursor=1}
+  if not registry.supported(root) then return end
+  if root.topology_interests~=nil then
+    if type(root.topology_interests)~='table' or root.topology_interests.version~=1 then return end
+    local prior=topology_state(1); prior.version=2
+  else root.topology_interests={version=2,order={},computers={},cursor=1} end
   for _,id in ipairs(root.order) do
     local c=root.computers[id]
     if c and c.schema_version==1 and c.status=='running' and type(c.subscriptions)=='table' then
       for _,sub in pairs(c.subscriptions) do
-        if sub.event_name=='peripheral_attach' or sub.event_name=='peripheral_detach' or sub.event_name=='modem_message' then topology_subscription(c,sub,true) end
+        if sub.event_name=='peripheral_attach' or sub.event_name=='peripheral_detach' or sub.event_name=='modem_message' or sub.event_name=='dashboard_click' then topology_subscription(c,sub,true) end
       end
       for _,wire in ipairs({'red','green'}) do
         if type(c.network_views)=='table' and type(c.network_views[wire])=='table' and c.network_views[wire].job then binding(c,wire).pending=true end
@@ -355,6 +358,22 @@ registry.register_initializer('topology-interests',function(root)
     end
   end
 end)
+local function retire_dashboard_bindings(computer,wire,inventory,spend)
+  spend(limits.subscriptions)
+  local absent={}
+  for _,sub in pairs(computer.subscriptions) do
+    if sub.event_name=='dashboard_click' and sub.details.wire==wire then
+      local item=inventory[sub.details.peripheral]
+      if not item or item.generation~=sub.details.generation then absent[sub.details.peripheral]=true end
+    end
+  end
+  for _,name in ipairs(sorted(absent,spend)) do
+    local selection=computer.monitor_sync; local shell_selection=computer.shell and computer.shell.monitor_sync
+    spend(((selection and #selection.members or 0)+(shell_selection and #shell_selection.members or 0))*4
+      +limits.subscriptions^2+limits.subscriptions*(#computer.queue*2+1)+#topology_state().order*4+132)
+    M.revoke(computer,name,wire,'wire_removed')
+  end
+end
 local function reconcile_one(computer,wire,tick,spend)
   spend(16)
   computer.network_views=computer.network_views or {}
@@ -368,6 +387,7 @@ local function reconcile_one(computer,wire,tick,spend)
       end
       error(result,0)
     end
+    retire_dashboard_bindings(computer,wire,result,spend)
     computer.network_views[wire]={run_id=computer.run_id,inventory=result,tick=tick}; return
   end
   if not view.job then
@@ -377,6 +397,7 @@ local function reconcile_one(computer,wire,tick,spend)
       if type(next_inventory)~='table' or not next_inventory.code then error(next_inventory,0) end
       failure=next_inventory; next_inventory={}
     end
+    if not failure then retire_dashboard_bindings(computer,wire,next_inventory,spend) end
     local changes={}
     for _,name in ipairs(sorted(view.inventory,spend)) do
       local old=view.inventory[name]; local new=next_inventory[name]

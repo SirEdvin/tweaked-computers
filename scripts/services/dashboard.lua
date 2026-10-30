@@ -113,12 +113,13 @@ function M.validate(c,item,spend)
   local ok,button=pcall(model.widget,tab,event.button,'button')
   return ok and button.enabled and player_authorized and player_authorized(event.player_index,r,proof.token,event.tab) or false
 end
-function M.revoke(c,name,wire)
+function M.revoke(c,name,wire,reason)
+  if reason=='unavailable' or reason=='limit' then return end -- Incomplete discovery is not definitive detachment.
   local ids={}
   for id,sub in pairs(c.subscriptions) do
     if sub.event_name=='dashboard_click' and sub.details.peripheral==name and sub.details.wire==wire then ids[#ids+1]=id end
   end
-  for _,id in ipairs(ids) do c.subscriptions[id]=nil; remove_queued(c,id) end
+  for _,id in ipairs(ids) do runtime.unsubscribe(c,id); remove_queued(c,id) end
 end
 peripheral.register_type('dashboard',{methods=M.methods})
 peripheral.register_revocation('dashboard-subscriptions',M.revoke)

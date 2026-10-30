@@ -69,10 +69,11 @@ Timer durations are positive safe integer ticks. Equal deadlines use creation
 order. Recurring overdue work coalesces, including already queued notifications:
 one event retains its first scheduled_tick and accumulates missed intervals;
 the next deadline stays aligned. One-shots are consumed on queue admission.
-Cancellation still removes admitted work. Power loss removes transient events,
-pauses callbacks and clears owned outputs through host cleanup; restoration
-keeps the same generation, retains timers/state, requests current-input resync
-and notifies retained power_restored subscribers. Cold load is not restoration.
+Cancellation still removes admitted work. Custom devices need no electricity:
+electrical loss/restoration does not pause callbacks, discard events or clear
+owned outputs. `power_restored` remains an inert compatibility registration.
+Physical invalidation, stop/fault and definitive authority loss retain their
+existing safety cleanup. Cold load does not replay startup or emit restoration.
 
 An ordinary failure can be caught with pcall. Uncaught errors fault the run;
 private quota/stop controls cannot be swallowed or forged by an error table.
@@ -103,12 +104,14 @@ Use the one existing on_tick handler; add phase hooks instead of replacing it.
   bindings. It does not destroy entities: the composite owner does that only
   after successful removal. A failed hook retains the record/recovery graph
   and returns false. Removing an identity never removes same-tick ledger entries.
-- `register_cleanup(name, function(record, run_id, reason))` installs an ephemeral
-  host safety hook; `cleanup(record,run_id,reason) -> boolean` calls hooks in name
+- `register_cleanup(name, function(record, run_id, reason, removing))` installs an ephemeral
+  host safety hook; `cleanup(record,run_id,reason,removing?) -> boolean` calls hooks in name
   order, catches each failure, and retains bounded cleanup_failures. Successful
   retry clears those failures. Hook work must be bounded by admitted owned
   resources, independent of guest credits/source. Never mutate scheduler order
   from a teardown callback. Clear only outputs still owned by that exact run ID.
+  Registry removal passes `removing=true`; program retirement alone does not
+  cancel physical-root native discovery.
 
 Record schema: `schema_version=1, id, generation, kind, body, children,
 force_index, surface_index, powered`. The root owns `entities[unit_number] =
@@ -161,7 +164,8 @@ lifecycle/revocation, sampling, notifications, timers, fair callbacks, rendering
 Hooks must spend before input-dependent native work/mutation and retain their
 own bounded cursor on deferral. `try_maintenance(fn)` catches only the private
 maintenance refusal; unexpected host failures remain visible. Emit precharges
-all deliveries. Power transitions precharge their complete notification envelope.
+all deliveries. Native radar/speaker electrical eligibility is checked at use;
+custom devices have no electrical-transition notification work.
 
 One program callback or Console submission per computer per actual tick; FIFO
 within each queue, with the existing program/Console alternation. Event publication

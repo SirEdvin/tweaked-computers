@@ -47,6 +47,14 @@ function M.run()
     data.measure=measure
     assert(settled,settled_error)
     assert(visits==0,'unchanged open dashboard rediscovered widget definitions: '..visits)
+    limits.maintenance_work_per_tick=1
+    local paid=scheduler.maintenance(registry.get(),100,true)
+    ui.tick(100,function(n) paid(n+2) end)
+    assert(fa.availability.caption=='Dashboard update pending: maintenance allowance unavailable' and not sa.dirty)
+    limits.maintenance_work_per_tick=maintenance_limit
+    ui.tick(101,function() end)
+    assert(fa.availability.caption=='' and sa.tabs['1']==first,'stable dashboard retained a recovered maintenance warning')
+    log('TC_DASHBOARD_GUI stable-view-maintenance-warning-clears-without-rebuild')
     local function activate(element,player,mouse)
       ui.on_click{element=element,player_index=(player or a).index,button=mouse or defines.mouse_button_type.left}
     end

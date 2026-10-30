@@ -177,8 +177,9 @@ function M.adopt_tick(tick,spend)
     end
   end
 end
-registry.register_cleanup('native-discovery',function(rec)
-  if rec.kind~='computer' then return end
+registry.register_cleanup('native-discovery',function(rec,run,reason,removing)
+  -- Discovery belongs to the physical root, not the callback that requested it.
+  if rec.kind~='computer' or not removing and reason~='authority_changed' then return end
   local s=adoption_state()
   retire_adoption(s,rec.id..'/red'); retire_adoption(s,rec.id..'/green')
 end)
