@@ -166,6 +166,14 @@ function M.maintenance_set(kind,id,owner,tick)
   deadline_put(M.maintenance_clock(kind),{id=id,owner=owner,generation=owner.generation,tick=tick})
 end
 function M.maintenance_remove(kind,id) return deadline_remove(M.maintenance_clock(kind),id) end
+function M.art_changed(rec,tick)
+  local root=M.get()
+  if not rec or rec.native_carrier or not M.supported(root) or M.record(rec.id)~=rec then return end
+  local valid,clock=pcall(M.maintenance_clock,'art')
+  if not valid then root.scheduling_diagnostic=clock; return end
+  if clock.initialized~=1 then return end
+  M.maintenance_set('art',rec.id,rec,tick or game.tick)
+end
 M.register_initializer('00-service-deadlines',function(root)
   if not M.scheduling_supported(root) or root.scheduler.due_work~=nil then return end
   local s={version=1}; root.scheduler.due_work=s
@@ -298,6 +306,7 @@ function M.get() return storage.tweaked_computers end
 function M.monitor_changed(rec,topology)
   local root=M.get()
   if topology then root.monitor_topology_dirty=true end
+  M.art_changed(rec)
   local s=root.monitors
   local g=s and s.version==1 and s.groups[s.membership[rec.id]]
   if not g then return end
@@ -440,14 +449,25 @@ function M.remove(id,reason)
     local valid,problem=pcall(M.maintenance_clock,'physical')
     if not valid then root.scheduling_diagnostic=problem; return false end
   end
+  if rec.kind=='kv' then
+    local valid,problem=pcall(M.maintenance_clock,'kv')
+    if not valid then root.scheduling_diagnostic=problem; return false end
+  end
+  if not rec.native_carrier then
+    local valid,problem=pcall(M.maintenance_clock,'art')
+    if not valid then root.scheduling_diagnostic=problem; return false end
+  end
   if not M.cleanup(rec,rec.run_id,reason or 'removed') then
     rec.status='faulted'; rec.diagnostic=errors.new('E_ENGINE','cleanup failed; entity/data retained for recovery')
+    M.art_changed(rec)
     return false
   end
   if rec.kind=='monitor' then M.monitor_changed(rec,true) end
   rec.status='removed'; rec.queue={}; rec.timers={}; rec.subscriptions={}
   M.ready_changed(rec); M.timer_remove(rec.id)
   if rec.kind~='radar' then M.maintenance_remove('physical',rec.id) end
+  if rec.kind=='kv' then M.maintenance_remove('kv',rec.id) end
+  if not rec.native_carrier then M.maintenance_remove('art',rec.id) end
   for unit,binding in pairs(root.entities) do if binding.id==id then root.entities[unit]=nil end end
   root.computers[id]=nil; root.devices[id]=nil
   root.retained_count=root.retained_count-1

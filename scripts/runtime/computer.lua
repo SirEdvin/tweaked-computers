@@ -34,6 +34,7 @@ function M.retire(rec,status,reason)
   local cleaned=registry.cleanup(rec,rec.run_id,reason or status)
   rec.queue={}; rec.queue_bytes=0; rec.timers={}; rec.subscriptions={}
   rec.status=cleaned and status or 'faulted'
+  registry.art_changed(rec)
   registry.ready_changed(rec); registry.timers_changed(rec)
   if not cleaned then rec.diagnostic=errors.new('E_ENGINE','host teardown failed; cleanup recovery retained') end
   return cleaned
@@ -92,6 +93,7 @@ function M.activate(id,tick,expected_revision)
   rec.run_id=rec.id..'/run-'..string.format('%.0f',rec.run_generation)
   rec.active={source=plan.source,revision=rec.saved_revision,api_version=1,compiler_version=limits.compiler_version,storage_version=limits.storage_version,handlers=plan.handlers}
   rec.status='running'; rec.diagnostic=nil; rec.candidate_diagnostic=nil
+  registry.art_changed(rec)
   if plan.handlers.start then M.enqueue(rec,'start',{name='start'},tick) end
   return rec.run_id
 end

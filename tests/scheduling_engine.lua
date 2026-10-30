@@ -15,6 +15,7 @@ local network=require('scripts.network')
 local undo=require('scripts.computer-undo')
 local blueprints=require('scripts.blueprints')
 local monitor=require('scripts.services.monitor')
+local art=require('scripts.device-art')
 
 local M={}
 local resume=false
@@ -164,6 +165,56 @@ function M.run()
   assert(notified,notification_error)
   assert(notification_work==0,'settled displays acquired notification discovery work: '..notification_work)
   assert(notification_visits==0,'settled displays were visited to discover notifications: '..notification_visits)
+  local kv_work,art_work=0,0
+  kv.maintenance(game.tick,function(n) kv_work=kv_work+n end)
+  art.tick(game.tick,function() end)
+  art.tick(game.tick,function(n) art_work=art_work+n end)
+  assert(kv_work==0,'persistent-only databases acquired reclamation discovery work: '..kv_work)
+  assert(art_work==0,'settled devices acquired art discovery work: '..art_work)
+  local nop=function() end
+  for _,saved in ipairs(legacy) do if saved.rec.kind=='kv' then rec=saved.rec end end
+  assert(registry.record(rec.id)==rec and rec.kind=='kv')
+  kv.methods.set(nil,rec,nil,game.tick,nop,'future','old')
+  kv.methods.expire(nil,rec,nil,game.tick,nop,'future',1000)
+  local deadline=rec.database.entries.future.deadline
+  assert(registry.maintenance_next('kv').tick==deadline)
+  kv_work=0; kv.maintenance(game.tick,function(n) kv_work=kv_work+n end)
+  assert(kv_work==0,'future-only database acquired per-tick work')
+  assert(kv.methods.persist(nil,rec,nil,game.tick,nop,'future')==1 and not registry.maintenance_next('kv'))
+  local trace={}
+  kv.methods.expire(nil,rec,nil,game.tick,function(n) trace[#trace+1]=n end,'future',1000)
+  kv.methods.persist(nil,rec,nil,game.tick,nop,'future')
+  local before=rec.database; local refused={}; local charges=0
+  local published,why=pcall(kv.methods.expire,nil,rec,nil,game.tick,function()
+    charges=charges+1; if charges==#trace then error(refused,0) end
+  end,'future',1000)
+  assert(not published and why==refused and rec.database==before and not registry.maintenance_next('kv'),
+    'refused deadline publication changed database/index')
+  kv.methods.expire(nil,rec,nil,game.tick,nop,'future',1000)
+  kv.methods.set(nil,rec,nil,game.tick,nop,'future','replacement')
+  assert(not registry.maintenance_next('kv') and kv.methods.ttl(nil,rec,nil,game.tick,nop,'future')==-1)
+  kv.methods.set(nil,rec,nil,game.tick,nop,'cold-expiry',string.rep('x',8192))
+  kv.methods.expire(nil,rec,nil,game.tick,nop,'cold-expiry',1)
+  local small=assert(lifecycle.build(assert(surface.create_entity{name=defs.devices.kv.entity_name,position={96,12},force='player'})))
+  kv.methods.set(nil,small,nil,game.tick,nop,'small','v')
+  kv.methods.expire(nil,small,nil,game.tick,nop,'small',1)
+  local recovery=assert(lifecycle.build(assert(surface.create_entity{name=defs.devices.kv.entity_name,position={104,12},force='player'})))
+  kv.methods.set(nil,recovery,nil,game.tick,nop,'kept','accepted')
+  kv.methods.expire(nil,recovery,nil,game.tick,nop,'kept',1000)
+  local retained=kv.snapshot(recovery,game.tick,nop)
+  local clock=registry.maintenance_clock('kv'); local clocks=registry.get().scheduler.due_work
+  local diagnostic=registry.get().scheduling_diagnostic; clocks.version=99
+  kv.restore(recovery,retained)
+  local imported=recovery.database
+  assert(imported.entries.kept.value=='accepted' and imported.entries.kept.deadline==game.tick+60000)
+  local changed,issue=pcall(kv.methods.set,nil,recovery,nil,game.tick,nop,'kept','replacement')
+  assert(not changed and issue.code=='E_UNSUPPORTED' and recovery.database==imported)
+  assert(not registry.remove(recovery.id,'unsupported deadline fixture') and recovery.body.valid and clocks.version==99)
+  clocks.version=1; kv.initialize(recovery)
+  registry.get().scheduling_diagnostic=diagnostic
+  assert(lifecycle.remove(recovery.id,'supported deadline fixture',true))
+  assert(not clock.deadline_positions[recovery.id],'removed database retained deadline ownership')
+  log('TC_CONTRACT deadline-owned-kv-and-status-art-zero-idle-future-cancel-replace-atomic-publication')
 
   log('TC_SCHEDULING_NINE_POWER_FREE_FAMILIES owned-helper-migration physical-proofs role-and-content-aliases')
   for i,name in ipairs({'radar','programmable-speaker'}) do
@@ -178,7 +229,8 @@ function M.run()
   local c=build(0); local stopped=build(4); local faulted=build(8)
   runtime.stop(stopped.id)
   runtime.fault(faulted,{code='E_PROGRAM',message='intentional stopped fixture'},game.tick)
-  storage.tc_scheduling={phase='armed',id=c.id,stopped=stopped.id,faulted=faulted.id}
+  storage.tc_scheduling={phase='armed',id=c.id,stopped=stopped.id,faulted=faulted.id,
+    database=rec.id,small_database=small.id,kv_deadline=rec.database.entries['cold-expiry'].deadline,kv_data=rec.database}
 end
 function M.on_load()
   resume=storage.tc_scheduling.phase=='frozen'
@@ -294,7 +346,35 @@ function M.on_tick(event)
     assert(observed,problem); assert(visits==0,'settled same-tick physical work was rediscovered')
     assert(c.status=='running' and c.state.boots==1 and c.state.once==1)
     log('TC_CONTRACT native-destruction-targeted-owned-helper-recovery-no-foreign-cleanup-no-stale-deadlines')
-    x.phase='done'; log('TC_COLD_OK')
+    x.phase='maintenance-deadlines'
+  elseif x.phase=='maintenance-deadlines' then
+    local database=registry.record(x.database); local key=database.database.entries['cold-expiry']
+    if event.tick==x.kv_deadline then
+      assert(key and kv.methods.get(nil,database,nil,event.tick,function() end,'cold-expiry')==nil,
+        'expiry semantics waited for physical reclamation')
+      local spend=scheduler.maintenance(root,event.tick)
+      root.scheduler.maintenance_spent=limits.maintenance_work_per_tick-root.scheduler.render_reserved_work-1000
+      kv.maintenance(event.tick,spend)
+      assert(database.database.entries['cold-expiry']==key and not registry.record(x.small_database).database.entries.small,
+        'refused expiry blocked a fitting database or deleted accepted state')
+      assert(registry.maintenance_next('kv').owner==database and registry.maintenance_next('kv').tick==x.kv_deadline,
+        'refused expiry lost its original deadline')
+      log('TC_SCHEDULING_KV_REFUSAL_OK exact-expiry-fitting-peer-old-due-tick-retained')
+    end
+    tick(event.tick)
+    assert(database.database==x.kv_data and database.database.entries.future.value=='replacement')
+    local position=registry.maintenance_clock('art').deadline_positions[c.id]
+    assert(position and registry.maintenance_clock('art').deadlines[position].tick==event.tick-event.tick%10+10)
+    assert(c.status_art.name=='tc-status-computer-north-blinking-'..math.floor(event.tick/10)%4,
+      'running status frame missed its actual-tick animation boundary')
+    assert(not registry.maintenance_clock('art').deadline_positions[x.stopped]
+      and not registry.maintenance_clock('art').deadline_positions[x.faulted],
+      'stopped or faulted computer retained animation work')
+    if event.tick>x.kv_deadline and not database.database.entries['cold-expiry'] then
+      assert(not registry.maintenance_clock('kv').deadline_positions[database.id])
+      log('TC_SCHEDULING_KV_ART_COLD_OK deadlines-aliases-expiry-running-animation-cadence')
+      x.phase='done'; log('TC_COLD_OK')
+    end
   end
 end
 return M

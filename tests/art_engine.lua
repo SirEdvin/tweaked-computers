@@ -21,12 +21,13 @@ function M.run()
     for _,rec in ipairs(records) do
       rec.powered=state~='unpowered'; rec.status=state=='blinking' and 'running' or 'stopped'
       rec.physical_error=state=='fault' and 'fixture fault' or nil
-      if rec.kind=='monitor' then rec.monitor_art_dirty=true end
+      registry.art_changed(rec,tick)
     end
     art.tick(tick,nop)
     for _,rec in ipairs(records) do
       local direction=({'north','east','south','west'})[rec.body.direction/4+1]
       local effective=state
+      if state=='unpowered' then effective=rec.kind=='computer' and 'off' or 'powered' end
       if state=='powered' and rec.kind=='computer' then effective='off' end
       if state=='off' and rec.kind~='computer' then effective='powered' end
       if state=='blinking' and rec.kind~='computer' then effective='powered' end
@@ -36,7 +37,8 @@ function M.run()
       cases=cases+1
       -- No unchanged-status recreation; body and native connector ownership stay.
       local before=rec.status_art.object
-      art.tick(tick,nop)
+      local work=0; art.tick(tick,function(n) work=work+n end)
+      assert(work==0,'settled art acquired same-tick discovery work')
       assert(rec.status_art.object==before and registry.by_entity(rec.body)==rec)
     end
   end

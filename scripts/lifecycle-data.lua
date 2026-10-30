@@ -170,6 +170,7 @@ function M.initialize_existing()
     local n=0
     for _,rec in pairs(root.computers or {}) do n=n+1; if n>limits.registry_entries then break end
       registry.cleanup(rec,rec.run_id,'unsupported_storage'); rec.status='faulted'; rec.powered=false
+      registry.art_changed(rec)
       if rec.body and rec.body.valid then rec.body.minable_flag=false end
     end
     return

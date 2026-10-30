@@ -28,6 +28,13 @@ or auto-subscribes. Stop cancels that generation's
 registrations/timers/events. State, source and logs remain. Reset State requires
 a stopped/faulted computer. Failed candidate validation leaves the old run intact.
 
+Status artwork is demand-driven: static devices retain their existing render
+object until their identity, geometry or status changes. Running computer status
+frames are due on the existing 10-tick animation boundaries. Stop/fault cancels
+that animation membership; electrical cycling does not change custom-device
+status. A missing native render object is rediscovered by the existing due
+physical observation, not a separate every-tick artwork sweep.
+
 All calls use dots, not colons. Exact argument counts are enforced:
 
 | Call | Result |

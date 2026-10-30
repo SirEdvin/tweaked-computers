@@ -41,6 +41,8 @@ At successful `expire(key, seconds)`:
 
 All expirations affect whole keys. A newly created hash after expiry has no inherited fields or deadline. On cold load the original absolute deadline remains, not a reset duration. An expired value is never returned merely because a maintenance sweep has not run.
 
+Background cleanup is owned by the earliest retained deadline or unfinished due cleanup, not an ordinary database discovery sweep. Persistent-only and future-expiry databases have no per-tick key visits. Cancellation, replacement, mining and restored placement update the appropriate identity's membership without renewing expiry. Refused cleanup keeps its old due tick and key cursor while other fitting due databases may progress; guest-visible logical expiry is independent of that admission.
+
 ## Atomicity and errors
 
 The command is the atomic boundary, not the entire callback. Validate total final capacity, per-command movement/copy cost, key type and all field/value inputs before committing. Overwrite/refusal retains the previous value and deadline; variadic HSET/HDEL cannot partially publish. Counts use the command's one simulation-tick observation.

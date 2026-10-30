@@ -158,7 +158,7 @@ function M.build(body,token)
       body.minable_flag=false; rec.mining_guard='awaiting-data-bearing-snapshots'
     end
   end)
-  if ok then return rec end
+  if ok then registry.art_changed(rec); return rec end
   if rec and not registry.remove(rec.id,'placement_rollback') then
     rec.physical_error='placement cleanup failed; retained for recovery'
     -- Bind any unbound staged parts so none can become an untracked orphan.
@@ -212,6 +212,7 @@ function M.connector(rec,role,color)
   return port.get_wire_connector(defines.wire_connector_id['circuit_'..color],false)
 end
 function M.rotate(rec,previous_direction)
+  registry.art_changed(rec)
   if rec and rec.native_carrier then return true end
   if not rec or rec.physical_version~=1 or not rec.body.valid then return false end
   local direction=rec.body.direction
@@ -284,6 +285,7 @@ local function upgrade_availability(rec)
     if power and power.valid then owner,role=registry.by_entity(power) end
     if power and power.valid and (owner~=rec or role~='power' or power.name~=defs.devices[rec.kind].power_name) then
       rec.physical_error='legacy electrical helper ownership invalid; data retained for recovery'
+      registry.art_changed(rec)
       return false
     end
     if power then
@@ -295,9 +297,11 @@ local function upgrade_availability(rec)
     rec.availability_version=1
   elseif rec.availability_version~=1 then
     rec.physical_error='unsupported availability representation; data retained for recovery'
+    registry.art_changed(rec)
     return false
   end
   M.reset_network(rec)
+  registry.art_changed(rec)
   return true
 end
 function M.upgrade(rec)
@@ -536,6 +540,7 @@ end
 local function observe(rec,tick,spend)
     local id=rec.id
       spend(16)
+      if not rec.status_art or not rec.status_art.object.valid then registry.art_changed(rec,tick) end
       if rec and rec.kind=='logic' then rec.logic_sample=nil; rec.output_bank=nil end
       if rec and rec.native_carrier=='speaker' then
         speaker.reconcile(rec,spend)
@@ -549,7 +554,7 @@ local function observe(rec,tick,spend)
           if rec.body.force.index~=rec.force_index or rec.body.surface.index~=rec.surface_index then
             spend(16)
             if not registry.cleanup(rec,rec.run_id,'authority_changed') then
-              rec.physical_error='authority cleanup failed'; rec.powered=false; return
+              rec.physical_error='authority cleanup failed'; rec.powered=false; registry.art_changed(rec,tick); return
             end
             rec.force_index=rec.body.force.index; rec.surface_index=rec.body.surface.index
             if rec.kind=='computer' then runtime.retire(rec,'stopped','authority_changed') end
@@ -561,6 +566,7 @@ local function observe(rec,tick,spend)
             if not port or not port.valid then
               rec.physical_error='owned port missing; device retained for recovery'
               registry.cleanup(rec,rec.run_id,'physical_failure'); rec.powered=false
+              registry.art_changed(rec,tick)
               if rec.kind=='computer' then runtime.stop(id) end
               return
             end
