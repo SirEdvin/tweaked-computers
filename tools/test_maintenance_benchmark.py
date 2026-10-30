@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Small host-only regressions for counting and explicit idle-window comparison."""
 import copy
+import json
+from pathlib import Path
+import tempfile
 import unittest
 
-from maintenance_benchmark import distribution
+from maintenance_benchmark import PROFILE_PHASES, distribution, extract
 from maintenance_benchmark_summary import canonical_records, idle_window_equivalent
 
 
@@ -21,6 +24,19 @@ def idle(start):
 
 
 class CountedBenchmarkTests(unittest.TestCase):
+    def test_complete_current_hook_inventory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp); engine = folder / 'engine'; case = engine / 'base'
+            case.mkdir(parents=True)
+            (engine / 'summary.json').write_text(json.dumps({'cases': [{'cold_phases': [{'passed': True}, {'passed': True}]}]}))
+            samples = [{'tick': i, 'index': i, **dict.fromkeys(('maintenance', 'guest', 'reserved', 'refused', 'faults', 'retired', 'staging', 'beats', 'changes'), 0)} for i in (1, 2)]
+            lines = ['TC_MB_SAMPLE '+json.dumps(row) for row in samples]
+            lines += ['TC_MB_DONE {}', 'TC_MB_CLEANUP {}', 'TC_MB_BEGIN '+json.dumps({'beats': 0, 'changes': 0})]
+            for phases, expected in ((PROFILE_PHASES, True), (PROFILE_PHASES - {'render/ui-dashboard'}, False), (PROFILE_PHASES | {'unexpected/hook'}, False)):
+                cpu = [f'TC_MB_CPU tick={tick} phase={phase} Duration: 0.1ms' for phase in phases for tick in (1, 2)]
+                (case / 'cold-second-engine.log').write_text('\n'.join(lines+cpu))
+                self.assertEqual(extract(folder, 2, True)['structural_pass'], expected)
+
     def test_nearest_rank_and_empty(self):
         self.assertEqual(distribution([]), {'count': 0})
         self.assertEqual(distribution(list(range(1, 101)))['p95'], 95)
