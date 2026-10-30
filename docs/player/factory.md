@@ -9,7 +9,7 @@ demonstrates shared versus independent physical storage.
 The optional [Recipe Searcher](api/recipe-searcher.md) has its own late-game gate:
 Circuit Computers and utility science as direct prerequisites, 200 red/green/utility
 pack sets at 60 seconds each. Craft it from 10 steel plates, 5 advanced circuits
-and 2 processing units in 2 seconds. Supply 30 kW and connect its body to the red
+and 2 processing units in 2 seconds. No electricity is needed; connect its body to the red
 Network, then run the separate [query example](examples.md#recipe-searcher-program).
 It requires no physical product input and does not craft or configure machines.
 

@@ -608,7 +608,7 @@ See Examples for complete control and optional line/duration programs.
 PRODUCTION STATISTICS
 find("production_statistics", wire) -> read-only local statistics facade. Research
 Recipe Searcher, craft from 8 iron, 5 electronic circuits and 2 advanced circuits
-(2 seconds), supply 30 kW and wire Network on red or green. Normal opening shows
+(2 seconds), then wire Network on red or green; no electricity is needed. Normal opening shows
 identity/status only; no queries run in the inspector. Item/fluid use this device's
 force and surface; pollution is surface-wide emissions/absorption, not concentration.
 
@@ -639,7 +639,7 @@ plots both directions oldest-left without reversing the API arrays.
 FACTORIOPEDIA INTERFACE
 find("factoriopedia_interface", wire) -> read-only catalogue facade. Research Recipe
 Searcher; craft from 10 steel, 5 advanced circuits and 2 processing units (2 seconds).
-Supply 30 kW and wire its 1x1 Network body on red or green. Normal opening shows
+Wire its 1x1 Network body on red or green; no electricity is needed. Normal opening shows
 identity/status only. Native Factoriopedia stays unchanged; no inventory is needed.
 
 getItem(exact_name) -> detached Item record. Stack size/stackable, native weight,

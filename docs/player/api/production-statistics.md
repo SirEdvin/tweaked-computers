@@ -9,7 +9,7 @@ collector, machine scanner or replacement for the game's production charts.
 Research **Recipe Searcher** (`tc-recipe-searcher`). Its original research cost,
 prerequisites and existing unlocks are unchanged. Circuit Computers alone is not
 enough. Craft one device in 2 seconds from **8 iron plates, 5 electronic circuits
-and 2 advanced circuits**. Items stack to 50. The 1×1 instrument consumes **30 kW**.
+and 2 advanced circuits**. Items stack to 50. The 1×1 instrument needs no electricity.
 Connect its visible **Network** contacts directly to a computer Network on an
 explicit red or green wire. Both colors work independently; the body is a passive
 same-color relay, never a factory-signal input/output or a bridge between colors.

@@ -1,8 +1,8 @@
 # Recipe Searcher
 
 Available in 0.1.9 ALPHA. Research and craft the
-[separate Recipe Searcher](../getting-started.md#research-and-craft), supply 30 kW
-and connect its 1×1 body directly to the computer's red or green Network.
+[separate Recipe Searcher](../getting-started.md#research-and-craft), then connect
+its electricity-free 1×1 body directly to the computer's red or green Network.
 It is a read-only catalogue scanner: no item inventory, fluid input, crafting
 execution or dedicated search GUI. Inspect it through the existing Peripherals tab.
 

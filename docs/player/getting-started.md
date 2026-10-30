@@ -4,7 +4,7 @@
 
 In a build containing the [Factoriopedia Interface](api/factoriopedia-interface.md), it shares Recipe Searcher
 research: 10 steel plates, 5 advanced circuits, 2 processing units, 2 seconds per
-1×1 device. Supply 30 kW and connect its Network body to the computer's red or
+1×1 device. No electricity is needed; connect its Network body to the computer's red or
 green Network. Ordinary opening shows identity/status; queries are read-only guest
 calls, not a catalogue GUI. No item/fluid input is needed.
 
