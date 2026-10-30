@@ -67,7 +67,8 @@ function M.on_tick(event)
   end
   loaded=false
   for _,id in ipairs({s.c,s.db,s.monitor}) do local rec=registry.record(id)
-    lifecycle.power_entity(rec).energy=1000000; rec.powered=true
+    if lifecycle.power_entity then lifecycle.power_entity(rec).energy=1000000; rec.powered=true
+    else assert(not rec.children.power and lifecycle.available(rec)) end
   end
   s.speaker.energy=1000000
   scheduler.tick(event.tick)

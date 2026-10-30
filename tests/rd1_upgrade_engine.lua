@@ -106,7 +106,7 @@ function M.on_configuration_changed()
   local x=f(); x.upgraded=true; retained()
   for _,kind in ipairs({'computer','kv','monitor','logic'}) do
     local rec=x.records[kind]; assert(rec.layout_version==2 and rec.body.name==defs.devices[kind].entity_name)
-    assert(registry.by_entity(rec.body)==rec and lifecycle.has_power(rec))
+    assert(registry.by_entity(rec.body)==rec and lifecycle.available(rec) and not rec.children.power)
     for _,role in ipairs(defs.devices[kind].roles) do for _,color in ipairs({'red','green'}) do
       assert(lifecycle.connector(rec,role,color),'migrated role unavailable')
     end end
@@ -125,7 +125,7 @@ function M.on_configuration_changed()
   local section=old_output.get_control_behavior().get_section(1); section.filters={}
   section.set_slot(1,{value={type='virtual',name='signal-A',quality='normal'},min=1})
   assert(lifecycle.upgrade(refused) and not old_output.valid)
-  lifecycle.power_entity(refused).power_usage=0
+  assert(not refused.children.power and lifecycle.available(refused))
   x.refused.children.targets=x.missing
   assert(lifecycle.upgrade(x.refused)); retained()
   for _,part in ipairs(x.parts) do assert(not part.valid,'old physical object survived successful upgrade') end
@@ -142,7 +142,7 @@ function M.on_configuration_changed()
   assert(lifecycle.connector(x.records.logic,'output','red').real_connection_count==1)
   local out=x.records.logic.children.output.get_control_behavior()
   assert(out.enabled and out.get_section(1).get_slot(1).min==13,'output section lost during replacement')
-  for _,rec in pairs(x.records) do lifecycle.power_entity(rec).power_usage=0 end
+  for _,rec in pairs(x.records) do assert(not rec.children.power and lifecycle.available(rec)) end
   x.upgraded=true; x.phase='verify'; x.tick=game.tick
   log('TC_RD1_UPGRADE_DATA_WIRES_REFUSAL_OK stopped-host-setup logical-aliases-and-old-endpoints-retired')
 end

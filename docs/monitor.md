@@ -116,7 +116,8 @@ It passes native game actions through and does not block reuse of held Ctrl;
 there is no extra linked building/mining action. The actual clicked member must
 be within native player reach and belong to the player's force/surface.
 Bezel, letterboxing, outside, GUI-hover/focus and
-unpowered interactions are ignored. Each player activation is separate.
+physically unavailable interactions are ignored. Monitors need no electricity.
+Each player activation is separate.
 
 Register `computer.on('monitor_touch','touched')` or
 `computer.on('monitor_resize','resized')`. Both add these fields to BaseEvent:

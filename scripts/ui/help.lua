@@ -315,8 +315,10 @@ Shared signal guidance:
 input explicitly selects red or green, never both; identities include type/name/quality (normal by default).
 signal_changed includes sample_tick, previous/current, changes with disappeared
 current=0, selected connectivity, initial/resync and discovery wire.
-Admission advances the baseline. Outages discard queued transients and resync current
-input. Stop/fault/cable loss clears only the still-owned run/channel bank.
+Admission advances the baseline. Each subscribed input/color is observed every tick;
+unsubscribed computers create no signal polling. Electrical cycling has no effect.
+Physical recovery may resync current input. Stop/fault/cable loss clears only the
+still-owned run/channel bank.
 The in-game Stock-controlled inserter tutorial includes stock INPUT, inserter OUTPUT,
 red NETWORK wiring, runnable source, execution steps and expected behavior.
 

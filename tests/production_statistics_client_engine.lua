@@ -116,7 +116,7 @@ function M.on_player_joined(event)
       assert(lifecycle.connector(c,'network',color).connect_to(lifecycle.connector(replacement,'network',color)))
       assert(lifecycle.connector(replacement,'network',color).connect_to(lifecycle.connector(registry.record(x.views[2]),'network',color)))
     end
-    lifecycle.power_entity(replacement).energy=1000; replacement.powered=true
+    assert(not replacement.children.power and lifecycle.available(replacement))
     x.old_identity=old.id; x.views[1]=replacement.id
     local ok,e=shell.evaluate(c,"local ok,e=pcall(captured,'item'); assert(not ok and e.code=='E_UNREACHABLE')",game.tick,2); assert(ok,serpent.line(e))
     x.late_join=true; x.resume_tick=game.tick; game.tick_paused=false

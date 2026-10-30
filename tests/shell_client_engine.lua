@@ -26,12 +26,12 @@ function M.run()
   for _,r in ipairs({db,logic,config,tiles[1]}) do
     assert(lifecycle.connector(c,'network','red').connect_to(lifecycle.connector(r,'network','red')))
   end
-  assert(surface.create_entity{name='substation',position={4,4},force='player'})
+  local pole=assert(surface.create_entity{name='substation',position={4,4},force='player'})
   local supply=assert(surface.create_entity{name='electric-energy-interface',position={7,4},force='player'})
   supply.power_production=100000000; supply.power_usage=0
   local source='function start(e) computer.every(30,"beat") end\n\nfunction beat(e) computer.setState("heartbeat",(computer.getState("heartbeat") or 0)+1) end'
   runtime.save(c.id,source,0); assert(runtime.activate(c.id,game.tick))
-  storage.tc_shell_client={computer=c.id,db=db.id,monitor_tile=tiles[1].id,logic=logic.id,configurator=config.id,start=game.tick}
+  storage.tc_shell_client={computer=c.id,db=db.id,monitor_tile=tiles[1].id,logic=logic.id,configurator=config.id,start=game.tick,supply=supply,pole=pole}
 end
 function M.on_player_joined(event)
   local f=storage.tc_shell_client; local p=game.get_player(event.player_index)

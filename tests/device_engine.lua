@@ -68,10 +68,7 @@ local function check_geometry(rec)
     for _,color in ipairs({'red','green'}) do assert(lifecycle.connector(rec,role,color)) end
     if role~='output' then assert(p.get_control_behavior().sections_count==0 and not p.get_control_behavior().enabled) end
   end
-  local p=assert(lifecycle.power_entity(rec))
-  assert(p~=b and p.valid and p.position.x==b.position.x and p.position.y==b.position.y)
-  assert(not p.minable_flag and not p.destructible and not p.operable and not p.rotatable and not p.prototype.selectable_in_game)
-  local owner,role=registry.by_entity(p); assert(owner==rec and role=='power' and p.force==b.force and p.surface==b.surface)
+  assert(not rec.children.power and lifecycle.available(rec),'custom shell needs an electrical helper')
 end
 local function check_wires()
   local f=storage.tc04_fixture
@@ -108,7 +105,7 @@ function M.run()
       local rec=body(surface,kind,{x=col*16,y=row*16},direction)
       check_geometry(rec)
       f.ids[#f.ids+1]=rec.id
-      f.grids[#f.grids+1]=power(surface,rec.body.position)
+
       if kind=='logic' then
         f.logic_ids[#f.logic_ids+1]=rec.id
         local pos=rec.body.position
@@ -174,8 +171,8 @@ function M.run()
   assert(#created==2 and not created[2].valid)
   consumed.destroy(); robot.destroy()
   group('real_partial_allocation_rollback_no_orphan_robot_refund')
-  local mine=body(surface,'kv',{x=32,y=112},0)
-  local child=lifecycle.power_entity(mine)
+  local mine=body(surface,'logic',{x=32,y=112},0)
+  local child=mine.children.input
   f.cleanup_refusal=mine.id
   assert(not lifecycle.remove(mine.id,'refusal',true) and mine.body.valid and child.valid and registry.record(mine.id)==mine)
   f.cleanup_refusal=nil; assert(lifecycle.remove(mine.id,'retry',true)); assert(not child.valid)
@@ -254,9 +251,9 @@ function M.run()
 end
 local function frozen_check()
   local f=storage.tc04_fixture; local saved=f.snapshot; local rec=registry.record(f.good)
-  assert(rec.id==saved.id and rec.body.unit_number==saved.unit and lifecycle.endpoint(rec,'network').unit_number==saved.port and lifecycle.power_entity(rec).unit_number==saved.power)
-  assert(rec.run_id==saved.run_id and rec.active.source==source and rec.state.boots==1 and rec.state.restores==1)
-  assert(rec.powered==saved.powered and lifecycle.power_entity(rec).energy==saved.energy)
+  assert(rec.id==saved.id and rec.body.unit_number==saved.unit and lifecycle.endpoint(rec,'network').unit_number==saved.port)
+  assert(rec.run_id==saved.run_id and rec.active.source==source and rec.state.boots==1 and rec.state.restores==0)
+  assert(rec.powered==saved.powered and not rec.children.power and lifecycle.available(rec))
   local root=registry.get()
   assert(root.ledger.tick==saved.tick and root.ledger.total==saved.total and root.scheduler.last_tick==saved.scheduler_tick)
   for _,id in ipairs(f.ids) do check_geometry(registry.record(id)) end
@@ -282,7 +279,7 @@ function M.on_tick(event)
     if f.upgraded then log('TC_UPGRADE_OK exact-body-port-retention researched-unlocks')
     else
       for _,kind in ipairs(defs.order) do assert(not game.forces.player.recipes[defs.devices[kind].name].enabled,'ordinary load unexpectedly migrated unlocks') end
-      log('TC_COLD_OK exact-owned-ports power-state native-source no-on-load-mutation')
+      log('TC_COLD_OK exact-owned-ports power-free native-source no-on-load-mutation')
     end
     f.phase='done'; return
   end
@@ -310,48 +307,40 @@ function M.on_tick(event)
     check_wires()
     assert(value(f.power_sensor,'red','signal-C')==17 and value(f.power_sensor,'green','signal-C')==17)
     log('TC_PHYSICAL_NATIVE_WIRES_OK all-cardinal role-isolation no-leaks mirrored-output')
-    -- Check steady draw in joules/tick using the native power usage and buffer.
+    -- Cycling a real electrical grid must not affect custom device availability.
     for _,id in ipairs(f.power_ids) do
-      local rec=registry.record(id); local watts=defs.devices[rec.kind].watts
-      local power=lifecycle.power_entity(rec)
-      assert(math.abs(power.power_usage-watts/60)<0.001 and math.abs(power.electric_buffer_size-watts/30)<0.001)
+      local rec=registry.record(id)
+      assert(not rec.children.power and lifecycle.available(rec))
     end
-    f.draw_energy={}
-    for _,id in ipairs(f.power_ids) do f.draw_energy[id]=lifecycle.power_entity(registry.record(id)).energy end
-    f.power_grid.pole.destroy() -- Isolate real buffers for a one-tick consumption readback.
+    f.power_grid.pole.destroy()
     f.power_grid.source.power_production=0; f.power_grid.source.energy=0
     f.phase='outage'; f.phase_tick=event.tick
   elseif f.phase=='outage' and event.tick==f.phase_tick+1 then
-    for _,id in ipairs(f.power_ids) do
-      local rec=registry.record(id); local expected=defs.devices[rec.kind].watts/60
-      local consumed=f.draw_energy[id]-lifecycle.power_entity(rec).energy
-      assert(math.abs(consumed-expected)<0.02,'native per-tick consumption mismatch '..rec.kind..': '..consumed..' vs '..expected)
-    end
-    log('TC_NATIVE_CONSUMPTION_OK computer=1000J kv=500J monitor=250J logic=250J configurator=500J per-tick')
+    for _,id in ipairs(f.power_ids) do assert(lifecycle.available(registry.record(id))) end
+    log('TC_NATIVE_CONSUMPTION_OK custom-families=no-power-helper-no-consumption')
   elseif f.phase=='outage' and event.tick>=f.phase_tick+8 then
-    for _,id in ipairs(f.power_ids) do assert(not registry.record(id).powered,'native outage not sampled') end
+    for _,id in ipairs(f.power_ids) do assert(lifecycle.available(registry.record(id)),'electrical outage affected a custom device') end
     local logic=registry.record(f.power_logic)
-    assert(not logic.children.output.get_control_behavior().enabled and logic.children.output.get_control_behavior().sections_count==0)
-    assert(value(f.power_sensor,'red','signal-C')==0 and value(f.power_sensor,'green','signal-C')==0,'outage signal contribution survived')
+    assert(logic.children.output.get_control_behavior().enabled and logic.children.output.get_control_behavior().sections_count==1)
+    assert(value(f.power_sensor,'red','signal-C')==17 and value(f.power_sensor,'green','signal-C')==17,'electrical outage cleared valid output')
     assert(good.status=='running' and good.state.boots==1 and good.state.restores==0 and next(good.timers))
     assert(lifecycle.connector(good,'network','red'),'outage removed passive connector')
     f.power_grid.pole=assert(good.body.surface.create_entity{name='substation',position={0,4},force='player'})
     f.power_grid.source.power_production=1000000
     f.phase='restore'; f.phase_tick=event.tick
-  elseif f.phase=='restore' and good.state.restores==1 then
-    assert(good.state.boots==1 and good.powered and good.needs_input_resync)
+  elseif f.phase=='restore' and event.tick>=f.phase_tick+8 then
+    assert(good.state.boots==1 and good.state.restores==0 and good.powered and not good.needs_input_resync)
     for _,id in ipairs(f.power_ids) do assert(registry.record(id).powered) end
-    log('TC_PHYSICAL_NATIVE_POWER_OK pause durable-state fail-safe restoration neighbour-safe malicious-source')
+    log('TC_PHYSICAL_NATIVE_POWER_OK no-pause no-restoration-event durable-state output-retained neighbour-safe malicious-source')
     -- No electrical participant can consume/refill a body after expected capture.
     for _,grid in ipairs(f.grids) do grid.source.power_production=0; grid.source.energy=0; grid.pole.destroy() end
     f.power_grid.source.power_production=0; f.power_grid.source.energy=0; f.power_grid.pole.destroy()
-    for _,rec in pairs(registry.get().computers) do if rec.physical_version then lifecycle.power_entity(rec).power_usage=0 end end
-    for _,rec in pairs(registry.get().devices) do if rec.physical_version then lifecycle.power_entity(rec).power_usage=0 end end
+
     -- Deliberately stale unlocks separate ordinary reload from config migration.
     for _,kind in ipairs(defs.order) do game.forces.player.recipes[defs.devices[kind].name].enabled=false end
     local root=registry.get()
-    f.snapshot={id=good.id,unit=good.body.unit_number,port=lifecycle.endpoint(good,'network').unit_number,power=lifecycle.power_entity(good).unit_number,run_id=good.run_id,
-      powered=good.powered,energy=lifecycle.power_entity(good).energy,tick=root.ledger.tick,total=root.ledger.total,scheduler_tick=root.scheduler.last_tick}
+    f.snapshot={id=good.id,unit=good.body.unit_number,port=lifecycle.endpoint(good,'network').unit_number,run_id=good.run_id,
+      powered=good.powered,tick=root.ledger.tick,total=root.ledger.total,scheduler_tick=root.scheduler.last_tick}
     f.phase='frozen'; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
   end
 end

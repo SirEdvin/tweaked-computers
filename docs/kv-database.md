@@ -31,7 +31,7 @@ Missing results are one returned nil, not zero returns or empty strings.
 | `expire(key, seconds)` | 0 or 1 | Integer simulation seconds; absent gives zero; nonpositive deletes a live key immediately |
 | `ttl(key)` | integer | Missing -2, persistent -1, otherwise rounded seconds |
 | `persist(key)` | 0 or 1 | One only when an existing live deadline was removed |
-| `getLimits()` | copied map | Reachable static limits, including while unpowered |
+| `getLimits()` | copied map | Reachable static limits; no electricity required |
 
 Every hash command rejects an existing live string with `E_WRONGTYPE`; the
 message contains WRONGTYPE. HSET/HDEL retain an existing hash's deadline unless
@@ -104,8 +104,8 @@ metadata has room without deleting data or reducing the content cap.
 
 Background reclamation visits at most eight indexed keys in each of two selected
 databases per tick, on a persisted fair device/key cursor. It uses the existing
-reserved maintenance ledger, not guest callback credits, and also visits
-unpowered databases. Deferral preserves the cursor. Per-command logical expiry
+reserved maintenance ledger, not guest callback credits, independently of electricity.
+Deferral preserves the cursor. Per-command logical expiry
 is independent of the sweep. Ordinary save/load retains both cursors/counters.
 
 ## Mining, placement and recovery

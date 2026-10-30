@@ -62,8 +62,14 @@ local function mutate(action)
   elseif action=='disconnect' or action=='reconnect' then
     local a=lifecycle.connector(rec('computer'),'network','red'); local b=lifecycle.connector(rec('kv'),'network','red')
     assert(action=='disconnect' and a.disconnect_from(b) or action=='reconnect' and a.connect_to(b))
-  elseif action=='power-off' then storage.tc_ui1.no_power=true
-  elseif action=='power-on' then storage.tc_ui1.no_power=false
+  elseif action=='power-off' then
+    local scene=storage.tc_shell_client
+    scene.supply.power_production=0; scene.supply.energy=0
+    if scene.pole.valid then scene.pole.destroy() end
+  elseif action=='power-on' then
+    local scene=storage.tc_shell_client
+    scene.supply.power_production=100000000
+    if not scene.pole.valid then scene.pole=assert(rec('computer').body.surface.create_entity{name='substation',position={4,4},force='player'}) end
   elseif action=='query-error' then storage.tc_ui1.query_error=true
   elseif action=='query-ok' then storage.tc_ui1.query_error=false
   elseif action=='overflow' then
@@ -80,7 +86,7 @@ local function tree(e)
 end
 function M.on_tick(event)
   local x=storage.tc_ui1
-  if x.no_power then lifecycle.power_entity(rec('kv')).energy=0 end
+
   if x.at and event.tick>=x.at then
     local action=x.action; x.at=nil; x.action=nil; mutate(action)
     x.events[#x.events+1]={action=action,tick=event.tick}; log('TC_UI1_MUTATED '..action)

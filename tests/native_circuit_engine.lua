@@ -167,6 +167,9 @@ function M.on_tick(event)
       end
       assert(c.queue[1].event.current[1100].signal~=c.queue[2].event.current[1100].signal)
       c.queue[1].circuit=nil -- Emulate the older host-only queue record.
+      registry.get().logic_observers=nil
+      registry.initialize() -- Synchronized migration, never an on_load rebuild.
+      assert(c.queue[1].circuit==true and #registry.get().logic_observers.order==2)
       for _,entry in ipairs(c.queue[1].event.current) do entry.signal.quality='normal' end
       for _,sub in pairs(c.subscriptions) do
         for _,entry in ipairs(sub.details.previous) do entry.signal.quality='normal' end
@@ -267,12 +270,14 @@ function M.on_tick(event)
       for _,sub in pairs(c.subscriptions) do sub.details.initial=true end
       logic.sample(event.tick,spend); assert(#c.queue==2)
       c.powered=false; logic.sample(event.tick,spend)
+      assert(#c.queue==2 and not c.queue[1].event.resync,'obsolete electrical flag affected sampling')
+      c.powered=true; c.body.direction=4; logic.sample(event.tick,spend)
       assert(#c.queue==0 and c.queue_bytes==0)
-      c.powered=true; logic.sample(event.tick,spend)
+      c.body.direction=0; logic.sample(event.tick,spend)
       assert(#c.queue==2 and c.queue[1].event.resync and #c.queue[1].event.previous==1100)
       probe([[assert(p.unsubscribe(computer.getState('sub')))]],true)
       assert(#c.queue==1 and c.queue_bytes==c.queue[1].bytes)
-      log('TC_CONTRACT native-reordered-defaulted-power-resync-unsubscribe-and-fresh-post-load-read')
+      log('TC_CONTRACT native-reordered-defaulted-physical-resync-power-independent-unsubscribe-and-fresh-post-load-read')
       while #c.queue<limits.event_queue_entries do
         assert(runtime.enqueue(c,'changed',{name='backlog'},event.tick))
       end
@@ -280,9 +285,26 @@ function M.on_tick(event)
       logic.sample(event.tick,spend)
       assert(c.status=='faulted' and c.diagnostic.code=='E_CAPACITY' and #c.queue==0 and c.queue_bytes==0)
       assert(not io.output_owner and #logic.inspect_output(io,function() end)==0)
+      local observers=registry.get().logic_observers
+      assert(#observers.order==0 and #observers.input_order==0 and next(observers.inputs)==nil and next(observers.computers)==nil,'fault retained a signal observer')
       log('TC_CONTRACT native-genuine-queue-entry-overflow-clears-owner-and-byte-counter')
-      x.phase='done'; log('TC_COLD_OK native-direct-circuits')
+      x.phase='sample-pressure'; x.since=event.tick
     end
+  elseif x.phase=='sample-pressure' then
+    local c=registry.computer(x.computer); local events=c.state.events
+    runtime.save(c.id,'function changed(e) error("refused observation dispatched") end',c.saved_revision)
+    assert(runtime.activate(c.id,event.tick))
+    probe([[p.subscribe({input='red',initial=true},'changed')]],true)
+    local root=registry.get(); local s=root.scheduler
+    local spend=scheduler.maintenance(root,event.tick)
+    local guest=root.ledger.tick==event.tick and root.ledger.total or 0
+    local remaining=math.min(limits.maintenance_work_per_tick-s.render_reserved_work,limits.host_work_per_tick-guest)-s.maintenance_spent
+    assert(remaining>=0); spend(remaining)
+    logic.sample(event.tick,spend)
+    assert(c.status=='faulted' and c.diagnostic.code=='E_BUSY' and #c.queue==0 and c.state.events==events)
+    assert(#root.logic_observers.order==0 and #root.logic_observers.input_order==0)
+    log('TC_CONTRACT native-exhausted-real-maintenance-explicit-sampling-fault-no-slow-poll')
+    x.phase='done'; log('TC_COLD_OK native-direct-circuits')
   end
 end
 return M

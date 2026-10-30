@@ -117,9 +117,7 @@ Body/child LuaEntity references are host-only; never return these records to gue
   -> run_id? , diagnostic?` charge the same shared ledger. Compile refusal does
   not retire the current run. Teardown refusal prevents replacement as well.
 - `stop(id) -> cleaned`, `reset_state(id)` are explicit host actions.
-- `set_power(id,boolean,tick,spend?) -> changed` provides the power transition.
-  Call in lifecycle reconciliation before sampling. Consume needs_input_resync
-  only after the logic module establishes a new current-input sample.
+
 - `subscribe(record,event_name,handler_name,details?,spend?) -> id` shares both
   per-computer and aggregate registration limits with trusted peripheral event
   kinds. Details are copied plain Data. `unsubscribe(record,id,spend?) -> boolean`.
@@ -127,15 +125,16 @@ Body/child LuaEntity references are host-only; never return these records to gue
   copies a named payload, overrides all BaseEvent authority fields, and assigns
   a global sequence. Metadata.timer_id is host-only timer cancellation bookkeeping.
   Queue overflow visibly faults/cleans the run, not silently drops history.
-  Inactive/unpowered transient admission returns false. Size/type errors throw.
+  Inactive admission returns false. Size/type errors throw.
 - `emit(id,general_event_name,payload,tick,spend?) -> boolean` delivers matching
   registrations in creation order. All copy work is admitted before publication;
   maintenance deferral cannot deliver an unmarked partial subscriber prefix.
 - `register_services(name, function(record,tick,guard) -> method_map)` adds
   trusted `computer`/`peripheral` methods without collisions. Construct opaque
   peripheral handles with guard.namespace and guard.service. Every peripheral
-  method MUST independently prove live channel/force/surface authority, power
-  and native-work admission immediately before effects. Never return raw host
+  method MUST independently prove live channel/force/surface authority, physical
+  availability and native-work admission immediately before effects. Native radar/speaker
+  also require their native electrical/operational checks. Never return raw host
   functions/objects. No public extension registry is added.
 
 The active header stores exact source, revision, API/storage/compiler versions

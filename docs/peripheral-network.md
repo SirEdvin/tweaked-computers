@@ -56,9 +56,11 @@ native body position, not the originally requested coordinates. Direction is
 Monitor bindings replace the position/footprint with logical group geometry.
 Neither descriptions nor methods contain native entities/connectors.
 
-Use `device.getLimits()` with no arguments even while its reachable endpoint is
-unpowered. Other device methods require power. Metadata also remains available
-while unpowered, and unpowered devices still relay physical discovery.
+Custom devices need no electricity. Their methods require live physical availability.
+Native radar/speaker keep their electrical requirements: metadata and no-argument
+`getLimits()` remain available while unpowered, and native carriers still relay
+physical discovery. The compatibility `powered` field reflects availability; it
+never substitutes for a fresh operation/receiver authority check.
 
 A wrapper binds an opaque identity, generation, discovery channel and current
 computer run, never a mutable coordinate/label. Captured methods recheck live
@@ -77,7 +79,8 @@ is no callback-wide transaction: successful prior effects survive a later error.
 `E_LIMIT`: graph/result bound exceeded. `E_NETWORK_PENDING`: proof/reconciliation
 is incomplete. A captured detached method throws `E_UNREACHABLE`, while fresh
 presence/type/describe/wrap queries return false/nil only after a complete search.
-Active methods on unpowered devices throw `E_UNPOWERED`. Ordinary errors are
+Active methods on unpowered native radar/speaker throw `E_UNPOWERED`; unavailable
+custom devices throw `E_UNREACHABLE`. Ordinary errors are
 catchable; fatal callback-budget exhaustion still faults the run. Do not busy-wait.
 
 Register `computer.on("peripheral_attach", "attached")` and/or

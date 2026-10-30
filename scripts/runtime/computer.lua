@@ -7,6 +7,11 @@ local data = require('scripts.runtime.data')
 local principal = require('scripts.runtime.principal')
 local M = {}
 local providers = {}
+local subscription_lifecycle = {}
+function M.register_subscription_lifecycle(event,fn)
+  assert(type(event)=='string' and type(fn)=='function' and not subscription_lifecycle[event])
+  subscription_lifecycle[event]=fn
+end
 local shell_lifecycle
 function M.register_shell_lifecycle(fn) assert(not shell_lifecycle); shell_lifecycle=fn end
 local general={peripheral_attach=true,peripheral_detach=true,monitor_resize=true,monitor_touch=true,power_restored=true,modem_message=true}
@@ -109,15 +114,24 @@ function M.subscribe(rec,event_name,handler_name,details,spend,circuit)
   elseif details~=nil then copied=data.copy(details,spend) end
   local total=0; for _,c in pairs(root().computers) do total=total+count(c.subscriptions) end
   if count(rec.subscriptions)>=limits.subscriptions or total>=limits.aggregate_subscriptions then errors.raise('E_CAPACITY','subscription capacity reached') end
-  local seq=registry.sequence(); local id=rec.run_id..'/sub-'..string.format('%.0f',seq)
-  rec.subscriptions[id]={id=id,event_name=event_name,handler=handler_name,sequence=seq,details=copied}
+  local seq=root().next_sequence
+  if not errors.integer(seq,1,MAX-1) then errors.raise('E_CAPACITY','identity sequence exhausted') end
+  local id=rec.run_id..'/sub-'..string.format('%.0f',seq)
+  local sub={id=id,event_name=event_name,handler=handler_name,sequence=seq,details=copied}
+  local change=subscription_lifecycle[event_name]
+  if change then change(rec,sub,true,spend) end
+  registry.sequence()
+  rec.subscriptions[id]=sub
   return id
 end
 function M.unsubscribe(rec,id,spend)
   local prefix=rec.run_id..'/sub-'
   if type(id)~='string' or #id>128 or id:sub(1,#prefix)~=prefix then errors.raise('E_ARGUMENT','ID belongs to another computer/run') end
   if spend then spend(#id+1) end
-  local exists=rec.subscriptions[id]~=nil; rec.subscriptions[id]=nil; return exists
+  local sub=rec.subscriptions[id]
+  local change=sub and subscription_lifecycle[sub.event_name]
+  if change then change(rec,sub,false,spend) end
+  rec.subscriptions[id]=nil; return sub~=nil
 end
 function M.prepare_event(rec,name,payload,tick,spend,metadata)
   if rec.status~='running' then return false,'inactive' end

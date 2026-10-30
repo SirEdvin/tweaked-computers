@@ -12,7 +12,7 @@ local function nop() end
 local function f() return storage.tc_inspector_upgrade end
 local program='function start(e) computer.setState("boots",(computer.getState("boots") or 0)+1); local io=peripheral.find("logic_handler","red"); assert(io); io.setOutput({{signal={type="virtual",name="signal-A"},count=13}}) end'
 function M.run()
-  storage.tc_inspector_upgrade={records={},parts={},phase='boot'}
+  storage.tc_inspector_upgrade={records={},parts={},power_parts={},phase='boot'}
   local s=game.surfaces[1]
   for i,kind in ipairs(defs.order) do
     local r=assert(lifecycle.build(assert(s.create_entity{name=defs.devices[kind].entity_name,position={i*3,0},force='player'})))
@@ -21,7 +21,9 @@ function M.run()
     lifecycle.power_entity(r).energy=defs.devices[kind].watts/30
     lifecycle.power_entity(r).power_usage=0
     r.powered=true; r.power_checked_tick=game.tick
-    for _,part in pairs(r.children) do f().parts[#f().parts+1]=part end
+    for role,part in pairs(r.children) do
+      local parts=role=='power' and f().power_parts or f().parts; parts[#parts+1]=part
+    end
   end
   local c=f().records.computer; local io=f().records.logic
   for _,color in ipairs({'red','green'}) do
@@ -49,8 +51,10 @@ end
 local function retained()
   local x=f(); local c=x.records.computer; local io=x.records.logic
   for _,part in ipairs(x.parts) do assert(part.valid and registry.by_entity(part),'existing physical objects must not be recreated') end
+  for _,part in ipairs(x.power_parts) do assert(part.valid==not x.upgraded,'only legacy electrical helpers may be retired') end
   for kind,r in pairs(x.records) do
     assert(registry.record(r.id)==r and r.layout_version==2)
+    if x.upgraded then assert(not r.children.power and lifecycle.available(r)) end
     local cb=r.body.get_control_behavior(); assert(not cb.enabled and cb.sections_count==0)
     for _,role in ipairs(defs.devices[kind].roles) do for _,color in ipairs({'red','green'}) do assert(lifecycle.connector(r,role,color)) end end
   end

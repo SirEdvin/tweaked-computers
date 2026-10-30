@@ -210,107 +210,145 @@ method('getLimits',0,function(c,r,w,t,spend)
   result.sample_interval_ticks=1; result.notification_latency_ticks=limits.topology_latency_ticks
   return result
 end)
-function M.revoke(c,name,wire)
-  local removed={}
-  for id,sub in pairs(c.subscriptions) do
-    if sub.event_name=='signal_changed' and sub.details.peripheral==name and sub.details.wire==wire then
-      removed[id]=true; c.subscriptions[id]=nil
+local function observers()
+  local s=registry.get().logic_observers
+  if type(s)~='table' or s.version~=1 or type(s.order)~='table' or type(s.inputs)~='table'
+    or type(s.input_order)~='table' or type(s.computers)~='table' then
+    errors.raise('E_UNSUPPORTED','unsupported logic observation membership; source and observations retained')
+  end
+  return s
+end
+local function forget(s,entry)
+  local computer=s.computers[entry.computer.id]
+  if not computer or computer[entry.sub.id]~=entry then return end
+  computer[entry.sub.id]=nil
+  if not next(computer) then s.computers[entry.computer.id]=nil end
+  for i,e in ipairs(s.order) do if e==entry then table.remove(s.order,i); break end end
+  local input=entry.input
+  if input then
+    input.subscribers[entry.sub.id]=nil
+    if not next(input.subscribers) then
+      s.inputs[input.key]=nil
+      for i,e in ipairs(s.input_order) do if e==input then table.remove(s.input_order,i); break end end
     end
   end
-  local queue,bytes={},0
-  for _,item in ipairs(c.queue) do
-    if not removed[item.event.subscription_id] then queue[#queue+1]=item; bytes=bytes+item.bytes end
+end
+local function subscription_changed(c,sub,adding,spend)
+  local s=observers()
+  if spend then spend(#s.order+#s.input_order+#c.queue*2+4) end
+  local entries=s.computers[c.id]
+  if not adding then
+    if entries and entries[sub.id] then forget(s,entries[sub.id]) end
+    remove_queued(c,sub.id,function() end)
+    return
   end
-  c.queue=queue; c.queue_bytes=bytes
-  registry.ready_changed(c)
+  local d=sub.details
+  local entry={computer=c,sub=sub,generation=c.generation,run_id=c.run_id}
+  if type(d)=='table' and type(d.peripheral)=='string' and type(d.generation)=='number'
+    and (d.input=='red' or d.input=='green') then
+    local k=d.peripheral..'/'..d.generation..'/'..d.input
+    local input=s.inputs[k]
+    if not input then
+      input={key=k,id=d.peripheral,generation=d.generation,color=d.input,subscribers={}}
+      s.inputs[k]=input
+      local i=#s.input_order+1
+      while i>1 and s.input_order[i-1].key>k do i=i-1 end
+      table.insert(s.input_order,i,input)
+    end
+    input.subscribers[sub.id]=entry; entry.input=input
+  end
+  if not entries then entries={}; s.computers[c.id]=entries end
+  entries[sub.id]=entry
+  local i=#s.order+1
+  while i>1 and s.order[i-1].sub.sequence>sub.sequence do i=i-1 end
+  table.insert(s.order,i,entry)
+end
+runtime.register_subscription_lifecycle('signal_changed',subscription_changed)
+registry.register_initializer('logic-observers',function(root)
+  if not registry.supported(root) or root.logic_observers~=nil then return end
+  root.logic_observers={version=1,order={},inputs={},input_order={},computers={}}
+  for _,id in ipairs(root.order) do
+    local c=root.computers[id]
+    if c and c.status=='running' and type(c.subscriptions)=='table' then
+      for _,sub in pairs(c.subscriptions) do
+        if sub.event_name=='signal_changed' then
+          subscription_changed(c,sub,true)
+          local d=sub.details
+          for _,item in ipairs(c.queue) do
+            local e=item.event
+            if type(d)=='table' and not item.circuit and e.name=='signal_changed' and e.subscription_id==sub.id
+              and e.run_id==c.run_id and e.peripheral==d.peripheral and e.wire==d.wire and e.input==d.input then item.circuit=true end
+          end
+        end
+      end
+    end
+  end
+end)
+function M.revoke(c,name,wire)
+  local entries=observers().computers[c.id]
+  if not entries then return end
+  local removed={}
+  for id,entry in pairs(entries) do
+    local d=entry.sub.details
+    if d.peripheral==name and d.wire==wire then removed[#removed+1]=id end
+  end
+  table.sort(removed)
+  for _,id in ipairs(removed) do runtime.unsubscribe(c,id) end
 end
 local function discard(c,sub)
   remove_queued(c,sub.id,function() end); sub.details.resync=true
 end
 function M.sample(tick,spend)
-  local root=registry.get()
-  local admitted=scheduler.try_maintenance(function() spend(limits.registry_entries+limits.aggregate_subscriptions+1) end)
+  local root=registry.get(); local valid,s=pcall(observers)
+  if not valid then root.scheduling_diagnostic=s; return end
+  if #s.order==0 then return end
+  local subscriptions={}
+  local admitted=scheduler.try_maintenance(function()
+    spend(#s.order+#s.input_order+1)
+    for i,entry in ipairs(s.order) do subscriptions[i]=entry end
+  end)
   if not admitted then
-    -- No transient may silently vanish if earlier maintenance used this tick.
-    for _,id in ipairs(root.order) do
-      local c=root.computers[id]
-      if c and c.status=='running' then
-        for _,sub in pairs(c.subscriptions) do
-          if sub.event_name=='signal_changed' then runtime.fault(c,errors.new('E_BUSY','logic sampling maintenance exhausted; run stopped'),tick); break end
-        end
-      end
+    -- Retirement removes entries; keep taking the current head, not a stale index.
+    while s.order[1] do
+      local entry=s.order[1]; local c=entry.computer
+      if c.status=='running' then runtime.fault(c,errors.new('E_BUSY','logic sampling maintenance exhausted; run stopped'),tick)
+      else forget(s,entry) end
     end
     return
   end
-  local subscriptions={}; local devices={}
-  for _,id in ipairs(root.order) do
-    local c=root.computers[id]
-    if c and c.status=='running' then
-      for _,sub in pairs(c.subscriptions) do
-        if sub.event_name=='signal_changed' then
-          local d=sub.details
-          if d.input~='red' and d.input~='green' then
-            -- Validate retained registrations before any queued callback dispatch.
-            -- Never translate legacy combined input or replay its pending effects.
-            runtime.fault(c,errors.new('E_ARGUMENT','retained logic subscription requires explicit red or green input; update source and restart'),tick)
-            break
-          end
-          -- Older accepted events lacked the private dispatch marker. Keep their
-          -- snapshots/byte accounting intact; never infer trust from a guest name.
-          for _,item in ipairs(c.queue) do
-            local e=item.event
-            if not item.circuit and e.name=='signal_changed' and e.subscription_id==sub.id
-              and e.run_id==c.run_id and e.peripheral==d.peripheral and e.wire==d.wire and e.input==d.input then
-              item.circuit=true
-            end
-          end
-          local needs=devices[d.peripheral] or {}; devices[d.peripheral]=needs
-          subscriptions[#subscriptions+1]={computer=c,sub=sub}
-          needs[d.input]=true
-        end
-      end
-    end
-  end
-  local names={}; for name in pairs(devices) do names[#names+1]=name end
-  local sorted_admitted=scheduler.try_maintenance(function() spend((#subscriptions)^2+(#names)^2+1) end)
-  if not sorted_admitted then
-    for _,entry in ipairs(subscriptions) do
-      if entry.computer.status=='running' then runtime.fault(entry.computer,errors.new('E_BUSY','logic ordering work exhausted; run stopped'),tick) end
-    end
-    return
-  end
-  table.sort(subscriptions,function(a,b) return a.sub.sequence<b.sub.sequence end)
-  table.sort(names)
   local samples={}
-  for _,name in ipairs(names) do
-    local rec=registry.record(name)
-    if rec and lifecycle.available(rec) then
+  for _,input in ipairs(s.input_order) do
+    local rec=registry.record(input.id)
+    if rec and rec.generation==input.generation and lifecycle.available(rec) then
       local ok,result=pcall(function()
         local admitted,value=scheduler.try_maintenance(function()
-          local needs=devices[name]; local connected=status(rec); local red,green
-          if needs.red then red=native_read(rec,'red',spend) end
-          if needs.green then green=native_read(rec,'green',spend) end
-          local sample={red=red,green=green,connected=connected,tick=tick}
-          return sample
+          return M.inspect_input(rec,input.color,tick,spend)
         end)
         if not admitted then errors.raise('E_BUSY','logic sampling envelope exhausted; run stopped rather than losing observations') end
         return value
       end)
-      samples[name]=ok and result or {failure=type(result)=='table' and result.code and result or errors.new('E_ENGINE','logic input sampling failed')}
+      samples[input.key]=ok and result or {failure=type(result)=='table' and result.code and result or errors.new('E_ENGINE','logic input sampling failed')}
     end
   end
+  local observed={}
   for _,entry in ipairs(subscriptions) do
-    local c,sub=entry.computer,entry.sub; local d=sub.details; local r=registry.record(d.peripheral)
-    if c.status=='running' and c.subscriptions[sub.id]==sub then
+    local c,sub=entry.computer,entry.sub; local d=sub.details
+    if root.computers[c.id]==c and c.status=='running' and c.subscriptions[sub.id]==sub and c.generation==entry.generation and c.run_id==entry.run_id then
+      observed[c.id]=c
       local ok,result=pcall(function()
         local admitted=scheduler.try_maintenance(function()
+          if type(d)~='table' or not entry.input or d.input~=entry.input.color or d.peripheral~=entry.input.id or d.generation~=entry.input.generation then
+            errors.raise('E_ARGUMENT','retained logic subscription requires its original explicit red or green input; update source and restart')
+          end
           spend(#c.queue*2+limits.subscriptions+16)
           if not lifecycle.available(c) then discard(c,sub); return end
+          local r=registry.record(d.peripheral)
           local target=peripheral.authority(c,d.peripheral,d.wire,spend)
           if target~=r or not r or r.generation~=d.generation then M.revoke(c,d.peripheral,d.wire); return end
-          if not samples[r.id] then discard(c,sub); return end
-          if samples[r.id].failure then error(samples[r.id].failure,0) end
-          local s=samples[r.id]; local current,connected=project(s[d.input],s.connected,d.input,d.signals,spend)
+          local sample=samples[entry.input.key]
+          if not sample then discard(c,sub); return end
+          if sample.failure then error(sample.failure,0) end
+          local current,connected=project(sample.values,{[d.input]=sample.connected},d.input,d.signals,spend)
           local previous=d.initial and {} or d.previous
           local pc=d.connected
           if d.initial then pc={}; for k in pairs(connected) do pc[k]=false end end
@@ -328,21 +366,23 @@ function M.sample(tick,spend)
         if not admitted then errors.raise('E_BUSY','logic notification envelope exhausted; run stopped rather than losing observations') end
       end)
       if not ok and c.status=='running' then runtime.fault(c,type(result)=='table' and result.code and result or errors.new('E_ENGINE','logic sampling failed'),tick) end
-    end
+    else forget(s,entry) end
   end
-  for _,id in ipairs(root.order) do local c=root.computers[id]; if c then c.needs_input_resync=nil end end
+  for _,c in pairs(observed) do c.needs_input_resync=nil end
 end
 registry.register_cleanup('logic-subscriptions',function(rec,run,reason)
   if rec.kind=='computer' then
-    if reason=='authority_changed' then
-      local bindings={}
-      for _,sub in pairs(rec.subscriptions) do
-        if sub.event_name=='signal_changed' then bindings[#bindings+1]={name=sub.details.peripheral,wire=sub.details.wire} end
-      end
-      for _,binding in ipairs(bindings) do M.revoke(rec,binding.name,binding.wire) end
-    end
+    local s=observers(); local entries=s.computers[rec.id]; local removed={}
+    for id in pairs(entries or {}) do removed[#removed+1]=id end
+    table.sort(removed)
+    for _,id in ipairs(removed) do runtime.unsubscribe(rec,id) end
   elseif rec.kind=='logic' then
-    for _,id in ipairs(registry.get().order) do local c=registry.get().computers[id]; if c then M.revoke(c,rec.id,'red'); M.revoke(c,rec.id,'green') end end
+    local s=observers(); local affected={}
+    for _,color in ipairs({'red','green'}) do
+      local input=s.inputs[rec.id..'/'..rec.generation..'/'..color]
+      if input then for _,entry in pairs(input.subscribers) do affected[entry.computer.id]=entry.computer end end
+    end
+    for _,c in pairs(affected) do M.revoke(c,rec.id,'red'); M.revoke(c,rec.id,'green') end
     lifecycle.clear_output(rec)
   end
 end)

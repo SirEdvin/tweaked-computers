@@ -263,9 +263,33 @@ local function consumed(event,body)
 end
 -- A legacy body remains authoritative until every replacement and native wire
 -- has been staged successfully. Never call runtime activation or snapshot import.
+local function upgrade_availability(rec)
+  if rec.physical_version~=1 or rec.layout_version~=2 or not rec.body.valid then return false end
+  if rec.availability_version==nil then
+    local power=rec.children.power
+    local owner,role
+    if power and power.valid then owner,role=registry.by_entity(power) end
+    if power and power.valid and (owner~=rec or role~='power' or power.name~=defs.devices[rec.kind].power_name) then
+      rec.physical_error='legacy electrical helper ownership invalid; data retained for recovery'
+      return false
+    end
+    if power then
+      registry.unbind_child(rec.id,'power')
+      if power.valid then power.destroy() end
+    end
+    if rec.kind=='computer' and rec.status=='running' and rec.powered==false then rec.needs_input_resync=true end
+    rec.powered=true; rec.power_checked_tick=nil; rec.outage_start_tick=nil; rec.power_revision=nil
+    rec.availability_version=1
+  elseif rec.availability_version~=1 then
+    rec.physical_error='unsupported availability representation; data retained for recovery'
+    return false
+  end
+  M.reset_network(rec)
+  return true
+end
 function M.upgrade(rec)
   if rec.native_carrier then return true end
-  if rec.layout_version==2 then return true end
+  if rec.layout_version==2 then return upgrade_availability(rec) end
   local old=rec.body; local children=rec.children; local staged={}; local body
   local ok,e=pcall(function()
     assert(rec.layout_version==nil,'unsupported legacy physical layout')
@@ -337,7 +361,7 @@ function M.upgrade(rec)
   end
   for _,child in pairs(children) do if child.valid then child.destroy() end end
   old.destroy()
-  return true
+  return upgrade_availability(rec)
 end
 function M.upgrade_existing()
   local root=registry.get(); if not registry.supported(root) then return end
@@ -349,25 +373,7 @@ function M.upgrade_existing()
       if not ok then log('TC physical upgrade '..rec.id..': '..e.message) end
     end
     if rec and not rec.native_carrier and rec.physical_version==1 and rec.layout_version==2 and rec.body.valid then
-      if rec.availability_version==nil then
-        local power=rec.children.power
-        local owner,role
-        if power and power.valid then owner,role=registry.by_entity(power) end
-        if power and power.valid and (owner~=rec or role~='power' or power.name~=defs.devices[rec.kind].power_name) then
-          rec.physical_error='legacy electrical helper ownership invalid; data retained for recovery'
-        else
-          if power then
-            registry.unbind_child(rec.id,'power')
-            if power.valid then power.destroy() end
-          end
-          if rec.kind=='computer' and rec.status=='running' and rec.powered==false then rec.needs_input_resync=true end
-          rec.powered=true; rec.power_checked_tick=nil; rec.outage_start_tick=nil; rec.power_revision=nil
-          rec.availability_version=1
-        end
-      elseif rec.availability_version~=1 then
-        rec.physical_error='unsupported availability representation; data retained for recovery'
-      end
-      M.reset_network(rec)
+      upgrade_availability(rec)
     end
   end
 end

@@ -119,14 +119,15 @@ source separately from the saved source and unsaved player draft.
 ## Troubleshooting
 
 - Missing peripheral: open Peripherals; inspect automatic red and green observations separately.
-  Check actual NETWORK ports, force/surface, power and physical same-color paths.
+  Check actual NETWORK ports, force/surface and physical same-color paths.
 - Target absent: check TARGETS color, actual isolated native connector and relay
   wires. Being visible in computer discovery does not authorize factory targets.
 - No movement: check supply/destination, inserter direction/power, read-contents
   stock chest and native condition readback. Wait for circuit/in-flight settling.
 - E_BUSY/pending: retry on a later named timer; do not spin. E_BUDGET faults the
   run and clears its bank. Divide extra factory work into bounded named callbacks.
-- Unpowered monitor: every member must be powered. Buffer contents remain stored.
+- Unavailable monitor: every member must be physically valid and owned. No electricity
+  is required. Buffer contents remain stored.
 - Wire loss: output is fail-safe; this example faults on missing required services,
   not an automatic reconnect manager. Fix wiring, review diagnostics, then Run.
 

@@ -225,6 +225,7 @@ function M.tick(tick)
   root.scheduler.last_tick=tick
   phase('lifecycle',tick,spend)
   phase('sample',tick,spend)
+  if root.scheduling_diagnostic then return end
   phase('notifications',tick,spend)
   local s=root.scheduler
   local due={}

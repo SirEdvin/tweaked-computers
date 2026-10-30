@@ -80,7 +80,11 @@ A subscription binds computer/run, handler generation and discovery color. Losin
 red access cannot silently move it to green. Removing its handler or changing
 computer authority revokes it. An ID from another run/binding is refused.
 
-One production sample observes each subscribed powered handler per actual tick.
+Each actively subscribed physical input/color is read once per actual tick and
+shared across its ordered subscribers; filters and delivered events remain independent.
+Registration/cancellation and run/endpoint retirement maintain this work membership.
+Unsubscribed computers cause no signal discovery or sampling visits. Direct reads
+and registration baselines remain fresh, not answers from retained observations.
 Initial=false baselines current authoritative input without an event. Initial=true
 queues a snapshot on the next sampling tick, with empty previous and false selected
 previous connectivity. Unchanged values/connectivity produce no event. Disappearance
@@ -95,11 +99,12 @@ connectivity maps. `sample_tick` is observation time; `tick` is callback dispatc
 Native circuits expose previous-circuit-step signals and propagate writes natively,
 not by immediate recursive callbacks.
 
-Queue admission advances the baseline, not callback dispatch. Computer/handler
-outages remove obsolete queued samples but retain their last admitted baseline and
-registration. Restoration delivers current resync, not every unobserved transition;
-previous may refer to a discarded callback's sample. Handler outputs stay empty
-until a new successful write. Cold reload preserves valid bank/owner/subscriptions
+Queue admission advances the baseline, not callback dispatch. Custom computers and
+handlers need no electricity: factory power cycling does not discard samples, clear
+valid outputs or manufacture resync events. Actual temporary physical unavailability
+discards obsolete queued samples and requires current-input resync after recovery;
+previous may refer to a discarded callback's sample. Stop/fault or lost authority
+still clears only the retiring writer's bank. Cold reload preserves valid bank/owner/subscriptions
 and exact run identity without startup or write replay. Legacy subscriptions with
 `both`, missing or invalid selectors fault before queued callbacks dispatch, clear
 owned output and discard pending effects. Update source to explicitly select red
@@ -114,6 +119,9 @@ domains still apply. Own output is read from its native section, not a cached ba
 Registration counts remain 64 per computer and 1024 globally, admitted only when
 registering. There is no distinct sampled-handler or owned-output quota.
 Sampling interval is 1; the 60-tick notification/topology allowance is provisional.
+The pinned-engine change hint is not used to skip watched reads: no retained input
+cache or slower polling is needed. One-step pulses, empty connect/disconnect and
+merge/split cases are covered independently of callback dispatch latency.
 
 Circuit result, baseline and event signal graphs do not pass through generic Data
 size admission. Only queue entries and event envelopes consume circuit backlog
@@ -129,7 +137,7 @@ and native ownership survive reload without replay. Obsolete read/output caches
 are retired during synchronized gameplay, never during on_load. Back up before
 upgrading; rollback uses the previous package and a pre-upgrade save backup.
 
-Argument/domain/capacity/unpowered/path failures are ordinary catchable ApiErrors.
+Argument/domain/capacity/physical-availability/path failures are ordinary catchable ApiErrors.
 Queue overflow visibly faults the computer and clears its exact owned outputs.
 Sampling/notification maintenance refusal also visibly faults affected runs rather
 than silently skipping input history. Earlier accepted state/KV/other effects remain;

@@ -55,12 +55,54 @@ end
 local function snapshot()
   local x=f(); local c=registry.computer(x.c); local io=registry.record(x.io)
   local sub=c.subscriptions[c.state.subscription]; local root=registry.get()
-  return {state=c.state,run=c.run_id,active=c.active,queue=c.queue,subscriptions=c.subscriptions,
+  return {state=c.state,run=c.run_id,active=c.active,queue=c.queue,subscriptions=c.subscriptions,observers=root.logic_observers,
     filter=sub.details.signals,baseline=sub.details.previous,bank=io.output_bank,owner=io.output_owner,
     legacy=x.legacy and registry.computer(x.legacy).subscriptions,
     legacy_queue=x.legacy and registry.computer(x.legacy).queue,
     ledger=root.ledger,total=root.ledger.total,tick=root.ledger.tick,machine=root.ledger.machines[c.id],
     work=root.ledger.machines[c.id].work,events=c.state.events,shell=c.shell,values=c.shell and c.shell.values}
+end
+local function observation_contract(c,io)
+  local root=registry.get(); local s=root.logic_observers
+  assert(#s.order==1 and #s.input_order==1 and s.order[1].sub==c.subscriptions[c.state.subscription])
+  local body=assert(c.body.surface.create_entity{name=defs.devices.computer.entity_name,position={0,6},force='player'})
+  local peer=assert(lifecycle.build(body))
+  assert(lifecycle.connector(peer,'network','red').connect_to(lifecycle.connector(io,'network','red')))
+  runtime.save(peer.id,'function changed(e) end',0); assert(runtime.activate(peer.id,game.tick))
+  probe(c,[[computer.setState('extra_red',p.subscribe({input='red',signals={{type='item',name='iron-plate'}},initial=true},'changed'))
+    computer.setState('extra_green',p.subscribe({input='green',initial=true},'changed'))]])
+  probe(peer,[[computer.setState('shared',p.subscribe({input='red',initial=true},'changed'))]])
+  assert(#s.order==4 and #s.input_order==2)
+  local inspect=logic.inspect_input; local calls={red=0,green=0}
+  logic.inspect_input=function(rec,color,...)
+    assert(rec==io); calls[color]=calls[color]+1; return inspect(rec,color,...)
+  end
+  local ok,problem=pcall(logic.sample,game.tick,function() end)
+  logic.inspect_input=inspect
+  assert(ok,problem); assert(calls.red==1 and calls.green==1,'duplicate physical input observation')
+  assert(#c.queue==2 and #peer.queue==1)
+  assert(c.queue[1].event.input=='red' and #c.queue[1].event.current==1 and c.queue[1].event.current[1].signal.name=='iron-plate')
+  assert(c.queue[2].event.input=='green' and c.queue[2].event.connected.green and c.queue[2].event.connected.red==nil)
+  local shared=peer.queue[1].event.current
+  c.queue[1].event.current[1].count=123456
+  assert(shared[1].count~=123456 and c.subscriptions[c.state.extra_red].details.previous[1].count~=123456)
+  local sequence=root.next_sequence; local order=#s.order; local queue=c.queue
+  local refusal={code='E_BUDGET'}
+  local charge=#s.order+#s.input_order+#c.queue*2+4
+  local success,e=pcall(runtime.subscribe,c,'signal_changed','changed',c.subscriptions[c.state.extra_red].details,function(n)
+    if n==charge then error(refusal,0) end
+  end,true)
+  assert(not success and e==refusal and root.next_sequence==sequence and #s.order==order and c.queue==queue,'refused membership consumed an ID or published state')
+  success,e=pcall(runtime.unsubscribe,c,c.state.extra_red,function(n) if n==charge then error(refusal,0) end end)
+  assert(not success and e==refusal and #s.order==order and c.queue==queue and #queue==2,'refused cancellation changed accepted work')
+  probe(c,[[assert(computer.off(computer.getState('extra_red')))
+    assert(p.unsubscribe(computer.getState('extra_green')))]])
+  assert(#c.queue==0 and #s.order==2 and #s.input_order==1)
+  runtime.stop(peer.id)
+  assert(#peer.queue==0 and #s.order==1 and #s.input_order==1 and not s.computers[peer.id])
+  assert(lifecycle.remove(peer.id,'fixture',true))
+  assert(registry.initialize().logic_observers==s and #s.order==1)
+  log('TC_CONTRACT logic-shared-watch-colors-filters-isolation-off-refusal-and-stop-retirement')
 end
 local function unchanged()
   local old,new=f().snapshot,snapshot()
@@ -113,6 +155,15 @@ function M.on_tick(event)
     put(x.red,{{signal=recipe(),count=20},{signal={type='item',name='iron-plate'},count=99}})
     x.phase='resume'; x.resumed=event.tick
   else loaded=false end
+  if x.hints then
+    local port=io.children.input; local id=defines.wire_connector_id.circuit_green
+    x.hints[#x.hints+1]={phase=x.phase,tick=event.tick,changed=port.get_signals_changed(id,x.last_hint_tick),
+      connected=lifecycle.connector(io,'input','green').real_connection_count>0}
+    x.last_hint_tick=event.tick
+    if x.phase=='pulse-high' and port.get_signal({type='entity',name='inserter',quality='normal'},id)==42 then
+      x.pulse_tick=event.tick; put(x.green,{{signal={type='entity',name='inserter'},count=1}})
+    end
+  end
   with_player(function() scheduler.tick(event.tick) end)
   if x.legacy_armed then
     local legacy=registry.computer(x.legacy)
@@ -123,6 +174,12 @@ function M.on_tick(event)
   assert(event.tick-x.start<240,'recipe scenario deadline '..x.phase)
   if x.phase=='power' and event.tick-x.start>=5 then
     assert(c.powered and io.powered)
+    local root=registry.get(); local computers=root.computers; local visits=0
+    root.computers=setmetatable({},{__index=function(_,id) visits=visits+1; return computers[id] end})
+    local ok,problem=pcall(logic.sample,event.tick,function() end)
+    root.computers=computers
+    assert(ok,problem); assert(visits==0,'unsubscribed computers acquired signal discovery work: '..visits)
+    log('TC_CONTRACT logic-unsubscribed-zero-registry-discovery')
     assert(runtime.save(c.id,source,c.saved_revision)); assert(runtime.activate(c.id,event.tick))
     x.phase='initial'
   elseif x.phase=='initial' and c.state.last then
@@ -130,6 +187,7 @@ function M.on_tick(event)
     local e=c.state.last
     assert(e.initial and #e.current==1 and e.current[1].signal.type=='recipe' and e.current[1].count==12)
     assert(e.changes[1].previous==0 and e.changes[1].current==12)
+    observation_contract(c,io)
     log('TC_RECIPE_NATIVE_INPUT '..serpent.line(io.children.input.get_signals(defines.wire_connector_id.circuit_red)))
     local sampled,bank,owner=io.logic_sample,logic.inspect_output(io,function() end),io.output_owner
     local observed=logic.inspect(io,event.tick,function() end)
@@ -280,6 +338,51 @@ function M.on_tick(event)
     local bank,owner=serpent.line(logic.inspect_output(io,function() end)),io.output_owner
     probe(c,[[local a=p.readSignals('green'); assert(#a==1 and a[1].signal.type=='entity' and a[1].signal.name=='inserter' and a[1].count==1)]])
     assert(serpent.line(logic.inspect_output(io,function() end))==bank and io.output_owner==owner)
+    probe(c,[[p.subscribe({input='green'},'changed')]])
+    assert(io.children.input.get_signals_changed(defines.wire_connector_id.pole_copper)==nil,'missing connector is not an unchanged observation')
+    x.hints={}; x.last_hint_tick=event.tick; x.phase='pulse-high'
+    put(x.green,{{signal={type='entity',name='inserter'},count=42}})
+  elseif x.phase=='pulse-high' and x.pulse_tick then
+    local e=c.state.last
+    assert(e.sample_tick==event.tick and e.input=='green' and e.current[1].count==42,'one-native-step pulse was missed')
+    x.phase='pulse-low'
+  elseif x.phase=='pulse-low' then
+    local e=c.state.last
+    assert(event.tick==x.pulse_tick+1 and e.sample_tick==event.tick and e.current[1].count==1,'pulse disappearance was not sampled next tick')
+    put(x.green,{}); x.phase='empty-connected'
+  elseif x.phase=='empty-connected' and #c.state.last.current==0 then
+    assert(c.state.last.connected.green)
+    assert(lifecycle.connector(io,'input','green').disconnect_from(x.green.get_wire_connector(defines.wire_connector_id.circuit_green,false)))
+    x.phase='empty-disconnected'
+  elseif x.phase=='empty-disconnected' and c.state.last.connected.green==false then
+    assert(#c.state.last.current==0)
+    assert(lifecycle.connector(io,'input','green').connect_to(x.green.get_wire_connector(defines.wire_connector_id.circuit_green,true)))
+    x.phase='empty-reconnected'
+  elseif x.phase=='empty-reconnected' and c.state.last.connected.green then
+    assert(#c.state.last.current==0 and not c.state.last.initial)
+    x.merge=assert(io.body.surface.create_entity{name='constant-combinator',position={7,-6},force='player'})
+    put(x.merge,{})
+    assert(x.green.get_wire_connector(defines.wire_connector_id.circuit_green,true).connect_to(x.merge.get_wire_connector(defines.wire_connector_id.circuit_green,true)))
+    x.phase='empty-merge'; x.since=event.tick; x.events=c.state.events
+  elseif x.phase=='empty-merge' and event.tick-x.since>=3 then
+    assert(c.state.events==x.events and #c.queue==0,'empty merge produced a false effective delta')
+    assert(x.green.get_wire_connector(defines.wire_connector_id.circuit_green,false).disconnect_from(x.merge.get_wire_connector(defines.wire_connector_id.circuit_green,false)))
+    x.phase='empty-split'; x.since=event.tick
+  elseif x.phase=='empty-split' and event.tick-x.since>=3 then
+    assert(c.state.events==x.events and #c.queue==0,'empty split produced a false effective delta')
+    x.merge.destroy()
+    log('TC_NATIVE_SIGNAL_HINTS '..helpers.table_to_json(x.hints))
+    log('TC_CONTRACT logic-native-one-step-pulse-empty-connect-disconnect-merge-split-and-missing-hint-connector')
+    local ids={}; for id in pairs(c.subscriptions) do ids[#ids+1]=id end
+    for _,id in ipairs(ids) do runtime.unsubscribe(c,id) end
+    local observers=registry.get().logic_observers
+    assert(#observers.order==0 and #observers.input_order==0 and next(observers.inputs)==nil and next(observers.computers)==nil,'last unsubscribe retained a watch')
+    probe(c,[[p.subscribe({input='green',initial=true},'changed')]])
+    logic.sample(event.tick,function() end)
+    assert(#c.queue==1 and #observers.order==1)
+    assert(lifecycle.remove(io.id,'fixture-endpoint-removal',true))
+    assert(#c.queue==0 and #observers.order==0 and #observers.input_order==0 and next(c.subscriptions)==nil,'endpoint removal retained an observer or its queued event')
+    log('TC_CONTRACT logic-last-unsubscribe-and-endpoint-removal-cancel-observation-and-queue')
     x.phase='done'; log('TC_COLD_OK recipe-red-green-isolation-legacy-fault-no-replay-and-disappearance')
   end
 end

@@ -4,6 +4,15 @@ local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local M = {}
 local cleanup = {} -- Ephemeral host hooks, registered during control parsing.
+local initializers = {}
+function M.register_initializer(name,fn)
+  assert(type(name)=='string' and type(fn)=='function' and not initializers[name])
+  initializers[name]=fn
+end
+local function initialize_services(root)
+  local names={}; for name in pairs(initializers) do names[#names+1]=name end; table.sort(names)
+  for _,name in ipairs(names) do initializers[name](root) end
+end
 function M.scheduling_supported(root)
   local s=root and root.scheduler
   return type(s)=='table' and s.work_version==1 and type(s.ready)=='table'
@@ -185,6 +194,7 @@ function M.initialize()
     root.scheduler=root.scheduler or {cursor=1,last_tick=-1}
     migrate_work(root)
     migrate_tracking(root)
+    initialize_services(root)
     return root
   end
   root={schema_version=limits.storage_version,next_id=1,next_sequence=1,
@@ -192,6 +202,7 @@ function M.initialize()
     scheduler={cursor=1,last_tick=-1},tracking_version=1,retained_count=0,radar_destructions={}}
   storage.tweaked_computers=root
   migrate_work(root)
+  initialize_services(root)
   return root
 end
 function M.get() return storage.tweaked_computers end

@@ -8,6 +8,7 @@ local admission=require('scripts.runtime.admission')
 local radar=require('scripts.radar')
 local speaker=require('scripts.speaker')
 local kv=require('scripts.services.kv')
+local logic=require('scripts.services.logic')
 local M={}
 local resume=false
 local function tick(t)
@@ -113,6 +114,12 @@ function M.run()
     saved.unrelated.destroy()
   end
   assert(#surface.find_entities_filtered{type='item-entity'}==0,'helper migration created item drops')
+  local root=registry.get(); local computers=root.computers; local signal_visits=0
+  root.computers=setmetatable({},{__index=function(_,id) signal_visits=signal_visits+1; return computers[id] end})
+  local sampled,failure=pcall(logic.sample,game.tick,function() end)
+  root.computers=computers
+  assert(sampled,failure); assert(signal_visits==0,'power-free idle populations acquired signal discovery')
+  assert(#root.logic_observers.order==0 and #root.logic_observers.input_order==0)
   log('TC_SCHEDULING_NINE_POWER_FREE_FAMILIES owned-helper-migration physical-proofs role-and-content-aliases')
   for i,name in ipairs({'radar','programmable-speaker'}) do
     assert(lifecycle.build(assert(game.surfaces[1].create_entity{name=name,position={i*8,16},force='player'})))

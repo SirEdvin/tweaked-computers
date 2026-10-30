@@ -57,6 +57,14 @@ With initial=false, notify only on effective identity/count or connectivity chan
 not ordering or explicit-default differences. With initial=true, enqueue next sample
 with empty previous. A disappearance remains observable as zero in changes.
 
+Accepted registrations maintain a physical-input/color watch and ordered reverse
+subscribers. One fresh native observation per watched input/color serves independent
+filters and isolated events; no subscription means no signal discovery visit.
+Cancellation (including `computer.off`), run retirement and endpoint removal retire
+the relevant watch and canceled queued samples. Direct reads and new baselines never
+reuse retained observations. The implementation reads watched inputs every tick;
+it does not rely on `get_signals_changed` to skip a native read or slow sampling.
+
 ```text
 -- Documentation event; also includes BaseEvent.
 SignalChanged = {
