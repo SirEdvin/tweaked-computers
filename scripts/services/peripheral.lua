@@ -344,7 +344,9 @@ registry.register_initializer('topology-interests',function(root)
   if not registry.supported(root) then return end
   if root.topology_interests~=nil then
     if type(root.topology_interests)~='table' or root.topology_interests.version~=1 then return end
-    local prior=topology_state(1); prior.version=2
+    local valid,prior=pcall(topology_state,1)
+    if not valid then root.scheduling_diagnostic=prior; return end
+    prior.version=2
   else root.topology_interests={version=2,order={},computers={},cursor=1} end
   for _,id in ipairs(root.order) do
     local c=root.computers[id]

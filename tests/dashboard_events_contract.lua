@@ -61,6 +61,12 @@ function M.tick(c,second,third,panel,guest,tick)
         'version-one index migration omitted dashboard-only demand or replaced retained membership')
       assert(prior.computers[c.id]==owner and c.network_views==views and registry.get().ledger==ledger
         and ledger.total==credits and registry.get().next_sequence==sequence,'index migration changed accepted state/credits')
+      local diagnostic=registry.get().scheduling_diagnostic
+      prior.version=1; prior.order=false
+      local initialized,result=pcall(registry.initialize)
+      assert(initialized and result==registry.get() and prior.version==1 and prior.order==false
+        and registry.get().scheduling_diagnostic.code=='E_UNSUPPORTED','malformed legacy index crashed or was rewritten during migration')
+      prior.version=2; prior.order=order; registry.get().scheduling_diagnostic=diagnostic
       lifecycle.connector(third,'network','green').disconnect_all()
       peripheral.reconcile_one(third,'green',tick,function() end)
       assert(next(third.subscriptions)==nil and not registry.get().topology_interests.computers[third.id],
