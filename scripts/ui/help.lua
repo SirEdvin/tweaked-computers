@@ -768,7 +768,7 @@ local subheadings={
   ['Maintenance holds']='Editing and execution', ['Stop cancels']='Stopping and recovery',
   ['Ctrl+left-click']='World interaction', ['Open inspectors']='Local inspectors',
   ['Monitor dimensions']='Monitor interaction', ['All essential']='Native controls',
-  ['function start']='Named handlers', ['Legacy return']='Program forms',
+  ['function start']='Named handlers',
   ['Locals, helpers']='Callback lifetime', ['No require']='Sandbox boundaries',
   ['print(...)']='Printing', ['rawget(t,key)']='Raw table helpers',
   ['xpcall(fn,handler,...)']='Errors and protected calls', ['New global names']='Reserved names and upgrades',

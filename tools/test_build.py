@@ -476,7 +476,6 @@ class CanonicalContractTests(unittest.TestCase):
                         if source_body is not None:
                             self.assertEqual(found[1].strip(), source_body)
                             old_names = set(re.findall(r'^#### Scenario: ([^\n]+)', body, re.M))
-                            old_names = {'Print from a saved function' if n == 'Print from either saved format' else n for n in old_names}
                             new_names = set(re.findall(r'^#### Scenario: ([^\n]+)', source_body, re.M))
                             self.assertLessEqual(old_names, new_names)
                             continue

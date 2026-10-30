@@ -101,7 +101,7 @@ hidden radar radio links never grant discovery authority, and hearing sound neve
 grants speaker control. The optional interplanetary radar has separate Space Age research.
 
 New built-ins reserve only top-level function declaration names, not ordinary
-locals/parameters, legacy handler keys or nested scratch fields. An older colliding
+locals/parameters or nested scratch fields. An older colliding
 active declaration faults at synchronized reconstruction while preserving exact
 source/state; rename the declaration and explicitly Save/Run. An older colliding
 Console root returns named `E_UNSUPPORTED` before effects and keeps its graph.

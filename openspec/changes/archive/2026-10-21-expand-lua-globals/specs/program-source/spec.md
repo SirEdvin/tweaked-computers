@@ -5,7 +5,7 @@
 ### Requirement: Expanded globals in saved function bodies
 Saved-function callbacks SHALL resolve the expanded globals according to the [runtime companion](../computer-runtime/lua-api.md). Their availability SHALL NOT permit top-level effects, arbitrary global assignment or borrowing saved-program functions from Console. The editor starter and language reference SHALL demonstrate program `print` while retaining documentation for `computer.log`.
 
-#### Scenario: Print from either saved format
+#### Scenario: Print from a saved function
 - **WHEN** a valid saved-function callback calls `print("hello", false, nil)`
 - **THEN** validation succeeds and dispatched execution emits the same bounded program output
 - **AND** validation and saving alone emit no output.
