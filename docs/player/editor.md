@@ -198,9 +198,9 @@ mod/world for rollback.
   Try reviewed rebase/reload, cancel reset/forget, then close/reopen a dirty draft.
   Recover the removed computer's draft through another computer's Maintenance;
   check standalone recovery when opening a ninth computer with eight retained slots.
-- On a powered 2×2 monitor, keep text/background/cursor changing; mark one
+- On an electricity-free 2×2 monitor, keep text/background/cursor changing; mark one
   non-anchor tile and confirm the genuine native red X remains visible. Repeat
-  dark/unpowered and rotated. Save/load, cancel, restore power and check retained
+  outside electric coverage and rotated. Save/load, cancel and check retained
   image/palette/cursor and Ctrl+click coordinates. Then allow robot removal and
   check normal splitting with no floating fragments or extra drops.
 - Upgrade a copy of a populated 0.1.1 world; inspect existing role/color wires,

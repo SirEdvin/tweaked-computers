@@ -116,6 +116,7 @@ local function physical_tick(event)
     assert(not monitor.available(old,function() end),'same-event physical mutation reused authority: '..name)
     test.stage='changed'; test.changed=event.tick; return
   elseif test.stage=='changed' then
+    if rec.monitor_repair then return end
     assert(rec.direction==rec.body.direction and rec.force_index==rec.body.force.index and rec.surface_index==rec.body.surface.index)
     assert(rec.position.x==rec.body.position.x and rec.position.y==rec.body.position.y)
     if name=='surface-clone' then
@@ -125,7 +126,7 @@ local function physical_tick(event)
       test.retired=rec.id; test.tile=clone.id; x.tiles[36]=clone.id
       rec.body.destroy()
     elseif name=='ownership' then
-      assert(not rec.powered and monitor.resolve(rec).render.hidden,'lost ownership kept presentation live')
+      assert(not lifecycle.available(rec) and monitor.resolve(rec).render.hidden,'lost ownership kept presentation live')
       root.entities[rec.body.unit_number]=test.binding; test.binding=nil
     else
       rec.body.force=test.force; rec.body.direction=test.direction
@@ -133,7 +134,7 @@ local function physical_tick(event)
     end
     test.stage='restored'; test.changed=event.tick; return
   elseif test.stage=='restored' then
-    if not rec.powered then return end
+    if not lifecycle.available(rec) then return end
     if name=='surface-clone' then assert(not registry.record(test.retired),'restored clone retargeted the old identity') end
     for _,id in ipairs(x.tiles) do assert(lifecycle.available(registry.record(id)),'restoration lost live tile availability') end
     assert(monitor.available(monitor.resolve(rec),function() end))

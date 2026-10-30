@@ -68,7 +68,7 @@ Warm compilation charges exactly the same units as cold parsing; a refused
 replay charges the same accepted prefix, including shared-host exhaustion.
 Cold processes reconstruct the proof normally without renewing saved credits.
 
-Physical discovery/all-member power proofs may be reused only within one
+Physical discovery/all-member availability proofs may be reused only within one
 non-yielding callback. The reviewed monitor provider cannot change physical
 connectivity or members. Other providers invalidate those proofs before their
 method executes, even when it later throws. Every method still checks its active
@@ -91,7 +91,7 @@ The gate requires 360 actual publication intervals per mode/layout, none above
 two simulation ticks, after warmup; it spans the periodic rediscovery. A separate
 process checks unchanged saved source/state/presentation/credits before resuming.
 The fixture deliberately freezes scheduling while writing its snapshot, so the
-artificial paused boundary separates measurement windows. Power loss and recovery
+artificial paused boundary separates measurement windows. Availability refusal and recovery
 are also exercised. Scheduler CPU samples exclude fixture observation and world
 setup but include cold reconstruction; profiles are diagnostics, not CI timing
 thresholds or client rendering measurements.
@@ -104,7 +104,7 @@ connected subpixel curves in actual window captures and native screenshots; an
 eight-second base-client recording shows the animation. The older screenshot
 equality and performance reports used star markers, not this new workload.
 These shared-host checks do not establish steady real-time motion.
-The 2.1 release is headless-only: rendering, representative GPU-backed FPS and
+These 2.1 animation receipts are headless-only: rendering, representative GPU-backed FPS and
 multiplayer-client smoothness remain unverified on that engine.
 
 The source checkout also includes `tools/monitor_performance.py` for serial,
@@ -127,7 +127,7 @@ The other screens retain complete fronts without a continuous producer.
 Run paired archives serially with identical scene, layout, workload, tick count,
 engine and mode. Each run creates a separate-process cold boundary, rewarms, then
 records exactly `--ticks` scheduler samples per requested content mode. Live tile
-counts/power and the expected running/stopped producer are checked outside the
+counts/physical availability and the expected running/stopped producer are checked outside the
 timed scheduler call. Summary mean/median/p95/max are whole-scheduler Lua CPU,
 not client FPS or a numerical pass/fail speed threshold. Instrumented structural
 counters and phase attribution must be reported separately. Test-only payload
@@ -147,7 +147,7 @@ publication and retirement retain the existing fair cursors and budgets.
 Getters do not wake rendering. Native cursor blink does not require a redraw.
 
 Stable topology is not rediscovered each tick. The physical lifecycle observes
-body/helper validity, ownership, power, geometry and scope once per actual tick,
+body/endpoint validity, ownership, geometry and scope once per actual tick,
 then notifies changes. This is not cached permission: actual calls, touch and
 publication still prove fresh authority, including native changes in one event.
 Generic monitor proofs and repeated status-name construction are skipped when
@@ -170,17 +170,17 @@ instrumented wrapper. Host instrumentation guards are tested by
 | `topology` | Complete tile-signature construction, not an unused public wrapper |
 | `full_proofs` | Availability proofs after the operation-local positive-reuse check |
 | `presentation_proof_requests` | Presenter requests, including safe operation-local reuse |
-| `connector`, `has_power` | Monitor endpoint/power checks, including necessary network/service work |
+| `connector`, `available` | Monitor endpoint/physical-availability checks, including necessary network/service work |
 | `capture`, `frame`, `cell`, `cursor` | Immutable capture and renderer preparation entry points |
 | `native_create`, `native_retire`, `visibility` | Monitor sprite allocation, actual backend retirement and native visibility assignments |
 | `clear_cell`, `art_create` | Retirement-cell visits and separately classified status-art allocation |
 
 The fixture checks settled/stopped, ordinary cold idle, outage/restoration, one
 independent updating screen and four updating screens on actual scheduler ticks.
-It checks powered tile inventory and real producer progress, unchanged-peer
+It checks physically available tile inventory and real producer progress, unchanged-peer
 front identity, drained retained work and zero unnecessary passive presentation.
 Separate native mutations exercise silent movement, rotation, force changes,
-cross-surface clone/retirement and helper loss/restoration, preserving unrelated fronts. Same-event
+cross-surface clone/retirement and binding loss/restoration, preserving unrelated fronts. Same-event
 proof probes are distinguished from subsequent actual-tick reconciliation.
 The pinned engine does not support same-body surface teleport for combinators;
 cross-surface cloning therefore proves fresh identities and retirement rather

@@ -13,7 +13,7 @@ if lifecycle.observe_monitor then
   local observe=lifecycle.observe_monitor
   lifecycle.observe_monitor=function(...) count('observation'); return observe(...) end
 end
-for _,name in ipairs({'connector','has_power'}) do
+for _,name in ipairs({'connector','available'}) do
   local original=lifecycle[name]
   lifecycle[name]=function(rec,...)
     if type(rec)=='table' and rec.kind=='monitor' then count(name) end
