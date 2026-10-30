@@ -162,6 +162,7 @@ local function remove_queued(c,id,spend)
     if item.event.subscription_id~=id then result[#result+1]=item; bytes=bytes+item.bytes end
   end
   c.queue=result; c.queue_bytes=bytes
+  registry.ready_changed(c)
 end
 local function subscribe(c,rec,wire,tick,spend,options,handler)
   fields(options,{input=true,signals=true,initial=true}); local input=selection(options.input)
@@ -221,6 +222,7 @@ function M.revoke(c,name,wire)
     if not removed[item.event.subscription_id] then queue[#queue+1]=item; bytes=bytes+item.bytes end
   end
   c.queue=queue; c.queue_bytes=bytes
+  registry.ready_changed(c)
 end
 local function discard(c,sub)
   remove_queued(c,sub.id,function() end); sub.details.resync=true

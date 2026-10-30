@@ -29,6 +29,7 @@ function M.retire(rec,status,reason)
   local cleaned=registry.cleanup(rec,rec.run_id,reason or status)
   rec.queue={}; rec.queue_bytes=0; rec.timers={}; rec.subscriptions={}
   rec.status=cleaned and status or 'faulted'
+  registry.ready_changed(rec); registry.timers_changed(rec)
   if not cleaned then rec.diagnostic=errors.new('E_ENGINE','host teardown failed; cleanup recovery retained') end
   return cleaned
 end
@@ -157,6 +158,7 @@ function M.publish_event(rec,item,tick)
   item.event.sequence=registry.sequence()
   rec.queue[#rec.queue+1]=item
   rec.queue_bytes=rec.queue_bytes+bytes
+  registry.ready_changed(rec)
   return true
 end
 function M.enqueue(rec,name,payload,tick,spend,metadata)
@@ -198,6 +200,7 @@ function M.set_power(id,powered,tick,spend)
       if item.event.name=='timer' or item.event.name=='start' then retained[#retained+1]=item; bytes=bytes+item.bytes end
     end
     rec.queue=retained; rec.queue_bytes=bytes
+    registry.ready_changed(rec)
   else
     rec.needs_input_resync=true -- Host logic sampling consumes this before dispatch.
     if rec.status=='running' then M.emit(id,'power_restored',{outage_start_tick=rec.outage_start_tick,restored_tick=tick},tick) end
@@ -276,6 +279,7 @@ function M.services(rec,tick,guard,execution)
     end
     local seq=registry.sequence(); local id=rec.run_id..'/timer-'..string.format('%.0f',seq)
     rec.timers[id]={id=id,handler=name,deadline=tick+delay,interval=recurring and delay or nil,payload=copied,payload_bytes=size and size.bytes or 0,sequence=seq}
+    registry.timers_changed(rec)
     return id
   end
   method('after',2,3,function(delay,name,payload) return timer(delay,name,payload,false) end)
@@ -287,7 +291,9 @@ function M.services(rec,tick,guard,execution)
     for _,item in ipairs(rec.queue) do
       if item.timer_id==id then exists=true else retained[#retained+1]=item; bytes=bytes+item.bytes end
     end
-    rec.queue=retained; rec.queue_bytes=bytes; return exists
+    rec.queue=retained; rec.queue_bytes=bytes
+    registry.ready_changed(rec); registry.timers_changed(rec)
+    return exists
   end)
   local map={computer=api,peripheral={}}
   local names={}; for name in pairs(providers) do names[#names+1]=name end; table.sort(names)

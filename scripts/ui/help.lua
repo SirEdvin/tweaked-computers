@@ -145,6 +145,10 @@ cancelTimer(ID) -> boolean, including already queued timer notifications.
 
 Timer event: timer_id, scheduled_tick, interval_ticks?, missed, payload?.
 Recurring overdue intervals coalesce. Callbacks finish or fault; they never yield.
+Future timers sleep until due; cancellation also removes queued notifications.
+Events and Console submissions wake a ready rotation; empty queues leave it.
+One program/Console item per computer/tick, with fair alternation when both wait.
+Peers awakened during dispatch join a later round; load never replays startup.
 
 Data: finite numbers, booleans, strings, dense arrays or string-keyed maps;
 no mixed keys, nil entries, cycles, functions, metatables or native objects.

@@ -106,7 +106,9 @@ function M.run()
   assert(cleanup_calls[#cleanup_calls].id==id)
   report('entity-child-binding-removal-identity-and-spent-ledger')
   root=fresh(); rec=computer(source('computer.setState("kept",true)'))
-  scheduler.tick(0); rec.active.compiler_version=999
+  scheduler.tick(0)
+  assert(runtime.enqueue(rec,'start',{name='fixture'},1))
+  rec.active.compiler_version=999 -- Invalid retained code is checked when work is due, not by an idle sweep.
   scheduler.tick(1); assert(rec.status=='faulted' and rec.state.kept and rec.active.source and rec.diagnostic.code=='E_UNSUPPORTED')
   root.schema_version=999; local count=root.next_id; scheduler.tick(2); assert(root.next_id==count)
   expected_error('E_UNSUPPORTED',function() registry.register('computer',body()) end)

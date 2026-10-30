@@ -157,8 +157,22 @@ own bounded cursor on deferral. `try_maintenance(fn)` catches only the private
 maintenance refusal; unexpected host failures remain visible. Emit precharges
 all deliveries. Power transitions precharge their complete notification envelope.
 
-One callback per computer per actual tick; FIFO within each run, persisted
-round-robin cursor between runs. Timer maintenance has its own rotating cursor.
+One program callback or Console submission per computer per actual tick; FIFO
+within each queue, with the existing program/Console alternation. Event publication
+and Console ingress maintain a persisted generation-aware ready rotation. Each
+tick freezes its current members and advances the starting member even when shared
+credits refuse the entire round. A callback cannot execute a newly awakened peer
+recursively or add that peer to the already frozen round. Drained/retired queues
+leave the rotation; an open viewer alone is not execution demand.
+
+Timer mutations maintain one indexed earliest deadline per computer, without
+cancellation tombstones. Only due owners are visited; future timers do not cause
+per-tick computer searches. Due owners retain rotating service under maintenance
+pressure, equal deadlines keep timer creation order, recurring events coalesce
+without moving their original scheduled tick, and cancellation also removes an
+undispatched event. These memberships initialize once on init/configuration change,
+not on ordinary load. Unknown scheduling versions remain inert with source,
+queues, deadlines and spent credits retained for recovery.
 Insufficient aggregate headroom defers untouched runs, not faults them. The
 ledger retains per-ID work/compile/allocation spending until a later real tick.
 Source replacement, stop, removal, repeated tick dispatch and cold load cannot
@@ -175,7 +189,8 @@ state, attaching it only during synchronized admission for older saves.
 Changes preserve already-spent credits, and getLimits returns current values.
 If the per-computer budgets sum above the shared allowance, the scheduler reserves
 at most that allowance rather than permanently starving small fitting callbacks;
-actual over-budget work still faults through admission. Identity walks are prepaid before hooks can exhaust it.
+actual over-budget work still faults through admission. Ready/deadline traversal
+pays for live work, not a fictional full registry walk.
 Safety cleanup must stay bounded independently of the offending guest.
 
 ## Focused checks and evidence boundaries

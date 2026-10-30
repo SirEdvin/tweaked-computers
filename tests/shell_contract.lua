@@ -54,11 +54,13 @@ function M.run()
       input.text=text; editor.on_text{player_index=p.index,element=input,tick=tick}
       editor.on_confirmed{player_index=p.index,element=input,tick=tick}
       assert(input.text=='','ingress failed: '..tostring(gui.content.console.shell_status.caption))
+      assert(registry.get().scheduler.ready[rec.id],'accepted Console input did not own ready membership')
     end
     local function dispatch()
       rec.power_checked_tick=tick
       assert(scheduler.dispatch(rec,tick),'shell did not dispatch')
       assert(not scheduler.dispatch(rec,tick),'duplicate same-tick dispatch')
+      assert((registry.get().scheduler.ready[rec.id]~=nil)==(shell.waiting(rec) or rec.status=='running' and #rec.queue>0),'drained Console left stale ready membership')
     end
     local function execute(text,expect,p,gui)
       submit(text,p,gui); dispatch()

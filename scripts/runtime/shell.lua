@@ -43,6 +43,7 @@ function M.reset(rec,reason)
   end
   if not principal.cleanup(rec,principal.shell(rec),reason or 'reset') then return false end
   rec.shell=nil
+  registry.ready_changed(rec)
   return true
 end
 function M.submit(rec,source,player,token,tick,expected)
@@ -68,6 +69,7 @@ function M.submit(rec,source,player,token,tick,expected)
   s.pending[#s.pending+1]={source=source,id=id,player=player,token=token,session=s.id}
   s.pending_bytes=s.pending_bytes+#source
   s.status='Queued #'..string.format('%.0f',id)
+  registry.ready_changed(rec)
   return id
 end
 function M.waiting(rec)
@@ -125,6 +127,7 @@ function M.dispatch(rec,tick)
   -- Unstarted records are consumed exactly once, even on loss of UI authority.
   rec.last_dispatch_tick=tick
   table.remove(s.pending,1); s.pending_bytes=s.pending_bytes-#item.source
+  registry.ready_changed(rec)
   local valid=rec.powered and rec.body.valid and item.session==s.id and authorize and authorize(rec,item.player,item.token)
   if not valid then
     s.status='Canceled #'..item.id..': Console authority or power changed'
@@ -148,6 +151,7 @@ registry.register_cleanup('shell-safety',function(rec,run,reason)
   local s=rec.shell
   if #s.pending>0 then s.status='Canceled pending commands: '..reason end
   s.pending={}; s.pending_bytes=0
+  registry.ready_changed(rec)
   if not principal.cleanup(rec,principal.shell(rec),reason) then error('shell cleanup failed',0) end
 end)
 return M

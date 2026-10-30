@@ -4,6 +4,142 @@ local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local M = {}
 local cleanup = {} -- Ephemeral host hooks, registered during control parsing.
+function M.scheduling_supported(root)
+  local s=root and root.scheduler
+  return type(s)=='table' and s.work_version==1 and type(s.ready)=='table'
+    and type(s.deadlines)=='table' and type(s.deadline_positions)=='table'
+    and errors.integer(s.ready_count,0,limits.registry_entries)
+    and (s.ready_head==nil and s.ready_count==0 or type(s.ready_head)=='string' and s.ready_count>0)
+end
+local function work_state()
+  local root=M.get()
+  local s=root and root.scheduler
+  if not M.scheduling_supported(root) then errors.raise('E_UNSUPPORTED','unsupported scheduling membership; source/data retained') end
+  return s
+end
+local function ready_remove(s,id)
+  local item=s.ready[id]
+  if not item then return end
+  if item.next==id then s.ready_head=nil
+  else
+    s.ready[item.previous].next=item.next
+    s.ready[item.next].previous=item.previous
+    if s.ready_head==id then s.ready_head=item.next end
+  end
+  s.ready[id]=nil
+  s.ready_count=s.ready_count-1
+end
+function M.retire_ready(item)
+  local s=work_state()
+  if s.ready[item.id]==item then ready_remove(s,item.id) end
+end
+function M.ready_changed(rec)
+  local s=work_state()
+  local shell=rec.shell
+  local pending=shell and shell.version==1 and type(shell.pending)=='table' and #shell.pending>0
+  local wanted=rec.kind=='computer' and rec.status~='removed'
+    and (rec.status=='running' and #rec.queue>0 or pending)
+  local old=s.ready[rec.id]
+  if old and (old.generation~=rec.generation or old.run_id~=rec.run_id
+    or old.shell_id~=(shell and shell.id)) then ready_remove(s,rec.id); old=nil end
+  if not wanted then ready_remove(s,rec.id); return end
+  if old then return end
+  local id=rec.id
+  local item={id=id,generation=rec.generation,run_id=rec.run_id,shell_id=shell and shell.id}
+  if s.ready_head then
+    local head=s.ready[s.ready_head]; local tail=s.ready[head.previous]
+    item.previous=tail.id; item.next=head.id; tail.next=id; head.previous=id
+  else s.ready_head=id; item.previous=id; item.next=id end
+  s.ready[id]=item
+  s.ready_count=s.ready_count+1
+end
+function M.ready_round(admit)
+  local s=work_state(); local head=s.ready_head; local result={}
+  if not head then return result end
+  local id=head
+  repeat
+    if not admit(1) then s.ready_head=id; return result end
+    local item=s.ready[id]
+    if #result>=s.ready_count or type(item)~='table' or item.id~=id
+      or type(item.next)~='string' or type(item.previous)~='string'
+      or type(s.ready[item.next])~='table' or s.ready[item.next].previous~=id
+      or type(s.ready[item.previous])~='table' or s.ready[item.previous].next~=id then
+      errors.raise('E_UNSUPPORTED','invalid retained ready links; source/queues retained')
+    end
+    result[#result+1]=item; id=item.next
+  until id==head
+  if #result~=s.ready_count then errors.raise('E_UNSUPPORTED','incomplete retained ready rotation; source/queues retained') end
+  -- Advance independently of walking the complete round, including refusals.
+  s.ready_head=s.ready[head].next
+  return result
+end
+local function deadline_before(a,b)
+  if type(a)~='table' or type(b)~='table' or type(a.id)~='string' or type(b.id)~='string'
+    or not errors.integer(a.tick,0,9007199254740991) or not errors.integer(b.tick,0,9007199254740991) then
+    errors.raise('E_UNSUPPORTED','invalid retained deadline; source/timers retained')
+  end
+  return a.tick<b.tick or a.tick==b.tick and a.id<b.id
+end
+function M.next_timer()
+  local s=work_state(); local item=s.deadlines[1]
+  if item~=nil then
+    deadline_before(item,item)
+    if s.deadline_positions[item.id]~=1 then errors.raise('E_UNSUPPORTED','invalid retained deadline index; source/timers retained') end
+  end
+  return item
+end
+local function deadline_swap(s,a,b)
+  local h=s.deadlines; h[a],h[b]=h[b],h[a]
+  s.deadline_positions[h[a].id]=a; s.deadline_positions[h[b].id]=b
+end
+local function deadline_fix(s,i)
+  local h=s.deadlines
+  while i>1 do
+    local parent=math.floor(i/2)
+    if not deadline_before(h[i],h[parent]) then break end
+    deadline_swap(s,i,parent); i=parent
+  end
+  while i*2<=#h do
+    local child=i*2
+    if child<#h and deadline_before(h[child+1],h[child]) then child=child+1 end
+    if not deadline_before(h[child],h[i]) then break end
+    deadline_swap(s,i,child); i=child
+  end
+end
+function M.timer_remove(id)
+  local s=work_state(); local i=s.deadline_positions[id]
+  if not i then return end
+  if not errors.integer(i,1,#s.deadlines) or type(s.deadlines[i])~='table' or s.deadlines[i].id~=id then
+    errors.raise('E_UNSUPPORTED','invalid retained deadline position; source/timers retained')
+  end
+  local h=s.deadlines; local last=table.remove(h)
+  s.deadline_positions[id]=nil
+  if i<=#h then h[i]=last; s.deadline_positions[last.id]=i; deadline_fix(s,i) end
+end
+function M.timers_changed(rec)
+  local s=work_state(); local tick
+  if rec.status=='running' then
+    for _,timer in pairs(rec.timers) do if not tick or timer.deadline<tick then tick=timer.deadline end end
+  end
+  if not tick then M.timer_remove(rec.id); return end
+  local i=s.deadline_positions[rec.id]
+  if not i then i=#s.deadlines+1; s.deadline_positions[rec.id]=i end
+  s.deadlines[i]={id=rec.id,generation=rec.generation,run_id=rec.run_id,tick=tick}
+  deadline_fix(s,i)
+end
+
+local function migrate_work(root)
+  local s=root.scheduler
+  if s.work_version~=nil then return end
+  s.work_version=1; s.ready={}; s.ready_count=0; s.ready_head=nil
+  s.deadlines={}; s.deadline_positions={}
+  for _,id in ipairs(root.order) do
+    local rec=root.computers[id]
+    if rec and rec.schema_version==1 and type(rec.queue)=='table' and type(rec.timers)=='table' then
+      M.ready_changed(rec); M.timers_changed(rec)
+    end
+  end
+end
 local function track_destruction(root,rec)
   if rec.kind=='radar' and rec.body.valid then
     local registration=script.register_on_object_destroyed(rec.body)
@@ -47,6 +183,7 @@ function M.initialize()
     root.order=root.order or {}; root.next_sequence=root.next_sequence or 1
     root.ledger=root.ledger or admission.new()
     root.scheduler=root.scheduler or {cursor=1,last_tick=-1}
+    migrate_work(root)
     migrate_tracking(root)
     return root
   end
@@ -54,6 +191,7 @@ function M.initialize()
     entities={},computers={},devices={},player_drafts={},order={},ledger=admission.new(),
     scheduler={cursor=1,last_tick=-1},tracking_version=1,retained_count=0,radar_destructions={}}
   storage.tweaked_computers=root
+  migrate_work(root)
   return root
 end
 function M.get() return storage.tweaked_computers end
@@ -196,6 +334,7 @@ function M.remove(id,reason)
   end
   if rec.kind=='monitor' then M.monitor_changed(rec,true) end
   rec.status='removed'; rec.queue={}; rec.timers={}; rec.subscriptions={}
+  M.ready_changed(rec); M.timer_remove(rec.id)
   for unit,binding in pairs(root.entities) do if binding.id==id then root.entities[unit]=nil end end
   root.computers[id]=nil; root.devices[id]=nil
   root.retained_count=root.retained_count-1

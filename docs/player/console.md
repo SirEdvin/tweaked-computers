@@ -9,6 +9,10 @@ controls. There is **no command history**, multiline continuation, OS or filesys
 **This is live, not a dry run.** Commands use the existing
 [peripheral authority](api/peripheral.md) and affect your real factory.
 The saved program can continue running beside the prompt, or remain stopped.
+Submitting a command wakes that computer in the shared ready rotation. At most one
+program callback or Console command runs per computer per simulation tick, with
+fair alternation when both queues have work. An open prompt without submissions
+does not schedule empty commands. Queue order and spent credits survive save/load.
 
 ## Try a monitor
 

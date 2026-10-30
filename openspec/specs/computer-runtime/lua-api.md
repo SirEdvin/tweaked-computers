@@ -78,6 +78,14 @@ TimerEvent = {
 
 Recurring events use the first due deadline as `scheduled_tick`, report intervals skipped beyond that delivery in `missed`, and advance to the first aligned deadline strictly after current admission time. Equal deadlines are ordered by timer creation sequence. Handler dispatch can be later than admission; `event.tick` is the dispatch tick, while `scheduled_tick` remains unchanged. Pending work stays ordered through a save. Stop, fault or source activation cancels all timers in that run.
 
+Future timers retain indexed earliest-deadline membership, with no per-tick search
+of waiting computers. Only due owners receive timer maintenance; refused due work
+retains its deadline and fair service opportunity. Published events wake a persisted
+ready rotation. Each tick freezes that round, serves at most one program/Console
+item per computer, and rotates its start even after shared-credit refusal. New
+peers awakened by a callback join a subsequent round, never recursive dispatch.
+Empty queues leave execution membership; ordinary load preserves order and credits.
+
 ## Recoverable and fatal errors
 
 Approved globals include protected `pcall` for ordinary API errors. A protected call never returns a host object or the private quota/stop sentinel.

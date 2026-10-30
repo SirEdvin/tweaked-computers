@@ -8,6 +8,12 @@ Open the computer through its existing interaction, select Console, and type or 
 
 A line is one synchronous native chunk, with the same bounded statements, loops, local functions, standard helpers, and dot-call convention documented in `docs/player/api/language.md`. Semicolons can separate statements on that line. Literal CR/LF input is refused; there is no multiline continuation mode.
 
+Admitting a nonempty command wakes the computer's shared persisted ready rotation.
+Program and Console queues retain FIFO order and existing fair alternation, with
+at most one executable item per computer per actual tick. Draining or canceling
+both queues removes execution membership; an open Console alone creates no empty
+dispatches. Cold load preserves pending order, session identity and spent credits.
+
 Evaluation first tries to compile an expression list as a return expression. Only a syntax/grammar mismatch permits a statement-chunk attempt; both attempts share one compilation budget. Nothing executes until the chosen parse has passed validation. A runtime error never causes a second evaluation attempt. Explicit `return ...` works in statement mode. Results are displayed with exact tuple arity: one nil is a value; zero returns produce no result entry.
 
 Shell-global names read the shared scratch environment; an undefined nonreserved name yields nil. Assignment creates or replaces a shell value, and assigning nil deletes a binding. `local` variables last only for that submitted chunk. The existing API/library names and `print` are reserved against assignment. `_G`, `_ENV`, private generated identifiers, `game`, `storage`, dynamic loading, host objects, coroutines, and the existing unsupported language constructs remain unavailable. The saved-program compiler is not relaxed.

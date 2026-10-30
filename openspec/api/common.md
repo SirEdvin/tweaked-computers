@@ -90,8 +90,15 @@ Errors never convert a failed lookup into an empty successful result. Expected a
 1. At synchronized tick processing, reconcile bounded lifecycle/power changes and revoke stale authority. Fail-safe output cleanup has a reserved non-guest maintenance path.
 2. Observe each powered logic handler's native input state once for that tick. Derive subscription events without recursive callback delivery.
 3. Advance timers and topology/display notifications under separate maintenance budgets.
-4. Dispatch ready computers in deterministic round-robin order using a persisted cursor; each computer consumes its FIFO event order. IDs and queue sequence break ties. A running callback finishes or faults; it never suspends mid-Lua-stack.
+4. Dispatch a frozen round of the persisted ready-computer rotation, at most one program or Console item per computer per actual tick. Each queue retains FIFO order and existing program/Console alternation; the starting member advances even under shared-credit refusal. Events/Console ingress wake their destination directly, drained queues leave the rotation, and peers awakened during dispatch join a subsequent round. A running callback finishes or faults; it never suspends mid-Lua-stack.
 5. Complete bounded display presentation and housekeeping. Native circuit propagation determines when other factory entities observe output; no zero-latency feedback guarantee is made.
+
+Future timers retain one indexed earliest deadline per computer, not a per-tick
+timer search. Due owners preserve deadline/creation order, cancellation of queued
+notifications, recurring alignment/coalescing and fair maintenance deferral.
+Waiting computers without queued work or due timers receive no timer/dispatch
+discovery visit. Ordinary cold load preserves these memberships and spent credits;
+only synchronized init/configuration migration builds missing memberships.
 
 Within the published supported envelope, no changed logic sample is silently lost. Queue-capacity overflow faults the affected run visibly and clears its still-owned outputs. Unpowered computers do not admit transient touch/signal event history; on restoration they discard obsolete transient samples, retain durable application state/registrations, and request current-input resynchronization. Already completed effects never replay. Recurring overdue timers produce one event with a missed count instead of a burst; one-shots fire once. Ordinary cold load does not cause power-restoration or startup events merely because host functions were reconstructed.
 

@@ -87,8 +87,13 @@ faults it and clears its still-owned logic output.
 
 Each actual tick processes lifecycle/power and authority revocation, signal samples,
 notifications/timers, fair callbacks, then display presentation/housekeeping. At
-most one callback per computer per tick runs, with FIFO events and round-robin
-computer selection. A callback finishes or faults; it never suspends its Lua stack.
+most one program callback or Console command per computer per tick runs, with FIFO
+queues and a persisted rotation of ready computers. Empty queues leave that rotation;
+an event or Console submission wakes its destination directly. The starting member
+rotates even under shared-credit refusal, and a peer awakened during callback dispatch
+joins a subsequent round. Future timers sleep in an indexed deadline queue rather
+than causing per-tick computer searches. Due timers keep creation order, cancellation,
+alignment and coalescing. A callback finishes or faults; it never suspends its Lua stack.
 Circuit propagation remains native, not immediate recursive notification.
 
 Monitor models change synchronously, but immutable presentation snapshots seal

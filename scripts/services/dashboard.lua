@@ -46,6 +46,7 @@ local function remove_queued(c,id)
     if item.event.subscription_id~=id then queue[#queue+1]=item; bytes=bytes+item.bytes end
   end
   c.queue=queue; c.queue_bytes=bytes
+  registry.ready_changed(c)
 end
 method('unsubscribe',1,function(c,r,w,t,spend,id)
   if type(id)~='string' then errors.raise('E_ARGUMENT','subscription ID required') end
