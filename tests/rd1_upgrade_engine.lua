@@ -49,7 +49,7 @@ function M.run()
   local value,stats=data.copy(1,nop)
   c.state.boots=value; c.state_sizes.boots=stats.bytes+#'boots'+16
   c.state_entries=1; c.state_bytes=c.state_bytes+c.state_sizes.boots
-  c.state_nodes=stats.nodes; c.state_node_sizes.boots=stats.nodes
+  c.state_nodes=c.state_nodes+stats.nodes; c.state_node_sizes.boots=stats.nodes
   local io=x.records.logic
   io.output_bank={{signal={type='virtual',name='signal-C',quality='normal'},count=13}}
   local output=io.children.output.get_or_create_control_behavior()
@@ -87,6 +87,8 @@ local function retained()
   assert(registry.record(c.id)==c and c.state==x.state and c.active==x.active and c.timers==x.timers and c.queue==x.queue)
   assert(c.run_id==x.run and c.generation==x.generation and c.state.boots==1 and not c.state.timers and c.saved_source==program)
   assert(c.status=='stopped' and not c.active and not c.run_id and next(c.timers)==nil and next(c.queue)==nil)
+  assert(c.state_nodes==1+c.state_node_sizes.boots and c.state_node_sizes.boots==1)
+  assert(c.state_entries==1 and c.state_bytes==16+c.state_sizes.boots)
   assert(x.records.kv.database==x.database and x.database.entries.secret.value=='retained string')
   assert(x.database.entries.hash.fields.field=='retained hash' and x.database.entries.secret.deadline==x.deadline)
   assert(monitor.resolve(x.records.monitor)==x.group and x.group.model==x.screen and x.screen.cells[1][1]==75)

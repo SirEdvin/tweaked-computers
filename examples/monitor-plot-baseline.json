@@ -1,6 +1,8 @@
 {
-  "source_sha256": "b095e3789ede9bd639bedcaaf85849cda5f00cf2905bcdd2eddd68e879529798",
-  "source_bytes": 3195,
-  "origin": "Previously supplied external 0.1.4 four-row example; not part of the immutable released ZIP.",
+  "source_sha256": "decef3b1a4f1f785257ffbb656128053089b6e71d1d560f134436a21e32b6573",
+  "source_bytes": 2829,
+  "origin": "Function-only adaptation of the previously supplied external 0.1.4 four-row example; not byte-identical historical source or a released ZIP payload.",
+  "historical_source_sha256": "b095e3789ede9bd639bedcaaf85849cda5f00cf2905bcdd2eddd68e879529798",
+  "historical_source_bytes": 3195,
   "pacing": "Four rows every five ticks, round-robin logical screens."
 }

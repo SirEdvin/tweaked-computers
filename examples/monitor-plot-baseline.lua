@@ -1,4 +1,4 @@
--- Exact historical four-row guest source; see the adjacent provenance record.
+-- Function-only adaptation of the historical four-row workload; see adjacent provenance.
 return [====[function start(event)
   computer.setState("plot_screen", 0)
   computer.deleteState("plot_job")

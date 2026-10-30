@@ -266,6 +266,22 @@ getLimits()''',
                 self.assertEqual(example[1] + b'\n', source)
                 self.assertEqual(player_docs.guest_example('function-program').encode() + b'\n', source)
 
+    def test_adapted_plot_baseline_provenance(self):
+        import hashlib
+        import json
+        import re
+        source = (build.ROOT / 'examples/monitor-plot-baseline.lua').read_bytes()
+        guest = re.search(rb'return \[====\[(.*?)\]====\]', source, re.S)
+        self.assertIsNotNone(guest)
+        assert guest is not None
+        provenance = json.loads((build.ROOT / 'examples/monitor-plot-baseline.json').read_text())
+        self.assertEqual(provenance['source_sha256'], hashlib.sha256(guest[1]).hexdigest())
+        self.assertEqual(provenance['source_bytes'], len(guest[1]))
+        self.assertEqual(provenance['historical_source_sha256'],
+                         'b095e3789ede9bd639bedcaaf85849cda5f00cf2905bcdd2eddd68e879529798')
+        self.assertEqual(provenance['historical_source_bytes'], 3195)
+        self.assertNotEqual(provenance['source_sha256'], provenance['historical_source_sha256'])
+
     def test_documentation_rejects_starter_example_drift(self):
         import player_docs
         original = player_docs.text

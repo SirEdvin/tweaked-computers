@@ -130,7 +130,7 @@ function M.run()
  local value,stats=data.copy(1,nop)
  c.state.boots=value; c.state_sizes.boots=stats.bytes+#'boots'+16
  c.state_entries=1; c.state_bytes=c.state_bytes+c.state_sizes.boots
- c.state_nodes=stats.nodes; c.state_node_sizes.boots=stats.nodes
+ c.state_nodes=c.state_nodes+stats.nodes; c.state_node_sizes.boots=stats.nodes
  x.survivors={}; x.survivor_anchors={}; x.absorbed={}
  for i,wall in ipairs(x.walls) do
   local groups={}; local survivor
@@ -152,6 +152,7 @@ function M.on_load()
  end
  if x.saved then
   local c=registry.computer(x.computer); local g=monitor.resolve(registry.record(x.unaffected))
+  local _,stats=data.copy(c.state,nop); assert(c.state_nodes==stats.nodes,'retained state node accounting mismatch')
   assert(c.run_id==(x.candidate_run or x.saved.run_id) and c.state.boots==(x.boots or 1))
   assert(g.id==x.saved.id and g.model==x.saved.model and g.model.cells==x.saved.cells)
  end
@@ -203,6 +204,7 @@ function M.on_tick(event)
  end
  fuel(); scheduler.tick(event.tick); x.steps=x.steps+1; assert(x.steps<300,serpent.line{phase=x.phase,state=registry.computer(x.computer).state,groups=#registry.get().monitors.order,job=registry.get().monitors.job~=nil})
  local c=registry.computer(x.computer)
+ local _,stats=data.copy(c.state,nop); assert(c.state_nodes==stats.nodes,'state node accounting mismatch')
  assert(c.status==(x.phase=='legacy' and 'stopped' or 'running'),serpent.line(c.diagnostic))
  local s=registry.get().monitors; local ready=not s.job
  for _,id in ipairs(s.order) do local g=s.groups[id]; if not g.render or g.render.presented_revision~=g.model.revision then ready=false end end
