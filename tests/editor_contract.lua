@@ -118,7 +118,7 @@ local function gui(parent,spec)
   return e
 end
 function M.player(index,body)
-  return {index=index,valid=true,force=body.force,surface=body.surface,can_reach_entity=function() return true end,
+  return {index=index,valid=true,connected=true,force=body.force,surface=body.surface,can_reach_entity=function() return true end,
     display_resolution={width=1280,height=900},display_scale=1,gui={screen=gui(nil,{type='flow'})},print=function() end}
 end
 function M.run()

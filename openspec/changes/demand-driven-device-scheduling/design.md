@@ -67,13 +67,13 @@ This inventory covers every production `register_phase` call found in the inspec
 
 | Existing phase / hook | Proposed work and trigger |
 | --- | --- |
-| lifecycle / `00-physical-power-loss` | Remove custom power sampling entirely. No replacement native-carrier power sweep. |
+| lifecycle / `00-physical-observation` | Targeted lifecycle events/repairs plus staggered due non-power observation, within the existing topology envelope; necessary checks precede dependent use. |
+| retired / `00-physical-power-loss` | Removed custom power sampling entirely. No replacement native-carrier power sweep. |
 | lifecycle / `01-clone-components` | Existing pending clone ports only; enqueue on clone events, retire on adoption/destruction. A bounded related lookup while resolving actual clone work is allowed, not an idle scan. |
 | lifecycle / `01-network-output-authority` | Incrementally maintained output owners only; preserve published fail-safe checks even when the owner has no executable item. |
 | lifecycle / `02-computer-undo` | Existing pending undo settlement plus explicitly scheduled candidate-clear work; no retained undo-state visit once settled. |
 | lifecycle / `02-monitor-groups` | Dirty topology and unfinished partition/group/retirement work only. Genuine regrouping may enumerate its affected component; do not use the global registry to discover idle groups. |
 | lifecycle / `02-native-radar-adoption` | Pending computer-rooted discovery and due interested topology observations; no all-computer root rebuild, dormant radar scan or native power check. |
-| lifecycle / `physical-devices` | Targeted lifecycle events/repairs plus staggered due non-power observation, within the existing topology envelope; necessary checks precede dependent use. |
 | sample / `logic-input` | Active watcher index only; shared native observation, independent subscriptions, no all-computer cleanup tail. |
 | notifications / `monitor-events` | Pending touch and resize jobs plus indexed registered recipients; no settled-display scan. |
 | notifications / `peripheral-topology` | Due interested computer/color bindings and existing unfinished transition jobs; do not poll every running computer. |
@@ -139,6 +139,18 @@ Implement power/membership migration and a usable runtime slice together before 
 5. Exercise separate-process upgrade and ordinary reload, including partial pending topology/monitor work, queued Console commands and spent same-tick credits. Verify connected-client deterministic order separately.
 6. Package only the verified candidate with updated docs/help/examples. Keep evidence outside git and never include Factorio distributions. Roll back by restoring the copied pre-upgrade save with its matching old archive; in-place downgrade of migrated scheduling state is not promised.
 
+## Implementation hook reconciliation
+
+The baseline observations above remain historical. The current production hook
+names, exact ordering, per-identity demand reasons and non-ordinary inventory
+exceptions are reconciled in [the source hook audit](../../../docs/device-scheduling.md).
+The drawing now identifies itself as an implementation map, not measured
+performance or acceptance evidence. Direct per-tick watched reads are the chosen
+fallback after the pinned-engine hint probes; the hint never suppresses an
+observation. Open editor/inspector sessions use the fixed 15-tick deadline lanes;
+Dashboard refresh reuses exact tab-definition identities and selected visible
+chart references, preserving existing viewer/chart rotation.
+
 ## Evidence references
 
-Pinned official runtime API inspected for planning: `https://lua-api.factorio.com/2.1.23/runtime-api.json` (`LuaBootstrap.on_event`, `LuaEntity.get_signals_changed`, event inventory). These are source/API observations, not execution receipts. The editable scene and previews explain the design; only their JSON/import/rendering and the planning artifacts are validated in this change. Runtime, timing, migration, visual and multiplayer gates remain future implementation work in [tasks.md](tasks.md).
+Pinned official runtime API inspected for planning: `https://lua-api.factorio.com/2.1.23/runtime-api.json` (`LuaBootstrap.on_event`, `LuaEntity.get_signals_changed`, event inventory). These are source/API observations, not execution receipts. The editable scene and previews explain the design; their JSON/import/rendering is validated independently. Implemented rows, remaining runtime/native/peer gates and the separately owned timing comparison are tracked in [tasks.md](tasks.md) with external checkpoint receipts; the diagram itself certifies none of those passes.

@@ -605,19 +605,16 @@ function M.resize(player)
   if not size.supported then c.message.feedback.caption='Small display: use at least 760 × 480 effective GUI units, or reduce GUI scale.' end
 end
 function M.on_size(event) M.resize(game.get_player(event.player_index)) end
+local function refresh_viewer(index,s,tick,spend)
+  if model.session(index)~=s then return end
+  local player=game.get_player(index); local f=player and frame(player)
+  if not player or not player.valid or not player.connected or not f or not f.valid
+    or f.visible==false or f.enabled==false or player.opened~=f then model.close(index,s.token); return end
+  spend(limits.console_bytes+limits.console_entries*64+1); M.refresh(player,nil,tick)
+  return model.session(index)==s
+end
 function M.tick(tick,spend)
-  if tick%15~=0 then return end
-  local viewers=game.connected_players; local n=#viewers
-  spend(n+1); if n==0 then return end
-  local root=registry.get(); local start=(root.editor_cursor or 0)%n
-  root.editor_cursor=(start+1)%n
-  for offset=1,n do
-    local player=viewers[(start+offset-1)%n+1]
-    local f=frame(player)
-    if f and f.valid and f.visible~=false and f.enabled~=false and player.opened==f then
-      scheduler.try_maintenance(function() spend(limits.console_bytes+limits.console_entries*64+1); M.refresh(player,nil,tick) end)
-    end
-  end
+  scheduler.viewer_tick('editor',tick,spend,refresh_viewer)
 end
 scheduler.register_phase('render','program-editor',M.tick)
 console_shell.register_authority(function(rec,index,token)

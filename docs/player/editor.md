@@ -31,6 +31,11 @@ and display-size changes. Those actions do not save, run or replace your text.
 Errors may mark Console with **(!)**, but never switch tabs or grab typing focus.
 In focus mode, hover the title status for dirty/action detail.
 
+Only an open, owned workspace receives recurring refresh at the existing
+15-tick cadence. Closing, disconnecting or replacing its exact session retires
+that refresh deadline without deleting retained drafts. A deferred refresh keeps
+its due age; another open viewer can still progress with fitting shared credits.
+
 At an effective display of at least **760 × 480 GUI units** (physical resolution
 divided by GUI scale), the window is clamped to the screen and the Editor action
 row is reachable without scrolling the whole window. A small screen or larger

@@ -253,10 +253,11 @@ local function audit()
   local x=f()
   expect(count(registry.get().devices)+count(registry.get().computers)==#x.ids+(x.adopted and registry.by_entity(x.adopted) and 1 or 0),'registry population changed')
   for _,e in ipairs(x.native) do expect(e.valid,'native carrier disappeared'); expect(e.energy>0,'native carrier unpowered') end
+  local available=lifecycle.available or lifecycle.has_power
   for _,id in ipairs(x.ids) do
     local r=registry.record(id)
     expect(r and r.body.valid,'missing fixture device '..id)
-    if r and r.body.valid then expect(lifecycle.has_power(r),'unpowered fixture device '..id) end
+    if r and r.body.valid then expect(available(r),'unavailable fixture device '..id) end
   end
   for _,id in ipairs(x.computers) do
     local c=rec(id)

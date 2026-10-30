@@ -41,6 +41,12 @@ function M.run()
     assert(first.tab.caption=='' and first.tab.plain_caption.caption=='Literal [img=iron-plate]')
 
     assert(fa.api_name.read_only and fa.api_name.text==rec.id)
+    local measure=data.measure; local visits=0
+    data.measure=function(...) visits=visits+1; return measure(...) end
+    local settled,settled_error=pcall(ui.tick,100,function() end)
+    data.measure=measure
+    assert(settled,settled_error)
+    assert(visits==0,'unchanged open dashboard rediscovered widget definitions: '..visits)
     local function activate(element,player,mouse)
       ui.on_click{element=element,player_index=(player or a).index,button=mouse or defines.mouse_button_type.left}
     end

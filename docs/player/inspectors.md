@@ -111,7 +111,10 @@ It cannot block the other wire or the handler's own output bank. Disconnected
 inputs do not require a native signal-list query. The own bank is an independent
 observation too. Unchanged slots and their scrolling survive polling.
 The panel does not capture every pulse between samples. It creates no program
-subscription, writer or output publication.
+subscription, writer or output publication. Refresh deadlines belong only to open,
+owned sessions: closing or losing a viewer retires them without scanning other
+players or installing a guest signal watcher. Refused acquisition keeps its due
+age and retained stale view while independently fitting viewers can progress.
 Existing authority/writer cleanup remains responsible for fail-safe output removal.
 
 ## Monitor: logical tiles and character cells

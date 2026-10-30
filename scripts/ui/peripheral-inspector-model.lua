@@ -32,6 +32,7 @@ function M.open(player,id)
   root.peripheral_inspectors=root.peripheral_inspectors or {}
   local s={version=M.version,id=id,unit=rec.body.unit_number,generation=rec.generation,
     token=registry.sequence(),pending=true,page=1,field_page=1,value_page=1}
+  local indexed,problem=registry.viewer_changed('inspector',player.index,s); if not indexed then error(problem,0) end
   root.peripheral_inspectors[player.index]=s
   return s
 end
@@ -45,7 +46,10 @@ function M.current(player,token)
 end
 function M.close(index,token)
   local s=M.session(index)
-  if s and (not token or s.token==token) then registry.get().peripheral_inspectors[index]=nil end
+  if s and (not token or s.token==token) then
+    registry.get().peripheral_inspectors[index]=nil
+    registry.viewer_changed('inspector',index)
+  end
 end
 -- ASCII-only reversible byte strings: quotes, escaped quotes/backslashes, and
 -- exactly two uppercase hex digits after \x for every non-printable/high byte.

@@ -98,7 +98,10 @@ function M.on_tick(event)
   local s,b=model.session(1); local i=inspection.session(1)
   local state={tick=event.tick,events=x.events,frame=f and tree(f),editor=s and {tab=s.tab,peripheral=s.peripheral,wire=s.peripheral_wire},
     draft=s and b.documents[s.id] and b.documents[s.id].source,inspection=i and {key=i.key,field=i.field,page=i.page,field_page=i.field_page,value_page=i.value_page,
-    snapshot_tick=i.snapshot and i.snapshot.tick,pending=i.pending},maintenance=registry.get().scheduler.maintenance_spent}
+    snapshot_tick=i.snapshot and i.snapshot.tick,pending=i.pending,
+    details_index=f and f.details and f.details.index},
+    watched_inputs=registry.get().logic_observers and #registry.get().logic_observers.input_order,
+    maintenance=registry.get().scheduler.maintenance_spent}
   helpers.write_file('ui1-state.json',helpers.table_to_json(state),false)
 end
 return M

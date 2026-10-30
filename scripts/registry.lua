@@ -166,6 +166,15 @@ function M.maintenance_set(kind,id,owner,tick)
   deadline_put(M.maintenance_clock(kind),{id=id,owner=owner,generation=owner.generation,tick=tick})
 end
 function M.maintenance_remove(kind,id) return deadline_remove(M.maintenance_clock(kind),id) end
+function M.viewer_changed(kind,index,session)
+  local ok,problem=pcall(function()
+    if M.maintenance_clock(kind).initialized~=1 then errors.raise('E_UNSUPPORTED','unsupported viewer deadlines; session retained') end
+    if session then M.maintenance_set(kind,tostring(index),session,game.tick+(15-game.tick%15)%15)
+    else M.maintenance_remove(kind,tostring(index)) end
+  end)
+  if not ok then M.get().scheduling_diagnostic=problem end
+  return ok,problem
+end
 function M.art_changed(rec,tick)
   local root=M.get()
   if not rec or rec.native_carrier or not M.supported(root) or M.record(rec.id)~=rec then return end
@@ -482,4 +491,19 @@ function M.remove(id,reason)
   -- Ledger identities remain until real clock advancement: removal never renews credits.
   return true
 end
+M.register_initializer('ui-refresh-deadlines',function(root)
+  if not M.supported(root) or not M.scheduling_supported(root) then return end
+  for _,kind in ipairs({'editor','inspector'}) do
+    local valid,clock=pcall(M.maintenance_clock,kind)
+    if not valid then root.scheduling_diagnostic=clock; return end
+    if clock.initialized==nil then
+      clock.initialized=1
+      local all=kind=='editor' and root.player_drafts or root.peripheral_inspectors or {}
+      for index,value in pairs(all) do
+        local session=value; if kind=='editor' then session=value.session end
+        if session then M.viewer_changed(kind,index,session) end
+      end
+    end
+  end
+end)
 return M

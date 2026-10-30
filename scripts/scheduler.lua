@@ -201,6 +201,29 @@ function M.dispatch(rec,tick)
   if dispatched then rec.next_work_class='shell' end
   return dispatched
 end
+function M.viewer_tick(kind,tick,spend,refresh)
+  if tick%15~=0 then return end
+  local root=registry.get(); local valid,item=pcall(registry.maintenance_next,kind)
+  if not valid then root.scheduling_diagnostic=item; return end
+  if not item or item.tick>tick then return end
+  local pending={}; local clock=registry.maintenance_clock(kind)
+  if clock.initialized~=1 then root.scheduling_diagnostic=errors.new('E_UNSUPPORTED','unsupported viewer deadlines; session retained'); return end
+  for _=1,#clock.deadlines do
+    item=registry.maintenance_next(kind); if not item or item.tick>tick then break end
+    local size,work=#clock.deadlines,16
+    while size>0 do work=work+16; size=math.floor(size/2) end
+    if not M.try_maintenance(function() spend(work) end) then break end
+    registry.maintenance_remove(kind,item.id)
+    local ok,admitted,keep=pcall(M.try_maintenance,function() return refresh(tonumber(item.id),item.owner,tick,spend) end)
+    if not ok or not admitted or keep=='pending' then pending[#pending+1]=item
+    elseif keep then registry.maintenance_set(kind,item.id,item.owner,tick-tick%15+15) end
+    if not ok then
+      for _,entry in ipairs(pending) do registry.maintenance_set(kind,entry.id,entry.owner,entry.tick) end
+      error(admitted,0)
+    end
+  end
+  for _,entry in ipairs(pending) do registry.maintenance_set(kind,entry.id,entry.owner,entry.tick) end
+end
 function M.tick(tick)
   local root=registry.get()
   if not registry.supported(root) then return end -- Unknown storage stays inert.

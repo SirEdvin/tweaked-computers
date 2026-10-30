@@ -16,6 +16,8 @@ local undo=require('scripts.computer-undo')
 local blueprints=require('scripts.blueprints')
 local monitor=require('scripts.services.monitor')
 local art=require('scripts.device-art')
+local editor_ui=require('scripts.ui.editor')
+local inspector_ui=require('scripts.ui.peripheral-inspector')
 
 local M={}
 local resume=false
@@ -165,6 +167,19 @@ function M.run()
   assert(notified,notification_error)
   assert(notification_work==0,'settled displays acquired notification discovery work: '..notification_work)
   assert(notification_visits==0,'settled displays were visited to discover notifications: '..notification_visits)
+  local native_game=game; local player_walks,closed_ui_work=0,0
+  _G.game=setmetatable({},{__index=function(_,key)
+    if key=='connected_players' then player_walks=player_walks+1 end
+    return native_game[key]
+  end})
+  local quiet,ui_error=pcall(function()
+    editor_ui.tick(native_game.tick,function(n) closed_ui_work=closed_ui_work+n end)
+    inspector_ui.tick(native_game.tick)
+  end)
+  _G.game=native_game
+  assert(quiet,ui_error)
+  assert(player_walks==0 and closed_ui_work==0,
+    'closed UI acquired connected-player discovery: walks='..player_walks..' work='..closed_ui_work)
   local kv_work,art_work=0,0
   kv.maintenance(game.tick,function(n) kv_work=kv_work+n end)
   art.tick(game.tick,function() end)

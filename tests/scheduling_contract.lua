@@ -36,6 +36,30 @@ function M.run()
   end
   local ok,problem=pcall(function()
     local root=fresh()
+    local calls={}
+    local a,b={token=1},{token=2}
+    assert(registry.viewer_changed('editor',1001,a) and registry.viewer_changed('editor',1002,b))
+    local function viewer(index,session,tick,spend)
+      spend(index==1001 and 100 or 1); calls[index]=(calls[index] or 0)+1; return true
+    end
+    local due=registry.maintenance_next('editor').tick
+    scheduler.viewer_tick('editor',due+1,function() error('undue viewer charged') end,viewer)
+    assert(not next(calls))
+    local paid=scheduler.maintenance(root,due,true)
+    scheduler.viewer_tick('editor',due,function(n) paid(n==100 and 1000000000 or n) end,viewer)
+    assert(not calls[1001] and calls[1002]==1,'refused viewer blocked a fitting peer')
+    assert(registry.maintenance_next('editor').tick==due,'viewer refusal lost due age')
+    scheduler.viewer_tick('editor',due+15,function() end,viewer)
+    assert(calls[1001]==1 and calls[1002]==2,'viewer deadline/cadence lost accepted session')
+    assert(registry.viewer_changed('editor',1001) and registry.viewer_changed('editor',1002))
+    local closed_work=0
+    scheduler.viewer_tick('editor',due+30,function(n) closed_work=closed_work+n end,viewer)
+    assert(closed_work==0 and not registry.maintenance_next('editor'))
+    local clock=registry.maintenance_clock('editor'); clock.initialized=99
+    assert(not registry.viewer_changed('editor',1001,a) and not registry.maintenance_next('editor'))
+    assert(clock.initialized==99 and root.scheduling_diagnostic.code=='E_UNSUPPORTED')
+    report('viewer-deadlines-cadence-refusal-fairness-close')
+    root=fresh()
     local idle={}
     for i=1,32 do idle[i]=computer('function event(e) computer.setState("calls",(computer.getState("calls") or 0)+1) end') end
     scheduler.tick(0)
