@@ -50,13 +50,15 @@ function M.run()
   supply.power_production=100000000; supply.power_usage=0
   for _,position in ipairs({{-4,-5},{-4,2},{7,-5},{8,4},{15,-5}}) do assert(surface.create_entity{name='substation',position=position,force='player'}) end
   assert(runtime.save(c.id,example,0)); assert(runtime.activate(c.id,game.tick))
-  local subscriber=[[return {api_version=1,handlers={start=function()
-    local p=peripheral.find('dashboard','red'); assert(p); p.subscribe('clicked')
-    computer.setState('boots',(computer.getState('boots') or 0)+1)
-  end,clicked=function(e)
-    computer.setState('clicks',(computer.getState('clicks') or 0)+1)
-    computer.setState('last',e)
-  end}}]]
+  local subscriber=[[function start()
+  local p=peripheral.find('dashboard','red'); assert(p); p.subscribe('clicked')
+  computer.setState('boots',(computer.getState('boots') or 0)+1)
+end
+
+function clicked(e)
+  computer.setState('clicks',(computer.getState('clicks') or 0)+1)
+  computer.setState('last',e)
+end]]
   assert(runtime.save(second.id,subscriber,0)); assert(runtime.activate(second.id,game.tick))
 end
 function M.on_player_joined(event)

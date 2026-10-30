@@ -88,34 +88,30 @@ A writer's shared state/KV updates and monitor image are not rolled back when it
 ## Example: threshold control
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      local io = peripheral.find("logic_handler", "red")
-      if io then
-        io.subscribe({
-          input = "red",
-          signals = { { type = "item", name = "iron-plate", quality = "normal" } },
-          initial = true
-        }, "changed")
-      end
-    end,
-    changed = function(event)
-      local io = peripheral.wrap(event.peripheral, event.wire)
-      if not io then return end
-      local count = 0
-      for _, entry in ipairs(event.current) do
-        count = entry.count
-      end
-      local enable = 0
-      if count < 100 then enable = 1 end
-      io.setOutput({
-        { signal = { type = "virtual", name = "signal-A", quality = "normal" }, count = enable }
-      })
-    end
-  }
-}
+function start(event)
+  local io = peripheral.find("logic_handler", "red")
+  if io then
+    io.subscribe({
+      input = "red",
+      signals = { { type = "item", name = "iron-plate", quality = "normal" } },
+      initial = true
+    }, "changed")
+  end
+end
+
+function changed(event)
+  local io = peripheral.wrap(event.peripheral, event.wire)
+  if not io then return end
+  local count = 0
+  for _, entry in ipairs(event.current) do
+    count = entry.count
+  end
+  local enable = 0
+  if count < 100 then enable = 1 end
+  io.setOutput({
+    { signal = { type = "virtual", name = "signal-A", quality = "normal" }, count = enable }
+  })
+end
 ```
 
 The filter above selects one full identity, so its current snapshot has at most one entry. A second computer can receive these circuit signals through its own logic handler; there is no direct computer-message API.

@@ -12,29 +12,25 @@ claiming graphical keyboard/focus/touch delivery.
 Research Native circuit computers; build and power a Dashboard (15 kW) and computer. Connect Network red. Validate, Save and Run, then close the computer, normally open the Dashboard and left-click Acknowledge. The status changes from Ready to Acknowledged through the saved clicked handler. No chart library is required; Console cannot subscribe.
 
 ```lua
-return {
-    api_version = 1,
-    handlers = {
-        start = function(event)
-            local panel = peripheral.find("dashboard", "red")
-            assert(panel, "Connect a powered Dashboard on red")
-            panel.setTab(1, {
-                title = "Overview",
-                content = {type = "column", id = "root", children = {
-                    {type = "label", id = "status", text = "Ready"},
-                    {type = "button", id = "ack", text = "Acknowledge"}
-                }}
-            })
-            panel.subscribe("clicked")
-        end,
-        clicked = function(event)
-            local panel = peripheral.wrap(event.peripheral, event.wire)
-            if event.tab == 1 and event.button == "ack" then
-                panel.setText(1, "status", "Acknowledged")
-            end
-        end
-    }
-}
+function start(event)
+    local panel = peripheral.find("dashboard", "red")
+    assert(panel, "Connect a powered Dashboard on red")
+    panel.setTab(1, {
+        title = "Overview",
+        content = {type = "column", id = "root", children = {
+            {type = "label", id = "status", text = "Ready"},
+            {type = "button", id = "ack", text = "Acknowledge"}
+        }}
+    })
+    panel.subscribe("clicked")
+end
+
+function clicked(event)
+    local panel = peripheral.wrap(event.peripheral, event.wire)
+    if event.tab == 1 and event.button == "ack" then
+        panel.setText(1, "status", "Acknowledged")
+    end
+end
 ```
 
 ## dashboard-charts
@@ -42,8 +38,7 @@ return {
 Use the same powered red-wired Dashboard setup. Optionally enable unmodified factorio-charts 1.2.0 for rolling lines and seconds-only duration bars; without it labels/buttons still work. Twelve startup samples wrap an eight-slot line before opening. Scroll Overview for both charts, switch among six tabs and acknowledge a button. Live label updates preserve the selected tab and unchanged identity selection. X positions mean sample order, not wall time; this is not the native production widget.
 
 ```lua
-return {api_version=1,handlers={
-start=function()
+function start()
   local p=peripheral.find('dashboard','red'); assert(p,'Connect a powered Dashboard on red')
   local available=false
   for _,name in ipairs(peripheral.getMethods(peripheral.getName(p),'red')) do if name=='appendSample' then available=true end end
@@ -65,20 +60,21 @@ start=function()
   p.subscribe('clicked')
   computer.every(60,'refresh')
   computer.setState('boots',(computer.getState('boots') or 0)+1)
-end,
-refresh=function()
+end
+
+function refresh()
   local p=peripheral.find('dashboard','red')
   local n=(computer.getState('updates') or 0)+1
   computer.setState('updates',n)
   p.setText(1,'heartbeat','Updates '..n)
-end,
-clicked=function(event)
+end
+
+function clicked(event)
   local p=peripheral.wrap(event.peripheral,event.wire)
   local count=(computer.getState('clicks') or 0)+1
   computer.setState('clicks',count)
   p.setText(1,'status','Acknowledged '..count)
 end
-}}
 ```
 
 ## production-statistics-program
@@ -86,7 +82,7 @@ end
 Research Recipe Searcher, craft and power a Production Statistics device and connect Network red to the computer. Validate, Save and Run. Logs local native item/fluid/pollution totals and rates, then newest/oldest iron history in both directions. Empty input and complete-result E_LIMIT refusal are distinct; work/allocation exhaustion remains fatal. This small Console example is not an unlimited export.
 
 ```lua
-return {api_version=1,handlers={start=function()
+function start()
   local stats=peripheral.find("production_statistics","red")
   assert(stats,"Connect a powered Production Statistics device on red")
   local function report()
@@ -119,7 +115,7 @@ return {api_version=1,handlers={start=function()
     else error(e) end
   end
   computer.setState("statistics_example",true)
-end}}
+end
 ```
 
 ## production-statistics-monitor
@@ -127,9 +123,9 @@ end}}
 Connect a powered Production Statistics device and monitor on red; use a display of at least 14 columns and 7 rows. Validate, Save and Run, then wait 120 ticks. Displays one-minute iron rates and both 300-sample native histories, oldest-left/newest-right with a shared peak scale. No history is accumulated. Query refused means E_LIMIT, not empty data; No activity means both native series are zero.
 
 ```lua
-return {api_version=1,handlers={
-start=function() computer.every(120,"draw") end,
-draw=function()
+function start() computer.every(120,"draw") end
+
+function draw()
   local stats=peripheral.find("production_statistics","red")
   local screen=peripheral.find("monitor","red")
   assert(stats and screen,"Connect powered statistics and monitor devices on red")
@@ -169,7 +165,7 @@ draw=function()
     else error(e) end
   end
   computer.setState("statistics_monitor",true)
-end}}
+end
 ```
 
 ## factoriopedia-program
@@ -177,38 +173,33 @@ end}}
 Research Recipe Searcher, craft a Factoriopedia Interface and supply 30 kW. Connect its Network to a computer on red. Validate, Save and Run the complete document. Logs item reference rocket capacity, water bounds and both complete name lists (or E_LIMIT); no live silo/tank feasibility is inferred.
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      local encyclopedia = peripheral.find("factoriopedia_interface", "red")
-      assert(encyclopedia, "Connect a powered Factoriopedia Interface on red")
-      local item = encyclopedia.getItem("iron-plate")
-      computer.log(item.name .. " stack size=" .. tostring(item.stack_size))
-      if item.rocket_capacity ~= nil then
-        computer.log("Reference items per rocket=" .. tostring(item.rocket_capacity))
-      else
-        computer.log("No finite mass-limited rocket count")
-      end
-      local fluid = encyclopedia.getFluid("water")
-      computer.log(fluid.name .. " temperature=" .. tostring(fluid.default_temperature)
-        .. ".." .. tostring(fluid.max_temperature) .. " C")
-      local function reportNames(method, label)
-        local ok, result = pcall(method)
-        if ok then
-          computer.log(label .. ": " .. tostring(#result))
-        elseif type(result) == "table" and result.code == "E_LIMIT" then
-          computer.log(label .. ": complete list exceeds shared Data limits")
-        else
-          error(result)
-        end
-      end
-      reportNames(encyclopedia.listItems, "Installed item names")
-      reportNames(encyclopedia.listFluids, "Installed fluid names")
-      computer.setState("factoriopedia_example", true)
+function start(event)
+  local encyclopedia = peripheral.find("factoriopedia_interface", "red")
+  assert(encyclopedia, "Connect a powered Factoriopedia Interface on red")
+  local item = encyclopedia.getItem("iron-plate")
+  computer.log(item.name .. " stack size=" .. tostring(item.stack_size))
+  if item.rocket_capacity ~= nil then
+    computer.log("Reference items per rocket=" .. tostring(item.rocket_capacity))
+  else
+    computer.log("No finite mass-limited rocket count")
+  end
+  local fluid = encyclopedia.getFluid("water")
+  computer.log(fluid.name .. " temperature=" .. tostring(fluid.default_temperature)
+    .. ".." .. tostring(fluid.max_temperature) .. " C")
+  local function reportNames(method, label)
+    local ok, result = pcall(method)
+    if ok then
+      computer.log(label .. ": " .. tostring(#result))
+    elseif type(result) == "table" and result.code == "E_LIMIT" then
+      computer.log(label .. ": complete list exceeds shared Data limits")
+    else
+      error(result)
     end
-  }
-}
+  end
+  reportNames(encyclopedia.listItems, "Installed item names")
+  reportNames(encyclopedia.listFluids, "Installed fluid names")
+  computer.setState("factoriopedia_example", true)
+end
 ```
 
 ## reference-speaker
@@ -439,7 +430,7 @@ end
 
 ## function-program
 
-Power a computer; no peripheral or wire is required. In an empty Editor draft, choose Insert starter (or paste this whole document), Validate, Save, then Run. Insertion and validation do not save or execute anything. The first dispatch calls `sample()` immediately and logs its returned count in Console; the `samples` value in explicit computer state increases once, then once more at the first 60-tick timer deadline. Private `increment` is declared before use and is not exported. `sample` is forward-visible and registration uses its string name, not its function value. Each callback has fresh locals/functions; reapplying keeps the explicit count, while ordinary reload does not replay `start`. These functions are not callable from the live Console. The legacy descriptor examples below remain supported.
+Power a computer; no peripheral or wire is required. In an empty Editor draft, choose Insert starter (or paste this whole document), Validate, Save, then Run. Insertion and validation do not save or execute anything. The first dispatch calls `sample()` immediately and logs its returned count in Console; the `samples` value in explicit computer state increases once, then once more at the first 60-tick timer deadline. Private `increment` is declared before use and is not exported. `sample` is forward-visible and registration uses its string name, not its function value. Each callback has fresh locals/functions; reapplying keeps the explicit count, while ordinary reload does not replay `start`. These functions are not callable from the live Console.
 
 ```lua
 local function increment(value)
@@ -464,35 +455,30 @@ end
 Research Recipe Searcher separately, power it and connect its Network directly to a computer on red. Paste the whole document, Validate, Save and Run. Searches item/fluid products and refines E_LIMIT by exact category; a single category may still exceed 50 or other budgets.
 
 ```lua
-return {
-    api_version = 1,
-    handlers = {
-        start = function(event)
-            local searcher = peripheral.find("recipe_searcher", "red")
-            assert(searcher, "Connect a Recipe Searcher with a red Network wire")
+function start(event)
+    local searcher = peripheral.find("recipe_searcher", "red")
+    assert(searcher, "Connect a Recipe Searcher with a red Network wire")
 
-            local limits = searcher.getLimits()
-            assert(limits.recipe_search_results == 50)
+    local limits = searcher.getLimits()
+    assert(limits.recipe_search_results == 50)
 
-            local ok, recipes = pcall(searcher.findRecipes, "item", "iron-plate")
-            if not ok then
-                if type(recipes) ~= "table" or recipes.code ~= "E_LIMIT" then
-                    error(recipes)
-                end
-                recipes = searcher.findRecipes("item", "iron-plate", "smelting")
-            end
-            for _, recipe in ipairs(recipes) do
-                computer.log(recipe.name .. " / " .. recipe.category
-                    .. " / seconds=" .. tostring(recipe.energy)
-                    .. " / enabled=" .. tostring(recipe.enabled))
-            end
-
-            local fluids = searcher.findRecipes("fluid", "petroleum-gas", "chemistry")
-            computer.setState("recipe_count", #recipes)
-            computer.setState("fluid_recipe_count", #fluids)
+    local ok, recipes = pcall(searcher.findRecipes, "item", "iron-plate")
+    if not ok then
+        if type(recipes) ~= "table" or recipes.code ~= "E_LIMIT" then
+            error(recipes)
         end
-    }
-}
+        recipes = searcher.findRecipes("item", "iron-plate", "smelting")
+    end
+    for _, recipe in ipairs(recipes) do
+        computer.log(recipe.name .. " / " .. recipe.category
+            .. " / seconds=" .. tostring(recipe.energy)
+            .. " / enabled=" .. tostring(recipe.enabled))
+    end
+
+    local fluids = searcher.findRecipes("fluid", "petroleum-gas", "chemistry")
+    computer.setState("recipe_count", #recipes)
+    computer.setState("fluid_recipe_count", #fluids)
+end
 ```
 
 ## peripheral-program
@@ -500,34 +486,30 @@ return {
 Wire a computer NETWORK to any device NETWORK on red. Inspect each color in Peripherals; read program output in Console.
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      computer.on('peripheral_attach', 'changed')
-      computer.on('peripheral_detach', 'changed')
-      for _, wire in ipairs({'red', 'green'}) do
-        local names = peripheral.getNames(wire)
-        computer.setState('names_' .. wire, names)
-        for _, name in ipairs(names) do
-          local info = peripheral.describe(name, wire)
-          local device = peripheral.wrap(name, wire)
-          if info and device then
-            local capacities = device.getLimits()
-            computer.log(wire .. ' / ' .. peripheral.getName(device) .. ' / ' .. info.type)
-            assert(peripheral.getWire(device) == wire and type(capacities) == 'table')
-          end
-        end
+function start(event)
+  computer.on('peripheral_attach', 'changed')
+  computer.on('peripheral_detach', 'changed')
+  for _, wire in ipairs({'red', 'green'}) do
+    local names = peripheral.getNames(wire)
+    computer.setState('names_' .. wire, names)
+    for _, name in ipairs(names) do
+      local info = peripheral.describe(name, wire)
+      local device = peripheral.wrap(name, wire)
+      if info and device then
+        local capacities = device.getLimits()
+        computer.log(wire .. ' / ' .. peripheral.getName(device) .. ' / ' .. info.type)
+        assert(peripheral.getWire(device) == wire and type(capacities) == 'table')
       end
-    end,
-    changed = function(event)
-      computer.log(event.name .. ' / ' .. event.wire .. ' / ' .. event.peripheral)
-      local ok, names = pcall(peripheral.getNames, event.wire)
-      if ok then computer.setState('names_' .. event.wire, names)
-      else computer.log('Discovery unavailable; retry after the next topology event or timer.') end
     end
-  }
-}
+  end
+end
+
+function changed(event)
+  computer.log(event.name .. ' / ' .. event.wire .. ' / ' .. event.peripheral)
+  local ok, names = pcall(peripheral.getNames, event.wire)
+  if ok then computer.setState('names_' .. event.wire, names)
+  else computer.log('Discovery unavailable; retry after the next topology event or timer.') end
+end
 ```
 
 ## logic-controller
@@ -535,32 +517,28 @@ return {
 Follow [your first inserter controller](first-controller.md). Stock INPUT red, discovery NETWORK red, OUTPUT to the inserter.
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      computer.setState("starts", (computer.getState("starts") or 0) + 1)
-      local io = peripheral.find("logic_handler", "red")
-      assert(io, "Wire a logic NETWORK port to the computer on red")
-      io.subscribe({input="red", signals={{type="item",name="iron-plate",quality="normal"}}, initial=true}, "changed")
-      computer.log("Controller subscribed")
-    end,
-    changed = function(event)
-      local io = peripheral.wrap(event.peripheral, event.wire)
-      if not io then return end
-      local stock = 0
-      for _,entry in ipairs(event.current) do stock=entry.count end
-      local enabled = 0
-      if stock < 100 then enabled=1 end
-      io.setOutput({{signal={type="virtual",name="signal-A",quality="normal"},count=enabled}})
-      computer.setState("stock", stock)
-      computer.setState("sample_tick", event.sample_tick)
-      computer.setState("last_changes", event.changes)
-      computer.setState("input_connected", event.connected)
-      computer.setState("resync", event.resync)
-    end
-  }
-}
+function start(event)
+  computer.setState("starts", (computer.getState("starts") or 0) + 1)
+  local io = peripheral.find("logic_handler", "red")
+  assert(io, "Wire a logic NETWORK port to the computer on red")
+  io.subscribe({input="red", signals={{type="item",name="iron-plate",quality="normal"}}, initial=true}, "changed")
+  computer.log("Controller subscribed")
+end
+
+function changed(event)
+  local io = peripheral.wrap(event.peripheral, event.wire)
+  if not io then return end
+  local stock = 0
+  for _,entry in ipairs(event.current) do stock=entry.count end
+  local enabled = 0
+  if stock < 100 then enabled=1 end
+  io.setOutput({{signal={type="virtual",name="signal-A",quality="normal"},count=enabled}})
+  computer.setState("stock", stock)
+  computer.setState("sample_tick", event.sample_tick)
+  computer.setState("last_changes", event.changes)
+  computer.setState("input_connected", event.connected)
+  computer.setState("resync", event.resync)
+end
 ```
 
 ## kv-program
@@ -568,25 +546,21 @@ return {
 Connect one powered database NETWORK on red. Save/Run; inspect the delayed status/TTL in Console.
 
 ```lua
-return {
-  api_version=1,
-  handlers={
-    start=function(event)
-      local db=peripheral.find('kv_database','red')
-      if not db then return end
-      db.hset('machine','status','ready','owner',computer.getID())
-      db.expire('machine',30)
-      computer.after(60,'inspect')
-    end,
-    inspect=function(event)
-      local db=peripheral.find('kv_database','red')
-      if not db then return end
-      local fields=db.hgetall('machine')
-      computer.log(fields.status or 'expired')
-      computer.log('TTL='..tostring(db.ttl('machine')))
-    end
-  }
-}
+function start(event)
+  local db=peripheral.find('kv_database','red')
+  if not db then return end
+  db.hset('machine','status','ready','owner',computer.getID())
+  db.expire('machine',30)
+  computer.after(60,'inspect')
+end
+
+function inspect(event)
+  local db=peripheral.find('kv_database','red')
+  if not db then return end
+  local fields=db.hgetall('machine')
+  computer.log(fields.status or 'expired')
+  computer.log('TTL='..tostring(db.ttl('machine')))
+end
 ```
 
 ## monitor-program
@@ -594,28 +568,28 @@ return {
 Connect a powered monitor NETWORK on red. Run, then activate a character cell; use matching adjacent tiles to test resize.
 
 ```lua
-return {api_version=1,handlers={
-  start=function(event)
-    computer.on('monitor_touch','touched')
-    computer.on('monitor_resize','resized')
-    local m=peripheral.find('monitor','red')
-    if m then
-      m.setBackgroundColour(colors.black); m.setTextColour(colors.lime)
-      m.clear(); m.setCursorPos(1,1); m.write('READY')
-    end
-  end,
-  touched=function(event)
-    local m=peripheral.wrap(event.peripheral,event.wire)
-    if m then
-      m.setCursorPos(1,1)
-      m.write(tostring(event.x)..','..tostring(event.y))
-    end
-  end,
-  resized=function(event)
-    local m=peripheral.wrap(event.peripheral,event.wire)
-    if m then m.setCursorPos(1,1); m.write('RESIZED') end
+function start(event)
+  computer.on('monitor_touch','touched')
+  computer.on('monitor_resize','resized')
+  local m=peripheral.find('monitor','red')
+  if m then
+    m.setBackgroundColour(colors.black); m.setTextColour(colors.lime)
+    m.clear(); m.setCursorPos(1,1); m.write('READY')
   end
-}}
+end
+
+function touched(event)
+  local m=peripheral.wrap(event.peripheral,event.wire)
+  if m then
+    m.setCursorPos(1,1)
+    m.write(tostring(event.x)..','..tostring(event.y))
+  end
+end
+
+function resized(event)
+  local m=peripheral.wrap(event.peripheral,event.wire)
+  if m then m.setCursorPos(1,1); m.write('RESIZED') end
+end
 ```
 
 ## monitor-plot-program
@@ -623,101 +597,101 @@ return {api_version=1,handlers={
 Connect up to four powered logical monitors on red/green. Uses one shared sine sample and replaces one complete row per screen, retaining older rows as a rolling trace. Startup discovery, geometry inspection, selection and clearing are deliberately sliced across callbacks. Checks at most eight names per color; red wins duplicate names. Resize/detach events restart discovery; unavailable screens are retried periodically. This is not a full-grid repaint or an unlimited factory/network benchmark.
 
 ```lua
-return {api_version=1,handlers={
- start=function(e)
-  computer.setState('plot_refresh',true)
-  computer.setState('plot_sample',0)
-  local limits=computer.getLimits()
-  computer.setState('plot_member_limit',limits.sync_group_members)
-  computer.setState('plot_cell_limit',limits.sync_group_cells)
-  computer.every(10,'plot')
-  computer.every(300,'refresh')
-  computer.on('peripheral_attach','refresh')
-  computer.on('peripheral_detach','refresh')
-  computer.on('monitor_resize','refresh')
- end,
- refresh=function(e)
-  local views=computer.getState('plot_views') or {}
-  if e.name~='timer' or computer.getState('plot_missing') or #views==0 then computer.setState('plot_refresh',true) end
- end,
- plot=function(e)
-  local stage=computer.getState('plot_stage')
-  if computer.getState('plot_refresh') then
-   computer.setState('plot_refresh',false)
-   computer.setState('plot_views',{})
-   computer.setState('plot_seen',{})
-   computer.setState('plot_missing',false)
-   computer.setState('plot_wire',1)
-   stage='scan'
-  end
-  local views=computer.getState('plot_views') or {}
-  if stage=='scan' then
-   local wire=computer.getState('plot_wire')==1 and 'red' or 'green'
-   local ok,names=pcall(peripheral.getNames,wire)
-   if not ok then return end
-   local candidates={}
-   for i=1,math.min(#names,8) do candidates[i]={name=names[i],wire=wire} end
-   computer.setState('plot_candidates',candidates)
-   computer.setState('plot_index',1)
-   stage='inspect'
-  elseif stage=='inspect' then
-   local candidates=computer.getState('plot_candidates')
-   local index=computer.getState('plot_index')
-   local ref=candidates[index]
-   if ref then
-    local seen=computer.getState('plot_seen')
-    if not seen[ref.name] and #views<computer.getState('plot_member_limit') then
-     local ok,w,h=pcall(function()
-      if peripheral.getType(ref.name,ref.wire)~='monitor' then return end
-      return peripheral.call(ref.name,ref.wire,'getSize')
-     end)
-     if not ok then computer.setState('plot_missing',true) end
-     if ok and w then
-      local cells=w*h
-      for _,view in ipairs(views) do cells=cells+view.width*view.height end
-      if cells<=computer.getState('plot_cell_limit') then
-       views[#views+1]={name=ref.name,wire=ref.wire,width=w,height=h}
-       seen[ref.name]=true; computer.setState('plot_seen',seen)
-       computer.setState('plot_views',views)
-      end
+function start(e)
+ computer.setState('plot_refresh',true)
+ computer.setState('plot_sample',0)
+ local limits=computer.getLimits()
+ computer.setState('plot_member_limit',limits.sync_group_members)
+ computer.setState('plot_cell_limit',limits.sync_group_cells)
+ computer.every(10,'plot')
+ computer.every(300,'refresh')
+ computer.on('peripheral_attach','refresh')
+ computer.on('peripheral_detach','refresh')
+ computer.on('monitor_resize','refresh')
+end
+
+function refresh(e)
+ local views=computer.getState('plot_views') or {}
+ if e.name~='timer' or computer.getState('plot_missing') or #views==0 then computer.setState('plot_refresh',true) end
+end
+
+function plot(e)
+ local stage=computer.getState('plot_stage')
+ if computer.getState('plot_refresh') then
+  computer.setState('plot_refresh',false)
+  computer.setState('plot_views',{})
+  computer.setState('plot_seen',{})
+  computer.setState('plot_missing',false)
+  computer.setState('plot_wire',1)
+  stage='scan'
+ end
+ local views=computer.getState('plot_views') or {}
+ if stage=='scan' then
+  local wire=computer.getState('plot_wire')==1 and 'red' or 'green'
+  local ok,names=pcall(peripheral.getNames,wire)
+  if not ok then return end
+  local candidates={}
+  for i=1,math.min(#names,8) do candidates[i]={name=names[i],wire=wire} end
+  computer.setState('plot_candidates',candidates)
+  computer.setState('plot_index',1)
+  stage='inspect'
+ elseif stage=='inspect' then
+  local candidates=computer.getState('plot_candidates')
+  local index=computer.getState('plot_index')
+  local ref=candidates[index]
+  if ref then
+   local seen=computer.getState('plot_seen')
+   if not seen[ref.name] and #views<computer.getState('plot_member_limit') then
+    local ok,w,h=pcall(function()
+     if peripheral.getType(ref.name,ref.wire)~='monitor' then return end
+     return peripheral.call(ref.name,ref.wire,'getSize')
+    end)
+    if not ok then computer.setState('plot_missing',true) end
+    if ok and w then
+     local cells=w*h
+     for _,view in ipairs(views) do cells=cells+view.width*view.height end
+     if cells<=computer.getState('plot_cell_limit') then
+      views[#views+1]={name=ref.name,wire=ref.wire,width=w,height=h}
+      seen[ref.name]=true; computer.setState('plot_seen',seen)
+      computer.setState('plot_views',views)
      end
     end
-    computer.setState('plot_index',index+1)
-   elseif computer.getState('plot_wire')==1 then
-    computer.setState('plot_wire',2); stage='scan'
-   else stage='select' end
-  elseif stage=='select' then
-   local refs={}
-   for _,view in ipairs(views) do refs[#refs+1]={name=view.name,wire=view.wire} end
-   local ok=pcall(peripheral.setMonitorSyncGroup,refs)
-   if ok then computer.setState('plot_index',1); stage='clear'
-   else computer.setState('plot_refresh',true) end
-  elseif stage=='clear' then
-   local index=computer.getState('plot_index'); local view=views[index]
-   if view then
-    local ok=pcall(peripheral.call,view.name,view.wire,'clear')
-    if not ok then computer.setState('plot_refresh',true) end
-    computer.setState('plot_index',index+1)
-   else stage='draw' end
-  elseif stage=='draw' then
-   local sample=computer.getState('plot_sample')+1
-   local value=math.sin(computer.getTick()/120)
-   local ok=pcall(function()
-    for _,view in ipairs(views) do
-     local width,height=view.width,view.height
-     local x=1+(sample-1)%width
-     local y=1+math.floor((1-value)*(height-1)/2+0.5)
-     local text=string.rep(' ',x-1)..'*'..string.rep(' ',width-x)
-     peripheral.call(view.name,view.wire,'setCursorPos',1,y)
-     peripheral.call(view.name,view.wire,'blit',text,string.rep('5',width),string.rep('f',width))
-    end
-   end)
-   if ok then computer.setState('plot_sample',sample)
-   else computer.setState('plot_refresh',true) end
-  end
-  computer.setState('plot_stage',stage)
+   end
+   computer.setState('plot_index',index+1)
+  elseif computer.getState('plot_wire')==1 then
+   computer.setState('plot_wire',2); stage='scan'
+  else stage='select' end
+ elseif stage=='select' then
+  local refs={}
+  for _,view in ipairs(views) do refs[#refs+1]={name=view.name,wire=view.wire} end
+  local ok=pcall(peripheral.setMonitorSyncGroup,refs)
+  if ok then computer.setState('plot_index',1); stage='clear'
+  else computer.setState('plot_refresh',true) end
+ elseif stage=='clear' then
+  local index=computer.getState('plot_index'); local view=views[index]
+  if view then
+   local ok=pcall(peripheral.call,view.name,view.wire,'clear')
+   if not ok then computer.setState('plot_refresh',true) end
+   computer.setState('plot_index',index+1)
+  else stage='draw' end
+ elseif stage=='draw' then
+  local sample=computer.getState('plot_sample')+1
+  local value=math.sin(computer.getTick()/120)
+  local ok=pcall(function()
+   for _,view in ipairs(views) do
+    local width,height=view.width,view.height
+    local x=1+(sample-1)%width
+    local y=1+math.floor((1-value)*(height-1)/2+0.5)
+    local text=string.rep(' ',x-1)..'*'..string.rep(' ',width-x)
+    peripheral.call(view.name,view.wire,'setCursorPos',1,y)
+    peripheral.call(view.name,view.wire,'blit',text,string.rep('5',width),string.rep('f',width))
+   end
+  end)
+  if ok then computer.setState('plot_sample',sample)
+  else computer.setState('plot_refresh',true) end
  end
-}}
+ computer.setState('plot_stage',stage)
+end
 ```
 
 ## smooth-sine-chart
@@ -725,154 +699,149 @@ return {api_version=1,handlers={
 Connect up to four powered logical monitors on red/green. Draws a connected green line using 2×3 mosaic subpixels instead of text markers, with a gray axis. Samples one phase and updates all selected screens every two ticks, submitting only rows whose glyphs or colors changed. Uses scale 2 when a footprint axis exceeds three tiles, otherwise scale 1, and bounds grids to 32 columns / 22 rows. Ships with version 0.1.7 and its runtime/presenter optimizations; older published archives retain their original example. Paste the complete source, then Validate, Save and Run. Do not run other content writers on the same screens with this row-cached example. See the [subpixel design and verification boundaries](monitor-animation.md).
 
 ```lua
-return {
-    api_version = 1,
-    handlers = {
-        start = function()
-            computer.deleteState("smooth_chart")
-            computer.every(2, "plot")
-        end,
+function start()
+    computer.deleteState("smooth_chart")
+    computer.every(2, "plot")
+end
 
-        plot = function()
-            local C, P, M, S = computer, peripheral, math, string
-            local ok = pcall(function()
-                local c = C.getState("smooth_chart") or { next = 0 }
-                local tick = C.getTick()
+function plot()
+    local C, P, M, S = computer, peripheral, math, string
+    local ok = pcall(function()
+        local c = C.getState("smooth_chart") or { next = 0 }
+        local tick = C.getTick()
 
-                if tick >= c.next then
-                    local refs = {}
-                    for _, wire in ipairs({ "red", "green" }) do
-                        local names = P.getNames(wire)
-                        for i = 1, M.min(#names, 16) do
-                            local name = names[i]
-                            local info = P.describe(name, wire)
-                            if #refs < 8 and info.type == "monitor" and info.powered then
-                                local m = P.wrap(name, wire)
-                                local scale = M.max(info.footprint.width, info.footprint.height) > 3 and 2 or 1
-                                if m.getTextScale() ~= scale then
-                                    m.setTextScale(scale)
-                                end
-                                refs[#refs + 1] = { name = name, wire = wire }
-                            end
+        if tick >= c.next then
+            local refs = {}
+            for _, wire in ipairs({ "red", "green" }) do
+                local names = P.getNames(wire)
+                for i = 1, M.min(#names, 16) do
+                    local name = names[i]
+                    local info = P.describe(name, wire)
+                    if #refs < 8 and info.type == "monitor" and info.powered then
+                        local m = P.wrap(name, wire)
+                        local scale = M.max(info.footprint.width, info.footprint.height) > 3 and 2 or 1
+                        if m.getTextScale() ~= scale then
+                            m.setTextScale(scale)
                         end
+                        refs[#refs + 1] = { name = name, wire = wire }
                     end
-
-                    P.setMonitorSyncGroup(refs)
-                    local views = P.getMonitorSyncGroup().members
-                    for _, v in ipairs(views) do
-                        for _, old in ipairs(c.views or {}) do
-                            if v.name == old.name then
-                                v.width = old.width;
-                                v.height = old.height
-                            end
-                        end
-                    end
-                    c.views = views;
-                    c.next = tick + 600
                 end
-
-                c.phase = tick / 120
-                local previous = c.frames or {}
-                local frames = {}
-                for _, v in ipairs(c.views) do
-                    local m = P.wrap(v.name, v.wire)
-                    local w, h = m.getSize()
-                    if w < 3 or h < 3 or w > 32 or h > 22 then
-                        error("Resized")
-                    end
-                    if v.width ~= w or v.height ~= h then
-                        m.setCursorBlink(false)
-                    end
-                    m.setCursorPos(1, 1)
-
-                    local key = w .. "/" .. h
-                    local old = v.width == w and v.height == h and previous[key]
-                    local rows = frames[key]
-                    if not rows then
-                        rows = {}
-                        local pw, ph = w * 2, (h - 1) * 3
-                        local masks = {}
-                        local previous_y
-
-                        -- Join samples on a 2x3-subpixel grid, not with text markers.
-                        -- Store only occupied cell masks, not a full pixel canvas.
-                        for px = 0, pw - 1 do
-                            local py = 1 + M.floor(
-                                (1 - M.sin(c.phase + px * 6.283185307179586 / (pw - 1)))
-                                    * (ph - 3) / 2 + 0.5
-                            )
-                            local from = previous_y or py
-                            for sy = M.min(from, py), M.max(from, py) do
-                                local cell = M.floor(sy / 3) * w + M.floor(px / 2) + 1
-                                local bit = 2 ^ ((sy % 3) * 2 + px % 2)
-                                local mask = masks[cell] or 0
-                                if mask % (bit * 2) < bit then
-                                    masks[cell] = mask + bit
-                                end
-                            end
-                            previous_y = py
-                        end
-
-                        -- Pack text/foreground/background together so row-cache
-                        -- comparisons include color inversions as well as glyphs.
-                        rows[1] = S.sub(" SINE / LIVE" .. S.rep(" ", w), 1, w)
-                            .. S.rep("0", w) .. S.rep("f", w)
-                        local blank = S.rep(" ", w) .. S.rep("5", w) .. S.rep("f", w)
-                        for y = 2, h do
-                            rows[y] = blank
-                        end
-                        local middle = M.floor(ph / 2)
-                        local axis = 3 * 2 ^ ((middle % 3) * 2)
-                        local af, ab = "7", "f"
-                        if axis >= 32 then
-                            axis = 63 - axis
-                            af, ab = ab, af
-                        end
-                        rows[M.floor(middle / 3) + 2] = S.rep(S.char(128 + axis), w)
-                            .. S.rep(af, w) .. S.rep(ab, w)
-
-                        -- Encode only occupied cells; never scan a dense pixel canvas.
-                        for cell, mask in pairs(masks) do
-                            local y = M.floor((cell - 1) / w) + 2
-                            local x = (cell - 1) % w + 1
-                            local fg, bg = "5", "f"
-                            -- The sixth subpixel is always the background.
-                            -- Complement the mask and swap colors when it is lit.
-                            if mask >= 32 then
-                                mask = 63 - mask
-                                fg, bg = bg, fg
-                            end
-                            local glyph = mask == 0 and " " or S.char(128 + mask)
-                            local row = rows[y]
-                            rows[y] = S.sub(row, 1, x - 1) .. glyph
-                                .. S.sub(row, x + 1, w + x - 1) .. fg
-                                .. S.sub(row, w + x + 1, w * 2 + x - 1) .. bg
-                                .. S.sub(row, w * 2 + x + 1)
-                        end
-                        frames[key] = rows
-                    end
-
-                    for y = 1, h do
-                        if not old or rows[y] ~= old[y] then
-                            m.setCursorPos(1, y)
-                            m.blit(S.sub(rows[y], 1, w), S.sub(rows[y], w + 1, w * 2), S.sub(rows[y], w * 2 + 1))
-                        end
-                    end
-                    v.width = w;
-                    v.height = h
-                    v.phase = c.phase
-                end
-
-                c.frames = frames
-                C.setState("smooth_chart", c)
-            end)
-
-            if not ok then
-                C.deleteState("smooth_chart")
             end
+
+            P.setMonitorSyncGroup(refs)
+            local views = P.getMonitorSyncGroup().members
+            for _, v in ipairs(views) do
+                for _, old in ipairs(c.views or {}) do
+                    if v.name == old.name then
+                        v.width = old.width;
+                        v.height = old.height
+                    end
+                end
+            end
+            c.views = views;
+            c.next = tick + 600
         end
-    }
-}
+
+        c.phase = tick / 120
+        local previous = c.frames or {}
+        local frames = {}
+        for _, v in ipairs(c.views) do
+            local m = P.wrap(v.name, v.wire)
+            local w, h = m.getSize()
+            if w < 3 or h < 3 or w > 32 or h > 22 then
+                error("Resized")
+            end
+            if v.width ~= w or v.height ~= h then
+                m.setCursorBlink(false)
+            end
+            m.setCursorPos(1, 1)
+
+            local key = w .. "/" .. h
+            local old = v.width == w and v.height == h and previous[key]
+            local rows = frames[key]
+            if not rows then
+                rows = {}
+                local pw, ph = w * 2, (h - 1) * 3
+                local masks = {}
+                local previous_y
+
+                -- Join samples on a 2x3-subpixel grid, not with text markers.
+                -- Store only occupied cell masks, not a full pixel canvas.
+                for px = 0, pw - 1 do
+                    local py = 1 + M.floor(
+                        (1 - M.sin(c.phase + px * 6.283185307179586 / (pw - 1)))
+                            * (ph - 3) / 2 + 0.5
+                    )
+                    local from = previous_y or py
+                    for sy = M.min(from, py), M.max(from, py) do
+                        local cell = M.floor(sy / 3) * w + M.floor(px / 2) + 1
+                        local bit = 2 ^ ((sy % 3) * 2 + px % 2)
+                        local mask = masks[cell] or 0
+                        if mask % (bit * 2) < bit then
+                            masks[cell] = mask + bit
+                        end
+                    end
+                    previous_y = py
+                end
+
+                -- Pack text/foreground/background together so row-cache
+                -- comparisons include color inversions as well as glyphs.
+                rows[1] = S.sub(" SINE / LIVE" .. S.rep(" ", w), 1, w)
+                    .. S.rep("0", w) .. S.rep("f", w)
+                local blank = S.rep(" ", w) .. S.rep("5", w) .. S.rep("f", w)
+                for y = 2, h do
+                    rows[y] = blank
+                end
+                local middle = M.floor(ph / 2)
+                local axis = 3 * 2 ^ ((middle % 3) * 2)
+                local af, ab = "7", "f"
+                if axis >= 32 then
+                    axis = 63 - axis
+                    af, ab = ab, af
+                end
+                rows[M.floor(middle / 3) + 2] = S.rep(S.char(128 + axis), w)
+                    .. S.rep(af, w) .. S.rep(ab, w)
+
+                -- Encode only occupied cells; never scan a dense pixel canvas.
+                for cell, mask in pairs(masks) do
+                    local y = M.floor((cell - 1) / w) + 2
+                    local x = (cell - 1) % w + 1
+                    local fg, bg = "5", "f"
+                    -- The sixth subpixel is always the background.
+                    -- Complement the mask and swap colors when it is lit.
+                    if mask >= 32 then
+                        mask = 63 - mask
+                        fg, bg = bg, fg
+                    end
+                    local glyph = mask == 0 and " " or S.char(128 + mask)
+                    local row = rows[y]
+                    rows[y] = S.sub(row, 1, x - 1) .. glyph
+                        .. S.sub(row, x + 1, w + x - 1) .. fg
+                        .. S.sub(row, w + x + 1, w * 2 + x - 1) .. bg
+                        .. S.sub(row, w * 2 + x + 1)
+                end
+                frames[key] = rows
+            end
+
+            for y = 1, h do
+                if not old or rows[y] ~= old[y] then
+                    m.setCursorPos(1, y)
+                    m.blit(S.sub(rows[y], 1, w), S.sub(rows[y], w + 1, w * 2), S.sub(rows[y], w * 2 + 1))
+                end
+            end
+            v.width = w;
+            v.height = h
+            v.phase = c.phase
+        end
+
+        c.frames = frames
+        C.setState("smooth_chart", c)
+    end)
+
+    if not ok then
+        C.deleteState("smooth_chart")
+    end
+end
 ```
 
 ## configurator-program
@@ -880,7 +849,7 @@ return {
 Discovery NETWORK red; separate TARGETS green to one inserter. Sets A > 4, not A > 0. Supply an external A signal of at least 5 for motion.
 
 ```lua
-return {api_version=1,handlers={start=function(e)
+function start(e)
   local cfg=peripheral.find('configurator','red'); assert(cfg)
   local devices=cfg.getDevices('green')
   for _,device in ipairs(devices) do
@@ -892,7 +861,7 @@ return {api_version=1,handlers={start=function(e)
       computer.setState('configured',device.id)
     end
   end
-end}}
+end
 ```
 
 ## configurator-sections
@@ -900,7 +869,7 @@ end}}
 Discovery NETWORK red; TARGETS green to one constant combinator. Adds a section, activates it and saves its actual index in computer state; it intentionally writes no signal filters.
 
 ```lua
-return {api_version=1,handlers={start=function(event)
+function start(event)
   local cfg=peripheral.find('configurator','red'); assert(cfg)
   for _,device in ipairs(cfg.getDevices('green')) do
     if device.type=='constant-combinator' and device.configurable then
@@ -909,7 +878,7 @@ return {api_version=1,handlers={start=function(event)
       computer.setState('section',index)
     end
   end
-end}}
+end
 ```
 
 ## factory-controller
@@ -917,93 +886,93 @@ end}}
 Follow the complete [factory wiring tutorial](factory.md). Keep one device per type reachable. Paste this whole document.
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      local io = peripheral.find("logic_handler", "red")
-      local db = peripheral.find("kv_database", "red")
-      local monitor = peripheral.find("monitor", "red")
-      local cfg = peripheral.find("configurator", "red")
-      assert(io and db and monitor and cfg, "Connect all four peripherals")
-      computer.setState("starts", (computer.getState("starts") or 0) + 1)
-      if computer.getState("enabled") == nil then computer.setState("enabled", true) end
-      local configured = 0
-      for _, device in ipairs(cfg.getDevices("green")) do
-        if device.type == "inserter" then
-          local caps = cfg.getCapabilities(device.id, "green")
-          local enable = caps.settings.circuit_enable_disable
-          local condition = caps.settings.circuit_condition
-          if enable and enable.writable and condition and condition.writable then
-            cfg.setConfiguration(device.id, {set = {
-              circuit_enable_disable = true,
-              circuit_condition = {
-                first_signal = {type = "virtual", name = "signal-A", quality = "normal"},
-                comparator = ">", constant = 0
-              }
-            }}, "green")
-            configured = configured + 1
-          end
-        end
+function start(event)
+  local io = peripheral.find("logic_handler", "red")
+  local db = peripheral.find("kv_database", "red")
+  local monitor = peripheral.find("monitor", "red")
+  local cfg = peripheral.find("configurator", "red")
+  assert(io and db and monitor and cfg, "Connect all four peripherals")
+  computer.setState("starts", (computer.getState("starts") or 0) + 1)
+  if computer.getState("enabled") == nil then computer.setState("enabled", true) end
+  local configured = 0
+  for _, device in ipairs(cfg.getDevices("green")) do
+    if device.type == "inserter" then
+      local caps = cfg.getCapabilities(device.id, "green")
+      local enable = caps.settings.circuit_enable_disable
+      local condition = caps.settings.circuit_condition
+      if enable and enable.writable and condition and condition.writable then
+        cfg.setConfiguration(device.id, {set = {
+          circuit_enable_disable = true,
+          circuit_condition = {
+            first_signal = {type = "virtual", name = "signal-A", quality = "normal"},
+            comparator = ">", constant = 0
+          }
+        }}, "green")
+        configured = configured + 1
       end
-      assert(configured > 0, "Connect a configurable inserter to the target port")
-      -- Full expansion capability readback and subscription admission share
-      -- the callback ceiling; finish setup on the next real simulation tick.
-      computer.after(1, "ready")
-    end,
-    ready = function(event)
-      local io = peripheral.find("logic_handler", "red")
-      local monitor = peripheral.find("monitor", "red")
-      assert(io and monitor, "Required peripheral disconnected during setup")
-      monitor.setTextScale(1)
-      io.subscribe({input = "red", signals = {
-        {type = "item", name = "iron-plate", quality = "normal"}
-      }, initial = true}, "changed")
-      computer.on("monitor_touch", "touched")
-      computer.on("monitor_resize", "resized")
-      computer.every(60, "refresh")
-      computer.after(1, "refresh")
-    end,
-    changed = function(event)
-      computer.after(1, "refresh")
-    end,
-    touched = function(event)
-      local monitor = peripheral.find("monitor", "red")
-      if monitor and event.peripheral == peripheral.getName(monitor) then
-        computer.setState("enabled", not computer.getState("enabled"))
-        computer.after(1, "refresh")
-      end
-    end,
-    resized = function(event)
-      computer.after(1, "refresh")
-    end,
-    refresh = function(event)
-      local io = peripheral.find("logic_handler", "red")
-      local db = peripheral.find("kv_database", "red")
-      local monitor = peripheral.find("monitor", "red")
-      assert(io and db and monitor, "Required peripheral disconnected")
-      local count = io.readSignal("red", {type = "item", name = "iron-plate", quality = "normal"})
-      local output = 0
-      if computer.getState("enabled") and count < 100 then output = 1 end
-      io.setOutput({{signal = {type = "virtual", name = "signal-A", quality = "normal"}, count = output}})
-      local status = "STOPPED"
-      if output == 1 then status = "FILLING" end
-      db.hset("stock:iron", "count", tostring(count), "status", status,
-        "sample_tick", tostring(computer.getTick()))
-      db.expire("stock:iron", 3)
-      monitor.setBackgroundColor(colors.black)
-      monitor.setTextColor(colors.white)
-      monitor.clear()
-      monitor.setCursorPos(1, 1)
-      monitor.write("Iron: " .. tostring(count))
-      monitor.setCursorPos(1, 2)
-      monitor.setTextColor(colors.lime)
-      monitor.write(status)
-      monitor.setCursorPos(1, 3)
-      monitor.write("Touch to toggle")
     end
-  }
-}
+  end
+  assert(configured > 0, "Connect a configurable inserter to the target port")
+  -- Full expansion capability readback and subscription admission share
+  -- the callback ceiling; finish setup on the next real simulation tick.
+  computer.after(1, "ready")
+end
+
+function ready(event)
+  local io = peripheral.find("logic_handler", "red")
+  local monitor = peripheral.find("monitor", "red")
+  assert(io and monitor, "Required peripheral disconnected during setup")
+  monitor.setTextScale(1)
+  io.subscribe({input = "red", signals = {
+    {type = "item", name = "iron-plate", quality = "normal"}
+  }, initial = true}, "changed")
+  computer.on("monitor_touch", "touched")
+  computer.on("monitor_resize", "resized")
+  computer.every(60, "refresh")
+  computer.after(1, "refresh")
+end
+
+function changed(event)
+  computer.after(1, "refresh")
+end
+
+function touched(event)
+  local monitor = peripheral.find("monitor", "red")
+  if monitor and event.peripheral == peripheral.getName(monitor) then
+    computer.setState("enabled", not computer.getState("enabled"))
+    computer.after(1, "refresh")
+  end
+end
+
+function resized(event)
+  computer.after(1, "refresh")
+end
+
+function refresh(event)
+  local io = peripheral.find("logic_handler", "red")
+  local db = peripheral.find("kv_database", "red")
+  local monitor = peripheral.find("monitor", "red")
+  assert(io and db and monitor, "Required peripheral disconnected")
+  local count = io.readSignal("red", {type = "item", name = "iron-plate", quality = "normal"})
+  local output = 0
+  if computer.getState("enabled") and count < 100 then output = 1 end
+  io.setOutput({{signal = {type = "virtual", name = "signal-A", quality = "normal"}, count = output}})
+  local status = "STOPPED"
+  if output == 1 then status = "FILLING" end
+  db.hset("stock:iron", "count", tostring(count), "status", status,
+    "sample_tick", tostring(computer.getTick()))
+  db.expire("stock:iron", 3)
+  monitor.setBackgroundColor(colors.black)
+  monitor.setTextColor(colors.white)
+  monitor.clear()
+  monitor.setCursorPos(1, 1)
+  monitor.write("Iron: " .. tostring(count))
+  monitor.setCursorPos(1, 2)
+  monitor.setTextColor(colors.lime)
+  monitor.write(status)
+  monitor.setCursorPos(1, 3)
+  monitor.write("Touch to toggle")
+end
 ```
 
 ## shared-telemetry
@@ -1011,29 +980,25 @@ return {
 Use the [second-computer setup](factory.md#second-computer-shared-and-private-data): shared database on red, separate physical database on green.
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      local shared = peripheral.find("kv_database", "red")
-      local independent = peripheral.find("kv_database", "green")
-      assert(shared and independent, "Connect one database on each color")
-      assert(peripheral.getName(shared) ~= peripheral.getName(independent), "Use two physical databases")
-      shared.set("observer", computer.getID())
-      independent.set("observer", "private")
-      computer.every(60, "inspect")
-    end,
-    inspect = function(event)
-      local shared = peripheral.find("kv_database", "red")
-      local independent = peripheral.find("kv_database", "green")
-      assert(shared and independent, "Database disconnected")
-      local stock = shared.hgetall("stock:iron")
-      computer.setState("shared_status", stock.status or "expired")
-      computer.setState("shared_count", stock.count or "expired")
-      computer.setState("private_status", independent.hget("stock:iron", "status") or "absent")
-      computer.setState("observer", shared.get("observer"))
-      computer.log((stock.status or "expired") .. " / private=" .. independent.get("observer"))
-    end
-  }
-}
+function start(event)
+  local shared = peripheral.find("kv_database", "red")
+  local independent = peripheral.find("kv_database", "green")
+  assert(shared and independent, "Connect one database on each color")
+  assert(peripheral.getName(shared) ~= peripheral.getName(independent), "Use two physical databases")
+  shared.set("observer", computer.getID())
+  independent.set("observer", "private")
+  computer.every(60, "inspect")
+end
+
+function inspect(event)
+  local shared = peripheral.find("kv_database", "red")
+  local independent = peripheral.find("kv_database", "green")
+  assert(shared and independent, "Database disconnected")
+  local stock = shared.hgetall("stock:iron")
+  computer.setState("shared_status", stock.status or "expired")
+  computer.setState("shared_count", stock.count or "expired")
+  computer.setState("private_status", independent.hget("stock:iron", "status") or "absent")
+  computer.setState("observer", shared.get("observer"))
+  computer.log((stock.status or "expired") .. " / private=" .. independent.get("observer"))
+end
 ```

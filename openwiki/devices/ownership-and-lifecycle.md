@@ -8,25 +8,25 @@ sources:
     resource: repo://prototypes/devices.lua
   - id: openwiki-source-d804efd8219272266fe9cedb
     resource: repo://scripts/blueprints.lua
+  - id: openwiki-source-2c8179a140ad91d42350e8a8
+    resource: repo://scripts/computer-undo.lua
   - id: openwiki-source-efb72cb67b97c27491e72b6a
     resource: repo://scripts/lifecycle-data.lua
   - id: openwiki-source-765149bc0fcb867d9e5de6c4
     resource: repo://scripts/lifecycle.lua
-  - id: openwiki-source-6017f73285ae6bbf6c3d040a
-    resource: repo://scripts/registry.lua
   - id: openwiki-source-0ddacafef71462f8b63089cd
     resource: repo://scripts/runtime/computer.lua
-generated: { by: "hermes", at: "2026-10-15T13:11:13.133Z" }
+generated: { by: "hermes", at: "2026-10-29T22:50:29.161Z" }
 verified:
   - by: openwiki/0.7.1
-    at: 2026-10-15T13:11:13.133Z
+    at: 2026-10-29T22:50:29.161Z
 ---
 
 # Physical ownership, material data and lifecycle
 
 ## A device is an owned family
 
-`device-definitions.lua` is shared host tuning for recipes, widths, power, cardinal socket coordinates/colors and pad boxes. At `layout_version=2`, every visible body is a circuit-capable constant-combinator shell and the Network endpoint. Private, nonselectable electric carriers supply the original power policy. Only logic Input/Output and configurator Factory targets require separate protected, device-specific selectable role pads. Computers, KV and monitors have no selectable Network helper. Passive shells/pads have no output sections and stay disabled; settings paste normalizes Network again. Only logic Output deliberately publishes a bank.
+`device-definitions.lua` is shared host tuning for recipes, widths, power, cardinal socket coordinates/colors and pad boxes. At `layout_version=2`, each custom composite's visible body is a circuit-capable constant-combinator shell and the Network endpoint. Private, nonselectable electric carriers supply the current power policy. Only logic Input/Output and configurator Factory targets require separate protected, device-specific selectable role pads. Single-role families have no selectable Network helper. Passive shells/pads have no output sections and stay disabled; settings paste normalizes Network again. Only logic Output deliberately publishes a bank. Adopted native radars and speakers retain their own native bodies instead of this shell/helper layout.
 
 `lifecycle.build` allocates physical parts before publishing an identity, binds each exact child and records body position/direction/scope. Duplicate raised builds return the existing identity rather than replaying material import. Rollback removes staged parts unless cleanup failure requires an inert recoverable record. Registry lookup checks the exact retained object against the role binding: reused native numbers or a replacement at the same position cannot retarget the old ID.
 
@@ -43,15 +43,15 @@ Computer power loss invokes cleanup and retains only queued start/timer events, 
 | Operation | Computer | KV | Monitor |
 | --- | --- | --- | --- |
 | Ordinary save/load | Active source metadata, explicit state and pending records remain; dispatch reconstructs callbacks | Physical-local database and absolute expiry remain | Group/model/render jobs remain |
-| Mining into material item | Saved and formerly active source, explicit state, label; no runtime execution | Audited data snapshot, with expiry semantics retained | Scale, palette, foreground/background, blink; no old group buffer/cursor |
-| Place material item | New identity, stopped, no queue/timers/subscriptions; recovery text is not auto-run | Import data only from actually consumed material item | New grouping from tile settings |
+| Mining into material item | Plain hardware: no source, application state or label | Audited data snapshot, with expiry semantics retained | Scale, palette, foreground/background, blink; no old group buffer/cursor |
+| Place material item | New blank/stopped identity; old computer item payloads are ignored, with no queue/timers/subscriptions | Import data only from actually consumed material item | New grouping from tile settings |
 | Blueprint/settings copy | Saved source/label, not active execution or application state | No database duplication | Settings only |
 | Clone | Settings into a new stopped identity; no application state/run/output | Empty fresh store | Settings, fresh grouping |
 | Destruction | Explicit loss, teardown and outputs cleared | Explicit data loss | Membership regrouping/teardown |
 
-Material snapshots are host formats with strict version/shape/size validation; import never compiles source. Computer snapshot validation recomputes aggregate state accounting. Unsupported retained computer data becomes unmineable/faulted for recovery rather than being serialized destructively. Settings-copy increments the destination source revision monotonically and preserves its existing explicit state while stopping its old run.
+Host snapshots have strict version/shape/size validation; import never compiles source. Computer snapshots belong to explicit settings/undo recovery, not ordinary item transport, and recompute aggregate state accounting. Unsupported retained computer data becomes unmineable/faulted for recovery rather than being destroyed. Settings-copy increments the destination source revision monotonically and preserves its existing explicit state while stopping its old run. Qualifying undo restores saved source, explicit state and formerly active recovery text under a new stopped identity; it is not an automatic runtime restart or position-based recovery.
 
-The mining event serializes into the actual matching native result stack before unregistering ownership. Placement reads adapter tags only from the consumed item; blueprint/script tags cannot counterfeit a carried database. Successful material restoration takes precedence over blueprint settings. On material restore failure placement is refused/refunded unless cleanup itself requires retention.
+For data-bearing non-computer families, the mining event serializes into the actual matching native result stack before unregistering ownership. Placement reads adapter tags only from the consumed item; blueprint/script tags cannot counterfeit a carried database. Computer legacy item payloads never override a blueprint or qualifying undo snapshot. Successful non-computer material restoration takes precedence over blueprint settings. On material restore failure placement is refused/refunded unless cleanup itself requires retention. Dashboards retain accepted layout/chart data in items, while configuration copies exclude source chart histories and preserve only compatible destination history.
 
 ## Blueprints and cloned helper events
 
@@ -67,7 +67,7 @@ Area clone events can arrive for helpers separately from bodies. A bounded retai
 
 ## Maintenance seams and tests
 
-Material adapters register `initialize`, `snapshot`, `restore` and a fixed tag during control parsing. Ownership stays independent from service data formats. Keep state-bearing import separate from settings-only import and preserve explicit review/copy-to-draft for formerly active text.
+Non-computer material adapters register `initialize`, `snapshot`, `restore` and a fixed tag during control parsing. Computer initialization and operation-owned undo have separate registration seams. Ownership stays independent from service data formats. Keep state-bearing recovery separate from settings-only import and preserve explicit review/copy-to-draft for formerly active text.
 
 `tests/redesign_engine.lua` covers physical shell/role contracts; `tests/lifecycle_engine.lua` covers exact owned teardown, native blueprints/clones and material data. `tools/rd1_upgrade.py` builds a populated pinned-alpha save with only an opt-in test hook, then cold-upgrades the unchanged candidate and checks refusal/data/wires. Use production context for those ownership fixtures so a second event registry does not fabricate duplicate helpers. No graphical rotations, mining UX or multiplayer join is established. See [operations](../operations/build-test-and-assets.md).
 

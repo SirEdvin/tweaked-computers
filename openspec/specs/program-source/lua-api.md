@@ -1,45 +1,42 @@
 # Saved-program declaration contract
 
-This normative companion specifies the authoring surface in [spec.md](spec.md), available in 0.1.10 ALPHA. It adds no host API method. Both source forms use the real saved-program compiler, sandbox and activation path; the earlier planning probe is not feature acceptance.
+Normative companion to [spec.md](spec.md). A saved program is a declaration-only document. This surface adds no host method and uses the existing saved-program compiler, sandbox and activation path. Unchanged runtime, Data, peripheral and Console contracts remain authoritative for their own APIs.
 
-## Forms and names
+## Grammar and names
 
-A saved program uses exactly one form:
+A document contains at least one exported `function name(parameters) ... end`, with optional top-level `local function helper(parameters) ... end`, comments and semicolons. API version 1 is implicit.
 
-1. Legacy: the existing literal `return { api_version = 1, handlers = { ... } }` document, unchanged.
-2. Declarations: at least one top-level `function name(parameters) ... end`, with optional top-level `local function helper(parameters) ... end`, comments and semicolons. API version 1 is implicit.
+Only simple names declare exports: `function object.method(...)`, methods with `:`, `name = function(...)`, conditional definitions and declarations inside a top-level `do` are not export mechanisms. Top-level returns, calls, initializers, assignments, loops and conditionals are invalid. The restriction does not prohibit supported statements, local/nested functions, constructors or returns inside function bodies. Empty/comment-only/private-helper-only documents are invalid.
 
-Only simple names are declarations: not `function object.method(...)`, methods with `:`, `name = function(...)`, conditionally defined functions, or declarations enclosed by a top-level `do`. Those forms do not become alternative export mechanisms. Existing supported statements and nested/local functions remain available inside function bodies.
+Public and private top-level identifiers are distinct, match `[A-Za-z_][A-Za-z_0-9]*` and fit `identifier_bytes`. Neither kind may use `_ENV`, `_G`, the reserved `__tc` prefix, an approved API/library/built-in name or a forbidden global from the saved-language contract. This includes `print`, `xpcall`, `unpack` and `_VERSION`. Diagnostics identify the original source; names are never silently renamed. Body-local bindings and parameters retain ordinary lexical shadowing.
 
-Top-level identifiers are distinct across public and private declarations, use `[A-Za-z_][A-Za-z_0-9]*`, and fit `identifier_bytes`. Neither kind of top-level declaration may use `_ENV`, `_G`, the reserved `__tc` prefix, an approved global/API/library name, `print`, or a global explicitly excluded by the existing saved-program language contract (including host, dynamic-load, raw/metatable, coroutine and IO facilities). Reject ambiguous or forbidden names; never silently rename the user's source. Nested lexical locals retain existing language rules.
-
-Every non-local top-level declaration is exported, including helpers the author elects not to mark local. Exports count against `handler_names` (currently 64). Private helpers do not consume export slots, but remain subject to all existing source, compile, generated-text and native syntax bounds; their capacity is not unlimited.
+Every non-local top-level function is exported, whether or not the author later registers it. Exports consume the existing `handler_names` allowance. Private helpers consume no export slot but remain subject to source, token, compiler, generated-text, native syntax, execution and allocation bounds. No bound is widened by this change.
 
 ## Scope and values
 
-- All exported function names are visible to other program functions regardless of declaration order. This is a deliberate module-like source convention, not permission to assign globals.
-- Private `local function` helpers follow Lua lexical scope: declare them before functions that use them. They can call themselves and can reference exported functions declared later. Private forward declarations through `local helper` assignments are outside this declaration-only top level.
-- Function parameters and body locals shadow names normally. Writes to such genuine lexical bindings remain allowed; writes to an unshadowed public binding remain forbidden.
-- Within a callback, referring to an export returns the same guarded function value used by the handler table. Values can be passed, returned, put into temporary guest tables and called through `pcall`; they cannot be persisted through Data-only APIs.
-- Every dispatched callback gets fresh function identities, closures, locals and private helpers. No function or captured local survives as application state. Continue using `computer.getState`/`setState` for continuity.
+- Exported names are visible to all program functions regardless of declaration order, including mutual calls. This does not permit global assignment.
+- Private `local function` helpers have normal lexical declaration order and self-recursion. Declare them before functions that use them; they can reference later exported functions. Top-level variable forward declarations are not allowed.
+- Parameters and body-local variables can shadow an export or built-in normally. An unshadowed exported binding cannot be reassigned or redefined from inside a callback.
+- An exported function has the same guarded callable identity as its corresponding dispatch entry within one callback. It can be passed, returned, placed in temporary guest tables and called through the approved protected-call helpers.
+- Each dispatched callback constructs fresh functions, closures, locals and helpers. Explicit application continuity uses `computer.getState`/`setState`, not retained functions or captured locals. Functions remain invalid values for Data-only APIs; failed storage does not mutate the previous value.
 
-## Invocation
+## Calls and registration
 
 | Operation | Arguments and results | Execution meaning |
 | --- | --- | --- |
-| `sample(...)` | Exactly the supplied bounded Lua arguments; ordinary scalar/multiple-return adjustment, false/nil holes and zero-return arity | Synchronous call inside the current callback; no copied or synthesized event |
-| `local f = sample; f(...)` | Same as direct call | Same ephemeral callable identity and current guard |
-| `pcall(sample, ...)` | Existing `true, results...` or `false, error`; tuple bounds include the status value | Ordinary errors catchable; fatal budget/stop controls escape |
-| `computer.every(60, "sample")` | Existing interval/name/optional payload signature; returns timer ID | Later callback receives the existing TimerEvent; return values are not scheduler messages |
-| `computer.on(event_name, "sample")` / logic `subscribe(options, "sample")` | Unchanged APIs and existing event payloads | Explicit event registration by exported name |
+| `sample(...)` | Supplied bounded Lua arguments; ordinary scalar/multiple-return adjustment, false/nil holes and zero-return arity | Synchronous call under the current callback; no synthesized event |
+| `local f = sample; f(...)` | Same as a direct call | Same ephemeral identity, guard, authority and run |
+| `pcall(sample, ...)` | Existing status-prefixed result tuple or safe ordinary error; tuple bounds include status | Ordinary failures are catchable; fatal budget/stop control is not |
+| `computer.every(60, "sample")` | Existing interval/name/optional-payload signature; returns a timer ID | Later dispatch supplies its ordinary TimerEvent in a fresh callback environment |
+| `computer.on(event_name, "sample")` / logic `subscribe(options, "sample")` | Existing signatures, results and event payloads | Explicit registration by exported name |
 
-Automatic dispatch still passes one copied event. Direct calls pass no event unless the caller supplies one; an event parameter may therefore be nil. Direct calls retain native argument aliases, not API Data-copy semantics. They do not grant a new budget, new peripheral authority or another run. All runtime/API calls continue to use dots, not colons.
+Automatic dispatch passes one copied event, with existing trusted-native event rules unchanged. Direct calls pass only their supplied arguments and preserve native argument aliases; they do not apply API Data-copy semantics, create a callback, enqueue work or renew any credits. A direct call with no arguments supplies no synthetic event. Runtime/API methods retain dot-call syntax.
 
-`start` is an optional exported function automatically queued once per successful explicit activation. An ordinary `start(...)` call simply runs that body, including any registrations the author explicitly repeats; it does not activate a new generation. No other name automatically subscribes to an event. A private `local function start` is not the startup handler.
+`start` is optional and is queued once per successful explicit activation when exported. Calling `start(...)` explicitly is an ordinary function call; effects and registrations in its body occur, but it does not create a new run. A private `local function start` is not a startup handler. No event-like name subscribes automatically. Registration APIs require an exported name string, not a function value, private helper or nested-function name.
 
-The live Console never inherits these bindings. No `computer.call`, Console `run`, guest file import or external function-invocation API is added.
+The live Console does not inherit program exports. Its statement/expression syntax, scratch graphs and ephemeral locals remain separate. There is no added external function-invocation method, executable file import, Console program launcher or background callback API.
 
-## Example: immediate work and recurring work
+## Example: immediate and recurring work
 
 ```lua
 local function increment(value)
@@ -59,16 +56,20 @@ function sample(event)
 end
 ```
 
-Acceptance: Validate and Save have no sampling effects; activation samples once immediately, then the first timer deadline samples once more. `sample()` has no event argument; timer delivery supplies TimerEvent. `increment` is private, `sample` is forward-referenced, and ordinary reload does not rerun `start`. Reapplying explicitly starts another generation while retaining the explicit sample count under existing state rules.
+Validate and Save have no sampling effects. Activation samples once immediately; the first timer deadline samples once more. `sample()` has no event argument; timer delivery supplies TimerEvent. `increment` is private, `sample` is forward-visible, and ordinary reload does not rerun `start`. Explicit reapplication starts another generation while retaining the existing explicit count.
 
-## Diagnostics, limits and compatibility
+## Errors, admission and lifecycle
 
-The [expanded base-global inventory](../computer-runtime/lua-api.md#expanded-lua-base-globals) is shared by both saved forms and Console. Print is callable inside callbacks only; top-level print remains an invalid source effect. Newly available xpcall/unpack/_VERSION (and the other approved globals) are reserved public/private top-level declaration names. Genuine lexical locals/parameters may shadow them; legacy descriptor handler keys are not global declarations and keep their existing names. A failed colliding candidate preserves the old run. A pre-update colliding active source faults on its next synchronized reconstruction, preserving exact source/application state without load-time mutation; rename and explicitly Save/Run. Noncolliding sources retain versions and pending work without startup replay.
+| Condition | Existing result |
+| --- | --- |
+| Invalid top-level statement, missing export, duplicate/reserved declaration, unavailable global or forbidden global write | `E_PROGRAM`, original source line/column, no candidate execution or replacement of the active run |
+| Declared source/inventory/generated-text envelope exceeded | Existing `E_LIMIT`; previous active run retained |
+| Insufficient compilation or reconstruction admission | Existing `E_BUDGET`; no renewed credits or unguarded retry |
+| Invalid name or function value supplied to a named-registration API | Existing `E_ARGUMENT`; no new registration |
+| Executable or otherwise invalid value supplied to a Data-only API | Existing Data refusal; previous stored value retained |
 
-- Invalid source shape, duplicate/reserved names, forbidden global writes and mixed formats produce `E_PROGRAM` with original source line/column before replacement of the previous run. An excessive declared inventory/source envelope produces the existing `E_LIMIT`; insufficient compilation/reconstruction credits produce the existing `E_BUDGET`.
-- Unknown names in function bodies remain compile-time unavailable-name errors; this syntax does not make arbitrary unresolved globals readable.
-- Registering a function value, undeclared export or private helper keeps the existing `E_ARGUMENT` behavior. Function values in durable Data remain invalid. Helper runtime diagnostics point to the helper's original source; lifecycle attribution still names the externally dispatched handler.
-- No new limits or budgets. Function creation, reference movement, calls, recursion and collection operations pay existing guard admission. Same-source warm and cold compiler proofs must spend identically, including partially refused admission.
-- No module-level variables or effects, whether persistent or ephemeral. No implicit `require`, file execution, VM, coroutine, metatable or unrestricted Lua environment.
-- Existing descriptor source and saved active programs keep their behavior; they are not rewritten or granted new implicit sibling-function bindings. The two forms share lifecycle and APIs, not necessarily identical compilation cost for different source strings.
-- Retain API version 1, compiler representation version 2 and storage schema version 1. Reconstruct from the exact active source on synchronized dispatch, never on load. Switching formats is an ordinary explicit Save/Apply operation; failed candidates preserve the previous run.
+Diagnostics in a directly called helper identify that helper's original source location; run/revision/dispatched-handler attribution keeps its existing meaning. Function binding, creation, reference movement, ordinary/protected calls and recursion retain guard admission. For the same source and initial credits, warm and cold cache paths must agree on success, refusal and paid prefixes. Caller-mutated generated text or handler inventories are not executable authority.
+
+Validate, Save and Run/Apply retain their separate effects. Failed candidates preserve the active run, registrations and state. Compatible active sources retain their exact bytes, run identity, explicit state, timer deadlines, pending work and spent same-tick credits across cold reload. Reconstruction occurs only on synchronized dispatch, never during load; startup and completed effects are not replayed. No source conversion, new setting, storage migration or blanket API/compiler-version rejection is introduced.
+
+If an active declaration collides with a newly reserved built-in, normal synchronized reconstruction reports the collision and faults safely while preserving source, explicit state and recovery information. Load itself neither rewrites the source nor executes it. Noncolliding declarations continue without forced restart.

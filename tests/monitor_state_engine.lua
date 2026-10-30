@@ -42,7 +42,7 @@ local function unchanged(saved)
 end
 local function guest(c,text)
   local ctx=admission.context(admission.new(),c.id,game.tick)
-  local plan,e=compiler.compile('return {api_version=1,handlers={start=function(e) '..text..' end}}',ctx)
+  local plan,e=compiler.compile('function start(e) '..text..' end',ctx)
   assert(plan,e and e.message)
   local ok,why=compiler.run(plan,'start',{},function(g) return runtime.services(c,game.tick,g) end,ctx)
   assert(ok,serpent.line(why))
@@ -60,9 +60,9 @@ local function fuel()
     if r and r.body.valid then lifecycle.power_entity(r).energy=100000 end
   end
 end
-local source=[[return {api_version=1,handlers={start=function(e)
+local source=[[function start(e)
   computer.setState('boots',(computer.getState('boots') or 0)+1)
-end}}]]
+end]]
 local function lane(c) return c.monitor_sync and registry.get().monitors.presentation.lanes[c.monitor_sync.key] end
 local function select_group(c)
   guest(c,[[local refs={}

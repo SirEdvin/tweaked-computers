@@ -7,10 +7,10 @@ Run a player's event-driven factory program through bounded native Lua callbacks
 ## Requirements
 
 ### Requirement: Native named-handler execution
-The saved-program runtime SHALL execute one active source document using named, non-suspending native Lua handlers conforming to `lua-api.md`. It MUST NOT interpret Lua instructions, introduce a VM fallback, expose a filesystem, or emulate an operating-system shell. The independent Console command surface SHALL obey the bounded `console-shell` contract; it does not relax saved-handler syntax, create background callbacks or replace the saved program.
+The saved-program runtime SHALL execute one active function-declaration document using named, non-suspending native Lua handlers conforming to the `program-source` contract and `lua-api.md`. It MUST NOT interpret Lua instructions, introduce a VM fallback, expose a filesystem, or emulate an operating-system shell. The independent Console SHALL obey the bounded `console-shell` contract; it does not relax saved-handler syntax, create background callbacks or replace the saved program.
 
 #### Scenario: Start an event-driven program
-- **WHEN** the player runs a valid document defining a `start` handler
+- **WHEN** the player runs a valid document defining an exported `start` function
 - **THEN** the computer begins a new run generation and invokes that handler once
 - **AND** subsequent callbacks run only for registered events, subscriptions or timers.
 
@@ -18,6 +18,11 @@ The saved-program runtime SHALL execute one active source document using named, 
 - **WHEN** a document requests an unsupported language feature, dynamic code loading, coroutine suspension or forbidden host access
 - **THEN** validation reports a source-located diagnostic before activation
 - **AND** the previous valid active program is not replaced.
+
+#### Scenario: Validate and reconstruct the same language
+- **WHEN** a saved candidate is validated for activation or an accepted active source is reconstructed for dispatch
+- **THEN** both operations enforce the same declaration-only grammar and named-handler rules
+- **AND** neither stored metadata nor caller-supplied generated text bypasses source validation or selects another execution path.
 
 ### Requirement: Explicit durable state
 Saved handlers SHALL persist application data only through the documented state API. Callback locals and closures MUST NOT become durable state. State reads and writes SHALL defensively copy validated, bounded plain data. Console-only globals SHALL use the separate bounded shell graph and symbolic-binding contract, never saved executable functions or command replay; this exception SHALL NOT expand ordinary Data or saved-handler retention.

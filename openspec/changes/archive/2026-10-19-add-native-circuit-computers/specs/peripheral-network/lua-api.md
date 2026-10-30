@@ -72,21 +72,16 @@ Monitor touch/resize events deduplicate a logical display per computer registrat
 ## Example: inspect both channels without bridging them
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      for _, wire in ipairs({ "red", "green" }) do
-        for _, name in ipairs(peripheral.getNames(wire)) do
-          local info = peripheral.describe(name, wire)
-          if info then
-            computer.log(wire .. " / " .. name .. " / " .. info.type)
-          end
-        end
+function start(event)
+  for _, wire in ipairs({ "red", "green" }) do
+    for _, name in ipairs(peripheral.getNames(wire)) do
+      local info = peripheral.describe(name, wire)
+      if info then
+        computer.log(wire .. " / " .. name .. " / " .. info.type)
       end
     end
-  }
-}
+  end
+end
 ```
 
 ## Required cases

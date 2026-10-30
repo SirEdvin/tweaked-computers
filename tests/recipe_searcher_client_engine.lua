@@ -4,16 +4,17 @@ local lifecycle=require('scripts.lifecycle')
 local runtime=require('scripts.runtime.computer')
 local scheduler=require('scripts.scheduler')
 local defs=require('scripts.device-definitions')
-local M={}; local loaded=false
-local source=[[return {api_version=1,handlers={start=function(e) computer.every(15,'query') end,
-query=function(e)
+local M={}
+local source=[[function start(e) computer.every(15,'query') end
+
+function query(e)
   local s=peripheral.find('recipe_searcher','red'); assert(s)
   local a=s.findRecipes('item','advanced-circuit')
   local b=peripheral.find('recipe_searcher','green').findRecipes('item','advanced-circuit')
   assert(#a==#b)
   for i,v in ipairs(a) do assert(v.name==b[i].name and v.enabled==b[i].enabled) end
   computer.setState('recipes',a); computer.setState('queries',(computer.getState('queries') or 0)+1)
-end}}]]
+end]]
 local function f() return storage.tc_recipe_client end
 local function equal(a,b)
   if type(a)~=type(b) then return false end
@@ -61,7 +62,7 @@ local function readback()
   table.sort(peers)
   return {tick=game.tick,computer=c.id,queries=c.state.queries,recipes=c.state.recipes,
     retained=x.retained,phase=x.phase,peers=peers,force_enabled=game.forces.player.recipes['advanced-circuit'].enabled,
-    late_join_retained=x.late_join_retained,cold=x.cold}
+    late_join_retained=x.late_join_retained}
 end
 local function publish()
   local data=helpers.table_to_json(readback())
@@ -81,7 +82,7 @@ function M.on_player_joined(event)
   else log('TC_RECIPE_PEER_JOIN index='..p.index..' retained=false') end
 end
 function M.on_load()
-  loaded=true
+  -- A joining client also loads; process-local flags cannot publish saved state.
   local x=f()
   if x.retained then
     assert(equal(registry.record(x.c).state.recipes,x.retained))
@@ -91,7 +92,7 @@ end
 function M.on_configuration_changed() error('unexpected scene configuration change') end
 function M.on_tick(event)
   local x=f(); local c=registry.record(x.c)
-  if loaded then x.cold=x.retained~=nil; loaded=false end
+
   scheduler.tick(event.tick)
   assert(c.status=='running',serpent.line(c.diagnostic))
   if c.state.queries and x.phase=='boot' then

@@ -11,18 +11,14 @@
 <section id="workspace"><h2>Code gets the room.</h2><p>Factory Planner inspires the native framing, compact header and contextual actions—not a web dashboard. These five tabs separate activities. The Editor opens first; output, help, devices and recovery never form a stack underneath it.</p><p class="mock-caption">Interactive layout concept, not a native screenshot. Try the tabs and Focus. Other controls illustrate placement only.</p>
 <div class="machine" id="machine"><div class="titlebar"><span>Computer</span><span class="grip" aria-hidden="true"></span><span class="status">● Stopped</span><button id="focus" aria-pressed="false">Focus</button><button disabled aria-label="Close window (illustration)">×</button></div>
 <div class="tabs" role="tablist" aria-label="Computer workspace"><button id="tab-editor" class="active" role="tab" aria-controls="editor" aria-selected="true">Editor</button><button id="tab-console" role="tab" aria-controls="console" aria-selected="false">Console</button><button id="tab-peripherals" role="tab" aria-controls="peripherals" aria-selected="false">Peripherals</button><button id="tab-reference" role="tab" aria-controls="reference" aria-selected="false">Reference</button><button id="tab-maintenance" role="tab" aria-controls="maintenance" aria-selected="false">Maintenance</button></div>
-<div class="workspace"><div class="panel" id="editor" role="tabpanel" aria-labelledby="tab-editor"><div class="toolbar"><button disabled>Validate</button><button disabled>Save</button><button disabled class="primary">Run</button><button disabled>Stop</button><span class="push"></span><span class="hint">One document · Lua API v1</span></div><div class="codebox" tabindex="0" aria-label="Read-only shipped example"><pre><span class="kw">return</span> {
-  api_version = 1,
-  handlers = {
-    start = <span class="kw">function</span>(event)
-      computer.log(<span class="str">"Controller started"</span>)
-      computer.on(<span class="str">"peripheral_attach"</span>, <span class="str">"attached"</span>)
-    <span class="kw">end</span>,
-    attached = <span class="kw">function</span>(event)
-      computer.log(event.peripheral .. <span class="str">" attached on "</span> .. event.wire)
-    <span class="kw">end</span>
-  }
-}</pre></div><div class="foot">Saved draft · No active run · Save and Run remain separate</div></div>
+<div class="workspace"><div class="panel" id="editor" role="tabpanel" aria-labelledby="tab-editor"><div class="toolbar"><button disabled>Validate</button><button disabled>Save</button><button disabled class="primary">Run</button><button disabled>Stop</button><span class="push"></span><span class="hint">One document · Lua API v1</span></div><div class="codebox" tabindex="0" aria-label="Read-only shipped example"><pre><span class="kw">function</span> start(event)
+  computer.log(<span class="str">"Controller started"</span>)
+  computer.on(<span class="str">"peripheral_attach"</span>, <span class="str">"attached"</span>)
+<span class="kw">end</span>
+
+<span class="kw">function</span> attached(event)
+  computer.log(event.peripheral .. <span class="str">" attached on "</span> .. event.wire)
+<span class="kw">end</span></pre></div><div class="foot">Saved draft · No active run · Save and Run remain separate</div></div>
 <div class="panel" id="console" role="tabpanel" aria-labelledby="tab-console"><h3>Console</h3><div class="toolbar"><button disabled>Follow output: on</button><span class="hint">Bounded, selectable output. No REPL.</span></div><div class="log">No output yet.<br><br>Save and run your program to see computer.log output here.</div><div class="foot">Reading old output does not fight automatic scrolling when Follow is off.</div></div>
 <div class="panel" id="peripherals" role="tabpanel" aria-labelledby="tab-peripherals"><h3>Peripherals</h3><div class="toolbar"><button disabled class="primary">Red network</button><button disabled>Green network</button><span class="push"></span><button disabled>Refresh</button></div><div class="notice">Example layout. Real names and availability will come from authorized discovery.</div><table class="sample-table"><thead><tr><th>Device</th><th>API name</th><th>State</th></tr></thead><tbody><tr><td>Monitor</td><td><code>&lt;discovered name&gt;</code></td><td>Powered</td></tr><tr><td>KV database</td><td><code>&lt;discovered name&gt;</code></td><td>Unpowered</td></tr></tbody></table><p>Select a device to inspect its methods and connection. Pending discovery is shown as pending, never disguised as an empty successful result.</p></div>
 <div class="panel" id="reference" role="tabpanel" aria-labelledby="tab-reference"><h3>Reference</h3><div class="refgrid"><aside>Getting started<br>Computer<br>Peripherals<br>Monitor<br>KV database<br>Logic handler<br>Configurator<br>Examples</aside><div><h3>Save is not Run</h3><p>Validate checks the draft without effects. Save commits your source but leaves the current program alone. Run or Apply activates the saved revision.</p><p>Stop retains source, state and peripheral data. Reset State is a separate, confirmed operation in Maintenance.</p><div class="notice">Topic/search navigation and selectable examples. No undocumented API, new shell or filesystem.</div></div></div></div>

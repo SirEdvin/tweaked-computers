@@ -10,9 +10,7 @@ certification. Historical releases are immutable.
 - **Plain function programs:** exported `function name(...) ... end` declarations,
   optional private `local function` helpers, forward-visible exports and ordinary
   guarded direct/alias/protected calls. The maintained starter calls `sample()`
-  immediately and also registers it by name for a later timer. Legacy returned
-  descriptors remain supported; do not mix the two forms or add module-level
-  effects/variables. Locals/functions are fresh for each callback, not durable
+  immediately and also registers it by name for a later timer. Locals/functions are fresh for each callback, not durable
   state. Console bindings remain separate. See the [language guide](player/api/language.md).
 - **Live world-maintenance setting:** change `tc-maintenance-work-per-tick` in Map
   settings. The default remains **200000**, within the unchanged shared-host
@@ -44,7 +42,6 @@ Do not install GitHub's automatic source archives or the `tc-smoke` test compani
 Compare the downloaded ZIP with the release's `SHA256SUMS`/`SHA1SUMS` files.
 
 API version 1, compiler representation 2 and storage schema 1 remain unchanged.
-Existing supported descriptor programs are not rewritten or forcibly restarted;
 ordinary reload executes no guest code and does not replay startup. Validate and
 Save do not run a candidate; Run/Apply explicitly starts another generation.
 Keep the pre-upgrade save and its matching 0.1.9 ZIP rather than downgrading a save

@@ -52,25 +52,21 @@ Accepted content counts against a published live-content budget. Serialization m
 ## Example: cache one machine's state
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      local db = peripheral.find("kv_database", "red")
-      if not db then return end
-      db.hset("machine", "status", "ready", "owner", computer.getID())
-      db.expire("machine", 30)
-      computer.after(60, "inspect")
-    end,
-    inspect = function(event)
-      local db = peripheral.find("kv_database", "red")
-      if not db then return end
-      local fields = db.hgetall("machine")
-      computer.log(fields.status or "expired")
-      computer.log("TTL=" .. tostring(db.ttl("machine")))
-    end
-  }
-}
+function start(event)
+  local db = peripheral.find("kv_database", "red")
+  if not db then return end
+  db.hset("machine", "status", "ready", "owner", computer.getID())
+  db.expire("machine", 30)
+  computer.after(60, "inspect")
+end
+
+function inspect(event)
+  local db = peripheral.find("kv_database", "red")
+  if not db then return end
+  local fields = db.hgetall("machine")
+  computer.log(fields.status or "expired")
+  computer.log("TTL=" .. tostring(db.ttl("machine")))
+end
 ```
 
 This is a contract example, not a deployed Redis service. The stored owner is a string identity, not a direct computer-message address.

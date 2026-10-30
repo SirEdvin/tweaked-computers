@@ -30,7 +30,7 @@ local function connect(a,b,color)
   assert(lifecycle.connector(a,'network',color).connect_to(lifecycle.connector(b,'network',color),false))
 end
 local function guest(c,body)
-  local source='return {api_version=1,handlers={start=function(e) '..body..' end}}'
+  local source='function start(e) '..body..' end'
   local ctx=runtime.context(c,game.tick)
   local plan,problem=compiler.compile(source,ctx); assert(plan,serpent.line(problem))
   local ok,diagnostic=compiler.run(plan,'start',{},function(g) return runtime.services(c,game.tick,g) end,ctx)
@@ -105,18 +105,20 @@ local cases={
     computer.setState('enabled',a[1].enabled)
   ]]}
 }
-local busy=[[return {api_version=1,handlers={start=function(e) computer.every(1,'work') end,
- work=function(e) computer.setState('samples',(computer.getState('samples') or 0)+1) end}}]]
-local query_source=[[return {api_version=1,handlers={start=function(e) computer.every(1,'query') end,
- query=function(e)
-   local s=peripheral.find('recipe_searcher','red'); local a=s.findRecipes('item','tc-rs-fifty')
-   assert(#a==50); computer.setState('queries',(computer.getState('queries') or 0)+1)
- end}}]]
-local exhausted_source=[[return {api_version=1,handlers={start=function(e)
+local busy=[[function start(e) computer.every(1,'work') end
+
+function work(e) computer.setState('samples',(computer.getState('samples') or 0)+1) end]]
+local query_source=[[function start(e) computer.every(1,'query') end
+
+function query(e)
+  local s=peripheral.find('recipe_searcher','red'); local a=s.findRecipes('item','tc-rs-fifty')
+  assert(#a==50); computer.setState('queries',(computer.getState('queries') or 0)+1)
+end]]
+local exhausted_source=[[function start(e)
   local s=peripheral.find('recipe_searcher','red')
   local ok,e=pcall(function() for i=1,100 do local a=s.findRecipes('item','tc-rs-fifty'); assert(#a==50) end end)
   computer.setState('escaped',true)
-end}}]]
+end]]
 local function snapshot()
   local x=f(); local root=registry.get(); local c=registry.record(x.c)
   return {computer=c,state=c.state,active=c.active,query=c.state.retained,searcher=registry.record(x.s),

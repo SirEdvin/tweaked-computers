@@ -4,7 +4,7 @@ This is the authorized native-only model. It is not Lua interpreted in Lua, byte
 
 ## Accepted document shape
 
-One literal `return { api_version = 1, handlers = { name = function(event) ... end, ... } }`. No extra descriptor keys, dynamic handler keys, duplicate handler names, module-level side effects, module-level helper initialization or other top-level statements except comments/empty statements are accepted. Handler names are nonempty bounded identifiers. The descriptor factory is recreated for each callback so captured temporary objects never acquire an undocumented lifetime across callbacks.
+Saved programs contain one or more exported function declarations, optional private local-function helpers, comments and empty statements. Top-level returns, calls, values and control flow are forbidden. Each callback reconstructs fresh ephemeral functions; captured objects never acquire an undocumented lifetime.
 
 Inside a handler, support ordinary local declarations/assignments, literals, bounded tables, `if`/`elseif`/`else`, `do`, `return`, `break`, numeric `for`, generic iteration, `while`, `repeat`, local helper functions and guest function calls. Loops are valid syntax but consume enforced work on every iteration; recursion is valid only within the enforced call-depth/work ceiling. Nested helper closures are ephemeral and cannot be registered as callbacks or persisted as Data. Asynchronous APIs accept a declared handler's name, not a function value.
 

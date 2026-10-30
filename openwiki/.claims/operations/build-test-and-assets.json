@@ -1,64 +1,60 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:94b4144bdc33298628fd123ebaecc8d0423b1c546d7a462dab9448b084c04af2",
+  "pageVersion": "sha256:0f651500f65a871998fc6da9ae3b43b090c1bcfd515226c294db69285df067dc",
   "claims": [
     {
       "id": "claim_ff7fc687d62649a2a466ff6e6ed2684b",
       "statement": "The builder rejects in-checkout output, verifies parser/asset inventories and hashes, excludes source-only Python/caches and refuses prohibited executable suffixes, then creates deterministic explicit-inventory ZIPs with payload hashes; openwiki is outside its packaged directory list.",
       "evidence": [
         {
-          "resource": "repo://tools/build.py#L10-L20",
-          "version": "repo-lines-v1:sha256:eb2fec63b634b286e250db7a54374fd4e90f60224602c4389a681640a87fe72c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjMGNhZjQ0MWExYWFkMjI0MGU3YWFjY2JiMmE3MzkxNWZjNWNlNjJhOTBlYjg1NzgzNmQ5MDVjNjg3NjBjN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4MjdkYzk5ZjhhNmVlMWYxYTE2ZGYzN2Y4OTkwODMwY2M0MTdjN2YzYTc3NTdkOGQyNThiMTBhN2IyNDM5ZTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYzZTcxY2NiOGZlNjBhMTZkMWIxMTc0N2M0YWQ5N2E4YzczZDYzMGQ0YjQ1YzZlNWYzNDA3Nzk1MjIxMzM4MTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRjZTJhOGM5YThlYWE4MjVmMmFiZTNhZTUzZDc1ZjQ1ODNmYjA3NzVhOGFhZTczY2I4NDk4YTQ1ZDlkYjQzZTQifQ"
+          "resource": "repo://tools/build.py#L10-L55",
+          "version": "repo-lines-v1:sha256:3ddc59fb4fea205b8be10681645579cf95998b226b7b62e1bbb0738f63c16a04:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjMGNhZjQ0MWExYWFkMjI0MGU3YWFjY2JiMmE3MzkxNWZjNWNlNjJhOTBlYjg1NzgzNmQ5MDVjNjg3NjBjN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmZjg2ODNhMTUyMzc5NzkyM2RlZWYyZjE3ZGE0MzdlMWJlYTQ1Y2RlNjI1YzIzNmYwNjExNjhiOGY1NjlhZjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYzZTcxY2NiOGZlNjBhMTZkMWIxMTc0N2M0YWQ5N2E4YzczZDYzMGQ0YjQ1YzZlNWYzNDA3Nzk1MjIxMzM4MTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0YWIzZDk0Y2JlZmIzYzI3OTQyOTY1OGUxOGYwMzc3MzAxODE5MTJjN2Y1MDFhMDhmZjVhMDM5ZGE5ZjY4OTUifQ"
         },
         {
-          "resource": "repo://tools/build.py#L23-L81",
-          "version": "repo-lines-v1:sha256:43b356df850e87959c57f132813dcba1a44abc343e8d40e549b903a590dfaf7e:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhjOWQ2MWUxZGE4OGY2MGZjNjFlYzFjMjM4YzJjNzUyMTgwNDZjMjllZjMzMDg0ZDU4MDQxNzI3ZmViOTNjYzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4MjhiMDBkNTc1MDhjMTk2MThjZGZlZDFjNjMyN2IwMjQ2MDcxZWVkNTU1YzlkMDk0ZGQxZTBlNWE5ZmQzOGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFkNDRhOTllYjQ0NDNmY2MxMTI0ZjFmYzRmNzJmMDFjZWJhMjQ2YTg2NWQxMGNhN2FkMDk5ZGVlNmEwMDQ5NDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImExN2Y4ZTNiODk2NDkyY2MyMDNiMTk2MWJiYWFmYWZkMjQ5YzNkZDliNWMxNTQxOTA4ODhjY2NlMDM1NDE5NjUifQ"
+          "resource": "repo://tools/build.py#L58-L124",
+          "version": "repo-lines-v1:sha256:2cd6b46396ca8aa2d3f25d3b3c98e4f6792ccb9afecda59d2844e5c2beb051a5:eyJzZWxlY3RlZExpbmVDb3VudCI6NjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiYzQ4MTcyMDU5MTI4ZDUwNmFkMWI1ZWM1ZjY3ZDY2YTQ5NWFiZTE5YTgwYjEwMjFmYmQzMzA0YTRkMTY0OGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhY2JjMjU0NDU0OWNmOTY4OGUzZjIwNjhhNmFjY2Y3YWEzMmMzOGQ2YjFkMDRhYTY1Y2IzM2ZiMTU2ZTE1N2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVlOWZmZDVlMmQwY2NkMjE5ZTg5MmQxMDE3NWY4MjdmOWJjZTlmOGIzNjdkNjQxMzU1ZWJiYjc5ODYyNTE3OWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyYjNkOTBlODliNzQ1Njg2NTAyNjlhMThmYzdjZjg0MmI0NDVhNmYwMjJkNDRjNDk0ZWIyNzA3ZTkwOTU0ZmIifQ"
         }
       ]
     },
     {
       "id": "claim_a1cd8bb8363a42fb8a974dded1e71395",
-      "statement": "Smoke requires exact Factorio 2.0.77 and fresh external output, copies exact archive bytes and executes packaged fixture source with grouped-result/exit-code checks.",
+      "statement": "Smoke requires exact Factorio 2.1.23 and fresh external output, copies exact archive bytes and executes packaged fixture source with grouped-result and exit-code checks.",
       "evidence": [
         {
-          "resource": "repo://tools/smoke.py#L82-L150",
-          "version": "repo-lines-v1:sha256:d01882554100c9975cd67880d88d0c6418176d5b55bf78a315028e94edd463fd:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyZTMxMjU3ZGMwYWUxZDU5MzAzN2MyODBjOWFkNTA4MTliOGE2YzhjZjcyOGJlMDcxNmQwMGEzZWVjYzA0YmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwOGViYjAyNTNhNjJhZjg3Y2ZjNGUxYjJmZTQ0YzljYWViMGE2MGJjNmE5ODBkNDkzMTQwNzBkODY0NmYzOGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyZjQxODhhMjM4NTU4OTQ0MzA3MDRhZGIyYTEwNDI4MzZmNDlhOTZiYjRhZGQ1Yzk4ZDc2MGI5NzZhNTRjMWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwZWZkMmUxMTM3ZTFlNGMxMjNmMjE1NjBlZDgxNDJmNTdhZDA4YzM5NWE1YTIzZWM4Y2RiMmI1Njg3ODc2NjUifQ"
+          "resource": "repo://tools/smoke.py#L109-L173",
+          "version": "repo-lines-v1:sha256:b054f70189b19aba3048faf8a2e0cf626998ff95d83681e9538696538149b117:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1OGRjMjdjZTdlYTk4MTc4YWVmMDA5YTFjNTU1ZjE1NDVlZjAwMTlhMDFlZDg1MTdhZmNhNTk1OWM5N2M1ZmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwOGViYjAyNTNhNjJhZjg3Y2ZjNGUxYjJmZTQ0YzljYWViMGE2MGJjNmE5ODBkNDkzMTQwNzBkODY0NmYzOGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY2NmNkODhhYWE3MDBhMTAzNTJiNTlmYThmNTk4NGE3MjVmMjE2YzQ0MjQ4NWY4MjViZmNmZjc1M2JiN2YyYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5ODlmNTcxNmZmMTUyZjFlZWJiMzZlZWM1ZDUwNmRlMmU5NGNiMTgxYzlkZDlhMTA1MmE4YmY2NzJmODY2MzUifQ"
         }
       ]
     },
     {
       "id": "claim_366228bee090474d8e8abe7740b3649d",
-      "statement": "Cold smoke runs isolated localhost-only phases with verified console quit and immutable snapshot readback; the closed five-fixture production allowlist avoids duplicate native owners and the upgrade driver preserves genuine old/new archive names.",
+      "statement": "Cold smoke uses isolated localhost-only phases with verified console quit and readable snapshot checks; its closed production-context fixture allowlist requires cold mode and avoids duplicate native owners, while historical upgrades retain genuine old/new payload identity and distinguish stopped host setup from running continuity.",
       "evidence": [
         {
-          "resource": "repo://tools/rd1_upgrade.py",
-          "version": "repo-file-v1:sha256:796a0d9f15d5685b9ce9024796fda80b40caea72e1cb3520666ad7225a99a3fc"
+          "resource": "repo://tools/rd1_upgrade.py#L20-L69",
+          "version": "repo-lines-v1:sha256:ac4facfaff1fc961524f42f3d76740751e15872c45def34eb6fee3504728c3ae:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyZTg4YTEyYWU3Y2Q5YTNjYzFiODMyNGY4ODA5NjdkYzgxMTMyYTVmYWY2Yzc5ZjJiYjI3MzMzYjQ4YjBmOTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyNzk4YjlhOThiOTQ2MzdhNjVhYTk4ZjQwNzE2MjQ2Y2I0YmJmMDlhOGFlNDkzZDlkYjg2ODhmNTQwYmI3ZTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE4OTE0MGFiMmYyODYzZTNmYmM4NzI1Nzk3M2FiMDU1ODg3YzE0ZGVjYjUzNzM1YWY2YjY4N2MyYzUyYjI1ZmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmMjFiMGZlZTcyYWVlNzlmM2YwM2ZhYzhhN2U0NGY3MDg3NTRjNDEzYWI5NjNkN2I2MmMyOGM0OWY2MzY0NDUifQ"
         },
         {
-          "resource": "repo://tools/smoke.py#L118-L168",
-          "version": "repo-lines-v1:sha256:41c75949e46a755e35fac27590e9c57a34dfda7721f5d492eee945526ce02e1b:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1YzcxYjhmMzIyODBiMGQ0NjMxZTM4ZjQ1Y2YyODBiM2Q4MmRmMTBlYTQ0OGQwZDBiZmI3ZGE3NmIwNzhlZGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0ZDhhMzIzZGM2OGNhMjYxMzE5Mjc4YmVhY2Y1Nzc1ZWQ5MWJmYThmNjA5Zjg5NDNhMmQ1ZGUyNzc3NWIwNTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyN2ZiYjFkMTYzZDI3MWUwMDgzMWRmNjUyYmE3ZmFlYjVhODU5Mzc3Y2RiOGQ2MWRkYWQyOWNlZmIxMmNkODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4ODQ5ZWQ5ZTMyZGU3ZDgwODU0ZTU4YTI2Yzc1YWZmMDcwNzIyN2U3NTgwNGY0MThiMGIyNjExZGQ2ZWFiNjMifQ"
+          "resource": "repo://tools/smoke.py#L137-L195",
+          "version": "repo-lines-v1:sha256:90b8d35f0aacf1706379b41bca2962e81726742ddd31ce7a43cc1860869f6820:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlMzMxYTVmZTYwZGFiNzgxMmRiOWQ5NzRiNmEwZTUwNTdlNjQ0MDQxN2U5ODUzMmI4NzViOWQ0OGU3ODhiZTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0ZDhhMzIzZGM2OGNhMjYxMzE5Mjc4YmVhY2Y1Nzc1ZWQ5MWJmYThmNjA5Zjg5NDNhMmQ1ZGUyNzc3NWIwNTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJlNGViNzE4NjU3M2RjNjg4ZGQ4ZmNiZWM2ZGU1MTI5YTRjZGE1YjQzODFhYjU1NWRmNmM1MGQ3YTVjNzVmNTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4ODQ5ZWQ5ZTMyZGU3ZDgwODU0ZTU4YTI2Yzc1YWZmMDcwNzIyN2U3NTgwNGY0MThiMGIyNjExZGQ2ZWFiNjMifQ"
         },
         {
-          "resource": "repo://tools/smoke.py#L16-L79",
-          "version": "repo-lines-v1:sha256:fc5c72bdf759bb463a3062fa33897158123a7d25691907374135c09e2d7d032c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkMWI3YjJjMDRmMjgzNTFhODQzN2FjNTQ4ZDViYWE0ODc4MGE4NTIwZTY2ZjAyMTZlNTY5Y2E4MzcyOTg5NjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhMDY3MzUzZjBiODY3YmMxNjE4NDE4YWY0ZTM5YjQ5MGMwZDA1OGQyNzMzYzVhODdkMzA4YTUyZTYzNzEzMDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY1ZDg3OGRiOGZlMDE2OWFjZmY2YTJiM2MxZDVjZmQzMjBhNjE1MDk2MWY2YTY2YWVjOTIyOThjZjEwYjUxMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllZGZlZmE4OWY2MDRlY2JiZDVkNjcyODk0OTMzOWU4MjIyYmZlOTRjMDVkNTJiNjc2ZjQ3M2NiODVjZTViZGEifQ"
+          "resource": "repo://tools/smoke.py#L27-L88",
+          "version": "repo-lines-v1:sha256:4984b70f5e87488d06d061b27db0877cd0019586ee675a0daf72d4def507606c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2ZjBhMTI1YzhhYjU1MWIzZTlhZWU2ZTAyZGZiYWZkYjA4MzAzNTJlMTQ5YjFiNWM3OTRiYzc5MjE3OGZmN2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjMTNkOGI2MmU5YjM2MzAyOTEyNDA3YWNlODY0YzZmYjY3NzRiOGIzZmI4OWU3OGRkNThhYTg0ZWQwODZhMzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM3YTc2YThkODhjMTFlYzI0N2RjMjYxNmEyNjQ3MGU5YTY2OTg5NjI0NmI5MWU5NzgwMTFjNTc0NDM3Y2IyZTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNmNDI1NjU1MjczZmRiMTMwMzA0Mzk4NzVlNjhhYjdhNDliZTVjMzlhMjBhMTIxMmQ3ODIyMTEyZTFmNWQ3MTEifQ"
         }
       ]
     },
     {
       "id": "claim_d9d9e01ce8904ec6b4c64a0fab266f99",
-      "statement": "Five original industrial designs and independent glyph/fill pixels are reproducibly exported with 147-image provenance and 64 shared contacts; historical pinned Greg Flavored inputs/notices remain unchanged but are not sampled by the redesign.",
+      "statement": "Selected Service Rack artwork uses original MIT source meshes and shared contact/status helpers, with nine silhouettes, 265 PNGs and 96 contacts documented; historical pinned Greg Flavored inputs and notices remain unchanged and are not sampled.",
       "evidence": [
         {
-          "resource": "repo://assets/README.md#L103-L130",
-          "version": "repo-lines-v1:sha256:6b0f30bc2e1ec0114e5b77fb9bd3be08f78d8cf3e03ef52f0e5faf8fe5c3b895:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkOWFlMWZjYjJkMDYzMjVkOTQ2YjM2ZGFlMzI3NTdjMjI5N2FkOGQ0ZDY5ZTRlZDg1ZGQ0ZTZmZWZiOWM4MWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4YTRmZTI1ZDQ2NGMzNDdiMGNmOGZlODA5YmUzNWNhY2ZkMzJhNDE2YTJmYzJmODkyYzJjMWE5NzMwYjc3YzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjllNGQ5ZjgwMWVkYWUxZjljYzE3M2NlNjc2MmJhNTVkNzE5OTc3YTQ3ZGI3NjYxZDNlYWI4MTMwOTUzN2JlMGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM5NzM4MjEwNzg2M2JmYWExNTE5ZTQwNjNmNDFhMjcwMGU5ZGJkYjcxOWEwY2UwZWQzNDAxNWYyMjYzYjBmMWYifQ"
+          "resource": "repo://assets/README.md#L3-L22",
+          "version": "repo-lines-v1:sha256:d4edcbb9e68d23686e006e8d50b4917fe88291f6724702db39ebe95db153afb8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyMGIxMzJiNTU3ODExYjVjYjcyYThhNWMwOWEwMzJmZGMxOTczYTdmMDM4N2Y4ZGU1MmY1MWFkOWVmN2U4NjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3ZWUzMWI5Zjk3NTU5YWUwZWNmNzUwZmYwZWU1NzE2YzRkMWYzMWNlN2JkYTlkNjM1ZDQ0N2MzMTI2ODExODkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFkMTM4ZmJkMmRhNmMxYzA3MDU3NjUyZjNkZjBjNjlkYTBjNzY5OTRiNzdiMjZhNzM3YmM0NWM3MWMzN2U2NGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA2NjdjNzA1OTRmNWE1MmQ5MmFkZmRjZDFhMGU3ZTJlZTkwYzRhZGI1Mzk3NTQwMGI0NzAzNDBkMmEyMWJhMDAifQ"
         },
         {
-          "resource": "repo://assets/README.md#L151-L167",
-          "version": "repo-lines-v1:sha256:bbd8475c2dcc74903a58f3ec974d63b367b6e4cea09343154952da448594d60d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlMmVhMjk3YzcwNmZiMTYzODI5NjU2NDJkMGVkYWRkMjU3YTE0NzJmNTVjNmE2YzUwMDdiNzVlNDhhZTcxMjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5M2ZmYmY1OTRiMmM2YjM1ZDhiMDhhYmNlYWIwNjg4YmZjNzQ1YmNkZWJhMTkxOTBkMmE2ZDY5OTNmYWIwNWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ0YzA3OTlhOTgyZTZjYzY2Y2NjNWFiYWY2OWViMzdmNDNhZmUxZGI3NWI4MzAxMzE4ZjNmZjU1N2I5OGNjNjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZkMGYyYWI5MjUxMGZhY2YwNTVmMTFkZmFmYTM4M2M4OTYxMjc4ZmJjZmEyZDM1ZTk0OGRhNjU4NzljYmIxNTAifQ"
-        },
-        {
-          "resource": "repo://assets/README.md#L6-L57",
-          "version": "repo-lines-v1:sha256:4f6bc3c4ee77d2ee9c73752d35ae49cc35c7f1089335575c23dd6252c9322aea:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlMmIwZTA2ZDhmMTg4MzdmMjg5ZmUxMmRhZjQ5YmU4ZGEyNTZhMDQyYzU1YTZhZTBjMzZiZGMzMDE5OWYxODYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2OWFjODJjZDI1ZTE4MjZkOTNlZDU5NjdhMjkxZGIxMjdhMjAzZDk5YzgzM2VjMTc2ZmUxMzg3MTQ3NTUwZTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMzMWNmMmYwODY2MTA1NTczNzhiNGUxNGYyZGRiYzBhNjYwZjI2Nzc1YjVmNGFkMTc3NmRmN2IzZWQzYmY1OTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNmMzM4YjIxMGRmOTE2ZWM2Y2VjNzI4ZGM0MjM4YTM5MTk1MzBmMTE0ZmVhZTIzMzczNDU2YTRiNmU0MGZkNWQifQ"
+          "resource": "repo://assets/README.md#L40-L75",
+          "version": "repo-lines-v1:sha256:2f48bdda621ff129efc7b082f018e20070fb0d3665177d36a9d3dae052905124:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFjYTQwMTEyYjVjNTAyMTYxMzRiMzA0MDNiMjA0MTQ4Yjg2M2UyNmYxN2Q5MDU4YzQ5NDU5MjNiNjBjMjQyMDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkZjA3MDdlNWU3YjZlMTY2ODU1NzU4OWJmMDBkYWQxNDYzMWM1MTYwZjBiNDIzMmYwNjU5YjFhN2ZmODBhNDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc4MWM3Y2QzODIwYmNiY2U4OTFkZThkMmQ4YTk3YmVjMDE1OTY2N2NjZDUxMzA3MDI5ZDdiYjQ0MTEzMThlNDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4YTEwYzliMjY3YWUxNzlkZTVjNzc2MjJiMDY0MDY1MDc5MjZkNjAyMjI0NjIxOTJhMWJhY2I3MzUwMjJmMzcifQ"
         }
       ]
     },
@@ -74,15 +70,15 @@
     },
     {
       "id": "claim_56451cf609ff44f5bd1d561d419b1078",
-      "statement": "The player-doc pipeline is distinct from OpenWiki: filtered PR/main builds and trusted main-workflow manual refs feed a separate protected minimal-permission Pages deployment, while MkDocs builds docs/player with complete player-guide and Lua API navigation.",
+      "statement": "The player-doc pipeline is separate from OpenWiki: relevant main pushes and trusted main-workflow manual refs build and upload a strict immutable-source Pages artifact, with a separate minimal-permission deployment; no pull-request trigger is configured.",
       "evidence": [
         {
-          "resource": "repo://.github/workflows/docs.yml#L3-L81",
-          "version": "repo-lines-v1:sha256:babde50be6ab147d5eab6566929da1bc6449b643083ca260a8bd923163281133:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NmRjNDgxNDlmNWE4M2QxZWQ2ZGJiMzliYmM3ZTJiOTAyYWEzZDM0ZDZiZDVhZTRiMjkxYjY4ZGYwY2E3OWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4ZWQ3NDA5N2Y5NTE5YTVhN2ZiYTRmYjYwYjkxYWM2NmU5ZTYwN2JjNWE4NjExZDhiMDEzMDk4ZDRjMjA4YzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4ZWY2MWUyOWQ2NmY3ZmMyODJmYjFlODZlZmY4MDU2YjVjODVhYTJiNmJiNTA5ODU5NmZkODM5N2RiNDFjYjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://.github/workflows/docs.yml#L3-L78",
+          "version": "repo-lines-v1:sha256:7721ddfa3f34103d9115fa52575770a8f640c2547b29a7de2cd0b789926b4d98:eyJzZWxlY3RlZExpbmVDb3VudCI6NzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NmRjNDgxNDlmNWE4M2QxZWQ2ZGJiMzliYmM3ZTJiOTAyYWEzZDM0ZDZiZDVhZTRiMjkxYjY4ZGYwY2E3OWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4ZWQ3NDA5N2Y5NTE5YTVhN2ZiYTRmYjYwYjkxYWM2NmU5ZTYwN2JjNWE4NjExZDhiMDEzMDk4ZDRjMjA4YzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4ZWY2MWUyOWQ2NmY3ZmMyODJmYjFlODZlZmY4MDU2YjVjODVhYTJiNmJiNTA5ODU5NmZkODM5N2RiNDFjYjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         },
         {
-          "resource": "repo://mkdocs.yml#L1-L38",
-          "version": "repo-lines-v1:sha256:75fdb0c77c0efa0f760c56b32fb0d2ece1bf3dc62b698edb55b72c486113db42:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwNTZlZGMxMTAwZWU1M2I0NWU2MTJkYTBiYjVjYWU1ZjBjOWNiYTdmMjQ2NGExNTE2YWNiNTI2ZTRjNjhiNDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyYzRmODkzMzJkYjMzOWUyNTk5OGNhNTdkYTBiOTYxZjQxYmI3N2VkNDVjMzg5YThkZTgyZjQyYzFmYmQwOWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://mkdocs.yml#L1-L50",
+          "version": "repo-lines-v1:sha256:ca5af4b482b4f8ecd75cb747e4fe0da148052a9fcef8c3b0d9325745d0dc9036:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwNTZlZGMxMTAwZWU1M2I0NWU2MTJkYTBiYjVjYWU1ZjBjOWNiYTdmMjQ2NGExNTE2YWNiNTI2ZTRjNjhiNDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyYzRmODkzMzJkYjMzOWUyNTk5OGNhNTdkYTBiOTYxZjQxYmI3N2VkNDVjMzg5YThkZTgyZjQyYzFmYmQwOWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     },
@@ -101,22 +97,22 @@
       ]
     },
     {
-      "id": "claim_a74fb5c03c4a4c9fb82e03746c04f5dd",
-      "statement": "Mod CI emits stable Mod validation on every branch push and PR; RD5 prepares an unpublished 0.1.2 ALPHA candidate and RD6 owns public release/live docs, with native graphical acceptance still deferred.",
+      "id": "claim_291a5918606845efa135cd2d3f5424e3",
+      "statement": "Mod tests and pull-request documentation checks are local obligations rather than hosted CI; optional model-backed OpenWiki Update remains explicitly gated and does not waive exact-package or native acceptance.",
       "evidence": [
         {
-          "resource": "repo://.github/workflows/ci.yml#L1-L91",
-          "version": "repo-lines-v1:sha256:dd244eb07c33e806d67bff59059aeb145001364240838f1d4ea027905ae8e870:eyJzZWxlY3RlZExpbmVDb3VudCI6OTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYzN2FiODdjMjdkNGM0ZTQyZjBjY2U4ZmMyMTQ0NzU5NDNmZjMxNTQ5NTcwMzE3OTZiOWFjYTY1NjdjNzMxMTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlN2EwMWZiZjEzN2FkNTI4YmE5MjQ5NTNiYmI3NGQ4Y2EyMzNkOGFkNDdmMjdmYzZkZjVmMmQxNmNjMjYzYjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+          "resource": "repo://.github/workflows/openwiki-update.yml#L12-L16",
+          "version": "repo-lines-v1:sha256:7adea89d5816add82ac819b28bdbc6ccfad5d1490cdc268ef849e2be10e61992:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTlkODAxNTRlZDQyZmM1Yzc3OWIxMzMxNTc4YjU4Yjg5YzgwMWVhY2U3NGYyNGNkNDhlYjRhMjM1Nzk0MGE5NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWI3YzhkOThlNDdkY2I4MTczNTIwMzJiMzBlZDliMWNhNGE3ZmFmOGQwYzZhZWNjMTE5NWU1ODZkMWUwYzRkOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTZmN2QzN2ZiMjk3Mzk5ZmVhMmE1Y2VmMWNjNDAyOGM4OTk3OWE5MDUwYTkyODU2ZjBkOTZlMWMxOGJhMTlhNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjY0MDRiMDhmZTYzMmQ2MjFiYjg5YWY1MjFkMmE0MGU5MDU3YzRmZWUxYmI3MDkyMjI2MzhjNDM4Yzc4M2VkMCJ9"
         },
         {
-          "resource": "repo://docs/rd5-candidate.md",
-          "version": "repo-file-v1:sha256:58f1da1de163bf4770e998f0e8972fdd95369dd779761855dfe030f26e02b030"
+          "resource": "repo://docs/documentation-maintenance.md#L51-L79",
+          "version": "repo-lines-v1:sha256:73bb6fde375a3ca1077d7fbf576e1a7bb61b2162dd267068255c1ccf67d679d6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZiYzlkM2YyM2EyMzA1YjUxNzU1MjUyZDBkMzU3MzRjZTQ2NjA5ZjMwMDRmNGE2NjNlZmRiMWUzYWI3ZWYwNWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzYTg5MGNkNDk3NjhhNDMzNDljOTEyMTgwYmMwOWFhYjk2NjM4ZTI2ZWFmOTAyMDEzYmMwNzU4OWY1YmU4MjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2ZGJkZjYxODNjMTMwYzg4OGQwY2E1ZTJkYjM5ZDEyMzY1NGI3NjU3Y2VjMWNjMDE3ZjViMzAwM2JkOGVhY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhNjQxZGE0MjcxYzI0NmU4ZDhjNzE1OWU3MDU1MjgzOWRjMGYzNWFmNTgyNDdiNDRhMmZmNGQzZGE3MDBlOWYifQ"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.7.1",
-    "at": "2026-10-15T13:11:13.133Z"
+    "at": "2026-10-29T22:50:29.161Z"
   }
 }

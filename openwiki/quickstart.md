@@ -8,10 +8,8 @@ sources:
     resource: repo://control.lua
   - id: openwiki-source-0f322ac3f67e0772fa67765f
     resource: repo://data.lua
-  - id: openwiki-source-c579e13e7a45ccc214422220
-    resource: repo://docs/rd5-candidate.md
-  - id: openwiki-source-765149bc0fcb867d9e5de6c4
-    resource: repo://scripts/lifecycle.lua
+  - id: openwiki-source-199ebbbf763b15ba60eb9147
+    resource: repo://scripts/device-definitions.lua
   - id: openwiki-source-562ddd59792f21328a7d3825
     resource: repo://scripts/rendering.lua
   - id: openwiki-source-4cee717286544161165260f8
@@ -26,15 +24,15 @@ sources:
     resource: repo://tools/build.py
   - id: openwiki-source-76b87832ddf6312873ab8b07
     resource: repo://tools/smoke.py
-generated: { by: "hermes", at: "2026-10-15T13:11:13.133Z" }
+generated: { by: "hermes", at: "2026-10-29T22:50:29.161Z" }
 verified:
   - by: openwiki/0.7.1
-    at: 2026-10-15T13:11:13.133Z
+    at: 2026-10-29T22:50:29.161Z
 ---
 
 # Developer quickstart and task routing
 
-Tweaked Computers is a Factorio 2.0.77 alpha implementation with optional Space Age. It composes native guarded named callbacks, a five-tab single-document workspace, visible circuit-shell Network endpoints with isolated auxiliary roles, local string/hash KV, merging monitors with explicit below-feedback sprite strata, typed native configurators and material lifecycle policies. The [0.1.2 integrated candidate](../docs/rd5-candidate.md) records the focused verification and publication handoff. It is not an OS/filesystem/interpreter and is not client-verified stable software. Back up saves; limits and performance envelopes remain provisional.
+Tweaked Computers is an alpha implementation currently verified with Factorio 2.1.23 and optional Space Age. It composes native guarded named callbacks, a five-tab single-document workspace, visible circuit-shell Network endpoints with isolated auxiliary roles, local string/hash KV, merging monitors with explicit below-feedback sprite strata, typed native configurators and material lifecycle policies. The [0.1.2 integrated candidate](../docs/rd5-candidate.md) is a historical receipt, not current-package acceptance. It is not an OS/filesystem/interpreter or a stability guarantee. Back up saves; limits and performance envelopes remain provisional.
 
 This is the developer OpenWiki: it explains source ownership, data/control flow, invariants, failure paths and extension seams. The separate [player guide](../docs/player/index.md) is the player-site source; existing [alpha installation/checklist](../docs/alpha-candidate.md) and [factory example](../docs/factory-example.md) are useful behavioral context, not substitutes for internal architecture. Planned contracts under OpenSpec must be compared with actual source before claiming effective behavior.
 
@@ -44,7 +42,7 @@ This is the developer OpenWiki: it explains source ownership, data/control flow,
 2. `control.lua` imports trusted modules during parsing and installs events. Normal initialization/configuration establishes state; normal `on_load` deliberately executes no source and changes no state.
 3. `scripts/registry.lua` owns exact entity/role identities and retained roots; `scripts/lifecycle.lua` owns physical family/power/teardown.
 4. `scripts/scheduler.lua` runs ordered host phases and fair queue dispatch; `scripts/runtime/computer.lua` owns saved/active revisions, explicit state and run IDs.
-5. `compiler.lua` recompiles retained source into guarded native Lua for each dispatch; `sandbox.lua` closes guest authority and Data copies isolate state/effects.
+5. `compiler.lua` validates declaration-only saved source (exported functions plus optional lexical local-function helpers), then revalidates or replays its exact-source proof for fresh guarded reconstruction on dispatch. Console expression/statement syntax is independent; `sandbox.lua` closes guest authority and Data copies isolate state/effects.
 
 ## Route the actual maintenance task
 
@@ -84,6 +82,6 @@ Use only the affected fixture after a narrow change. Cold save/load and producti
 - A discovery notification/cache is not authority. Reprove current physical color/path/run before effects; output cleanup must work without compiling source.
 - Stop/restart/removal/save/load do not renew same-tick admission. Reserve complete bounded work before native mutation and retain diagnostics rather than dropping malformed data.
 - Material mining is not blueprint/settings/clone duplication. Preserve absolute KV expiry, stopped imported computers and explicit recovery text review.
-- Preserve selected Greg Flavored MIT and independent glyph/parser provenance. Do not replace actual source evidence with speculative asset genealogy or client claims.
+- Preserve original Service Rack, historical Greg Flavored and independent glyph/parser provenance. Do not replace actual source evidence with speculative asset genealogy or client claims.
 
-Historical implementation reports and source fixtures record focused headless evidence; this developer-wiki generation does not rerun application/game tests. Native GUI typing/focus/layout, graphical world rendering/touch/zoom, audible playback, multiplayer joins and simultaneous maximum-world performance remain deferred to user testing. A headless draw handle or mocked player event is not client verification.
+Historical implementation reports and source fixtures record their own evidence; this developer-wiki generation does not rerun application/game tests. Native GUI typing/focus/layout, graphical world rendering/touch/zoom, audible playback, multiplayer joins and simultaneous maximum-world performance need explicit applicable acceptance receipts. A headless draw handle or mocked player event is not client verification, and missing receipts are not waived by this documentation.

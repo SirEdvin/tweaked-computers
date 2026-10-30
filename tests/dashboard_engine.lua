@@ -21,12 +21,14 @@ local function build(kind,x,y)
 end
 local function guest(c,body)
   local ctx=runtime.context(c,game.tick)
-  local plan,e=compiler.compile('return {api_version=1,handlers={start=function() '..body..' end}}',ctx)
+  local plan,e=compiler.compile('function start() '..body..' end',ctx)
   assert(plan,serpent.line(e))
   local ok,problem=compiler.run(plan,'start',{},function(g) return runtime.services(c,game.tick,g) end,ctx)
   assert(ok,serpent.line(problem))
 end
-local idle=[[return {api_version=1,handlers={start=function() end,clicked=function(e) computer.setState('clicks',(computer.getState('clicks') or 0)+1); computer.setState('last',e) end}}]]
+local idle=[[function start() end
+
+function clicked(e) computer.setState('clicks',(computer.getState('clicks') or 0)+1); computer.setState('last',e) end]]
 function M.run()
   contracts.run()
   gui_contracts.run()

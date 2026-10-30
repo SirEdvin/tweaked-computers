@@ -9,8 +9,9 @@ local monitor=require('scripts.services.monitor')
 local dashboard=require('examples.production-statistics-monitor')
 local M={}
 local function f() return storage.tc_stat_client end
-local source=[[return {api_version=1,handlers={start=function() computer.setState('boots',(computer.getState('boots') or 0)+1); computer.every(30,'query') end,
-query=function()
+local source=[[function start() computer.setState('boots',(computer.getState('boots') or 0)+1); computer.every(30,'query') end
+
+function query()
   local s=peripheral.find('production_statistics','red'); assert(s)
   local green=peripheral.find('production_statistics','green'); assert(green)
   local value={totals={},rates={},histories={},descriptor=peripheral.describe(peripheral.getName(s),'red')}
@@ -24,7 +25,7 @@ query=function()
   value.copper=green.getHistory('item','copper-plate','one_minute')
   computer.setState('snapshot',value)
   computer.setState('queries',(computer.getState('queries') or 0)+1)
-end}}]]
+end]]
 local function build(kind,x,y,d)
   local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},direction=d or 0,force='player'})
   lifecycle.on_built{entity=b}; return assert(registry.by_entity(b))

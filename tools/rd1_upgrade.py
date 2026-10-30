@@ -51,10 +51,21 @@ def main():
     control.write_text(original.replace(needle, needle + " or name=='" + args.fixture + "'"))
     fixture_path = args.fixture.replace('.', '/') + '.lua'
     shutil.copy2(ROOT / fixture_path, old / fixture_path)
+    with tarfile.open(fileobj=io.BytesIO(content)) as source:
+        changed = []
+        for member in source.getmembers():
+            if member.isfile():
+                original_file = source.extractfile(member)
+                assert original_file is not None
+                if (old / member.name).read_bytes() != original_file.read():
+                    changed.append(member.name)
+    assert set(changed) <= {'control.lua', fixture_path}, changed
     result = subprocess.run(['python3', str(old / 'tools/build.py'), '--output', str(args.output / 'alpha-artifact')],
                             capture_output=True, text=True, check=True)
     baseline = json.loads(result.stdout)
     summary = {'engine': '2.1.23', 'legacy_engine': '2.0.77', 'baseline_commit': args.baseline, 'fixture': args.fixture, 'instrumented_alpha': baseline,
+               'source_setup': 'stopped host data; no running-program continuity' if args.fixture == FIXTURE else 'function-capable baseline running source',
+               'changed_baseline_paths': changed,
                'candidate_sha256': hashlib.sha256(args.archive.read_bytes()).hexdigest(), 'cases': []}
     for mode in (['base', 'space-age'] if args.mode == 'both' else [args.mode]):
         folder = args.output / mode

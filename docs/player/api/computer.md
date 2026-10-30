@@ -1,6 +1,6 @@
 # Computer callbacks and state
 
-Use either [plain function declarations or the legacy native descriptor](language.md).
+Use [plain function declarations](language.md).
 All API calls use `computer.method(...)` with exact arity except the documented
 optional arguments. If exported, `start` is queued once per explicit successful
 Run/Apply, not after ordinary load. Without it, activation runs no arbitrary export.
@@ -107,10 +107,9 @@ discard transient event history, retain timers/registrations/state and request
 input resync. Load does not replay startup, timers already consumed, or effects.
 The exact active source stays separate from newer saved-but-unapplied source;
 later callbacks reconstruct the active revision, not the latest editor save.
-Legacy descriptor saves remain supported without rewriting or restarting them.
-API 1, compiler representation 2 and storage 1 are unchanged. Downgrades after
-saving declaration-form source are not supported by descriptor-only compilers:
-keep a backup or convert and explicitly apply a legacy descriptor before downgrading.
+Supported declaration saves retain their exact source and run without rewriting
+or restarting them. API 1, compiler representation 2 and storage 1 are unchanged.
+Keep complete save/mod backups before changing runtimes.
 
 For a complete timer/state program see [language example](language.md); for robust
 error inspection see [database example](kv.md). Do not busy-loop on network/busy

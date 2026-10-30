@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Guarded native command language
-The shell SHALL accept Lua statements, expressions, and shell-global assignments without a handler descriptor, using the existing bounded native language and the approved globals/libraries shared with saved programs, including `print`. Locals SHALL be scoped to one submission. Host globals, dynamic loading, coroutines, unguarded execution, and overwriting reserved API names SHALL remain forbidden. Saved-program syntax SHALL remain unchanged.
+The shell SHALL accept Lua statements, expressions, and shell-global assignments using the existing bounded native language and the approved globals/libraries shared with saved programs, including `print`. Locals SHALL be scoped to one submission. Host globals, dynamic loading, coroutines, unguarded execution, and overwriting reserved API names SHALL remain forbidden. Saved-program syntax SHALL remain unchanged.
 
 #### Scenario: Globals survive and locals do not
 - **WHEN** `x = 5; local y = 6` succeeds and the next line is `print(x, y)`

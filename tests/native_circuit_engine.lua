@@ -31,7 +31,7 @@ local function inventory(n)
 end
 local function probe(body,keep_run)
   local c=registry.computer(f().computer)
-  local source='return {api_version=1,handlers={start=function(e) local p=peripheral.find("logic_handler","red"); '..body..' end,changed=function(e) end}}'
+  local source='function start(e) local p=peripheral.find("logic_handler","red"); '..body..' end; function changed(e) end'
   local context=admission.context(admission.new(),c.id,game.tick)
   local plan,problem=compiler.compile(source,context); assert(plan,problem and serpent.line(problem))
   if not keep_run then
@@ -70,25 +70,24 @@ local function check_input(wire,n)
   assert(after[n].count==tail.count and after[n].signal.name==tail.signal.name)
   log('TC_NATIVE_READ '..serpent.line{wire=wire,count=n,work=measured.work,allocations=measured.allocations})
 end
-local event_source=[[return {api_version=1,handlers={
-  start=function(e)
-    computer.setState('boots',(computer.getState('boots') or 0)+1)
-    local p=peripheral.find('logic_handler','red')
-    local a=p.readSignals('red'); p.setOutput(a)
-    for i,s in ipairs(a) do a[i]=s.signal end
-    computer.setState('sub',p.subscribe({input='red',signals=a,initial=true},'changed'))
-    p.subscribe({input='red',initial=true},'changed')
-    a[1100].name='mutated request'
-  end,
-  changed=function(e)
-    assert(#e.current==1100 and #e.changes==1100 and #e.previous==0 and e.initial)
-    local n=0
-    for _,s in ipairs(e.current) do assert(s.signal.name~='mutated request' and s.count~=0); n=n+1 end
-    assert(n==1100)
-    e.current[1100].count=0; e.current[1100].signal.name='mutated event'
-    computer.setState('events',(computer.getState('events') or 0)+1)
-  end
-}}]]
+local event_source=[[function start(e)
+  computer.setState('boots',(computer.getState('boots') or 0)+1)
+  local p=peripheral.find('logic_handler','red')
+  local a=p.readSignals('red'); p.setOutput(a)
+  for i,s in ipairs(a) do a[i]=s.signal end
+  computer.setState('sub',p.subscribe({input='red',signals=a,initial=true},'changed'))
+  p.subscribe({input='red',initial=true},'changed')
+  a[1100].name='mutated request'
+end
+
+function changed(e)
+  assert(#e.current==1100 and #e.changes==1100 and #e.previous==0 and e.initial)
+  local n=0
+  for _,s in ipairs(e.current) do assert(s.signal.name~='mutated request' and s.count~=0); n=n+1 end
+  assert(n==1100)
+  e.current[1100].count=0; e.current[1100].signal.name='mutated event'
+  computer.setState('events',(computer.getState('events') or 0)+1)
+end]]
 local function check_inspector()
   local io=registry.record(f().logic); local real=game
   local root=registry.get(); local saved_scheduler,saved_ledger=root.scheduler,root.ledger

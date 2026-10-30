@@ -1,6 +1,6 @@
 # Logic Handler Lua API: direct native circuits
 
-Companion to this change's `spec.md`. Replaces the canonical-signal, inventory-limit and cached-observation portions of the existing Logic Handler API. Method names, dot-call arity, explicit input/discovery colors and source `api_version = 1` remain unchanged. Record shape/order changes are intentional compatibility changes, not a new language ABI.
+Companion to this change's `spec.md`. Replaces the canonical-signal, inventory-limit and cached-observation portions of the existing Logic Handler API. Method names, dot-call arity, explicit input/discovery colors and implicit source API version 1 remain unchanged. Record shape/order changes are intentional compatibility changes, not a new language ABI.
 
 ## Signal values
 

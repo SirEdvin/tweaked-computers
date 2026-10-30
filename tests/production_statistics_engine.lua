@@ -29,8 +29,9 @@ end
 local function wire(a,b,color)
   assert(lifecycle.connector(a,'network',color).connect_to(lifecycle.connector(b,'network',color)))
 end
-local busy=[[return {api_version=1,handlers={start=function() computer.every(1,'pulse') end,
-pulse=function() computer.setState('pulses',(computer.getState('pulses') or 0)+1) end}}]]
+local busy=[[function start() computer.every(1,'pulse') end
+
+function pulse() computer.setState('pulses',(computer.getState('pulses') or 0)+1) end]]
 local prefix=[[local s=peripheral.find('production_statistics','red'); assert(s)
 local function refused(code,fn,...)
   local ok,e=pcall(fn,...); assert(not ok and type(e)=='table' and e.code==code,code..' expected')
@@ -38,7 +39,7 @@ end
 ]]
 local function guest(c,body,document)
   local ctx=runtime.context(c,game.tick)
-  local plan,e=compiler.compile(document or 'return {api_version=1,handlers={start=function() '..body..' end}}',ctx)
+  local plan,e=compiler.compile(document or 'function start() '..body..' end',ctx)
   assert(plan,serpent.line(e))
   local ok,problem=compiler.run(plan,'start',{},function(g) return runtime.services(c,game.tick,g) end,ctx)
   assert(ok,serpent.line(problem))
@@ -264,7 +265,7 @@ function M.on_tick(event)
       lifecycle.power_entity(probe).energy=2000; probe.powered=true
       assert(runtime.save(probe.id,busy,0)); assert(runtime.activate(probe.id,event.tick))
       local ctx=runtime.context(probe,event.tick)
-      local source="return {api_version=1,handlers={start=function() local s=peripheral.find('production_statistics','red'); pcall(function() for i=1,1000 do s.getHistory('item','iron-plate','one_minute') end end); computer.setState('escaped',true) end}}"
+      local source="function start() local s=peripheral.find('production_statistics','red'); pcall(function() for i=1,1000 do s.getHistory('item','iron-plate','one_minute') end end); computer.setState('escaped',true) end"
       local plan,e=compiler.compile(source,ctx); assert(plan,serpent.line(e))
       assert(admission.reserve(ctx,kind,(kind=='work' and limits.callback_work or limits.callback_allocations)-ctx.machine[kind]-2000))
       local ok,problem=compiler.run(plan,'start',{},function(g) return runtime.services(probe,event.tick,g) end,ctx)

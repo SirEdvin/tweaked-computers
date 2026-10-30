@@ -12,11 +12,11 @@ local native=require('tests.monitor_buffer_engine').native
 local M={}; local loaded=false
 local function f() return storage.tc_budget_live end
 local function nop() end
-local source=[[return {api_version=1,handlers={
-start=function(e) computer.setState('beats',0); computer.setState('notifications',0); computer.every(1,'beat'); computer.every(7,'notify') end,
-beat=function(e) computer.setState('beats',computer.getState('beats')+1) end,
-notify=function(e) computer.setState('notifications',computer.getState('notifications')+1) end
-}}]]
+local source=[[function start(e) computer.setState('beats',0); computer.setState('notifications',0); computer.every(1,'beat'); computer.every(7,'notify') end
+
+function beat(e) computer.setState('beats',computer.getState('beats')+1) end
+
+function notify(e) computer.setState('notifications',computer.getState('notifications')+1) end]]
 local function fuel(x)
   for _,id in ipairs(x.nodes) do
     local r=assert(registry.record(id)); lifecycle.power_entity(r).energy=100000

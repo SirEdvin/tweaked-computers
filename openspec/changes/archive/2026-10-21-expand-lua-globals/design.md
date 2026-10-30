@@ -6,7 +6,7 @@ See [proposal.md](proposal.md) for motivation and agreed scope. Design is warran
 
 Observed implementation:
 
-- `scripts/runtime/compiler.lua:20-21` has the saved-program global allowlist. `:48-57` separates forbidden host names, reserved declarations and Console write protection. `:247` rejects reserved public/private top-level declaration names; legacy descriptor keys at `:303-308` are not global bindings.
+- `scripts/runtime/compiler.lua:20-21` has the saved-program global allowlist. `:48-57` separates forbidden host names, reserved declarations and Console write protection. `:247` rejects reserved public/private top-level declaration names.
 - `scripts/runtime/sandbox.lua` owns native execution guards: `G.call` handles depth, tuples, result validation and poison checking; `G.assignment_check` validates complete indexed writes before publication; `G.length` validates owned tables/strings. The owned/protected/callable registries are private ephemeral weak-key tables.
 - The same sandbox initializes both guest modes. `env.print` currently exists only inside the shell branch at `:505-518`; it already formats safe tab-separated tuples and is used by shell expression-result display.
 - `scripts/runtime/computer.lua:18-26` appends bounded log entries after charging retention work. Its registered `computer.log` service supplies current-record authority and the current guard. `scripts/runtime/shell.lua:33-36,83-87` supplies command prefixes and checks their full byte size.
@@ -34,7 +34,7 @@ Non-goals:
 
 Add the named globals to the existing compiler/global-environment definitions. Remove their treatment as excluded raw facilities where applicable, while preserving top-level name reservations and Console write protection. Keep host/global escape bans closed. Make `_VERSION` a fixed language-family string and `unpack` the very same wrapper function as `table.unpack`; initialize stable callable descriptions once so alias registration order cannot make function descriptions differ between peers.
 
-Tests must compare availability, reservation and behavior in both saved formats and Console. There is no reason to add a plugin registry or generate another API table for this small surface; a focused parity test is sufficient to catch compiler/environment drift.
+Tests must compare availability, reservation and behavior in saved functions and Console. There is no reason to add a plugin registry or generate another API table for this small surface; a focused parity test is sufficient to catch compiler/environment drift.
 
 Alternative rejected: expose Factorio's entire `_G` or native standard libraries. Presence in the host does not imply guest ownership, paid work or appropriate authority. Metatables would affect every indexed/operator/call path, not just add two functions; patterns, binary packing and randomness also need their own resource/state contracts. They remain separate work.
 
@@ -75,7 +75,7 @@ Alternative rejected: bare native `xpcall`, which could expose the private fatal
 
 Keep API version 1, compiler representation 2 and storage version 1 if generated `__tc` interfaces and stored representations remain unchanged. Adding entries to the existing environment does not justify faulting every running computer through a blanket ABI bump. Exact source is reconstructed using the current trusted compiler; do not persist or reuse old executable objects.
 
-Declaration-form collisions already flow through reserved-name rejection. Validate/Apply failure preserves the current run. A colliding old active declaration faults only when synchronized reconstruction is attempted, using existing cleanup and retaining source/state; no `on_load` mutation or automatic rename. Preserve legacy descriptor handler-key behavior and body-local/parameter shadowing.
+Declaration-form collisions already flow through reserved-name rejection. Validate/Apply failure preserves the current run. A colliding old active declaration faults only when synchronized reconstruction is attempted, using existing cleanup and retaining source/state; no `on_load` mutation or automatic rename. Preserve body-local/parameter shadowing.
 
 For Console, detect a newly reserved root key during admitted decode, before guest execution. Use a small host-only check against the actual built-in environment or shared existing inventory, not another public guest API. Return `E_UNSUPPORTED` naming the conflicting key and explaining explicit Reset Shell. Preserve the old graph; do not silently prioritize the built-in over stored data. Bound the check within the already bounded decode traversal. Nested keys remain ordinary data, and saved-program execution is unaffected.
 
@@ -103,7 +103,7 @@ No generated OpenWiki page is hand-edited. The separate inspector and radar prop
 
 Extend existing fixtures rather than create another runner:
 
-- `tests/runtime_contract.lua`: both saved forms, global parity/aliases, native raw/tuple/error semantics, forbidden sources/protected targets, fatal protection and warm/cold admission.
+- `tests/runtime_contract.lua`: saved functions, global parity/aliases, native raw/tuple/error semantics, forbidden sources/protected targets, fatal protection and warm/cold admission.
 - `tests/computer_contract.lua` and `tests/editor_contract.lua`: real validate/save/activate logging, exact entry/return behavior, starter source and failed replacement.
 - `tests/shell_contract.lua`: interactive helpers, expression display, prefixes, immutable names, transient versus retained functions, collisions, output failure and Follow-off behavior.
 - `tests/computer_cold.lua` and `tests/shell_cold.lua`: completed output not replayed, helper-produced data/aliases, exact old active source, retained collision records and same-tick spent credits in separate engine processes.
@@ -116,7 +116,7 @@ Use a copied isolated full-client scene to Validate → Save → Run the maintai
 ## Migration Plan
 
 1. Implement and verify the shared functions, compiler rules and collision handling without changing current data/ABI versions or budget defaults.
-2. Update the public supported-global inventory and clear name-collision recovery notes. Preserve existing descriptor programs and old noncolliding declaration/shell records.
+2. Update the public supported-global inventory and clear name-collision recovery notes. Preserve noncolliding declaration/shell records.
 3. Test saved fixtures before/after cold load, including colliding records, without load-time writes or startup replay.
 4. Package and validate the exact candidate; publish nothing until separately authorized.
 5. If reverting code, keep source/state/log records intact. Newly authored programs using added names will fail old compiler validation/reconstruction safely; no automatic source downgrade or destructive schema rollback is introduced.

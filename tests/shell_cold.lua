@@ -77,7 +77,7 @@ function M.run()
   assert(surface.create_entity{name='substation',position={3,4},force='player'})
   local supply=assert(surface.create_entity{name='electric-energy-interface',position={6,4},force='player'})
   supply.power_production=100000000; supply.power_usage=0
-  local source='return {api_version=1,handlers={start=function(e) computer.every(1,"sample") end,sample=function(e) computer.setState("samples",(computer.getState("samples") or 0)+1) end}}'
+  local source='function start(e) computer.every(1,"sample") end\n\nfunction sample(e) computer.setState("samples",(computer.getState("samples") or 0)+1) end'
   runtime.save(rec.id,source,0); assert(runtime.activate(rec.id,game.tick))
   runtime.save(peer.id,source,0); assert(runtime.activate(peer.id,game.tick))
   runtime.save(unknown.id,source,0); assert(runtime.activate(unknown.id,game.tick))

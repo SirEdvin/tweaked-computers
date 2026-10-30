@@ -5,7 +5,7 @@ local examples = require('examples.planning-programs')
 local sandbox = require('scripts.runtime.sandbox')
 local M = {}
 local function source(body)
-  return 'return {api_version=1, handlers={start=function(event) '..body..' end}}'
+  return 'function start(event) '..body..' end'
 end
 function M.run(report_total)
   local tests=0
@@ -241,8 +241,9 @@ end
     'local function sample() end; function sample() end',
     'function sample() end; local function sample() end',
     'local function x() end; local function x() end; function start() end',
-    'function start() end; return {api_version=1,handlers={}}',
-    'return {api_version=1,handlers={}}; function start() end',
+    'return 1',
+    'function start() end; return 1',
+    'return 1; function start() end',
     'function start() end; start()',
     'local count=0; function start() end',
     'local p=peripheral.wrap("x"); function start() end',
@@ -393,14 +394,14 @@ function sample() end
     assert(select('#',print())==0)
     print({},function() end,computer,unpack)
   ]]
-  for _,text in ipairs({source(shared_body),'function start() '..shared_body..' end'}) do
+  for _,text in ipairs({source(shared_body),'local function check() '..shared_body..' end; function start() check() end'}) do
     local output={}
     success,diagnostic=document(text,'start',{computer={log=function(s) output[#output+1]=s end}})
     assert(success,diagnostic and diagnostic.message)
     assert(#output==3 and output[1]=='value\tfalse\tnil\t3\tnil' and output[2]==''
       and output[3]=='table\tguest function\tAPI handle\ttable function')
   end
-  report('expanded-globals-both-saved-forms-tuples-identity-and-print')
+  report('expanded-globals-export-and-private-helper-tuples-identity-and-print')
   local accepted_example=0
   for _,example in ipairs(examples) do
     if example.name=='specs/computer-runtime/lua-api.md:3' then
@@ -447,10 +448,10 @@ function sample() end
     refused('function start() end; print("top-level")')
     success,diagnostic=document('function start('..name..') local '..name..'=false; assert('..name..'==false) end')
     assert(success,diagnostic and diagnostic.message)
-    success,diagnostic=document('return {api_version=1,handlers={'..name..'=function() assert(type(print)=="function") end}}',name)
+    success,diagnostic=document('function start() local '..name..'=false; assert('..name..'==false) end')
     assert(success,diagnostic and diagnostic.message)
   end
-  report('expanded-reservation-lexical-shadowing-and-legacy-handler-keys')
+  report('expanded-reservation-parameter-and-local-shadowing')
   for _,body in ipairs({
     [[xpcall(function() while true do end end,function(e) computer.log('unsafe') end); computer.log('unsafe')]],
     [[xpcall(function() error('x') end,function(e) while true do end end); computer.log('unsafe')]],

@@ -33,7 +33,7 @@ local function error_is(code,fn)
   local ok,e=pcall(fn); assert(not ok and type(e)=='table' and e.code==code,'expected '..code..', got '..(type(e)=='table' and tostring(e.code) or tostring(e)))
 end
 local function guest(c,body)
-  local source='return {api_version=1,handlers={start=function(e) '..body..' end}}'
+  local source='function start(e) '..body..' end'
   local ctx=admission.context(admission.new(),c.id,0)
   local plan,err=compiler.compile(source,ctx); assert(plan,err and err.message)
   local ok,e=compiler.run(plan,'start',{name='start'},function(g) return runtime.services(c,game.tick,g) end,ctx)
@@ -67,25 +67,25 @@ local function output(rec,c,wire)
   local target,path=peripheral.authority(c,rec.id,wire,nop); assert(target==rec)
   rec.output_owner={computer_id=c.id,run_id=c.run_id,wire=wire,path=path}
 end
-local cold_source=[[return {api_version=1,handlers={
-start=function(e)
+local cold_source=[[function start(e)
   computer.setState('boots',(computer.getState('boots') or 0)+1)
   computer.on('peripheral_attach','changed'); computer.on('peripheral_detach','changed')
   local db=peripheral.find('kv_database','red'); assert(db)
   computer.setState('db',peripheral.getName(db)); computer.setState('wire',peripheral.getWire(db))
   local info=peripheral.describe(peripheral.getName(db),'red'); computer.setState('position',info.position)
-end,
-changed=function(e)
+end
+
+function changed(e)
   local events=computer.getState('events') or {}
   events[#events+1]={name=e.name,peripheral=e.peripheral,wire=e.wire,reason=e.reason or ''}
   computer.setState('events',events)
-end,
-check=function(e)
+end
+
+function check(e)
   local name=computer.getState('db'); assert(not peripheral.isPresent(name,'red'))
   assert(peripheral.wrap(name,'red')==nil)
   computer.setState('checked',true)
-end
-}}]]
+end]]
 function M.run()
   registry.initialize(); storage.tc05_fixture={groups=0,revocations={},phase='armed'}
   local surface=game.surfaces[1]
@@ -139,7 +139,7 @@ function M.run()
     ok,e=pcall(db.getLimits,db); assert(not ok and e.code=='E_ARGUMENT')]])
   db.powered=true
   report('compiled-discovery-metadata-copy-arity-unpowered-static-limits-and-zero-tuple')
-  local direct_source='return {api_version=1,handlers={start=function(e) return peripheral.call('..string.format('%q',db.id)..',"red","testGet") end}}'
+  local direct_source='function start(e) return peripheral.call('..string.format('%q',db.id)..',"red","testGet") end'
   local direct_work={}
   for i,classify in ipairs({false,true}) do
     local ctx=admission.context(admission.new(),c.id,game.tick)
@@ -212,7 +212,7 @@ function M.run()
   output(io,c,'red')
   disconnect(c,db,'red'); peripheral.reconcile_one(c,'red',game.tick,nop)
   assert(not io.output_owner and io.children.output.get_control_behavior().sections_count==0)
-  local failure_source="return {api_version=1,handlers={changed=function(e) error('detach handler failed') end}}"
+  local failure_source="function changed(e) error('detach handler failed') end"
   local failure_ctx=admission.context(admission.new(),c.id,0)
   local failure_plan=assert(compiler.compile(failure_source,failure_ctx))
   local ran,diagnostic=compiler.run(failure_plan,'changed',c.queue[1].event,function(g) return runtime.services(c,game.tick,g) end,failure_ctx)

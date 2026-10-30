@@ -103,7 +103,6 @@ API companions and schema declarations remain under the five dated archives;
 packages exclude archive/proposal/design/task history. `tools/build.py` has a
 28-file explicit contract inventory. Package tests check canonical completeness,
 link destinations, baseline Purpose and requirement/scenario conservation.
-Planning fixtures retain the same nine descriptor sources and exact guest bytes.
 
 Strict OpenSpec, deterministic packaging, generated catalogue/examples, strict
 MkDocs/built links and the final packaged regressions are recorded individually

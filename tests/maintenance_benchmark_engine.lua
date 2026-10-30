@@ -22,25 +22,24 @@ local function connect(a,b,color,ar,br)
   assert(lifecycle.connector(a,ar or 'network',color).connect_to(lifecycle.connector(b,br or 'network',color)))
 end
 local function source(c,name,index)
-  if config.workload=='idle' then return [[return {api_version=1,handlers={
-    start=function(e) computer.every(60,'work') end,
-    work=function(e) computer.setState('beats',(computer.getState('beats') or 0)+1); computer.setState('last',e.tick) end}}]] end
+  if config.workload=='idle' then return [[function start(e) computer.every(60,'work') end
+
+function work(e) computer.setState('beats',(computer.getState('beats') or 0)+1); computer.setState('last',e.tick) end]] end
   local period=config.workload=='mixed' and 6 or 2
   local input=config.workload=='heavy' and index%2==0 and 'green' or 'red'
-  return string.format([[return {api_version=1,handlers={
-    start=function(e)
+  return string.format([[function start(e)
       local io=peripheral.find('logic_handler','red')
       io.subscribe({input=%q,initial=true,signals={{type='virtual',name='signal-A',quality='normal'}}},'changed')
       computer.every(%d,'work')
-    end,
-    changed=function(e)
+    end
+    function changed(e)
       local io=peripheral.find('logic_handler','red')
       local value=io.readSignal(%q,{type='virtual',name='signal-A',quality='normal'})
       computer.setState('input',value); computer.setState('input_tick',e.tick)
       computer.setState('changes',(computer.getState('changes') or 0)+1)
       %s
-    end,
-    work=function(e)
+    end
+    function work(e)
       local n=(computer.getState('beats') or 0)+1
       computer.setState('beats',n); computer.setState('last',e.tick)
       local db=peripheral.find('kv_database','red')
@@ -48,7 +47,7 @@ local function source(c,name,index)
       local m=peripheral.wrap(%q,'red')
       local w,h=m.getSize()
       %s
-    end}}]],input,period,input,index==1 and [[io.setOutput({{signal={type='virtual',name='signal-B',quality='normal'},count=value}})]] or '',
+    end]],input,period,input,index==1 and [[io.setOutput({{signal={type='virtual',name='signal-B',quality='normal'},count=value}})]] or '',
     c.id,name,config.workload=='mixed' and [[m.setCursorPos(1,1); m.clearLine(); m.write('Stock '..tostring(computer.getState('input') or 0)..' / '..tostring(n))]] or [[
       local digit=tostring(n%10); local row=string.rep(digit,w)
       local fg=string.rep('0',w); local bg=string.rep(n%2==0 and 'f' or '7',w)

@@ -1,5 +1,5 @@
 -- Contract inventory exercised as actual compiled guest source in the factory.
-return [[return {api_version=1,handlers={start=function(event)
+return [[function start(event)
   assert(type(computer.getID)=='function' and type(computer.getLabel)=='function')
   assert(type(computer.setLabel)=='function' and type(computer.getTick)=='function')
   assert(type(computer.getLimits)=='function' and type(computer.getState)=='function')
@@ -39,4 +39,4 @@ return [[return {api_version=1,handlers={start=function(event)
   end
   assert(colours==colors and colors.grey==colors.gray and colors.lightGrey==colors.lightGray)
   computer.setState('api_inventory',true)
-end}}]]
+end]]

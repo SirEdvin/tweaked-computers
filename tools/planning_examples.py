@@ -7,8 +7,8 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / 'openspec'
-# Preserve the original descriptor-program sources and fixture names. Console
-# inputs are not descriptor programs; archives are never live contract inputs.
+# Preserve complete saved-program sources and fixture names. Console inputs
+# are not saved programs; archives are never live contract inputs.
 SOURCES = ('api/examples.md',) + tuple(
     f'specs/{cap}/lua-api.md' for cap in (
         'computer-runtime', 'device-configurator', 'device-lifecycle',

@@ -1,4 +1,4 @@
--- Exact historical four-row producer in real production ticks. This is a
+-- Function-only four-row producer adaptation in real production ticks. This is a
 -- pacing/model/publication comparison, not graphical speedup acceptance.
 local registry=require('scripts.registry')
 local lifecycle=require('scripts.lifecycle')
@@ -16,7 +16,7 @@ local function build(kind,x,y)
 end
 local function wire(a,b) assert(lifecycle.connector(a,'network','red').connect_to(lifecycle.connector(b,'network','red'))) end
 function M.run()
- assert(#source==3195)
+ assert(#source==2829)
  local x={phase='running',steps=0,peak_work=0,peak_allocations=0,batches=0}; storage.tc_plot_baseline=x
  local c=build('computer',-3,0); x.computer=c.id
  local wall={}; for y=0,3 do for col=0,3 do wall[#wall+1]=build('monitor',col,y) end end

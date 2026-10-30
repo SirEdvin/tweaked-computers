@@ -29,7 +29,7 @@ function M.run()
   assert(surface.create_entity{name='substation',position={4,4},force='player'})
   local supply=assert(surface.create_entity{name='electric-energy-interface',position={7,4},force='player'})
   supply.power_production=100000000; supply.power_usage=0
-  local source='return {api_version=1,handlers={start=function(e) computer.every(30,"beat") end,beat=function(e) computer.setState("heartbeat",(computer.getState("heartbeat") or 0)+1) end}}'
+  local source='function start(e) computer.every(30,"beat") end\n\nfunction beat(e) computer.setState("heartbeat",(computer.getState("heartbeat") or 0)+1) end'
   runtime.save(c.id,source,0); assert(runtime.activate(c.id,game.tick))
   storage.tc_shell_client={computer=c.id,db=db.id,monitor_tile=tiles[1].id,logic=logic.id,configurator=config.id,start=game.tick}
 end

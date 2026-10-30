@@ -4,25 +4,21 @@ Normative companion to [spec.md](spec.md); shared types, errors and scheduling: 
 
 ## Source document
 
-A computer contains one source document, not files. Its only module-level executable construct is a literal returned descriptor:
+A computer contains one source document, not files. It contains exported function declarations with optional private local-function helpers:
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      local boots = computer.getState("boots") or 0
-      computer.setState("boots", boots + 1)
-      computer.every(60, "sample")
-    end,
-    sample = function(event)
-      computer.log("Sampling at tick " .. tostring(event.tick))
-    end
-  }
-}
+function start(event)
+  local boots = computer.getState("boots") or 0
+  computer.setState("boots", boots + 1)
+  computer.every(60, "sample")
+end
+
+function sample(event)
+  computer.log("Sampling at tick " .. tostring(event.tick))
+end
 ```
 
-`handlers` maps unique names to function declarations. `start` is optional; it receives `{name="start", ...BaseEvent}` once on explicit Run/Apply. No function/table initialization at module scope may touch the factory, inspect the clock, register events or mutate state. Local helper functions are permitted inside handlers within the documented bounded subset. Every dispatch constructs a fresh ephemeral descriptor environment: locals/globals/closures are not a hidden second persistence mechanism. Handler names are case-sensitive strings and must exist when registered.
+Exports populate the named-handler inventory. `start` is optional; it receives `{name="start", ...BaseEvent}` once on explicit Run/Apply. No function/table initialization at module scope may touch the factory, inspect the clock, register events or mutate state. Local helper functions are permitted inside handlers within the documented bounded subset. Every dispatch constructs a fresh ephemeral function environment: locals/globals/closures are not a hidden second persistence mechanism. Handler names are case-sensitive strings and must exist when registered.
 
 Save commits source only; Run/Apply validates and activates a saved revision. Replacing a run cancels its timers/subscriptions/pending events and clears its still-owned logic outputs, then creates a new run generation and queues `start`. Explicit state survives unless the user chooses Reset State. A compile/validation failure before activation does not retire the old run. An error in the newly started handler faults that new run; it does not secretly restart the old revision.
 
@@ -85,26 +81,21 @@ Recurring events use the first due deadline as `scheduled_tick`, report interval
 Approved globals include protected `pcall` for ordinary API errors. A protected call never returns a host object or the private quota/stop sentinel.
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      local db = peripheral.find("kv_database", "red")
-      if not db then
-        computer.log("Connect a database with a complete red path")
-        return
-      end
-      local ok, value = pcall(db.get, "counter")
-      if ok then
-        computer.log(value or "No counter yet")
-      elseif type(value) == "table" then
-        computer.log(value.code .. ": " .. value.message)
-      else
-        computer.log(tostring(value))
-      end
-    end
-  }
-}
+function start(event)
+  local db = peripheral.find("kv_database", "red")
+  if not db then
+    computer.log("Connect a database with a complete red path")
+    return
+  end
+  local ok, value = pcall(db.get, "counter")
+  if ok then
+    computer.log(value or "No counter yet")
+  elseif type(value) == "table" then
+    computer.log(value.code .. ": " .. value.message)
+  else
+    computer.log(tostring(value))
+  end
+end
 ```
 
 An uncaught error faults this run, retaining source/state/logs and prior successful calls. Execution-budget failure and `computer.stop()` always leave guest execution; user protection cannot resume effects afterward. The next explicit Run starts a new run generation. Recovery is never an automatic VM fallback, reset or source rerun.

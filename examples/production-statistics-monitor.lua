@@ -1,7 +1,7 @@
 -- Presentation only: each refresh reads native history, never records a series.
-return [[return {api_version=1,handlers={
-start=function() computer.every(120,"draw") end,
-draw=function()
+return [[function start() computer.every(120,"draw") end
+
+function draw()
   local stats=peripheral.find("production_statistics","red")
   local screen=peripheral.find("monitor","red")
   assert(stats and screen,"Connect powered statistics and monitor devices on red")
@@ -41,4 +41,4 @@ draw=function()
     else error(e) end
   end
   computer.setState("statistics_monitor",true)
-end}}]]
+end]]

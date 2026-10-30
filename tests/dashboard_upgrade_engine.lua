@@ -37,7 +37,7 @@ function M.run()
   assert(game.surfaces[1].create_entity{name='substation',position={3,3},force='player'})
   game.forces.player.technologies['tc-circuit-computers'].researched=true; lifecycle.unlocks()
   game.create_force('tc-dashboard-upgrade-unresearched')
-  local source=[[return {api_version=1,handlers={start=function() computer.setState('boots',(computer.getState('boots') or 0)+1) end}}]]
+  local source=[[function start() computer.setState('boots',(computer.getState('boots') or 0)+1) end]]
   assert(runtime.save(c.id,source,0)); assert(runtime.activate(c.id,game.tick))
 end
 function M.on_load() loaded=true end
@@ -70,11 +70,11 @@ function M.on_tick(event)
       local panel=build('dashboard',6); local probe=build('computer',9)
       x.panel=panel.id; x.probe=probe.id
       assert(lifecycle.connector(probe,'network','red').connect_to(lifecycle.connector(panel,'network','red')))
-      local source=[[return {api_version=1,handlers={start=function()
-        local p=peripheral.find('dashboard','red'); assert(p)
-        p.setTab(1,{title='Installed',content={type='label',id='status',text='Ready'}})
-        computer.setState('configured',true)
-      end}}]]
+      local source=[[function start()
+  local p=peripheral.find('dashboard','red'); assert(p)
+  p.setTab(1,{title='Installed',content={type='label',id='status',text='Ready'}})
+  computer.setState('configured',true)
+end]]
       assert(runtime.save(probe.id,source,0)); assert(runtime.activate(probe.id,event.tick)); return
     end
     local probe=registry.record(x.probe); assert(probe.status=='running',serpent.line(probe.diagnostic))

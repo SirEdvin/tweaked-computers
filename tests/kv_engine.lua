@@ -28,7 +28,7 @@ local function command(rec,name,tick,...)
   return kv.methods[name](nil,rec,'red',tick,nop,...)
 end
 local function guest(c,body)
-  local source='return {api_version=1,handlers={start=function(e) '..body..' end}}'
+  local source='function start(e) '..body..' end'
   local ctx=admission.context(admission.new(),c.id,0)
   local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
   local ok,diagnostic=compiler.run(plan,'start',{name='start'},function(g) return runtime.services(c,game.tick,g) end,ctx)

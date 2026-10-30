@@ -10,13 +10,12 @@ local admission=require('scripts.runtime.admission')
 local limits=require('scripts.runtime.limits')
 local M={}
 local loaded=false
-local old_source=[[return {api_version=1,handlers={
-  start=function(e)
-    computer.setState('boots',(computer.getState('boots') or 0)+1)
-    computer.after(8,'later')
-  end,
-  later=function(e) computer.setState('once',(computer.getState('once') or 0)+1) end
-}}]]
+local old_source=[[function start(e)
+  computer.setState('boots',(computer.getState('boots') or 0)+1)
+  computer.after(8,'later')
+end
+
+function later(e) computer.setState('once',(computer.getState('once') or 0)+1) end]]
 local saved_source=contracts.source(41)
 local draft_source=contracts.source(43)
 local function plain(value,seen)

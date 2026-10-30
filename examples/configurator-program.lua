@@ -1,5 +1,5 @@
 -- Native source document; executed by tests.configurator_engine.
-return [[return {api_version=1,handlers={start=function(e)
+return [[function start(e)
   local cfg=peripheral.find('configurator','red'); assert(cfg)
   local devices=cfg.getDevices('green')
   for _,device in ipairs(devices) do
@@ -11,4 +11,4 @@ return [[return {api_version=1,handlers={start=function(e)
       computer.setState('configured',device.id)
     end
   end
-end}}]]
+end]]

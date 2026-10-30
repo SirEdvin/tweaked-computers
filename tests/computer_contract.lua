@@ -35,7 +35,7 @@ local function computer(source,tick)
   return rec
 end
 local function source(start,others)
-  return 'return {api_version=1,handlers={start=function(event) '..start..' end'..(others or '')..'}}'
+  return 'function start(event) '..start..' end '..(others or '')
 end
 local function expected_error(code,fn)
   local ok,e=pcall(fn); assert(not ok and type(e)=='table' and e.code==code,code..' expected')
@@ -122,12 +122,12 @@ function M.run()
     computer.every(2,'repeat_timer')
     computer.on('power_restored','restored'); computer.on('monitor_touch','touch')
   ]],[[
-    ,a=function(e) computer.setState('order',computer.getState('order')..'a'); computer.setState('once',computer.getState('once')+1) end
-    ,b=function(e) computer.setState('order',computer.getState('order')..'b'); assert(computer.cancelTimer(computer.getState('cancel'))); assert(not computer.cancelTimer(computer.getState('cancel'))) end
-    ,cancelled=function(e) error('cancelled timer executed') end
-    ,repeat_timer=function(e) computer.setState('missed',e.missed); computer.setState('scheduled',e.scheduled_tick) end
-    ,restored=function(e) computer.setState('restored',e.restored_tick); computer.setState('outage',e.outage_start_tick) end
-    ,touch=function(e) error('obsolete touch executed') end
+    function a(e) computer.setState('order',computer.getState('order')..'a'); computer.setState('once',computer.getState('once')+1) end
+    function b(e) computer.setState('order',computer.getState('order')..'b'); assert(computer.cancelTimer(computer.getState('cancel'))); assert(not computer.cancelTimer(computer.getState('cancel'))) end
+    function cancelled(e) error('cancelled timer executed') end
+    function repeat_timer(e) computer.setState('missed',e.missed); computer.setState('scheduled',e.scheduled_tick) end
+    function restored(e) computer.setState('restored',e.restored_tick); computer.setState('outage',e.outage_start_tick) end
+    function touch(e) error('obsolete touch executed') end
   ]]))
   scheduler.tick(0); scheduler.tick(2); assert(rec.state.order=='a')
   scheduler.tick(3); assert(rec.state.order=='ab' and rec.state.once==1)
@@ -142,7 +142,7 @@ function M.run()
   scheduler.tick(13); assert(rec.state.missed==3 and rec.state.scheduled==6 and rec.state.once==1)
   assert(rec.needs_input_resync and rec.status=='running')
   report('timer-FIFO-equal-deadlines-cancel-coalescence-and-power')
-  root=fresh(); rec=computer(source('computer.setState("kept",true)',',event=function(e) end'))
+  root=fresh(); rec=computer(source('computer.setState("kept",true)','function event(e) end'))
   scheduler.tick(0)
   for i=1,limits.event_queue_entries do assert(runtime.enqueue(rec,'event',{name='timer'},1)) end
   assert(not runtime.enqueue(rec,'event',{name='timer'},1))
@@ -157,7 +157,7 @@ function M.run()
   local totalspent=root.ledger.total; scheduler.tick(0); assert(root.ledger.total==totalspent)
   report('production-scheduler-malicious-neighbor-and-once-per-tick')
   root=fresh(); local peers={}
-  for i=1,4 do peers[i]=computer(source('computer.setState("calls",(computer.getState("calls") or 0)+1)',',again=function(e) computer.setState("calls",computer.getState("calls")+1) end'),i) end
+  for i=1,4 do peers[i]=computer(source('computer.setState("calls",(computer.getState("calls") or 0)+1)','function again(e) computer.setState("calls",computer.getState("calls")+1) end'),i) end
   scheduler.tick(5)
   for _,c in ipairs(peers) do assert(c.state.calls==1); runtime.enqueue(c,'again',{name='timer'},6) end
   -- Synthetic aggregate pressure only: verify cursor-based deferral, not latency.
@@ -166,7 +166,7 @@ function M.run()
   scheduler.tick(7); for _,c in ipairs(peers) do assert(c.state.calls==2) end
   report('fair-aggregate-deferral-without-faulting-waiters')
   local ctx=admission.context(admission.new(),'locations',0)
-  local text='return {api_version=1,handlers={start=function(event)\n  local x=1\n  error("located")\nend}}'
+  local text='function start(event)\n  local x=1\n  error("located")\nend'
   local plan=assert(compiler.compile(text,ctx)); local ok,diag=compiler.run(plan,'start',{}, {},ctx)
   assert(not ok and diag.line==3 and diag.column>0,diag and diag.message)
   report('original-source-line-and-column')
@@ -240,15 +240,15 @@ function M.run()
   ok,diag=compiler.run(plan,'start',{}, {},admission.context(admission.new(),'indexed-execute',0)); assert(ok,diag and diag.message)
   report('maximum-indexed-assignment-width-and-publication-order')
   for _,text in ipairs({
-    'return {api_version=2,handlers={}}',
-    'return {api_version=1,handlers={},extra=true}',
-    'return {api_version=1,api_version=1,handlers={}}',
-    'return {api_version=1,handlers={a=function(e) end,a=function(e) end}}'
+    'return 2',
+    'function start() end; return true',
+    'local function private() end',
+    'function a(e) end\n\nfunction a(e) end'
   }) do
     local candidate,diagnostic=compiler.compile(text,admission.context(admission.new(),'bad-header',0))
     assert(not candidate and diagnostic.line and diagnostic.column)
   end
-  report('malformed-and-unsupported-source-descriptors')
+  report('malformed-and-unsupported-source-documents')
   root=fresh()
   local plain=[[
 local function increment(n) return n+1 end
@@ -349,7 +349,7 @@ end
   assert(sub_count==1)
   report('plain-once-timer-and-string-only-private-function-registration-refusal')
   local state,logs,queue=rec.state,rec.logs,rec.queue
-  for i,text in ipairs({'function start() sample() end; return {api_version=1,handlers={}}',
+  for i,text in ipairs({'function start() sample() end; return 1',
     'function start() end; computer.log("top-level")','function start() sample=1 end'}) do
     local tick=3+i
     runtime.save(rec.id,text,rec.saved_revision)

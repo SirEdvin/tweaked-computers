@@ -266,6 +266,22 @@ getLimits()''',
                 self.assertEqual(example[1] + b'\n', source)
                 self.assertEqual(player_docs.guest_example('function-program').encode() + b'\n', source)
 
+    def test_adapted_plot_baseline_provenance(self):
+        import hashlib
+        import json
+        import re
+        source = (build.ROOT / 'examples/monitor-plot-baseline.lua').read_bytes()
+        guest = re.search(rb'return \[====\[(.*?)\]====\]', source, re.S)
+        self.assertIsNotNone(guest)
+        assert guest is not None
+        provenance = json.loads((build.ROOT / 'examples/monitor-plot-baseline.json').read_text())
+        self.assertEqual(provenance['source_sha256'], hashlib.sha256(guest[1]).hexdigest())
+        self.assertEqual(provenance['source_bytes'], len(guest[1]))
+        self.assertEqual(provenance['historical_source_sha256'],
+                         'b095e3789ede9bd639bedcaaf85849cda5f00cf2905bcdd2eddd68e879529798')
+        self.assertEqual(provenance['historical_source_bytes'], 3195)
+        self.assertNotEqual(provenance['source_sha256'], provenance['historical_source_sha256'])
+
     def test_documentation_rejects_starter_example_drift(self):
         import player_docs
         original = player_docs.text
@@ -439,6 +455,22 @@ class CanonicalContractTests(unittest.TestCase):
             ('logic-handler', 'Bounded live signal observation'): '88df9636300ccab501411a2379f693aa5f27d1d9538bcaa771439243edb44ef4',
             ('peripheral-inspection', 'Bounded and honest refresh'): 'b1397186cf812339b3a8b16ac708d1d65cb728eae63bef4972df305f52db216c',
         }
+        # Source-only replacements must match the complete approved delta.
+        source_changes = [build.ROOT / 'openspec/changes/function-only-programs']
+        source_changes += list(archives.glob('*-function-only-programs'))
+        source_change = next(p for p in source_changes if p.is_dir())
+        source_replacements = {
+            'Declaration-only reconstruction boundary': 'Declaration-only document boundary',
+            'Compatible source lifecycle': 'Function-program source lifecycle',
+            'Expanded globals in saved function bodies': 'Approved globals in saved functions',
+            'Compatibility of newly reserved source names': 'Reserved names in saved programs',
+        }
+        source_blocks = {}
+        for delta in (source_change / 'specs').glob('*/spec.md'):
+            for section in re.split(r'^## ', delta.read_text(), flags=re.M):
+                if section.startswith(('MODIFIED Requirements', 'ADDED Requirements')):
+                    for name, body in re.findall(r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|\Z)', section, re.M | re.S):
+                        source_blocks[delta.parent.name, name] = body.strip()
         for change in changes:
             folder = archives / change
             self.assertTrue((folder / '.openspec.yaml').is_file(), change)
@@ -450,10 +482,19 @@ class CanonicalContractTests(unittest.TestCase):
                     with self.subTest(change=change, capability=delta.parent.name, requirement=name):
                         if (delta.parent.name,name)==('device-lifecycle','Mining preserves user data'):
                             name='Device-specific mining data policy'
+                        if delta.parent.name == 'program-source':
+                            name = source_replacements.get(name, name)
                         found = re.search(r'^### Requirement: ' + re.escape(name) +
                                           r'\n(.*?)(?=^### Requirement:|\Z)', canonical, re.M | re.S)
                         self.assertIsNotNone(found)
                         assert found is not None
+                        source_body = source_blocks.get((delta.parent.name, name))
+                        if source_body is not None:
+                            self.assertEqual(found[1].strip(), source_body)
+                            old_names = set(re.findall(r'^#### Scenario: ([^\n]+)', body, re.M))
+                            new_names = set(re.findall(r'^#### Scenario: ([^\n]+)', source_body, re.M))
+                            self.assertLessEqual(old_names, new_names)
+                            continue
                         expected = native_evolved.get((delta.parent.name, name))
                         if expected:
                             self.assertEqual(hashlib.sha256(found[1].strip().encode()).hexdigest(), expected)

@@ -7,15 +7,16 @@ local defs=require('scripts.device-definitions')
 local shell=require('scripts.runtime.shell')
 local M={}
 local function f() return storage.tc_fact_client end
-local source=[[return {api_version=1,handlers={start=function(e) computer.setState('boots',(computer.getState('boots') or 0)+1); computer.every(30,'query') end,
-query=function(e)
+local source=[[function start(e) computer.setState('boots',(computer.getState('boots') or 0)+1); computer.every(30,'query') end
+
+function query(e)
   local a=peripheral.find('factoriopedia_interface','red'); local b=peripheral.find('factoriopedia_interface','green')
   assert(a and b)
   local i=a.getItem('tc-fp-fractional'); assert(i.weight==b.getItem('tc-fp-fractional').weight)
   computer.setState('item',i); computer.setState('fluid',a.getFluid('tc-fp-overlap'))
   computer.setState('items',a.listItems()); computer.setState('fluids',a.listFluids())
   computer.setState('queries',(computer.getState('queries') or 0)+1)
-end}}]]
+end]]
 local function build(kind,x,y,d)
   local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},direction=d or 0,force='player'})
   lifecycle.on_built{entity=b}; return assert(registry.by_entity(b))

@@ -3,19 +3,17 @@ type: runtime
 title: Shared scheduling, timers and admission
 description: Deterministic host phase ordering, retained real-tick credits, fair callback/timer scans and bounded maintenance deferral.
 tags: [scheduler, admission, fairness, timers, budgets]
-verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-15T06:41:57.498Z
 sources:
-  - id: openwiki-source-6017f73285ae6bbf6c3d040a
-    resource: repo://scripts/registry.lua
   - id: openwiki-source-03e30f27b8f4219a9e5d2085
     resource: repo://scripts/runtime/admission.lua
   - id: openwiki-source-0ddacafef71462f8b63089cd
     resource: repo://scripts/runtime/computer.lua
   - id: openwiki-source-0bf68f272e97a323da18a610
     resource: repo://scripts/scheduler.lua
-generated: { by: "hermes", at: "2026-10-15T06:41:57.498Z" }
+generated: { by: "hermes", at: "2026-10-29T22:50:29.161Z" }
+verified:
+  - by: openwiki/0.7.1
+    at: 2026-10-29T22:50:29.161Z
 ---
 
 # Shared scheduling, timers and admission
@@ -41,7 +39,7 @@ Hooks are module-local functions registered during control parsing; the ordering
 
 `reserve` validates amounts/context age and atomically checks both the per-kind machine ceiling and aggregate guest ceiling before updating counters. Guest admission excludes the host maintenance reservation. Compiler probes, fresh reconstruction and service work therefore contend for explicit shared resources rather than each receiving independent unlimited budgets.
 
-Dispatch preserves aggregate headroom for one complete maximum-bounded callback. When neighbors leave insufficient headroom, the untouched queued run waits rather than being faulted solely for losing scheduling order. `E_BUSY` context admission also defers. A genuine compiler/callback failure faults the current run and executes teardown. Callback work is abstract admission units, not measured CPU milliseconds.
+Dispatch preserves aggregate headroom up to the smaller of one maximum-bounded callback and the current guest allowance; actual admission remains authoritative. When neighbors leave insufficient headroom, the untouched queued run waits rather than being faulted solely for losing scheduling order. `E_BUSY` context admission also defers. A genuine compiler/callback failure faults the current run and executes teardown. Callback work is abstract admission units, not measured CPU milliseconds.
 
 ## Maintenance refusal is not a guest exception
 

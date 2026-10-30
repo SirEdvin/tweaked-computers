@@ -18,7 +18,7 @@ local function wire(a,b)
 end
 local function start(mode)
   local x=fixture(); local c=registry.computer(x.computer)
-  local source=[[return {api_version=1,handlers={start=function()
+  local source=[[function start()
     local names={}
     for _,name in ipairs(peripheral.getNames('red')) do
       if peripheral.getType(name,'red')=='monitor' then names[#names+1]=name end
@@ -30,14 +30,15 @@ local function start(mode)
     end
     computer.setState('started',(computer.getState('started') or 0)+1)
     MODE
-  end,paint=function()
+  end
+  function paint()
     local names=computer.getState('names')
     for i=1,COUNT do
       local m=peripheral.wrap(names[i],'red')
       m.setCursorPos(1,2); m.write(tostring(computer.getTick()%10))
     end
     computer.setState('painted',(computer.getState('painted') or 0)+1)
-  end}}]]
+  end]]
   source=source:gsub('MODE',mode=='idle' and '' or "computer.every(2,'paint')")
   source=source:gsub('COUNT',mode=='all' and '4' or '1')
   local player={valid=true,index=1,force=c.body.force,surface=c.body.surface,can_reach_entity=function(body) return body==c.body end}

@@ -1,6 +1,5 @@
 -- Lines are sample-order values, duration bars are seconds; no production-widget parity.
-return [[return {api_version=1,handlers={
-start=function()
+return [[function start()
   local p=peripheral.find('dashboard','red'); assert(p,'Connect a powered Dashboard on red')
   local available=false
   for _,name in ipairs(peripheral.getMethods(peripheral.getName(p),'red')) do if name=='appendSample' then available=true end end
@@ -22,17 +21,18 @@ start=function()
   p.subscribe('clicked')
   computer.every(60,'refresh')
   computer.setState('boots',(computer.getState('boots') or 0)+1)
-end,
-refresh=function()
+end
+
+function refresh()
   local p=peripheral.find('dashboard','red')
   local n=(computer.getState('updates') or 0)+1
   computer.setState('updates',n)
   p.setText(1,'heartbeat','Updates '..n)
-end,
-clicked=function(event)
+end
+
+function clicked(event)
   local p=peripheral.wrap(event.peripheral,event.wire)
   local count=(computer.getState('clicks') or 0)+1
   computer.setState('clicks',count)
   p.setText(1,'status','Acknowledged '..count)
-end
-}}]]
+end]]

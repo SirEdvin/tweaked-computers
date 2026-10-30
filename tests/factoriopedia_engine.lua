@@ -44,16 +44,18 @@ end
 local function guest(c,body,document)
   local before=research(); local unit=c.body.unit_number
   local ctx=runtime.context(c,game.tick)
-  local plan,e=compiler.compile(document or 'return {api_version=1,handlers={start=function(e) '..body..' end}}',ctx)
+  local plan,e=compiler.compile(document or 'function start(e) '..body..' end',ctx)
   assert(plan,serpent.line(e))
   local ok,problem=compiler.run(plan,'start',{},function(g) return runtime.services(c,game.tick,g) end,ctx)
   assert(ok,serpent.line(problem))
   assert(c.body.valid and c.body.unit_number==unit and equal(before,research()),'query mutated native body/research/recipe state')
 end
-local busy=[[return {api_version=1,handlers={start=function(e) computer.every(1,'work') end,
-work=function(e) computer.setState('samples',(computer.getState('samples') or 0)+1) end}}]]
-local query_source=[[return {api_version=1,handlers={start=function(e) computer.setState('query_starts',(computer.getState('query_starts') or 0)+1); computer.every(1,'query') end,
-query=function(e)
+local busy=[[function start(e) computer.every(1,'work') end
+
+function work(e) computer.setState('samples',(computer.getState('samples') or 0)+1) end]]
+local query_source=[[function start(e) computer.setState('query_starts',(computer.getState('query_starts') or 0)+1); computer.every(1,'query') end
+
+function query(e)
   local s=peripheral.find('factoriopedia_interface','red')
   assert(s.getItem('iron-plate').stack_size>0)
   local n=computer.getState('queries') or 0
@@ -64,12 +66,12 @@ query=function(e)
     end
   end
   computer.setState('queries',n+1)
-end}}]]
-local exhausted_source=[[return {api_version=1,handlers={start=function(e)
+end]]
+local exhausted_source=[[function start(e)
   local s=peripheral.find('factoriopedia_interface','red')
   pcall(function() for i=1,1000 do s.getItem('iron-plate') end end)
   computer.setState('escaped',true)
-end}}]]
+end]]
 local cases={
   {'discovery-five-methods-and-arity',[[
     local id=peripheral.getNames('red'); local methods

@@ -16,8 +16,7 @@ local plot_source=require('examples.monitor-plot-program')
 local M={}; local loaded=false
 local function f() return storage.tc_present_live end
 local function nop() end
-local source=[[return {api_version=1,handlers={
-start=function(e)
+local source=[[function start(e)
  computer.setState('boots',(computer.getState('boots') or 0)+1)
  computer.setState('n',0)
  local refs={}
@@ -26,9 +25,11 @@ start=function(e)
  end
  peripheral.setMonitorSyncGroup(refs)
  computer.on('monitor_resize','resize'); computer.every(1,'paint')
-end,
-resize=function(e) computer.setState('repaint',true) end,
-paint=function(e)
+end
+
+function resize(e) computer.setState('repaint',true) end
+
+function paint(e)
  local n=computer.getState('n')+1; computer.setState('n',n)
  if n<=70 or computer.getState('repaint') then
   for _,ref in ipairs(peripheral.getMonitorSyncGroup().members) do
@@ -38,11 +39,10 @@ paint=function(e)
   end
   computer.setState('repaint',false)
  end
-end
-}}]]
+end]]
 local function guest(c,text)
  local ctx=admission.context(admission.new(),c.id,game.tick)
- local plan,e=compiler.compile('return {api_version=1,handlers={start=function(e) '..text..' end}}',ctx)
+ local plan,e=compiler.compile('function start(e) '..text..' end',ctx)
  assert(plan,e and e.message)
  local ok,why=compiler.run(plan,'start',{},function(g) return runtime.services(c,game.tick,g) end,ctx)
  assert(ok,serpent.line(why))
@@ -393,9 +393,9 @@ function M.on_tick(event)
   assert(c.status=='stopped' and not c.monitor_sync)
   log('TC_PRESENT_STOP_RETIREMENT_OK')
   local ref={name=x.tiny,wire='red'}
-  local text="return {api_version=1,handlers={start=function(e) local name="..string.format('%q',ref.name)..
+  local text="function start(e) local name="..string.format('%q',ref.name)..
     "; peripheral.setMonitorSyncGroup({{name=name,wire='red'}}); peripheral.call(name,'red','setCursorPos',1,1); "..
-    "peripheral.call(name,'red','write','F'); error('fixture accepted-write fault') end}}"
+    "peripheral.call(name,'red','write','F'); error('fixture accepted-write fault') end"
   assert(runtime.save(c.id,text,c.saved_revision)); assert(runtime.activate(c.id,event.tick))
   x.phase='faulting'; x.changed_at=event.tick
  elseif x.phase=='faulting' and c.status=='faulted' then

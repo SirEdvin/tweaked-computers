@@ -51,8 +51,8 @@ wrap returns nil. Earlier successful writes are not replayed on loading.
   retained. `fn=function() end` fails rather than saving executable code.
 - Host globals, dynamic loading, metatables, coroutines and unguarded execution
   remain unavailable. Reserved library/API names and `print` cannot be replaced.
-  [Saved programs](api/language.md) accept plain declarations or legacy
-  descriptors, but remain separate from Console. An active program's exported
+  [Saved programs](api/language.md) accept only plain function declarations
+  and remain separate from Console. An active program's exported
   `sample` or `start` is not a Console binding: `sample()` cannot call it here.
   Direct calls between exports belong inside that saved program. A Console local
   function with the same name is only a new, unrelated function for that submission.

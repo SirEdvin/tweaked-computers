@@ -36,7 +36,7 @@ local function put(entity,entries)
   s.filters=filters; cb.enabled=true
 end
 local function guest(c,text,handler)
-  local src='return {api_version=1,handlers={start=function(e) '..text..' end,changed=function(e) end}}'
+  local src='function start(e) '..text..' end; function changed(e) end'
   local ctx=admission.context(admission.new(),c.id,0)
   local plan,e=compiler.compile(src,ctx); assert(plan,e and e.message)
   c.active={source=src,revision=1,api_version=1,compiler_version=limits.compiler_version,storage_version=1,handlers=plan.handlers}

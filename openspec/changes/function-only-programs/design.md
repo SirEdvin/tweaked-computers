@@ -6,7 +6,7 @@ See `proposal.md` for motivation and approved scope. This is a deletion/consolid
 
 Observed in the current checkout:
 
-- `scripts/runtime/compiler.lua:224-315` separates Console emission, declaration discovery/emission and another saved-source branch selected by the first meaningful statement. Declaration discovery already validates names, builds exports, preserves lexical private helpers and emits guarded functions.
+- `scripts/runtime/compiler.lua` separates explicit Console emission from saved declaration discovery/emission. Declaration discovery validates names, builds exports, preserves lexical private helpers and emits guarded functions.
 - `compiler.compile` is called by `scripts/runtime/computer.lua:70` and `scripts/ui/editor-model.lua:84`; `scripts/runtime/shell.lua:78` explicitly selects `shell`. `scripts/scheduler.lua:166` dispatches through `compiler.run`, which revalidates the exact active source rather than trusting caller-supplied generated code.
 - `scripts/runtime/sandbox.lua:114` and its caller at `compiler.lua:405` prepay handler construction. The helper is shared accounting, not disposable execution protection.
 - `tests/runtime_contract.lua` already exercises declarations, lexical behavior, tuples, source diagnostics, protected calls, globals and bounds. Other behavioral fixtures still construct their guest source through reusable body wrappers or inline strings.
@@ -31,6 +31,8 @@ After the explicit Console branch, run declaration discovery and emission direct
 Keep existing forward export resolution, private-helper ordering, protected names, body emission, source coordinates and guarded closures. Rename the shared handler-preparation helper and its only production caller to describe handler preparation; preserve its accounting and allocation behavior. Keep private generated handler tables and `api_version`/compiler metadata where they express runtime contracts rather than user-authored syntax.
 
 Reusing this path is smaller and safer than a new frontend or compatibility switch. There is no reason to alter scheduler, editor, shell or computer lifecycle interfaces: they already converge on the compiler. Verify these call paths instead of introducing call-site workarounds.
+
+The unchanged sort-capacity workload exposed redundant whole-function assembly after conversion. The maintainer approved a scoped bounded-emitter refactor on 2026-10-29: append top-level function headers, already-paid body statements and terminators to the existing final fragment vector instead of assembling and charging a second whole-function string. Preserve nested emission, lexical order, function/statement guards, source locations and all production ceilings. Compute and admit final output length before joining; retain cumulative fragment accounting and exact warm/cold charge-prefix parity. This is construction deduplication, not permission to remove resource protection or weaken a workload.
 
 ### 2. State the accepted grammar positively, including in tests
 

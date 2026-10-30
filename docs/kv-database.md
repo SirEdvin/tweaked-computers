@@ -136,25 +136,21 @@ points.
 `examples/kv-program.lua` contains the native source document for this example:
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function(event)
-      local db = peripheral.find("kv_database", "red")
-      if not db then return end
-      db.hset("machine", "status", "ready", "owner", computer.getID())
-      db.expire("machine", 30)
-      computer.after(60, "inspect")
-    end,
-    inspect = function(event)
-      local db = peripheral.find("kv_database", "red")
-      if not db then return end
-      local fields = db.hgetall("machine")
-      computer.log(fields.status or "expired")
-      computer.log("TTL=" .. tostring(db.ttl("machine")))
-    end
-  }
-}
+function start(event)
+  local db = peripheral.find("kv_database", "red")
+  if not db then return end
+  db.hset("machine", "status", "ready", "owner", computer.getID())
+  db.expire("machine", 30)
+  computer.after(60, "inspect")
+end
+
+function inspect(event)
+  local db = peripheral.find("kv_database", "red")
+  if not db then return end
+  local fields = db.hgetall("machine")
+  computer.log(fields.status or "expired")
+  computer.log("TTL=" .. tostring(db.ttl("machine")))
+end
 ```
 
 The packaged fixture executes this source's Save/activation/start path through

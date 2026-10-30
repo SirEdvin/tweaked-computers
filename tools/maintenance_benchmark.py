@@ -21,6 +21,14 @@ import time
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
+PROFILE_PHASES = {'scheduler', 'advance_timers', 'dispatch',
+    'lifecycle/00-physical-power-loss', 'lifecycle/01-clone-components',
+    'lifecycle/01-network-output-authority', 'lifecycle/02-computer-undo',
+    'lifecycle/02-monitor-groups', 'lifecycle/02-native-radar-adoption',
+    'lifecycle/physical-devices', 'sample/logic-input',
+    'notifications/monitor-events', 'notifications/peripheral-topology',
+    'render/device-status-art', 'render/kv-reclamation', 'render/monitor-world',
+    'render/program-editor', 'render/ui-dashboard', 'render/ui-peripheral-inspectors'}
 
 
 def digest(data):
@@ -66,7 +74,7 @@ def extract(folder, ticks, profile):
                   and len(records.get('DONE', [])) == 1 and len(records.get('CLEANUP', [])) == 1
                   and len(shutdown) == 2 and all(p['passed'] for p in shutdown)
                   and len(profiles.get('scheduler', {})) == ticks
-                  and (not profile or len(profiles) == 15 and all(len(v) == ticks for v in profiles.values())))
+                  and (not profile or set(profiles) == PROFILE_PHASES and all(len(v) == ticks for v in profiles.values())))
     result = {'structural_pass': structural, 'sample_count': len(samples),
               'functional_pass': structural and all(r['faults'] == 0 for r in samples),
               'cpu_ms': {key: distribution(list(values.values())) for key, values in profiles.items()},

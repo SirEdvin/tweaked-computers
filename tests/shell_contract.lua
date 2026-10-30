@@ -272,7 +272,7 @@ function M.run()
       assert(rec.shell.status:find('Canceled',1,true)); tick=tick+1; execute('assert(x==6)')
     end)
     group('queue-capacity-and-fair-program-dispatch',function()
-      runtime.save(rec.id,'return {api_version=1,handlers={start=function(e) computer.setState("neighbor",true); peripheral.setMonitorSyncGroup({{name="'..screen.id..'",wire="red"}}) end}}',0)
+      runtime.save(rec.id,'function start(e) computer.setState("neighbor",true); peripheral.setMonitorSyncGroup({{name="'..screen.id..'",wire="red"}}) end',0)
       assert(runtime.activate(rec.id,tick)); editor.refresh(a)
       for i=1,limits.shell_pending_entries do submit('x='..i) end
       local input=f.content.console.prompt.command; input.text='x=999'; editor.on_text{player_index=a.index,element=input,tick=tick}

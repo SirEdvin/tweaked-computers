@@ -41,7 +41,7 @@ the [live maintenance setting](docs/player/api/limits.md#maintenance-and-shared-
 independent fault diagnostics and the selected [Service Rack six-device artwork](docs/player/artwork.md),
 including both research icons. The maintenance default stays **200000**;
 the benchmark's provisional 300000 recommendation is not adopted.
-See [historical 0.1.10 release notes](docs/release-0.1.10.md). Legacy programs remain supported.
+See [historical 0.1.10 release notes](docs/release-0.1.10.md).
 
 Version 0.1.9 added the separately researched
 [Recipe Searcher](docs/player/api/recipe-searcher.md): a powered 1×1 read-only

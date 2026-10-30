@@ -3,9 +3,6 @@ type: security
 title: Native compiler and sandbox trust boundaries
 description: Bounded parser admission and native Lua emission, fresh guarded callback environments, Data copying and uncancellable fatal poisoning.
 tags: [compiler, sandbox, security, native, data]
-verified:
-  - by: openwiki/0.7.1
-    at: 2026-10-15T06:41:57.498Z
 sources:
   - id: openwiki-source-4cee717286544161165260f8
     resource: repo://scripts/runtime/compiler.lua
@@ -13,24 +10,31 @@ sources:
     resource: repo://scripts/runtime/data.lua
   - id: openwiki-source-2e3e95454d6dba095a611b9f
     resource: repo://scripts/runtime/sandbox.lua
-generated: { by: "hermes", at: "2026-10-15T06:41:57.498Z" }
+generated: { by: "hermes", at: "2026-10-29T22:50:29.161Z" }
+verified:
+  - by: openwiki/0.7.1
+    at: 2026-10-29T22:50:29.161Z
 ---
 
 # Native compiler and sandbox trust boundaries
 
 ## Compile a language subset, not a general Lua loader
 
-`compiler.lua` imports only the pinned Phobos parser/tokenizer dependency closure. The document must return a literal descriptor containing exactly `api_version=1` and literal named function `handlers`. Top-level statements, computed handler definitions, duplicate/unknown descriptor keys and unsupported syntax are rejected before any guest execution. Compiler/API/storage versions are deliberately separate headers.
+`compiler.lua` imports only the pinned Phobos parser/tokenizer dependency closure. A saved document contains at least one exported simple `function name(...) ... end`, optional top-level lexical `local function` helpers, comments and empty statements. Discovery checks every top-level statement before emission: calls, initialization, assignments, returns, dotted/method declarations and other effects are rejected. Public/private names must be unique and must not collide with exposed built-ins, forbidden globals or reserved identifiers. API version 1 is implicit; compiler/API/storage versions remain separate private headers.
+
+Exports are forward-visible within the same document; private helpers keep lexical declaration order. Ordinary direct calls preserve aliases and tuple/nil arity under the current callback's guards and credits. Named registration still takes an exported name string, never an executable value. `start` is optional and queued only by explicit successful activation, not by validation, Save or load. Console compilation is an explicit separate mode with bounded expression/statement syntax; program exports are not injected into Console.
 
 `compile` bounds source bytes, tokenizer count/identifiers, AST nodes/nesting, tuples, handler count and generated text. Host parser probes share compilation admission. `_ENV`, `_G` and reserved `__tc` identifiers are forbidden; unknown globals and global writes are rejected. Colon declarations/calls are not part of this language. The allowed global surface is a closed set of wrapped primitives/libraries plus `computer` and `peripheral`, not Factorio `game`, `script`, raw loader, filesystem or OS access.
 
 Emission translates accepted AST forms into native Lua with guard calls at statement/loop/call/constructor/index/assignment boundaries. Native `load(...,'t',{})` during compile checks only emitted text syntax; it does not execute a candidate. There is no guest interpreter, bytecode backend, coroutine continuation or saved native stack.
 
+Top-level emission appends headers, already-paid body statements and terminators to one final fragment vector rather than assembling a second whole-function string. It retains cumulative fragment accounting and admits the final joined length before `table.concat`; nested emission, function guards and original-source coordinates remain intact. The exact-source, mode-separated private cache replays original ordered charges and copies caller-visible plans. Neither this construction reduction nor work counters establish a calibrated native heap or real-time bound.
+
 ## Dispatch trusts source, not retained generated text
 
 `compiler.run` validates plan versions and recompiles `plan.source` every dispatch. It ignores caller-retained generated text, checks that the requested handler exists and reserves reconstruction costs. It creates a sandbox, loads newly emitted text in an environment containing only `__tc`, constructs the handler table and invokes the named callback with a guarded event snapshot.
 
-The fresh environment is intentional: even an unchanged source document has the same admission/reconstruction behavior after cold load or in a warm process. Local closures/tables can live inside one callback but cannot become a hidden cross-callback state store. Durable communication uses explicit copied Data and named registrations in the [runtime owner](../architecture/runtime-and-state.md).
+The fresh environment is intentional: even an unchanged source document has the same admission/reconstruction behavior after cold load or in a warm process. `guard.prepare_handlers` still prepays handler construction before the factory executes. Local closures/tables can live inside one callback but cannot become a hidden cross-callback state store. Durable communication uses explicit copied Data and named registrations in the [runtime owner](../architecture/runtime-and-state.md). Invalid replacement candidates leave the prior active source/run/state intact; a later saved revision does not replace the exact source reconstructed for pending work.
 
 ## Guest values and host effects
 

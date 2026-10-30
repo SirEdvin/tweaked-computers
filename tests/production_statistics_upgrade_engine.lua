@@ -6,7 +6,7 @@ local scheduler=require('scripts.scheduler')
 local defs=require('scripts.device-definitions')
 local M={}; local loaded=false
 local function f() return storage.tc_stat_upgrade end
-local source=[[return {api_version=1,handlers={start=function() computer.setState('boots',(computer.getState('boots') or 0)+1) end}}]]
+local source=[[function start() computer.setState('boots',(computer.getState('boots') or 0)+1) end]]
 local function build(kind,x)
   local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,0},force='player'})
   lifecycle.on_built{entity=body}; return assert(registry.by_entity(body))

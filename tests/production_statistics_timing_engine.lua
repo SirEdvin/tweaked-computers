@@ -5,15 +5,17 @@ local runtime=require('scripts.runtime.computer')
 local scheduler=require('scripts.scheduler')
 local defs=require('scripts.device-definitions')
 local M={}; local resumed=false
-local busy=[[return {api_version=1,handlers={start=function() computer.every(1,'pulse') end,
-pulse=function() computer.setState('pulses',(computer.getState('pulses') or 0)+1) end}}]]
-local polling=[[return {api_version=1,handlers={start=function() computer.every(1,'pulse') end,
-pulse=function()
+local busy=[[function start() computer.every(1,'pulse') end
+
+function pulse() computer.setState('pulses',(computer.getState('pulses') or 0)+1) end]]
+local polling=[[function start() computer.every(1,'pulse') end
+
+function pulse()
   local s=peripheral.find('production_statistics','red'); assert(s)
   local a=s.getTotals('item'); local b=s.getRates('fluid','one_minute'); local h=s.getHistory('item','iron-plate','one_minute')
   assert(#h.input==300 and #h.output==300 and a.input.normal['iron-plate']==123 and b.input.water~=nil)
   computer.setState('reads',(computer.getState('reads') or 0)+1)
-end}}]]
+end]]
 local function f() return storage.tc_stat_timing end
 local function build(kind,x,y)
   local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})

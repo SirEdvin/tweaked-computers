@@ -96,6 +96,7 @@ def main():
             if name not in (legacy_prefix + 'control.lua', legacy_prefix + 'tests/monitor_upgrade_engine.lua'):
                 assert original.read(name) == patched.read(name), name
     summary = {'legacy_version': args.baseline_version, 'legacy_engine': legacy_version,
+               'source_setup': 'stopped host data; candidate-only activation for notification checks' if args.baseline_version == '0.1.4' else 'function-capable baseline running source',
                'candidate_version': candidate_info['version'], 'test_version': args.test_version,
                'source_archive_sha256': digest(args.archive),
                'legacy_release_sha256': legacy_sha, 'instrumented_legacy_sha256': digest(legacy_test),

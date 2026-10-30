@@ -4,7 +4,7 @@ This document is normative for the companion `specs/*/lua-api.md` contracts. It 
 
 ## Calling convention and version
 
-- Programs declare `api_version = 1`. Public namespaces are `computer`, `peripheral` and `colors` (`colours` is the same read-only color namespace).
+- Programs use implicit API version 1. Public namespaces are `computer`, `peripheral` and `colors` (`colours` is the same read-only color namespace).
 - Namespaces and wrapped peripheral methods use dot calls: `db.get("key")`, not `db:get("key")`. A colon call adds an unexpected argument and is rejected.
 - API methods are synchronous, non-yielding and non-reentrant. Method calls address current authoritative state. Every accepted mutation is ordered by the synchronized dispatcher; a callback is not a transaction.
 - Extra arguments and unknown option fields are errors unless a signature explicitly has varargs. Optional means omission or nil where specified, never implicit truthiness or string/number coercion.

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:196abf4598c9af1b6ceffc281d3b884d0892404d1a1560d1e4e689a39c054e2c",
+  "pageVersion": "sha256:cec0416455fe2e62d07f300fb7e83c776985ff8b4530f8f5eba25c5ee86bf82d",
   "claims": [
     {
       "id": "claim_b310705ed99b4864a5c7ac8fd64140cc",
@@ -8,10 +8,10 @@
       "evidence": [
         {
           "resource": "repo://scripts/services/kv.lua#L154-L173",
-          "version": "repo-lines-v1:sha256:4188e5a2431a398ae7c59f75f22a2c7a9d8ab3833e5b50f54ee9567fb33585aa:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0ZDZiN2ExMWJmNGYzNjZiZDQ5YTMwOGIzNmFjYTFlYzcyZGQwNTA2YzFkMGM4NzlhNDFiNmY5MTVlNGY4MmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3OTgxMWM1ZmJlMjVjM2Q0ZTVmM2QxZmQzNWFiOWRhNmJjZjhhNjhjNWVkZjlkNmJhOTdmNjg2ODZjMzk2ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI1ZjBmMmM4NGU5YTk4MDY1ZWE4ZmE1ODVjYjUwMGM3ZWZiNDY0YzBkZThhNjk1NGMwNjJiYzQwNWE5ZDI1OGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBhNjY4MzczZDdjNTAwYjQzMzc1NTllZGJmYmRiY2IyMDhlYzYyNjIyOWRiNmRmNWE1ZDc1MDYyMGE2NmUzMjgifQ"
+          "version": "repo-lines-v1:sha256:fd58b45532251136faf85825851ae0034fb11aa792ec6b3c7b98695ad52232a9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0ZDZiN2ExMWJmNGYzNjZiZDQ5YTMwOGIzNmFjYTFlYzcyZGQwNTA2YzFkMGM4NzlhNDFiNmY5MTVlNGY4MmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3OTgxMWM1ZmJlMjVjM2Q0ZTVmM2QxZmQzNWFiOWRhNmJjZjhhNjhjNWVkZjlkNmJhOTdmNjg2ODZjMzk2ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI1ZjBmMmM4NGU5YTk4MDY1ZWE4ZmE1ODVjYjUwMGM3ZWZiNDY0YzBkZThhNjk1NGMwNjJiYzQwNWE5ZDI1OGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdiYWUyNjUyNzNiZDRiMzE1YWRlN2U0OTllZjczMDdiNmVlNTBmZjhkNzNlY2M4NjM3NDc0NDViNTJlYTM4MzMifQ"
         },
         {
-          "resource": "repo://scripts/services/kv.lua#L318-L320",
+          "resource": "repo://scripts/services/kv.lua#L365-L367",
           "version": "repo-lines-v1:sha256:7e3c5bbedb1ed4f5f1ef31772f7115b13e1ec0470ee646dee2259c411ba8d5ad:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjAwNWM3NmExMmExMGMyNDEwZjlmZmJiMGI3ZDI2NjgzMWUzMDllOTM0YThhNjAzNjY1MDIzODAyNmZmMmM5NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzkyMTQyODhmM2M0OWFlNzYwNzIwYzIyODYxZTVmMjdiMDJiNjg4M2ZlZWM2Nzg5NDllMDUwYzU1MGU0NzY4YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzljYzJmN2UwMGM1MWI1MzQzYzM1OGJjMDI1MWQ2OTRlODE1MTI3ZDJhYmM1NTZhZWJlNGVmMzJiZWM2NGM0YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODczMzU5YzBhNzFhMmJkZjUzYjA4YjM5ZDgzMDE4MmI4ZmQ0ZGYyZTM5YWE2YWM4MDdhZjcyZWY1MTY5Y2RmOCJ9"
         },
         {
@@ -43,7 +43,7 @@
           "version": "repo-lines-v1:sha256:331602230c9741b9e97ccd528206fa622e1dec1e4191b2004ca6e093b3eccda4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ODYwN2VkMTMxMGY1NzZiOTg3OTgyZGRmYmRkY2ZkOTQ5OGIwMjMwZTY2NWJjNjAzYzBmYWMzNzNlOGQ1NGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4NjU4MGVhZjU3NjMyZjcwN2FiYmViMzg3MGI2NmU5NTQzMDZjNzE3NDRlMzQyZDlmODg4ZTRkNDVmNmFiZWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdkMDYyOGM2NTM3MzY0ODBhYmRiMGQ5NmIyOTdkNzIyYThiZmY5ODQ3MWU3ZTdkZjhkMDI3MjExY2FmZWRjNzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI1ZjBmMmM4NGU5YTk4MDY1ZWE4ZmE1ODVjYjUwMGM3ZWZiNDY0YzBkZThhNjk1NGMwNjJiYzQwNWE5ZDI1OGUifQ"
         },
         {
-          "resource": "repo://scripts/services/kv.lua#L248-L283",
+          "resource": "repo://scripts/services/kv.lua#L295-L330",
           "version": "repo-lines-v1:sha256:2c348f69fa997c0b617735aeb85ee0314f3e8d7bab144297df2b4a680806f925:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3YTM2ODU0MTA4ZDQ5N2E5Zjg3NDNiYzhkM2FjNTY1M2ZmMWJiMTFlZmRlMmNjMmZlYWIzMDdmMjhiZGI5NWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1ZDZlMDAyNzZhNjEwZjljYWY4MDQxOTE5YzE0ZDYxYzIyNDAxZWVmMjJiYjc4YWZhMzAyMmUxNzMxN2U0ZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU1ZThmZjY3NTdjNWRiODc5NjQ5YzI3OWEzMTQxNzQzNzE1ZTYwMWY0ZjQyZjg4NzNiNDI3Njk1MGE3MDI1NmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVjNjFkZTYwMWZkYzc0ZjM0ZTc3NmFiY2NhYmRjZTMzNjk0Nzg5MDAxZDgzZjNjN2FhMWZiOGVhNmRmN2U5ZTkifQ"
         },
         {
@@ -57,7 +57,7 @@
       "statement": "KV physical reclamation is an independently bounded render-phase maintenance sweep, while logical reads/mutations use expiry immediately and skip unsupported guarded stores.",
       "evidence": [
         {
-          "resource": "repo://scripts/services/kv.lua#L289-L320",
+          "resource": "repo://scripts/services/kv.lua#L336-L367",
           "version": "repo-lines-v1:sha256:f93531002167efbe0c0141b9da10208fb2cfa4bcdf782f62e995a704f64830ba:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1YmRkODE5YzM0ZTY0NDBlZjVmYjg0M2UwYTI5NzhlMWRlZGJkMjRkYjk1MTQwNWNjODcxZjc2NDMxZDJlNTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5MjE0Mjg4ZjNjNDlhZTc2MDcyMGMyMjg2MWU1ZjI3YjAyYjY4ODNmZWVjNjc4OTQ5ZTA1MGM1NTBlNDc2OGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0ZmEzOTljNGZhZGVhYzRkYjU0ZmMxZDk3NDNmMGEzMjhmMDY2MTdlMThmMTFjOTY3ZDI2YWRhZDhmYzJjMjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzM1OWMwYTcxYTJiZGY1M2IwOGIzOWQ4MzAxODJiOGZkNGRmMmUzOWFhNmFjODA3YWY3MmVmNTE2OWNkZjgifQ"
         }
       ]
@@ -67,11 +67,11 @@
       "statement": "KV audit/import verifies one-to-one index/content/accounting and strict versioned dense snapshots, rejecting duplicate keys/fields or malformed data before publication and mining.",
       "evidence": [
         {
-          "resource": "repo://scripts/services/kv.lua#L178-L194",
+          "resource": "repo://scripts/services/kv.lua#L225-L241",
           "version": "repo-lines-v1:sha256:793ff8c97be7a8dd88f912ea4179fd2a1dffcd1fb5c93dd720073d42f764d48e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlMGRjM2JjYTJkMjMzZTJjMTc4NTI0MjM4MTNmZWU3MDRkYzI3ZTY4OWVmODQ1OWFmMGYwODAyODQ4MDdmOTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZTg2NWI4OTE3Y2NlMGFiOGVkYWMxOThhMGU2NjFjZTczZTIwMmIyMTAyMWU3ODhlNWU4NzM3MDYyOGRiYTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNlMjJkMmMwOTNjNzcxYmY2OGRmZDgzMmQzYmI0ZGE2YWExMzQ1MWNjNjcxMDA5YjUyZDA0YjEzNDgxMzExN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBhODYxYzllMGJmYjM3ZWM3MzQ2OGQyNzM5Nzk3Y2YwZDA1MzVlNzc2MDAzZjRmMjMxYzBkOTI1ZTQxODA1MWEifQ"
         },
         {
-          "resource": "repo://scripts/services/kv.lua#L214-L287",
+          "resource": "repo://scripts/services/kv.lua#L261-L334",
           "version": "repo-lines-v1:sha256:b6ccb755962c1f1cdb6c3b6d404fdec26149a2ef05dbadd760cd1cf49171b0e0:eyJzZWxlY3RlZExpbmVDb3VudCI6NzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkNDRmNmI2NTQ0MDM1NGRjYjQzYTUyMWRhODIyMTZhZTJmOWRjNWUzZDY5OTNiNzM5MzMyY2FmYTEwZDA5YTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxZjRhYWEzN2UyNzg0MDA0NzNjMjJkNTFiOGM2ZTIzOTcwZThjY2IxMGMwOWFiYzBkZDU2NzA5ODlhZmNkNjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE0Mzg5NjQ1NTZmYTVlNTJkODkzMGNmZjJmNjlmZTJkYzNmMGQxNGE2MmY0ZjNiNWQ2YWEwZDlmM2ExYjM0MjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJiNzcxODRhMmY1NGI2MGU3YWRmN2E1OWQxNGQ4NjhjMjZhZWVhMDE2MTU4YzI5OGFkYjU3ZDNiZmY5NWViMzQifQ"
         }
       ]
@@ -79,6 +79,6 @@
   ],
   "verification": {
     "by": "openwiki/0.7.1",
-    "at": "2026-10-15T06:41:57.498Z"
+    "at": "2026-10-29T22:50:29.161Z"
   }
 }

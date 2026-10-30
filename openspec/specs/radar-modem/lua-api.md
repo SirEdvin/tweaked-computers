@@ -48,7 +48,7 @@ Each recipient handler receives an independent plain snapshot. Validation/copy w
 
 ## Event registration and schema
 
-Register through either supported source form using `computer.on("modem_message", "received")`; unregister with the returned subscription ID through `computer.off`. All existing subscription limits and named-handler rules remain in force. Multiple registrations intentionally produce one callback per registration.
+Register through saved function declarations using `computer.on("modem_message", "received")`; unregister with the returned subscription ID through `computer.off`. All existing subscription limits and named-handler rules remain in force. Multiple registrations intentionally produce one callback per registration.
 
 `ModemMessage` extends `BaseEvent`:
 

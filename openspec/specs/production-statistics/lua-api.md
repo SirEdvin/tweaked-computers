@@ -139,29 +139,24 @@ The device owns no statistics data, query sessions, subscriptions or output. Min
 The maintained packaged example exercises these operations. Setup: place and power a computer and Production Statistics device on the same surface/force and connect their visible Network sockets with a red wire. Generate some item/fluid/pollution activity first to see nonempty maps. No collector startup is required.
 
 ```lua
-return {
-  api_version = 1,
-  handlers = {
-    start = function()
-      local stats = peripheral.find("production_statistics", "red")
-      assert(stats, "Connect a Production Statistics device with red wire")
-      local items = stats.getTotals("item")
-      local normal = items.input.normal or {}
-      computer.log("Iron produced: " .. tostring(normal["iron-plate"] or 0))
+function start()
+  local stats = peripheral.find("production_statistics", "red")
+  assert(stats, "Connect a Production Statistics device with red wire")
+  local items = stats.getTotals("item")
+  local normal = items.input.normal or {}
+  computer.log("Iron produced: " .. tostring(normal["iron-plate"] or 0))
 
-      local fluids = stats.getRates("fluid", "one_minute")
-      computer.log("Water consumed/min: " .. tostring(fluids.output.water or 0))
+  local fluids = stats.getRates("fluid", "one_minute")
+  computer.log("Water consumed/min: " .. tostring(fluids.output.water or 0))
 
-      local pollution = stats.getTotals("pollution")
-      for name, amount in pairs(pollution.input) do
-        computer.log(name .. " emitted " .. tostring(amount))
-      end
+  local pollution = stats.getTotals("pollution")
+  for name, amount in pairs(pollution.input) do
+    computer.log(name .. " emitted " .. tostring(amount))
+  end
 
-      local history = stats.getHistory("item", "iron-plate", "one_minute", "normal")
-      computer.log("Newest iron production/min: " .. tostring(history.input[1]))
-    end
-  }
-}
+  local history = stats.getHistory("item", "iron-plate", "one_minute", "normal")
+  computer.log("Newest iron production/min: " .. tostring(history.input[1]))
+end
 ```
 
 An empty map is valid, unlike an unavailable/unpowered query. Large factories can exceed existing whole-result or Console/log budgets; examples must explain `E_LIMIT` and the existing fatal work budget without swallowing failures or retrying in an unbounded loop. The separate maintained monitor example must plot both native history arrays using the existing monitor API, with axes/unit/direction labels and no independent history recorder.

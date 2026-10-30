@@ -123,7 +123,7 @@ Reuse provider registration and existing graph primitives. Restrict generalizati
 
 The network delta is against current main. When combining with `add-radar-modems`, merge the explicit supported vertex sets and preserve its origin filtering, radar-specific scenarios and no-remote-discovery rule. Never apply either full MODIFIED block over the other without reconciliation. Preserve speaker native opening when the inspector proposal lands, and add speaker API/player documentation to the documentation reorganization rather than creating competing navigation.
 
-The new capability companion is part of the change's `specs` artifact set. During implementation, publish/synchronize the main speaker contract and account for it in `tools/build.py`, `tools/test_build.py`, `tools/player_docs.py`, the API manifest, site navigation and executable-example inventory. Inspect current generator inputs at apply time; do not add the example to a descriptor-only legacy corpus merely because it contains Lua fences.
+The new capability companion is part of the change's `specs` artifact set. During implementation, publish/synchronize the main speaker contract and account for it in `tools/build.py`, `tools/test_build.py`, `tools/player_docs.py`, the API manifest, site navigation and executable-example inventory. Inspect current generator inputs at apply time; do not add the example to a saved-program corpus merely because it contains Lua fences.
 
 ## Risks / Trade-offs
 

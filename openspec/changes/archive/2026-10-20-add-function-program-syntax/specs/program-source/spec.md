@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Let players author saved computer programs as named functions without a descriptor wrapper, while preserving bounded native execution, ordinary intra-program calls and compatibility with existing source documents.
+Let players author saved computer programs as named function declarations, preserving bounded native execution and ordinary intra-program calls.
 
 ## ADDED Requirements
 
 ### Requirement: Declaration-form saved programs
-The system SHALL accept declaration-form documents containing one or more exported `function name(...) ... end` declarations, optional top-level `local function` helpers, comments and empty statements. It SHALL derive the existing API-v1 named-handler inventory without requiring a returned table. Declaration names SHALL be unique across the top level and follow the naming rules in `lua-api.md`.
+The system SHALL accept documents containing one or more exported `function name(...) ... end` declarations, optional top-level `local function` helpers, comments and empty statements. It SHALL derive the existing API-v1 named-handler inventory from those declarations. Declaration names SHALL be unique across the top level and follow the naming rules in `lua-api.md`.
 
 #### Scenario: Run a document without a wrapper
 - **WHEN** the player validates, saves and runs a declaration-form document with `start` and `sample`
@@ -25,7 +25,7 @@ The system SHALL accept declaration-form documents containing one or more export
 #### Scenario: Reject a document without any exported function
 - **WHEN** a document is empty, contains only comments, or defines only private local helpers
 - **THEN** declaration-form validation reports that an exported function is required
-- **AND** the existing explicitly empty legacy descriptor remains valid.
+- **AND** no active run is created or replaced.
 
 ### Requirement: Ordinary calls to exported functions
 Exported functions SHALL be ordinary ephemeral callable values within their own program. Calls SHALL execute synchronously with supplied arguments, preserve bounded Lua return adjustment and nil arity, and share the current callback's guard, budget, authority and run. Direct calls SHALL NOT enqueue work, create another callback context or synthesize an event argument.
@@ -83,22 +83,18 @@ Automatic export SHALL only populate the declared handler inventory. Except for 
 - **AND** supplying the function value, an undeclared name, a local helper name or a nested function name fails with the existing argument diagnostic.
 
 ### Requirement: Declaration-only reconstruction boundary
-Declaration-form source SHALL NOT perform top-level calls, variable initialization, ordinary assignments, loops, conditionals, dotted/method declarations or returns. Mixing declarations with a returned descriptor SHALL be rejected. Each callback SHALL construct fresh ephemeral functions; durable application values SHALL still require the existing explicit state API.
+Declaration-form source SHALL NOT perform top-level calls, variable initialization, ordinary assignments, loops, conditionals, dotted/method declarations or returns. Every top-level statement must satisfy the declaration grammar. Each callback SHALL construct fresh ephemeral functions; durable application values SHALL still require the existing explicit state API.
 
 #### Scenario: Refuse initialization effects
 - **WHEN** a document places `sample()`, `local count = 0`, a peripheral lookup or a state write at top level
 - **THEN** validation rejects the statement before any guest effect or active-run replacement.
-
-#### Scenario: Refuse mixed formats
-- **WHEN** a document defines a top-level function and also returns a descriptor
-- **THEN** validation reports an incompatible document shape rather than choosing a format or silently ignoring part of the source.
 
 #### Scenario: Keep executable values out of persistent data
 - **WHEN** a callback attempts to store an exported function or private helper in computer state or another Data-only API
 - **THEN** the existing data validation refuses it without changing the previous stored value.
 
 ### Requirement: Equivalent safety and diagnostics
-Both source forms SHALL retain existing source, compilation, reconstruction, execution, tuple, allocation and depth limits. New declaration discovery, function binding and call paths SHALL be admitted work. Errors SHALL identify the player's original source location. Fatal quota and stop control SHALL remain unavoidable even through chains of direct or protected calls.
+Saved declarations SHALL retain existing source, compilation, reconstruction, execution, tuple, allocation and depth limits. New declaration discovery, function binding and call paths SHALL be admitted work. Errors SHALL identify the player's original source location. Fatal quota and stop control SHALL remain unavoidable even through chains of direct or protected calls.
 
 #### Scenario: Recursion cannot renew or swallow a budget
 - **WHEN** exported functions call each other indefinitely inside `pcall`
@@ -120,24 +116,8 @@ Both source forms SHALL retain existing source, compilation, reconstruction, exe
 - **THEN** success, refusal and accepted charge prefixes agree
 - **AND** mutated caller-owned generated text or handler inventories never become trusted executable input.
 
-### Requirement: Compatible source lifecycle
-Existing literal-descriptor programs SHALL retain their accepted grammar, execution and saved-state compatibility. Both forms SHALL use the existing validate/save/activate flow and retain exact active source independently of later edits. Reload SHALL execute no player code, replay no startup, and reset no spent same-tick credits.
-
-#### Scenario: Preserve a descriptor-format running save
-- **WHEN** the updated runtime loads a supported save containing an active literal-descriptor program
-- **THEN** its run identity, state, timers and admitted work remain compatible without source rewriting or forced restart.
-
-#### Scenario: Resume the original declaration-form snapshot
-- **WHEN** a declaration-form program has pending work, a different source is saved but not applied, and the game is cold-reloaded
-- **THEN** the next synchronized dispatch reconstructs the original active functions
-- **AND** startup and earlier committed effects are not replayed, while retained work and credits remain intact.
-
-#### Scenario: Invalid replacement retains the active run
-- **WHEN** a new declaration-form candidate fails validation
-- **THEN** the previous valid run, registrations and explicit state are not replaced.
-
 ### Requirement: Discoverable authoring without Console coupling
-The editor starter and primary language reference SHALL teach declaration-form programs and demonstrate one function used both directly and as a named callback. The legacy descriptor SHALL remain documented. Saved-program functions SHALL NOT be injected into the live Console or its retained value graph.
+The editor starter and primary language reference SHALL teach declaration-form programs and demonstrate one function used both directly and as a named callback. Saved-program functions SHALL NOT be injected into the live Console or its retained value graph.
 
 #### Scenario: Insert and run the starter
 - **WHEN** the player inserts the starter into an empty draft and follows Validate, Save, Run

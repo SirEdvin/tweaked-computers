@@ -79,8 +79,8 @@ same callback budget. computer.every(60, "sample") schedules a later TimerEvent.
 Names alone do not subscribe. Registration uses strings, never function values.
 Declare private local function helpers before use; they are not exported.
 Exports are read-only and forward-visible; parameters/locals shadow them normally.
-Legacy return {api_version=1, handlers={start=function(event) ... end, ...}}
-still works. Use one form per document. No top-level values, calls or effects.
+Only declarations, comments and semicolons belong at top level; at least one
+export is required. No top-level values, returns, calls or effects.
 Locals, helpers, if, loops and tables have guarded work/depth/allocation limits.
 Functions/locals are fresh per callback; keep durable values in computer state.
 Console cannot call saved-program functions. The starter samples once immediately,
@@ -104,7 +104,7 @@ use bounded native error-handler re-entry. Earlier successful effects stay commi
 Fatal work/allocation/depth/tuple exhaustion and stop bypass pcall AND xpcall;
 private control values never reach a guest handler. Console cannot stop a program.
 New global names are reserved for public/private top-level declarations, not
-body locals/parameters or legacy descriptor handler keys. Old colliding active
+body locals/parameters. Old colliding active
 source faults on synchronized reconstruction, retaining source/state; rename and
 explicitly Save/Run. A colliding Console root reports E_UNSUPPORTED before effects;
 its graph is retained until confirmed Reset Shell discards it. Nested keys are fine.
@@ -768,7 +768,7 @@ local subheadings={
   ['Maintenance holds']='Editing and execution', ['Stop cancels']='Stopping and recovery',
   ['Ctrl+left-click']='World interaction', ['Open inspectors']='Local inspectors',
   ['Monitor dimensions']='Monitor interaction', ['All essential']='Native controls',
-  ['function start']='Named handlers', ['Legacy return']='Program forms',
+  ['function start']='Named handlers',
   ['Locals, helpers']='Callback lifetime', ['No require']='Sandbox boundaries',
   ['print(...)']='Printing', ['rawget(t,key)']='Raw table helpers',
   ['xpcall(fn,handler,...)']='Errors and protected calls', ['New global names']='Reserved names and upgrades',

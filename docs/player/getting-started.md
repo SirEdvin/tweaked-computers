@@ -82,8 +82,8 @@ callbacks and release their owned output without replay or silent translation.
 The output is still one shared bank mirrored onto both colors. Shared work/Data
 budgets are unchanged and can still refuse queries or independent subscriptions.
 
-Version 0.1.10 adds [plain exported function programs](api/language.md), while
-keeping legacy descriptors and the separate Console. Validate and Save do not
+Version 0.1.10 adds [plain exported function programs](api/language.md) and keeps
+the separate Console. Validate and Save do not
 execute a new program; Run/Apply explicitly activates it. The new
 [world-maintenance Map setting](api/limits.md#maintenance-and-shared-headroom)
 defaults to 200000, inside the unchanged shared host budget. Raising it is not
@@ -101,7 +101,7 @@ hidden radar radio links never grant discovery authority, and hearing sound neve
 grants speaker control. The optional interplanetary radar has separate Space Age research.
 
 New built-ins reserve only top-level function declaration names, not ordinary
-locals/parameters, legacy handler keys or nested scratch fields. An older colliding
+locals/parameters or nested scratch fields. An older colliding
 active declaration faults at synchronized reconstruction while preserving exact
 source/state; rename the declaration and explicitly Save/Run. An older colliding
 Console root returns named `E_UNSUPPORTED` before effects and keeps its graph.

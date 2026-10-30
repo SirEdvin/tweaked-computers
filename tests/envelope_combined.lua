@@ -77,15 +77,14 @@ function M.run()
   s.create_entity{name='substation',position={7,-5},force='player'}
   s.create_entity{name='substation',position={9,5},force='player'}
   s.always_day=true
-  report('SETUP',{computers=4,subscriptions=4,logic=1,kv=1,configurators=1,targets=2,monitor_tiles=7,shapes={{3,2},{1,1}},source='compiled descriptor handlers',signal_period=24})
+  report('SETUP',{computers=4,subscriptions=4,logic=1,kv=1,configurators=1,targets=2,monitor_tiles=7,shapes={{3,2},{1,1}},source='compiled function declarations',signal_period=24})
   profiler.stop(); log({'','TC_COMBINED_CONSTRUCTION ',profiler})
 end
 local function program(index)
   local x=f(); local names={}
   for _,wall in ipairs(x.walls) do names[#names+1]=assert(monitor.resolve(registry.record(wall[1]))).id end
   local views=string.format("{{name=%q,wire='red'},{name=%q,wire='red'}}",names[1],names[2])
-  local source=[[return {api_version=1,handlers={
-    start=function(e)
+  local source=[[function start(e)
       local names=peripheral.getNames('red')
       computer.setState('discovered',#names)
       local io=peripheral.wrap(LOGIC,'red')
@@ -93,8 +92,8 @@ local function program(index)
       computer.setState('work',0)
       PRODUCER_START
       computer.setState('timer',computer.every(2,'work'))
-    end,
-    changed=function(e)
+    end
+    function changed(e)
       local value=0
       for _,entry in ipairs(e.current) do value=entry.count end
       computer.setState('signal',value)
@@ -102,8 +101,8 @@ local function program(index)
       computer.setState('delivery_tick',e.tick)
       if value==100 then computer.cancelTimer(computer.getState('timer')) end
       PRODUCER_CHANGED
-    end,
-    touched=function(e)
+    end
+    function touched(e)
       local n=(computer.getState('touch') or 0)+1
       computer.setState('touch',n)
       computer.setState('touch_tick',e.tick)
@@ -112,8 +111,8 @@ local function program(index)
       -- Both selected members must participate even when the other is unchanged.
       local refs=VIEWS
       for _,ref in ipairs(refs) do peripheral.call(ref.name,ref.wire,'setCursorBlink',false) end
-    end,
-    work=function(e)
+    end
+    function work(e)
       local sum=0
       for i=1,128 do sum=sum+i end
       computer.setState('sum',sum)
@@ -124,8 +123,7 @@ local function program(index)
       db.set('worker-INDEX',value)
       assert(db.get('worker-INDEX')==value)
       PRODUCER_WORK
-    end
-  }}]]
+    end]]
   local producer_start="peripheral.setMonitorSyncGroup("..views.."); computer.on('monitor_touch','touched')"
   local producer_work=[[local views=VIEWS
       local char=computer.getState('work')%2==0 and 'B' or 'C'

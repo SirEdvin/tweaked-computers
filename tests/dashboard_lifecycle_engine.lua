@@ -59,10 +59,12 @@ function M.run()
   local roboport=assert(surface.create_entity{name='roboport',position={8,19},force=force})
   roboport.energy=100000000; assert(roboport.get_inventory(defines.inventory.roboport_robot).insert{name='construction-robot',count=1}==1)
   local chest=assert(surface.create_entity{name='storage-chest',position={13,19},force=force})
-  local source=[[return {api_version=1,handlers={start=function()
-    peripheral.find('dashboard','red').subscribe('clicked')
-    computer.setState('boots',(computer.getState('boots') or 0)+1)
-  end,clicked=function() computer.setState('effects',(computer.getState('effects') or 0)+1) end}}]]
+  local source=[[function start()
+  peripheral.find('dashboard','red').subscribe('clicked')
+  computer.setState('boots',(computer.getState('boots') or 0)+1)
+end
+
+function clicked() computer.setState('effects',(computer.getState('effects') or 0)+1) end]]
   assert(runtime.save(c.id,source,0)); assert(runtime.activate(c.id,game.tick))
   storage.tc_dashboard_lifecycle={phase='power',origin=game.tick,c=c.id,panel=panel.id,original=panel.id,generator=generator,chest=chest}
 end

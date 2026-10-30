@@ -35,7 +35,7 @@ Each computer SHALL have one shell environment shared by its authorized players 
 - **THEN** the shell retains that value without replacing the program or its callbacks, timers, subscriptions, locals, or explicit application state.
 
 ### Requirement: Guarded native command language
-The shell SHALL accept Lua statements, expressions, and shell-global assignments without a handler descriptor, using the existing bounded native language and approved libraries plus shell-local `print`. Locals SHALL be scoped to one submission. Host globals, dynamic loading, coroutines, unguarded execution, and overwriting reserved API names SHALL remain forbidden. Saved-program syntax SHALL remain unchanged.
+The shell SHALL accept Lua statements, expressions, and shell-global assignments using the existing bounded native language and approved libraries plus shell-local `print`. Locals SHALL be scoped to one submission. Host globals, dynamic loading, coroutines, unguarded execution, and overwriting reserved API names SHALL remain forbidden. Saved-program syntax SHALL remain unchanged.
 
 #### Scenario: Globals survive and locals do not
 - **WHEN** `x = 5; local y = 6` succeeds and the next line is `print(x, y)`

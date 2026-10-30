@@ -5,7 +5,7 @@ description: How the Factorio control entrypoint composes host services around p
 tags: [architecture, persistence, lifecycle, runtime]
 verified:
   - by: openwiki/0.7.1
-    at: 2026-10-15T13:11:13.133Z
+    at: 2026-10-29T22:50:29.161Z
 sources:
   - id: openwiki-source-647cc954e0352bb51785a5d7
     resource: repo://control.lua
@@ -17,7 +17,7 @@ sources:
     resource: repo://scripts/runtime/computer.lua
   - id: openwiki-source-0bf68f272e97a323da18a610
     resource: repo://scripts/scheduler.lua
-generated: { by: "hermes", at: "2026-10-15T13:11:13.133Z" }
+generated: { by: "hermes", at: "2026-10-29T22:50:29.161Z" }
 ---
 
 # Runtime composition, durable state and cold reconstruction
@@ -39,7 +39,7 @@ Unknown root schemas remain inert rather than being reset. Registry writes rejec
 ## Save, activation and dispatch
 
 1. `runtime.save` checks the expected saved revision, bounds source bytes and increments the revision. It does not compile, stop or replace an active run.
-2. `activate` checks retained headers/capacity and validates the saved source before retiring the previous generation. A rejected candidate leaves the previous run intact.
+2. `activate` checks retained headers/capacity and validates the saved declaration document before retiring the previous generation. Validation accepts exported function declarations and optional lexical local-function helpers, not top-level initialization or effects. A rejected candidate leaves the previous run intact.
 3. Successful retirement runs all cleanup hooks, clears runtime queue/timers/subscriptions, assigns a new monotonic run identity and stores a plain active snapshot. A declared `start` handler is enqueued once here.
 4. Each dispatch checks the active header, body, current power observation and admission. It takes one queued handler/event, then `compiler.run` recompiles the retained exact source, constructs a fresh guarded native environment and calls the named handler with a copied event.
 5. Callback return does not preserve lexical variables. Cross-callback state must be explicitly copied through `computer.setState`; timers/subscriptions refer to handler names. Faults retire runtime work and invoke host cleanup, while retaining source and explicit state for recovery.
