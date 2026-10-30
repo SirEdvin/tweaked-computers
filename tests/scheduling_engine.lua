@@ -9,6 +9,8 @@ local radar=require('scripts.radar')
 local speaker=require('scripts.speaker')
 local kv=require('scripts.services.kv')
 local logic=require('scripts.services.logic')
+local peripheral=require('scripts.services.peripheral')
+local network=require('scripts.network')
 local M={}
 local resume=false
 local function tick(t)
@@ -120,6 +122,17 @@ function M.run()
   root.computers=computers
   assert(sampled,failure); assert(signal_visits==0,'power-free idle populations acquired signal discovery')
   assert(#root.logic_observers.order==0 and #root.logic_observers.input_order==0)
+  local record=registry.record; local output_visits=0
+  registry.record=function(...) output_visits=output_visits+1; return record(...) end
+  local checked,problem=pcall(peripheral.check_outputs,game.tick,function() end)
+  registry.record=record
+  assert(checked,problem); assert(output_visits==0,'idle devices acquired output-owner discovery: '..output_visits)
+  local topology_work=0
+  peripheral.reconcile(game.tick,function(n) topology_work=topology_work+n end)
+  assert(topology_work==0,'uninterested computers acquired topology discovery work: '..topology_work)
+  local adoption_work=0
+  network.adopt_tick(game.tick,function(n) adoption_work=adoption_work+n end)
+  assert(adoption_work==0,'idle roots acquired native adoption discovery work: '..adoption_work)
   log('TC_SCHEDULING_NINE_POWER_FREE_FAMILIES owned-helper-migration physical-proofs role-and-content-aliases')
   for i,name in ipairs({'radar','programmable-speaker'}) do
     assert(lifecycle.build(assert(game.surfaces[1].create_entity{name=name,position={i*8,16},force='player'})))
@@ -164,6 +177,17 @@ function M.on_tick(event)
     assert(runtime.enqueue(c,'message',{name='fixture',tag='b'},event.tick))
     assert(root.scheduler.ready[c.id] and #root.scheduler.deadlines==1)
     assert(not root.scheduler.ready[x.stopped] and not root.scheduler.ready[x.faulted])
+    local retained=snapshot()
+    for _,entry in ipairs({{'output_owners',peripheral.check_outputs},{'topology_interests',peripheral.reconcile},{'native_adoption',network.adopt_tick},{'logic_observers',logic.sample}}) do
+      local key,service=entry[1],entry[2]; local prior=root[key]
+      local unknown={version=99,retained=prior}; root[key]=unknown
+      local work=0; service(event.tick,function(n) work=work+n end)
+      assert(root.scheduling_diagnostic and root.scheduling_diagnostic.code=='E_UNSUPPORTED')
+      assert(work==0 and root[key]==unknown and unknown.retained==prior,'unknown work membership was consumed')
+      root[key]=prior; root.scheduling_diagnostic=nil
+      assert(equal(snapshot(),retained),'unknown membership changed accepted queues, timers or credits')
+    end
+    log('TC_CONTRACT unknown-service-memberships-inert-queues-timers-and-credits-retained')
     x.queue=c.queue; x.timers=c.timers; x.scheduler=root.scheduler
     x.tick=event.tick; x.work=root.ledger.machines[c.id].work; x.total=root.ledger.total
     x.expected=snapshot(); x.phase='waiting-save'

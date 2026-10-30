@@ -66,6 +66,7 @@ local function output(rec,c,wire)
   rec.output_bank={{signal={type='virtual',name='signal-A',quality='normal'},count=7}}
   local target,path=peripheral.authority(c,rec.id,wire,nop); assert(target==rec)
   rec.output_owner={computer_id=c.id,run_id=c.run_id,wire=wire,path=path}
+  registry.output_changed(rec) -- Host-only bank fixture uses the production publication index.
 end
 local cold_source=[[function start(e)
   computer.setState('boots',(computer.getState('boots') or 0)+1)
@@ -247,7 +248,7 @@ function M.run()
   io.output_owner.run_id='newer-writer'; peripheral.revoke(c,io.id,'red','wire_removed')
   assert(io.output_owner and io.output_owner.run_id=='newer-writer')
   io.output_owner.run_id=c.run_id
-  local root=registry.get(); root.scheduler.maintenance_tick=game.tick; root.scheduler.maintenance_spent=limits.maintenance_work_per_tick-(#root.order*4+256)
+  local root=registry.get(); root.scheduler.maintenance_tick=game.tick; root.scheduler.maintenance_spent=limits.maintenance_work_per_tick-#registry.owned_outputs().order*258
   peripheral.check_outputs(game.tick,scheduler.maintenance(root,game.tick))
   assert(not io.output_owner and io.authority_diagnostic.code=='E_NETWORK_PENDING')
   root.scheduler.maintenance_spent=0
@@ -280,12 +281,18 @@ local function snapshot()
     owner=io.output_owner,ledger_tick=root.ledger.tick,total=root.ledger.total,
     machine=root.ledger.machines[c.id],work=root.ledger.machines[c.id].work,
     compile=root.ledger.machines[c.id].compile,allocations=root.ledger.machines[c.id].allocations,
-    maintenance=root.scheduler.maintenance_spent,sequence=root.next_sequence}
+    maintenance=root.scheduler.maintenance_spent,sequence=root.next_sequence,
+    outputs=root.output_owners,interests=root.topology_interests,adoption=root.native_adoption}
 end
 local function unchanged()
   local s=f().snapshot; local now=snapshot()
   for _,k in ipairs({'run_id','boots','source','db_unit','c_unit','io_unit','ledger_tick','total','work','compile','allocations','maintenance','sequence'}) do assert(now[k]==s[k],'cold load changed '..k) end
   assert(now.view==s.view and now.owner==s.owner and now.machine==s.machine,'cold aliases changed')
+  assert(now.outputs==s.outputs and now.interests==s.interests and now.adoption==s.adoption,'cold membership aliases changed')
+  assert(now.outputs.records[f().io].record==registry.record(f().io) and #now.interests.order==2)
+  local pending=now.adoption.order[1]
+  assert(#now.adoption.order==1 and pending.computer==registry.record(f().stopped) and pending.wire=='red')
+  assert(pending.computer.status=='stopped' and pending.generation==pending.computer.generation and not registry.by_entity(f().native))
   assert(registry.record(f().io).output_owner.computer_id==f().c)
 end
 function M.on_load()
@@ -311,7 +318,23 @@ function M.on_tick(event)
   end
   if fixture.phase=='armed' and c.state.boots==1 and c.network_views and c.network_views.red then
     assert(inventory(c,'red')[db.id] and inventory(c,'red')[io.id])
-    output(io,c,'red'); fixture.phase='frozen'; fixture.snapshot=snapshot()
+    output(io,c,'red')
+    local root=registry.get(); local queue,subscriptions,views=c.queue,c.subscriptions,c.network_views
+    local sequence,maintenance=root.next_sequence,root.scheduler.maintenance_spent
+    local owner=assert(io.output_owner)
+    root.output_owners=nil; root.topology_interests=nil; root.native_adoption=nil
+    registry.initialize()
+    assert(c.queue==queue and c.subscriptions==subscriptions and c.network_views==views and io.output_owner==owner)
+    assert(root.next_sequence==sequence and root.scheduler.maintenance_spent==maintenance)
+    assert(root.output_owners.records[io.id].record==io and #root.topology_interests.order==2 and #root.native_adoption.order==0)
+    local stopped=build(c.body.surface,'computer',40,30)
+    local native=assert(c.body.surface.create_entity{name='radar',position={46,30},force='player'})
+    assert(connector(stopped,'red').connect_to(native.get_wire_connector(defines.wire_connector_id.circuit_red,true)))
+    error_is('E_NETWORK_PENDING',function() inventory(stopped,'red') end)
+    assert(stopped.status=='stopped' and #root.native_adoption.order==1 and not registry.by_entity(native))
+    fixture.stopped=stopped.id; fixture.native=native
+    log('TC_CONTRACT membership-migration-preserves-accepted-state-and-stopped-native-discovery-pending')
+    fixture.phase='frozen'; fixture.snapshot=snapshot()
     game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED'); return
   end
   if fixture.phase=='resuming' and c.state.checked and c.state.events and #c.state.events==2 then
@@ -319,6 +342,18 @@ function M.on_tick(event)
     assert(c.state.events[1].name=='peripheral_detach' and c.state.events[2].name=='peripheral_detach')
     assert(c.state.events[1].wire=='red' and c.state.events[1].peripheral<c.state.events[2].peripheral)
     assert(c.state.db==db.id and c.state.wire=='red' and c.state.position.x==db.body.position.x)
+    local native=assert(registry.by_entity(fixture.native)); local stopped=registry.computer(fixture.stopped)
+    assert(native.kind=='radar' and #registry.get().native_adoption.order==0 and stopped.status=='stopped' and not stopped.active)
+    assert(inventory(stopped,'red')[native.id] and not inventory(stopped,'green')[native.id])
+    log('TC_CONTRACT cold-pending-native-discovery-adopted-once-from-stopped-root')
+    local subscriptions={}; for id in pairs(c.subscriptions) do subscriptions[#subscriptions+1]=id end
+    for _,id in ipairs(subscriptions) do assert(runtime.unsubscribe(c,id)) end
+    local root=registry.get()
+    assert(#root.topology_interests.order==0 and next(root.topology_interests.computers)==nil)
+    assert(#root.output_owners.order==0 and next(root.output_owners.records)==nil and next(root.output_owners.computers)==nil)
+    local work=0; peripheral.reconcile(event.tick,function(n) work=work+n end)
+    assert(work==0,'last topology cancellation retained discovery work')
+    log('TC_CONTRACT cold-owned-membership-retained-and-last-topology-interest-retired')
     fixture.phase='done'; log('TC_COLD_OK')
   end
 end

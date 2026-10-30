@@ -57,9 +57,17 @@ end
 local function subscribe(c)
   guest(c,receiver_source,'received',{name='modem_message',message='setup'})
   c.state={}; c.state_sizes={}; c.state_bytes=16; c.state_entries=0; c.state_nodes=1; c.state_node_sizes={}
-  runtime.subscribe(c,'modem_message','received',nil,nop)
+  local interests=registry.get().topology_interests; local next_binding=interests.order[interests.cursor]
+  local id=runtime.subscribe(c,'modem_message','received',nil,nop)
+  assert(not next_binding or interests.order[interests.cursor]==next_binding,'new interest reset topology rotation')
+  local owner=assert(registry.get().topology_interests.computers[c.id])
+  assert(owner.subscriptions[id]==c.subscriptions[id] and owner.bindings.red and owner.bindings.green,'modem-only registration lost topology interest')
 end
 local function clear(c) c.queue={}; c.queue_bytes=0 end
+local function unsubscribe_all(c)
+  local ids={}; for id in pairs(c.subscriptions) do ids[#ids+1]=id end
+  for _,id in ipairs(ids) do assert(runtime.unsubscribe(c,id)) end
+end
 function M.run()
   storage.modem_fixture={groups=0,phase='armed'}
   local surface=game.surfaces[1]
@@ -194,7 +202,7 @@ local function duplicates(c,r,d,s)
   for _=3,9 do runtime.subscribe(d,'modem_message','received',nil,nop) end
   error_is('E_LIMIT',function() call(c,r,'transmit',42,17,'fanout') end)
   assert(#d.queue==0)
-  d.subscriptions={}; runtime.subscribe(d,'modem_message','received',nil,nop)
+  unsubscribe_all(d); runtime.subscribe(d,'modem_message','received',nil,nop)
   report('multiple-radars-subscription-order-copy-isolation-and-fanout-refusal')
 end
 function M.on_load()
@@ -259,7 +267,7 @@ local function envelope(c,r,d,s)
   f().maximum={work=ctx.machine.work,allocations=ctx.machine.allocations,queue_bytes=d.queue_bytes,
     deliveries=#d.queue,message_bytes=4096}
   log('TC_MODEM_ENVELOPE '..serpent.line(f().maximum))
-  clear(d); d.subscriptions={}; runtime.subscribe(d,'modem_message','received',nil,nop)
+  clear(d); unsubscribe_all(d); runtime.subscribe(d,'modem_message','received',nil,nop)
   guest(c,[[function start(e)
     local nodes={}; for i=1,255 do nodes[i]=false end
     peripheral.find('modem','red').transmit(42,17,nodes)

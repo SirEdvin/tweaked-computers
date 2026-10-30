@@ -139,6 +139,7 @@ end
 local principal=require('scripts.runtime.principal')
 local function output(computer,rec,wire,tick,spend,signals,execution)
   local bank=validate_output(signals,spend)
+  spend(#registry.owned_outputs().order*2+8)
   spend(64)
   local target,path=peripheral.authority(computer,rec.id,wire,spend)
   if target~=rec then errors.raise('E_UNREACHABLE','writer authority lost') end
@@ -153,6 +154,7 @@ local function output(computer,rec,wire,tick,spend,signals,execution)
     errors.raise('E_ENGINE',(restored and 'native output refused; old bank restored: ' or 'native output failed; output cleared and recovery retained: ')..tostring(e):sub(1,256))
   end
   rec.output_owner=principal.owner(computer,execution or principal.program(computer),wire,path)
+  registry.output_changed(rec)
   rec.output_recovery=nil
 end
 local function remove_queued(c,id,spend)

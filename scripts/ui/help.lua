@@ -164,6 +164,9 @@ Each has getLimits().
 Store name/wire in state, not ephemeral facades. Calls recheck live authority.
 Use Peripherals for automatically updated names/types/power on the selected color.
 Incomplete discovery reports pending/limit, never a successful empty prefix.
+Native enrollment runs for pending physical discovery, including stopped computers.
+Attach/detach and modem_message handlers retain topology interest; idle roots do not.
+Removing the last handler retires its interest, not accepted queued notifications.
 
 getNames(wire) -> complete sorted name array. Includes reachable unpowered devices;
 pending/limit errors are not an empty inventory.

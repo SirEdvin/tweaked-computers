@@ -12,6 +12,8 @@ Enrollment originates only at a placed computer, through a complete same-color, 
 
 Native electrical/operational availability is checked at interaction/transmit and real receiver eligibility, not by proactive generic-lifecycle power polling. Custom computers need no electricity; native radar energy settings and channel retention are unchanged.
 
+Fresh physical discovery requests enrollment when it encounters an unenrolled supported native member. Background adoption retains only pending computer/color requests, including requests from stopped or faulted physical roots; idle roots are not repeatedly searched. A pending request survives cold reload and is re-proved against the same physical generation, selected color, force and surface before enrollment. An incomplete result remains an error, never a partial inventory.
+
 ## Methods
 
 | Exact signature | Returns | Behavior |
@@ -51,6 +53,8 @@ Each recipient handler receives an independent plain snapshot. Validation/copy w
 ## Event registration and schema
 
 Register through saved function declarations using `computer.on("modem_message", "received")`; unregister with the returned subscription ID through `computer.off`. All existing subscription limits and named-handler rules remain in force. Multiple registrations intentionally produce one callback per registration.
+
+A `modem_message` registration maintains topology interest in both local physical colors even without attach/detach handlers. Removing the last relevant registration retires that interest after any already-pending host reconciliation settles; accepted queue snapshots are not recalled. Opening a radar channel alone does not create receive interest. Transmission and actual receiver eligibility still use fresh proofs, not the background observation as authority.
 
 `ModemMessage` extends `BaseEvent`:
 

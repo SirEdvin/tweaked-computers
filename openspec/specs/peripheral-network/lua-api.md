@@ -71,6 +71,8 @@ These names are transition notifications, not an inventory snapshot on registrat
 
 Monitor touch/resize events deduplicate a logical display per computer registration and carry a sorted `wires` array of its currently valid channels. `wire` equals that array's first entry for convenient binding; clients may explicitly choose another listed channel. This is not merged-color reachability.
 
+Background topology work belongs to attach/detach or modem-message registrations and unfinished computer/color reconciliation, not every running computer. Removing the last interest retires future observation after any pending host job settles, without recalling accepted queued events. Current output owners receive independent fail-safe proofs; idle logic handlers do not receive owner-discovery visits. A fresh physical discovery can retain a pending native-adoption request even from a stopped or faulted placed computer. These memberships and accepted observations survive ordinary cold reload without being rebuilt or mutated in `on_load`; explicit initialization/configuration migration seeds missing membership once. No background observation authorizes a later call.
+
 ## Example: inspect both channels without bridging them
 
 ```lua

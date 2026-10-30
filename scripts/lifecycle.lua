@@ -107,6 +107,7 @@ function M.clear_output(rec)
     end
   end
   rec.output_bank=nil; rec.output_owner=nil
+  registry.output_changed(rec)
 end
 
 function M.build(body,token)

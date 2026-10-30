@@ -15,7 +15,9 @@ running a program is not required for discovery. The complete path must stay on
 one wire color, force and surface. Hidden radio links and adjacent monitor tiles
 do not extend that path.
 
-An existing wired radar is adopted by bounded computer-rooted maintenance.
+Fresh discovery requests bounded computer-rooted adoption of an existing wired
+radar. Maintenance retains only pending computer/color requests, including
+stopped physical roots; idle computers do not acquire an adoption sweep.
 While adoption is incomplete, discovery reports `E_NETWORK_PENDING`; exhausted
 identity capacity reports `E_CAPACITY`. Integration failure never destroys or
 refunds a native radar. Very crowded native hidden-link inventories can exceed
@@ -72,6 +74,12 @@ register `computer.on("modem_message", "receive")` or `"reply"`, open the receiv
 channel, and send replies themselves. Registration names are strings, not
 function values. Neither the sending channel nor reply channel needs to be open
 on the sender to transmit. `replyChannel` is a hint, not an automatic return route.
+
+A `modem_message` handler retains background topology interest in both local
+wire colors even without attach/detach handlers. Opening a channel alone does
+not create receive interest. Removing the last relevant handler retires future
+observation after pending host work settles, not already accepted queue snapshots.
+Actual transmission and receiver eligibility always use fresh live proofs.
 
 A modem event has ordinary `name`, dispatch `tick`, `sequence`, `computer_id` and
 `run_id`, plus:

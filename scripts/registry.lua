@@ -136,6 +136,47 @@ function M.timers_changed(rec)
   s.deadlines[i]={id=rec.id,generation=rec.generation,run_id=rec.run_id,tick=tick}
   deadline_fix(s,i)
 end
+function M.owned_outputs()
+  local s=M.get().output_owners
+  if type(s)~='table' or s.version~=1 or type(s.order)~='table' or type(s.records)~='table' or type(s.computers)~='table' then
+    errors.raise('E_UNSUPPORTED','unsupported output ownership membership; data retained')
+  end
+  return s
+end
+function M.output_changed(rec)
+  local s=M.owned_outputs(); local entry=s.records[rec.id]
+  if entry and entry.computer_id then
+    local owned=s.computers[entry.computer_id]
+    if owned then owned[rec.id]=nil; if not next(owned) then s.computers[entry.computer_id]=nil end end
+  end
+  if not rec.output_owner then
+    if entry then
+      s.records[rec.id]=nil
+      for i,item in ipairs(s.order) do if item==entry then table.remove(s.order,i); break end end
+    end
+    return
+  end
+  if not entry then
+    entry={record=rec}; s.records[rec.id]=entry
+    local i=#s.order+1
+    while i>1 and s.order[i-1].record.id>rec.id do i=i-1 end
+    table.insert(s.order,i,entry)
+  end
+  entry.computer_id=type(rec.output_owner)=='table' and rec.output_owner.computer_id or nil
+  if type(entry.computer_id)=='string' then
+    local owned=s.computers[entry.computer_id]
+    if not owned then owned={}; s.computers[entry.computer_id]=owned end
+    owned[rec.id]=entry
+  else entry.computer_id=nil end
+end
+M.register_initializer('output-owners',function(root)
+  if not M.supported(root) or root.output_owners~=nil then return end
+  root.output_owners={version=1,order={},records={},computers={}}
+  for _,id in ipairs(root.order) do
+    local rec=root.devices[id]
+    if rec and rec.kind=='logic' and rec.output_owner then M.output_changed(rec) end
+  end
+end)
 
 local function migrate_work(root)
   local s=root.scheduler

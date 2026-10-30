@@ -100,6 +100,7 @@ local function phase(name,tick,spend)
     -- Samplers own admission and must run their fail-closed refusal path even
     -- when previous phases spent the maintenance ledger. No silent missed tick.
     M.try_maintenance(function() if name~='sample' then spend(1) end; hooks[name][key](tick,spend) end)
+    if registry.get().scheduling_diagnostic then return end
   end
 end
 function M.advance_timers(rec,tick,spend)
@@ -224,9 +225,11 @@ function M.tick(tick)
   if root.scheduler.last_tick==tick then return end -- No same-tick replay/credit refresh.
   root.scheduler.last_tick=tick
   phase('lifecycle',tick,spend)
+  if root.scheduling_diagnostic then return end
   phase('sample',tick,spend)
   if root.scheduling_diagnostic then return end
   phase('notifications',tick,spend)
+  if root.scheduling_diagnostic then return end
   local s=root.scheduler
   local due={}
   while true do

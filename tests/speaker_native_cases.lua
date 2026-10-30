@@ -17,7 +17,13 @@ local function build(kind,x,y)
   lifecycle.on_built{entity=body}; local rec=assert(registry.by_entity(body)); assert(not rec.children.power); return rec
 end
 local function native(x,y) return assert(game.surfaces[1].create_entity{name='programmable-speaker',position={x,y},force='player'}) end
-local function adopt() for _=1,#registry.get().order*2+4 do graph.adopt_tick(game.tick,nop) end end
+local function adopt(c)
+  for _,wire in ipairs({'red','green'}) do
+    local ok,e=pcall(peripheral.inventory,c,wire,nop)
+    assert(ok or type(e)=='table' and e.code=='E_NETWORK_PENDING',serpent.line(e))
+  end
+  for _=1,#registry.get().order*2+4 do graph.adopt_tick(game.tick,nop) end
+end
 local function error_is(code,fn) local ok,e=pcall(fn); assert(not ok and type(e)=='table' and e.code==code,serpent.line(e)) end
 function M.run(c,r,conf,guest,report)
   local b=r.body; local s=b.surface
@@ -37,18 +43,18 @@ function M.run(c,r,conf,guest,report)
   assert(registry.get().speaker_audio==spent and spent.total==2)
   report('compiled-console-program-apply-reconnect-and-recreated-wrapper-share-spent-credits')
   local unsupported=assert(s.create_entity{name='tc-fixture-unsupported-speaker',position={0,-6},force='player'})
-  lifecycle.on_built{entity=unsupported}; wire(c.body,unsupported,'green'); adopt()
+  lifecycle.on_built{entity=unsupported}; wire(c.body,unsupported,'green'); adopt(c)
   assert(not carrier.supports(unsupported) and not registry.by_entity(unsupported) and unsupported.valid); unsupported.destroy()
   local middle=native(9,3); local db=build('kv',12,6); local green=build('kv',12,9)
   wire(b,middle,'red'); wire(middle,db.body,'red'); wire(middle,green.body,'green')
-  error_is('E_NETWORK_PENDING',function() peripheral.inventory(c,'red',nop) end); adopt()
+  error_is('E_NETWORK_PENDING',function() peripheral.inventory(c,'red',nop) end); adopt(c)
   local m=assert(registry.by_entity(middle)); middle.energy=0
   assert(peripheral.inventory(c,'red',nop)[m.id] and peripheral.inventory(c,'red',nop)[db.id])
   assert(not peripheral.inventory(c,'red',nop)[green.id] and not peripheral.inventory(c,'green',nop)[green.id])
   local pole=assert(s.create_entity{name='small-electric-pole',position={15,9},force='player'})
   local hidden=build('kv',18,9); wire(middle,pole,'red'); wire(pole,hidden.body,'red')
   assert(not peripheral.inventory(c,'red',nop)[hidden.id] and conn(middle,'red').is_connected_to(conn(pole,'red')))
-  local target_only=native(0,12); wire(lifecycle.endpoint(conf,'targets'),target_only,'green'); adopt()
+  local target_only=native(0,12); wire(lifecycle.endpoint(conf,'targets'),target_only,'green'); adopt(c)
   assert(not registry.by_entity(target_only),'Targets-only native speaker must not be adopted as discovery frontier')
   report('native-speaker-chain-color-separation-unpowered-relay-unsupported-pole-and-target-role')
   wire(c.body,conf.body,'red')
@@ -66,7 +72,7 @@ function M.run(c,r,conf,guest,report)
   report('compiled-configurator-read-write-and-restore-registered-native-speaker')
   local cloned=assert(b.clone{position={6,12},surface=s,force=b.force})
   lifecycle.on_cloned{source=b,destination=cloned}; assert(not registry.by_entity(cloned))
-  wire(c.body,cloned,'green'); adopt(); local clone=assert(registry.by_entity(cloned)); assert(clone.id~=r.id and next(clone.children)==nil)
+  wire(c.body,cloned,'green'); adopt(c); local clone=assert(registry.by_entity(cloned)); assert(clone.id~=r.id and next(clone.children)==nil)
   cloned.energy=100000
   c.shell={version=1,id=c.id..'/speaker-native-fixture',pending={},pending_bytes=0}
   local ok,e=shell.evaluate(c,"held=peripheral.wrap('"..clone.id.."','green')",game.tick,'hold'); assert(ok,serpent.line(e))
@@ -79,7 +85,7 @@ function M.run(c,r,conf,guest,report)
   lifecycle.on_removed{entity=cloned}
   local inventory=game.create_inventory(4); assert(cloned.mine{inventory=inventory,raise_destroyed=true})
   assert(inventory.get_item_count('programmable-speaker')==1 and not registry.record(old)); inventory.destroy()
-  local replacement=native(6,12); wire(c.body,replacement,'green'); adopt()
+  local replacement=native(6,12); wire(c.body,replacement,'green'); adopt(c)
   local next_rec=assert(registry.by_entity(replacement)); assert(next_rec.id~=old)
   ok,e=shell.evaluate(c,'held.getLimits()',game.tick,'stale-replacement'); assert(not ok and e.code=='E_UNREACHABLE',serpent.line(e)); c.shell=nil
   local at=replacement.position; local moved=replacement.teleport({at.x+1,at.y})
@@ -97,7 +103,7 @@ function M.run(c,r,conf,guest,report)
   local ghost=assert(s.create_entity{name='entity-ghost',inner_name='programmable-speaker',position={6,12},force='player'})
   wire(c.body,ghost,'green'); wire(ghost,green.body,'green'); assert(not registry.by_entity(ghost))
   assert(not peripheral.inventory(c,'green',nop)[green.id],'ghost wires must not grant relay authority')
-  local _,revived=ghost.revive{raise_revive=true}; assert(revived); lifecycle.on_built{entity=revived}; adopt()
+  local _,revived=ghost.revive{raise_revive=true}; assert(revived); lifecycle.on_built{entity=revived}; adopt(c)
   assert(registry.by_entity(revived) and registry.by_entity(revived).id~=removed_id)
   assert(peripheral.inventory(c,'green',nop)[green.id],'revived native relay must use real wires')
   report('native-clone-revive-mining-replacement-movement-scope-generation-and-stale-console')
@@ -112,7 +118,7 @@ function M.run(c,r,conf,guest,report)
   local local_body=assert(s.create_entity{name='radar',position={16,3},force='player'}); lifecycle.on_built{entity=local_body}
   local remote_body=assert(s.create_entity{name='radar',position={100,3},force='player'}); lifecycle.on_built{entity=remote_body}
   local remote_db=build('kv',106,3); wire(middle,local_body,'red'); wire(remote_body,remote_db.body,'red')
-  adopt(); assert(not registry.by_entity(remote_body))
+  adopt(c); assert(not registry.by_entity(remote_body))
   local remote=assert(radar.build(remote_body)) -- Retained legacy identity is still no physical bridge.
   for _,x in ipairs({16,100}) do
     local power=assert(s.create_entity{name='electric-energy-interface',position={x,-6},force='player'})
