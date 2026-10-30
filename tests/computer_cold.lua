@@ -100,6 +100,12 @@ local function scalar_graph(value,seen)
   seen[value]=true
   for k,v in pairs(value) do scalar_graph(k,seen); scalar_graph(v,seen) end
 end
+local function historical_restore(rec,payload,tick)
+  assert(not runtime.emit(rec.id,'power_restored',payload,tick),'retired power event was manufactured')
+  -- Model an already accepted old-save item, not a new electrical notification.
+  payload.name='power_restored'
+  assert(runtime.enqueue(rec,'restore',payload,tick))
+end
 local function snapshot(rec)
   local root=registry.get(); local machine=root.ledger.machines[rec.id]
   local timers={}
@@ -199,14 +205,14 @@ function M.on_tick(event)
     assert(rec.state.boots==1)
     -- Keep committed editor source different from the active run snapshot.
     runtime.save(rec.id,'function start(e) error("saved-only source executed") end',rec.saved_revision)
-    runtime.emit(rec.id,'power_restored',{outage_start_tick=0,restored_tick=event.tick},event.tick)
+    historical_restore(rec,{outage_start_tick=0,restored_tick=event.tick},event.tick)
     if fixture.declaration then
       local plain=registry.computer(fixture.declaration)
       assert(plain.status=='running' and plain.state.boots==1 and plain.state.samples==1,
         plain.diagnostic and plain.diagnostic.message)
       runtime.save(plain.id,'function start(e) error("new saved-only declaration executed") end',plain.saved_revision)
-      local payload={tag='a'}; runtime.emit(plain.id,'power_restored',payload,event.tick); payload.tag='changed'
-      runtime.emit(plain.id,'power_restored',{tag='b'},event.tick)
+      local payload={tag='a'}; historical_restore(plain,payload,event.tick); payload.tag='changed'
+      historical_restore(plain,{tag='b'},event.tick)
       fixture.active_alias=plain.active; fixture.state_alias=plain.state
       fixture.timers_alias=plain.timers; fixture.queue_alias=plain.queue
       if fixture.collision then

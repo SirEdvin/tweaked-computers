@@ -82,7 +82,7 @@ function M.run()
   log('TC_CONTRACT genuine-alpha-stopped-host-data-kv-screen-wires-blueprint-tagged-item')
   log('TC_CONTRACT_TOTAL 1')
 end
-local function retained()
+local function retained(loading)
   local x=f(); local c=x.records.computer
   assert(registry.record(c.id)==c and c.state==x.state and c.active==x.active and c.timers==x.timers and c.queue==x.queue)
   assert(c.run_id==x.run and c.generation==x.generation and c.state.boots==1 and not c.state.timers and c.saved_source==program)
@@ -91,7 +91,9 @@ local function retained()
   assert(c.state_entries==1 and c.state_bytes==16+c.state_sizes.boots)
   assert(x.records.kv.database==x.database and x.database.entries.secret.value=='retained string')
   assert(x.database.entries.hash.fields.field=='retained hash' and x.database.entries.secret.deadline==x.deadline)
-  assert(monitor.resolve(x.records.monitor)==x.group and x.group.model==x.screen and x.screen.cells[1][1]==75)
+  local monitors=registry.get().monitors
+  local group=loading and monitors.groups[monitors.membership[x.records.monitor.id]] or monitor.resolve(x.records.monitor)
+  assert(group==x.group and x.group.model==x.screen and x.screen.cells[1][1]==75)
   local io=x.records.logic
   assert(io.output_owner==x.owner)
   if not x.upgraded then assert(io.output_bank==x.bank) end
@@ -100,7 +102,7 @@ local function retained()
 end
 function M.on_load()
   loaded=true
-  if f().phase=='frozen' then retained(); log('TC_RD1_OLD_ON_LOAD_UNCHANGED') end
+  if f().phase=='frozen' then retained(true); log('TC_RD1_OLD_ON_LOAD_UNCHANGED') end
 end
 function M.on_configuration_changed()
   local x=f(); x.upgraded=true; retained()

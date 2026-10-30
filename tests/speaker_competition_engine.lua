@@ -4,6 +4,7 @@ local animation=require('tests.monitor_animation_engine')
 local registry=require('scripts.registry')
 local lifecycle=require('scripts.lifecycle')
 local runtime=require('scripts.runtime.computer')
+local speaker=require('scripts.speaker')
 local defs=require('scripts.device-definitions')
 local M={}
 local source=[[function start(e) computer.after(120-computer.getTick()%60,'chord') end
@@ -54,6 +55,8 @@ function M.on_load() animation.on_load() end
 function M.on_configuration_changed() animation.on_configuration_changed() end
 function M.on_tick(event)
   local x=storage.speaker_competition
+  -- Preserve the original native supply after native carriers left generic tick order.
+  for _,id in ipairs(x.speakers) do local r=registry.record(id); r.body.energy=100000; assert(speaker.available(r)) end
   if storage.tc_animation.phase=='drawing' and event.tick%15==0 then
     x.constant.get_control_behavior().get_section(1).set_slot(1,{value={type='item',name='iron-plate',quality='normal'},min=event.tick%30==0 and 99 or 101})
   end

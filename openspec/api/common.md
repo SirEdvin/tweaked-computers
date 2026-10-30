@@ -71,7 +71,7 @@ time or player-local state. Configurator's independent field schemas are unchang
 | `E_NOT_FOUND` | An addressed identity or section no longer exists | None |
 | `E_UNREACHABLE` | No valid path on the selected channel or wrong force/surface | None |
 | `E_NETWORK_PENDING` | A bounded topology result cannot yet be established | None; retry on a later event/tick |
-| `E_UNPOWERED` | Target peripheral service is unavailable without electricity | None |
+| `E_UNPOWERED` | Native radar/speaker lacks electrical or operational availability; custom devices need no electricity | None |
 | `E_UNSUPPORTED` | Device/mode does not support the requested setting | None |
 | `E_READ_ONLY` | Setting/section is not mutable in its current native mode | None |
 | `E_SHARED_SCOPE` | Shared-group mutation would exceed target authority | None |
@@ -87,8 +87,8 @@ Errors never convert a failed lookup into an empty successful result. Expected a
 
 ## Scheduling and lifecycle
 
-1. At synchronized tick processing, reconcile bounded lifecycle/power changes and revoke stale authority. Fail-safe output cleanup has a reserved non-guest maintenance path.
-2. Observe each powered logic handler's native input state once for that tick. Derive subscription events without recursive callback delivery.
+1. At synchronized tick processing, reconcile targeted lifecycle changes and due non-power physical observations and revoke stale authority. Fail-safe output cleanup has a reserved non-guest maintenance path; native radar/speaker power is checked only at use.
+2. Observe each actively watched physical logic input/color once for that tick, sharing the native read across independent subscribers. Unsubscribed inputs receive no subscription-discovery visit. Derive subscription events without recursive callback delivery.
 3. Advance timers and topology/display notifications under separate maintenance budgets.
 4. Dispatch a frozen round of the persisted ready-computer rotation, at most one program or Console item per computer per actual tick. Each queue retains FIFO order and existing program/Console alternation; the starting member advances even under shared-credit refusal. Events/Console ingress wake their destination directly, drained queues leave the rotation, and peers awakened during dispatch join a subsequent round. A running callback finishes or faults; it never suspends mid-Lua-stack.
 5. Complete bounded display presentation and housekeeping. Native circuit propagation determines when other factory entities observe output; no zero-latency feedback guarantee is made.
@@ -100,9 +100,9 @@ Waiting computers without queued work or due timers receive no timer/dispatch
 discovery visit. Ordinary cold load preserves these memberships and spent credits;
 only synchronized init/configuration migration builds missing memberships.
 
-Within the published supported envelope, no changed logic sample is silently lost. Queue-capacity overflow faults the affected run visibly and clears its still-owned outputs. Unpowered computers do not admit transient touch/signal event history; on restoration they discard obsolete transient samples, retain durable application state/registrations, and request current-input resynchronization. Already completed effects never replay. Recurring overdue timers produce one event with a missed count instead of a burst; one-shots fire once. Ordinary cold load does not cause power-restoration or startup events merely because host functions were reconstructed.
+Within the published supported envelope, no changed logic sample is silently lost. Queue-capacity overflow faults the affected run visibly and clears its still-owned outputs. Custom computers need no electricity; electrical cycling does not pause execution, clear output, discard accepted events or resynchronize subscriptions. The legacy `power_restored` name remains registerable but produces no new events; accepted historical items retain ordinary ordering and cancellation. Migration resumes a supported legacy electrically paused generation without startup, requesting only its required current-input resync. Already completed effects never replay. Recurring overdue timers produce one event with a missed count instead of a burst; one-shots fire once. Ordinary cold load does not cause power-restoration or startup events merely because host functions were reconstructed.
 
-Discovery remains physical while a relay device is unpowered; actual service calls on an unpowered endpoint fail. Display render state and database contents survive outages. KV expiry follows simulation time even while its entity is unpowered or in a data-bearing item.
+All nine custom families need no electricity: computer, KV, monitor, logic, configurator, Recipe Searcher, Factoriopedia Interface, Production Statistics and Dashboard. Valid custom `PeripheralInfo.powered` remains true for compatibility, never as stored authority. Native radar/speaker discovery and permitted metadata/`getLimits` remain available without power; their active calls and actual radio-receiver eligibility check native availability at use. Display images and accepted database contents are unaffected by electrical cycling. KV expiry follows simulation time, including in a data-bearing item. Dirty/pending maintenance, output owners and open viewers maintain only their own eligible work; static displays use native cursor blinking without polling.
 
 ## Queryable limits
 

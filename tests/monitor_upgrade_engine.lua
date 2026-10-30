@@ -156,7 +156,8 @@ function M.on_load()
   assert(root.scheduler.maintenance_spent==x.progress.spent and root.scheduler.render_reserved_work==x.progress.reserved)
  end
  if x.saved then
-  local c=registry.computer(x.computer); local g=monitor.resolve(registry.record(x.unaffected))
+  local c=registry.computer(x.computer); local monitors=registry.get().monitors
+  local g=monitors.groups[monitors.membership[x.unaffected]] -- Retained aliases precede notification migration.
   local _,stats=data.copy(c.state,nop); assert(c.state_nodes==stats.nodes,'retained state node accounting mismatch')
   assert(c.run_id==(x.candidate_run or x.saved.run_id) and c.state.boots==(x.boots or 1))
   assert(g.id==x.saved.id and g.model==x.saved.model and g.model.cells==x.saved.cells)

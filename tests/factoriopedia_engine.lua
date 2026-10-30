@@ -238,7 +238,8 @@ function M.on_tick(event)
     assert(peripheral.inventory(c,'red',nop)[x.relay] and peripheral.inventory(c,'green',nop)[s.id])
     assert(not peripheral.inventory(c,'red',nop)[x.mixed],'mixed colors granted authority')
     s.powered=false
-    guest(c,prefix..[[assert(s.getLimits().table_entries==1024); assert(s.getItem('iron-plate').name=='iron-plate'); assert(#s.listItems()>0)]])
+    guest(c,prefix..[[assert(s.getLimits().table_entries==1024); assert(s.getItem('iron-plate').name=='iron-plate'); ]]..
+      (x.large and [[refused('E_LIMIT',s.listItems)]] or [[assert(#s.listItems()>0)]]))
     assert(peripheral.inventory(c,'red',nop)[x.relay],'unpowered relay lost discovery')
     s.powered=true
     guest(c,prefix..[[assert(s.getItem('iron-plate').name=='iron-plate')]])

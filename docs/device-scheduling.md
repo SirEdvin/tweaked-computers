@@ -69,3 +69,40 @@ pooled, and the downstream matched-timing row remains separate.
 Native selection/copy/scroll, audio and connected peers require their own actual
 client evidence. A mocked GUI, passing package create or useful-work counter is
 not a visual, audible, late-join or representative hardware-performance pass.
+
+## Mixed old-save and connected-peer fixtures
+
+`tools/scheduling_upgrade.py` consumes the exact candidate ZIP and a SHA-256-pinned
+function-capable pre-scheduler **source-built 0.1.17** archive. That comparison
+archive is not a public release. The tool replaces only the existing opt-in
+`tests/monitor_upgrade_engine.lua` test hook with the candidate's packaged
+`tests/scheduling_upgrade_engine.lua`; it checks every other archive member.
+When both supplied mod versions are equal, the existing version helper makes a
+private metadata-only patch advance. An already newer candidate is used without
+version rewriting. No supplied archive or original rollback save is overwritten.
+
+```sh
+python3 tools/scheduling_upgrade.py --factorio "$FACTORIO" \
+  --baseline "$PRE_SCHEDULER" --baseline-sha256 "$BASELINE_SHA256" \
+  --archive "$ARCHIVE" --output "$WORK/scheduling-upgrade"
+```
+
+Both content modes create an old-runtime scene, freeze it in a separate old
+server, upgrade in a new process, then ordinarily reload in another process.
+The fixture preserves all nine physical families, role wires, a genuinely paused
+old run, aligned/coalesced timers, canceled queued signal delivery, a complete
+1,100-signal observation, output ownership, queued Console ingress, database and
+Dashboard models, and a paid partial monitor frame. It compares source, aliases,
+queue order and spent credits before synchronized work. Console delivery uses
+an explicitly table-backed authorized player, not a native typing claim.
+
+`tests/scheduling_client_engine.lua` is the separate native-peer fixture. Its
+external exact-package driver redirects only the existing allowlisted native
+client test hook in a private ZIP. Client one reaches a real frozen queue/watch/
+deadline boundary before client two starts; the synchronized player-joined event
+resumes all peers. Independently evaluated server/client snapshots, actual window
+captures, a second server process, exact effect counts and clean exits establish
+that case. The external driver and replacement-byte proofs belong with the
+receipt bundle; neither a headless create nor these source descriptions certifies
+a native-client pass. Native radar and private-output speaker capture cases remain
+separate from the custom-device scene and from downstream matched timings.

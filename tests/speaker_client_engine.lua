@@ -27,11 +27,11 @@ function play(event)
     local ok,e=pcall(peripheral.call,computer.getState('speaker_name'),'red','playNote','piano',0,0)
     assert(not ok and e.code=='E_UNREACHABLE'); computer.setState('detach_verified',true)
   elseif operation=='unpowered' then
-    local s=peripheral.find('speaker','red'); assert(s.getLimits().speaker_notes_per_tick==8)
+    local got,s=pcall(peripheral.find,'speaker','red'); if not got then assert(s.code=='E_NETWORK_PENDING'); return end; assert(s.getLimits().speaker_notes_per_tick==8)
     local ok,e=pcall(s.playNote,'piano',0,0)
     assert(not ok and e.code=='E_UNPOWERED'); computer.setState('power_verified',true)
   else
-    local s=peripheral.find('speaker','red'); assert(s)
+    local got,s=pcall(peripheral.find,'speaker','red'); if not got then assert(s.code=='E_NETWORK_PENDING'); return end; assert(s)
     computer.setState('speaker_name',peripheral.getName(s)); count=1
     if operation=='effect' then assert(s.playSound('utility/wire_connect_pole',1))
     elseif operation=='zero' then assert(s.playNote('piano',0,0))

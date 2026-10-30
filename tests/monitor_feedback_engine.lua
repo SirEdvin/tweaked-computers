@@ -142,10 +142,12 @@ function M.run()
     assert(marked.body.to_be_deconstructed('player'))
     -- Unsupported availability hides/restores without changing committed content.
     marked.availability_version=99
+    lifecycle.observe_monitor(marked,game.tick) -- Explicit fixture corruption needs targeted observation, not an idle sweep.
     lifecycle.reconcile(game.tick,nop)
     monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
     assert(g.render.hidden and not g.render.panel.visible); unchanged(row)
     marked.availability_version=1
+    lifecycle.observe_monitor(marked,game.tick)
     settle(); unchanged(row); assert(not g.render.hidden and g.render.panel.visible)
     -- A real scale change makes the old front's grid obsolete immediately.
     -- Headless table-backed Ctrl-click must not map that still-visible image

@@ -48,7 +48,7 @@ function M.run()
   log('TC_CONTRACT pre-inspector-layout2-save-populated-identities-wires-data-owner-and-draft')
   log('TC_CONTRACT_TOTAL 1')
 end
-local function retained()
+local function retained(loading)
   local x=f(); local c=x.records.computer; local io=x.records.logic
   for _,part in ipairs(x.parts) do assert(part.valid and registry.by_entity(part),'existing physical objects must not be recreated') end
   for _,part in ipairs(x.power_parts) do assert(part.valid==not x.upgraded,'only legacy electrical helpers may be retired') end
@@ -64,11 +64,13 @@ local function retained()
   assert(io.children.output.get_control_behavior().get_section(1).get_slot(1).min==13)
   assert(x.records.kv.database==x.database and x.database.entries['binary\0'].value=='retained\255')
   assert(x.database.entries['binary\0'].deadline==360000)
-  assert(monitor.resolve(x.records.monitor)==x.group and x.group.model==x.model)
+  local monitors=registry.get().monitors
+  local group=loading and monitors.groups[monitors.membership[x.records.monitor.id]] or monitor.resolve(x.records.monitor)
+  assert(group==x.group and x.group.model==x.model)
   assert(registry.get().scheduler==x.ledger and x.ledger.maintenance_spent==x.spent)
   assert(registry.get().player_drafts[1].documents[c.id].source=='dirty retained draft')
 end
-function M.on_load() loaded=true; if f().phase=='frozen' then retained(); log('TC_INSPECTOR_UPGRADE_LOAD_UNCHANGED') end end
+function M.on_load() loaded=true; if f().phase=='frozen' then retained(true); log('TC_INSPECTOR_UPGRADE_LOAD_UNCHANGED') end end
 function M.on_configuration_changed()
   f().upgraded=true
   retained()

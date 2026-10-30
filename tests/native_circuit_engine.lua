@@ -91,7 +91,8 @@ end]]
 local function check_inspector()
   local io=registry.record(f().logic); local real=game
   local root=registry.get(); local saved_scheduler,saved_ledger=root.scheduler,root.ledger
-  root.scheduler={last_tick=-1}; root.ledger=admission.new() -- Isolate the table-GUI clock, not production credits.
+  local isolated={}; for k,v in pairs(saved_scheduler) do isolated[k]=v end
+  root.scheduler=isolated; root.ledger=admission.new() -- Preserve versioned lanes while isolating the table-GUI clock.
   local p=players.player(9201,io.body); local tick=math.ceil((game.tick+15)/15)*15
   game=setmetatable({tick=tick,connected_players={p},get_player=function() return p end},{__index=real})
   local ok,e=pcall(function()
@@ -153,6 +154,7 @@ function M.on_tick(event)
     assert(c.queue==x.queue and c.subscriptions==x.subscriptions and c.queue_bytes==x.bytes)
     assert(io.output_owner==x.owner and c.run_id==x.run and c.state.boots==1 and not c.state.events)
     assert(#c.queue==2 and #c.queue[2].event.current==1100)
+    lifecycle.request_observation(io,event.tick) -- Explicit obsolete-cache probe, not an undued global sweep.
     put(x.green,{{signal={name='iron-plate'},count=91}})
     x.phase='delivery'; x.since=event.tick
   elseif x.phase=='events' then

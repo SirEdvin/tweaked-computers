@@ -1,6 +1,6 @@
 # Computer runtime v1 (development)
 
-Target: Factorio 2.0.77. Native named callbacks only: no interpreter, OS,
+Current verification target: Factorio 2.1.23. Native named callbacks only: no interpreter, OS,
 filesystem, coroutine suspension or host-object API. The normative contracts
 are `openspec/api/{common,native-language}.md`
 and `openspec/specs/computer-runtime/lua-api.md` in the source repository.
@@ -218,9 +218,11 @@ ledger/scheduler snapshots, alias identity, two queued events in FIFO order and
 one immediate plus one timed call. Historical running-source upgrade evidence
 requires a genuine function-capable baseline and separate before/after receipts.
 
-Headless contracts use actual numbered vanilla fixture bodies, not the later
-powered composite prototypes. Power transitions are host-hook contract evidence;
-physical power sampling belongs to TC04. Editor/client focus, rendering/touch,
+Headless contracts use actual numbered vanilla fixture bodies, not composite
+prototypes. Historical TC03 power-transition checks were host-hook evidence;
+the current contract retains accepted historical events while generating no new
+electrical notifications. Custom composites now require no electricity.
+Editor/client focus, rendering/touch,
 multiplayer joining and production envelope/latency are not claimed here. Their
 client verification is intentionally deferred to the user/final release gate.
 Development limits are effective safety ceilings, not frozen responsiveness or

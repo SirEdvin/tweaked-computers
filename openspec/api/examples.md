@@ -4,7 +4,7 @@ These are maintained contract programs, not simulated execution transcripts. The
 
 ## Case A: a configured, monitored stock controller
 
-Prepare one powered computer, one KV database, one logic handler, one configurator and a powered 2×2 monitor rectangle. For this example there is exactly one peripheral of each type on the selected discovery channel, so `peripheral.find` is unambiguous. Production programs can bind explicitly to names from discovery instead.
+Prepare one computer, one KV database, one logic handler, one configurator and a 2×2 monitor rectangle; none needs electricity. Native factory targets such as inserters retain their own power requirements. For this example there is exactly one peripheral of each type on the selected discovery channel, so `peripheral.find` is unambiguous. Production programs can bind explicitly to names from discovery instead.
 
 Wiring:
 
