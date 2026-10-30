@@ -543,21 +543,30 @@ function M.on_tick(event)
     local crossbody=assert(moving.body.clone{position={0,0},surface=srf,force='player'})
     local cross=assert(registry.by_entity(crossbody)); assert(cross.saved_source==source and next(cross.state)==nil and cross.status=='stopped')
     local force=game.create_force('tc12-moved'); moving.body.force=force
+    assert(not lifecycle.connector(moving,'network','red'),'silent force change trusted cached scope')
+    x.moving=moving.id; x.moved_force=force; x.movement_tick=event.tick
+    x.cross=cross.id; x.cross_surface=srf.index; x.phase='movement_wait'
+  elseif x.phase=='movement_wait' then
     lifecycle.reconcile(event.tick,nop)
-    assert(moving.body.surface==lifecycle.endpoint(moving,'network').surface and lifecycle.endpoint(moving,'network').force==force and moving.state_bytes==65536)
+    assert(event.tick-x.movement_tick<=limits.topology_latency_ticks,'silent movement exceeded physical observation envelope')
+    local moving=registry.record(x.moving)
+    if moving.force_index~=x.moved_force.index then return end
+    assert(moving.body.surface==lifecycle.endpoint(moving,'network').surface and lifecycle.endpoint(moving,'network').force==x.moved_force and moving.state_bytes==65536)
     assert(lifecycle.connector(moving,'network','red'))
-    x.moving=moving.id; x.cross=cross.id; x.cross_surface=srf.index
-    game.merge_forces(force,'player'); x.phase='force_wait'
+    log('TC_NATIVE_SILENT_FORCE_DUE_OBSERVATION_OK source-state-retained')
+    game.merge_forces(x.moved_force,'player'); x.merge_tick=event.tick; x.phase='force_wait'
   elseif x.phase=='force_wait' then
     lifecycle.reconcile(event.tick,nop)
+    assert(event.tick-x.merge_tick<=limits.topology_latency_ticks,'force merge did not wake physical observation')
     local moving=registry.record(x.moving)
-    if moving.body.force.index~=game.forces.player.index then return end
+    if moving.body.force.index~=game.forces.player.index or moving.force_index~=game.forces.player.index then return end
     assert(moving.force_index==game.forces.player.index and moving.state_bytes==65536)
     local cross=registry.record(x.cross); x.cross_child=lifecycle.endpoint(cross,'network')
     game.delete_surface(x.cross_surface); x.phase='surface_wait'
   elseif x.phase=='surface_wait' then
     if game.surfaces[x.cross_surface] then return end
     assert(not registry.record(x.cross) and not x.cross_child.valid)
+
     log('TC_NATIVE_FORCE_SURFACE_MERGE_OK')
     local writer=build('computer',40,0); local output=build('logic',44,0)
     assert(lifecycle.connector(writer,'network','red').connect_to(lifecycle.connector(output,'network','red')))

@@ -89,14 +89,15 @@ local function deadline_before(a,b)
   end
   return a.tick<b.tick or a.tick==b.tick and a.id<b.id
 end
-function M.next_timer()
-  local s=work_state(); local item=s.deadlines[1]
+local function deadline_peek(s)
+  local item=s.deadlines[1]
   if item~=nil then
     deadline_before(item,item)
     if s.deadline_positions[item.id]~=1 then errors.raise('E_UNSUPPORTED','invalid retained deadline index; source/timers retained') end
   end
   return item
 end
+function M.next_timer() return deadline_peek(work_state()) end
 local function deadline_swap(s,a,b)
   local h=s.deadlines; h[a],h[b]=h[b],h[a]
   s.deadline_positions[h[a].id]=a; s.deadline_positions[h[b].id]=b
@@ -115,8 +116,8 @@ local function deadline_fix(s,i)
     deadline_swap(s,i,child); i=child
   end
 end
-function M.timer_remove(id)
-  local s=work_state(); local i=s.deadline_positions[id]
+local function deadline_remove(s,id)
+  local i=s.deadline_positions[id]
   if not i then return end
   if not errors.integer(i,1,#s.deadlines) or type(s.deadlines[i])~='table' or s.deadlines[i].id~=id then
     errors.raise('E_UNSUPPORTED','invalid retained deadline position; source/timers retained')
@@ -125,17 +126,51 @@ function M.timer_remove(id)
   s.deadline_positions[id]=nil
   if i<=#h then h[i]=last; s.deadline_positions[last.id]=i; deadline_fix(s,i) end
 end
+local function deadline_put(s,item)
+  deadline_before(item,item)
+  local id=item.id; local i=s.deadline_positions[id]
+  if i and (not errors.integer(i,1,#s.deadlines) or type(s.deadlines[i])~='table' or s.deadlines[i].id~=id) then
+    errors.raise('E_UNSUPPORTED','invalid retained deadline position; data retained')
+  end
+  if not i then i=#s.deadlines+1; s.deadline_positions[id]=i end
+  s.deadlines[i]=item; deadline_fix(s,i)
+end
+function M.timer_remove(id) return deadline_remove(work_state(),id) end
 function M.timers_changed(rec)
   local s=work_state(); local tick
   if rec.status=='running' then
     for _,timer in pairs(rec.timers) do if not tick or timer.deadline<tick then tick=timer.deadline end end
   end
   if not tick then M.timer_remove(rec.id); return end
-  local i=s.deadline_positions[rec.id]
-  if not i then i=#s.deadlines+1; s.deadline_positions[rec.id]=i end
-  s.deadlines[i]={id=rec.id,generation=rec.generation,run_id=rec.run_id,tick=tick}
-  deadline_fix(s,i)
+  deadline_put(s,{id=rec.id,generation=rec.generation,run_id=rec.run_id,tick=tick})
 end
+-- Fixed host lanes share the timer heap operations, not another dispatcher.
+local clock_kinds={'physical','kv','art','editor','inspector','dashboard'}
+function M.maintenance_clock(kind)
+  local s=work_state().due_work
+  if type(s)~='table' or s.version~=1 then errors.raise('E_UNSUPPORTED','unsupported service deadlines; data retained') end
+  local known=false; for _,name in ipairs(clock_kinds) do if kind==name then known=true; break end end
+  local clock=known and s[kind]
+  if type(clock)~='table' or type(clock.deadlines)~='table' or type(clock.deadline_positions)~='table' then
+    errors.raise('E_UNSUPPORTED','unsupported service deadline lane; data retained')
+  end
+  return clock
+end
+function M.maintenance_next(kind)
+  local item=deadline_peek(M.maintenance_clock(kind))
+  if item and type(item.owner)~='table' then errors.raise('E_UNSUPPORTED','invalid service deadline owner; data retained') end
+  return item
+end
+function M.maintenance_set(kind,id,owner,tick)
+  assert(type(owner)=='table','service deadline owner required')
+  deadline_put(M.maintenance_clock(kind),{id=id,owner=owner,generation=owner.generation,tick=tick})
+end
+function M.maintenance_remove(kind,id) return deadline_remove(M.maintenance_clock(kind),id) end
+M.register_initializer('00-service-deadlines',function(root)
+  if not M.scheduling_supported(root) or root.scheduler.due_work~=nil then return end
+  local s={version=1}; root.scheduler.due_work=s
+  for _,kind in ipairs(clock_kinds) do s[kind]={deadlines={},deadline_positions={}} end
+end)
 function M.owned_outputs()
   local s=M.get().output_owners
   if type(s)~='table' or s.version~=1 or type(s.order)~='table' or type(s.records)~='table' or type(s.computers)~='table' then
@@ -191,10 +226,23 @@ local function migrate_work(root)
   end
 end
 local function track_destruction(root,rec)
-  if rec.kind=='radar' and rec.body.valid then
+  if rec.body.valid then
     local registration=script.register_on_object_destroyed(rec.body)
     rec.destruction_registration=registration
-    root.radar_destructions[registration]=rec.id
+    if rec.kind=='radar' then root.radar_destructions[registration]=rec.id end
+  end
+end
+function M.track_physical(rec)
+  local root=M.get(); local body=rec.body
+  if body.valid then
+    local binding=root.entities[body.unit_number]
+    if binding and binding.id==rec.id and binding.role=='body' then
+      track_destruction(root,rec); binding.destruction_registration=rec.destruction_registration
+    end
+  end
+  for role,entity in pairs(rec.children) do
+    local binding=entity.valid and root.entities[entity.unit_number]
+    if binding and binding.id==rec.id and binding.role==role then binding.destruction_registration=script.register_on_object_destroyed(entity) end
   end
 end
 local function migrate_tracking(root)
@@ -300,6 +348,7 @@ end
 function M.register(kind,body)
   local root=writable()
   if type(kind)~='string' or #kind==0 or #kind>limits.identifier_bytes then errors.raise('E_ARGUMENT','invalid device kind') end
+  if kind~='radar' then M.maintenance_clock('physical') end
   if not body or not body.valid or not body.unit_number then errors.raise('E_ARGUMENT','valid numbered entity required') end
   if root.entities[body.unit_number] then errors.raise('E_ARGUMENT','entity already bound') end
   if root.retained_count>=limits.registry_entries then errors.raise('E_CAPACITY','placed identity capacity reached') end
@@ -316,9 +365,12 @@ function M.register(kind,body)
     rec.timers={}; rec.subscriptions={}
     root.computers[id]=rec
   else root.devices[id]=rec end
-  root.entities[body.unit_number]={id=id,role='body',generation=rec.generation}
+  root.entities[body.unit_number]={id=id,role='body',generation=rec.generation,destruction_registration=rec.destruction_registration}
   root.retained_count=root.retained_count+1
-  if kind~='radar' then root.order[#root.order+1]=id end
+  if kind~='radar' then
+    root.order[#root.order+1]=id
+    M.maintenance_set('physical',id,rec,game.tick+1+body.unit_number%limits.topology_latency_ticks)
+  end
   if kind=='monitor' then M.monitor_changed(rec,true) end
   return rec
 end
@@ -331,7 +383,8 @@ function M.bind_child(id,role,entity)
   local count=0; for _ in pairs(rec.children) do count=count+1 end
   if count>=limits.owned_children then errors.raise('E_CAPACITY','owned component capacity reached') end
   if entity.force.index~=rec.force_index or entity.surface.index~=rec.surface_index then errors.raise('E_ARGUMENT','child force/surface mismatch') end
-  rec.children[role]=entity; root.entities[entity.unit_number]={id=id,role=role,generation=rec.generation}
+  rec.children[role]=entity; root.entities[entity.unit_number]={id=id,role=role,generation=rec.generation,
+    destruction_registration=script.register_on_object_destroyed(entity)}
 end
 function M.unbind_child(id,role)
   local root=writable(); local rec=M.record(id)
@@ -352,6 +405,7 @@ end
 -- generations, aliases, queues or active runs. All native work precedes this call.
 function M.replace_physical(rec,body,children)
   local root=writable()
+  M.maintenance_clock('physical')
   assert(M.record(rec.id)==rec and body.valid and not root.entities[body.unit_number])
   for _,child in pairs(children) do assert(child.valid and not root.entities[child.unit_number]) end
   for unit,binding in pairs(root.entities) do if binding.id==rec.id then root.entities[unit]=nil end end
@@ -359,6 +413,8 @@ function M.replace_physical(rec,body,children)
   if rec.kind=='monitor' then M.monitor_changed(rec,true) end
   root.entities[body.unit_number]={id=rec.id,role='body',generation=rec.generation}
   for role,child in pairs(children) do root.entities[child.unit_number]={id=rec.id,role=role,generation=rec.generation} end
+  M.track_physical(rec)
+  M.maintenance_set('physical',rec.id,rec,game.tick+1)
 end
 function M.register_cleanup(name,fn)
   assert(type(name)=='string' and type(fn)=='function' and not cleanup[name],'invalid/duplicate host cleanup')
@@ -380,6 +436,10 @@ end
 function M.remove(id,reason)
   local root=writable(); local rec=M.record(id)
   if not rec then return false end
+  if rec.kind~='radar' then
+    local valid,problem=pcall(M.maintenance_clock,'physical')
+    if not valid then root.scheduling_diagnostic=problem; return false end
+  end
   if not M.cleanup(rec,rec.run_id,reason or 'removed') then
     rec.status='faulted'; rec.diagnostic=errors.new('E_ENGINE','cleanup failed; entity/data retained for recovery')
     return false
@@ -387,6 +447,7 @@ function M.remove(id,reason)
   if rec.kind=='monitor' then M.monitor_changed(rec,true) end
   rec.status='removed'; rec.queue={}; rec.timers={}; rec.subscriptions={}
   M.ready_changed(rec); M.timer_remove(rec.id)
+  if rec.kind~='radar' then M.maintenance_remove('physical',rec.id) end
   for unit,binding in pairs(root.entities) do if binding.id==id then root.entities[unit]=nil end end
   root.computers[id]=nil; root.devices[id]=nil
   root.retained_count=root.retained_count-1

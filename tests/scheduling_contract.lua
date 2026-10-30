@@ -189,8 +189,8 @@ function M.run()
       local a=api(c,0); local deadline=(i*7)%31+1
       peers[i]={rec=c,timer=a.after(deadline,'event'),deadline=deadline}
     end
-    local function heap()
-      local s=root.scheduler; local count=0
+    local function heap(s)
+      s=s or root.scheduler; local count=0
       for id,index in pairs(s.deadline_positions) do count=count+1; assert(s.deadlines[index].id==id) end
       assert(count==#s.deadlines)
       for i,item in ipairs(s.deadlines) do
@@ -206,6 +206,34 @@ function M.run()
     for tick=0,32 do scheduler.tick(tick); heap() end
     assert(#root.scheduler.deadlines==0 and root.scheduler.ready_count==0)
     report('indexed-heap-arbitrary-insertion-removal-and-drain')
+
+    root=fresh(); local physical=registry.maintenance_clock('physical'); local owners={}
+    for i=1,24 do
+      local id='fixture-'..i; local owner={generation=i}; owners[id]=owner
+      registry.maintenance_set('physical',id,owner,(i*7)%31+1); heap(physical)
+    end
+    registry.maintenance_set('kv','fixture-1',owners['fixture-1'],1)
+    for i=2,24,2 do registry.maintenance_remove('physical','fixture-'..i); heap(physical) end
+    for pass=1,8 do
+      for i=1,24,2 do registry.maintenance_set('physical','fixture-'..i,owners['fixture-'..i],pass+i); heap(physical) end
+      assert(#physical.deadlines==12,'service replacement accumulated tombstones')
+    end
+    while registry.maintenance_next('physical') do
+      local item=registry.maintenance_next('physical'); assert(item.owner==owners[item.id] and item.generation==item.owner.generation)
+      registry.maintenance_remove('physical',item.id); heap(physical)
+    end
+    assert(registry.maintenance_next('kv').owner==owners['fixture-1'],'independent service lane was drained')
+    registry.maintenance_remove('kv','fixture-1')
+    registry.maintenance_set('physical','kept',owners['fixture-1'],3)
+    local kept=physical.deadlines[1]; physical.deadline_positions.kept=2
+    local valid,diagnostic=pcall(registry.maintenance_set,'physical','kept',owners['fixture-1'],4)
+    assert(not valid and diagnostic.code=='E_UNSUPPORTED' and physical.deadlines[1]==kept and #physical.deadlines==1)
+    physical.deadline_positions.kept=1; registry.maintenance_remove('physical','kept')
+    root.scheduler.due_work.version=99
+    valid,diagnostic=pcall(registry.maintenance_next,'physical')
+    assert(not valid and diagnostic.code=='E_UNSUPPORTED' and root.scheduler.due_work.version==99)
+    root.scheduler.due_work.version=1
+    report('fixed-service-deadline-lanes-shared-heap-and-no-tombstones')
 
     root=fresh()
     peers={}

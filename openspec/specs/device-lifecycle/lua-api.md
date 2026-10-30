@@ -37,6 +37,15 @@ itself contain literals; blueprint disclosure excludes application state and KV 
 
 ## API observations
 
+Targeted physical events and staggered due non-power observations retain the
+existing topology envelope. Exact destruction registrations cannot retarget a
+replacement object. Direct calls retain immediate live validation; background
+observation is not authority. Pending physical repair, clone settlement and undo
+candidate cleanup retain their work across ordinary cold load, without an
+authoritative `on_load` mutation or startup replay. A refused due observation
+keeps its original deadline while fitting peers progress. Settled work retires
+its membership rather than rediscovering it through a registry tick walk.
+
 - `computer.getID()` and peripheral/device names survive ordinary saves, not physical replacement or cloning.
 - `PeripheralInfo.powered` remains a boolean: live physical availability for custom devices, live native electrical/operational availability for radar/speaker. Only native radar/speaker retain electrical `E_UNPOWERED`; their reachable metadata/getLimits remain available.
 - A lost wire invalidates the bound wrapper/channel even if the same physical peripheral is accessible on a different color. The program must explicitly rebind.

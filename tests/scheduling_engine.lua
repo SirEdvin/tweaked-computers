@@ -5,12 +5,15 @@ local scheduler=require('scripts.scheduler')
 local lifecycle=require('scripts.lifecycle')
 local defs=require('scripts.device-definitions')
 local admission=require('scripts.runtime.admission')
+local limits=require('scripts.runtime.limits')
 local radar=require('scripts.radar')
 local speaker=require('scripts.speaker')
 local kv=require('scripts.services.kv')
 local logic=require('scripts.services.logic')
 local peripheral=require('scripts.services.peripheral')
 local network=require('scripts.network')
+local undo=require('scripts.computer-undo')
+local blueprints=require('scripts.blueprints')
 local M={}
 local resume=false
 local function tick(t)
@@ -133,6 +136,21 @@ function M.run()
   local adoption_work=0
   network.adopt_tick(game.tick,function(n) adoption_work=adoption_work+n end)
   assert(adoption_work==0,'idle roots acquired native adoption discovery work: '..adoption_work)
+  local physical_visits=0
+  registry.record=function(...) physical_visits=physical_visits+1; return record(...) end
+  local observed,observation_error=pcall(lifecycle.reconcile,game.tick,function() end)
+  registry.record=record
+  assert(observed,observation_error)
+  assert(physical_visits==0,'undue physical observation discovered idle identities: '..physical_visits)
+  local undo_state=root.computer_undo; local original=undo_state or {pending={},ghosts={},destroyed={}}
+  local undo_visits=0
+  root.computer_undo=setmetatable({},{__index=function(_,key) undo_visits=undo_visits+1; return original[key] end,
+    __newindex=function() undo_visits=undo_visits+1 end})
+  local settled,settlement_error=pcall(undo.maintain,game.tick)
+  root.computer_undo=undo_state
+  assert(settled,settlement_error); assert(undo_visits==0,'settled undo state retained tick work: '..undo_visits)
+  local clone_work=0; blueprints.reconcile_clones(game.tick,function(n) clone_work=clone_work+n end)
+  assert(clone_work==0,'settled clones retained tick work')
   log('TC_SCHEDULING_NINE_POWER_FREE_FAMILIES owned-helper-migration physical-proofs role-and-content-aliases')
   for i,name in ipairs({'radar','programmable-speaker'}) do
     assert(lifecycle.build(assert(game.surfaces[1].create_entity{name=name,position={i*8,16},force='player'})))
@@ -188,6 +206,12 @@ function M.on_tick(event)
       assert(equal(snapshot(),retained),'unknown membership changed accepted queues, timers or credits')
     end
     log('TC_CONTRACT unknown-service-memberships-inert-queues-timers-and-credits-retained')
+    root.scheduler.due_work.version=99
+    local work=0; lifecycle.reconcile(event.tick,function(n) work=work+n end)
+    assert(work==0 and root.scheduler.due_work.version==99 and root.scheduling_diagnostic.code=='E_UNSUPPORTED')
+    assert(not registry.remove(c.id,'unsupported-deadline-removal') and registry.record(c.id)==c and c.status=='running')
+    root.scheduler.due_work.version=1; root.scheduling_diagnostic=nil
+    assert(equal(snapshot(),retained),'unknown service deadlines changed accepted data or credits')
     x.queue=c.queue; x.timers=c.timers; x.scheduler=root.scheduler
     x.tick=event.tick; x.work=root.ledger.machines[c.id].work; x.total=root.ledger.total
     x.expected=snapshot(); x.phase='waiting-save'
@@ -210,9 +234,53 @@ function M.on_tick(event)
       assert(c.state.first_scheduled==x.tick+3 and c.state.first_missed==math.floor((c.state.first_dispatch-x.tick-3)/3))
       assert(next(c.subscriptions)==nil and c.timers[c.state.cancel]==nil)
       assert(#root.scheduler.deadlines==1 and root.scheduler.deadline_positions[c.id]==1)
-      x.phase='done'; log('TC_SCHEDULING_DONE exact-once ordered callbacks canceled-deadline no-startup-replay')
-      log('TC_COLD_OK')
+      log('TC_SCHEDULING_DONE exact-once ordered callbacks canceled-deadline no-startup-replay')
+      local surface=game.surfaces[1]
+      local lost=assert(lifecycle.build(assert(surface.create_entity{name=defs.devices.kv.entity_name,position={84,12},force='player'})))
+      local damaged=assert(lifecycle.build(assert(surface.create_entity{name=defs.devices.logic.entity_name,position={80,12},force='player'})))
+      x.damaged=damaged.id; x.damaged_body=damaged.body; x.retained_output=damaged.children.output
+      x.lost=lost.id; x.destruction_tick=event.tick
+      local input=damaged.children.input; local unit=input.unit_number
+      local registration=root.entities[unit].destruction_registration
+      local other_binding=root.entities[damaged.body.unit_number]
+      lifecycle.on_object_destroyed{type=defines.target_type.entity,useful_id=damaged.body.unit_number,registration_number=registration,tick=event.tick}
+      assert(root.entities[damaged.body.unit_number]==other_binding and lifecycle.available(damaged),'foreign destruction token mutated an owned body')
+      input.destroy(); lost.body.destroy()
+      assert(not lifecycle.available(damaged) and not lifecycle.connector(damaged,'input','red'))
+      local notified=assert(lifecycle.build(assert(surface.create_entity{name=defs.devices.logic.entity_name,position={88,12},force='player'})))
+      local vanished=assert(lifecycle.build(assert(surface.create_entity{name=defs.devices.kv.entity_name,position={92,12},force='player'})))
+      registry.maintenance_set('physical',notified.id,notified,event.tick+limits.topology_latency_ticks)
+      registry.maintenance_set('physical',vanished.id,vanished,event.tick+limits.topology_latency_ticks)
+      x.notified=notified.id; x.vanished=vanished.id; x.notified_output=notified.children.output
+      notified.children.input.destroy(); vanished.body.destroy()
+      lifecycle.request_observation(lost,event.tick); lifecycle.request_observation(damaged,event.tick)
+      local head=registry.maintenance_next('physical'); assert(head.owner==lost)
+      local s=root.scheduler
+      s.maintenance_tick=event.tick; s.maintenance_spent=limits.maintenance_work_per_tick-s.render_reserved_work-root.ledger.total-1000
+      assert(s.maintenance_spent>=0)
+      lifecycle.reconcile(event.tick,scheduler.maintenance(root,event.tick))
+      assert(registry.record(lost.id)==lost and damaged.physical_error,'refused physical head blocked a fitting peer')
+      assert(registry.maintenance_next('physical').owner==lost and registry.maintenance_next('physical').tick==event.tick,'refused observation lost its original due tick')
+      log('TC_CONTRACT refused-physical-observation-retains-deadline-and-fitting-peer-progress')
+      x.phase='physical-destruction'
     end
+  elseif x.phase=='physical-destruction' then
+    tick(event.tick)
+    local damaged=registry.record(x.damaged); local notified=registry.record(x.notified)
+    assert(event.tick-x.destruction_tick<=3,'native destruction event did not target physical maintenance')
+    if registry.record(x.lost) or registry.record(x.vanished) or not damaged.physical_error or not notified.physical_error then return end
+    assert(damaged.body==x.damaged_body and damaged.body.valid and damaged.children.output==x.retained_output and x.retained_output.valid)
+    assert(notified.body.valid and notified.children.output==x.notified_output and x.notified_output.valid)
+    local physical=registry.maintenance_clock('physical')
+    assert(not physical.deadline_positions[x.lost] and not physical.deadline_positions[x.damaged],'settled physical failure retained periodic work')
+    assert(not physical.deadline_positions[x.notified] and not physical.deadline_positions[x.vanished],'native destruction left stale observer entries')
+    local record=registry.record; local visits=0
+    registry.record=function(...) visits=visits+1; return record(...) end
+    local observed,problem=pcall(lifecycle.reconcile,event.tick,function() end); registry.record=record
+    assert(observed,problem); assert(visits==0,'settled same-tick physical work was rediscovered')
+    assert(c.status=='running' and c.state.boots==1 and c.state.once==1)
+    log('TC_CONTRACT native-destruction-targeted-owned-helper-recovery-no-foreign-cleanup-no-stale-deadlines')
+    x.phase='done'; log('TC_COLD_OK')
   end
 end
 return M

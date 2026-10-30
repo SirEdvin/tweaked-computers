@@ -37,6 +37,17 @@ old mod, not loading an upgraded save in the old version.
 
 ## Blueprints, clones and settings copy
 
+Physical maintenance starts from targeted events and staggered due non-power
+observations, not a fresh registry discovery pass each tick. Ordinary silent
+geometry/scope changes are observed within the existing 60-tick topology envelope;
+operations still reject a stale binding immediately, before that observation.
+Exact native destruction registrations wake only their current owned body or
+socket. Deferred repair and refused observation retain demand; a fitting peer
+can progress without renewing the refused owner's due tick. Clone settlement
+and undo candidate cleanup stop visiting their retained state once work settles.
+Ordinary cold load preserves these memberships and spent credits without an
+authoritative `on_load` rebuild. Unsupported scheduling metadata stays inert.
+
 Blueprints include saved source and labels. These can themselves contain private literals. The blueprint description visibly discloses source inclusion. Application state, KV data, active source/run, registrations, output banks and managed target IDs are excluded. Inspect or remove source before sharing a blueprint.
 
 New blueprints attach Network wires directly to the shell; native auxiliary socket ghosts carry the other role wires, so the engine rotates their coordinates and transfers red/green wires on revival. Hidden uncraftable port tokens exist only to make these native blueprint ghosts valid; do not craft or supply additional devices for them. Building the body revives its owned helpers without consuming more items. Helpers cannot be independently mined, deconstructed or operated. Externally placed/revived unowned helpers are destroyed rather than becoming usable orphans.

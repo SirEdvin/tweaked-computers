@@ -9,6 +9,18 @@ local wires=require('scripts.physical-wires')
 local radar=require('scripts.radar')
 local speaker=require('scripts.speaker')
 local M={}
+local function physical_supported(rec)
+  return rec and rec.schema_version==1 and rec.physical_version==1
+    and (rec.layout_version==nil or rec.layout_version==2)
+    and (rec.native_carrier=='speaker' or rec.native_carrier=='radar'
+      or defs.devices[rec.kind] and (rec.availability_version==nil or rec.availability_version==1))
+end
+function M.request_observation(rec,tick)
+  if not physical_supported(rec) or rec.kind=='radar' or rec.physical_error and rec.body.valid or registry.record(rec.id)~=rec then return end
+  local clock=registry.maintenance_clock('physical'); local position=clock.deadline_positions[rec.id]
+  local prior=position and clock.deadlines[position]
+  registry.maintenance_set('physical',rec.id,rec,prior and math.min(tick,prior.tick) or tick)
+end
 -- Material transport is family-specific; computers own data on their entity.
 local item_adapters={}
 local initialize_computer
@@ -480,6 +492,7 @@ function M.on_forces_merging(event)
   for _,id in ipairs(root.order) do local rec=registry.record(id)
     if rec and (rec.force_index==event.source.index or rec.force_index==event.destination.index) then
       if rec.kind=='computer' then runtime.retire(rec,'stopped','force_merge') else registry.cleanup(rec,rec.run_id,'force_merge'); M.clear_output(rec) end
+      M.request_observation(rec,game.tick+1)
     end
   end
   for _,rec in pairs(root.devices) do
@@ -490,6 +503,16 @@ function M.on_forces_merging(event)
 end
 function M.on_object_destroyed(event)
   local root=registry.get(); if not registry.supported(root) then return end
+  local binding=event.type==defines.target_type.entity and root.entities[event.useful_id]
+  if binding and binding.destruction_registration==event.registration_number then
+    local rec=registry.record(binding.id)
+    local entity=rec and (binding.role=='body' and rec.body or rec.children[binding.role])
+    if physical_supported(rec) and rec.generation==binding.generation and entity and not entity.valid then
+      if rec.kind=='radar' then M.remove(rec.id,'native_body_lost',false)
+      else M.request_observation(rec,event.tick+1) end
+    end
+    return
+  end
   local id=root.radar_destructions[event.registration_number]
   local rec=id and registry.record(id)
   if rec and rec.kind=='radar' and rec.destruction_registration==event.registration_number and not rec.body.valid then
@@ -510,25 +533,18 @@ function M.unlocks()
     end
   end
 end
-function M.reconcile(tick,spend)
-  local root=registry.get(); local n=#root.order
-  if n==0 then return end
-  local cursor=math.min(root.scheduler.physical_cursor or 1,n)
-  -- One bounded fair pass; individual transitions reserve before mutation.
-  for _=1,n do
-    local id=root.order[cursor]; local rec=registry.record(id)
-    local removed=false
-    local ok=scheduler.try_maintenance(function()
+local function observe(rec,tick,spend)
+    local id=rec.id
       spend(16)
       if rec and rec.kind=='logic' then rec.logic_sample=nil; rec.output_bank=nil end
       if rec and rec.native_carrier=='speaker' then
-        removed=speaker.reconcile(rec,spend)
+        speaker.reconcile(rec,spend)
       elseif rec and rec.kind=='monitor' and rec.layout_version==2 and not rec.monitor_repair then
         M.observe_monitor(rec,tick)
       elseif rec and rec.physical_version==1 then
         if not rec.body.valid then
           spend(limits.registry_entries*6)
-          removed=M.remove(id,'body_lost',false)
+          M.remove(id,'body_lost',false)
         elseif not rec.physical_error then
           if rec.body.force.index~=rec.force_index or rec.body.surface.index~=rec.surface_index then
             spend(16)
@@ -557,13 +573,37 @@ function M.reconcile(tick,spend)
           if rec.kind=='monitor' then rec.monitor_repair=nil; registry.monitor_changed(rec,true) end
         end
       end
-    end)
-    if not ok then root.scheduler.physical_cursor=cursor; return end
-    local size=#root.order
-    if size==0 then root.scheduler.physical_cursor=1; return end
-    if not removed then cursor=cursor%size+1 elseif cursor>size then cursor=1 end
-    root.scheduler.physical_cursor=cursor
+end
+function M.reconcile(tick,spend)
+  local root=registry.get(); local valid,item=pcall(registry.maintenance_next,'physical')
+  if not valid then root.scheduling_diagnostic=item; return end
+  if not item or item.tick>tick then return end
+  local clock=registry.maintenance_clock('physical'); local retry={}
+  while item and item.tick<=tick do
+    if not scheduler.try_maintenance(function()
+      local size,work=#clock.deadlines,16
+      while size>0 do work=work+16; size=math.floor(size/2) end
+      spend(work)
+    end) then break end
+    registry.maintenance_remove('physical',item.id)
+    local rec=registry.record(item.id)
+    if rec==item.owner and physical_supported(rec) and rec.generation==item.generation then
+      local ok,admitted=pcall(scheduler.try_maintenance,function() observe(rec,tick,spend) end)
+      if not ok then
+        registry.maintenance_set('physical',rec.id,rec,item.tick)
+        for _,pending in ipairs(retry) do registry.maintenance_set('physical',pending.id,pending.owner,pending.tick) end
+        error(admitted,0)
+      end
+      if not admitted then retry[#retry+1]=item
+      elseif registry.record(rec.id)==rec and not rec.physical_error then
+        M.request_observation(rec,tick+(rec.monitor_repair and 1 or limits.topology_latency_ticks))
+      end
+    elseif rec==item.owner and physical_supported(rec) then M.request_observation(rec,tick+1)
+    end
+    item=registry.maintenance_next('physical')
   end
+  -- Keep refused owners' original due ticks without blocking fitting peers.
+  for _,pending in ipairs(retry) do registry.maintenance_set('physical',pending.id,pending.owner,pending.tick) end
 end
 -- Change detection only: later calls and publication still prove live authority.
 function M.observe_monitor(rec,tick)
@@ -577,10 +617,25 @@ function M.observe_monitor(rec,tick)
   local available=M.available(rec)
   if repair and not rec.monitor_repair then
     rec.monitor_repair=true; registry.monitor_changed(rec,true)
+    M.request_observation(rec,tick+1)
   end
   if rec.monitor_available~=available then
     rec.monitor_available=available; rec.monitor_art_dirty=true; registry.monitor_changed(rec,false)
   end
 end
-scheduler.register_phase('lifecycle','physical-devices',M.reconcile)
+registry.register_initializer('physical-observations',function(root)
+  if not registry.supported(root) or not registry.scheduling_supported(root) then return end
+  local valid,clock=pcall(registry.maintenance_clock,'physical')
+  if not valid then root.scheduling_diagnostic=clock; return end
+  for _,id in ipairs(root.order) do
+    local rec=registry.record(id)
+    if physical_supported(rec) then
+      registry.track_physical(rec)
+      if (not rec.physical_error or not rec.body.valid) and not clock.deadline_positions[id] then
+        M.request_observation(rec,game.tick+1+(rec.body.valid and rec.body.unit_number%limits.topology_latency_ticks or 0))
+      end
+    end
+  end
+end)
+scheduler.register_phase('lifecycle','00-physical-observation',M.reconcile)
 return M

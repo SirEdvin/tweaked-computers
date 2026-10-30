@@ -40,10 +40,12 @@ their existing bounded fair service.
 
 Placement/removal, physical changes, settings paste and ownership changes
 also wake the necessary work; a dummy drawing call is not required. Stable walls
-do not repeatedly rebuild topology signatures. One live physical observation
-pass remains each simulation tick, and calls, touch and publication still prove
-fresh authority. An earlier observation never authorizes a later same-tick call.
-There is no new polling delay, frame API, queue limit or budget setting.
+do not repeatedly rebuild topology signatures. Targeted invalidations and
+staggered due non-power observations retain the existing 60-tick topology
+envelope; an unrelated idle tile is not visited every tick. Calls, touch and
+publication still prove fresh authority, so an earlier observation never
+authorizes a later same-tick call. Signal subscriptions still sample each tick.
+There is no new frame API, queue limit or budget setting.
 
 For several independently grouped screens, optionally use
 `peripheral.setMonitorSyncGroup(members)` and `peripheral.getMonitorSyncGroup()`;

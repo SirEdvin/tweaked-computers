@@ -7,6 +7,7 @@ local monitor=require('scripts.services.monitor')
 local editor=require('scripts.ui.editor-model')
 local runtime=require('scripts.runtime.computer')
 local defs=require('scripts.device-definitions')
+local limits=require('scripts.runtime.limits')
 local M={}; local resumed=false
 local function fixture() return storage.tc_monitor_demand end
 local function build(kind,x,y,d)
@@ -117,6 +118,11 @@ local function physical_tick(event)
     test.stage='changed'; test.changed=event.tick; return
   elseif test.stage=='changed' then
     if rec.monitor_repair then return end
+    if rec.direction~=rec.body.direction or rec.force_index~=rec.body.force.index or rec.surface_index~=rec.body.surface.index
+      or rec.position.x~=rec.body.position.x or rec.position.y~=rec.body.position.y then return end
+    if name=='surface-clone' and registry.record(test.retired) then return end
+    local display=monitor.resolve(rec)
+    if name=='ownership' and (not display or not display.render or not display.render.hidden) then return end
     assert(rec.direction==rec.body.direction and rec.force_index==rec.body.force.index and rec.surface_index==rec.body.surface.index)
     assert(rec.position.x==rec.body.position.x and rec.position.y==rec.body.position.y)
     if name=='surface-clone' then
@@ -135,6 +141,7 @@ local function physical_tick(event)
     test.stage='restored'; test.changed=event.tick; return
   elseif test.stage=='restored' then
     if not lifecycle.available(rec) then return end
+    local display=monitor.resolve(rec); if not display or not display.render or display.render.hidden then return end
     if name=='surface-clone' then assert(not registry.record(test.retired),'restored clone retargeted the old identity') end
     for _,id in ipairs(x.tiles) do assert(lifecycle.available(registry.record(id)),'restoration lost live tile availability') end
     assert(monitor.available(monitor.resolve(rec),function() end))
@@ -151,14 +158,25 @@ function M.on_tick(event)
     resumed=false; x.phase='cold-idle'; x.steps=180; x.measured=0
   end
   local root=registry.get(); local c=registry.computer(x.computer)
-  for _,id in ipairs(root.order) do local rec=registry.record(id)
-    assert(not rec.children.power)
-    if rec.id==x.outage then rec.physical_error='fixture physical failure'
-    elseif rec.physical_error=='fixture physical failure' then rec.physical_error=nil end
+  for _,id in ipairs(root.order) do assert(not registry.record(id).children.power) end
+  if x.outage and not x.outage_binding then
+    local rec=registry.record(x.outage); x.outage_unit=rec.body.unit_number
+    x.outage_binding=assert(root.entities[x.outage_unit]); root.entities[x.outage_unit]=nil
+  elseif not x.outage and x.outage_binding then
+    assert(not root.entities[x.outage_unit]); root.entities[x.outage_unit]=x.outage_binding
+    x.outage_binding=nil; x.outage_unit=nil
   end
   assert(#x.tiles==144)
+  local physical=root.scheduler.due_work and root.scheduler.due_work.physical
+  local expected_observations=physical and 0 or 144
   for _,id in ipairs(x.tiles) do local rec=registry.record(id)
     assert(rec and rec.body.valid and lifecycle.available(rec)==(id~=x.outage))
+    if physical then
+      local item=assert(physical.deadlines[assert(physical.deadline_positions[id])],'physical tile lost its due membership')
+      assert(item.owner==rec and item.generation==rec.generation and not rec.monitor_repair)
+      assert(item.tick<=event.tick+limits.topology_latency_ticks,'physical observation exceeded existing topology envelope')
+      if item.tick<=event.tick then expected_observations=expected_observations+1 end
+    end
   end
   observer.begin(); scheduler.tick(event.tick); local counts=observer.finish()
   x.steps=x.steps+1
@@ -176,7 +194,7 @@ function M.on_tick(event)
   assert(c.status==(passive and 'stopped' or 'running'),serpent.line(c.diagnostic))
   log('TC_DEMAND_COUNTS phase='..x.phase..' '..serpent.line(counts))
   if observer.instrumented then assert((counts.topology or 0)==0,'unchanged tick rebuilt topology signature') end
-  assert(counts.observation==144,'live observation missed or duplicated physical tiles')
+  assert((counts.observation or 0)==expected_observations,'due observation missed or duplicated physical tiles')
   if passive then
     if observer.instrumented then assert((counts.full_proofs or 0)==0,'idle tick repeated full display proof') end
     for _,key in ipairs({'capture','frame','cell','cursor','native_create','native_retire','visibility','clear_cell'}) do assert((counts[key] or 0)==0,'idle presentation work: '..key) end
