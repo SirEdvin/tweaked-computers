@@ -326,7 +326,10 @@ function M.new(kind)
         assert(monitor.resolve(registry.record(x.target_anchor)).id==x.target_group,'surviving anchor identity changed')
         guest(c,'peripheral.setMonitorSyncGroup({})')
       elseif c and c.monitor_sync then
-        assert(e.tick-x.changed<=256,'selection not revoked '..action); return
+        assert(e.tick-x.changed<=256,'selection not revoked '..action..' '..serpent.line{
+          target_retained=registry.record(x.target)~=nil,job=s.job and s.job.cursor,dirty=root.monitor_topology_dirty,
+          groups=s.order,selection=c.monitor_sync.members,lane_status=l and l.status,
+          lane_diagnostic=l and l.diagnostic,work=l and s.presentation.work[l.key]~=nil}); return
       end
       if not x.restored then
         if action=='cable' then wire(c,registry.record(x.target))

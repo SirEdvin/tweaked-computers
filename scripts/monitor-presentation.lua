@@ -154,7 +154,7 @@ function M.select(c,tick,spend,input,execution)
   p.lanes[key]=lane; owner.monitor_sync={key=key,run_id=execution.id,members=members}
   if p.demand_version==1 then
     for _,ref in ipairs(members) do p.members[ref.name]=lane end
-    if execution.kind=='shell' then p.shells[key]=lane end
+    p.shells[key]=lane
     wake(p,lane)
   end
 end
@@ -276,12 +276,11 @@ local function qualify(s,lane,spend,proofs)
       return false
     end
     total=total+g.model.width*g.model.height
-    if not authority.available(g,spend,proofs) then
-      blocked(lane,'E_UNREACHABLE','monitor physically unavailable'); return false
-    end
-    -- Shells have no program subscriptions/topology sweep, and can remain live
-    -- while stopped. Revoke their idle selections too, not only ready jobs.
-    if owner and execution.kind=='shell' then
+    -- Selections own authority demand even without topology subscriptions or a frame.
+    if owner then
+      if not registry.record(ref.path[#ref.path]) then
+        release(owner,errors.new('E_UNREACHABLE','selected endpoint removed'),execution); return false
+      end
       local ok,valid=pcall(network.validate_witness,owner,ref.wire,ref.path,spend)
       if not ok then
         if type(valid)~='table' or not valid.code then error(valid,0) end
@@ -294,10 +293,13 @@ local function qualify(s,lane,spend,proofs)
           blocked(lane,target.code,target.message); return false
         end
         if not target or target.generation~=ref.generation then
-          release(owner,errors.new('E_UNREACHABLE','selected shell path removed'),execution); return false
+          release(owner,errors.new('E_UNREACHABLE','selected path removed'),execution); return false
         end
         spend(#path+4); ref.path=path
       end
+    end
+    if not authority.available(g,spend,proofs) then
+      blocked(lane,'E_UNREACHABLE','monitor physically unavailable'); return false
     end
   end
   if total>L.sync_group_cells then blocked(lane,'E_CAPACITY','selected grids exceed combined capacity'); return false end
@@ -462,7 +464,7 @@ local function enroll(s,p,spend)
   p.work=p.work or {}; p.members={}; p.shells={}
   for _,lane in pairs(p.lanes) do if lane.owner then
     for _,ref in ipairs(lane.members) do p.members[ref.name]=lane end
-    if lane.owner_kind=='shell' then p.shells[lane.key]=lane end
+    p.shells[lane.key]=lane
   end end
   for _,id in ipairs(s.order) do
     local g=s.groups[id]; local front=g.render
@@ -508,7 +510,7 @@ function M.tick(tick,spend)
   local remaining=L.render_cells_per_tick
   invalidate(p,spend)
   remaining=cleanup(p,spend,math.floor(remaining/2)) + math.ceil(L.render_cells_per_tick/2)
-  for _,lane in pairs(p.shells) do qualify(s,lane,spend,proofs) end
+  for _,lane in pairs(p.shells) do if p.work[lane.key]~=lane then qualify(s,lane,spend,proofs) end end
   local order={}
   for key,lane in pairs(p.work) do
     if p.lanes[key]==lane then order[#order+1]=lane else p.work[key]=nil end
@@ -563,6 +565,13 @@ function M.tick(tick,spend)
   cleanup(p,spend,remaining)
   scheduler.request_render_work(registry.get(),tick,demand,spend)
 end
+registry.register_initializer('monitor-selected-owners',function(r)
+  local s=r.monitors; local p=s and s.version==1 and s.presentation
+  if p and M.supported(p) and p.demand_version==1 then
+    -- The legacy shells index now retains every selected execution principal.
+    for key,lane in pairs(p.lanes) do if lane.owner then p.shells[key]=lane end end
+  end
+end)
 principal.register_cleanup('monitor-sync',function(c,p,reason)
   release(c,errors.new('E_NOT_FOUND','monitor selection released: '..reason),p)
 end)

@@ -14,21 +14,93 @@ local function root() local r=registry.get(); return r and r.monitors end
 local function key(x,y) return string.format('%.17g,%.17g',x,y) end
 local function scope(r) return r.surface_index..'/'..r.force_index..'/'..r.direction end
 
-local recipient_cost=limits.registry_entries+limits.active_computers^2+limits.active_computers*32+1
-local function recipients()
+local function recipient_index(name)
+  local s=registry.get().monitor_recipients
+  local event=type(s)=='table' and s[name]
+  if type(s)~='table' or s.version~=1 or type(event)~='table' or type(event.order)~='table' or type(event.computers)~='table' then
+    errors.raise('E_UNSUPPORTED','unsupported monitor recipient membership; notifications retained')
+  end
+  return event
+end
+local function subscription_changed(c,sub,adding,spend)
+  local index=recipient_index(sub.event_name); local owner=index.computers[c.id]
+  if spend then spend(#index.order*4+16) end
+  if adding then
+    if owner and (owner.computer~=c or owner.run_id~=c.run_id or owner.generation~=c.generation) then
+      errors.raise('E_UNSUPPORTED','stale monitor recipient owner; notifications retained')
+    end
+    if not owner then
+      owner={computer=c,run_id=c.run_id,generation=c.generation,subscriptions={}}
+      local i=#index.order+1
+      while i>1 and tonumber(index.order[i-1].computer.id:sub(4))>tonumber(c.id:sub(4)) do i=i-1 end
+      table.insert(index.order,i,owner); index.computers[c.id]=owner
+    end
+    owner.subscriptions[sub.id]=sub
+  elseif owner and owner.computer==c then
+    owner.subscriptions[sub.id]=nil
+    if not next(owner.subscriptions) then
+      for i,item in ipairs(index.order) do if item==owner then table.remove(index.order,i); break end end
+      index.computers[c.id]=nil
+    end
+  end
+end
+local function recipient_cost(name)
+  return #recipient_index(name).order*16+1
+end
+local function recipients(name)
   local result={}
-  for _,id in ipairs(registry.get().order) do
-    local c=registry.get().computers[id]
-    if c and c.status=='running' then result[#result+1]={id=id,run_id=c.run_id} end
+  for _,owner in ipairs(recipient_index(name).order) do
+    local c=owner.computer
+    if registry.get().computers[c.id]==c and c.status=='running' and c.run_id==owner.run_id and c.generation==owner.generation then
+      result[#result+1]={id=c.id,run_id=c.run_id,generation=c.generation}
+    end
   end
   return result
 end
+for _,event in ipairs({'monitor_touch','monitor_resize'}) do runtime.register_subscription_lifecycle(event,subscription_changed) end
+registry.register_cleanup('monitor-recipients',function(c)
+  if c.kind~='computer' then return end
+  for _,event in ipairs({'monitor_touch','monitor_resize'}) do
+    local index=recipient_index(event); local owner=index.computers[c.id]
+    if owner and owner.computer==c then
+      for i,item in ipairs(index.order) do if item==owner then table.remove(index.order,i); break end end
+      index.computers[c.id]=nil
+    end
+  end
+end)
+local function notification_supported(s)
+  return s.notification_version==1 and type(s.resize_order)=='table'
+end
+registry.register_initializer('monitor-recipients',function(r)
+  if not registry.supported(r) then return end
+  if r.monitor_recipients==nil then
+    r.monitor_recipients={version=1,monitor_touch={order={},computers={}},monitor_resize={order={},computers={}}}
+    for _,id in ipairs(r.order) do
+      local c=r.computers[id]
+      if c and c.schema_version==1 and c.status=='running' and type(c.subscriptions)=='table' then
+        for _,sub in pairs(c.subscriptions) do
+          if sub.event_name=='monitor_touch' or sub.event_name=='monitor_resize' then subscription_changed(c,sub,true) end
+        end
+      end
+    end
+  end
+  local s=r.monitors
+  if s and s.version==1 and s.notification_version==nil then
+    s.resize_order={}
+    for i,id in ipairs(s.order) do
+      s.groups[id].notification_index=i
+      if s.resizes[id] then s.resize_order[#s.resize_order+1]=id end
+    end
+    s.notification_version=1
+  end
+end)
 function M.resolve(tile)
   local state=root()
   if state and state.version~=1 then errors.raise('E_UNSUPPORTED','unsupported retained monitor state; data preserved') end
   if state and (not presentation.supported(state.presentation) or state.topology_version~=nil and state.topology_version~=1) then
     errors.raise('E_UNSUPPORTED','unsupported retained presentation; data preserved')
   end
+  if state and not notification_supported(state) then errors.raise('E_UNSUPPORTED','unsupported monitor notifications; data preserved') end
   if state and state.job then errors.raise('E_NETWORK_PENDING','monitor regrouping is not yet committed') end
   return state and state.groups[state.membership[tile.id]] or nil
 end
@@ -167,17 +239,23 @@ local function queue_resize(g,w,h,reason,receivers)
     -- state, while bounded notification publication preserves the new revision.
     pending.cursor=1
     pending.recipients=receivers
-  else state.resizes[g.id]={payload=resize_payload(g,w,h,reason),cursor=1,recipients=receivers} end
+  else
+    local i=#state.resize_order+1
+    while i>1 and state.groups[state.resize_order[i-1]].notification_index>g.notification_index do i=i-1 end
+    table.insert(state.resize_order,i,g.id)
+    state.resizes[g.id]={payload=resize_payload(g,w,h,reason),cursor=1,recipients=receivers}
+  end
 end
 function M.settings_changed(tile,g,resized,w,h,scale_changed)
   if scale_changed then presentation.changed(g) else registry.monitor_changed(tile,false) end
-  if resized then queue_resize(g,w,h,'scale',recipients()) end
+  if resized then queue_resize(g,w,h,'scale',recipients('monitor_resize')) end
 end
 function M.reconcile(tick,spend)
   local r=registry.get(); local state=r.monitors
   if state and state.version~=1 then return end
   if state and (not presentation.supported(state.presentation) or state.topology_version~=nil and state.topology_version~=1) then return end
-  if not state then state={version=1,groups={},membership={},resizes={},touches={},signature='',order={}}; r.monitors=state end
+  if state and not notification_supported(state) then return end
+  if not state then state={version=1,groups={},membership={},resizes={},resize_order={},notification_version=1,touches={},signature='',order={}}; r.monitors=state end
   local sig=state.job and state.job.signature or state.signature
   local tiles
   if r.monitor_topology_dirty or not state.topology_version then
@@ -239,8 +317,8 @@ function M.reconcile(tick,spend)
         job.cursor=job.cursor+1; processed=processed+1
       end
       if job.cursor>#job.rectangles then
-        spend(model.limits.tiles*32+recipient_cost)
-        local receivers=recipients()
+        spend(model.limits.tiles*32+recipient_cost('monitor_resize'))
+        local receivers=recipients('monitor_resize')
         presentation.regroup(state,job.groups)
         for id,g in pairs(state.groups) do
           if job.groups[id]~=g then presentation.retire(state,g.render) end
@@ -249,6 +327,11 @@ function M.reconcile(tick,spend)
         state.order=job.order; state.job=nil
         state.availability_dirty=true
         for _,g in pairs(state.groups) do g.observation_dirty=true end
+        state.resize_order={}
+        for i,id in ipairs(state.order) do
+          state.groups[id].notification_index=i
+          if state.resizes[id] then state.resize_order[#state.resize_order+1]=id end
+        end
         for id in pairs(state.resizes) do if not state.groups[id] then state.resizes[id]=nil end end
         for id,old in pairs(job.resizes) do queue_resize(state.groups[id],old.old_width,old.old_height,'tiles',receivers) end
       end
@@ -277,11 +360,11 @@ for name,fn in pairs(model.calls) do
 end
 methods.setTextScale=function(c,g,wire,tick,spend,...)
   if select('#',...)~=1 then errors.raise('E_ARGUMENT','setTextScale expects one argument') end
-  spend(recipient_cost)
+  spend(recipient_cost('monitor_resize')+#root().resize_order*4+1)
   local scale=g.model.scale
   local changed,w,h=model.scale(g.model,g.width_tiles,g.height_tiles,spend,...)
   if g.model.scale~=scale then presentation.changed(g) end
-  if changed then queue_resize(g,w,h,'scale',recipients()) end
+  if changed then queue_resize(g,w,h,'scale',recipients('monitor_resize')) end
   presentation.participate(g)
 end
 methods.getLimits=function(c,g,wire,tick,spend,...) return (data.copy(model.limits,spend)) end
@@ -352,14 +435,15 @@ function M.deliver(job,g,computer,tick,spend,player)
   return true
 end
 function M.notifications(tick,spend)
-  local state=root(); if not state or state.version~=1 then return end
-  spend(limits.registry_entries+model.limits.tiles*2+1)
+  local state=root(); if not state or state.version~=1 or not notification_supported(state) then return end
+  if #state.touches==0 and #state.resize_order==0 then return end
+  spend((#state.touches+#state.resize_order)*4+1)
   local completed=0
   local function process(job,g,player)
     local ids=job.recipients
     while job.cursor<=#ids and completed<3 do
       local receiver=ids[job.cursor]; local c=registry.record(receiver.id)
-      if c and c.run_id==receiver.run_id then
+      if c and c.run_id==receiver.run_id and (receiver.generation==nil or c.generation==receiver.generation) then
         local ok,delivered=scheduler.try_maintenance(function() return M.deliver(job,g,c,tick,spend,player) end)
         if not ok or not delivered then return false end
       end
@@ -376,17 +460,21 @@ function M.notifications(tick,spend)
     end
   end
   state.touches=retained
-  for _,id in ipairs(state.order) do
+  local pending,finished={},{}
+  for _,id in ipairs(state.resize_order) do
     local job=state.resizes[id]; local g=state.groups[id]
-    if job and (not g or M.available(g,spend) and process(job,g)) then state.resizes[id]=nil end
+    if job and (not g or M.available(g,spend) and process(job,g)) then finished[#finished+1]=id
+    elseif job then pending[#pending+1]=id end
   end
+  for _,id in ipairs(finished) do state.resizes[id]=nil end
+  state.resize_order=pending
 end
 function M.activate_for_player(event,player)
   if event.input_name~='tc-interact' or event.in_gui or event.element then return false end
   if not player or not player.valid or player.opened or player.cursor_ghost then return false end
   local cursor=player.cursor_stack
   if cursor and cursor.valid_for_read then return false end
-  local state=root(); if not state or state.version~=1 then return false end
+  local state=root(); if not state or state.version~=1 or not notification_supported(state) then return false end
   if state.job then return false end
   local pos=event.cursor_position
   if not pos or type(pos.x)~='number' or type(pos.y)~='number' or pos.x~=pos.x or pos.y~=pos.y then return false end
@@ -411,14 +499,14 @@ function M.activate_for_player(event,player)
   -- Engine custom input is one synchronized activation; no linked build/mining
   -- action and no per-path/tile fanout. Two players remain separate interactions.
   state.touches[#state.touches+1]={cursor=1,payload={name='monitor_touch',peripheral=selected.id,x=x,y=y,
-    player_index=player.index,sample_tick=event.tick},recipients=recipients()}
+    player_index=player.index,sample_tick=event.tick},recipients=recipients('monitor_touch')}
   return true
 end
 function M.activate(event)
   if not registry.supported(registry.get()) then return false end
   local player=game.get_player(event.player_index)
   local ok,result=scheduler.try_maintenance(function()
-    scheduler.maintenance(registry.get(),event.tick)(model.limits.tiles*32+recipient_cost+128)
+    scheduler.maintenance(registry.get(),event.tick)(model.limits.tiles*32+recipient_cost('monitor_touch')+128)
     return M.activate_for_player(event,player)
   end)
   if not ok and player then player.print({'tc-monitor.touch-busy'}) end

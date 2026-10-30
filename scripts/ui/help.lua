@@ -436,7 +436,8 @@ callbacks; the previous complete image remains until the replacement publishes.
 Selected groups wait for every member's successful mutation (including no-ops).
 They publish together, without flush or a timeout that splits a frame. Buffering
 does not infer completion of an application drawing over multiple callbacks.
-Resize clears changed dimensions. Stop leaves the image; outage hides, not erases.
+Resize clears changed dimensions. Stop leaves the image; electricity does not affect it.
+Touch/resize registration owns notification interest; settled displays need no event polling.
 Ctrl+left-click (rebindable), empty cursor/no GUI: monitor_touch carries logical
 peripheral, x/y, player_index, sample_tick, wire and deduplicated sorted wires.
 monitor_resize includes old_width/height, width/height and tiles/scale reason.

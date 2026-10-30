@@ -57,12 +57,15 @@ local function fuel()
  for _,id in ipairs(registry.get().order) do local r=registry.record(id)
   if r and r.body.valid then
    assert(not r.children.power)
-   if r.availability_version==99 then r.availability_version=1 end
+   local available=not (id==f().outage or id==f().computer and f().owner_outage)
+   local version=available and 1 or 99
+   if r.availability_version~=version then
+    r.availability_version=version
+    if r.kind=='monitor' then registry.monitor_changed(r,false) end
+   end
   end
  end
- -- Header refusal blocks availability without changing the selected physical path.
- if f().outage then registry.record(f().outage).availability_version=99 end
- if f().owner_outage then registry.record(f().computer).availability_version=99 end
+ -- Explicit host invalidation wakes the presenter; unsupported headers are not polled.
 end
 scheduler.register_phase('render','00-presentation-pressure',function(tick,spend)
  local x=f(); if not x or x.phase~='dense' or x.pressured then return end
@@ -326,11 +329,11 @@ function M.on_tick(event)
   guest(c,"for _,r in ipairs(peripheral.getMonitorSyncGroup().members) do peripheral.call(r.name,r.wire,'setCursorBlink',true) end")
   x.owner_outage=true; x.owner_selection=c.monitor_sync; x.changed_at=event.tick; x.phase='owner-outage'
  elseif x.phase=='owner-outage' and event.tick-x.changed_at>=5 then
-  assert(not c.powered and c.monitor_sync==x.owner_selection and lane.status=='blocked',serpent.line{
+  assert(not lifecycle.available(c) and c.monitor_sync==x.owner_selection and lane.status=='blocked',serpent.line{
    cached=c.powered,available=lifecycle.available(c),same_selection=c.monitor_sync==x.owner_selection,
    status=lane and lane.status,diagnostic=c.monitor_sync_diagnostic})
   x.owner_outage=nil; x.phase='owner-restoring'; x.changed_at=event.tick
- elseif x.phase=='owner-restoring' and c.powered and settled(s,c) then
+ elseif x.phase=='owner-restoring' and lifecycle.available(c) and settled(s,c) then
   assert(c.monitor_sync==x.owner_selection and event.tick-x.changed_at<=256)
   guest(c,"assert(select('#',peripheral.setMonitorSyncGroup({}))==0); assert(peripheral.getMonitorSyncGroup().status=='none')")
   assert(not c.monitor_sync); x.phase='released'

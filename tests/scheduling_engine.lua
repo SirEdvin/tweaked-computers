@@ -14,6 +14,8 @@ local peripheral=require('scripts.services.peripheral')
 local network=require('scripts.network')
 local undo=require('scripts.computer-undo')
 local blueprints=require('scripts.blueprints')
+local monitor=require('scripts.services.monitor')
+
 local M={}
 local resume=false
 local function tick(t)
@@ -151,6 +153,18 @@ function M.run()
   assert(settled,settlement_error); assert(undo_visits==0,'settled undo state retained tick work: '..undo_visits)
   local clone_work=0; blueprints.reconcile_clones(game.tick,function(n) clone_work=clone_work+n end)
   assert(clone_work==0,'settled clones retained tick work')
+  for _=1,20 do monitor.reconcile(game.tick,function() end); if not root.monitors.job then break end end
+  assert(not root.monitors.job and not next(root.monitors.resizes) and #root.monitors.touches==0)
+  local notification_work,notification_visits=0,0
+  local display_order=root.monitors.order
+  root.monitors.order=setmetatable({},{__len=function() return #display_order end,
+    __index=function(_,i) notification_visits=notification_visits+1; return display_order[i] end})
+  local notified,notification_error=pcall(monitor.notifications,game.tick,function(n) notification_work=notification_work+n end)
+  root.monitors.order=display_order
+  assert(notified,notification_error)
+  assert(notification_work==0,'settled displays acquired notification discovery work: '..notification_work)
+  assert(notification_visits==0,'settled displays were visited to discover notifications: '..notification_visits)
+
   log('TC_SCHEDULING_NINE_POWER_FREE_FAMILIES owned-helper-migration physical-proofs role-and-content-aliases')
   for i,name in ipairs({'radar','programmable-speaker'}) do
     assert(lifecycle.build(assert(game.surfaces[1].create_entity{name=name,position={i*8,16},force='player'})))
