@@ -4,7 +4,7 @@ local lifecycle=require('scripts.lifecycle')
 local runtime=require('scripts.runtime.computer')
 local scheduler=require('scripts.scheduler')
 local defs=require('scripts.device-definitions')
-local M={}; local loaded=false
+local M={}
 local source=[[function start(e) computer.every(15,'query') end
 
 function query(e)
@@ -62,7 +62,7 @@ local function readback()
   table.sort(peers)
   return {tick=game.tick,computer=c.id,queries=c.state.queries,recipes=c.state.recipes,
     retained=x.retained,phase=x.phase,peers=peers,force_enabled=game.forces.player.recipes['advanced-circuit'].enabled,
-    late_join_retained=x.late_join_retained,cold=x.cold}
+    late_join_retained=x.late_join_retained}
 end
 local function publish()
   local data=helpers.table_to_json(readback())
@@ -82,7 +82,7 @@ function M.on_player_joined(event)
   else log('TC_RECIPE_PEER_JOIN index='..p.index..' retained=false') end
 end
 function M.on_load()
-  loaded=true
+  -- A joining client also loads; process-local flags cannot publish saved state.
   local x=f()
   if x.retained then
     assert(equal(registry.record(x.c).state.recipes,x.retained))
@@ -92,7 +92,7 @@ end
 function M.on_configuration_changed() error('unexpected scene configuration change') end
 function M.on_tick(event)
   local x=f(); local c=registry.record(x.c)
-  if loaded then x.cold=x.retained~=nil; loaded=false end
+
   scheduler.tick(event.tick)
   assert(c.status=='running',serpent.line(c.diagnostic))
   if c.state.queries and x.phase=='boot' then
