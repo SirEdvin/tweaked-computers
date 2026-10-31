@@ -35,7 +35,7 @@ function M.run()
   f().wire=b.get_wire_connector(defines.wire_connector_id.circuit_red,false)
   runtime.save(c.id,source,0); assert(runtime.activate(c.id,game.tick))
 end
-local function retained()
+local function retained(loading)
   local s=f(); local c,db,m=registry.record(s.c),registry.record(s.db),registry.record(s.monitor)
   assert(c.body==s.c_body and db.body==s.db_body and m.body==s.m_body and c.state.boots==1)
   assert(c.active.source==source and c.run_id==s.run_id and c.state==s.state and db.database==s.database)
@@ -43,11 +43,13 @@ local function retained()
   assert(settings(s.speaker)==s.settings)
   assert(s.speaker.get_wire_connector(defines.wire_connector_id.circuit_red,false)==s.wire)
   assert(s.wire.is_connected_to(c.body.get_wire_connector(defines.wire_connector_id.circuit_red,false)))
-  assert(monitor.resolve(m).model==s.model)
+  local monitors=registry.get().monitors
+  local group=loading and monitors.groups[monitors.membership[m.id]] or monitor.resolve(m)
+  assert(group.model==s.model)
 end
 function M.on_load()
   loaded=true
-  if f().phase~='boot' then retained(); log('TC_SPEAKER_UPGRADE_LOAD_UNCHANGED') end
+  if f().phase~='boot' then retained(true); log('TC_SPEAKER_UPGRADE_LOAD_UNCHANGED') end
 end
 function M.on_configuration_changed()
   retained()
@@ -67,7 +69,8 @@ function M.on_tick(event)
   end
   loaded=false
   for _,id in ipairs({s.c,s.db,s.monitor}) do local rec=registry.record(id)
-    lifecycle.power_entity(rec).energy=1000000; rec.powered=true
+    if lifecycle.power_entity then lifecycle.power_entity(rec).energy=1000000; rec.powered=true
+    else assert(not rec.children.power and lifecycle.available(rec)) end
   end
   s.speaker.energy=1000000
   scheduler.tick(event.tick)

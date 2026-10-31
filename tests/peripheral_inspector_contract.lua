@@ -49,13 +49,13 @@ function M.run()
       end
       local r=records[family[1]]; local p=players.player(2001,r.body)
       local ok,e=pcall(function()
-        for _,powered in ipairs({false,true}) do
-          lifecycle.power_entity(r).energy=powered and defs.devices[r.kind].watts/30 or 0
+        for _,available in ipairs({false,true}) do
+          r.physical_error=not available and 'fixture physical failure' or nil
           local frame=assert(inspector.open(p,r.id))
           assert(frame.identity.api_name.text==r.id and frame.identity.api_name.read_only)
-          assert(frame.availability.caption[1]==(powered and 'tc-inspector.available' or 'tc-inspector.unpowered'))
+          assert(frame.availability.caption[1]==(available and 'tc-inspector.available' or 'tc-inspector.physical-unavailable'))
           local view=model.read(r,game.tick,function() end)
-          assert(view.powered==powered and not view.details)
+          assert(view.powered==available and not view.details)
           inspector.close(p)
         end
         assert(queries==0)
@@ -113,7 +113,7 @@ function M.run()
     local tick=0
     for _,rec in pairs(records) do
       tick=tick+15
-      lifecycle.power_entity(rec).energy=defs.devices[rec.kind].watts/30
+      assert(not rec.children.power and lifecycle.available(rec))
       local p=players.player(2001,rec.body)
       game={tick=tick,get_player=function(i) if i==p.index then return p end end,connected_players={p}}
       local ok,e=pcall(function()
@@ -163,7 +163,7 @@ function M.run()
     local ok,e=pcall(function()
       local f=assert(inspector.open(p,rec.id)); local s=model.session(p.index)
       for _=1,90 do
-        lifecycle.power_entity(rec).energy=defs.devices.logic.watts/30
+        assert(not rec.children.power and lifecycle.available(rec))
         game.tick=tick; scheduler.tick(tick); tick=tick+1
         if s.snapshot and s.snapshot.details.red_tick and s.snapshot.details.green_tick and not s.pending and not s.redraw then break end
       end
@@ -191,7 +191,7 @@ function M.run()
   end)
   check('inspector-independent-logic-admission-errors-power-and-retained-samples',function()
     local r=records.logic; local p=players.player(2001,r.body)
-    lifecycle.power_entity(r).energy=defs.devices.logic.watts/30
+    assert(not r.children.power and lifecycle.available(r))
     local s=model.open(p,r.id)
     local function spend() end
     local first=model.read(r,100,spend,s); s.snapshot=first
@@ -211,9 +211,10 @@ function M.run()
     local success,limited=pcall(model.read,r,175,spend,s)
     logic.inspect_input=input; assert(success,limited)
     assert(limited.details.errors.red=='E_LIMIT' and limited.details.red_tick==145 and limited.details.green_tick==160)
-    lifecycle.power_entity(r).energy=0
+    r.physical_error='fixture physical failure'
     local off=model.read(r,190,spend,s)
     assert(not off.powered and not off.details and not s.logic_partial and not s.logic_next)
+    r.physical_error=nil
     model.close(p.index,s.token)
   end)
   check('inspector-blocked-input-does-not-hide-other-wire-or-own-output',function()
@@ -228,7 +229,7 @@ function M.run()
     local ok,e=pcall(function()
       local f=assert(inspector.open(p,r.id)); local s=model.session(p.index)
       for _=1,4 do
-        lifecycle.power_entity(r).energy=defs.devices.logic.watts/30
+        assert(not r.children.power and lifecycle.available(r))
         game.tick=tick; inspector.tick(tick); tick=tick+15
       end
       assert(s.snapshot.details.errors.red=='E_BUSY' and not s.snapshot.details.red)
@@ -252,7 +253,7 @@ function M.run()
     assert(#view.entries==128 and #view.entries[128].fields==128 and view.entries[128].key==last)
     local p=players.player(2001,r.body); local real=game
     local tick=math.max(210,math.ceil(((registry.get().scheduler.maintenance_tick or 0)+15)/15)*15)
-    lifecycle.power_entity(r).energy=defs.devices.kv.watts/30
+    assert(not r.children.power and lifecycle.available(r))
     game={tick=tick,get_player=function() return p end,connected_players={p}}
     local ok,e=pcall(function()
       local f=inspector.open(p,r.id); local s=model.session(p.index)
@@ -300,7 +301,7 @@ function M.run()
       for _,entries in ipairs(cases) do
         r.database=kv.import{version=1,entries=entries}
         local database=r.database; local before=serpent.line(database)
-        lifecycle.power_entity(r).energy=defs.devices.kv.watts/30
+        assert(not r.children.power and lifecycle.available(r))
         local p=players.player(2001,r.body)
         game={tick=tick,get_player=function() return p end,connected_players={p}}
         local f=assert(inspector.open(p,r.id)); local s=model.session(p.index)
@@ -328,7 +329,7 @@ function M.run()
     game={tick=tick,connected_players={p},get_player=function() return p end}
     model.read=function(...) calls=calls+1; return read(...) end
     local ok,e=pcall(function()
-      lifecycle.power_entity(r).energy=defs.devices.kv.watts/30
+      assert(not r.children.power and lifecycle.available(r))
       local f=assert(inspector.open(p,r.id)); local s=model.session(p.index)
       local function poll() game.tick=tick; inspector.tick(tick); tick=tick+15 end
       poll(); assert(s.snapshot and not s.pending)
@@ -353,7 +354,7 @@ function M.run()
     local first=tick
     game={tick=tick,connected_players=viewers,get_player=function(i) return viewers[i-3000] end}
     local ok,e=pcall(function()
-      lifecycle.power_entity(r).energy=defs.devices.kv.watts/30
+      assert(not r.children.power and lifecycle.available(r))
       for i=1,16 do viewers[i]=players.player(3000+i,r.body); inspector.open(viewers[i],r.id) end
       for _=1,32 do
         game.tick=tick; inspector.tick(tick)
@@ -395,7 +396,7 @@ function M.run()
       local revision=g.model.revision; local c=monitor.inspect(case.members[#case.members],2001,function() end)
       local width,height=terminal.size(case.w,case.h,2)
       assert(c.columns==width and c.rows==height and c.scale==2 and g.model.revision==revision)
-      assert(not lifecycle.has_power(case.members[1]),'metadata test must cover committed unpowered geometry')
+      assert(lifecycle.available(case.members[1]) and not case.members[1].children.power,'metadata test must cover power-free geometry')
     end
     local state=registry.get().monitors; state.job={}
     local ok,err=pcall(monitor.inspect,cases[1].members[1],2001,function() end)
@@ -416,7 +417,7 @@ function M.run()
       local tick=math.ceil(((registry.get().scheduler.maintenance_tick or 0)+15)/15)*15
       game={tick=tick,connected_players={p},get_player=function() return p end}
       local ok,e=pcall(function()
-        lifecycle.power_entity(r).energy=defs.devices[kind].watts/30
+        assert(not r.children.power and lifecycle.available(r))
         local f=assert(inspector.open(p,r.id)); local s=model.session(p.index)
         local initial=f.details.children[1]
         model.read=function(rec,t,spend,session) spend(1000000000); return read(rec,t,spend,session) end

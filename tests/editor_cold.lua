@@ -102,7 +102,9 @@ function M.on_tick(event)
     local rec=registry.record(f.id)
     if not rec.state.boots then assert(event.tick<f.start_tick+60,'native power boot deadline'); return end
     assert(rec.status=='running' and rec.state.boots==1)
-    local player=contracts.player(f.player,rec.body); local s=model.session(player.index)
+    local player=contracts.player(f.player,rec.body)
+    assert(editor.open(player,rec.id)) -- The actual scheduler retired the absent mocked player.
+    local s=model.session(player.index)
     model.edit(player,s.token,saved_source); model.action(player,s.token,'save',event.tick)
     model.edit(player,s.token,draft_source)
     -- Table-backed real UI routes: retain bounded presentation/review state in

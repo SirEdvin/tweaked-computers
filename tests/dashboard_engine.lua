@@ -66,15 +66,15 @@ function M.on_tick(event)
   local x=f(); if x.phase=='done' then return end
   local panel=registry.record(x.panel); local c=registry.record(x.computer); local second=registry.record(x.second)
   if x.empty then
-    local empty=assert(registry.record(x.empty)); local power_part=empty.children.power
+    local empty=assert(registry.record(x.empty)); local body=empty.body; assert(not empty.children.power)
     local inventory=game.create_inventory(4)
     assert(empty.body.mine{inventory=inventory,raise_destroyed=true})
     local drops=0
     for i=1,#inventory do if inventory[i].valid_for_read then
       assert(inventory[i].name=='tc-dashboard' and inventory[i].count==1); drops=drops+1
     end end
-    assert(drops==1 and not registry.record(empty.id) and not power_part.valid,
-      ('mining result: drops=%d registered=%s helper_valid=%s'):format(drops,tostring(registry.record(empty.id)~=nil),tostring(power_part.valid)))
+    assert(drops==1 and not registry.record(empty.id) and not body.valid,
+      ('mining result: drops=%d registered=%s body_valid=%s'):format(drops,tostring(registry.record(empty.id)~=nil),tostring(body.valid)))
     inventory.destroy(); x.empty=nil
     log('TC_DASHBOARD cardinal-native-contacts-empty-script-mine-single-drop'); return
   end

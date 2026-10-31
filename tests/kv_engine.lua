@@ -22,7 +22,7 @@ end
 local function build(kind,x,y)
   local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
   local rec=assert(lifecycle.build(b))
-  lifecycle.power_entity(rec).energy=defs.devices[kind].watts/30; rec.powered=true; return rec
+  assert(not rec.children.power and lifecycle.available(rec)); return rec
 end
 local function command(rec,name,tick,...)
   return kv.methods[name](nil,rec,'red',tick,nop,...)
@@ -47,7 +47,7 @@ local function replace(buffer,x,y,robot)
   local b=assert(game.surfaces[1].create_entity{name=defs.devices.kv.entity_name,position={x,y},force='player'})
   if robot then lifecycle.on_built{entity=b,stack=buffer[1]}
   else lifecycle.on_built{entity=b,consumed_items=buffer} end
-  local rec=assert(registry.by_entity(b)); lifecycle.power_entity(rec).energy=1000; rec.powered=true; return rec
+  local rec=assert(registry.by_entity(b)); assert(not rec.children.power and lifecycle.available(rec)); return rec
 end
 -- Forward the real engine lifecycle events in this isolated test mod's registry.
 script.on_event(defines.events.on_robot_mined_entity,function(event)
@@ -207,12 +207,12 @@ function M.run()
   assert(lifecycle.connector(c2,'network','red').connect_to(lifecycle.connector(rec,'network','red')))
   guest(c2,[[local d=peripheral.find('kv_database','red'); assert(d.get('guest')=='value'); d.set('guest','second')]])
   guest(c,[[local d=peripheral.find('kv_database','red'); assert(d.get('guest')=='second')]])
-  rec.powered=false; lifecycle.power_entity(rec).energy=0
+  rec.powered=false
   guest(c,[[local d=peripheral.find('kv_database','red'); assert(d.getLimits().keys==128)
-    local ok,e=pcall(d.get,'guest'); assert(not ok and e.code=='E_UNPOWERED')]])
+    assert(d.get('guest')=='second')]])
   command(rec,'expire',0,'guest',1); assert(command(rec,'get',60,'guest')==nil)
   report('compiled-native-facades-sharing-malicious-values-static-limits-and-unpowered-expiry')
-  rec.powered=true; lifecycle.power_entity(rec).energy=1000
+  rec.powered=true
   runtime.save(c.id,example,c.saved_revision); assert(runtime.activate(c.id,game.tick))
   assert(scheduler.dispatch(c,game.tick)); assert(c.status=='running',c.diagnostic and c.diagnostic.message)
   assert(command(rec,'hget',game.tick,'machine','owner')==c.id)
@@ -257,7 +257,7 @@ function M.on_tick(event)
     -- the absolute deadline; never grant a renewed duration while carried.
     if event.tick<f().deadline then return end
     loaded=false
-    assert(not f().restored.powered and command(f().restored,'get',event.tick,'1')==nil)
+    assert(lifecycle.available(f().restored) and not f().restored.children.power and command(f().restored,'get',event.tick,'1')==nil)
     assert(f().chest.get_inventory(defines.inventory.chest).insert(f().carried[1])==1)
     f().carried[1].clear(); f().roboport.disabled_by_script=false; f().roboport.energy=100000000
     f().phase='rebuilding'; f().rebuild_tick=event.tick
@@ -295,7 +295,7 @@ function M.on_tick(event)
   -- Validate another ordinary save/load alias while the genuine mined item is carried.
   local restored=build('kv',12,0)
   kv.restore(restored,carried[1].tags.tc_kv)
-  lifecycle.power_entity(restored).energy=0; restored.powered=false; restored.body.disabled_by_script=true
+  restored.body.disabled_by_script=true; assert(lifecycle.available(restored) and not restored.children.power)
   f().restored=restored
   local spend=scheduler.maintenance(registry.get(),event.tick); spend(77)
   f().saved={deadline=f().deadline,value=carried[1].tags.tc_kv.entries[1].value,

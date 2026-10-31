@@ -14,7 +14,7 @@ local function f() return storage.tc_envelope end
 local function nop() end
 local function build(kind,x,y)
   local b=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
-  local r=assert(lifecycle.build(b)); lifecycle.power_entity(r).energy=100000; r.powered=true
+  local r=assert(lifecycle.build(b)); assert(not r.children.power and lifecycle.available(r))
   return r
 end
 local function wire(a,b)
@@ -97,7 +97,7 @@ function M.on_tick(event)
   end
   local root=registry.get()
   for _,id in ipairs(root.order) do local r=registry.record(id)
-    if r and r.body.valid then lifecycle.power_entity(r).energy=100000 end
+    if r and r.body.valid then assert(lifecycle.available(r)) end
   end
   local before={running=0,subscriptions=0}
   for _,id in ipairs(x.computers) do local c=registry.computer(id)

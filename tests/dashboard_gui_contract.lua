@@ -19,7 +19,7 @@ function M.run()
   local maintenance_limit=limits.maintenance_work_per_tick
   storage.tweaked_computers=nil; registry.initialize()
   local body=assert(real_game.surfaces[1].create_entity{name='tc-dashboard-shell',position={40,40},force='player'})
-  local rec=assert(lifecycle.build(body)); lifecycle.power_entity(rec).energy=500
+  local rec=assert(lifecycle.build(body)); assert(not rec.children.power and lifecycle.available(rec))
   model.set_tab(rec,1,definition(),function() end)
   model.set_tab(rec,2,{title='Second',content={type='label',id='only',text='Second viewer'}},function() end)
   local a,b=players.player(2001,body),players.player(2002,body)
@@ -41,6 +41,20 @@ function M.run()
     assert(first.tab.caption=='' and first.tab.plain_caption.caption=='Literal [img=iron-plate]')
 
     assert(fa.api_name.read_only and fa.api_name.text==rec.id)
+    local measure=data.measure; local visits=0
+    data.measure=function(...) visits=visits+1; return measure(...) end
+    local settled,settled_error=pcall(ui.tick,100,function() end)
+    data.measure=measure
+    assert(settled,settled_error)
+    assert(visits==0,'unchanged open dashboard rediscovered widget definitions: '..visits)
+    limits.maintenance_work_per_tick=1
+    local paid=scheduler.maintenance(registry.get(),100,true)
+    ui.tick(100,function(n) paid(n+2) end)
+    assert(fa.availability.caption=='Dashboard update pending: maintenance allowance unavailable' and not sa.dirty)
+    limits.maintenance_work_per_tick=maintenance_limit
+    ui.tick(101,function() end)
+    assert(fa.availability.caption=='' and sa.tabs['1']==first,'stable dashboard retained a recovered maintenance warning')
+    log('TC_DASHBOARD_GUI stable-view-maintenance-warning-clears-without-rebuild')
     local function activate(element,player,mouse)
       ui.on_click{element=element,player_index=(player or a).index,button=mouse or defines.mouse_button_type.left}
     end

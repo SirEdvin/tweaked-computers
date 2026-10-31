@@ -4,11 +4,262 @@ local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local M = {}
 local cleanup = {} -- Ephemeral host hooks, registered during control parsing.
+local initializers = {}
+function M.register_initializer(name,fn)
+  assert(type(name)=='string' and type(fn)=='function' and not initializers[name])
+  initializers[name]=fn
+end
+local function initialize_services(root)
+  local names={}; for name in pairs(initializers) do names[#names+1]=name end; table.sort(names)
+  for _,name in ipairs(names) do initializers[name](root) end
+end
+function M.scheduling_supported(root)
+  local s=root and root.scheduler
+  return type(s)=='table' and s.work_version==1 and type(s.ready)=='table'
+    and type(s.deadlines)=='table' and type(s.deadline_positions)=='table'
+    and errors.integer(s.ready_count,0,limits.registry_entries)
+    and (s.ready_head==nil and s.ready_count==0 or type(s.ready_head)=='string' and s.ready_count>0)
+end
+local function work_state()
+  local root=M.get()
+  local s=root and root.scheduler
+  if not M.scheduling_supported(root) then errors.raise('E_UNSUPPORTED','unsupported scheduling membership; source/data retained') end
+  return s
+end
+local function ready_remove(s,id)
+  local item=s.ready[id]
+  if not item then return end
+  if item.next==id then s.ready_head=nil
+  else
+    s.ready[item.previous].next=item.next
+    s.ready[item.next].previous=item.previous
+    if s.ready_head==id then s.ready_head=item.next end
+  end
+  s.ready[id]=nil
+  s.ready_count=s.ready_count-1
+end
+function M.retire_ready(item)
+  local s=work_state()
+  if s.ready[item.id]==item then ready_remove(s,item.id) end
+end
+function M.ready_changed(rec)
+  local s=work_state()
+  local shell=rec.shell
+  local pending=shell and shell.version==1 and type(shell.pending)=='table' and #shell.pending>0
+  local wanted=rec.kind=='computer' and rec.status~='removed'
+    and (rec.status=='running' and #rec.queue>0 or pending)
+  local old=s.ready[rec.id]
+  if old and (old.generation~=rec.generation or old.run_id~=rec.run_id
+    or old.shell_id~=(shell and shell.id)) then ready_remove(s,rec.id); old=nil end
+  if not wanted then ready_remove(s,rec.id); return end
+  if old then return end
+  local id=rec.id
+  local item={id=id,generation=rec.generation,run_id=rec.run_id,shell_id=shell and shell.id}
+  if s.ready_head then
+    local head=s.ready[s.ready_head]; local tail=s.ready[head.previous]
+    item.previous=tail.id; item.next=head.id; tail.next=id; head.previous=id
+  else s.ready_head=id; item.previous=id; item.next=id end
+  s.ready[id]=item
+  s.ready_count=s.ready_count+1
+end
+function M.ready_round(admit)
+  local s=work_state(); local head=s.ready_head; local result={}
+  if not head then return result end
+  local id=head
+  repeat
+    if not admit(1) then s.ready_head=id; return result end
+    local item=s.ready[id]
+    if #result>=s.ready_count or type(item)~='table' or item.id~=id
+      or type(item.next)~='string' or type(item.previous)~='string'
+      or type(s.ready[item.next])~='table' or s.ready[item.next].previous~=id
+      or type(s.ready[item.previous])~='table' or s.ready[item.previous].next~=id then
+      errors.raise('E_UNSUPPORTED','invalid retained ready links; source/queues retained')
+    end
+    result[#result+1]=item; id=item.next
+  until id==head
+  if #result~=s.ready_count then errors.raise('E_UNSUPPORTED','incomplete retained ready rotation; source/queues retained') end
+  -- Advance independently of walking the complete round, including refusals.
+  s.ready_head=s.ready[head].next
+  return result
+end
+local function deadline_before(a,b)
+  if type(a)~='table' or type(b)~='table' or type(a.id)~='string' or type(b.id)~='string'
+    or not errors.integer(a.tick,0,9007199254740991) or not errors.integer(b.tick,0,9007199254740991) then
+    errors.raise('E_UNSUPPORTED','invalid retained deadline; source/timers retained')
+  end
+  return a.tick<b.tick or a.tick==b.tick and a.id<b.id
+end
+local function deadline_peek(s)
+  local item=s.deadlines[1]
+  if item~=nil then
+    deadline_before(item,item)
+    if s.deadline_positions[item.id]~=1 then errors.raise('E_UNSUPPORTED','invalid retained deadline index; source/timers retained') end
+  end
+  return item
+end
+function M.next_timer() return deadline_peek(work_state()) end
+local function deadline_swap(s,a,b)
+  local h=s.deadlines; h[a],h[b]=h[b],h[a]
+  s.deadline_positions[h[a].id]=a; s.deadline_positions[h[b].id]=b
+end
+local function deadline_fix(s,i)
+  local h=s.deadlines
+  while i>1 do
+    local parent=math.floor(i/2)
+    if not deadline_before(h[i],h[parent]) then break end
+    deadline_swap(s,i,parent); i=parent
+  end
+  while i*2<=#h do
+    local child=i*2
+    if child<#h and deadline_before(h[child+1],h[child]) then child=child+1 end
+    if not deadline_before(h[child],h[i]) then break end
+    deadline_swap(s,i,child); i=child
+  end
+end
+local function deadline_remove(s,id)
+  local i=s.deadline_positions[id]
+  if not i then return end
+  if not errors.integer(i,1,#s.deadlines) or type(s.deadlines[i])~='table' or s.deadlines[i].id~=id then
+    errors.raise('E_UNSUPPORTED','invalid retained deadline position; source/timers retained')
+  end
+  local h=s.deadlines; local last=table.remove(h)
+  s.deadline_positions[id]=nil
+  if i<=#h then h[i]=last; s.deadline_positions[last.id]=i; deadline_fix(s,i) end
+end
+local function deadline_put(s,item)
+  deadline_before(item,item)
+  local id=item.id; local i=s.deadline_positions[id]
+  if i and (not errors.integer(i,1,#s.deadlines) or type(s.deadlines[i])~='table' or s.deadlines[i].id~=id) then
+    errors.raise('E_UNSUPPORTED','invalid retained deadline position; data retained')
+  end
+  if not i then i=#s.deadlines+1; s.deadline_positions[id]=i end
+  s.deadlines[i]=item; deadline_fix(s,i)
+end
+function M.timer_remove(id) return deadline_remove(work_state(),id) end
+function M.timers_changed(rec)
+  local s=work_state(); local tick
+  if rec.status=='running' then
+    for _,timer in pairs(rec.timers) do if not tick or timer.deadline<tick then tick=timer.deadline end end
+  end
+  if not tick then M.timer_remove(rec.id); return end
+  deadline_put(s,{id=rec.id,generation=rec.generation,run_id=rec.run_id,tick=tick})
+end
+-- Fixed host lanes share the timer heap operations, not another dispatcher.
+local clock_kinds={'physical','kv','art','editor','inspector','dashboard'}
+function M.maintenance_clock(kind)
+  local s=work_state().due_work
+  if type(s)~='table' or s.version~=1 then errors.raise('E_UNSUPPORTED','unsupported service deadlines; data retained') end
+  local known=false; for _,name in ipairs(clock_kinds) do if kind==name then known=true; break end end
+  local clock=known and s[kind]
+  if type(clock)~='table' or type(clock.deadlines)~='table' or type(clock.deadline_positions)~='table' then
+    errors.raise('E_UNSUPPORTED','unsupported service deadline lane; data retained')
+  end
+  return clock
+end
+function M.maintenance_next(kind)
+  local item=deadline_peek(M.maintenance_clock(kind))
+  if item and type(item.owner)~='table' then errors.raise('E_UNSUPPORTED','invalid service deadline owner; data retained') end
+  return item
+end
+function M.maintenance_set(kind,id,owner,tick)
+  assert(type(owner)=='table','service deadline owner required')
+  deadline_put(M.maintenance_clock(kind),{id=id,owner=owner,generation=owner.generation,tick=tick})
+end
+function M.maintenance_remove(kind,id) return deadline_remove(M.maintenance_clock(kind),id) end
+function M.viewer_changed(kind,index,session)
+  local ok,problem=pcall(function()
+    if M.maintenance_clock(kind).initialized~=1 then errors.raise('E_UNSUPPORTED','unsupported viewer deadlines; session retained') end
+    if session then M.maintenance_set(kind,tostring(index),session,game.tick+(15-game.tick%15)%15)
+    else M.maintenance_remove(kind,tostring(index)) end
+  end)
+  if not ok then M.get().scheduling_diagnostic=problem end
+  return ok,problem
+end
+function M.art_changed(rec,tick)
+  local root=M.get()
+  if not rec or rec.native_carrier or not M.supported(root) or M.record(rec.id)~=rec then return end
+  local valid,clock=pcall(M.maintenance_clock,'art')
+  if not valid then root.scheduling_diagnostic=clock; return end
+  if clock.initialized~=1 then return end
+  M.maintenance_set('art',rec.id,rec,tick or game.tick)
+end
+M.register_initializer('00-service-deadlines',function(root)
+  if not M.scheduling_supported(root) or root.scheduler.due_work~=nil then return end
+  local s={version=1}; root.scheduler.due_work=s
+  for _,kind in ipairs(clock_kinds) do s[kind]={deadlines={},deadline_positions={}} end
+end)
+function M.owned_outputs()
+  local s=M.get().output_owners
+  if type(s)~='table' or s.version~=1 or type(s.order)~='table' or type(s.records)~='table' or type(s.computers)~='table' then
+    errors.raise('E_UNSUPPORTED','unsupported output ownership membership; data retained')
+  end
+  return s
+end
+function M.output_changed(rec)
+  local s=M.owned_outputs(); local entry=s.records[rec.id]
+  if entry and entry.computer_id then
+    local owned=s.computers[entry.computer_id]
+    if owned then owned[rec.id]=nil; if not next(owned) then s.computers[entry.computer_id]=nil end end
+  end
+  if not rec.output_owner then
+    if entry then
+      s.records[rec.id]=nil
+      for i,item in ipairs(s.order) do if item==entry then table.remove(s.order,i); break end end
+    end
+    return
+  end
+  if not entry then
+    entry={record=rec}; s.records[rec.id]=entry
+    local i=#s.order+1
+    while i>1 and s.order[i-1].record.id>rec.id do i=i-1 end
+    table.insert(s.order,i,entry)
+  end
+  entry.computer_id=type(rec.output_owner)=='table' and rec.output_owner.computer_id or nil
+  if type(entry.computer_id)=='string' then
+    local owned=s.computers[entry.computer_id]
+    if not owned then owned={}; s.computers[entry.computer_id]=owned end
+    owned[rec.id]=entry
+  else entry.computer_id=nil end
+end
+M.register_initializer('output-owners',function(root)
+  if not M.supported(root) or root.output_owners~=nil then return end
+  root.output_owners={version=1,order={},records={},computers={}}
+  for _,id in ipairs(root.order) do
+    local rec=root.devices[id]
+    if rec and rec.kind=='logic' and rec.output_owner then M.output_changed(rec) end
+  end
+end)
+
+local function migrate_work(root)
+  local s=root.scheduler
+  if s.work_version~=nil then return end
+  s.work_version=1; s.ready={}; s.ready_count=0; s.ready_head=nil
+  s.deadlines={}; s.deadline_positions={}
+  for _,id in ipairs(root.order) do
+    local rec=root.computers[id]
+    if rec and rec.schema_version==1 and type(rec.queue)=='table' and type(rec.timers)=='table' then
+      M.ready_changed(rec); M.timers_changed(rec)
+    end
+  end
+end
 local function track_destruction(root,rec)
-  if rec.kind=='radar' and rec.body.valid then
+  if rec.body.valid then
     local registration=script.register_on_object_destroyed(rec.body)
     rec.destruction_registration=registration
-    root.radar_destructions[registration]=rec.id
+    if rec.kind=='radar' then root.radar_destructions[registration]=rec.id end
+  end
+end
+function M.track_physical(rec)
+  local root=M.get(); local body=rec.body
+  if body.valid then
+    local binding=root.entities[body.unit_number]
+    if binding and binding.id==rec.id and binding.role=='body' then
+      track_destruction(root,rec); binding.destruction_registration=rec.destruction_registration
+    end
+  end
+  for role,entity in pairs(rec.children) do
+    local binding=entity.valid and root.entities[entity.unit_number]
+    if binding and binding.id==rec.id and binding.role==role then binding.destruction_registration=script.register_on_object_destroyed(entity) end
   end
 end
 local function migrate_tracking(root)
@@ -47,19 +298,24 @@ function M.initialize()
     root.order=root.order or {}; root.next_sequence=root.next_sequence or 1
     root.ledger=root.ledger or admission.new()
     root.scheduler=root.scheduler or {cursor=1,last_tick=-1}
+    migrate_work(root)
     migrate_tracking(root)
+    initialize_services(root)
     return root
   end
   root={schema_version=limits.storage_version,next_id=1,next_sequence=1,
     entities={},computers={},devices={},player_drafts={},order={},ledger=admission.new(),
     scheduler={cursor=1,last_tick=-1},tracking_version=1,retained_count=0,radar_destructions={}}
   storage.tweaked_computers=root
+  migrate_work(root)
+  initialize_services(root)
   return root
 end
 function M.get() return storage.tweaked_computers end
 function M.monitor_changed(rec,topology)
   local root=M.get()
   if topology then root.monitor_topology_dirty=true end
+  M.art_changed(rec)
   local s=root.monitors
   local g=s and s.version==1 and s.groups[s.membership[rec.id]]
   if not g then return end
@@ -110,6 +366,7 @@ end
 function M.register(kind,body)
   local root=writable()
   if type(kind)~='string' or #kind==0 or #kind>limits.identifier_bytes then errors.raise('E_ARGUMENT','invalid device kind') end
+  if kind~='radar' then M.maintenance_clock('physical') end
   if not body or not body.valid or not body.unit_number then errors.raise('E_ARGUMENT','valid numbered entity required') end
   if root.entities[body.unit_number] then errors.raise('E_ARGUMENT','entity already bound') end
   if root.retained_count>=limits.registry_entries then errors.raise('E_CAPACITY','placed identity capacity reached') end
@@ -126,9 +383,12 @@ function M.register(kind,body)
     rec.timers={}; rec.subscriptions={}
     root.computers[id]=rec
   else root.devices[id]=rec end
-  root.entities[body.unit_number]={id=id,role='body',generation=rec.generation}
+  root.entities[body.unit_number]={id=id,role='body',generation=rec.generation,destruction_registration=rec.destruction_registration}
   root.retained_count=root.retained_count+1
-  if kind~='radar' then root.order[#root.order+1]=id end
+  if kind~='radar' then
+    root.order[#root.order+1]=id
+    M.maintenance_set('physical',id,rec,game.tick+1+body.unit_number%limits.topology_latency_ticks)
+  end
   if kind=='monitor' then M.monitor_changed(rec,true) end
   return rec
 end
@@ -141,7 +401,8 @@ function M.bind_child(id,role,entity)
   local count=0; for _ in pairs(rec.children) do count=count+1 end
   if count>=limits.owned_children then errors.raise('E_CAPACITY','owned component capacity reached') end
   if entity.force.index~=rec.force_index or entity.surface.index~=rec.surface_index then errors.raise('E_ARGUMENT','child force/surface mismatch') end
-  rec.children[role]=entity; root.entities[entity.unit_number]={id=id,role=role,generation=rec.generation}
+  rec.children[role]=entity; root.entities[entity.unit_number]={id=id,role=role,generation=rec.generation,
+    destruction_registration=script.register_on_object_destroyed(entity)}
 end
 function M.unbind_child(id,role)
   local root=writable(); local rec=M.record(id)
@@ -162,6 +423,7 @@ end
 -- generations, aliases, queues or active runs. All native work precedes this call.
 function M.replace_physical(rec,body,children)
   local root=writable()
+  M.maintenance_clock('physical')
   assert(M.record(rec.id)==rec and body.valid and not root.entities[body.unit_number])
   for _,child in pairs(children) do assert(child.valid and not root.entities[child.unit_number]) end
   for unit,binding in pairs(root.entities) do if binding.id==rec.id then root.entities[unit]=nil end end
@@ -169,19 +431,21 @@ function M.replace_physical(rec,body,children)
   if rec.kind=='monitor' then M.monitor_changed(rec,true) end
   root.entities[body.unit_number]={id=rec.id,role='body',generation=rec.generation}
   for role,child in pairs(children) do root.entities[child.unit_number]={id=rec.id,role=role,generation=rec.generation} end
+  M.track_physical(rec)
+  M.maintenance_set('physical',rec.id,rec,game.tick+1)
 end
 function M.register_cleanup(name,fn)
   assert(type(name)=='string' and type(fn)=='function' and not cleanup[name],'invalid/duplicate host cleanup')
   local n=0; for _ in pairs(cleanup) do n=n+1 end; assert(n<limits.host_hooks,'host cleanup capacity')
   cleanup[name]=fn
 end
-function M.cleanup(rec,run_id,reason)
+function M.cleanup(rec,run_id,reason,removing)
   -- Hooks cannot depend on compiling user code. Invoke every registered hook even
   -- when one adapter fails, and retain its recovery diagnostic for the host.
   local names={}; for name in pairs(cleanup) do names[#names+1]=name end; table.sort(names)
   local failures={}
   for _,name in ipairs(names) do
-    local ok,e=pcall(cleanup[name],rec,run_id,reason)
+    local ok,e=pcall(cleanup[name],rec,run_id,reason,removing)
     if not ok then failures[#failures+1]={adapter=name,message=type(e)=='string' and e:sub(1,256) or 'host cleanup failed'} end
   end
   if #failures>0 then rec.cleanup_failures=failures else rec.cleanup_failures=nil end
@@ -190,12 +454,29 @@ end
 function M.remove(id,reason)
   local root=writable(); local rec=M.record(id)
   if not rec then return false end
-  if not M.cleanup(rec,rec.run_id,reason or 'removed') then
+  if rec.kind~='radar' then
+    local valid,problem=pcall(M.maintenance_clock,'physical')
+    if not valid then root.scheduling_diagnostic=problem; return false end
+  end
+  if rec.kind=='kv' then
+    local valid,problem=pcall(M.maintenance_clock,'kv')
+    if not valid then root.scheduling_diagnostic=problem; return false end
+  end
+  if not rec.native_carrier then
+    local valid,problem=pcall(M.maintenance_clock,'art')
+    if not valid then root.scheduling_diagnostic=problem; return false end
+  end
+  if not M.cleanup(rec,rec.run_id,reason or 'removed',true) then
     rec.status='faulted'; rec.diagnostic=errors.new('E_ENGINE','cleanup failed; entity/data retained for recovery')
+    M.art_changed(rec)
     return false
   end
   if rec.kind=='monitor' then M.monitor_changed(rec,true) end
   rec.status='removed'; rec.queue={}; rec.timers={}; rec.subscriptions={}
+  M.ready_changed(rec); M.timer_remove(rec.id)
+  if rec.kind~='radar' then M.maintenance_remove('physical',rec.id) end
+  if rec.kind=='kv' then M.maintenance_remove('kv',rec.id) end
+  if not rec.native_carrier then M.maintenance_remove('art',rec.id) end
   for unit,binding in pairs(root.entities) do if binding.id==id then root.entities[unit]=nil end end
   root.computers[id]=nil; root.devices[id]=nil
   root.retained_count=root.retained_count-1
@@ -210,4 +491,19 @@ function M.remove(id,reason)
   -- Ledger identities remain until real clock advancement: removal never renews credits.
   return true
 end
+M.register_initializer('ui-refresh-deadlines',function(root)
+  if not M.supported(root) or not M.scheduling_supported(root) then return end
+  for _,kind in ipairs({'editor','inspector'}) do
+    local valid,clock=pcall(M.maintenance_clock,kind)
+    if not valid then root.scheduling_diagnostic=clock; return end
+    if clock.initialized==nil then
+      clock.initialized=1
+      local all=kind=='editor' and root.player_drafts or root.peripheral_inspectors or {}
+      for index,value in pairs(all) do
+        local session=value; if kind=='editor' then session=value.session end
+        if session then M.viewer_changed(kind,index,session) end
+      end
+    end
+  end
+end)
 return M

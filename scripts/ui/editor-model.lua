@@ -35,6 +35,7 @@ function M.open(player,id)
     b.documents[id]=d
   end
   local session={id=id,unit=rec.body.unit_number,generation=rec.generation,token=registry.sequence()}
+  local indexed,problem=registry.viewer_changed('editor',player.index,session); if not indexed then error(problem,0) end
   b.session=session
   return session,d
 end
@@ -165,7 +166,9 @@ function M.action(player,token,action,tick,arg)
 end
 function M.open_recovery(index)
   local b=bucket(index)
-  local s={mode='recovery',token=registry.sequence()}; b.session=s
+  local s={mode='recovery',token=registry.sequence()}
+  local indexed,problem=registry.viewer_changed('editor',index,s); if not indexed then error(problem,0) end
+  b.session=s
   return s,b
 end
 function M.recovery_action(index,token,action,id)
@@ -192,6 +195,7 @@ function M.close(index,token)
   local s,b=M.session(index)
   if not s or s.token~=token then return false end
   b.session=nil -- Documents remain even after destruction, disconnect or force changes.
+  registry.viewer_changed('editor',index)
   return true
 end
 return M

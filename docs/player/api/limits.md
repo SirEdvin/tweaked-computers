@@ -44,7 +44,7 @@ The requested setting is preserved, so raising host work can make more of it
 effective. This never raises the shared host setting. At least one guest unit
 remains, but one unit cannot run a useful callback: choose host headroom for
 your actual programs, preferably the three per-computer budgets plus maintenance.
-Maintenance covers discovery, power/signal sampling, timers, notifications and
+Maintenance covers discovery, physical validation, signal sampling, timers, notifications and
 monitor preparation/publication/retirement. More maintenance can reduce guest
 headroom; it does not automatically increase callback or monitor capacities.
 

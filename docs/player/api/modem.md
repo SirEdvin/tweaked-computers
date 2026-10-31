@@ -10,12 +10,14 @@ other mods' radar prototypes are not automatically enrolled.
 
 A radar is enrolled only through a physical path rooted at a placed computer.
 Placement, cloning, revival or a standalone peripheral component does not enroll
-it. A stopped, faulted or unpowered computer still supplies a physical root;
+it. A stopped or faulted computer still supplies a physical root; custom computers need no electricity;
 running a program is not required for discovery. The complete path must stay on
 one wire color, force and surface. Hidden radio links and adjacent monitor tiles
 do not extend that path.
 
-An existing wired radar is adopted by bounded computer-rooted maintenance.
+Fresh discovery requests bounded computer-rooted adoption of an existing wired
+radar. Maintenance retains only pending computer/color requests, including
+stopped physical roots; idle computers do not acquire an adoption sweep.
 While adoption is incomplete, discovery reports `E_NETWORK_PENDING`; exhausted
 identity capacity reports `E_CAPACITY`. Integration failure never destroys or
 refunds a native radar. Very crowded native hidden-link inventories can exceed
@@ -72,6 +74,12 @@ register `computer.on("modem_message", "receive")` or `"reply"`, open the receiv
 channel, and send replies themselves. Registration names are strings, not
 function values. Neither the sending channel nor reply channel needs to be open
 on the sender to transmit. `replyChannel` is a hint, not an automatic return route.
+
+A `modem_message` handler retains background topology interest in both local
+wire colors even without attach/detach handlers. Opening a channel alone does
+not create receive interest. Removing the last relevant handler retires future
+observation after pending host work settles, not already accepted queue snapshots.
+Actual transmission and receiver eligibility always use fresh live proofs.
 
 A modem event has ordinary `name`, dispatch `tick`, `sequence`, `computer_id` and
 `run_id`, plus:
@@ -138,7 +146,7 @@ After acceptance, a full recipient queue visibly faults that run, discards its
 remaining deliveries and continues other recipients. The sender is not given a
 retryable partial-send error. There is no ACK, retry, delivery guarantee or offline
 mailbox. Closing/detaching a radar after queue admission does not recall accepted
-data. Computer Stop/fault/removal/power loss can cancel transient queued messages.
+data. Computer Stop/fault/removal can cancel transient queued messages; electrical cycling cannot.
 Missed outage traffic is never replayed. Current peripheral calls always require
 new local authority, even inside an accepted event handler.
 

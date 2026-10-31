@@ -33,7 +33,7 @@ local function copy(t) if type(t)~='table' then return t end; local r={}; for k,
 local function atomic(m,code,fn) local old=copy(m); error_is(code,fn); assert(value_equal(old,m),'rejected terminal call mutated state') end
 local function build(kind,x,y,direction,force)
   local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].name,position={x,y},direction=direction or 0,force=force or 'player'})
-  local r=assert(lifecycle.build(body)); body.energy=defs.devices[kind].watts/30; r.powered=true; return r
+  local r=assert(lifecycle.build(body)); assert(not r.children.power and lifecycle.available(r)); return r
 end
 local function connect(a,b,wire) assert(lifecycle.connector(a,'network',wire).connect_to(lifecycle.connector(b,'network',wire))) end
 local function settle()
@@ -61,6 +61,7 @@ end
 function resized(e)
   local m=peripheral.wrap(e.peripheral,e.wire); local w,h=m.getSize()
   assert(w==e.width and h==e.height); computer.setState('resize',e)
+  computer.setState('resize_count',(computer.getState('resize_count') or 0)+1)
 end
 
 function touched(e) computer.setState('touch',e) end
@@ -174,10 +175,10 @@ function M.run()
   renderer.participate(display); renderer.tick(game.tick,scheduler.maintenance(root,game.tick,true))
   assert(display.render.presented_revision==display.model.revision)
   root.scheduler.maintenance_spent=0 -- Isolated fixture, not a production clock reset.
-  b0.body.energy=0; registry.monitor_changed(b0,false); monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
-  assert(display.render.hidden and not object.visible and display.model.cells[1][1]==80)
-  guest(c,"local m=peripheral.find('monitor','red'); local ok,e=pcall(m.write,'bad'); assert(not ok and e.code=='E_UNPOWERED')")
-  b0.body.energy=500; b0.powered=true; registry.monitor_changed(b0,false); monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
+  b0.powered=false; registry.monitor_changed(b0,false); monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
+  assert(not display.render.hidden and object.visible and display.model.cells[1][1]==80)
+  guest(c,"local m=peripheral.find('monitor','red'); assert(peripheral.describe(peripheral.getName(m),'red').powered); m.write('NOPOWER')")
+  b0.powered=true; registry.monitor_changed(b0,false); monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
   assert(not display.render.hidden and object.visible and display.model.cells[1][1]==80)
   local retained_model=display.model
   b0.physical_error='fixture-owned-port-fault'
@@ -202,11 +203,17 @@ function M.run()
     storage_version=limits.storage_version,handlers=plan.handlers}; c.subscriptions={}
   local ok,diagnostic=compiler.run(plan,'start',{name='start'},function(g) return runtime.services(c,game.tick,g) end,ctx)
   assert(ok,serpent.line(diagnostic)); assert(display.model.cells[1][1]==82 and display.model.fg==5)
+  for id in pairs(c.subscriptions) do runtime.unsubscribe(c,id,nop) end
   c.active=previous_active; c.subscriptions=previous_subscriptions
   -- Authentic event subscriptions, physical red/green proofs and mocked headless
   -- player interaction. This is deliberately NOT native player/client evidence.
   c.active.handlers.touch=true; c.active.handlers.resize=true
-  runtime.subscribe(c,'monitor_touch','touch',nil,nop); runtime.subscribe(c,'monitor_resize','resize',nil,nop)
+  local touch_sub=runtime.subscribe(c,'monitor_touch','touch',nil,nop)
+  local resize_sub=runtime.subscribe(c,'monitor_resize','resize',nil,nop)
+  local extra_sub=runtime.subscribe(c,'monitor_resize','resize',nil,nop)
+  local recipients=registry.get().monitor_recipients
+  assert(#recipients.monitor_resize.order==1 and #recipients.monitor_touch.order==1)
+  assert(runtime.unsubscribe(c,extra_sub,nop) and #recipients.monitor_resize.order==1)
   connect(c,b0,'green')
   local player={valid=true,index=1,force=b0.body.force,surface=b0.body.surface,cursor_stack={valid_for_read=false},
     can_reach_entity=function() return true end,print=nop}
@@ -219,6 +226,7 @@ function M.run()
   local foreign={valid=true,index=2,force=game.create_force('tc09-foreign'),surface=b0.body.surface,cursor_stack={valid_for_read=false},can_reach_entity=function() return true end,print=nop}
   assert(not monitor.activate_for_player({input_name='tc-interact',tick=game.tick,in_gui=false,cursor_position={x=px,y=py}},foreign))
   local job=registry.get().monitors.touches[1]
+  assert(#job.recipients==1 and job.recipients[1].id==c.id and job.recipients[1].generation==c.generation)
   local original_game=game
   local world_player=editor_contract.player(3001,b0.body); world_player.cursor_stack={valid_for_read=false}
   local ok,err=pcall(function()
@@ -236,12 +244,31 @@ function M.run()
   assert(#c.queue==1 and c.queue[1].event.x==1 and #c.queue[1].event.wires==2 and c.queue[1].event.wire=='red')
   registry.get().monitors.touches={}; c.queue={}; c.queue_bytes=0
   guest(c,"local m=peripheral.find('monitor','red'); m.setTextScale(2)")
+  local ms=registry.get().monitors
+  assert(#ms.resize_order==1 and ms.resize_order[1]==display.id)
+  local pending_resize=ms.resizes[display.id]
+  registry.get().monitor_recipients=nil; ms.notification_version=nil; ms.resize_order=nil
+  registry.initialize()
+  assert(ms.resizes[display.id]==pending_resize and #ms.resize_order==1 and ms.resize_order[1]==display.id)
+  recipients=registry.get().monitor_recipients
+  assert(#recipients.monitor_resize.order==1 and recipients.monitor_resize.order[1].subscriptions[resize_sub]==c.subscriptions[resize_sub])
   monitor.notifications(game.tick,nop); assert(#c.queue==1 and c.queue[1].event.reason=='scale')
   guest(c,"local m=peripheral.find('monitor','red'); m.setTextScale(3)")
   monitor.notifications(game.tick,nop)
   assert(#c.queue==1 and c.queue[1].event.width==display.model.width and c.queue[1].event.height==display.model.height)
   guest(c,"local m=peripheral.find('monitor','red'); m.setTextScale(2)"); monitor.notifications(game.tick,nop)
   c.queue={}; c.queue_bytes=0
+  assert(#ms.resize_order==0 and not next(ms.resizes))
+  local notification_work=0
+  monitor.notifications(game.tick,function(n) notification_work=notification_work+n end)
+  assert(notification_work==0,'settled notifications charged discovery work')
+  local version=recipients.version; recipients.version=99
+  local scale=display.model.scale; local ok,problem=pcall(guest,c,"local m=peripheral.find('monitor','red'); m.setTextScale(3)")
+  assert(not ok and display.model.scale==scale and recipients.version==99,'unknown recipient state mutated the display')
+  recipients.version=version
+  assert(runtime.unsubscribe(c,resize_sub,nop) and #recipients.monitor_resize.order==0)
+  assert(runtime.unsubscribe(c,touch_sub,nop) and #recipients.monitor_touch.order==0)
+  report('monitor-recipient-membership-cancellation-migration-unsupported-and-zero-idle-work')
   report('mock-world-activation-with-authentic-deduplicated-channel-events-and-resize')
   -- Maximum physical rectangle, all 256 literal byte slots, mixed-revision sweep.
   local maximum={}
@@ -281,11 +308,14 @@ local function snapshot()
   return {model=g.model,render=g.render,revision=g.model.revision,cells=copy(g.model.cells),palette=copy(g.model.palette),
     id=g.id,anchor=g.anchor,body=g.body.unit_number,boots=c.state.boots,run_id=c.run_id,
     total=r.ledger.total,tick=r.ledger.tick,machine=r.ledger.machines[c.id],work=r.ledger.machines[c.id].work,
-    maintenance=r.scheduler.maintenance_spent,sequence=r.next_sequence,source=c.active.source}
+    maintenance=r.scheduler.maintenance_spent,sequence=r.next_sequence,source=c.active.source,
+    recipients=r.monitor_recipients,resize_order=r.monitors.resize_order,resize_job=r.monitors.resizes[g.id],
+    resize_cursor=r.monitors.resizes[g.id] and r.monitors.resizes[g.id].cursor,resize_count=c.state.resize_count or 0}
 end
 local function unchanged()
   local a=f().snapshot; local b=snapshot()
-  for _,k in ipairs({'model','render','revision','id','anchor','body','boots','run_id','total','tick','machine','work','maintenance','sequence','source'}) do
+  for _,k in ipairs({'model','render','revision','id','anchor','body','boots','run_id','total','tick','machine','work','maintenance','sequence','source',
+    'recipients','resize_order','resize_job','resize_cursor','resize_count'}) do
     assert(a[k]==b[k],'cold load changed '..k)
   end
   assert(value_equal(a.cells,b.cells) and value_equal(a.palette,b.palette))
@@ -314,6 +344,11 @@ function M.on_tick(event)
     -- Save a post-dispatch accepted write beside the prior complete front.
     -- Actual partially prepared/coalesced cold state is covered by the full-world
     -- monitor_presentation_engine fixture, not by inventing a second tick here.
+    local tile=registry.record(fixture.tile); local settings=snapshots.settings(tile)
+    settings.monitor.scale=3; snapshots.apply_settings(tile,settings)
+    settings.monitor.scale=2; snapshots.apply_settings(tile,settings)
+    local pending=registry.get().monitors.resizes[g.id]
+    assert(pending and pending.cursor==1 and #pending.recipients==1 and pending.recipients[1].id==c.id)
     model.calls.setCursorPos(g.model,nop,1,1); model.calls.write(g.model,nop,'COLD')
     renderer.participate(g)
     local spent=registry.get().scheduler.maintenance_spent; local front=g.render
@@ -329,6 +364,10 @@ function M.on_tick(event)
     game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
   elseif fixture.phase=='resuming' and c.state.checked and g.render.presented_revision==g.model.revision then
     assert(c.state.boots==1 and g.id==fixture.snapshot.id and g.model.cells[1][1]==67)
+    if not c.state.resize then return end
+    assert(c.state.resize_count==fixture.snapshot.resize_count+1,'cold resize was lost or replayed')
+    assert(not next(registry.get().monitors.resizes) and #registry.get().monitors.resize_order==0)
+    log('TC_MONITOR_NOTIFICATIONS_COLD_OK exact-membership-pending-cursor-coalesced-once')
     assert(g.model.cells[g.model.width+1][1]==82); fixture.phase='done'; log('TC_COLD_OK')
   end
 end

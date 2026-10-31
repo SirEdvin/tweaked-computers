@@ -41,8 +41,8 @@ function M.run()
   f().sender=c.id; f().radar=r.id; f().receiver=d.id; f().remote=receiver.id
   supply(s,0,-8); supply(s,30,-8)
   rendering.draw_text{text='NATIVE RADAR / SHARED MODEM',surface=s,target={-2,3},alignment='center',color={1,1,1},scale=.7}
-  assert(runtime.save(d.id,receiver_source,0)); assert(runtime.activate(d.id,game.tick))
-  assert(runtime.save(c.id,sender_source,0)); assert(runtime.activate(c.id,game.tick))
+  assert(runtime.save(d.id,receiver_source,0))
+  assert(runtime.save(c.id,sender_source,0))
   if script.active_mods['space-age'] then
     assert(s.can_place_entity{name='tc-interplanetary-radar',position={7,0},force='player'})
     local advanced=build('advanced',7,0); f().advanced=advanced.id
@@ -113,6 +113,13 @@ function M.on_configuration_changed() error('unexpected native scene configurati
 function M.on_tick(event)
   local x=f(); loaded=false -- Joining reconstructs local code, never authoritative state.
   if not x.booted then x.booted=true; log('TC_RADAR_SCENE_BOOTED') end
+  if not x.activated then
+    -- Power-free computers can start at tick zero, before native supply propagates.
+    if not radar.available(registry.record(x.radar)) or not radar.available(registry.record(x.remote)) then
+      assert(event.tick-x.start<60,'native radar supply startup deadline'); return
+    end
+    assert(runtime.activate(x.receiver,event.tick)); assert(runtime.activate(x.sender,event.tick)); x.activated=true
+  end
   scheduler.tick(event.tick)
   local c,d=registry.record(x.sender),registry.record(x.receiver)
   assert(c.status=='running',serpent.line(c.diagnostic)); assert(d.status=='running',serpent.line(d.diagnostic))

@@ -12,7 +12,7 @@ local function f() return storage.tc_plot_baseline end
 local function nop() end
 local function build(kind,x,y)
  local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
- local r=assert(lifecycle.build(body)); lifecycle.power_entity(r).energy=100000; r.powered=true; return r
+ local r=assert(lifecycle.build(body)); assert(not r.children.power and lifecycle.available(r)); return r
 end
 local function wire(a,b) assert(lifecycle.connector(a,'network','red').connect_to(lifecycle.connector(b,'network','red'))) end
 function M.run()
@@ -37,7 +37,7 @@ function M.on_tick(event)
   assert(c.state.plot_screen==x.saved.screen and root.scheduler.maintenance_spent==x.saved.spent)
   x.phase='running'; loaded=false; x.resumed=true; log('TC_BASELINE_COLD_RETAINED')
  end
- for _,id in ipairs(root.order) do lifecycle.power_entity(registry.record(id)).energy=100000 end
+ for _,id in ipairs(root.order) do assert(not registry.record(id).children.power) end
  local profiler=helpers.create_profiler(); scheduler.tick(event.tick); profiler.stop()
  assert(c.status=='running' or x.phase=='draining' and c.status=='stopped',serpent.line(c.diagnostic)); x.steps=x.steps+1; assert(x.steps<250)
  local machine=root.ledger.machines[c.id]

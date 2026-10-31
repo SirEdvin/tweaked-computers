@@ -1,21 +1,28 @@
 # Dashboard
 
-A Dashboard is a powered 1×1 control panel with up to six shared tabs. Its
+A Dashboard is an electricity-free 1×1 control panel with up to six shared tabs. Its
 physical identity and data belong to the device, not to the last computer that
 wrote to it. This feature is unreleased and its complete acceptance is still in
 progress; the dependency evidence below is not a substitute for native/peer gates.
 
-## Construction, power and identity
+<a id="construction-power-and-identity"></a>
+
+## Construction and identity
 
 Dashboard uses the existing computer research. Its provisional recipe consumes
 **4 iron plates, 2 copper plates and 5 electronic circuits**; its Network-role
-body uses **15 kW**. Supply electricity and connect a computer's Network port with
+body needs no electricity or electrical helper. Connect a computer's Network port with
 red or green circuit wire. Rotation preserves the logical device and contacts.
 
 One physical Dashboard has one API identity, shown as selectable, read-only text
 in its window. Normal opening shows interactive tabs rather than the read-only
 peripheral inspector. Each viewer chooses a tab and scroll position independently;
 controls and content remain shared. Close the window with **Close** or **Escape**.
+Only open, authorized viewers participate in refresh. Stable tab definitions keep
+their widgets, selection and scroll position; shared content changes, tab switches
+and resizing request a paid update. Only the selected tab's visible chart nodes
+request presentation; unchanged charts keep their image, and pending render work
+retains the existing rotating fairness between visible charts and viewers.
 
 Mining yields one tagged Dashboard item, not separate helper-entity drops. Item
 placement creates a new identity; retained content travels with the supported

@@ -46,6 +46,7 @@ local function remove_queued(c,id)
     if item.event.subscription_id~=id then queue[#queue+1]=item; bytes=bytes+item.bytes end
   end
   c.queue=queue; c.queue_bytes=bytes
+  registry.ready_changed(c)
 end
 method('unsubscribe',1,function(c,r,w,t,spend,id)
   if type(id)~='string' then errors.raise('E_ARGUMENT','subscription ID required') end
@@ -60,8 +61,8 @@ if model.charts then
   method('clearChart',2,function(c,r,w,t,spend,slot,id) model.clear(r,slot,id,spend) end)
 end
 local function authorized(c,r,sub,spend)
-  if not r or not r.body.valid or r.generation~=sub.details.generation or not lifecycle.has_power(r)
-    or c.status~='running' or not c.powered or not lifecycle.has_power(c) then return false end
+  if not r or not r.body.valid or r.generation~=sub.details.generation or not lifecycle.available(r)
+    or c.status~='running' or not lifecycle.available(c) then return false end
   local ok,target=pcall(peripheral.authority,c,r.id,sub.details.wire,spend)
   if not ok then if type(target)~='table' or not target.code then error(target,0) end; return false end
   return target==r
@@ -112,12 +113,13 @@ function M.validate(c,item,spend)
   local ok,button=pcall(model.widget,tab,event.button,'button')
   return ok and button.enabled and player_authorized and player_authorized(event.player_index,r,proof.token,event.tab) or false
 end
-function M.revoke(c,name,wire)
+function M.revoke(c,name,wire,reason)
+  if reason=='unavailable' or reason=='limit' then return end -- Incomplete discovery is not definitive detachment.
   local ids={}
   for id,sub in pairs(c.subscriptions) do
     if sub.event_name=='dashboard_click' and sub.details.peripheral==name and sub.details.wire==wire then ids[#ids+1]=id end
   end
-  for _,id in ipairs(ids) do c.subscriptions[id]=nil; remove_queued(c,id) end
+  for _,id in ipairs(ids) do runtime.unsubscribe(c,id); remove_queued(c,id) end
 end
 peripheral.register_type('dashboard',{methods=M.methods})
 peripheral.register_revocation('dashboard-subscriptions',M.revoke)

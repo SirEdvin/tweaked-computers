@@ -57,6 +57,14 @@ With initial=false, notify only on effective identity/count or connectivity chan
 not ordering or explicit-default differences. With initial=true, enqueue next sample
 with empty previous. A disappearance remains observable as zero in changes.
 
+Accepted registrations maintain a physical-input/color watch and ordered reverse
+subscribers. One fresh native observation per watched input/color serves independent
+filters and isolated events; no subscription means no signal discovery visit.
+Cancellation (including `computer.off`), run retirement and endpoint removal retire
+the relevant watch and canceled queued samples. Direct reads and new baselines never
+reuse retained observations. The implementation reads watched inputs every tick;
+it does not rely on `get_signals_changed` to skip a native read or slow sampling.
+
 ```text
 -- Documentation event; also includes BaseEvent.
 SignalChanged = {
@@ -78,9 +86,9 @@ SignalChanged = {
 }
 ```
 
-Only selected colors are present in connectivity maps. Initial events use false selected connectivity in previous_connected. `resync=true` denotes restoration after a power interruption, not replay. `previous` is the most recent successfully admitted sample, or the registration baseline; queue admission advances it, not callback dispatch. Power interruption discards queued transient samples, so previous may describe a discarded callback's observation. Collections preserve optional fields and have no sorting guarantee; delivered events are isolated from baselines and other subscribers. Empty changes with changed connectivity is valid. Native graph size does not consume generic payload capacity, but queue entries and envelope bytes remain bounded with existing fault-on-overflow behavior.
+Only selected colors are present in connectivity maps. Initial events use false selected connectivity in previous_connected. `resync=true` denotes required legacy-upgrade current-input resynchronization, not replay. `previous` is the most recent successfully admitted sample, or the registration baseline; queue admission advances it, not callback dispatch. Electrical cycling no longer discards accepted custom-device observations or callbacks. Collections preserve optional fields and have no sorting guarantee; delivered events are isolated from baselines and other subscribers. Empty changes with changed connectivity is valid. Native graph size does not consume generic payload capacity, but queue entries and envelope bytes remain bounded with existing fault-on-overflow behavior.
 
-Factorio reports circuit values from its native circuit-update state, documented as previous-tick signals. `sample_tick` identifies observation time; it does not assert that a newly written output can be read by another device immediately. `event.tick` identifies callback dispatch. No within-tick transient detection or recursively triggered signal callback is promised. When powered and within the supported envelope, sampling is once per actual simulation tick, not once per arbitrary number of scheduler dispatches.
+Factorio reports circuit values from its native circuit-update state, documented as previous-tick signals. `sample_tick` identifies observation time; it does not assert that a newly written output can be read by another device immediately. `event.tick` identifies callback dispatch. No within-tick transient detection or recursively triggered signal callback is promised. When physically valid and within the supported envelope, sampling is once per actual simulation tick, not once per arbitrary number of scheduler dispatches.
 
 ## Output ownership and failure
 
@@ -89,7 +97,7 @@ before queued callback dispatch, clear its still-owned output and discard pendin
 callbacks. Update source to select red or green and restart; never translate wires
 or replay effects on load. Valid single-color load retains exact identities.
 
-Every successful setOutput/clearOutput records the writing computer's identity, active run generation and bound network color. The bank is a single ownership unit. A subsequent successful write replaces that ownership; a failed write does not. Stop, fault, computer/handler power loss, removal, force/surface change or loss of the owner's selected path clears its still-owned output through host cleanup.
+Every successful setOutput/clearOutput records the writing computer's identity, active run generation and bound network color. The bank is a single ownership unit. A subsequent successful write replaces that ownership; a failed write does not. Stop, fault, physical invalidity, removal, force/surface change or loss of the owner's selected path clears its still-owned output through host cleanup.
 
 Computer A stopping must not clear a bank written more recently by B. Clear applies before any later unauthorized guest call and within the published topology/fail-safe envelope for externally observed wiring changes. Retaining the same bank across ordinary load is allowed only with retained valid ownership; host function reconstruction neither republishes the write nor creates a new owner. Clones/new placement have empty output and no owner.
 

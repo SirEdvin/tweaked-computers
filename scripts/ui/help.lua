@@ -67,8 +67,8 @@ Configurator lists target-side prototypes: Unique deduplicates overlapping Red
 and Green counts. Logic shows separate colored inputs and its own output bank,
 not other emitters. Logic/monitor updates are sampled every 15 ticks when admitted.
 Monitor dimensions are local connected tiles and terminal columns/rows, not pixels.
-Ctrl-click monitor touches remain distinct. Unpowered peripherals retain identity,
-but only committed monitor geometry is readable without active service power.
+Ctrl-click monitor touches remain distinct. Custom devices need no electricity;
+identity, geometry, permissions and live wiring still govern availability.
 All essential actions are buttons, including while the text box has focus.
 
 LANGUAGE
@@ -136,6 +136,7 @@ off(ID) -> boolean. Remove an event subscription.
 
 General events: peripheral_attach, peripheral_detach, monitor_resize,
 monitor_touch, power_restored, modem_message. Events include name/tick/sequence/computer_id/run_id.
+power_restored is an inert legacy registration; electricity creates no new event.
 
 after(delay_ticks, handler_name, payload?) -> timer ID
 
@@ -145,6 +146,10 @@ cancelTimer(ID) -> boolean, including already queued timer notifications.
 
 Timer event: timer_id, scheduled_tick, interval_ticks?, missed, payload?.
 Recurring overdue intervals coalesce. Callbacks finish or fault; they never yield.
+Future timers sleep until due; cancellation also removes queued notifications.
+Events and Console submissions wake a ready rotation; empty queues leave it.
+One program/Console item per computer/tick, with fair alternation when both wait.
+Peers awakened during dispatch join a later round; load never replays startup.
 
 Data: finite numbers, booleans, strings, dense arrays or string-keyed maps;
 no mixed keys, nil entries, cycles, functions, metatables or native objects.
@@ -159,6 +164,9 @@ Each has getLimits().
 Store name/wire in state, not ephemeral facades. Calls recheck live authority.
 Use Peripherals for automatically updated names/types/power on the selected color.
 Incomplete discovery reports pending/limit, never a successful empty prefix.
+Native enrollment runs for pending physical discovery, including stopped computers.
+Attach/detach and modem_message handlers retain topology interest; idle roots do not.
+Removing the last handler retires its interest, not accepted queued notifications.
 
 getNames(wire) -> complete sorted name array. Includes reachable unpowered devices;
 pending/limit errors are not an empty inventory.
@@ -254,7 +262,7 @@ Native radar: unchanged scanning, circuits, power, GUI and mining; no adapter it
 find("modem", wire); numeric channels are not red/green discovery colors.
 Enrollment needs a placed computer's same-color physical path, direct or through
 supported relays. Standalone components and hidden radio links do not qualify.
-Stopped/unpowered computers remain physical roots; placement alone does not enroll.
+Stopped/faulted computers remain physical roots; placement alone does not enroll.
 Shared radio guidance: all methods except getLimits require an active, electrically
 supplied radar. Discovery wire and numeric radio channel are independent.
 Channels 0..65535; 128 shared open channels per physical radar, across all callers.
@@ -310,8 +318,10 @@ Shared signal guidance:
 input explicitly selects red or green, never both; identities include type/name/quality (normal by default).
 signal_changed includes sample_tick, previous/current, changes with disappeared
 current=0, selected connectivity, initial/resync and discovery wire.
-Admission advances the baseline. Outages discard queued transients and resync current
-input. Stop/fault/cable loss clears only the still-owned run/channel bank.
+Admission advances the baseline. Each subscribed input/color is observed every tick;
+unsubscribed computers create no signal polling. Electrical cycling has no effect.
+Physical recovery may resync current input. Stop/fault/cable loss clears only the
+still-owned run/channel bank.
 The in-game Stock-controlled inserter tutorial includes stock INPUT, inserter OUTPUT,
 red NETWORK wiring, runnable source, execution steps and expected behavior.
 
@@ -355,7 +365,7 @@ unsubscribe(subscription_id) -> boolean. Removes this run/binding's registration
 and its queued samples; false when absent, not authority to remove another binding.
 
 
-getLimits() -> copied common/logic ceilings, including while reachable unpowered.
+getLimits() -> copied common/logic ceilings. All logic methods need no electricity.
 Includes registration limits and one-tick sampling; no slot/filter/device/bank cap.
 
 KV DATABASE
@@ -414,19 +424,20 @@ second (half up). Zero can still be live; deadline expiry is logically immediate
 persist(key) -> integer 0 or 1. Returns 1 only when removing a live existing deadline.
 
 
-getLimits() -> copied common/KV capacities, including while reachable unpowered.
+getLimits() -> copied common/KV capacities. All database methods need no electricity.
 Byte, field, key, argument and snapshot limits all apply; no external Redis connection.
 
 MONITOR
 Shared display guidance: one byte per cell, no terminal escape/Unicode processing.
-Adjacent same-force/orientation powered tiles share a rectangular screen.
+Adjacent same-force/orientation tiles share a rectangular screen without electricity.
 Every complete shape up to 6x6 is supported, including 1x6 and 3x6.
 Methods update the model immediately. Fixed snapshots prepare invisibly after
 callbacks; the previous complete image remains until the replacement publishes.
 Selected groups wait for every member's successful mutation (including no-ops).
 They publish together, without flush or a timeout that splits a frame. Buffering
 does not infer completion of an application drawing over multiple callbacks.
-Resize clears changed dimensions. Stop leaves the image; outage hides, not erases.
+Resize clears changed dimensions. Stop leaves the image; electricity does not affect it.
+Touch/resize registration owns notification interest; settled displays need no event polling.
 Ctrl+left-click (rebindable), empty cursor/no GUI: monitor_touch carries logical
 peripheral, x/y, player_index, sample_tick, wire and deduplicated sorted wires.
 monitor_resize includes old_width/height, width/height and tiles/scale reason.
@@ -518,13 +529,13 @@ setTextScale(scale) -> no values. Half-steps 0.5..5; recalculates terminal geome
 Changed dimensions clear the image and report resize; it is not a pixel font size.
 
 
-getLimits() -> copied common/monitor capacities, including while reachable unpowered.
+getLimits() -> copied common/monitor capacities. Displays need no electricity.
 Query actual cell, write, tile and rendering bounds; maxima need not combine.
 
 RECIPE SEARCHER
 find("recipe_searcher", wire) -> facade. Separate Recipe Searcher research.
 Shared query guidance: no inventory, physical product input, crafting execution or
-recipe browser GUI. Reachable unpowered devices allow limits/discovery/relay only.
+recipe browser GUI. All methods need no electricity and still reprove live authority.
 The in-game Find iron plate recipes tutorial includes research, wiring and runnable code.
 
 findRecipes("item"/"fluid", exact_product_name, exact_category?) -> one complete array.
@@ -535,7 +546,7 @@ Records include ingredients/products, ranges/probabilities, energy in seconds,
 categories, visibility, surface bounds and current force enabled state (not feasibility).
 
 
-getLimits() -> copied common/recipe-searcher limits, including while unpowered.
+getLimits() -> copied common/recipe-searcher limits, without electrical requirements.
 recipe_search_results=50; common work/result/allocation limits still apply.
 
 DASHBOARD
@@ -564,7 +575,7 @@ never Console. Each registration receives one scheduled dashboard_click, includi
 intentional registrations on both colors; the last writer has no special role.
 Fields: peripheral, wire, subscription_id, tab, button, player_index and activation
 tick, plus normal BaseEvent fields. No guest callback runs in the GUI handler.
-Exact control/session/player authority, wire path and power are rechecked at dispatch.
+Exact control/session/player authority and wire path are rechecked at dispatch.
 
 unsubscribe(subscription_id) -> one boolean. Exact run/dashboard/wire binding;
 also retires matching pending clicks. Stop/replacement retires subscriptions.
@@ -579,7 +590,7 @@ dense array of nonnegative finite duration maps in seconds. No numeric/category 
 clearChart(slot, id) -> no values. Optional factorio-charts only; clears data, not
 configuration or a line's reserved rolling capacity.
 
-getLimits() -> one defensive effective map, even when reachable unpowered.
+getLimits() -> one defensive effective map. Dashboard methods need no electricity.
 dashboard_tabs=6; dashboard_state_bytes equals existing state_bytes. With charts:
 chart_line_series and chart_bar_entries reflect unmodified upstream support.
 Line nodes define dense series names, capacity and format number/percent/time.
@@ -597,7 +608,7 @@ See Examples for complete control and optional line/duration programs.
 PRODUCTION STATISTICS
 find("production_statistics", wire) -> read-only local statistics facade. Research
 Recipe Searcher, craft from 8 iron, 5 electronic circuits and 2 advanced circuits
-(2 seconds), supply 30 kW and wire Network on red or green. Normal opening shows
+(2 seconds), then wire Network on red or green; no electricity is needed. Normal opening shows
 identity/status only; no queries run in the inspector. Item/fluid use this device's
 force and surface; pollution is surface-wide emissions/absorption, not concentration.
 
@@ -616,8 +627,8 @@ dense arrays of 300 native per-minute samples. Index 1 is newest, 300 oldest.
 Item quality defaults normal; other categories reject non-nil quality. Use exact
 installed identities; pollution also accepts recorded native source/sink keys.
 
-getLimits() -> defensive effective common limits, even when reachable unpowered.
-All statistical methods require power. Existing work/allocation and Data protections
+getLimits() -> defensive effective common limits, without electrical requirements.
+All statistical methods need no electricity. Existing work/allocation and Data protections
 apply to the entire result: E_LIMIT refuses, never truncates or creates a query job.
 Unknown identities/windows raise E_RANGE, bad arguments E_ARGUMENT, native failures
 E_ENGINE, nonfinite native data E_UNSUPPORTED. E_BUDGET remains fatal, not catchable.
@@ -628,7 +639,7 @@ plots both directions oldest-left without reversing the API arrays.
 FACTORIOPEDIA INTERFACE
 find("factoriopedia_interface", wire) -> read-only catalogue facade. Research Recipe
 Searcher; craft from 10 steel, 5 advanced circuits and 2 processing units (2 seconds).
-Supply 30 kW and wire its 1x1 Network body on red or green. Normal opening shows
+Wire its 1x1 Network body on red or green; no electricity is needed. Normal opening shows
 identity/status only. Native Factoriopedia stays unchanged; no inventory is needed.
 
 getItem(exact_name) -> detached Item record. Stack size/stackable, native weight,
@@ -649,8 +660,8 @@ never substitute identity. Existing Data limits (including 1024 entries) can ref
 a complete list with E_LIMIT; no prefix, pagination or cache. Exact lookups remain
 independent of unrelated catalogue growth. E_BUDGET remains fatal, not catchable.
 
-getLimits() -> copied common limits, including while unpowered. Other methods
-require power and current bound same-force/surface, explicit-color authority.
+getLimits() -> copied common limits, without electrical requirements. All methods
+require current bound same-force/surface, explicit-color authority, not electricity.
 Dot calls only; extra nil, wrong type/empty names raise E_ARGUMENT; unknown exact
 names raise E_RANGE. Unsupported finite representation raises E_UNSUPPORTED.
 Records share type/name/prototype_type/group/subgroup/order, visibility flags and
@@ -704,7 +715,7 @@ removeSection(id, index, target_wire) -> boolean, false if absent, true after ve
 removal. Nonmanual sections refuse. Native 1-based indexes can shift afterward.
 
 
-getLimits() -> copied common/configurator capacities, including reachable unpowered.
+getLimits() -> copied common/configurator capacities. All methods need no electricity.
 Target graph, patch, section, filter and result budgets apply independently.
 
 COMBINED EXAMPLE
@@ -719,7 +730,7 @@ are supplementary; they are not required to complete these in-game tutorials.
 FAILURES AND PERSISTENCE
 Ordinary errors are plain {code,message,field?,peripheral?,device?} and catchable.
 Earlier successful effects remain after a later fault; no callback transaction.
-Unpowered computers pause; state/source survive. Cold load does not replay start.
+Custom computers need no electricity; cold load does not replay start.
 Saved and active sources may differ. Functions are reconstructed only on dispatch.
 Quotas are initial development ceilings, not a guaranteed real-time latency bound.
 Full capability method guides ship in docs/ with the installed mod.
@@ -750,10 +761,10 @@ for line in string.gmatch(M.text..'\n','([^\n]*)\n') do
 end
 local tutorials=require('scripts.ui.tutorials')
 tutorials.starter={title='Starter controller',purpose='Sample immediately, then retain a counter once per 60 simulation ticks. No peripheral is needed.',
-  setup='Research Native circuit computers (tc-circuit-computers), craft one computer and supply electricity with a powered pole in range. No wire, second computer or external file is needed.',
+  setup='Research Native circuit computers (tc-circuit-computers) and craft one computer. No electricity, wire, second computer or external file is needed.',
   steps='Clear the cursor and Ctrl+left-click the computer. Select and copy this entire code box with native controls, paste into an empty Editor draft, then Validate, Save and Run. The Editor starter control is an optional way to insert the same source; Reference has no action buttons.',
   expected='Console prints Initial sample count: 1 on a fresh computer. The retained samples state is 1 immediately and increases to 2 at the first 60-tick timer. Reapplying retains the previous count; cold load does not replay start.',
-  failures='Unpowered computers pause. Save alone does not activate a revision. Saved program functions cannot be called from Console. Stop cancels the timer without clearing the count. Maintenance Reset State requires Stop and separate confirmation.',
+  failures='Save alone does not activate a revision. Saved program functions cannot be called from Console. Stop cancels the timer without clearing the count. Maintenance Reset State requires Stop and separate confirmation.',
   source='function-program',code=M.template}
 M.tutorials=tutorials
 local function block(topic,kind,text)
@@ -773,7 +784,7 @@ local subheadings={
   ['print(...)']='Printing', ['rawget(t,key)']='Raw table helpers',
   ['xpcall(fn,handler,...)']='Errors and protected calls', ['New global names']='Reserved names and upgrades',
   ['General events:']='Events', ['Timer event:']='Timer delivery', ['Data:']='Persistent Data',
-  ['Ordinary errors']='Errors and partial effects', ['Unpowered computers']='Power and cold load',
+  ['Ordinary errors']='Errors and partial effects', ['Custom computers']='Electricity and cold load',
   ['Quotas are']='Resource limits'
 }
 -- Signatures stay isolated rather than relying on representation-specific blank

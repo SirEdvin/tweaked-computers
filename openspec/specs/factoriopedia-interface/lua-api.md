@@ -16,7 +16,7 @@ Use dot calls. The closed method inventory is:
 | `listFluids()` | None | One dense array of fluid-name strings |
 | `getLimits()` | None | One detached map of current common limits |
 
-The four agreed feature methods are accompanied by the existing common `getLimits()` convention. No optional quality, filter, page, cursor, bulk-detail, recipe or entity argument is accepted. Passing an explicit extra nil still changes arity. The underlying same-force/surface, explicit-color, identity and power checks remain mandatory.
+The four agreed feature methods are accompanied by the existing common `getLimits()` convention. No optional quality, filter, page, cursor, bulk-detail, recipe or entity argument is accepted. Passing an explicit extra nil still changes arity. The underlying same-force/surface, explicit-color, identity and physical-availability checks remain mandatory.
 
 ## Names and catalogue scope
 
@@ -24,7 +24,7 @@ The four agreed feature methods are accompanied by the existing common `getLimit
 - `getItem` and `listItems` use the item namespace, including native item subtypes such as ammo or tools. `getFluid` and `listFluids` use only the fluid namespace. Equal names in different namespaces remain independent.
 - All installed entries participate, including hidden, Factoriopedia-hidden, blueprint-parameter and modded entries. This is structured source metadata, not a promise to mirror Factoriopedia's visible page list.
 - A Factoriopedia alternative is reported by name when present; it is never followed to replace the requested record.
-- Research, recipe enabled state and the computer's planet/surface do not filter results. Availability to query the peripheral is still subject to ordinary network and power authority.
+- Research, recipe enabled state and the computer's planet/surface do not filter results. Availability to query the peripheral is still subject to ordinary network and physical authority; the custom interface needs no electricity.
 - Name lists are unique, complete, bytewise name-sorted arrays, possibly empty. They contain no detail records. Returned order is not localized alphabetical order or prototype `order`.
 
 ## Common record fields
@@ -117,9 +117,9 @@ There is no pagination, truncation, cache, persisted index or asynchronous job. 
 
 Work, allocation, error handling, shared scheduling and already-spent tick credits retain their existing behavior. In particular, `E_BUDGET` is fatal and not made catchable by this provider. The circuit-only large-native-array exception is not generalized to catalogue lists by this change.
 
-## Authority, power and persistence
+## Authority, availability and persistence
 
-All methods, including `getLimits`, recheck current same-force/surface, explicit-color path and bound generation. `getLimits` is the only power-exempt method. Reachable unpowered interfaces remain discoverable and passive network relays; the four catalogue methods raise `E_UNPOWERED`.
+All methods, including `getLimits`, recheck current same-force/surface, explicit-color path and bound generation. All methods retain non-power physical authority checks. The custom interface needs no electricity or electrical helper; no catalogue method raises electrical `E_UNPOWERED`.
 
 Queries have no world effects and require no persistent per-device catalogue state. New calls read the installed prototypes; already returned snapshots do not update themselves. Storing a snapshot through computer state remains subject to that independent storage allowance. Store name/wire for later rediscovery rather than treating an ephemeral facade as plain Data; retained Console symbolic bindings still revalidate live authority.
 
@@ -135,23 +135,23 @@ Ordinary errors use the existing plain `{code, message, field?, peripheral?, dev
 | Unknown exact item/fluid name | `E_RANGE`, `field="name"` |
 | Arguments or complete result exceed an existing Data/string allowance | `E_LIMIT`; never a successful prefix |
 | Nonfinite/unrepresentable metadata or unsupported required native representation | `E_UNSUPPORTED` |
-| Active catalogue call without power | `E_UNPOWERED` |
+| Physically unavailable interface | `E_UNREACHABLE` |
 | Bound peripheral removed, replaced or no longer reachable in its scope | `E_UNREACHABLE` |
 | Network proof pending or over its existing allowance | Existing `E_NETWORK_PENDING` / `E_LIMIT` |
 | Retired or otherwise unauthorized calling computer run | Existing `E_NOT_FOUND` |
 | Native metadata access raises an engine error | `E_ENGINE` |
 | Work or allocation credits exhausted | Fatal `E_BUDGET` |
 
-Input Data admission occurs before provider validation; current authority and power checks precede provider semantic checks. Thus an earlier Data, authority, power or budget failure can take precedence over an invalid name. Fatal budget poison must not be caught and translated to `E_ENGINE` by a native-access wrapper.
+Input Data admission occurs before provider validation; current physical authority checks precede provider semantic checks. Thus an earlier Data, physical authority or budget failure can take precedence over an invalid name. Fatal budget poison must not be caught and translated to `E_ENGINE` by a native-access wrapper.
 
 ## Guest example
 
-This example is source documentation, not an execution receipt. On a fresh base or Space Age game, research Recipe Searcher, connect a powered interface on red, and run:
+This example is source documentation, not an execution receipt. On a fresh base or Space Age game, research Recipe Searcher, connect an electricity-free interface on red, and run:
 
 ```lua
 function start(event)
     local encyclopedia = peripheral.find("factoriopedia_interface", "red")
-    assert(encyclopedia, "Connect a powered Factoriopedia Interface on red")
+    assert(encyclopedia, "Connect a Factoriopedia Interface on red")
 
     local item = encyclopedia.getItem("iron-plate")
     computer.log(item.name .. " stack size=" .. tostring(item.stack_size))

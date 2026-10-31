@@ -20,7 +20,7 @@ table-backed mocks and are not graphical-client evidence.
 | --- | --- |
 | **Editor** | Write your document; Validate, Save, Run / Apply and Stop in one row. See saved/unsaved status and a compact conflict/validation message. |
 | **Console** | Read bounded live output and diagnostics, or try a live single-line Lua command with Enter / Execute. [Shell values and effects](console.md) are shared per computer, independent of the saved program. Follow-off stops automatic scrolling, not arrivals; changed text may clear native selection. |
-| **Peripherals** | Choose **Red** or **Green**. Rows update automatically and show actual API name, type, icon and power. Click a row for details; click that selected row again for its Reference topic, with no double-click timer. Pending/errors remain explicit; observations are not continuous authorization. |
+| **Peripherals** | Choose **Red** or **Green**. Rows update automatically and show actual API name, type, icon and availability. Click a row for details; click that selected row again for its Reference topic, with no double-click timer. Pending/errors remain explicit; observations are not continuous authorization. |
 | **Reference** | Search all Lua v1 guidance and literal code by category/topic. Manually select/copy headings, paragraphs, signatures or complete code boxes. Six self-contained mini-tutorials include setup and expected results. No action buttons, draft edits or execution. |
 | **Maintenance** | Review current/active source, resolve conflicts, review/copy/forget retained drafts, and deliberately reset a stopped computer's state. |
 
@@ -30,6 +30,11 @@ The same source widget stays mounted across tabs, focus toggles, status updates
 and display-size changes. Those actions do not save, run or replace your text.
 Errors may mark Console with **(!)**, but never switch tabs or grab typing focus.
 In focus mode, hover the title status for dirty/action detail.
+
+Only an open, owned workspace receives recurring refresh at the existing
+15-tick cadence. Closing, disconnecting or replacing its exact session retires
+that refresh deadline without deleting retained drafts. A deferred refresh keeps
+its due age; another open viewer can still progress with fitting shared credits.
 
 At an effective display of at least **760 × 480 GUI units** (physical resolution
 divided by GUI scale), the window is clamped to the screen and the Editor action
@@ -130,13 +135,13 @@ first. Program/source/help text is displayed without interpreting rich-text tags
 
 Peripherals distinguishes complete inventory, pending/refused inspection and an
 empty complete inventory. It does not turn deferred work into successful discovery.
-The open tab polls automatically after wiring or power changes. A previously selected device missing from a
+The open tab updates automatically after wiring or availability changes. A previously selected device missing from a
 complete refreshed path is shown as disconnected; if inspection is pending, presence
 is unknown instead. Red and green never silently mix. Use the exact displayed name
 and wire with `peripheral.wrap(name, wire)`; calls recheck live authority.
 
 Clicking a selected row again opens its exact device-type topic in **Reference**,
-even after a delay and even if the device is unpowered. This clears Reference
+even after a delay or a native device's power loss. This clears Reference
 Search, selects the Peripherals category, synchronizes both visible filters and
 reveals the topic from its beginning. Unknown types keep useful details and report
 documentation unavailable instead of opening an unrelated topic. This is static
@@ -151,7 +156,7 @@ name, not row position. A new editor session starts unselected.
 Every Reference topic uses native headings and wrapped paragraphs. Discovery and
 every shipped family (including [radar modems](api/modem.md) and [speakers](api/speaker.md))
 have distinct selectable signatures and result/argument/caveat blocks. Aliases have
-their own entries; overloads stay together. Shared wiring, power, persistence and
+their own entries; overloads stay together. Shared wiring, native electricity, persistence and
 event notes remain separate. There is no raw Markdown or Reference action toolbar.
 
 To copy, click inside the desired paragraph or code box and manually select text
@@ -162,7 +167,7 @@ mounted widgets when switching away/back; ordinary status updates never rebuild 
 
 The Examples category contains Starter controller, One speaker note, Stock-controlled
 inserter, Find iron plate recipes, Small factory dashboard and Two-computer shared
-data. Each provides research, entities, electricity, exact wire roles/colors,
+data. Each provides research, entities, native-target electricity where needed, exact wire roles/colors,
 complete source, Validate/Save/Run steps, expected visible results and failures.
 Shared data includes separate writer/observer programs for two computers and two
 physical databases. These small lessons need no external file; larger programs
@@ -170,7 +175,7 @@ on the [examples page](examples.md) are supplementary. The empty-draft **Starter
 example** invitation remains in Editor, not Reference.
 
 For a fault: read Console's first error, Stop if necessary, repair source/wiring/
-power, Validate, Save and Run. Reset State is a deliberate last step for application
+physical validity, Validate, Save and Run. Reset State is a deliberate last step for application
 data, not a wiring fix or a way to clear a database.
 
 ## Integrated redesign playtest
@@ -198,9 +203,9 @@ mod/world for rollback.
   Try reviewed rebase/reload, cancel reset/forget, then close/reopen a dirty draft.
   Recover the removed computer's draft through another computer's Maintenance;
   check standalone recovery when opening a ninth computer with eight retained slots.
-- On a powered 2×2 monitor, keep text/background/cursor changing; mark one
+- On an electricity-free 2×2 monitor, keep text/background/cursor changing; mark one
   non-anchor tile and confirm the genuine native red X remains visible. Repeat
-  dark/unpowered and rotated. Save/load, cancel, restore power and check retained
+  outside electric coverage and rotated. Save/load, cancel and check retained
   image/palette/cursor and Ctrl+click coordinates. Then allow robot removal and
   check normal splitting with no floating fragments or extra drops.
 - Upgrade a copy of a populated 0.1.1 world; inspect existing role/color wires,

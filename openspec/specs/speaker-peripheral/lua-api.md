@@ -74,6 +74,8 @@ Audio is positional on the speaker's current surface, not force-filtered. The en
 
 ## Availability, identity and native coexistence
 
+Native electrical/operational availability is checked at interaction and playback submission, not by proactive generic-lifecycle power polling. Custom computers need no electricity; this does not change the speaker's native energy settings or replay missed notes.
+
 - `getLimits` works whenever the exact peripheral remains reachable, including when unpowered. Every other method requires live availability, matching existing peripheral conventions.
 - The speaker must retain positive native electrical energy and must not be script-disabled, frozen or marked for deconstruction. A false circuit playback condition alone is not an API outage. Unavailable service reports `E_UNPOWERED`; discovery and same-color relay remain intact.
 - Every call reproves exact identity, force, surface and selected wire. Stale wrappers cannot control replacements; coordinates and labels remain descriptive only.

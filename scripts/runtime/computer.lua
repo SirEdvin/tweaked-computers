@@ -7,6 +7,11 @@ local data = require('scripts.runtime.data')
 local principal = require('scripts.runtime.principal')
 local M = {}
 local providers = {}
+local subscription_lifecycle = {}
+function M.register_subscription_lifecycle(event,fn)
+  assert(type(event)=='string' and type(fn)=='function' and not subscription_lifecycle[event])
+  subscription_lifecycle[event]=fn
+end
 local shell_lifecycle
 function M.register_shell_lifecycle(fn) assert(not shell_lifecycle); shell_lifecycle=fn end
 local general={peripheral_attach=true,peripheral_detach=true,monitor_resize=true,monitor_touch=true,power_restored=true,modem_message=true}
@@ -29,6 +34,8 @@ function M.retire(rec,status,reason)
   local cleaned=registry.cleanup(rec,rec.run_id,reason or status)
   rec.queue={}; rec.queue_bytes=0; rec.timers={}; rec.subscriptions={}
   rec.status=cleaned and status or 'faulted'
+  registry.art_changed(rec)
+  registry.ready_changed(rec); registry.timers_changed(rec)
   if not cleaned then rec.diagnostic=errors.new('E_ENGINE','host teardown failed; cleanup recovery retained') end
   return cleaned
 end
@@ -86,6 +93,7 @@ function M.activate(id,tick,expected_revision)
   rec.run_id=rec.id..'/run-'..string.format('%.0f',rec.run_generation)
   rec.active={source=plan.source,revision=rec.saved_revision,api_version=1,compiler_version=limits.compiler_version,storage_version=limits.storage_version,handlers=plan.handlers}
   rec.status='running'; rec.diagnostic=nil; rec.candidate_diagnostic=nil
+  registry.art_changed(rec)
   if plan.handlers.start then M.enqueue(rec,'start',{name='start'},tick) end
   return rec.run_id
 end
@@ -108,20 +116,29 @@ function M.subscribe(rec,event_name,handler_name,details,spend,circuit)
   elseif details~=nil then copied=data.copy(details,spend) end
   local total=0; for _,c in pairs(root().computers) do total=total+count(c.subscriptions) end
   if count(rec.subscriptions)>=limits.subscriptions or total>=limits.aggregate_subscriptions then errors.raise('E_CAPACITY','subscription capacity reached') end
-  local seq=registry.sequence(); local id=rec.run_id..'/sub-'..string.format('%.0f',seq)
-  rec.subscriptions[id]={id=id,event_name=event_name,handler=handler_name,sequence=seq,details=copied}
+  local seq=root().next_sequence
+  if not errors.integer(seq,1,MAX-1) then errors.raise('E_CAPACITY','identity sequence exhausted') end
+  local id=rec.run_id..'/sub-'..string.format('%.0f',seq)
+  local sub={id=id,event_name=event_name,handler=handler_name,sequence=seq,details=copied}
+  local change=subscription_lifecycle[event_name]
+  if change then change(rec,sub,true,spend) end
+  registry.sequence()
+  rec.subscriptions[id]=sub
   return id
 end
 function M.unsubscribe(rec,id,spend)
   local prefix=rec.run_id..'/sub-'
   if type(id)~='string' or #id>128 or id:sub(1,#prefix)~=prefix then errors.raise('E_ARGUMENT','ID belongs to another computer/run') end
   if spend then spend(#id+1) end
-  local exists=rec.subscriptions[id]~=nil; rec.subscriptions[id]=nil; return exists
+  local sub=rec.subscriptions[id]
+  local change=sub and subscription_lifecycle[sub.event_name]
+  if change then change(rec,sub,false,spend) end
+  rec.subscriptions[id]=nil; return sub~=nil
 end
 function M.prepare_event(rec,name,payload,tick,spend,metadata)
   if rec.status~='running' then return false,'inactive' end
   handler(rec,name)
-  if not rec.powered and payload.name~='timer' and payload.name~='start' then return false,'unpowered' end
+
   local circuit=metadata and metadata.circuit==true
   local envelope=payload
   if circuit then
@@ -157,6 +174,7 @@ function M.publish_event(rec,item,tick)
   item.event.sequence=registry.sequence()
   rec.queue[#rec.queue+1]=item
   rec.queue_bytes=rec.queue_bytes+bytes
+  registry.ready_changed(rec)
   return true
 end
 function M.enqueue(rec,name,payload,tick,spend,metadata)
@@ -167,7 +185,7 @@ end
 function M.emit(id,event_name,payload,tick,spend)
   local rec=registry.computer(id)
   if not general[event_name] then errors.raise('E_ARGUMENT','unsupported general event') end
-  if rec.status~='running' or not rec.powered then return false end
+  if rec.status~='running' or event_name=='power_restored' then return false end
   if spend then spend(#rec.queue+limits.subscriptions^2+limits.subscriptions+1) end
   local subscriptions={}
   for _,sub in pairs(rec.subscriptions) do if sub.event_name==event_name then subscriptions[#subscriptions+1]=sub end end
@@ -179,29 +197,6 @@ function M.emit(id,event_name,payload,tick,spend)
   if spend then spend(#subscriptions*(stats.bytes+stats.nodes*2+#event_name+32)) end
   for _,sub in ipairs(subscriptions) do
     if not M.enqueue(rec,sub.handler,copied,tick,nil) then return false end
-  end
-  return true
-end
-function M.set_power(id,powered,tick,spend)
-  root()
-  local rec=registry.computer(id)
-  if type(powered)~='boolean' then errors.raise('E_ARGUMENT','boolean power state required') end
-  if rec.powered==powered then return false end
-  -- Reserve bounded restoration notification copies before the power change.
-  if spend then spend(#rec.queue+1+(powered and limits.subscriptions*512+limits.subscriptions^2 or 0)) end
-  rec.powered=powered
-  if not powered then
-    rec.outage_start_tick=tick
-    if not registry.cleanup(rec,rec.run_id,'power_loss') then M.retire(rec,'faulted','cleanup_failure') end
-    local retained={}; local bytes=0
-    for _,item in ipairs(rec.queue) do
-      if item.event.name=='timer' or item.event.name=='start' then retained[#retained+1]=item; bytes=bytes+item.bytes end
-    end
-    rec.queue=retained; rec.queue_bytes=bytes
-  else
-    rec.needs_input_resync=true -- Host logic sampling consumes this before dispatch.
-    if rec.status=='running' then M.emit(id,'power_restored',{outage_start_tick=rec.outage_start_tick,restored_tick=tick},tick) end
-    rec.outage_start_tick=nil
   end
   return true
 end
@@ -276,6 +271,7 @@ function M.services(rec,tick,guard,execution)
     end
     local seq=registry.sequence(); local id=rec.run_id..'/timer-'..string.format('%.0f',seq)
     rec.timers[id]={id=id,handler=name,deadline=tick+delay,interval=recurring and delay or nil,payload=copied,payload_bytes=size and size.bytes or 0,sequence=seq}
+    registry.timers_changed(rec)
     return id
   end
   method('after',2,3,function(delay,name,payload) return timer(delay,name,payload,false) end)
@@ -287,7 +283,9 @@ function M.services(rec,tick,guard,execution)
     for _,item in ipairs(rec.queue) do
       if item.timer_id==id then exists=true else retained[#retained+1]=item; bytes=bytes+item.bytes end
     end
-    rec.queue=retained; rec.queue_bytes=bytes; return exists
+    rec.queue=retained; rec.queue_bytes=bytes
+    registry.ready_changed(rec); registry.timers_changed(rec)
+    return exists
   end)
   local map={computer=api,peripheral={}}
   local names={}; for name in pairs(providers) do names[#names+1]=name end; table.sort(names)

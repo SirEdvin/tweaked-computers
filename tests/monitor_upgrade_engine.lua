@@ -26,12 +26,17 @@ function resized(e)
 end]]
 local function build(kind,x,y)
  local body=assert(game.surfaces[1].create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
- local r=assert(lifecycle.build(body)); lifecycle.power_entity(r).energy=100000; r.powered=true; return r
+ local r=assert(lifecycle.build(body))
+ if not lifecycle.power_entity then assert(not r.children.power and lifecycle.available(r)) end
+ return r
 end
 local function wire(a,b) assert(lifecycle.connector(a,'network','red').connect_to(lifecycle.connector(b,'network','red'))) end
 local function fuel()
  for _,id in ipairs(registry.get().order) do local r=registry.record(id)
-  if r and r.body.valid then lifecycle.power_entity(r).energy=100000; r.powered=true end
+  if r and r.body.valid then
+   if lifecycle.power_entity then lifecycle.power_entity(r).energy=100000; r.powered=true
+   else assert(not r.children.power and lifecycle.available(r)) end
+  end
  end
 end
 local function maintenance_run()
@@ -151,7 +156,8 @@ function M.on_load()
   assert(root.scheduler.maintenance_spent==x.progress.spent and root.scheduler.render_reserved_work==x.progress.reserved)
  end
  if x.saved then
-  local c=registry.computer(x.computer); local g=monitor.resolve(registry.record(x.unaffected))
+  local c=registry.computer(x.computer); local monitors=registry.get().monitors
+  local g=monitors.groups[monitors.membership[x.unaffected]] -- Retained aliases precede notification migration.
   local _,stats=data.copy(c.state,nop); assert(c.state_nodes==stats.nodes,'retained state node accounting mismatch')
   assert(c.run_id==(x.candidate_run or x.saved.run_id) and c.state.boots==(x.boots or 1))
   assert(g.id==x.saved.id and g.model==x.saved.model and g.model.cells==x.saved.cells)
@@ -176,7 +182,7 @@ function M.on_configuration_changed(event)
  -- not running-source continuity from the pre-declaration release.
  local c=registry.computer(x.computer)
  assert(c.status=='stopped' and not c.active and not c.run_id and c.state.boots==1)
- fuel(); lifecycle.sample_power(c,game.tick,nop)
+ fuel(); assert(lifecycle.available(c) and not c.children.power)
  local run,reason=runtime.activate(c.id,game.tick); assert(run,serpent.line(reason)); x.candidate_run=run
  local dispatched,dispatch_error=scheduler.dispatch(c,game.tick); assert(dispatched,serpent.line(dispatch_error or c.diagnostic))
  -- Establish a paid observation before regrouping, not a fabricated old run.

@@ -7,6 +7,7 @@ local errors = require('scripts.runtime.errors')
 local admission = require('scripts.runtime.admission')
 local budgets = require('scripts.runtime.budget-settings')
 local shell = require('scripts.runtime.shell')
+local principal = require('scripts.runtime.principal')
 local M = {}
 local hooks={lifecycle={},sample={},notifications={},render={}}
 local refusal={} -- Host-only ephemeral maintenance deferral identity.
@@ -85,16 +86,25 @@ function M.try_maintenance(fn)
   if not ok and result~=refusal then error(result,0) end
   return ok,result
 end
+local function work(root,fn)
+  local ok,result=pcall(fn)
+  if not ok and result~=refusal then
+    if type(result)=='table' and result.code=='E_UNSUPPORTED' then root.scheduling_diagnostic=result
+    else error(result,0) end
+  end
+  return ok,result
+end
 local function phase(name,tick,spend)
   local names={}; for key in pairs(hooks[name]) do names[#names+1]=key end; table.sort(names)
   for _,key in ipairs(names) do
     -- Samplers own admission and must run their fail-closed refusal path even
     -- when previous phases spent the maintenance ledger. No silent missed tick.
     M.try_maintenance(function() if name~='sample' then spend(1) end; hooks[name][key](tick,spend) end)
+    if registry.get().scheduling_diagnostic then return end
   end
 end
 function M.advance_timers(rec,tick,spend)
-  if rec.status~='running' or not rec.powered then return end
+  if rec.status~='running' or not principal.available(rec) then return end
   spend(limits.timers*limits.timers+#rec.queue+1)
   local due={}
   for _,timer in pairs(rec.timers) do if timer.deadline<=tick then due[#due+1]=timer end end
@@ -118,12 +128,11 @@ function M.advance_timers(rec,tick,spend)
     end
     if timer.interval then timer.deadline=deadline else rec.timers[timer.id]=nil end
   end
+  registry.timers_changed(rec)
 end
 local function dispatch_program(rec,tick)
-  if rec.status~='running' or not rec.powered or #rec.queue==0 or rec.last_dispatch_tick==tick then return false end
-  -- Physical sampling can defer under maintenance pressure. Never dispatch from
-  -- an old positive power observation; standalone runtime fixtures have no tag.
-  if rec.physical_version and (rec.physical_error or rec.power_checked_tick~=tick) then return false end
+  if rec.status~='running' or #rec.queue==0 or rec.last_dispatch_tick==tick then return false end
+  if not principal.available(rec) then return false end
   if not runtime.check_active(rec) then
     runtime.fault(rec,errors.new('E_UNSUPPORTED','unsupported retained computer/source header; source/state retained'),tick)
     return false
@@ -153,6 +162,7 @@ local function dispatch_program(rec,tick)
     if not admitted then return false end
     if not valid then
       table.remove(rec.queue,1); rec.queue_bytes=rec.queue_bytes-item.bytes
+      registry.ready_changed(rec)
       rec.last_dispatch_tick=tick; return true
     end
   end
@@ -162,6 +172,7 @@ local function dispatch_program(rec,tick)
   end
   rec.last_dispatch_tick=tick
   table.remove(rec.queue,1); rec.queue_bytes=rec.queue_bytes-item.bytes
+  registry.ready_changed(rec)
   if item.event.name~='dashboard_click' then item.event.tick=tick end
   local ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,function(guard) return runtime.services(rec,tick,guard) end,ctx,item.circuit==true)
   if not ok then
@@ -171,9 +182,9 @@ local function dispatch_program(rec,tick)
   return true
 end
 function M.dispatch(rec,tick)
-  if not rec.powered or rec.last_dispatch_tick==tick then return false end
+  if rec.last_dispatch_tick==tick then return false end
   if not rec.body.valid then return dispatch_program(rec,tick) end
-  if rec.physical_version and (rec.physical_error or rec.power_checked_tick~=tick) then return false end
+  if not principal.available(rec) then return false end
   local root=registry.get()
   local maximum=math.min(limits.compile_work+limits.callback_work+limits.callback_allocations,
     admission.guest_ceiling(root.ledger,tick))
@@ -190,9 +201,37 @@ function M.dispatch(rec,tick)
   if dispatched then rec.next_work_class='shell' end
   return dispatched
 end
+function M.viewer_tick(kind,tick,spend,refresh)
+  if tick%15~=0 then return end
+  local root=registry.get(); local valid,item=pcall(registry.maintenance_next,kind)
+  if not valid then root.scheduling_diagnostic=item; return end
+  if not item or item.tick>tick then return end
+  local pending={}; local clock=registry.maintenance_clock(kind)
+  if clock.initialized~=1 then root.scheduling_diagnostic=errors.new('E_UNSUPPORTED','unsupported viewer deadlines; session retained'); return end
+  for _=1,#clock.deadlines do
+    item=registry.maintenance_next(kind); if not item or item.tick>tick then break end
+    local size,work=#clock.deadlines,16
+    while size>0 do work=work+16; size=math.floor(size/2) end
+    if not M.try_maintenance(function() spend(work) end) then break end
+    registry.maintenance_remove(kind,item.id)
+    local ok,admitted,keep=pcall(M.try_maintenance,function() return refresh(tonumber(item.id),item.owner,tick,spend) end)
+    if not ok or not admitted or keep=='pending' then pending[#pending+1]=item
+    elseif keep then registry.maintenance_set(kind,item.id,item.owner,tick-tick%15+15) end
+    if not ok then
+      for _,entry in ipairs(pending) do registry.maintenance_set(kind,entry.id,entry.owner,entry.tick) end
+      error(admitted,0)
+    end
+  end
+  for _,entry in ipairs(pending) do registry.maintenance_set(kind,entry.id,entry.owner,entry.tick) end
+end
 function M.tick(tick)
   local root=registry.get()
   if not registry.supported(root) then return end -- Unknown storage stays inert.
+  if not registry.scheduling_supported(root) then
+    root.scheduling_diagnostic=errors.new('E_UNSUPPORTED','unsupported scheduling membership; source/queues/timers/credits retained')
+    return
+  end
+  if root.scheduling_diagnostic then return end
   local ledger=root.ledger
   if type(ledger)~='table' or ledger.version~=1 or not errors.integer(ledger.total,0,1000000000)
     or not errors.integer(ledger.tick,-1,9007199254740991) or tick<ledger.tick
@@ -207,44 +246,51 @@ function M.tick(tick)
   end
   local spend=M.maintenance(root,tick)
   if root.scheduler.last_tick==tick then return end -- No same-tick replay/credit refresh.
-  -- Pay both bounded identity walks before hooks can exhaust maintenance. This
-  -- also covers inactive records and refusals later in the timer walk.
-  if not M.try_maintenance(function() spend(limits.registry_entries*2+1) end) then
-    -- A live decrease can leave even the entry walk inadmissible. Samplers
-    -- must still run their existing fail-closed refusal path, never miss a tick.
-    phase('sample',tick,spend)
-    return
-  end
   root.scheduler.last_tick=tick
   phase('lifecycle',tick,spend)
+  if root.scheduling_diagnostic then return end
   phase('sample',tick,spend)
+  if root.scheduling_diagnostic then return end
   phase('notifications',tick,spend)
-  -- Advance clocks before callback dispatch; the cursor also rotates maintenance
-  -- scanning so a large earlier timer set cannot starve later identities.
-  local n=#root.order
-  if n==0 then phase('render',tick,M.maintenance(root,tick,true)); return end
-  local start=math.min(root.scheduler.cursor,n)
-  local maintenance_start=math.min(root.scheduler.maintenance_cursor or 1,n)
-  local admitted=false
-  for offset=0,n-1 do
-    local i=(maintenance_start+offset-1)%n+1
-    local rec=root.computers[root.order[i]]
-    M.try_maintenance(function()
-      if rec and rec.status=='running' then
-        if not runtime.check_active(rec) then runtime.fault(rec,errors.new('E_UNSUPPORTED','unsupported retained computer/source header; source/state retained'),tick)
-        else M.advance_timers(rec,tick,spend) end
-      end
-    end)
-  end
-  root.scheduler.maintenance_cursor=maintenance_start%n+1
-  for offset=0,n-1 do
-    local i=(start+offset-1)%n+1
-    local rec=root.computers[root.order[i]]
-    if rec and M.dispatch(rec,tick) then
-      root.scheduler.cursor=i%n+1; admitted=true
+  if root.scheduling_diagnostic then return end
+  local s=root.scheduler
+  local due={}
+  while true do
+    local valid,item=work(root,registry.next_timer)
+    if not valid or not item or item.tick>tick then break end
+    if not work(root,function() spend(1); registry.timer_remove(item.id) end) then break end
+    local rec=root.computers[item.id]
+    if rec and rec.generation==item.generation and rec.run_id==item.run_id then
+      M.try_maintenance(function()
+        if rec.status=='running' then
+          if not runtime.check_active(rec) then runtime.fault(rec,errors.new('E_UNSUPPORTED','unsupported retained computer/source header; source/state retained'),tick)
+          else M.advance_timers(rec,tick,spend) end
+        end
+      end)
+      -- Reinsert after this pass: a refused due owner cannot block its peers.
+      registry.timer_remove(rec.id)
+      due[#due+1]=rec
     end
   end
-  if not admitted then root.scheduler.cursor=start%n+1 end
+  if root.scheduling_diagnostic then return end
+  for _,rec in ipairs(due) do registry.timers_changed(rec) end
+  -- Freeze identities before callbacks can publish new work or retire neighbors.
+  local admitted,round=work(root,function()
+    return registry.ready_round(function(n) return M.try_maintenance(function() spend(n) end) end)
+  end)
+  if admitted then
+    for _,item in ipairs(round) do
+      local rec=root.computers[item.id]
+      if s.ready[item.id]==item and rec and rec.generation==item.generation
+        and rec.run_id==item.run_id and (rec.shell and rec.shell.id)==item.shell_id then
+        M.dispatch(rec,tick)
+        registry.ready_changed(rec)
+      elseif s.ready[item.id]==item then
+        registry.retire_ready(item)
+        if rec then registry.ready_changed(rec) end
+      end
+    end
+  end
   phase('render',tick,M.maintenance(root,tick,true))
 end
 return M

@@ -98,9 +98,9 @@ function M.methods.transmit(c,r,w,t,spend,...)
   local candidates={}; local count=0
   local computers={}
   for _,rec in pairs(root.computers) do
-    if rec.status=='running' and rec.powered and rec.force_index==r.force_index
+    if rec.status=='running' and rec.force_index==r.force_index
       and (rec.surface_index==r.surface_index or r.modem_tier=='interplanetary' and script.active_mods['space-age'])
-      and lifecycle.has_power(rec) then
+      and lifecycle.available(rec) then
       for _,sub in pairs(rec.subscriptions) do
         spend(4)
         if sub.event_name=='modem_message' then computers[#computers+1]=rec; break end

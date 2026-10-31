@@ -1,7 +1,7 @@
 -- Complete guest document. Native maps may be empty; refusal is not zero data.
 return [[function start()
   local stats=peripheral.find("production_statistics","red")
-  assert(stats,"Connect a powered Production Statistics device on red")
+  assert(stats,"Connect a Production Statistics device on red")
   local function report()
     for _,kind in ipairs({"item","fluid","pollution"}) do
       local totals=stats.getTotals(kind)

@@ -10,6 +10,8 @@ local lifecycle=require('scripts.lifecycle')
 local limits=require('scripts.runtime.limits')
 local players=require('tests.editor_contract')
 local editor=require('scripts.ui.editor')
+local peripheral=require('scripts.services.peripheral')
+local network=require('scripts.network')
 local M={}
 local state
 local function counts(c,second) return c.state.clicks or 0,second.state.clicks or 0 end
@@ -36,6 +38,40 @@ function M.tick(c,second,third,panel,guest,tick)
         computer.setState('red',r.subscribe('clicked')); computer.setState('green',g.subscribe('clicked'))
         local ok,e=pcall(computer.on,'dashboard_click','clicked'); assert(not ok and e.code=='E_ARGUMENT')]])
       guest(second,[[computer.setState('red',peripheral.find('dashboard','red').subscribe('clicked'))]])
+      peripheral.reconcile_one(c,'green',tick,function() end)
+      local native=assert(real_game.surfaces[1].create_entity{name='radar',position={9,0},force='player'})
+      assert(lifecycle.connector(panel,'network','green').connect_to(native.get_wire_connector(defines.wire_connector_id.circuit_green,true)))
+      peripheral.reconcile_one(c,'green',tick,function() end)
+      assert(c.network_views.green.diagnostic.code=='E_NETWORK_PENDING' and c.subscriptions[c.state.green],
+        'incomplete native discovery retired a connected dashboard registration')
+      network.adopt_tick(tick,function() end)
+      local adopted=assert(registry.by_entity(native))
+      peripheral.reconcile_one(c,'green',tick,function() end)
+      assert(c.subscriptions[c.state.green] and not c.network_views.green.diagnostic)
+      assert(registry.remove(adopted.id,'fixture-native-adoption')); native.destroy()
+      guest(third,[[peripheral.find('dashboard','green').subscribe('clicked')]])
+      assert(registry.get().topology_interests.computers[third.id])
+      local prior=registry.get().topology_interests; local order={}
+      for _,item in ipairs(prior.order) do if item.owner.computer~=third then order[#order+1]=item end end
+      prior.order=order; prior.computers[third.id]=nil; prior.cursor=1; prior.version=1
+      local owner=prior.computers[c.id]; local views=c.network_views; local ledger=registry.get().ledger
+      local credits,sequence=ledger.total,registry.get().next_sequence
+      registry.initialize()
+      assert(registry.get().topology_interests==prior and prior.order==order and prior.version==2 and prior.computers[third.id],
+        'version-one index migration omitted dashboard-only demand or replaced retained membership')
+      assert(prior.computers[c.id]==owner and c.network_views==views and registry.get().ledger==ledger
+        and ledger.total==credits and registry.get().next_sequence==sequence,'index migration changed accepted state/credits')
+      local diagnostic=registry.get().scheduling_diagnostic
+      prior.version=1; prior.order=false
+      local initialized,result=pcall(registry.initialize)
+      assert(initialized and result==registry.get() and prior.version==1 and prior.order==false
+        and registry.get().scheduling_diagnostic.code=='E_UNSUPPORTED','malformed legacy index crashed or was rewritten during migration')
+      prior.version=2; prior.order=order; registry.get().scheduling_diagnostic=diagnostic
+      lifecycle.connector(third,'network','green').disconnect_all()
+      peripheral.reconcile_one(third,'green',tick,function() end)
+      assert(next(third.subscriptions)==nil and not registry.get().topology_interests.computers[third.id],
+        'detachment before the first topology baseline retained registration or demand')
+      assert(lifecycle.connector(third,'network','green').connect_to(lifecycle.connector(panel,'network','green')))
       assert(activate())
       assert(#c.queue==2 and #second.queue==1 and #third.queue==0)
       assert((c.state.clicks or 0)==0 and (second.state.clicks or 0)==0,'GUI handler dispatched a guest callback')
@@ -55,18 +91,25 @@ function M.tick(c,second,third,panel,guest,tick)
       s.c,s.second=counts(c,second)
       assert(activate())
       for _,rec in ipairs({panel,c}) do
-        local power=lifecycle.power_entity(rec); local energy=power.energy; power.energy=0
-        assert(not service.validate(c,c.queue[1],function() end),'dispatch accepted a native unpowered endpoint')
-        power.energy=energy
+        rec.availability_version=99
+        assert(not service.validate(c,c.queue[1],function() end),'dispatch accepted an unavailable endpoint')
+        rec.availability_version=1
       end
       lifecycle.connector(c,'network','green').disconnect_all()
-      s.phase='path'
+      s.detached=tick; s.phase='path'
     elseif s.phase=='path' then
       if #c.queue>0 or #second.queue>0 then return end
       assert(c.state.clicks==s.c and second.state.clicks==s.second+1,'detached recipient received the queued click')
+      if c.subscriptions[c.state.green] then
+        assert(tick-s.detached<limits.topology_latency_ticks,'dashboard-only registration survived definitive detachment')
+        return
+      end
+      assert(not registry.get().topology_interests.computers[c.id],'last dashboard registration retained topology demand')
       s.second=second.state.clicks
       assert(lifecycle.connector(c,'network','green').connect_to(lifecycle.connector(panel,'network','green')))
-      guest(c,[[local p=peripheral.find('dashboard','green'); p.unsubscribe(computer.getState('green')); computer.setState('green',p.subscribe('clicked'))]])
+      assert(activate() and #c.queue==0,'reconnection revived a retired dashboard registration')
+      s.second=s.second+1 -- The still-authorized second computer receives this click.
+      guest(c,[[local p=peripheral.find('dashboard','green'); assert(not p.unsubscribe(computer.getState('green'))); computer.setState('green',p.subscribe('clicked'))]])
       local body=assert(real_game.surfaces[1].create_entity{name='tc-dashboard-shell',position={9,3},force='player'})
       lifecycle.on_built{entity=body}; local extra=assert(registry.by_entity(body))
       assert(lifecycle.connector(c,'network','red').connect_to(lifecycle.connector(extra,'network','red')))

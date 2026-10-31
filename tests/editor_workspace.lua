@@ -164,9 +164,10 @@ function M.run()
         interaction.on_input{player_index=a.index,input_name='tc-interact',tick=tick}
         assert(not a.opened and not a.gui.screen[editor.frame_name] and not model.session(a.index))
       end
-      local helpers=0
-      for _,child in pairs(rec.children) do refused(child); helpers=helpers+1 end
-      assert(helpers>0,'exercise a real owned computer helper')
+      assert(next(rec.children)==nil,'power-free computer unexpectedly owns a helper')
+      local io=build('logic',39,120); local helpers=0
+      for _,child in pairs(io.children) do refused(child); helpers=helpers+1 end
+      assert(helpers==2,'exercise both owned logic helpers'); assert(lifecycle.remove(io.id,'fixture',true))
       local ghost=assert(surface.create_entity{name='entity-ghost',inner_name=rec.body.name,position={30,120},force='player'})
       refused(ghost); ghost.destroy()
       local removed=build('computer',33,120); local body=removed.body
@@ -320,14 +321,14 @@ function M.run()
     group('workspace-real-wire-color-inventory-powered-and-disconnected-rows',function()
       db.powered=false; tab(f,3)
       local s=model.session(a.index); local p=f.content.peripherals
-      assert(s.inventory.wire=='red' and #s.inventory.items==1 and s.inventory.items[1].name==db.id and not s.inventory.items[1].powered)
+      assert(s.inventory.wire=='red' and #s.inventory.items==1 and s.inventory.items[1].name==db.id and s.inventory.items[1].powered)
       assert(p.rows.device_1.icon.sprite=='item/tc-kv')
-      click(p.rows.device_1.peripheral_1); assert(p.details.text:find(db.id,1,true) and p.details.text:find('Unpowered',1,true))
+      click(p.rows.device_1.peripheral_1); assert(p.details.text:find(db.id,1,true) and p.details.text:find('no electricity required',1,true))
       local row=p.rows.device_1; local details_writes=p.details.text_writes
       tick=tick+15; game.tick=tick; editor.tick(tick-tick%15,function() end)
       assert(p.rows.device_1==row and p.details.text_writes==details_writes and s.peripheral==db.id)
       db.powered=true; editor.refresh(a,nil,tick)
-      assert(p.rows.device_1==row and p.details.text:find('Powered',1,true))
+      assert(p.rows.device_1==row and p.details.text:find('no electricity required',1,true) and p.details.text_writes==details_writes)
       select(p.filter.wire,2)
       assert(s.inventory.wire=='green' and s.inventory.items and #s.inventory.items==1 and s.inventory.items[1].name==monitor_id,serpent.line(s.inventory))
       assert(p.rows.device_1.icon.sprite=='item/tc-monitor')

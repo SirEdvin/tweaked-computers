@@ -9,6 +9,18 @@ local wires=require('scripts.physical-wires')
 local radar=require('scripts.radar')
 local speaker=require('scripts.speaker')
 local M={}
+local function physical_supported(rec)
+  return rec and rec.schema_version==1 and rec.physical_version==1
+    and (rec.layout_version==nil or rec.layout_version==2)
+    and (rec.native_carrier=='speaker' or rec.native_carrier=='radar'
+      or defs.devices[rec.kind] and (rec.availability_version==nil or rec.availability_version==1))
+end
+function M.request_observation(rec,tick)
+  if not physical_supported(rec) or rec.kind=='radar' or rec.physical_error and rec.body.valid or registry.record(rec.id)~=rec then return end
+  local clock=registry.maintenance_clock('physical'); local position=clock.deadline_positions[rec.id]
+  local prior=position and clock.deadlines[position]
+  registry.maintenance_set('physical',rec.id,rec,prior and math.min(tick,prior.tick) or tick)
+end
 -- Material transport is family-specific; computers own data on their entity.
 local item_adapters={}
 local initialize_computer
@@ -68,25 +80,19 @@ function M.endpoint(rec,role)
   if rec.layout_version==2 and role=='network' then return rec.body end
   return rec.children[role]
 end
-function M.power_entity(rec)
-  if rec.layout_version==2 then return rec.children.power end
-  return rec.body
-end
-function M.has_power(rec)
-  if not rec or not rec.body or not rec.body.valid then return false end
+function M.available(rec)
+  if not registry.supported(registry.get()) or not rec or not rec.body or not rec.body.valid then return false end
   if rec.native_carrier=='radar' then return radar.available(rec) end
   if rec.native_carrier=='speaker' then return speaker.available(rec) end
-  local p=M.power_entity(rec)
-  if not p or not p.valid or p.force.index~=rec.force_index or p.surface.index~=rec.surface_index then return false end
-  local at=rec.body.position; local power_at=p==rec.body and at or p.position
-  return power_at.x==at.x and power_at.y==at.y
-    and registry.by_entity(p)==rec and p.energy>=defs.devices[rec.kind].watts/60
+  if not defs.devices[rec.kind] or rec.availability_version~=1 then return false end
+  for _,role in ipairs(defs.devices[rec.kind].roles) do
+    if not M.connector(rec,role,'red') or not M.connector(rec,role,'green') then return false end
+  end
+  return true
 end
-function M.normalize_power(rec)
-  if rec.native_carrier then return end
-  local watts=defs.devices[rec.kind].watts; local p=M.power_entity(rec)
-  p.power_usage=watts/60; p.power_production=0; p.electric_buffer_size=watts/30
-end
+-- Host compatibility name; custom availability is exclusively physical.
+M.has_power=M.available
+require('scripts.runtime.principal').register_availability(M.available)
 local function passive(body)
   body.operable=defs.by_name[body.name]~='computer'
   local cb=body.get_or_create_control_behavior(); cb.enabled=false
@@ -96,46 +102,26 @@ local function passive(body)
   end
 end
 function M.reset_network(rec)
-  if rec.layout_version==2 and rec.body.valid then passive(rec.body) end
+  if rec.layout_version==2 and rec.body.valid then
+    local owner,role=registry.by_entity(rec.body)
+    if owner==rec and role=='body' then passive(rec.body) end
+  end
 end
-local function create_power(body,kind)
-  local p=body.surface.create_entity{name=defs.devices[kind].power_name,position=body.position,
-    direction=body.direction,force=body.force,quality=body.quality,create_build_effect_smoke=false}
-  if not p then errors.raise('E_ENGINE','could not create private power carrier') end
-  protect(p); return p
-end
+
 function M.clear_output(rec)
   local port=rec.children.output
   if port and port.valid then
-    local cb=port.get_or_create_control_behavior()
-    cb.enabled=false
-    for i=cb.sections_count,1,-1 do cb.remove_section(i) end
-  end
-  rec.output_bank=nil; rec.output_owner=nil
-end
--- Downstream logic owns generation-specific writer cleanup. Physical outages of
--- the peripheral itself always clear its bank; never clear unrelated devices here.
-function M.sample_power(rec,tick,spend)
-  if rec.native_carrier=='speaker' then spend(4); rec.powered=speaker.available(rec); rec.power_checked_tick=tick; return end
-  if rec.native_carrier=='radar' then spend(4); rec.powered=radar.available(rec); rec.power_checked_tick=tick; return end
-  local def=defs.devices[rec.kind]
-  local powered=M.has_power(rec)
-  if powered then
-    for _,role in ipairs(def.roles) do
-      -- The red proof checks the complete endpoint ownership/geometry. Nothing
-      -- can move it before the adjacent native green-connector existence read.
-      if not M.connector(rec,role,'red') or not M.endpoint(rec,role).get_wire_connector(defines.wire_connector_id.circuit_green,false) then powered=false end
+    local owner,role=registry.by_entity(port)
+    if owner==rec and role=='output' then
+      local cb=port.get_or_create_control_behavior()
+      cb.enabled=false
+      for i=cb.sections_count,1,-1 do cb.remove_section(i) end
     end
   end
-  if rec.kind=='computer' then runtime.set_power(rec.id,powered,tick,spend)
-  elseif rec.powered~=powered then
-    spend(4)
-    if not powered then M.clear_output(rec) end
-    rec.powered=powered; rec.power_revision=(rec.power_revision or 0)+1
-    if rec.kind=='monitor' then rec.monitor_art_dirty=true; registry.monitor_changed(rec,false) end
-  end
-  rec.power_checked_tick=tick
+  rec.output_bank=nil; rec.output_owner=nil
+  registry.output_changed(rec)
 end
+
 function M.build(body,token)
   if speaker.supports(body) then return speaker.build(body) end
   if radar.supports(body) then return radar.build(body) end
@@ -159,22 +145,20 @@ function M.build(body,token)
       end
     end
     if body.type=='constant-combinator' then
-      passive(body); staged[#staged+1]={role='power',entity=create_power(body,kind)}
+      passive(body)
     end
     rec=registry.register(kind,body)
     for _,child in ipairs(staged) do registry.bind_child(rec.id,child.role,child.entity) end
     rec.physical_version=1; rec.layout_version=body.type=='constant-combinator' and 2 or nil; rec.direction=body.direction
     rec.position={x=body.position.x,y=body.position.y}
-    rec.powered=M.has_power(rec)
-    rec.power_checked_tick=game.tick
-    M.normalize_power(rec)
+    rec.availability_version=1; rec.powered=M.available(rec)
     if kind=='computer' and initialize_computer then initialize_computer(rec)
     elseif item_adapters[kind] then item_adapters[kind].initialize(rec)
     elseif kind=='computer' or kind=='kv' then
       body.minable_flag=false; rec.mining_guard='awaiting-data-bearing-snapshots'
     end
   end)
-  if ok then return rec end
+  if ok then registry.art_changed(rec); return rec end
   if rec and not registry.remove(rec.id,'placement_rollback') then
     rec.physical_error='placement cleanup failed; retained for recovery'
     -- Bind any unbound staged parts so none can become an untracked orphan.
@@ -228,6 +212,7 @@ function M.connector(rec,role,color)
   return port.get_wire_connector(defines.wire_connector_id['circuit_'..color],false)
 end
 function M.rotate(rec,previous_direction)
+  registry.art_changed(rec)
   if rec and rec.native_carrier then return true end
   if not rec or rec.physical_version~=1 or not rec.body.valid then return false end
   local direction=rec.body.direction
@@ -242,11 +227,7 @@ function M.rotate(rec,previous_direction)
         port.direction=direction
       end
     end
-    if rec.layout_version==2 then
-      local p=assert(rec.children.power); assert(p.valid,'power carrier missing')
-      moved[#moved+1]={entity=p,position=p.position,direction=p.direction}
-      assert(p.teleport(rec.body.position,nil,false,false),'power teleport refused'); p.direction=direction
-    end
+
   end)
   if not ok then
     rec.body.direction=previous_direction
@@ -296,11 +277,39 @@ local function consumed(event,body)
 end
 -- A legacy body remains authoritative until every replacement and native wire
 -- has been staged successfully. Never call runtime activation or snapshot import.
+local function upgrade_availability(rec)
+  if rec.physical_version~=1 or rec.layout_version~=2 or not rec.body.valid then return false end
+  if rec.availability_version==nil then
+    local power=rec.children.power
+    local owner,role
+    if power and power.valid then owner,role=registry.by_entity(power) end
+    if power and power.valid and (owner~=rec or role~='power' or power.name~=defs.devices[rec.kind].power_name) then
+      rec.physical_error='legacy electrical helper ownership invalid; data retained for recovery'
+      registry.art_changed(rec)
+      return false
+    end
+    if power then
+      registry.unbind_child(rec.id,'power')
+      if power.valid then power.destroy() end
+    end
+    if rec.kind=='computer' and rec.status=='running' and rec.powered==false then rec.needs_input_resync=true end
+    rec.powered=true; rec.power_checked_tick=nil; rec.outage_start_tick=nil; rec.power_revision=nil
+    rec.availability_version=1
+  elseif rec.availability_version~=1 then
+    rec.physical_error='unsupported availability representation; data retained for recovery'
+    registry.art_changed(rec)
+    return false
+  end
+  M.reset_network(rec)
+  registry.art_changed(rec)
+  return true
+end
 function M.upgrade(rec)
   if rec.native_carrier then return true end
-  if rec.layout_version==2 then return true end
+  if rec.layout_version==2 then return upgrade_availability(rec) end
   local old=rec.body; local children=rec.children; local staged={}; local body
   local ok,e=pcall(function()
+    assert(rec.layout_version==nil,'unsupported legacy physical layout')
     assert(rec.physical_version==1 and not rec.physical_error and old.valid,'legacy physical record unavailable')
     assert(old.name==defs.devices[rec.kind].name and defs.cardinal(old.direction),'unsupported legacy body')
     assert(old.direction==rec.direction and old.position.x==rec.position.x and old.position.y==rec.position.y,'legacy body moved')
@@ -309,15 +318,20 @@ function M.upgrade(rec)
       assert(M.connector(rec,role,'red') and M.connector(rec,role,'green'),'legacy role unavailable')
       snapshots[role]=wires.snapshot(children[role])
     end
+    for role,child in pairs(children) do
+      assert(role=='power' or snapshots[role],'unsupported legacy child role')
+      if child.valid then
+        local owner,bound=registry.by_entity(child)
+        assert(owner==rec and bound==role,'legacy child ownership invalid')
+        if role=='power' then assert(child.name==defs.devices[rec.kind].power_name,'legacy electrical helper prototype invalid') end
+      end
+    end
     body=assert(old.surface.create_entity{name=defs.devices[rec.kind].entity_name,position=old.position,
       direction=old.direction,force=old.force,quality=old.quality,create_build_effect_smoke=false},'shell allocation refused')
     staged[#staged+1]=body; passive(body)
     assert(body.position.x==old.position.x and body.position.y==old.position.y,'shell placement moved')
     body.health=old.health; body.minable_flag=old.minable_flag; body.destructible=old.destructible; body.rotatable=old.rotatable
-    local parts={power=create_power(body,rec.kind)}; staged[#staged+1]=parts.power
-    parts.power.energy=old.energy
-    local watts=defs.devices[rec.kind].watts
-    parts.power.power_usage=watts/60; parts.power.power_production=0; parts.power.electric_buffer_size=watts/30
+    local parts={}
     local remap={}
     for i,role in ipairs(defs.devices[rec.kind].roles) do
       local endpoint=body
@@ -364,7 +378,7 @@ function M.upgrade(rec)
   end
   for _,child in pairs(children) do if child.valid then child.destroy() end end
   old.destroy()
-  return true
+  return upgrade_availability(rec)
 end
 function M.upgrade_existing()
   local root=registry.get(); if not registry.supported(root) then return end
@@ -375,7 +389,9 @@ function M.upgrade_existing()
       local ok,e=M.upgrade(rec)
       if not ok then log('TC physical upgrade '..rec.id..': '..e.message) end
     end
-    if rec and rec.layout_version==2 and rec.body.valid then M.reset_network(rec) end
+    if rec and not rec.native_carrier and rec.physical_version==1 and rec.layout_version==2 and rec.body.valid then
+      upgrade_availability(rec)
+    end
   end
 end
 function M.on_built(event)
@@ -460,7 +476,8 @@ function M.on_cloned(event)
     local rec=M.build(body)
     if rec and source and role=='body' and blueprint_adapter then blueprint_adapter.clone(rec,source) end
   elseif defs.power_kind(body.name) then
-    if not registry.by_entity(body) then body.destroy() end
+    local source,role=registry.by_entity(event.source)
+    if source and role=='power' and not registry.by_entity(body) then body.destroy() end
   elseif defs.port_role(body.name) and blueprint_adapter then
     blueprint_adapter.clone_port(event)
   end
@@ -479,6 +496,7 @@ function M.on_forces_merging(event)
   for _,id in ipairs(root.order) do local rec=registry.record(id)
     if rec and (rec.force_index==event.source.index or rec.force_index==event.destination.index) then
       if rec.kind=='computer' then runtime.retire(rec,'stopped','force_merge') else registry.cleanup(rec,rec.run_id,'force_merge'); M.clear_output(rec) end
+      M.request_observation(rec,game.tick+1)
     end
   end
   for _,rec in pairs(root.devices) do
@@ -489,6 +507,16 @@ function M.on_forces_merging(event)
 end
 function M.on_object_destroyed(event)
   local root=registry.get(); if not registry.supported(root) then return end
+  local binding=event.type==defines.target_type.entity and root.entities[event.useful_id]
+  if binding and binding.destruction_registration==event.registration_number then
+    local rec=registry.record(binding.id)
+    local entity=rec and (binding.role=='body' and rec.body or rec.children[binding.role])
+    if physical_supported(rec) and rec.generation==binding.generation and entity and not entity.valid then
+      if rec.kind=='radar' then M.remove(rec.id,'native_body_lost',false)
+      else M.request_observation(rec,event.tick+1) end
+    end
+    return
+  end
   local id=root.radar_destructions[event.registration_number]
   local rec=id and registry.record(id)
   if rec and rec.kind=='radar' and rec.destruction_registration==event.registration_number and not rec.body.valid then
@@ -509,34 +537,24 @@ function M.unlocks()
     end
   end
 end
-function M.reconcile(tick,spend)
-  local root=registry.get(); local n=#root.order
-  if n==0 then return end
-  local cursor=math.min(root.scheduler.physical_cursor or 1,n)
-  -- One bounded fair pass; individual transitions reserve before mutation.
-  for _=1,n do
-    local id=root.order[cursor]; local rec=registry.record(id)
-    local removed=false
-    local ok=scheduler.try_maintenance(function()
+local function observe(rec,tick,spend)
+    local id=rec.id
       spend(16)
+      if not rec.status_art or not rec.status_art.object.valid then registry.art_changed(rec,tick) end
       if rec and rec.kind=='logic' then rec.logic_sample=nil; rec.output_bank=nil end
       if rec and rec.native_carrier=='speaker' then
-        removed=speaker.reconcile(rec,spend)
+        speaker.reconcile(rec,spend)
       elseif rec and rec.kind=='monitor' and rec.layout_version==2 and not rec.monitor_repair then
-        if rec.monitor_available and not rec.powered then
-          spend(4); rec.powered=true; rec.power_revision=(rec.power_revision or 0)+1
-          rec.monitor_art_dirty=true; registry.monitor_changed(rec,false)
-        end
-        rec.power_checked_tick=tick
+        M.observe_monitor(rec,tick)
       elseif rec and rec.physical_version==1 then
         if not rec.body.valid then
           spend(limits.registry_entries*6)
-          removed=M.remove(id,'body_lost',false)
+          M.remove(id,'body_lost',false)
         elseif not rec.physical_error then
           if rec.body.force.index~=rec.force_index or rec.body.surface.index~=rec.surface_index then
             spend(16)
             if not registry.cleanup(rec,rec.run_id,'authority_changed') then
-              rec.physical_error='authority cleanup failed'; rec.powered=false; return
+              rec.physical_error='authority cleanup failed'; rec.powered=false; registry.art_changed(rec,tick); return
             end
             rec.force_index=rec.body.force.index; rec.surface_index=rec.body.surface.index
             if rec.kind=='computer' then runtime.retire(rec,'stopped','authority_changed') end
@@ -548,6 +566,7 @@ function M.reconcile(tick,spend)
             if not port or not port.valid then
               rec.physical_error='owned port missing; device retained for recovery'
               registry.cleanup(rec,rec.run_id,'physical_failure'); rec.powered=false
+              registry.art_changed(rec,tick)
               if rec.kind=='computer' then runtime.stop(id) end
               return
             end
@@ -556,81 +575,73 @@ function M.reconcile(tick,spend)
           if rec.body.direction~=rec.direction or at.x~=rec.position.x or at.y~=rec.position.y then
             M.rotate(rec,rec.direction)
           end
-          if not rec.physical_error then M.sample_power(rec,tick,spend) end
+          rec.powered=M.available(rec)
           if rec.kind=='monitor' then rec.monitor_repair=nil; registry.monitor_changed(rec,true) end
         end
       end
-    end)
-    if not ok then root.scheduler.physical_cursor=cursor; return end
-    local size=#root.order
-    if size==0 then root.scheduler.physical_cursor=1; return end
-    if not removed then cursor=cursor%size+1 elseif cursor>size then cursor=1 end
-    root.scheduler.physical_cursor=cursor
+end
+function M.reconcile(tick,spend)
+  local root=registry.get(); local valid,item=pcall(registry.maintenance_next,'physical')
+  if not valid then root.scheduling_diagnostic=item; return end
+  if not item or item.tick>tick then return end
+  local clock=registry.maintenance_clock('physical'); local retry={}
+  while item and item.tick<=tick do
+    if not scheduler.try_maintenance(function()
+      local size,work=#clock.deadlines,16
+      while size>0 do work=work+16; size=math.floor(size/2) end
+      spend(work)
+    end) then break end
+    registry.maintenance_remove('physical',item.id)
+    local rec=registry.record(item.id)
+    if rec==item.owner and physical_supported(rec) and rec.generation==item.generation then
+      local ok,admitted=pcall(scheduler.try_maintenance,function() observe(rec,tick,spend) end)
+      if not ok then
+        registry.maintenance_set('physical',rec.id,rec,item.tick)
+        for _,pending in ipairs(retry) do registry.maintenance_set('physical',pending.id,pending.owner,pending.tick) end
+        error(admitted,0)
+      end
+      if not admitted then retry[#retry+1]=item
+      elseif registry.record(rec.id)==rec and not rec.physical_error then
+        M.request_observation(rec,tick+(rec.monitor_repair and 1 or limits.topology_latency_ticks))
+      end
+    elseif rec==item.owner and physical_supported(rec) then M.request_observation(rec,tick+1)
+    end
+    item=registry.maintenance_next('physical')
   end
+  -- Keep refused owners' original due ticks without blocking fitting peers.
+  for _,pending in ipairs(retry) do registry.maintenance_set('physical',pending.id,pending.owner,pending.tick) end
 end
 -- Change detection only: later calls and publication still prove live authority.
 function M.observe_monitor(rec,tick)
-  local body=rec.body; local available=body and body.valid and not rec.physical_error
+  local body=rec.body
   local repair=not body or not body.valid
-  if available then
-    local at=body.position; local direction=body.direction
-    repair=direction~=rec.direction or at.x~=rec.position.x or at.y~=rec.position.y
+  if not repair then
+    local at=body.position
+    repair=body.direction~=rec.direction or at.x~=rec.position.x or at.y~=rec.position.y
       or body.force.index~=rec.force_index or body.surface.index~=rec.surface_index
-    local owner,role=registry.by_entity(body)
-    local power=rec.children.power
-    available=not repair and owner==rec and role=='body' and power and power.valid
-    if available then
-      local pos=power.position; local power_owner,power_role=registry.by_entity(power)
-      available=power_owner==rec and power_role=='power'
-        and power.force.index==rec.force_index and power.surface.index==rec.surface_index
-        and pos.x==at.x and pos.y==at.y and power.energy>=defs.devices.monitor.watts/60
-        and body.get_wire_connector(defines.wire_connector_id.circuit_red,false)~=nil
-        and body.get_wire_connector(defines.wire_connector_id.circuit_green,false)~=nil
-    end
   end
-  available=not not available
+  local available=M.available(rec)
   if repair and not rec.monitor_repair then
     rec.monitor_repair=true; registry.monitor_changed(rec,true)
+    M.request_observation(rec,tick+1)
   end
   if rec.monitor_available~=available then
     rec.monitor_available=available; rec.monitor_art_dirty=true; registry.monitor_changed(rec,false)
   end
-  if not available and rec.powered then
-    M.clear_output(rec); rec.powered=false; rec.power_revision=(rec.power_revision or 0)+1
-    rec.monitor_art_dirty=true; registry.monitor_changed(rec,false)
-  end
-  if available==rec.powered then rec.power_checked_tick=tick end
 end
-function M.power_losses(tick,spend)
-  local root=registry.get()
-  -- Pay the whole critical walk before restoration notifications or ordinary
-  -- lifecycle work can defer. A stale positive observation must never leave
-  -- callbacks/services/output live during a real outage.
-  spend(#root.order*16)
+registry.register_initializer('physical-observations',function(root)
+  if not registry.supported(root) or not registry.scheduling_supported(root) then return end
+  local valid,clock=pcall(registry.maintenance_clock,'physical')
+  if not valid then root.scheduling_diagnostic=clock; return end
   for _,id in ipairs(root.order) do
     local rec=registry.record(id)
-    if rec and rec.native_carrier=='speaker' then
-      rec.powered=speaker.available(rec); rec.power_checked_tick=tick
-    elseif rec and rec.kind=='monitor' and rec.layout_version==2 then
-      M.observe_monitor(rec,tick)
-    elseif rec and rec.physical_version==1 then
-      local available=rec.body.valid and not rec.physical_error
-      if available then
-        for _,role in ipairs(defs.devices[rec.kind].roles) do
-          -- This proof includes live body/port validity, force, surface,
-          -- position, direction and registry ownership; do not repeat it.
-          if not M.connector(rec,role,'red') then available=false end
-        end
-        if available then available=M.has_power(rec) end
+    if physical_supported(rec) then
+      registry.track_physical(rec)
+      if (not rec.physical_error or not rec.body.valid) and not clock.deadline_positions[id] then
+        M.request_observation(rec,game.tick+1+(rec.body.valid and rec.body.unit_number%limits.topology_latency_ticks or 0))
       end
-      if not available and rec.powered then
-        if rec.kind=='computer' then runtime.set_power(id,false,tick,spend)
-        else M.clear_output(rec); rec.powered=false; rec.power_revision=(rec.power_revision or 0)+1 end
-      end
-      if available==rec.powered then rec.power_checked_tick=tick end
     end
   end
-end
-scheduler.register_phase('lifecycle','00-physical-power-loss',M.power_losses)
-scheduler.register_phase('lifecycle','physical-devices',M.reconcile)
+end)
+scheduler.register_phase('lifecycle','00-physical-observation',M.reconcile)
 return M

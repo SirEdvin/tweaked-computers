@@ -20,7 +20,7 @@ local function f() return storage.tc12 end
 local function group(name) f().groups=f().groups+1; log('TC_CONTRACT '..name) end
 local function build(kind,x,y,surface)
   local b=assert((surface or game.surfaces[1]).create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})
-  lifecycle.on_built{entity=b}; local r=assert(registry.by_entity(b)); lifecycle.power_entity(r).energy=defs.devices[kind].watts/30; r.powered=true
+  lifecycle.on_built{entity=b}; local r=assert(registry.by_entity(b)); assert(not r.children.power and lifecycle.available(r))
   assert(r.body.minable_flag,'new '..kind..' must be mineable')
   return r
 end
@@ -178,15 +178,15 @@ local function undo_contract(legacy,case)
   for _,failure in ipairs({'current-capacity','partial-placement'}) do
     tags=ghost.tags; ghost.destroy()
     local failed=assert(surface.create_entity{name=payload.name,position=payload.position,force=player.force})
-    local state_limit,normalize,staged_power=limits.state_bytes,lifecycle.normalize_power
+    local state_limit,available,staged_body=limits.state_bytes,lifecycle.available
     if failure=='current-capacity' then limits.state_bytes=limits.state_bytes-1
-    else lifecycle.normalize_power=function(rec)
-      staged_power=rec.children.power; assert(staged_power.valid)
+    else lifecycle.available=function(rec)
+      staged_body=rec.body; assert(staged_body.valid and not rec.children.power)
       error({code='E_ENGINE',message='injected physical allocation refusal'},0)
     end end
     local accepted,reason=pcall(lifecycle.on_built,{entity=failed,robot=robot,consumed_items=material,tags=tags})
-    limits.state_bytes=state_limit; lifecycle.normalize_power=normalize; assert(accepted,reason)
-    assert(not failed.valid and (not staged_power or not staged_power.valid),'refused restoration published partial placement'); refusals=refusals+1
+    limits.state_bytes=state_limit; lifecycle.available=available; assert(accepted,reason)
+    assert(not failed.valid and (not staged_body or not staged_body.valid),'refused restoration published partial placement'); refusals=refusals+1
     local retained=surface.find_entities_filtered{type='entity-ghost',position=payload.position,force=player.force}
     assert(#retained==1 and retained[1].tags.tc_computer_undo.snapshot.state.k1==payload.snapshot.state.k1)
     ghost=retained[1]
@@ -415,7 +415,7 @@ function M.run()
   f().blueprint_inventory=inventory
   group('native-blueprint-source-disclosure-no-state-kv-and-complete-role-wire-graph')
   -- Destruction and surface deletion never delete a replacement by location.
-  local srf=game.create_surface('tc12-delete',{width=32,height=32}); local gone=build('computer',0,0,srf); local oldchild=gone.children.power
+  local srf=game.create_surface('tc12-delete',{width=32,height=32}); local gone=build('logic',0,0,srf); local oldchild=lifecycle.endpoint(gone,'output')
   local id=gone.id; lifecycle.on_surface_removed{surface_index=srf.index}; game.delete_surface(srf)
   assert(not registry.record(id) and not oldchild.valid)
   group('surface-delete-route-retires-exact-owned-objects-on-init-events-suppressed')
@@ -489,7 +489,7 @@ function M.on_tick(event)
       elseif kind=='kv' then assert(next(clone.database.entries)==nil) end
       x.clones[#x.clones+1]=clone.id
       if kind=='production_statistics' then
-        local helper=lifecycle.power_entity(clone); local id=clone.id
+        local helper=lifecycle.endpoint(clone,'network'); local id=clone.id
         local native=clone.body.force.get_item_production_statistics(clone.body.surface)
         local before=serpent.line(native.input_quality_counts)
         local inventory=mine(clone)
@@ -543,25 +543,34 @@ function M.on_tick(event)
     local crossbody=assert(moving.body.clone{position={0,0},surface=srf,force='player'})
     local cross=assert(registry.by_entity(crossbody)); assert(cross.saved_source==source and next(cross.state)==nil and cross.status=='stopped')
     local force=game.create_force('tc12-moved'); moving.body.force=force
+    assert(not lifecycle.connector(moving,'network','red'),'silent force change trusted cached scope')
+    x.moving=moving.id; x.moved_force=force; x.movement_tick=event.tick
+    x.cross=cross.id; x.cross_surface=srf.index; x.phase='movement_wait'
+  elseif x.phase=='movement_wait' then
     lifecycle.reconcile(event.tick,nop)
-    assert(moving.body.surface==lifecycle.endpoint(moving,'network').surface and lifecycle.endpoint(moving,'network').force==force and moving.state_bytes==65536)
+    assert(event.tick-x.movement_tick<=limits.topology_latency_ticks,'silent movement exceeded physical observation envelope')
+    local moving=registry.record(x.moving)
+    if moving.force_index~=x.moved_force.index then return end
+    assert(moving.body.surface==lifecycle.endpoint(moving,'network').surface and lifecycle.endpoint(moving,'network').force==x.moved_force and moving.state_bytes==65536)
     assert(lifecycle.connector(moving,'network','red'))
-    x.moving=moving.id; x.cross=cross.id; x.cross_surface=srf.index
-    game.merge_forces(force,'player'); x.phase='force_wait'
+    log('TC_NATIVE_SILENT_FORCE_DUE_OBSERVATION_OK source-state-retained')
+    game.merge_forces(x.moved_force,'player'); x.merge_tick=event.tick; x.phase='force_wait'
   elseif x.phase=='force_wait' then
     lifecycle.reconcile(event.tick,nop)
+    assert(event.tick-x.merge_tick<=limits.topology_latency_ticks,'force merge did not wake physical observation')
     local moving=registry.record(x.moving)
-    if moving.body.force.index~=game.forces.player.index then return end
+    if moving.body.force.index~=game.forces.player.index or moving.force_index~=game.forces.player.index then return end
     assert(moving.force_index==game.forces.player.index and moving.state_bytes==65536)
     local cross=registry.record(x.cross); x.cross_child=lifecycle.endpoint(cross,'network')
     game.delete_surface(x.cross_surface); x.phase='surface_wait'
   elseif x.phase=='surface_wait' then
     if game.surfaces[x.cross_surface] then return end
     assert(not registry.record(x.cross) and not x.cross_child.valid)
+
     log('TC_NATIVE_FORCE_SURFACE_MERGE_OK')
     local writer=build('computer',40,0); local output=build('logic',44,0)
     assert(lifecycle.connector(writer,'network','red').connect_to(lifecycle.connector(output,'network','red')))
-    lifecycle.sample_power(writer,event.tick,nop); lifecycle.sample_power(output,event.tick,nop)
+    assert(lifecycle.available(writer) and lifecycle.available(output))
     local program="function start(e) local l=peripheral.find('logic_handler','red'); assert(l); l.setOutput({{signal={type='virtual',name='signal-A'},count=9}}) end"
     runtime.save(writer.id,program,0); assert(runtime.activate(writer.id,event.tick)); assert(scheduler.dispatch(writer,event.tick))
     assert(output.output_owner and output.output_owner.computer_id==writer.id,'native output writer missing')
@@ -570,7 +579,7 @@ function M.on_tick(event)
     log('TC_NATIVE_DESTRUCTION_OUTPUT_CLEANUP_OK malformed-source-independent')
     -- Maximum accepted source+state item, mined by an actual construction robot.
     local r=registry.record(x.computer)
-    lifecycle.power_entity(r).energy=defs.devices.computer.watts/30; lifecycle.sample_power(r,event.tick,nop)
+    assert(lifecycle.available(r) and not r.children.power)
     x.expected_active=source..string.rep(' ',limits.source_bytes-#source)
     runtime.save(r.id,x.expected_active,r.saved_revision); assert(runtime.activate(r.id,event.tick))
     assert(scheduler.dispatch(r,event.tick)); fixture_state(r)
@@ -621,7 +630,7 @@ function M.on_tick(event)
     assert(r.state_bytes==65536 and r.status=='stopped' and r.active.source==x.expected_active and next(r.timers)==nil)
     x.robot_id=r.id; x.alias=r; x.state_alias=r.state; x.active_alias=r.active
     stack.clear(); x.generator.power_production=0
-    for _,id in ipairs(registry.get().order) do local rec=registry.record(id); lifecycle.power_entity(rec).power_usage=0 end
+    for _,id in ipairs(registry.get().order) do assert(not registry.record(id).children.power) end
     x.database_alias=registry.record(x.kv).database
     local g=monitor.resolve(registry.record(x.monitor)); x.monitor_alias=g.model
     local root=registry.get(); root.scheduler.maintenance_spent=limits.maintenance_work_per_tick

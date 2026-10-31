@@ -71,19 +71,13 @@ local function target(inventory,name)
 end
 M.resolve_inventory_item=target -- Host-only: logical displays are not registry tile IDs.
 function M.revoke(computer,name,wire,reason,execution)
-  local root=registry.get()
   local program_owner,shell_owner=principal.program(computer),principal.shell(computer)
-  -- Exact current writer only. The cleanup walk is covered by callers' fixed
-  -- safety/publication admission; it never executes player source.
-  for _,id in ipairs(root.order) do
-    local rec=registry.record(id); local owner=rec and rec.output_owner
-    local current_owner=execution and principal.matches(owner,computer,execution)
-      or not execution and (principal.matches(owner,computer,program_owner) or principal.matches(owner,computer,shell_owner))
-    if rec and rec.kind=='logic' and rec.id==name and owner
-      and owner.computer_id==computer.id and owner.wire==wire and current_owner then
-      lifecycle.clear_output(rec)
-    end
-  end
+  -- The named logical output is the only resource this revocation can own.
+  local rec=registry.record(name); local owner=rec and rec.output_owner
+  local current_owner=execution and principal.matches(owner,computer,execution)
+    or not execution and (principal.matches(owner,computer,program_owner) or principal.matches(owner,computer,shell_owner))
+  if rec and rec.kind=='logic' and owner and owner.computer_id==computer.id
+    and owner.wire==wire and current_owner then lifecycle.clear_output(rec) end
   local names={}; for key in pairs(revocations) do names[#names+1]=key end; table.sort(names)
   local failed=false
   for _,key in ipairs(names) do
@@ -107,7 +101,7 @@ function M.services(computer,tick,guard,execution)
   local function current()
     guard.check()
     if not principal.live(computer,execution)
-      or not computer.powered or not authorized and not lifecycle.connector(computer,'network','red') then
+      or not principal.available(computer) or not authorized and not lifecycle.connector(computer,'network','red') then
       errors.raise('E_NOT_FOUND','computer run no longer authorized')
     end
     authorized=true
@@ -148,12 +142,11 @@ function M.services(computer,tick,guard,execution)
     -- Unknown/test/other providers invalidate proofs even if they later throw.
     if not bindings[rec.kind].callback_stable then inventories={}; availability={}; authorized=false end
     if method=='getLimits' and select('#',...)~=0 then errors.raise('E_ARGUMENT','getLimits expects no arguments') end
-    -- Logical providers prove all current members themselves. Their cached
-    -- aggregate powered flag can lag paid topology maintenance after restoration.
+    -- Availability is live physical authority; only native carriers need power.
     local available=bindings[rec.kind].available
-    if method~='getLimits' and ((available and not available(rec,spend,availability))
-      or (not available and (not rec.powered or not lifecycle.has_power(rec)))) then
-      errors.raise('E_UNPOWERED','peripheral is unpowered')
+    if (method~='getLimits' or not rec.native_carrier) and ((available and not available(rec,spend,availability))
+      or (not available and not lifecycle.available(rec))) then
+      errors.raise(rec.native_carrier and 'E_UNPOWERED' or 'E_UNREACHABLE','peripheral is unavailable')
     end
     if rec.kind=='speaker' and (method=='playNote' or method=='playSound') then guard.prepare_boolean_result() end
     if rec.kind=='radar' and method=='transmit' then guard.prepare_empty_result() end
@@ -213,11 +206,11 @@ function M.services(computer,tick,guard,execution)
     local b=rec.body; local def=defs.devices[rec.kind]
     local horizontal=rec.direction==0 or rec.direction==8
     local width=rec.native_carrier=='speaker' and 1 or rec.native_carrier=='radar' and (rec.modem_tier=='surface' and 3 or 5) or nil
-    local info={name=rec.id,type=types[rec.kind],label=rec.label,powered=rec.powered,
+    local info={name=rec.id,type=types[rec.kind],label=rec.label,powered=lifecycle.available(rec),
       position={x=b.position.x,y=b.position.y},surface={index=b.surface.index,name=b.surface.name},
       quality=b.quality.name,direction=directions[width and b.direction or rec.direction],
       footprint={width=width or (horizontal and def.width or 1),height=width or (horizontal and 1 or def.width)},wire=wire}
-    if width then info.modem_tier=rec.modem_tier; info.powered=lifecycle.has_power(rec) end
+    if width then info.modem_tier=rec.modem_tier end
     if bindings[rec.kind].describe then info=bindings[rec.kind].describe(rec,wire,info) end
     return (data.copy(info,spend))
   end)
@@ -283,7 +276,107 @@ local function reason(computer,item)
   if not rec or rec.id~=item.name or rec.generation~=item.generation then return 'regrouped' end
   return 'wire_removed'
 end
-function M.reconcile_one(computer,wire,tick,spend)
+local function topology_state(version)
+  local s=registry.get().topology_interests
+  if type(s)~='table' or s.version~=(version or 2) or type(s.order)~='table' or type(s.computers)~='table'
+    or not errors.integer(s.cursor,1,math.max(1,#s.order)) then
+    errors.raise('E_UNSUPPORTED','unsupported topology interest membership; observations retained')
+  end
+  return s
+end
+local function remove_binding(s,binding)
+  local owner=binding.owner
+  if owner.bindings[binding.wire]~=binding then return end
+  owner.bindings[binding.wire]=nil
+  for i,item in ipairs(s.order) do
+    if item==binding then
+      table.remove(s.order,i)
+      if i<s.cursor then s.cursor=s.cursor-1 end
+      if s.cursor>#s.order then s.cursor=1 end
+      break
+    end
+  end
+  if not next(owner.bindings) and not next(owner.subscriptions) and s.computers[owner.computer.id]==owner then s.computers[owner.computer.id]=nil end
+end
+local function binding(c,wire,spend)
+  local s=topology_state(); local owner=s.computers[c.id]
+  if owner and (owner.computer~=c or owner.run_id~=c.run_id or owner.generation~=c.generation) then
+    errors.raise('E_UNSUPPORTED','stale topology interest owner; observations retained')
+  end
+  if owner and owner.bindings[wire] then return owner.bindings[wire] end
+  if spend then spend(#s.order*2+8) end
+  if not owner then
+    owner={computer=c,run_id=c.run_id,generation=c.generation,bindings={},subscriptions={}}; s.computers[c.id]=owner
+  end
+  local item={owner=owner,wire=wire}; owner.bindings[wire]=item
+  local i=#s.order+1; local key=c.id..'/'..wire
+  while i>1 and s.order[i-1].owner.computer.id..'/'..s.order[i-1].wire>key do i=i-1 end
+  if #s.order>0 and i<=s.cursor then s.cursor=s.cursor+1 end
+  table.insert(s.order,i,item)
+  return item
+end
+local function retire_interests(c)
+  local s=topology_state(); local owner=s.computers[c.id]
+  if not owner then return end
+  owner.subscriptions={}
+  for _,wire in ipairs({'red','green'}) do if owner.bindings[wire] then remove_binding(s,owner.bindings[wire]) end end
+end
+local function topology_subscription(c,sub,adding,spend)
+  local s=topology_state(); local owner=s.computers[c.id]
+  if spend then spend(#s.order*4+16) end
+  if adding then
+    local red=binding(c,'red'); binding(c,'green')
+    red.owner.subscriptions[sub.id]=sub
+  elseif owner then
+    owner.subscriptions[sub.id]=nil
+    if not next(owner.subscriptions) then
+      for _,wire in ipairs({'red','green'}) do
+        local b=owner.bindings[wire]
+        if b and not b.pending then remove_binding(s,b) end
+      end
+    end
+  end
+end
+for _,event in ipairs({'peripheral_attach','peripheral_detach','modem_message','dashboard_click'}) do
+  runtime.register_subscription_lifecycle(event,topology_subscription)
+end
+registry.register_initializer('topology-interests',function(root)
+  if not registry.supported(root) then return end
+  if root.topology_interests~=nil then
+    if type(root.topology_interests)~='table' or root.topology_interests.version~=1 then return end
+    local valid,prior=pcall(topology_state,1)
+    if not valid then root.scheduling_diagnostic=prior; return end
+    prior.version=2
+  else root.topology_interests={version=2,order={},computers={},cursor=1} end
+  for _,id in ipairs(root.order) do
+    local c=root.computers[id]
+    if c and c.schema_version==1 and c.status=='running' and type(c.subscriptions)=='table' then
+      for _,sub in pairs(c.subscriptions) do
+        if sub.event_name=='peripheral_attach' or sub.event_name=='peripheral_detach' or sub.event_name=='modem_message' or sub.event_name=='dashboard_click' then topology_subscription(c,sub,true) end
+      end
+      for _,wire in ipairs({'red','green'}) do
+        if type(c.network_views)=='table' and type(c.network_views[wire])=='table' and c.network_views[wire].job then binding(c,wire).pending=true end
+      end
+    end
+  end
+end)
+local function retire_dashboard_bindings(computer,wire,inventory,spend)
+  spend(limits.subscriptions)
+  local absent={}
+  for _,sub in pairs(computer.subscriptions) do
+    if sub.event_name=='dashboard_click' and sub.details.wire==wire then
+      local item=inventory[sub.details.peripheral]
+      if not item or item.generation~=sub.details.generation then absent[sub.details.peripheral]=true end
+    end
+  end
+  for _,name in ipairs(sorted(absent,spend)) do
+    local selection=computer.monitor_sync; local shell_selection=computer.shell and computer.shell.monitor_sync
+    spend(((selection and #selection.members or 0)+(shell_selection and #shell_selection.members or 0))*4
+      +limits.subscriptions^2+limits.subscriptions*(#computer.queue*2+1)+#topology_state().order*4+132)
+    M.revoke(computer,name,wire,'wire_removed')
+  end
+end
+local function reconcile_one(computer,wire,tick,spend)
   spend(16)
   computer.network_views=computer.network_views or {}
   local view=computer.network_views[wire]
@@ -296,6 +389,7 @@ function M.reconcile_one(computer,wire,tick,spend)
       end
       error(result,0)
     end
+    retire_dashboard_bindings(computer,wire,result,spend)
     computer.network_views[wire]={run_id=computer.run_id,inventory=result,tick=tick}; return
   end
   if not view.job then
@@ -305,6 +399,7 @@ function M.reconcile_one(computer,wire,tick,spend)
       if type(next_inventory)~='table' or not next_inventory.code then error(next_inventory,0) end
       failure=next_inventory; next_inventory={}
     end
+    if not failure then retire_dashboard_bindings(computer,wire,next_inventory,spend) end
     local changes={}
     for _,name in ipairs(sorted(view.inventory,spend)) do
       local old=view.inventory[name]; local new=next_inventory[name]
@@ -323,7 +418,8 @@ function M.reconcile_one(computer,wire,tick,spend)
     local change=job.changes[job.cursor]; local item=change.item
     -- Atomic event/cleanup publication reservation. runtime.emit then uses the
     -- already-paid bounded copy space; no prefix is repeated after deferral.
-    spend(#registry.get().order*4+limits.subscriptions+128)
+    local selection=computer.monitor_sync; local shell_selection=computer.shell and computer.shell.monitor_sync
+    spend(((selection and #selection.members or 0)+(shell_selection and #shell_selection.members or 0))*4+limits.subscriptions+132)
     local deliveries=0
     for _,sub in pairs(computer.subscriptions) do if sub.event_name==change.event then deliveries=deliveries+1 end end
     spend(deliveries*768+limits.subscriptions^2+128)
@@ -334,24 +430,32 @@ function M.reconcile_one(computer,wire,tick,spend)
   end
   view.inventory=job.inventory; view.diagnostic=job.diagnostic; view.tick=tick; view.job=nil
 end
+function M.reconcile_one(computer,wire,tick,spend)
+  network.wire(wire)
+  local item=binding(computer,wire,spend); item.pending=true
+  local ok,problem=pcall(reconcile_one,computer,wire,tick,spend)
+  if ok then
+    item.pending=false
+    if not next(item.owner.subscriptions) then remove_binding(topology_state(),item) end
+  else error(problem,0) end
+end
 function M.reconcile(tick,spend)
-  local root=registry.get(); spend(limits.registry_entries+limits.active_computers^2+1)
-  local ids={}; for _,id in ipairs(root.order) do local rec=root.computers[id]; if rec and rec.physical_version and rec.status=='running' then ids[#ids+1]=id end end
-  table.sort(ids)
-  if #ids==0 then return end
-  local size=#ids*2; local cursor=math.min(root.scheduler.network_cursor or 1,size)
-  -- At most 3 channel inventories per tick: 64 active computers/2 channels fit
-  -- a 43-tick ordinary sweep; work/capacity refusal remains explicit diagnostic.
-  for _=1,math.min(3,size) do
-    local rec=root.computers[ids[math.floor((cursor-1)/2)+1]]; local wire=cursor%2==1 and 'red' or 'green'
-    local admitted=scheduler.try_maintenance(function() M.reconcile_one(rec,wire,tick,spend) end)
-    if not admitted then
-      -- Diagnostic only; retain the exact pending transition/cursor for retry.
-      if rec.network_views and rec.network_views[wire] then
+  local valid,s=pcall(topology_state)
+  if not valid then registry.get().scheduling_diagnostic=s; return end
+  if #s.order==0 then return end
+  -- Preserve the existing three-channel service envelope without finding roots.
+  for _=1,math.min(3,#s.order) do
+    local item=s.order[s.cursor]; if not item then break end
+    local owner=item.owner; local rec=owner.computer; local wire=item.wire
+    if registry.get().computers[rec.id]~=rec or rec.status~='running' or rec.generation~=owner.generation or rec.run_id~=owner.run_id then
+      retire_interests(rec)
+    else
+      local admitted=scheduler.try_maintenance(function() M.reconcile_one(rec,wire,tick,spend) end)
+      if not admitted and rec.network_views and rec.network_views[wire] then
         rec.network_views[wire].diagnostic=errors.new('E_NETWORK_PENDING','topology maintenance deferred; current calls still require a live proof')
       end
+      if owner.bindings[wire]==item and #s.order>0 then s.cursor=s.cursor%#s.order+1 end
     end
-    cursor=cursor%size+1; root.scheduler.network_cursor=cursor
   end
 end
 function M.authority(computer,name,wire,spend)
@@ -362,22 +466,20 @@ function M.authority(computer,name,wire,spend)
 end
 function M.check_outputs(tick,spend)
   local root=registry.get()
-  -- Prepay the complete walk and all native zero-bank cleanups independently of
-  -- guest credits. Proof may defer; that clears output rather than trusting it.
-  spend(#root.order*4)
-  local owned=0
-  for _,id in ipairs(root.order) do
-    local rec=registry.record(id)
-    if rec and rec.kind=='logic' and rec.output_owner then owned=owned+1 end
-  end
-  spend(owned*256)
-  for _,id in ipairs(root.order) do
-    local rec=registry.record(id); local owner=rec and rec.kind=='logic' and rec.output_owner
+  local valid,index=pcall(registry.owned_outputs)
+  if not valid then root.scheduling_diagnostic=index; return end
+  local entries={}
+  -- Snapshot current owners before fail-safe clearing can retire membership.
+  spend(#index.order*258)
+  for i,entry in ipairs(index.order) do entries[i]=entry end
+  for _,entry in ipairs(entries) do
+    local rec=entry.record; local owner=rec.output_owner
+    if registry.record(rec.id)~=rec then owner=nil; rec.output_owner=nil; registry.output_changed(rec) end
     if owner then
       local computer=type(owner)=='table' and root.computers[owner.computer_id]; local valid=false
-      if computer and principal.live(computer,{kind=owner.kind or 'program',id=owner.run_id}) and computer.powered then
+      if computer and principal.live(computer,{kind=owner.kind or 'program',id=owner.run_id}) and principal.available(computer) then
         local safe,admitted,result=pcall(scheduler.try_maintenance,function()
-          if owner.wire~='red' and owner.wire~='green' then return false end
+          if owner.wire~='red' and owner.wire~='green' or not lifecycle.available(rec) then return false end
           if owner.path and network.validate_witness(computer,owner.wire,owner.path,spend) then
             return owner.path[#owner.path]==rec.id
           end
@@ -398,17 +500,19 @@ function M.check_outputs(tick,spend)
 end
 runtime.register_services('peripheral',M.services)
 principal.register_cleanup('logic-output',function(c,p)
-  for _,id in ipairs(registry.get().order) do
-    local rec=registry.record(id)
+  local owned=registry.owned_outputs().computers[c.id] or {}
+  for _,id in ipairs(sorted(owned)) do
+    local rec=owned[id] and owned[id].record
     if rec and rec.kind=='logic' and principal.matches(rec.output_owner,c,p) then lifecycle.clear_output(rec) end
   end
 end)
 registry.register_cleanup('network-owned-output',function(computer,run_id,reason)
   if computer.kind~='computer' then return end
-  if reason~='power_loss' and reason~='authority_changed' then computer.network_views=nil end
-  local root=registry.get()
-  for _,id in ipairs(root.order) do
-    local rec=registry.record(id); local owner=rec and rec.kind=='logic' and rec.output_owner
+  retire_interests(computer)
+  if reason~='authority_changed' then computer.network_views=nil end
+  local owned=registry.owned_outputs().computers[computer.id] or {}
+  for _,id in ipairs(sorted(owned)) do
+    local rec=owned[id] and owned[id].record; local owner=rec and rec.output_owner
     if type(owner)=='table' and owner.computer_id==computer.id and owner.run_id==run_id then lifecycle.clear_output(rec) end
   end
 end)

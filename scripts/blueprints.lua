@@ -146,7 +146,7 @@ function M.on_pasted(event)
   local player=game.get_player(event.player_index)
   if not player or player.force.index~=source.force_index or player.force.index~=target.force_index
     or player.surface.index~=target.surface_index or not player.can_reach_entity(source.body) or not player.can_reach_entity(target.body) then return end
-  local ok,e=pcall(function() snapshots.apply_settings(target,snapshots.settings(source)); lifecycle.normalize_power(target) end)
+  local ok,e=pcall(function() snapshots.apply_settings(target,snapshots.settings(source)) end)
   if not ok then player.print('Settings copy refused; source/data retained: '..(type(e)=='table' and e.message or 'engine failure')) end
 end
 function M.clone(rec,source)

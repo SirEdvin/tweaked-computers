@@ -28,7 +28,7 @@ function M.run()
   local surface=game.surfaces[1]; local original_game=game; local tick=1000; local total=0
   local function build(kind,x,y)
     local rec=assert(lifecycle.build(assert(surface.create_entity{name=defs.devices[kind].entity_name,position={x,y},force='player'})))
-    lifecycle.power_entity(rec).energy=1000000; rec.powered=true; return rec
+    assert(not rec.children.power and lifecycle.available(rec)); return rec
   end
   local rec=build('computer',0,0); local db=build('kv',3,0); local out=build('logic',6,0); local mon=build('monitor',0,4)
   local config=build('configurator',9,0)
@@ -54,11 +54,13 @@ function M.run()
       input.text=text; editor.on_text{player_index=p.index,element=input,tick=tick}
       editor.on_confirmed{player_index=p.index,element=input,tick=tick}
       assert(input.text=='','ingress failed: '..tostring(gui.content.console.shell_status.caption))
+      assert(registry.get().scheduler.ready[rec.id],'accepted Console input did not own ready membership')
     end
     local function dispatch()
       rec.power_checked_tick=tick
       assert(scheduler.dispatch(rec,tick),'shell did not dispatch')
       assert(not scheduler.dispatch(rec,tick),'duplicate same-tick dispatch')
+      assert((registry.get().scheduler.ready[rec.id]~=nil)==(shell.waiting(rec) or rec.status=='running' and #rec.queue>0),'drained Console left stale ready membership')
     end
     local function execute(text,expect,p,gui)
       submit(text,p,gui); dispatch()
@@ -238,16 +240,20 @@ function M.run()
       assert(out.output_owner and out.output_owner.run_id=='later-run','shell cleared another principal output')
       lifecycle.clear_output(out)
     end)
-    group('power-loss-cleans-under-exhaustion-without-discard-or-replay',function()
+    group('obsolete-power-cache-cannot-cancel-pending-shell-or-owned-output',function()
       execute('peripheral.call("'..out.id..'","red","setOutput",{})')
       local graph=rec.shell.values
       submit('x=999')
       local ctx=runtime.context(rec,tick)
       assert(admission.reserve(ctx,'work',limits.callback_work-ctx.machine.work))
-      runtime.set_power(rec.id,false,tick)
-      assert(rec.shell.values==graph and #rec.shell.pending==0 and not out.output_owner)
-      tick=tick+1; runtime.set_power(rec.id,true,tick)
-      execute('assert(x==5)')
+      rec.powered=false
+      assert(rec.shell.values==graph and #rec.shell.pending==1 and out.output_owner)
+      tick=tick+1; dispatch()
+      assert(#rec.shell.pending==0 and out.output_owner)
+      rec.powered=true
+      tick=tick+1; execute('assert(x==999)')
+      tick=tick+1; execute('x=5')
+      tick=tick+1; execute('assert(x==5)')
     end)
     group('blank-invalid-paste-bounds-draft-and-duplicate-submit',function()
       local input=f.content.console.prompt.command

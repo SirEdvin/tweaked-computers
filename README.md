@@ -44,7 +44,7 @@ the benchmark's provisional 300000 recommendation is not adopted.
 See [historical 0.1.10 release notes](docs/release-0.1.10.md).
 
 Version 0.1.9 added the separately researched
-[Recipe Searcher](docs/player/api/recipe-searcher.md): a powered 1×1 read-only
+[Recipe Searcher](docs/player/api/recipe-searcher.md): a now electricity-free 1×1 read-only
 item/fluid recipe catalogue peripheral, with complete sorted metadata and an
 explicit 50-result ceiling after category filtering. It also adds recipe circuit
 signals, monitor stacks of 50, readable Console tabs and native Ctrl-click

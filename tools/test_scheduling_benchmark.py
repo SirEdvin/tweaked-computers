@@ -2,6 +2,7 @@
 import copy
 import json
 import os
+import re
 from pathlib import Path
 import tempfile
 import sys
@@ -107,6 +108,35 @@ class SchedulingBenchmarkTests(unittest.TestCase):
         self.assertIn('visit()\nend', instrumented)
         with self.assertRaises(ValueError):
             bench.instrument('scripts/services/logic.lua', 'local function renamed() end')
+
+    def test_hook_disposition_inventory_matches_production(self):
+        hooks = set()
+        for path in (bench.ROOT / 'scripts').rglob('*.lua'):
+            hooks.update('/'.join(h) for h in re.findall(
+                r"scheduler.register_phase\('([^']+)','([^']+)'", path.read_text()))
+        documented = set(re.findall(r'\| `(lifecycle/[^`]+|sample/[^`]+|notifications/[^`]+|render/[^`]+)`',
+                                    (bench.ROOT / 'docs/device-scheduling.md').read_text()))
+        self.assertEqual(hooks, documented)
+
+    def test_current_demand_counters_are_distinct_and_complete(self):
+        expected = {
+            'scripts/scheduler.lua': ('scheduler:ready-member', 'scheduler:due-timer-member'),
+            'scripts/lifecycle.lua': ('physical:due-observation',),
+            'scripts/services/logic.lua': ('signal:watched-input', 'signal:subscriber'),
+            'scripts/services/peripheral.lua': ('output:owner',),
+            'scripts/ui/editor.lua': ('ui:editor-due',),
+            'scripts/ui/peripheral-inspector.lua': ('ui:inspector-due',),
+            'scripts/ui/dashboard.lua': ('ui:dashboard-viewer',),
+        }
+        for path, counters in expected.items():
+            source = (bench.ROOT / path).read_text()
+            payload = bench.instrument(path, source)
+            assert payload is not None
+            payload = payload.decode()
+            for key in counters:
+                self.assertEqual(payload.count("bench.count('" + key + "')"), 1, (path, key))
+            self.assertEqual(source.count('local rec=root.computers[item.id]'),
+                             payload.count('local rec=root.computers[item.id]'))
 
     def test_prepared_archive_and_optional_dependency_are_exact(self):
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:

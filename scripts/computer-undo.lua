@@ -83,6 +83,7 @@ local function begin(rec,player_index,snapshot)
     if side=='undo' and matches(a,p) then stack.set_undo_tag(i,j,'tc_computer_seen',p.operation) end
   end)
   local s=state(); s.pending[#s.pending+1]=p
+  registry.get().scheduler.undo_pending=true
   return p
 end
 function M.on_marked(event)
@@ -139,6 +140,7 @@ function M.on_ghost(event)
   -- against that event's tagged action before granting restoration authority.
   s.candidates=s.candidates or {}
   s.candidates[#s.candidates+1]={entity=e,player=event.player_index,tick=event.tick}
+  registry.get().scheduler.undo_pending=true
 end
 local function inverse_tag(player,side,p,ghost)
   local stack=player.undo_redo_stack
@@ -244,11 +246,19 @@ function M.on_destroyed(event)
   if unit then s.ghosts[unit]=nil; s.destroyed[event.registration_number]=nil end
 end
 function M.maintain(tick)
-  local root=registry.get(); local s=root and root.computer_undo
+  local root=registry.get()
+  if not root or not root.scheduler.undo_pending then return end
+  local s=root.computer_undo
   if not s then return end
   if #s.pending>0 then M.settle() end
   s.candidates=nil
+  root.scheduler.undo_pending=#s.pending>0
 end
+registry.register_initializer('undo-work',function(root)
+  if not registry.scheduling_supported(root) or root.scheduler.undo_pending~=nil then return end
+  local s=root.computer_undo
+  root.scheduler.undo_pending=type(s)=='table' and (type(s.pending)=='table' and #s.pending>0 or s.candidates~=nil) or false
+end)
 scheduler.register_phase('lifecycle','02-computer-undo',M.maintain)
 lifecycle.register_undo_adapter(M)
 return M

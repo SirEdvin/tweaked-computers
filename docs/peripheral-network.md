@@ -56,9 +56,11 @@ native body position, not the originally requested coordinates. Direction is
 Monitor bindings replace the position/footprint with logical group geometry.
 Neither descriptions nor methods contain native entities/connectors.
 
-Use `device.getLimits()` with no arguments even while its reachable endpoint is
-unpowered. Other device methods require power. Metadata also remains available
-while unpowered, and unpowered devices still relay physical discovery.
+Custom devices need no electricity. Their methods require live physical availability.
+Native radar/speaker keep their electrical requirements: metadata and no-argument
+`getLimits()` remain available while unpowered, and native carriers still relay
+physical discovery. The compatibility `powered` field reflects availability; it
+never substitutes for a fresh operation/receiver authority check.
 
 A wrapper binds an opaque identity, generation, discovery channel and current
 computer run, never a mutable coordinate/label. Captured methods recheck live
@@ -77,7 +79,8 @@ is no callback-wide transaction: successful prior effects survive a later error.
 `E_LIMIT`: graph/result bound exceeded. `E_NETWORK_PENDING`: proof/reconciliation
 is incomplete. A captured detached method throws `E_UNREACHABLE`, while fresh
 presence/type/describe/wrap queries return false/nil only after a complete search.
-Active methods on unpowered devices throw `E_UNPOWERED`. Ordinary errors are
+Active methods on unpowered native radar/speaker throw `E_UNPOWERED`; unavailable
+custom devices throw `E_UNREACHABLE`. Ordinary errors are
 catchable; fatal callback-budget exhaustion still faults the run. Do not busy-wait.
 
 Register `computer.on("peripheral_attach", "attached")` and/or
@@ -89,15 +92,32 @@ or `unavailable`. Simultaneous detachments precede attachments, each in sorted
 name order. A power outage alone is not a physical detach.
 
 The host retains plain per-run/channel inventories and bounded pending event
-jobs; deferral preserves the exact next transition. Three channel inventories
-are attempted per tick with a persisted rotating cursor. The 60-tick topology
+jobs; deferral preserves the exact next transition. Attach/detach,
+`modem_message` and Dashboard-click registrations maintain interest in both physical colors; pending
+reconciliation also retains its color until the job settles. Only those bindings
+enter the persisted rotation, with at most three channel inventories attempted
+per tick. Computers without interest or pending work are not searched to find
+notification work. Removing the last registration retires that interest without
+discarding accepted snapshot notifications or an unfinished host job. Definitive
+selected-wire Dashboard detachment also retires its registrations and queued clicks;
+incomplete discovery does not permanently retire a connected registration. The 60-tick topology
 ceiling is development tuning, not a measured maximum-world release guarantee;
 maintenance pressure is explicitly `E_NETWORK_PENDING`, never silent success.
 Queries and calls do not use this notification cache as authority. Every call
 performs a new complete bounded physical search. Logic output uses a cheaper
 revalidated physical witness, then a bounded alternate search; failure or proof
-credit deferral clears it fail-closed on the next safety pass. Stop/fault/power
-cleanup also independently clears only the exact current writer generation.
+credit deferral clears it fail-closed on the next safety pass. Safety validation
+visits retained current output owners, not every device to find them. Stop/fault
+cleanup also independently clears only the exact current writer generation;
+electrical cycling does not clear a custom logic handler's output.
+
+Fresh discovery can request enrollment of supported native radar/speaker relays
+from a placed computer, including a stopped or faulted physical root. An
+unenrolled native member reports `E_NETWORK_PENDING`; retry through a later
+callback rather than busy-waiting. Background enrollment services only retained
+pending computer/color requests, not every idle computer. Placement alone does
+not enroll an isolated native device. Pending requests survive cold reload and
+retain the same physical generation, force, surface and selected-color proof.
 
 Logical monitor grouping can map multiple reachable tiles to one identity, but
 never adds graph edges between them. Different cables touching different members
@@ -121,13 +141,14 @@ Import `scripts.services.peripheral` during control parsing, as control.lua does
 Do not add another on_tick handler. The service installs one provider and two
 hooks on the existing scheduler; only plain observations/jobs enter storage.
 
-`register_type(kind, binding)` is a closed four-family binding, not a plugin bus.
-Kinds are `kv`, `monitor`, `logic`, `configurator`. `binding.methods` includes a
+`register_type(kind, binding)` is a closed device-family binding, not a plugin bus.
+`binding.methods` includes a
 `getLimits` function and every public method/alias, max 128. Each fixed method is
 called as `fn(computer, target, wire, tick, spend, ...)`; validate exact arity and
 reserve native work before effects, return only plain Data/ordinary tuples.
 The boundary already snapshots caller data, checks current run, identity,
-channel, force/surface/path and target power, and snapshots method results.
+channel, force/surface/path and live target availability, and snapshots method
+results. Native radar/speaker methods still check electricity at the call.
 
 Optional monitor-only `binding.resolve(member)` returns the current logical
 anchor record, or nil for an unavailable member; `binding.describe(target, wire,
@@ -147,7 +168,8 @@ separate and must not jump between an entity's isolated connectors.
 
 Logic writes use `output_owner={computer_id, run_id, wire, path?}` with native
 output configuration, not a retained `output_bank` mirror. The optional path is a physical ID sequence from computer to logic
-handler. The network safety hook revalidates it every tick, recovers an alternate
+handler. The retained owner index is updated with native output publication/clearing.
+The network safety hook revalidates current owners every tick, recovers an alternate
 bounded path, or calls `lifecycle.clear_output`. It also clears malformed ownership
 fail-closed. The registered source-independent cleanup hook clears exact
 computer/run owners on retirement, preserving a newer writer's bank. Logic's own

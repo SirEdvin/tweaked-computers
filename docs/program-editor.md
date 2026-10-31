@@ -142,7 +142,7 @@ existing fixed host callback `fn(record,wire,tick)` → complete dense
 `{name,type,powered}` descriptors or `nil,diagnostic`. The production
 `scripts.ui.network-inspector` uses the real peripheral traversal and shared work
 admission, not a second UI graph/cache. It must never return an incomplete prefix.
-The UI distinguishes complete-empty, unpowered, disconnected-from-the-refreshed-path
+The UI distinguishes complete-empty, physically unavailable, disconnected-from-the-refreshed-path
 and pending/refused/unknown. It omits snapshot tick clutter and does not claim continuous
 live authorization. Friendly labels never replace API names or mix red and green.
 

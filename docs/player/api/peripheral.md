@@ -1,6 +1,6 @@
 # Peripheral discovery and calls
 
-The computer sees powered or unpowered peripherals through uninterrupted red or
+The computer sees physically reachable peripherals through uninterrupted red or
 green wires directly between the devices’ **Network** connections on its force/surface. Computers
 relay discovery but are not programmable peripherals. Supported native radar and vanilla programmable-speaker sockets
 also relay local same-color wires. Vanilla poles/machines,
@@ -48,9 +48,11 @@ and `wire`. Actual world coordinates are descriptive, not authority. A monitor's
 position/footprint describe its logical rectangle's world extents, not terminal
 character dimensions. No native entities/connectors/method objects are exposed.
 
-Every peripheral exposes `getLimits()` while reachable even if unpowered. Other
-methods fail `E_UNPOWERED`. Descriptions remain available and unpowered relays
-still connect valid physical paths.
+All nine custom families need no electricity. `PeripheralInfo.powered` describes
+their live physical availability, not an electrical buffer. For native radar and
+speaker it retains native electrical/operational availability. Their reachable
+metadata/`getLimits()` remain available while unpowered; other native methods
+retain `E_UNPOWERED`. No description authorizes a later call.
 
 ## Wrappers and stale identities
 
@@ -71,9 +73,9 @@ Up to eight supplied references are checked before deduplication; red wins when
 both valid paths address the same logical screen. Canonical members sort by name.
 The group supports four logical screens and 10,584 summed actual cells, with mixed
 shapes/scales/orientations. Four 6×6 scale-1 screens fit; four at scale 0.5 do not.
-Registration requires powered monitors and current same-force/surface authority.
+Registration requires physically available monitors and current same-force/surface authority.
 Wrong shape/key/arity is E_ARGUMENT; excessive refs E_LIMIT; nonmonitors
-E_WRONGTYPE; missing paths E_UNREACHABLE; outages E_UNPOWERED; capacity E_CAPACITY;
+E_WRONGTYPE; missing paths or physical unavailability E_UNREACHABLE; capacity E_CAPACITY;
 another run's selection E_BUSY. Every refusal preserves the prior selection.
 
 Selection controls presentation, not write ownership: other authorized writers
@@ -120,10 +122,25 @@ inventories per tick fairly; the queried 60-tick topology ceiling is provisional
 not a guarantee under arbitrary world load. Shared calls use synchronized order,
 not exclusive locks or callback-wide transactions.
 
+Attach/detach, `modem_message` and Dashboard-click registrations, plus unfinished
+reconciliation, retain background topology interest. Idle computers are not
+searched to find that work. Removing the last relevant handler retires its
+interest after any pending host job settles, without recalling accepted snapshot
+notifications. Definitive selected-wire Dashboard detachment retires its
+registrations and queued clicks; incomplete discovery alone does not retire a
+connected Dashboard registration.
+Current output owners receive separate fail-safe checks; custom electricity
+changes neither create detach events nor clear a logic handler's output.
+
+Fresh discovery can request native radar/speaker enrollment from a placed
+computer, including a stopped or faulted physical root. Pending computer/color
+requests survive cold reload and require the same current physical proof.
+An idle computer is not periodically searched just to find native carriers.
+
 ## Use and troubleshooting
 
 Run [peripheral-program](../examples.md#peripheral-program) with at least one
-powered NETWORK-connected device; it inspects both colors and logs metadata. Use
+physically valid NETWORK-connected device; it inspects both colors and logs metadata. Use
 the automatically updating Peripherals tab to compare the same paths. Check exact role/color/force/surface
 before interpreting missing as empty. A monitor regroup can invalidate an old
 name; re-enumerate, do not retarget by coordinates. For service-specific errors

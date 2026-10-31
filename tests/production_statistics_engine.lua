@@ -224,11 +224,11 @@ function M.on_tick(event)
     assert(runtime.save(c.id,busy,c.saved_revision)); assert(runtime.activate(c.id,event.tick))
     x.phase='authority'; return
   elseif x.phase=='authority' then
-    lifecycle.power_entity(s).energy=0; s.powered=false
+    s.powered=false
     guest(c,prefix..[[assert(s.getLimits().table_entries==1024)
-      refused('E_UNPOWERED',s.getTotals,'item'); refused('E_UNPOWERED',s.getRates,'fluid','one_minute')
-      refused('E_UNPOWERED',s.getHistory,'item','iron-plate','one_minute')]])
-    lifecycle.power_entity(s).energy=1000; s.powered=true
+      assert(type(s.getTotals('item'))=='table' and type(s.getRates('fluid','one_minute'))=='table')
+      assert(type(s.getHistory('item','iron-plate','one_minute'))=='table')]])
+    s.powered=true
     c.shell={version=1,id='statistics-fixture-shell',pending={},pending_bytes=0}
     local ok,e=shell.evaluate(c,"s=peripheral.find('production_statistics','red'); captured=s.getTotals",event.tick,1); assert(ok,serpent.line(e))
     local foreign=game.forces['tc-stat-other']; s.body.force=foreign
@@ -243,7 +243,7 @@ function M.on_tick(event)
     guest(c,"assert(peripheral.wrap('"..moved_rec.id.."','red')==nil)")
     assert(lifecycle.remove(moved_rec.id,'fixture',true))
     s=build('production_statistics',surface,c.body.force,position.x,position.y); scope.s=s.id
-    wire(c,s,'red'); wire(c,s,'green'); lifecycle.power_entity(s).energy=1000; s.powered=true
+    wire(c,s,'red'); wire(c,s,'green'); assert(not s.children.power)
     ok,e=shell.evaluate(c,"s=peripheral.find('production_statistics','red'); captured=s.getTotals",event.tick,2); assert(ok,serpent.line(e))
     local relay=build('kv',c.body.surface,c.body.force,6,-3); local mixed=build('production_statistics',c.body.surface,c.body.force,9,-3)
     wire(s,relay,'red'); wire(relay,mixed,'green')
@@ -251,7 +251,7 @@ function M.on_tick(event)
     local old_id=s.id; local pos=s.body.position; local before=expected(s,'item')
     assert(lifecycle.remove(old_id,'fixture',true))
     s=build('production_statistics',c.body.surface,c.body.force,pos.x,pos.y); wire(c,s,'red'); wire(c,s,'green'); scope.s=s.id
-    lifecycle.power_entity(s).energy=1000; s.powered=true
+    assert(not s.children.power and lifecycle.available(s))
     ok,e=shell.evaluate(c,"local ok,e=pcall(captured,'item'); assert(not ok and e.code=='E_UNREACHABLE')",event.tick,3); assert(ok,serpent.line(e))
     assert(equal(before,expected(s,'item')),'replacement reset native statistics')
     assert(shell.reset(c,'fixture'))
@@ -262,7 +262,7 @@ function M.on_tick(event)
   elseif x.phase=='pressure' then
     for _,kind in ipairs({'work','allocations'}) do
       local probe=build('computer',c.body.surface,c.body.force,-4,kind=='work' and 0 or 4); wire(probe,s,'red')
-      lifecycle.power_entity(probe).energy=2000; probe.powered=true
+      assert(not probe.children.power and lifecycle.available(probe))
       assert(runtime.save(probe.id,busy,0)); assert(runtime.activate(probe.id,event.tick))
       local ctx=runtime.context(probe,event.tick)
       local source="function start() local s=peripheral.find('production_statistics','red'); pcall(function() for i=1,1000 do s.getHistory('item','iron-plate','one_minute') end end); computer.setState('escaped',true) end"

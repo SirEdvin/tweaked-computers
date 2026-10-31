@@ -39,6 +39,22 @@ local function sorted(map,spend)
   table.sort(keys,function(a,b) spend(#a+#b+1); return a<b end)
   return keys
 end
+local function registered(rec)
+  return rec.id and registry.get() and registry.record(rec.id)==rec
+end
+local function schedule(rec,d,spend)
+  if not registered(rec) then return end
+  local lane=registry.maintenance_clock('kv'); local deadline
+  local size,work=#lane.deadlines,#d.order*2+16
+  while size>0 do work=work+16; size=math.floor(size/2) end
+  spend(work)
+  for _,k in ipairs(d.order) do
+    local at=d.entries[k].deadline
+    if at and (not deadline or at<deadline) then deadline=at end
+  end
+  if deadline then registry.maintenance_set('kv',rec.id,rec,deadline)
+  else registry.maintenance_remove('kv',rec.id) end
+end
 -- Cloning the bounded index also establishes exact live capacity independently
 -- of the sweep cursor. Old entries/field maps remain immutable until publication.
 local function stage(d,tick,spend)
@@ -57,7 +73,9 @@ local function publish(rec,d,spend)
   end
   if #order>L.keys or bytes>L.bytes or fields>L.total_hash_fields then fail('E_CAPACITY','database content capacity exceeded') end
   spend(#order+1)
-  d.order=order; d.bytes=bytes; d.fields=fields; rec.database=d
+  d.order=order; d.bytes=bytes; d.fields=fields
+  schedule(rec,d,spend)
+  rec.database=d
 end
 local methods={}
 local exact={get=1,set=2,type=1,hget=2,hexists=2,hgetall=1,hlen=1,expire=2,ttl=1,persist=1,getLimits=0}
@@ -160,8 +178,11 @@ M.methods=methods
 function M.initialize(rec)
   if rec.database==nil then rec.database=empty() end
   local ok=pcall(M.audit,rec.database,function() end)
-  if not ok then rec.body.minable_flag=false; rec.mining_guard='unsupported-database'; return end
+  if not ok then rec.body.minable_flag=false; rec.mining_guard='unsupported-database'; registry.art_changed(rec); return end
+  local scheduled,problem=pcall(schedule,rec,rec.database,function() end)
+  if not scheduled then registry.get().scheduling_diagnostic=type(problem)=='table' and problem or errors.new('E_ENGINE','database deadline initialization refused') end
   rec.body.minable_flag=true; rec.mining_guard=nil
+  registry.art_changed(rec)
 end
 function M.initialize_existing()
   local root=registry.get()
@@ -348,19 +369,39 @@ function M.reclaim(rec,tick,spend)
   end
 end
 function M.maintenance(tick,spend)
-  local root=registry.get(); local n=#root.order
-  if n==0 then return end
-  spend(n+1)
-  local cursor=math.min(root.scheduler.kv_cursor or 1,n); local visited=0
-  for _=1,n do
-    local rec=registry.record(root.order[cursor]); cursor=cursor%n+1
-    if rec and rec.kind=='kv' and rec.database and rec.database.version==1 and rec.mining_guard~='unsupported-database' then
-      scheduler.try_maintenance(function() M.reclaim(rec,tick,spend) end)
-      visited=visited+1
+  local root=registry.get(); local valid,item=pcall(registry.maintenance_next,'kv')
+  if not valid then root.scheduling_diagnostic=item; return end
+  if not item or item.tick>tick then return end
+  local retry={}; local serviced=0
+  for _=1,#registry.maintenance_clock('kv').deadlines do
+    item=registry.maintenance_next('kv'); if not item or item.tick>tick then break end
+    local size,work=#registry.maintenance_clock('kv').deadlines,16
+    while size>0 do work=work+16; size=math.floor(size/2) end
+    if not scheduler.try_maintenance(function() spend(work) end) then break end
+    registry.maintenance_remove('kv',item.id)
+    local rec=registry.record(item.id)
+    if rec==item.owner and rec.generation==item.generation and rec.kind=='kv'
+      and rec.database and rec.database.version==1 and rec.mining_guard~='unsupported-database' then
+      local ok,admitted=pcall(scheduler.try_maintenance,function()
+        M.reclaim(rec,tick,spend); schedule(rec,rec.database,spend)
+      end)
+      if not ok or not admitted then retry[#retry+1]=item end
+      if not ok then
+        for _,pending in ipairs(retry) do registry.maintenance_set('kv',pending.id,pending.owner,pending.tick) end
+        error(admitted,0)
+      end
+      local position=registry.maintenance_clock('kv').deadline_positions[rec.id]
+      if admitted and position then
+        local pending=registry.maintenance_clock('kv').deadlines[position]
+        if pending.tick<=tick then
+          registry.maintenance_remove('kv',rec.id); retry[#retry+1]=pending
+        end
+      end
+      if admitted then serviced=serviced+1 end
     end
-    root.scheduler.kv_cursor=cursor
-    if visited>=L.reclaim_devices_per_tick then return end
+    if serviced>=L.reclaim_devices_per_tick then break end
   end
+  for _,pending in ipairs(retry) do registry.maintenance_set('kv',pending.id,pending.owner,pending.tick) end
 end
 peripheral.register_type('kv',{methods=methods})
 lifecycle.register_item_adapter('kv',{initialize=M.initialize,snapshot=M.snapshot,restore=M.restore,tag='tc_kv'})

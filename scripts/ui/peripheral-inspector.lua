@@ -71,8 +71,8 @@ function M.open(player,id)
   identity.select_name.enabled=rec.kind~='monitor'
   local types={kv='kv_database',logic='logic_handler',monitor='monitor',configurator='configurator',recipe_searcher='recipe_searcher',factoriopedia_interface='factoriopedia_interface',production_statistics='production_statistics'}
   label(f,tr('peripheral-type',types[rec.kind]))
-  local powered=lifecycle.has_power(rec)
-  f.add{type='label',name='availability',caption=tr(not powered and 'unpowered' or (rec.kind=='recipe_searcher' or rec.kind=='factoriopedia_interface' or rec.kind=='production_statistics') and 'available' or 'pending')}
+  local powered=lifecycle.available(rec)
+  f.add{type='label',name='availability',caption=tr(not powered and 'physical-unavailable' or (rec.kind=='recipe_searcher' or rec.kind=='factoriopedia_interface' or rec.kind=='production_statistics') and 'available' or 'pending')}
 
   f.add{type='scroll-pane',name='details',horizontal_scroll_policy='auto',vertical_scroll_policy='auto'}
   -- Structure and identity never wait for expensive data-query admission.
@@ -96,7 +96,7 @@ end
 local function prepare(s,spend)
   local snapshot=s.snapshot; local d=snapshot.details
   local view={signature='',kind=snapshot.kind}
-  if not d then view.message=snapshot.powered and tr('identity-only') or tr('unpowered'); return view end
+  if not d then view.message=snapshot.powered and tr('identity-only') or tr('physical-unavailable'); return view end
   if snapshot.kind=='kv' then
     local entries=d.entries; view.keys={}; local pages=math.max(1,math.ceil(#entries/8))
     s.page=math.min(s.page,pages); view.pages=pages
@@ -205,7 +205,7 @@ end
 draw_pending=function(f,s,rec,powered)
   local p=f.details; p.clear(); s.drawn=nil
   if rec.kind=='logic' then draw_logic(p,s,{connected={},errors={}}); return end
-  local reason=tr(not powered and rec.kind~='monitor' and 'unpowered' or 'pending')
+  local reason=tr(not powered and rec.kind~='monitor' and 'physical-unavailable' or 'pending')
   if rec.kind=='recipe_searcher' or rec.kind=='factoriopedia_interface' or rec.kind=='production_statistics' then reason=tr('identity-only')
   elseif rec.kind=='kv' then label(p,tr('keys')); p.tooltip=tr('kv-help')
   elseif rec.kind=='configurator' then
@@ -364,67 +364,60 @@ function M.on_player_unavailable(event)
   if player and player.valid then M.close(player) else model.close(event.player_index) end
 end
 function M.on_size(event) M.resize(game.get_player(event.player_index)) end
+local function refresh_viewer(index,s,tick,spend)
+  if model.session(index)~=s then return end
+  local player=game.get_player(index)
+  if not player or not player.valid or not player.connected then model.close(index,s.token); return end
+  local f=frame(player)
+  if not f or not f.valid or f.visible==false or f.enabled==false or player.opened~=f or f.tags.token~=s.token or f.tags.ui_version~=model.version then M.close(player); return end
+  spend(128)
+  local ok,rec=pcall(model.current,player,s.token)
+  if not ok then M.close(player); return end
+  local powered=lifecycle.available(rec)
+  if s.snapshot and powered~=s.snapshot.powered then
+    s.snapshot=nil; s.logic_partial=nil; s.pending=true
+    draw_pending(f,s,rec,powered)
+  end
+  if not s.redraw or not s.snapshot then
+    s.pending=true; f.availability.caption=tr(not powered and 'physical-unavailable' or s.snapshot and 'pending-stale' or 'pending')
+    local candidate,admitted
+    local success,err=pcall(function()
+      admitted=scheduler.try_maintenance(function() candidate=model.read(rec,tick,spend,s) end)
+    end)
+    if not success then
+      spend(128); f.availability.caption=tr('unavailable',type(err)=='table' and err.code or 'E_ENGINE')
+      if f.details.pending_content then f.details.pending_content.caption=f.availability.caption end
+      -- Retain the last detached view as explicitly stale. Monitor
+      -- identity may have changed, so it is not copyable until resolved.
+      if rec.kind=='monitor' then f.identity.api_name.text=''; f.identity.select_name.enabled=false end
+      return true
+    end
+    if not admitted or not candidate then return 'pending' end -- Keep due age; credits stay spent.
+    s.identity_changed=s.snapshot and s.snapshot.name~=candidate.name or false
+    s.snapshot=candidate; s.pending=false; s.redraw=true
+  end
+  if s.redraw and s.snapshot then
+    local view=prepare(s,spend)
+    -- Bound native construction including worst-case slot rows and KV
+    -- chunks; no partial query is published as a complete inventory.
+    spend(12000+(view.groups and #view.groups*160 or 0))
+    draw(f,s,view); s.redraw=false
+
+    if f.identity.api_name.text~=s.snapshot.name then f.identity.api_name.text=s.snapshot.name end
+    f.identity.select_name.enabled=true
+    f.availability.caption=tr(not s.snapshot.powered and 'physical-unavailable' or s.identity_changed and 'identity-changed' or 'available')
+    if view.kind=='logic' and view.signals and (not view.signals.red_tick or not view.signals.green_tick
+      or next(view.signals.errors or {})) then f.availability.caption=tr('signals-pending') end
+
+    local width=math.max(300,math.min(720,math.floor(player.display_resolution.width/player.display_scale)-32))
+    for _,e in pairs(f.details.children) do if e.type=='text-box' then e.style.width=width-48 end end
+  end
+  return model.session(index)==s
+end
 function M.tick(tick)
   if tick%15~=0 then return end
   local root=registry.get(); if not registry.supported(root) then return end
-  local spend=scheduler.maintenance(root,tick)
-  local viewers=game.connected_players; local n=#viewers
-  if n==0 then return end
-  local start=(root.peripheral_inspector_cursor or 0)%n
-  root.peripheral_inspector_cursor=(start+1)%n
-  for offset=1,n do
-    local player=viewers[(start+offset-1)%n+1]
-    local s=model.session(player.index); local f=frame(player)
-    if s then
-      if not f or not f.valid or f.visible==false or f.enabled==false or player.opened~=f or f.tags.token~=s.token or f.tags.ui_version~=model.version then M.close(player)
-      else
-        scheduler.try_maintenance(function()
-          spend(128)
-          local ok,rec=pcall(model.current,player,s.token)
-          if not ok then M.close(player); return end
-          local powered=lifecycle.has_power(rec)
-          if s.snapshot and powered~=s.snapshot.powered then
-            s.snapshot=nil; s.logic_partial=nil; s.pending=true
-            draw_pending(f,s,rec,powered)
-          end
-          if not s.redraw or not s.snapshot then
-            s.pending=true; f.availability.caption=tr(not powered and 'unpowered' or s.snapshot and 'pending-stale' or 'pending')
-            local candidate,admitted
-            local success,err=pcall(function()
-              admitted=scheduler.try_maintenance(function() candidate=model.read(rec,tick,spend,s) end)
-            end)
-            if not success then
-              spend(128); f.availability.caption=tr('unavailable',type(err)=='table' and err.code or 'E_ENGINE')
-              if f.details.pending_content then f.details.pending_content.caption=f.availability.caption end
-              -- Retain the last detached view as explicitly stale. Monitor
-              -- identity may have changed, so it is not copyable until resolved.
-              if rec.kind=='monitor' then f.identity.api_name.text=''; f.identity.select_name.enabled=false end
-              return
-            end
-            if not admitted or not candidate then return end -- Credits remain spent; candidate stays private.
-            s.identity_changed=s.snapshot and s.snapshot.name~=candidate.name or false
-            s.snapshot=candidate; s.pending=false; s.redraw=true
-          end
-          if s.redraw and s.snapshot then
-            local view=prepare(s,spend)
-            -- Bound native construction including worst-case slot rows and KV
-            -- chunks; no partial query is published as a complete inventory.
-            spend(12000+(view.groups and #view.groups*160 or 0))
-            draw(f,s,view); s.redraw=false
-
-            if f.identity.api_name.text~=s.snapshot.name then f.identity.api_name.text=s.snapshot.name end
-            f.identity.select_name.enabled=true
-            f.availability.caption=tr(not s.snapshot.powered and 'unpowered' or s.identity_changed and 'identity-changed' or 'available')
-            if view.kind=='logic' and view.signals and (not view.signals.red_tick or not view.signals.green_tick
-              or next(view.signals.errors or {})) then f.availability.caption=tr('signals-pending') end
-
-            local width=math.max(300,math.min(720,math.floor(player.display_resolution.width/player.display_scale)-32))
-            for _,e in pairs(f.details.children) do if e.type=='text-box' then e.style.width=width-48 end end
-          end
-        end)
-      end
-    elseif f and f.valid then f.destroy() end
-  end
+  scheduler.viewer_tick('inspector',tick,scheduler.maintenance(root,tick),refresh_viewer)
 end
 scheduler.register_phase('render','ui-peripheral-inspectors',M.tick)
 return M

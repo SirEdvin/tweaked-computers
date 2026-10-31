@@ -73,6 +73,7 @@ script.on_event(defines.events.on_tick,function(event) scheduler.tick(event.tick
 if script.active_mods['tc-smoke'] and settings.startup['tc-smoke-production-fixture'] then
   local name=settings.startup['tc-smoke-production-fixture'].value
   local monitor_state_fixture={['tests.dashboard_lifecycle_engine']=true,['tests.dashboard_client_engine']=true,['tests.dashboard_engine']=true,['tests.dashboard_dependency_engine']=true,['tests.monitor_demand_engine']=true,['tests.monitor_state_idle']=true,['tests.monitor_state_pending']=true,
+    ['tests.scheduling_engine']=true,
     ['tests.monitor_state_waiting']=true,['tests.monitor_state_preparing']=true,
     ['tests.monitor_state_ready']=true,['tests.monitor_state_retiring']=true,
     ['tests.acceptance_monitor_engine']=true,['tests.editor_reference_client_engine']=true,['tests.peripheral_inspector_engine']=true,

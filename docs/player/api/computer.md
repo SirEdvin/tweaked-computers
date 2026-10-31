@@ -68,11 +68,13 @@ private helper names or nested local names.
 | peripheral_detach | peripheral, peripheral_type, wire, reason |
 | monitor_resize | peripheral, wire, wires, old_width, old_height, width, height, reason |
 | monitor_touch | peripheral, wire, wires, x, y, player_index, sample_tick |
-| power_restored | outage_start_tick, restored_tick |
+| power_restored | Inert legacy registration; no new events |
 | modem_message | peripheral, wire, wires, channel, replyChannel, message?, distance?, sent_tick; [modem semantics](modem.md#messages-and-named-handlers) |
 
-`power_restored` occurs once after a real outage for retained subscriptions, not
-cold load. No power-loss/stop/fault guest callback is required for safety. `start`,
+`power_restored` remains registerable for source compatibility but produces no
+new events. Already accepted historical events retain their old payloads.
+Custom computers need no electricity and electrical cycling never pauses work.
+No power-loss/stop/fault guest callback is required for safety. `start`,
 `timer` and `signal_changed` are **not** accepted by computer.on. Logic uses
 [its own subscribe](logic.md#subscriptions); timers address a named handler directly.
 There is no guest on_tick.

@@ -24,7 +24,8 @@ local function build(kind,surface,x,y,force)
   local body=assert(surface.create_entity{name=name,position={x,y},force=force or 'player'})
   -- Transport cases seed retained identities; radar_engine covers rooted enrollment.
   local rec=assert(lifecycle.build(body))
-  lifecycle.power_entity(rec).energy=1000000; rec.powered=true; return rec
+  if rec.native_carrier then rec.body.energy=1000000 end
+  assert(not rec.children.power); return rec
 end
 local function conn(rec,wire)
   if rec.native_carrier then return assert(rec.body.get_wire_connector(defines.wire_connector_id['circuit_'..wire],true)) end
@@ -56,9 +57,17 @@ end
 local function subscribe(c)
   guest(c,receiver_source,'received',{name='modem_message',message='setup'})
   c.state={}; c.state_sizes={}; c.state_bytes=16; c.state_entries=0; c.state_nodes=1; c.state_node_sizes={}
-  runtime.subscribe(c,'modem_message','received',nil,nop)
+  local interests=registry.get().topology_interests; local next_binding=interests.order[interests.cursor]
+  local id=runtime.subscribe(c,'modem_message','received',nil,nop)
+  assert(not next_binding or interests.order[interests.cursor]==next_binding,'new interest reset topology rotation')
+  local owner=assert(registry.get().topology_interests.computers[c.id])
+  assert(owner.subscriptions[id]==c.subscriptions[id] and owner.bindings.red and owner.bindings.green,'modem-only registration lost topology interest')
 end
 local function clear(c) c.queue={}; c.queue_bytes=0 end
+local function unsubscribe_all(c)
+  local ids={}; for id in pairs(c.subscriptions) do ids[#ids+1]=id end
+  for _,id in ipairs(ids) do assert(runtime.unsubscribe(c,id)) end
+end
 function M.run()
   storage.modem_fixture={groups=0,phase='armed'}
   local surface=game.surfaces[1]
@@ -134,11 +143,8 @@ function M.run()
   log('TC_CONTRACT_TOTAL '..f().groups)
 end
 local function power()
-  for _,id in ipairs(registry.get().order) do local rec=registry.record(id)
-    if rec and rec.body.valid then lifecycle.power_entity(rec).energy=1000000; rec.powered=true end
-  end
   for _,rec in pairs(registry.get().devices) do
-    if rec.kind=='radar' and rec.body.valid then rec.body.energy=1000000 end
+    if rec.native_carrier and rec.body.valid then rec.body.energy=1000000 end
   end
 end
 local function traffic(c,r,d,s)
@@ -196,7 +202,7 @@ local function duplicates(c,r,d,s)
   for _=3,9 do runtime.subscribe(d,'modem_message','received',nil,nop) end
   error_is('E_LIMIT',function() call(c,r,'transmit',42,17,'fanout') end)
   assert(#d.queue==0)
-  d.subscriptions={}; runtime.subscribe(d,'modem_message','received',nil,nop)
+  unsubscribe_all(d); runtime.subscribe(d,'modem_message','received',nil,nop)
   report('multiple-radars-subscription-order-copy-isolation-and-fanout-refusal')
 end
 function M.on_load()
@@ -261,7 +267,7 @@ local function envelope(c,r,d,s)
   f().maximum={work=ctx.machine.work,allocations=ctx.machine.allocations,queue_bytes=d.queue_bytes,
     deliveries=#d.queue,message_bytes=4096}
   log('TC_MODEM_ENVELOPE '..serpent.line(f().maximum))
-  clear(d); d.subscriptions={}; runtime.subscribe(d,'modem_message','received',nil,nop)
+  clear(d); unsubscribe_all(d); runtime.subscribe(d,'modem_message','received',nil,nop)
   guest(c,[[function start(e)
     local nodes={}; for i=1,255 do nodes[i]=false end
     peripheral.find('modem','red').transmit(42,17,nodes)
@@ -311,9 +317,10 @@ local function lifecycle_cases(c,r,d,s)
   local fc=build('computer',c.body.surface,1100,0,foreign); local fr=build('radar',c.body.surface,1106,0,foreign)
   connect(fc,fr,'red'); subscribe(fc); call(fc,fr,'open',42)
   call(c,r,'transmit',42,17,'force-isolation'); assert(#fc.queue==0 and #d.queue==1)
-  runtime.set_power(d.id,false,game.tick,nop); assert(#d.queue==0 and s.modem.channels[42])
-  call(c,r,'transmit',42,17,'computer-outage'); assert(#d.queue==0)
-  runtime.set_power(d.id,true,game.tick,nop); assert(#d.queue==0)
+  local accepted=d.queue[1]
+  d.powered=false; assert(#d.queue==1 and s.modem.channels[42])
+  call(c,r,'transmit',42,17,'power-free-computer'); assert(#d.queue==2 and d.queue[1]==accepted)
+  d.powered=true; clear(d)
   local previous=s.modem
   s.body.force=foreign
   assert(not peripheral.inventory(d,'red',nop)[s.id])

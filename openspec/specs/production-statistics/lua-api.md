@@ -116,7 +116,7 @@ The item ID passed to the engine is a plain `{name=..., quality=...}` identity. 
 
 ## Authority, errors and lifecycle
 
-Same-force, same-surface, explicit-color Network reachability and the exact bound identity/generation are rechecked through the existing peripheral facade. Passive discovery and `getLimits()` remain available without device power. All three statistical methods require power. Captured methods do not retarget a replacement; Console-restored bindings retain the existing live checks.
+Same-force, same-surface, explicit-color Network reachability and the exact bound identity/generation are rechecked through the existing peripheral facade. The device needs no electricity or electrical helper. Discovery, getLimits and all three statistical methods retain their current non-power physical authority checks. Captured methods do not retarget a replacement; Console-restored bindings retain the existing live checks.
 
 | Condition | Result |
 | --- | --- |
@@ -125,18 +125,18 @@ Same-force, same-surface, explicit-color Network reachability and the exact boun
 | Existing argument/result envelope is exceeded | Existing `E_LIMIT`; no partial snapshot |
 | Native data contains an unsupported/nonfinite value | `E_UNSUPPORTED`; no silently omitted entry |
 | Native statistics access unexpectedly fails | `E_ENGINE`; do not manufacture zero values |
-| Device is reachable but unpowered | `E_UNPOWERED` for statistical methods |
+| Device physically unavailable | `E_UNREACHABLE` |
 | Bound identity, path, force or surface is no longer authorized | Existing `E_UNREACHABLE` behavior |
 | Network proof is pending or cannot fit existing allowances | Existing `E_NETWORK_PENDING` / `E_LIMIT` behavior |
 | Shared work or callback allocation is exhausted | Existing fatal `E_BUDGET` control, not a catchable statistics-specific retry |
 
-Ordinary errors use the shared plain `ApiError` shape and can be caught with `pcall`; message text is not stable API. Existing authority/power checks precede provider input validation, and resource exhaustion can occur before later semantic validation. Do not weaken those contracts to guarantee a different error ordering.
+Ordinary errors use the shared plain `ApiError` shape and can be caught with `pcall`; message text is not stable API. Existing physical authority checks precede provider input validation, and resource exhaustion can occur before later semantic validation. Do not weaken those contracts to guarantee a different error ordering.
 
 The device owns no statistics data, query sessions, subscriptions or output. Mining and replacement never reset native statistics; blueprint/cloning cannot duplicate a private production history. Save/load retains ordinary identity and wire state without storing native flow objects. Neither the feature nor its inspector exposes reset/write methods.
 
 ## Example: query the three categories and operations
 
-The maintained packaged example exercises these operations. Setup: place and power a computer and Production Statistics device on the same surface/force and connect their visible Network sockets with a red wire. Generate some item/fluid/pollution activity first to see nonempty maps. No collector startup is required.
+The maintained packaged example exercises these operations. Setup: place an electricity-free computer and Production Statistics device on the same surface/force and connect their visible Network sockets with a red wire. Generate some item/fluid/pollution activity first to see nonempty maps. No collector startup is required.
 
 ```lua
 function start()
@@ -159,7 +159,7 @@ function start()
 end
 ```
 
-An empty map is valid, unlike an unavailable/unpowered query. Large factories can exceed existing whole-result or Console/log budgets; examples must explain `E_LIMIT` and the existing fatal work budget without swallowing failures or retrying in an unbounded loop. The separate maintained monitor example must plot both native history arrays using the existing monitor API, with axes/unit/direction labels and no independent history recorder.
+An empty map is valid, unlike a physically unavailable query. Large factories can exceed existing whole-result or Console/log budgets; examples must explain `E_LIMIT` and the existing fatal work budget without swallowing failures or retrying in an unbounded loop. The separate maintained monitor example must plot both native history arrays using the existing monitor API, with axes/unit/direction labels and no independent history recorder.
 
 ## Pinned primary references and evidence status
 

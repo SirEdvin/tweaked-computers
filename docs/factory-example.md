@@ -1,20 +1,21 @@
 # Editable factory controller
 
 This controller combines the original device types using native named callbacks. It requires
-Factorio 2.0.77, base alone or Space Age. Back up your save before installing the
+Factorio 2.1.23, base alone or Space Age. Back up your save before installing the
 alpha candidate. Client typing, focus, zoom and multiplayer checks are still yours;
 headless tests use explicit player/GUI doubles, not a real graphical player.
 
 ## Build and wire
 
 Research **Native circuit computers** after circuit-network and advanced-circuit.
-Power a computer, KV database, logic handler, configurator and a north-facing 2×2
-rectangle of four monitor tiles. All tiles need electricity. Place an ordinary
+Place a computer, KV database, logic handler, configurator and a north-facing 2×2
+rectangle of four monitor tiles. These custom devices need no electricity. Place an ordinary
 inserter between a supply chest containing iron plates and an empty destination.
 Use a separate stock-reading chest to control the threshold. Enable **Read
 contents** in that stock chest's native circuit GUI. Put five iron plates in it.
 
-Use actual small role ports, not the large body selection rectangle:
+Wire visible Network bodies and the distinct Logic Input/Output and Configurator
+Targets contacts; do not treat the isolated roles as internally connected:
 
     COMPUTER NETWORK --red-- KV NETWORK --red-- MONITOR member NETWORK
                                  |
@@ -42,7 +43,7 @@ The shared monitor does not create an unwired bridge between its members.
 The optional Recipe Searcher is a separate late-game research, with exactly
 Circuit Computers and utility science as direct prerequisites: 200 red/green/utility
 pack sets at 60 seconds each. Craft it from 10 steel plates, 5 advanced circuits
-and 2 processing units in 2 seconds, supply 30 kW and wire its body to the red
+and 2 processing units in 2 seconds, then wire its body to the red
 Network. It needs no product inventory or fluid input. Run the separate
 [recipe-searcher-program.lua](../examples/recipe-searcher-program.lua) document
 to inspect item/fluid recipes without replacing any machine configuration.
@@ -79,7 +80,7 @@ not a Unicode terminal, and drawing never interprets rich text.
 
 ## Shared versus independent databases
 
-Power a second computer and a second physical database. Connect the second
+Place a second computer and a second physical database. Connect the second
 computer's NETWORK red to the first database NETWORK. Connect its NETWORK green
 only to the second database NETWORK; do not also create a complete green path to
 the first database. Paste, Save and Run
@@ -119,14 +120,15 @@ source separately from the saved source and unsaved player draft.
 ## Troubleshooting
 
 - Missing peripheral: open Peripherals; inspect automatic red and green observations separately.
-  Check actual NETWORK ports, force/surface, power and physical same-color paths.
+  Check actual NETWORK ports, force/surface and physical same-color paths.
 - Target absent: check TARGETS color, actual isolated native connector and relay
   wires. Being visible in computer discovery does not authorize factory targets.
 - No movement: check supply/destination, inserter direction/power, read-contents
   stock chest and native condition readback. Wait for circuit/in-flight settling.
 - E_BUSY/pending: retry on a later named timer; do not spin. E_BUDGET faults the
   run and clears its bank. Divide extra factory work into bounded named callbacks.
-- Unpowered monitor: every member must be powered. Buffer contents remain stored.
+- Unavailable monitor: every member must be physically valid and owned. No electricity
+  is required. Buffer contents remain stored.
 - Wire loss: output is fail-safe; this example faults on missing required services,
   not an automatic reconnect manager. Fix wiring, review diagnostics, then Run.
 

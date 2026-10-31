@@ -3,6 +3,12 @@ local registry=require('scripts.registry')
 local errors=require('scripts.runtime.errors')
 local M={}
 local cleanup={}
+local physical_available
+function M.register_availability(fn) assert(not physical_available); physical_available=fn end
+function M.available(c)
+  if not registry.supported(registry.get()) or not c or registry.record(c.id)~=c or not c.body.valid then return false end
+  return not c.physical_version or physical_available and physical_available(c) or false
+end
 function M.program(c) return {kind='program',id=c.run_id} end
 function M.shell(c) return {kind='shell',id=c.shell and c.shell.id} end
 function M.live(c,p)
@@ -11,7 +17,7 @@ function M.live(c,p)
   return p.kind=='shell' and c.shell and c.shell.version==1 and c.shell.id==p.id
 end
 function M.check(c,p)
-  if not M.live(c,p) or not c.powered then errors.raise('E_NOT_FOUND','execution owner no longer active or powered') end
+  if not M.live(c,p) or not M.available(c) then errors.raise('E_NOT_FOUND','execution owner no longer active or physically valid') end
 end
 function M.owner(c,p,wire,path)
   return {computer_id=c.id,kind=p.kind,run_id=p.id,wire=wire,path=path}

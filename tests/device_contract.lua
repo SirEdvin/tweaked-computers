@@ -4,7 +4,7 @@ function M.run()
   local count=0
   for _,kind in ipairs(defs.order) do
     local def=defs.devices[kind]
-    assert(#def.roles==def.width and def.watts>0)
+    assert(#def.roles==def.width and def.watts==nil)
     for _,direction in ipairs({0,4,8,12}) do
       local seen={}
       for i,role in ipairs(def.roles) do

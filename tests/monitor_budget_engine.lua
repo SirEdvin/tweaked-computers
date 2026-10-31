@@ -19,7 +19,7 @@ function beat(e) computer.setState('beats',computer.getState('beats')+1) end
 function notify(e) computer.setState('notifications',computer.getState('notifications')+1) end]]
 local function fuel(x)
   for _,id in ipairs(x.nodes) do
-    local r=assert(registry.record(id)); lifecycle.power_entity(r).energy=100000
+    local r=assert(registry.record(id)); assert(not r.children.power)
   end
 end
 local function render(tick,spend)

@@ -4,12 +4,19 @@ Mine or rotate the whole body, not an owned role port. Mining produces one logic
 item; helpers have no drops. Rotation retains identity and role wires. Destruction
 is data loss, not an alternative to mining. Back up saves before upgrades or repair.
 
+All nine custom families work without electricity. Native radar/speaker power is
+separate and still checked when used. Targeted lifecycle events wake repair;
+silent geometry/scope changes use staggered observations within the existing
+60-tick topology envelope. Calls reject invalid bindings immediately rather than
+trusting an earlier observation. Settled clone/undo work does not keep polling,
+and ordinary load preserves pending maintenance without restarting programs.
+
 ## Upgrading from alpha 0.1.1
 
 Back up the entire save and old mod ZIP before upgrading. The redesigned devices
 use new circuit-capable shells without changing public Lua v1, logical IDs or
 recipe/item names. During the mod configuration change, existing bodies are
-converted only after replacement power, sockets and every role/color wire have
+converted only after replacement shells, required sockets and every role/color wire have
 been staged. Data, absolute KV deadlines, live monitor contents, active runs and
 unsaved recovery drafts are retained; conversion does not run startup again.
 Existing editor sessions must be reopened against the new physical body.
@@ -35,8 +42,9 @@ old mod, not loading an upgraded save in the old version.
 | Save edited source | Saved revision changes; active run/state unchanged | Unchanged | Unchanged | Unchanged |
 | Run/Apply | New generation; state survives; old work canceled | Unchanged | Image remains | Old run's still-owned bank clears; target settings remain |
 | Stop/fault | Source/state/logs remain; run work canceled | Unchanged | Image remains | Still-owned bank clears; target settings remain |
-| Computer outage | Pause; keep state/registrations/timers; discard transient history and resync on restoration | Deadlines continue with simulation | Retained | Owned output clears; target settings remain |
-| Peripheral outage | Active services refuse | Retain data/deadlines | Hide presentation, keep model | Handler bank clears; target settings remain |
+| Custom-device electrical cycling | Continue; no pause, cancellation or electrical resync | Deadlines continue with simulation | Retained image/model | Still-owned bank retained; target settings remain |
+| Lost/invalid physical binding | Active calls refuse; existing non-power invalidation cleanup applies | Retain contents/deadlines | Hide unavailable presentation, retain model | Fail-safe current-owner cleanup; surviving target settings remain |
+| Native radar/speaker electrical loss | Native operations/receiver eligibility refuse; channels remain, no missed-traffic/audio replay | Unchanged | Unchanged | Custom output unchanged; native behavior retained |
 | Mine/re-place | Plain hardware: new blank stopped identity, empty state/source and no label | Tagged contents/deadlines; new identity | Tile settings retained, new blank grouping | New logic bank zero/unowned; surviving targets unchanged |
 | Native undo of removal | Pre-removal saved source/label/state and different formerly active recovery source; new stopped identity, no run work | Existing item policy | Existing item policy | Old output ownership and earlier factory effects are not restored |
 | Blueprint / clone | Saved source/label, new stopped identity, empty state/work | Empty | Applicable settings, new blank model | Zero/unowned; configurator retains no old target list |
@@ -115,7 +123,7 @@ Use the deconstruction planner on the visible monitor body. Marking/cancelling
 keeps the current cells, cursor, palette, scale and merged identity; it does not
 reset the display. Only actual robot mining/removal changes topology and invokes
 normal split/resize rules. You can cancel one tile before removal without losing
-the image. Power restoration reveals retained content, not a newly blank model.
+the image. Electrical cycling has no effect on custom monitor presentation.
 
 The renderer puts content below native world feedback rather than drawing a
 custom removal symbol. Native red-X visibility while the display changes is

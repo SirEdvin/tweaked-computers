@@ -78,9 +78,9 @@ function M.on_tick(event)
   local root=registry.get(); local c=registry.computer(x.computer)
   local tiles=0
   for _,id in ipairs(root.order) do local r=registry.record(id)
-    if r and r.body.valid then lifecycle.power_entity(r).energy=100000 end
+    if r and r.body.valid then assert(not r.children.power) end
     if r and r.kind=='monitor' then
-      assert(r.body.valid and lifecycle.has_power(r),'timing scene lost a live powered tile')
+      assert(r.body.valid and lifecycle.available(r),'timing scene lost a live available tile')
       tiles=tiles+1
     end
   end

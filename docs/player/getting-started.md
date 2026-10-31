@@ -4,7 +4,7 @@
 
 In a build containing the [Factoriopedia Interface](api/factoriopedia-interface.md), it shares Recipe Searcher
 research: 10 steel plates, 5 advanced circuits, 2 processing units, 2 seconds per
-1×1 device. Supply 30 kW and connect its Network body to the computer's red or
+1×1 device. No electricity is needed; connect its Network body to the computer's red or
 green Network. Ordinary opening shows identity/status; queries are read-only guest
 calls, not a catalogue GUI. No item/fluid input is needed.
 
@@ -122,7 +122,7 @@ are retained. Keep a pre-upgrade save and matching 0.1.11 ZIP for rollback.
 Version 0.1.13 removes catalogue-wide admission estimates from logic input reads
 and Recipe Searcher product/category queries. Adding unrelated recipes, items or
 qualities no longer makes a small input query unaffordable. Actual result limits,
-validation, power/ownership checks and shared work/Data budgets remain unchanged.
+validation, live ownership checks and shared work/Data budgets remain unchanged.
 Back up the save and keep the matching 0.1.12 ZIP before upgrading.
 
 Version 0.1.14 reads complete native circuit inventories in native order, without
@@ -158,7 +158,7 @@ prerequisites are `tc-circuit-computers` and `utility-science-pack`. It costs 20
 units of one automation, one logistic and one utility pack each, at 60 seconds per
 unit (no chemical or production packs in this technology). One device crafts in
 2 seconds from 10 steel plates, 5 advanced circuits and 2 processing units. Its
-1×1 body consumes 30 kW with a 1 kJ buffer. Circuit Computers alone never unlocks
+1×1 body needs no electricity. Circuit Computers alone never unlocks
 it, including when installing into an already-researched factory.
 
 Fresh monitor items stack to 50. Native tags, labels and quality must match to
@@ -166,19 +166,19 @@ stack data-bearing items; unlike settings do not silently merge. Computer and KV
 items remain stacks of one. Mining retains monitor settings/palette, not a
 portable copy of the previous logical screen buffer.
 
-| Device / recipe ID | Iron plate | Copper plate | Electronic circuit | Advanced circuit | Demand | Buffer |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Computer `tc-computer` | 10 | 5 | 10 | 2 | 60 kW | 2 kJ |
-| KV database `tc-kv` | 8 | 0 | 5 | 2 | 30 kW | 1 kJ |
-| Monitor tile `tc-monitor` | 4 | 2 | 5 | 0 | 15 kW | 500 J |
-| Logic handler `tc-logic` | 6 | 0 | 8 | 0 | 15 kW | 500 J |
-| Configurator `tc-configurator` | 8 | 0 | 8 | 2 | 30 kW | 1 kJ |
+| Device / recipe ID | Iron plate | Copper plate | Electronic circuit | Advanced circuit |
+| --- | ---: | ---: | ---: | ---: |
+| Computer `tc-computer` | 10 | 5 | 10 | 2 |
+| KV database `tc-kv` | 8 | 0 | 5 | 2 |
+| Monitor tile `tc-monitor` | 4 | 2 | 5 | 0 |
+| Logic handler `tc-logic` | 6 | 0 | 8 | 0 |
+| Configurator `tc-configurator` | 8 | 0 | 8 | 2 |
 
-Supply electricity to every body; each needs at least one tick's demand in its
-buffer to operate. Buffers provide only short brownout tolerance. Passive wire
-paths remain during outages, but active peripheral calls fail `E_UNPOWERED`.
-Computer callbacks pause; logic output clears; monitor presentation hides but its
-image survives. KV expiry still follows simulation ticks.
+All nine custom families need no electricity or power helper. Electrical cycling
+does not pause their programs, cancel accepted work, clear outputs or blank
+monitors. KV expiry still follows simulation ticks. Native radar, programmable-
+speaker and vanilla factory targets retain their own electricity requirements;
+native radar/speaker active methods can still report `E_UNPOWERED`.
 
 ## Recognize the devices
 
@@ -195,8 +195,8 @@ The world sprites and inventory icons use the same industrial forms:
 
 The small Network diamond and Factory targets crosshair supplement the device
 shape and socket position. Their colors do not restrict which wire color you use.
-A powered stopped computer has a grey dash; running uses an alternating amber
-beacon. Green means a powered peripheral, amber slash means unpowered and a tiny
+A stopped computer has a grey dash; running uses an alternating amber
+beacon. Green means an available custom peripheral, amber slash means physically unavailable and a tiny
 red cross means fault (monitors use compact bezel dots). These status cues are
 not deconstruction markers and do not replace the native removal X. The body
 keeps its identity in every state. Native appearance remains part of alpha review.

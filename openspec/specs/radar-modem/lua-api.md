@@ -8,7 +8,11 @@ Use `peripheral.find("modem", "red")`, `peripheral.wrap(name, wire)` or checked 
 
 Only vanilla prototype `radar` and, when Space Age is active, `tc-interplanetary-radar` participate. No automatic support is promised for third-party radar prototypes. No method enumerates remote computers, wraps remote peripherals or returns Factorio objects.
 
-Enrollment originates only at a placed computer, through a complete same-color, same-force, same-surface physical path. Direct cables and supported transitive network connectors qualify, including previously unenrolled native radar/speaker relays. Factory-only sockets, unsupported vanilla relays, ghosts, merged-monitor adjacency and hidden radio links do not. Placement, cloning, revival or wiring to a standalone peripheral does not enroll a radar. Stopped, faulted and unpowered computers remain physical roots; execution and powered methods retain their separate checks. Incomplete or refused adoption retains `E_NETWORK_PENDING`, `E_LIMIT` and `E_CAPACITY`, never a successful partial inventory.
+Enrollment originates only at a placed computer, through a complete same-color, same-force, same-surface physical path. Direct cables and supported transitive network connectors qualify, including previously unenrolled native radar/speaker relays. Factory-only sockets, unsupported vanilla relays, ghosts, merged-monitor adjacency and hidden radio links do not. Placement, cloning, revival or wiring to a standalone peripheral does not enroll a radar. Stopped and faulted computers remain physical roots; custom computers need no electricity. Execution authority and native powered methods retain their separate checks. Incomplete or refused adoption retains `E_NETWORK_PENDING`, `E_LIMIT` and `E_CAPACITY`, never a successful partial inventory.
+
+Native electrical/operational availability is checked at interaction/transmit and real receiver eligibility, not by proactive generic-lifecycle power polling. Custom computers need no electricity; native radar energy settings and channel retention are unchanged.
+
+Fresh physical discovery requests enrollment when it encounters an unenrolled supported native member. Background adoption retains only pending computer/color requests, including requests from stopped or faulted physical roots; idle roots are not repeatedly searched. A pending request survives cold reload and is re-proved against the same physical generation, selected color, force and surface before enrollment. An incomplete result remains an error, never a partial inventory.
 
 ## Methods
 
@@ -50,6 +54,8 @@ Each recipient handler receives an independent plain snapshot. Validation/copy w
 
 Register through saved function declarations using `computer.on("modem_message", "received")`; unregister with the returned subscription ID through `computer.off`. All existing subscription limits and named-handler rules remain in force. Multiple registrations intentionally produce one callback per registration.
 
+A `modem_message` registration maintains topology interest in both local physical colors even without attach/detach handlers. Removing the last relevant registration retires that interest after any already-pending host reconciliation settles; accepted queue snapshots are not recalled. Opening a radar channel alone does not create receive interest. Transmission and actual receiver eligibility still use fresh proofs, not the background observation as authority.
+
 `ModemMessage` extends `BaseEvent`:
 
 ```text
@@ -78,7 +84,7 @@ One transmission produces one receive event per `(receiving computer run, receiv
 
 At the accepted transmission, select powered/active receiving radars whose channel is open, with the same force as the sender. On the same surface either tier can receive from either tier at any distance. Across surfaces, both endpoints must be advanced and Space Age must be enabled. All surfaces, including planets and travelling space platforms, follow this rule; there is no interplanetary distance calculation or delayed orbital delivery.
 
-Only running, powered computers with a matching handler and a freshly proved local path to the receiver are destinations. A receiver with no eligible computer produces no event. No recipients is a successful no-op, not a discovery failure. Native hidden radar links are never local path evidence.
+Only running, physically valid computers with a matching handler and a freshly proved local path to the receiver are destinations. A receiver with no eligible computer produces no event. No recipients is a successful no-op, not a discovery failure. Native hidden radar links are never local path evidence.
 
 Routing starts from those eligible receiving computers, not from the remembered-radar pool. `routing_candidates` counts unique available, open-channel receivers reached through their current inventories; disconnected retained records are neither enumerated nor charged against that ceiling. Both relevant color proofs must complete before publication. Numeric ceilings, selected-wire authority, deterministic ordering and failure atomicity are unchanged.
 
@@ -88,7 +94,7 @@ After successful preparation, publish in sorted computer ID, receiving radar ID 
 
 Recipient queue overflow follows the existing runtime policy: visibly fault that recipient and retire its run, skip its remaining prepared deliveries, and continue other recipients deterministically. This is not a retryable sender error after partial publication. Preparation must ensure payloads and host-work reservations cannot fail partway through publication. These are datagrams without acknowledgements/retries, not an all-recipients delivery guarantee.
 
-A packet already queued is an accepted data snapshot: closing a channel, detaching or removing the receiving radar later does not recall it. Subsequent calls still need live authority. Stop, fault, computer removal, force/surface retirement and computer power-loss handling retain their existing cancellation/transient-event rules. No traffic missed during unavailability is replayed.
+A packet already queued is an accepted data snapshot: closing a channel, detaching or removing the receiving radar later does not recall it. Subsequent calls still need live authority. Stop, fault, computer removal, force/surface retirement retain their existing cancellation/transient-event rules. Custom electrical cycling cancels no accepted packets. No traffic missed during unavailability is replayed.
 
 ## Persistence and identity
 

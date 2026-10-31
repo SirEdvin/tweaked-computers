@@ -237,10 +237,11 @@ function M.on_tick(event)
     local nop=function() end
     assert(peripheral.inventory(c,'red',nop)[x.relay] and peripheral.inventory(c,'green',nop)[s.id])
     assert(not peripheral.inventory(c,'red',nop)[x.mixed],'mixed colors granted authority')
-    lifecycle.power_entity(s).energy=0; s.powered=false
-    guest(c,prefix..[[assert(s.getLimits().table_entries==1024); refused('E_UNPOWERED',s.getItem,'iron-plate'); refused('E_UNPOWERED',s.listItems)]])
+    s.powered=false
+    guest(c,prefix..[[assert(s.getLimits().table_entries==1024); assert(s.getItem('iron-plate').name=='iron-plate'); ]]..
+      (x.large and [[refused('E_LIMIT',s.listItems)]] or [[assert(#s.listItems()>0)]]))
     assert(peripheral.inventory(c,'red',nop)[x.relay],'unpowered relay lost discovery')
-    lifecycle.power_entity(s).energy=1000; s.powered=true
+    s.powered=true
     guest(c,prefix..[[assert(s.getItem('iron-plate').name=='iron-plate')]])
     c.shell={version=1,id='factoriopedia-fixture-shell',pending={},pending_bytes=0}
     local ok,e=shell.evaluate(c,"s=peripheral.find('factoriopedia_interface','red'); captured=s.getItem",game.tick,1); assert(ok,serpent.line(e))
@@ -255,7 +256,7 @@ function M.on_tick(event)
     local position=s.body.position; assert(lifecycle.remove(s.id,'fixture',true))
     local replacement=build('factoriopedia_interface',position.x,position.y)
     connect(c,replacement,'red'); connect(c,replacement,'green'); connect(replacement,registry.record(x.relay),'red')
-    x.s=replacement.id; lifecycle.power_entity(replacement).energy=1000; replacement.powered=true
+    x.s=replacement.id; assert(not replacement.children.power)
     ok,e=shell.evaluate(c,"local ok,e=pcall(captured,'iron-plate'); assert(not ok and e.code=='E_UNREACHABLE')",game.tick,2); assert(ok,serpent.line(e))
     assert(shell.reset(c,'fixture'))
     log('TC_FACT authority-both-colors-relay-mixed-power-force-surface-and-stale-method')
@@ -265,8 +266,8 @@ function M.on_tick(event)
       lifecycle.on_rotated{entity=specimen.body,previous_direction=before}; assert(specimen.direction==direction)
     end
     local cloned=assert(specimen.body.clone{position={16,8},surface=game.surfaces[1],force='player'})
-    local clone=assert(registry.by_entity(cloned)); assert(clone.id~=specimen.id)
-    local helper=lifecycle.power_entity(clone); local inventory=game.create_inventory(1); local quality=cloned.quality.name
+    local clone=assert(registry.by_entity(cloned)); assert(clone.id~=specimen.id and lifecycle.available(clone))
+    local helper=lifecycle.endpoint(clone,'network'); local inventory=game.create_inventory(1); local quality=cloned.quality.name
     lifecycle.on_removed{entity=cloned}; assert(cloned.mine{inventory=inventory,raise_destroyed=false})
     assert(inventory.get_item_count{name='tc-factoriopedia-interface',quality=quality}==1 and not helper.valid and not registry.record(clone.id))
     inventory.destroy()
@@ -292,10 +293,10 @@ function M.on_tick(event)
       assert(lifecycle.connector(record,'network','red').connection_count==1 and lifecycle.connector(record,'network','green').connection_count==1)
     end
     for _,record in ipairs(revived) do
-      local power=lifecycle.power_entity(record); assert(lifecycle.remove(record.id,'fixture',true) and not power.valid)
+      local body=record.body; assert(lifecycle.remove(record.id,'fixture',true) and not body.valid)
     end
     selection.destroy(); assert(lifecycle.remove(specimen.id,'fixture',true) and lifecycle.remove(partner.id,'fixture',true))
-    local doomed=build('factoriopedia_interface',20,8); local doomed_power=lifecycle.power_entity(doomed)
+    local doomed=build('factoriopedia_interface',20,8); local doomed_power=doomed.body
     assert(doomed.body.die() and not doomed_power.valid and not registry.record(doomed.id))
     log('TC_FACT cardinal-clone-mining-one-drop-wired-blueprint-destruction-and-helper-cleanup')
     assert(runtime.save(c.id,query_source,c.saved_revision)); assert(runtime.activate(c.id,event.tick))
@@ -314,7 +315,7 @@ function M.on_tick(event)
     assert(c.state.queries>=20 and registry.record(x.neighbor).state.samples>x.neighbor_before)
     log('TC_FACT contention '..serpent.line{queries=c.state.queries,neighbor=registry.record(x.neighbor).state.samples,neighbor_before=x.neighbor_before,total=registry.get().ledger.total})
     local work=build('computer',-4,4); connect(work,s,'red')
-    lifecycle.power_entity(work).energy=defs.devices.computer.watts/30; work.powered=true
+    assert(not work.children.power and lifecycle.available(work))
     assert(runtime.save(work.id,busy,0)); assert(runtime.activate(work.id,event.tick))
     local ctx=runtime.context(work,event.tick)
     local plan,problem=compiler.compile(exhausted_source,ctx); assert(plan,serpent.line(problem))

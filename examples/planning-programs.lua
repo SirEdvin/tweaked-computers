@@ -143,9 +143,9 @@ end]=]},
   assert(ok == false)
   print(message)
 end]=]},
-  {name=[=[specs/dashboard-interface/lua-api.md:1]=],sha256=[=[15291206586ecb09c3e24f00d834ed702ae49e713fbf9d526a769e348992a43a]=],source=[=[function start(event)
+  {name=[=[specs/dashboard-interface/lua-api.md:1]=],sha256=[=[0f55e9c742893b0be3e598c540e2e4cf1c53f0540f0b2a5e3ffcc8d60345102a]=],source=[=[function start(event)
     local panel = peripheral.find("dashboard", "red")
-    assert(panel, "Connect a powered Dashboard on red")
+    assert(panel, "Connect a Dashboard on red")
     panel.setTab(1, {
         title = "Overview",
         content = {type = "column", id = "root", children = {

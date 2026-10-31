@@ -9,19 +9,19 @@ demonstrates shared versus independent physical storage.
 The optional [Recipe Searcher](api/recipe-searcher.md) has its own late-game gate:
 Circuit Computers and utility science as direct prerequisites, 200 red/green/utility
 pack sets at 60 seconds each. Craft it from 10 steel plates, 5 advanced circuits
-and 2 processing units in 2 seconds. Supply 30 kW and connect its body to the red
+and 2 processing units in 2 seconds. No electricity is needed; connect its body to the red
 Network, then run the separate [query example](examples.md#recipe-searcher-program).
 It requires no physical product input and does not craft or configure machines.
 
 ## Build and wire
 
-Research [Native circuit computers](getting-started.md). Power a computer, KV,
+Research [Native circuit computers](getting-started.md). Place a computer, KV,
 logic handler, configurator and a north-facing 2×2 rectangle of four monitor tiles.
-Every tile needs electricity. Put a powered inserter between a supply chest with
+The custom devices need no electricity. Put a powered inserter between a supply chest with
 iron plates and an empty destination. Use a separate stock-reading chest, enable
 its native **Read contents**, and put five normal-quality iron plates in it.
 
-Connect the small role ports, not the large body selection rectangle:
+Connect each visible Network body and the named Input/Output/Factory targets sockets:
 
     COMPUTER NETWORK --red-- KV NETWORK --red-- MONITOR member NETWORK
                                  |
@@ -64,7 +64,7 @@ cells. Text is byte-indexed; it is not a Unicode terminal.
 
 ## Second computer: shared and private data
 
-Power a second computer and second physical KV. Connect second computer NETWORK
+Place a second computer and second physical KV. Connect second computer NETWORK
 red to the **first** database NETWORK. Connect its NETWORK green **only** to the
 second database NETWORK: do not accidentally make a complete green path to the
 first database. Save/Run [shared-telemetry](examples.md#shared-telemetry).
@@ -100,13 +100,13 @@ another explicit configuration write; read/reconnect does not enforce old settin
 ## Troubleshooting
 
 - Missing required peripheral: open Peripherals, inspect NETWORK color, exact
-  ports, force/surface and power. This example faults on missing services; it is
+  ports, force/surface and physical validity. This example faults on missing services; it is
   not an automatic reconnect manager. Repair and Run explicitly.
 - Target absent: inspect TARGETS green and actual isolated native connectors.
   Discovery visibility is not target authority.
 - No transfer: check supply/destination, direction/power, stock chest read mode
   and actual inserter condition; allow circuit/in-flight settling.
-- Blank monitor: power **all** members, use matching orientation and a complete
+- Blank monitor: check physical validity of **all** members, matching orientation and a complete
   rectangle. Native touch/input/readability remain user alpha testing.
 - `E_BUDGET`: split extra work across named callbacks; do not raise caps or retry
   in a busy loop. Pending/busy failures need a later event/tick.

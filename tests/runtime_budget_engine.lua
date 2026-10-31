@@ -88,7 +88,7 @@ local function maintenance_contracts(report)
   assert(root.ledger.total==total and rec.last_dispatch_tick==nil)
   -- Table-backed registration isolates scheduler entry -> authentic sampler
   -- refusal. Native subscription/output cleanup is covered by logic_engine.
-  rec.subscriptions.pressure={event_name='signal_changed'}
+  assert(runtime.subscribe(rec,'signal_changed','start'))
   scheduler.tick(t)
   assert(rec.status=='faulted' and rec.diagnostic.code=='E_BUSY',
     'scheduler entry deferral silently skipped fail-closed signal sampling')
@@ -119,8 +119,8 @@ local function maintenance_contracts(report)
   assert(not scheduler.try_maintenance(function() spend(1) end))
   assert(not admission.reserve(ctx,'work',1) and root.ledger.total==480000)
   scheduler.tick(t)
-  assert(root.scheduler.last_tick==-1 and root.scheduler.maintenance_spent==220000,
-    'exhausted scheduler entry crashed or reset retained spending')
+  assert(root.scheduler.last_tick==t and root.scheduler.maintenance_spent==220000,
+    'empty demand round crashed or reset retained spending')
   report('maintenance-increase-and-host-decrease-respect-combined-spent-work')
 
   change('maintenance',100000000); change('host',200001)

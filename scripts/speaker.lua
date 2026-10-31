@@ -44,6 +44,5 @@ function M.reconcile(rec,spend)
     rec.generation=rec.generation+1
     registry.get().entities[b.unit_number].generation=rec.generation
   end
-  rec.powered=M.available(rec)
 end
 return M

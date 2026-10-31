@@ -9,6 +9,13 @@ local function equal(a,b)
 end
 for _,kind in ipairs(defs.order) do
   local def=defs.devices[kind]; local shell=data.raw['constant-combinator'][def.entity_name]
+  assert(def.watts==nil and shell.energy_source==nil,'custom shell consumes electricity')
+  for _,name in ipairs({def.name,def.power_name}) do
+    local legacy=data.raw['electric-energy-interface'][name]
+    assert(legacy.energy_usage=='0W' and legacy.energy_production=='0W')
+    assert(legacy.energy_source.input_flow_limit=='0W' and legacy.energy_source.drain=='0W')
+    assert(legacy.energy_source.render_no_power_icon==false and legacy.energy_source.render_no_network_icon==false)
+  end
   assert(equal(shell.circuit_wire_connection_points,defs.points(kind,'network',false)))
   for _,role in ipairs(def.roles) do if role~='network' then
     local pad=data.raw['constant-combinator'][defs.pad_name(kind,role)]

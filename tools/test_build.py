@@ -185,6 +185,10 @@ getLimits()''',
         reference = re.search(r'  text=\[\[(.*?)\]\]', source, re.S)
         assert reference is not None, 'missing packaged reference'
         text = reference[1]
+        self.assertNotIn('supply 30 kw', text.lower(), 'custom-device Reference still requires electricity')
+        for relative in ('docs/player/getting-started.md', 'docs/player/factory.md',
+                         'docs/player/api/production-statistics.md', 'docs/player/api/recipe-searcher.md'):
+            self.assertNotIn('30 kw', (build.ROOT / relative).read_text().lower(), relative)
         self.assertEqual(sum(len(signatures.splitlines()) for signatures in expected.values()), 103)
         for heading, signatures in expected.items():
             found = re.search(r'^' + re.escape(heading) + r'\n(.*?)(?=^[A-Z][A-Z ]+\n|\Z)',

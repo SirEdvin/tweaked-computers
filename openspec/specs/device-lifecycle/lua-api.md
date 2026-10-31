@@ -7,7 +7,7 @@ Normative companion to [spec.md](spec.md). This capability adds no unrestricted 
 This matrix describes saved-program and physical-device state. The independent
 [Console lifecycle](../console-shell/lua-api.md#session-lifetime) additionally
 retains its scratch graph across window close, load, automatic program fault and
-power loss, but clears it on successful Run/Apply, explicit Stop or confirmed
+electrical cycling, but clears it on successful Run/Apply, explicit Stop or confirmed
 Reset Shell. Shell sessions never travel to a new physical identity.
 
 | Transition | Computer source/state | Runtime/timers/subscriptions | KV contents/TTL | Monitor | Logic output | Target configuration |
@@ -16,8 +16,8 @@ Reset Shell. Shell sessions never travel to a new physical identity.
 | Save edited source | Update saved source only | Old active revision continues | Unchanged | Unchanged | Unchanged | Unchanged |
 | Explicit Run/Apply | New active revision; retain explicit state | New run generation; old work canceled | Unchanged | Retain image | Clear old run's still-owned bank | Retain |
 | Stop/fault | Retain recoverable source/state | Cancel run work | Retain | Retain image | Clear still-owned bank | Retain |
-| Computer power loss | Retain | Pause; resync current inputs on return | Retain; ticks still expire keys | Retain | Clear still-owned bank | Retain |
-| Peripheral power loss | No change | Services unavailable; relevant current-input resync on return | Retain deadlines/data | Blank presentation, retain model | Clear bank | Retain native targets |
+| Custom-device electrical cycling | Retain | Continue; no cancellation or electrical resync | Retain; ticks still expire keys | Retain presentation/model | Retain still-owned bank | Retain |
+| Native radar/speaker electrical loss | No change | Native service/receiver unavailable; channels remain; no missed-traffic/audio replay | No change | No change | No change | Native behavior unchanged |
 | Mining/replacement | Plain hardware; ordinary placement has empty source/state, no label and a new stopped identity | No execution/work travels | Preserve data/deadlines in item; new entity ID | Preserve tile settings, not an obsolete merged screen image | New placement zero/unowned | Already-applied settings remain on targets |
 | Qualifying native undo removal/restoration | Restore pre-removal saved source, label and explicit state; retain different formerly active source for reviewed recovery; new identity | Stopped; no run, callbacks, timers, subscriptions, Console session or output ownership | Existing item policy | Existing item policy | Zero/unowned | Earlier factory effects are not rewound |
 | Blueprint/clone/settings copy | Copy source/label/applicable settings, not explicit state; new identity | Start stopped, no work | Empty | New grouping, blank buffers, copied applicable settings | Zero/unowned | Copy only the native target settings if the target itself is copied; configurator does not carry a list of old managed target IDs |
@@ -37,8 +37,17 @@ itself contain literals; blueprint disclosure excludes application state and KV 
 
 ## API observations
 
+Targeted physical events and staggered due non-power observations retain the
+existing topology envelope. Exact destruction registrations cannot retarget a
+replacement object. Direct calls retain immediate live validation; background
+observation is not authority. Pending physical repair, clone settlement and undo
+candidate cleanup retain their work across ordinary cold load, without an
+authoritative `on_load` mutation or startup replay. A refused due observation
+keeps its original deadline while fitting peers progress. Settled work retires
+its membership rather than rediscovering it through a registry tick walk.
+
 - `computer.getID()` and peripheral/device names survive ordinary saves, not physical replacement or cloning.
-- `peripheral.describe()` can still describe an unpowered reachable endpoint. Active services fail E_UNPOWERED; metadata getLimits remains available.
+- `PeripheralInfo.powered` remains a boolean: live physical availability for custom devices, live native electrical/operational availability for radar/speaker. Only native radar/speaker retain electrical `E_UNPOWERED`; their reachable metadata/getLimits remain available.
 - A lost wire invalidates the bound wrapper/channel even if the same physical peripheral is accessible on a different color. The program must explicitly rebind.
 - Force or surface changes revoke old authority before guest effects. Foreign/allied forces are not implicitly authorized.
 - Mine/destroy events never require a player callback to complete safety cleanup. A malicious stopped program cannot prevent host cleanup.

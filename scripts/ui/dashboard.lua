@@ -44,6 +44,7 @@ function M.resize(player)
   f.content.style.width=width-32; f.content.style.height=height-160
   f.location={x=math.floor((player.display_resolution.width-width*player.display_scale)/2),
     y=math.floor((player.display_resolution.height-height*player.display_scale)/2)}
+  local s=sessions()[player.index]; if s then s.dirty=true end
 end
 local function build(parent,node,elements)
   local element
@@ -91,23 +92,21 @@ local function refresh(player,f,s,rec,spend)
       view.body.style.width=f.style.minimal_width-56
       view.body.style.height=math.max(120,f.style.minimal_height-220)
       view.tab.plain_caption.caption=tab.definition.title
+      view.charts={}
       local function update(node)
         spend(8)
         local e=view.elements[node.id]
         if node.type=='label' then if e.caption~=node.text then e.caption=node.text end
         elseif node.type=='button' then
           if e.plain_caption.caption~=node.text then e.plain_caption.caption=node.text end
-          e.enabled=node.enabled and lifecycle.has_power(rec)
-        elseif (node.type=='line' or node.type=='stacked_bars') and slot==selected and lifecycle.has_power(rec) then
-          local height=math.max(180,math.min(700,f.style.minimal_height-360))
-          local width=math.min(math.max(240,f.style.minimal_width-80),math.floor(height*900/700))
-          e.chart.style.width=width; e.chart.style.height=math.floor(width*700/900)
-          local chart_key=charts.show(rec,slot,node,tab)
-          charts.view(chart_key,e.chart,e.status,player.display_scale)
+          e.enabled=node.enabled and lifecycle.available(rec)
+        elseif node.type=='line' or node.type=='stacked_bars' then
+          view.charts[#view.charts+1]=node
         end
         for _,child in ipairs(node.children or {}) do update(child) end
       end
       update(tab.definition.content)
+      view.definition=tab.definition
     end
   end
   local ordered=true
@@ -120,7 +119,23 @@ local function refresh(player,f,s,rec,spend)
   if selected then
     for i,entry in ipairs(pane.tabs) do if entry.tab==s.tabs[tostring(selected)].tab then pane.selected_tab_index=i; break end end
   end
-  f.availability.caption=lifecycle.has_power(rec) and (#occupied>0 and '' or 'Unconfigured dashboard') or 'Unpowered — retained content'
+  f.availability.caption=lifecycle.available(rec) and (#occupied>0 and '' or 'Unconfigured dashboard') or 'Unavailable — retained content'
+  s.available=lifecycle.available(rec); s.dirty=false
+end
+local function visible_charts(player,f,s,rec,spend)
+  if not s.selected or not lifecycle.available(rec) then return end
+  local view=s.tabs[tostring(s.selected)]; if not view then return end
+  local tab=model.current(rec).tabs[tostring(s.selected)]
+  if not tab or view.definition~=tab.definition then return end
+  spend(#(view.charts or {})*8)
+  for _,node in ipairs(view.charts or {}) do
+    local e=view.elements[node.id]
+    local height=math.max(180,math.min(700,f.style.minimal_height-360))
+    local width=math.min(math.max(240,f.style.minimal_width-80),math.floor(height*900/700))
+    e.chart.style.width=width; e.chart.style.height=math.floor(width*700/900)
+    local key=charts.show(rec,s.selected,node,tab)
+    charts.view(key,e.chart,e.status,player.display_scale)
+  end
 end
 function M.open(player,id)
   local rec=registry.record(id); if not M.authorized(player,rec) then return end
@@ -157,7 +172,7 @@ end
 function M.on_click(event)
   local player,f,s,rec=owned(event); if not player then return end
   if event.element==s.dismiss then M.close(player); return end
-  if event.button~=defines.mouse_button_type.left or not s.selected or not lifecycle.has_power(rec) then return end
+  if event.button~=defines.mouse_button_type.left or not s.selected or not lifecycle.available(rec) then return end
   local tab=model.current(rec).tabs[tostring(s.selected)]; local view=s.tabs[tostring(s.selected)]
   if not tab or not view or view.generation~=tab.generation then return end
   for id,element in pairs(view.elements) do
@@ -170,7 +185,7 @@ end
 function M.on_tab(event)
   local player,f,s=owned(event); if not player or event.element~=f.content then return end
   local selected=f.content.selected_tab_index; local entry=selected and f.content.tabs[selected]
-  if entry then for key,view in pairs(s.tabs) do if view.tab==entry.tab then s.selected=tonumber(key); return end end end
+  if entry then for key,view in pairs(s.tabs) do if view.tab==entry.tab then s.selected=tonumber(key); s.dirty=true; return end end end
 end
 function M.on_closed(event)
   local player=game.get_player(event.player_index)
@@ -195,17 +210,28 @@ function M.tick(tick,spend)
     local s=all[index]; local player=game.get_player(index); local rec=player and current(player,s); local f=player and frame(player)
     if not rec or not f or not f.valid or player.opened~=f then if player then M.close(player) else all[index]=nil end
     else
+      local dirty=s.dirty or s.available~=lifecycle.available(rec)
+      for slot=1,6 do
+        local key=tostring(slot); local tab=model.current(rec).tabs[key]; local view=s.tabs[key]
+        if tab and (not view or view.definition~=tab.definition) or view and not tab then dirty=true; break end
+      end
       -- Prepay the complete native widget traversal/build before touching GUI state.
       local admitted=scheduler.try_maintenance(function()
-        local bytes,nodes=0,0
-        for _,tab in pairs(model.current(rec).tabs) do
-          local stats=data.measure(tab.definition,spend,limits.peripheral_call_bytes)
-          bytes=bytes+stats.bytes; nodes=nodes+stats.nodes
+        if dirty then
+          local bytes,nodes=0,0
+          for _,tab in pairs(model.current(rec).tabs) do
+            local stats=data.measure(tab.definition,spend,limits.peripheral_call_bytes)
+            bytes=bytes+stats.bytes; nodes=nodes+stats.nodes
+          end
+          spend(nodes*8+bytes+128)
+          refresh(player,f,s,rec,function() end)
         end
-        spend(nodes*8+bytes+128)
-        refresh(player,f,s,rec,function() end)
+        visible_charts(player,f,s,rec,spend)
       end)
-      if not admitted then f.availability.caption='Dashboard update pending: maintenance allowance unavailable' end
+      if not admitted then f.availability.caption='Dashboard update pending: maintenance allowance unavailable'
+      elseif f.availability.caption=='Dashboard update pending: maintenance allowance unavailable' then
+        f.availability.caption=lifecycle.available(rec) and (s.selected and '' or 'Unconfigured dashboard') or 'Unavailable — retained content'
+      end
     end
   end
   -- Rotate the next starting viewer, not the end of the completed full walk.
@@ -215,7 +241,7 @@ end
 service.register_player_authority(function(index,rec,token,slot)
   local player=game.get_player(index); local s=sessions()[index]; local f=player and frame(player)
   return s and s.token==token and s.id==rec.id and s.selected==slot and current(player,s)==rec
-    and f and f.valid and player.opened==f and lifecycle.has_power(rec) or false
+    and f and f.valid and player.opened==f and lifecycle.available(rec) or false
 end)
 scheduler.register_phase('render','ui-dashboard',M.tick)
 registry.register_cleanup('dashboard-viewers',function(rec)

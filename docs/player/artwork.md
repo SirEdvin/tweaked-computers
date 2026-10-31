@@ -29,7 +29,7 @@ native roles in every cardinal orientation. Device and role-marker colors do
 not restrict the wire color you choose; [same-color discovery rules](api/peripheral.md)
 still apply. Rotate or mine the main body, not an auxiliary socket.
 
-Stopped, active, unpowered and fault cues remain compact. They do not replace
+Stopped, active, physically unavailable and fault cues remain compact. They do not replace
 Factorio's native deconstruction X. Monitor glass keeps the same active interior,
 alpha boundary and display model; marking/cancelling a device does not turn a
 status symbol into a removal action. See [monitor behavior](api/monitor.md) and

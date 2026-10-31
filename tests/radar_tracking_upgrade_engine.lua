@@ -103,7 +103,7 @@ function M.on_tick(event)
     s.phase='legacy-frozen'; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
   elseif s.phase=='installing' then
     retained(); separated(); check_credits(s.credits)
-    if s.computer then lifecycle.power_entity(registry.record(s.computer)).energy=1000000 end
+    if s.computer then assert(not registry.record(s.computer).children.power and lifecycle.available(registry.record(s.computer))) end
     tick_without_dormant(event.tick)
     if s.computer then
       local c=registry.record(s.computer)
@@ -113,7 +113,7 @@ function M.on_tick(event)
     s.phase='installed'; s.cold_credits=credits(); loaded=false; log('TC_UPGRADE_OK')
   elseif s.phase=='installed' and loaded then
     loaded=false; retained(); separated(); check_credits(s.cold_credits)
-    if s.computer then lifecycle.power_entity(registry.record(s.computer)).energy=1000000 end
+    if s.computer then assert(not registry.record(s.computer).children.power and lifecycle.available(registry.record(s.computer))) end
     tick_without_dormant(event.tick)
     if s.computer then assert(registry.record(s.computer).state.messages==1 and #registry.record(s.computer).queue==0) end
     local c=s.computer and registry.record(s.computer) or build_computer()

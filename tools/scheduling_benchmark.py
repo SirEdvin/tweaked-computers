@@ -31,6 +31,10 @@ ROOT = Path(__file__).resolve().parents[1]
 FAMILIES = ('computer', 'kv', 'monitor', 'logic', 'configurator', 'recipe_searcher',
             'factoriopedia_interface', 'production_statistics', 'dashboard')
 LANES = ('timing', 'profile', 'structure')
+STRUCTURE_PATHS = ('scripts/scheduler.lua', 'scripts/lifecycle.lua', 'scripts/network.lua',
+                   'scripts/services/logic.lua', 'scripts/services/peripheral.lua',
+                   'scripts/services/kv.lua', 'scripts/device-art.lua',
+                   'scripts/ui/editor.lua', 'scripts/ui/peripheral-inspector.lua', 'scripts/ui/dashboard.lua')
 
 
 def catalog():
@@ -125,6 +129,28 @@ def instrument(path, source):
             raise ValueError('review native-read observer against this archive')
         source = source.replace(needle, needle + "  bench.count('logic:native-read')\n")
         hits += 1
+    # Keep baseline discovery counters; label candidate demand visits separately.
+    demand = {
+        'scripts/scheduler.lua': {
+            '    for _,item in ipairs(round) do': 'scheduler:ready-member',
+            '    local rec=root.computers[item.id]': 'scheduler:due-timer-member',
+        },
+        'scripts/lifecycle.lua': {'local function observe(rec,tick,spend)': 'physical:due-observation'},
+        'scripts/services/logic.lua': {
+            '  for _,input in ipairs(s.input_order) do': 'signal:watched-input',
+            '  for _,entry in ipairs(subscriptions) do': 'signal:subscriber',
+        },
+        'scripts/services/peripheral.lua': {
+            '  for i,entry in ipairs(index.order) do': 'output:owner',
+        },
+        'scripts/ui/editor.lua': {'local function refresh_viewer(index,s,tick,spend)': 'ui:editor-due'},
+        'scripts/ui/peripheral-inspector.lua': {'local function refresh_viewer(index,s,tick,spend)': 'ui:inspector-due'},
+        'scripts/ui/dashboard.lua': {'  for offset=0,#indices-1 do': 'ui:dashboard-viewer'},
+    }
+    for needle, key in demand.get(path, {}).items():
+        source, n = re.subn('^' + re.escape(needle),
+                            lambda m: m[0] + " bench.count('" + key + "');", source, flags=re.MULTILINE)
+        hits += n
     return (prefix + source).encode() if hits else None
 
 
@@ -151,9 +177,7 @@ def prepare(archive, folder, case, lane, ticks, warmup, mode, engine, capture, f
             raise ValueError('review observer insertion against control imports')
         overrides['control.lua'] = control.replace(marker, marker + "require('tests.scheduling_benchmark_observer').install()\n").encode()
         if lane == 'structure':
-            for path in ('scripts/scheduler.lua', 'scripts/lifecycle.lua', 'scripts/network.lua',
-                         'scripts/services/logic.lua', 'scripts/services/peripheral.lua',
-                         'scripts/services/kv.lua', 'scripts/device-art.lua'):
+            for path in STRUCTURE_PATHS:
                 changed = instrument(path, src.read(prefix + path).decode())
                 if changed:
                     overrides[path] = changed
@@ -169,9 +193,7 @@ def prepare(archive, folder, case, lane, ticks, warmup, mode, engine, capture, f
         allowed = {'control.lua', 'tests/monitor_animation_engine.lua', 'tests/scheduling_benchmark_config.lua',
                    'tests/scheduling_benchmark_engine.lua', 'tests/scheduling_benchmark_observer.lua'}
         if lane == 'structure':
-            allowed |= {'scripts/scheduler.lua', 'scripts/lifecycle.lua', 'scripts/network.lua',
-                        'scripts/services/logic.lua', 'scripts/services/peripheral.lua',
-                        'scripts/services/kv.lua', 'scripts/device-art.lua'}
+            allowed |= set(STRUCTURE_PATHS)
         if set(changed) - allowed:
             raise ValueError('unexpected changed payloads: ' + str(set(changed) - allowed))
         hooks = sorted(set(re.findall(r"scheduler.register_phase\('([^']+)','([^']+)'", '\n'.join(

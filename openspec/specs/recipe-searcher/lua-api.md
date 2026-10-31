@@ -114,13 +114,13 @@ Ordinary errors use the existing plain `{code, message, field?, peripheral?, dev
 | More than 50 matches after category filtering | `E_LIMIT`, `field="results"` |
 | Result violates a documented structure/string/snapshot-byte bound | `E_LIMIT`; no partial result |
 | Unexpected native metadata cannot be represented by this contract, including nonfinite values other than open surface bounds | `E_UNSUPPORTED`; no omitted recipe or field to conceal the issue |
-| Reachable searcher is unpowered | `E_UNPOWERED` for `findRecipes` |
+| Searcher physically unavailable | `E_UNREACHABLE`; no electrical requirement |
 | Bound identity/path/force/surface was lost | Existing `E_UNREACHABLE` behavior |
 | Incomplete or oversized network proof | Existing `E_NETWORK_PENDING` / `E_LIMIT` behavior |
 | Callback/shared work or allocation is exhausted | Existing fatal `E_BUDGET` control; no budget reset or retry loop |
 | Unexpected native access failure or missing force recipe for an existing candidate | `E_ENGINE`; no fabricated enabled value |
 
-Authority and active-service power checks retain existing peripheral precedence before service argument handling. An operation can exhaust its existing work budget before detecting a later semantic/count error; no stronger error precedence under exhausted credits is promised. Invalid or oversized results never mutate recipes or world state, but legitimately consumed accounting credits remain consumed.
+Live physical authority checks retain existing peripheral precedence before service argument handling. An operation can exhaust its existing work budget before detecting a later semantic/count error; no stronger error precedence under exhausted credits is promised. Invalid or oversized results never mutate recipes or world state, but legitimately consumed accounting credits remain consumed.
 
 ## Identity, persistence and lifecycle
 
@@ -128,13 +128,13 @@ A wrapper is protected, callback-local and bound to the selected wire, current r
 
 The [Console](../console-shell/lua-api.md) may retain authentic symbolic peripheral bindings in its separate scratch graph. This does not permit functions/facades in ordinary Data or change saved-handler lifetime, and every restored call retains the same live authority checks.
 
-`getLimits()` remains callable while the reachable searcher is unpowered. Discovery and passive relay behavior survive an outage; active search does not. Removing or changing force/surface revokes the old path. The new service owns no mutable database, job queue, query session, output or persistent catalogue cache.
+The searcher needs no electricity or electrical helper. Discovery, getLimits and active search retain their non-power physical identity/scope/path requirements. Removing or changing force/surface revokes the old path. The new service owns no mutable database, job queue, query session, output or persistent catalogue cache.
 
 Ordinary cold reload preserves existing physical identity and computer state without executing source or mutating storage on load. Query tables contain only serializable plain Data and can be saved through existing computer-state APIs if their independent state limits permit; obtaining a snapshot does not guarantee it fits one state entry. A new call after configuration changes reads the currently installed catalogue rather than an old retained result.
 
 ## Example: search, refine and read metadata
 
-Illustrative source for the named-handler runtime; acceptance must execute this exact maintained example through the packaged compiler and services on a real powered Network connection.
+Illustrative source for the named-handler runtime; acceptance must execute this exact maintained example through the packaged compiler and services on a real physically valid Network connection.
 
 ```lua
 function start(event)

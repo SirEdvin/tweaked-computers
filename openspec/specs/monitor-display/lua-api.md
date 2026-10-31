@@ -74,7 +74,7 @@ Grouping is geometric, not dependent on whether tiles are wired. A complete comp
 
 On merge, the surviving group's cursor, colors, scale and palette are retained. On split, resulting groups inherit those settings; the group containing the retained anchor keeps the name, others receive new names. Whenever character dimensions differ, clear the whole resulting buffer using retained current colors. Preserve cursor coordinates/blink even if temporarily offscreen; do not silently clamp them. Newly created independent displays use defaults. Removed identities detach; they are not aliases to unrelated new groups.
 
-The logical display requires all member tiles powered. Losing power blanks world presentation and makes active methods unavailable while retaining contents/settings and grouping. Restoring power redraws the retained buffer, not an empty display or a fabricated resize event.
+The custom logical display needs no electricity or electrical helper. Electrical cycling never blanks presentation or refuses methods. Live physical validity/ownership, geometry, scope and selected paths remain authoritative; physical unavailability can hide presentation without erasing retained contents/settings.
 
 ## Events
 
@@ -132,7 +132,7 @@ function resized(event)
 end
 ```
 
-Required cases: negative/offscreen cursor clipping; nil/invalid color and blit atomicity; palette repaint; positive/negative/large scroll; all scales; merge/split/rotation identity and geometry; same-color reach through non-anchor tiles; touch on borders/corners; power restoration; cold retained display; glyph/rich-text safety; real-client maximum supported render latency.
+Required cases: negative/offscreen cursor clipping; nil/invalid color and blit atomicity; palette repaint; positive/negative/large scroll; all scales; merge/split/rotation identity and geometry; same-color reach through non-anchor tiles; touch on borders/corners; power-free operation and physical-availability recovery; cold retained display; glyph/rich-text safety; real-client maximum supported render latency.
 
 ## Demand-driven scheduling contract
 
@@ -149,7 +149,7 @@ All existing dot-call signatures, argument domains, Color/Colour aliases, glyph 
 | Both documented overloads of `m.setPaletteColor(...)` and `m.setPaletteColour(...)` | Zero values | Preserve full validation, recoloring of stored color indexes and presentation invalidation; overloads and arity are not changed. |
 | `m.setTextScale(scale)` | Zero values | Preserve the half-step domain, current dimensions, dimension-change clearing and resize notification; invalidate obsolete staging as required. |
 | Existing monitor getters and `isColor()` / `isColour()` | Existing exact arity from the terminal contract | Read current shared model/state under existing guards, not a queued command result or an older visible image; do not drive rendering. |
-| `m.getLimits()` | One defensive table | Preserve all existing keys/capacities and its reachable-but-unpowered availability. No new scheduling knobs or limits. |
+| `m.getLimits()` | One defensive table | Preserve all existing keys/capacities and reachable static-metadata availability. No new scheduling knobs or limits. |
 | `peripheral.setMonitorSyncGroup(members)` | Zero values | Preserve atomic registration, canonical deduplication, explicit wire binding, idempotence, run/shell ownership and clear-on-empty-array behavior. |
 | `peripheral.getMonitorSyncGroup()` | One defensive `MonitorSyncStatus` table | Preserve existing fields, status meanings, sequence/tick acknowledgement and diagnostics. Readback does not drive rendering or retry an authority proof. |
 
@@ -161,14 +161,14 @@ Read-after-write is still synchronous even when the world is displaying the prev
 - Repeated writes before that boundary coalesce demand. The existing bounded newest-pending snapshot sits behind an admitted immutable frame; new writes cannot restart that frame indefinitely or create an unbounded per-call queue.
 - A selected group still requires a successful mutating operation on every member after registration or the preceding seal. A successful no-op counts; getters and rejected operations do not. A no-op round retains its sequence/publication semantics without requiring redundant native sprite reconstruction.
 - A group with incomplete participation does not time out, fabricate missing writes or partially publish. Other independent eligible displays retain deterministic fair service.
-- A stopped writer leaves its last complete powered image visible. Running a program elsewhere does not wake settled monitors. Preparation, ready publication, backpressure recovery and retirement already in progress continue without requiring new drawing.
-- Native settings paste, topology changes, power transitions and ownership release also cause the necessary work. Drawing calls are not the only invalidation source.
+- A stopped writer leaves its last complete physically valid image visible. Running a program elsewhere does not wake settled monitors. Preparation, ready publication, backpressure recovery and retirement already in progress continue without requiring new drawing.
+- Native settings paste, topology/physical changes and ownership release also cause the necessary work. Drawing calls are not the only invalidation source.
 
-### Power, authority and physical changes
+### Availability, authority and physical changes
 
-All tiles of a logical display must remain powered for active monitor operations. Outage hides presentation without erasing the model; restoration can show retained valid state without a dummy write or artificial resize. Existing admission and hide/restore timing are preserved; there is no new idle polling interval.
+All tiles of a logical display must remain physically valid for active operations; no electricity is required. Physical unavailability can hide presentation without erasing the model; valid restoration can show retained state without a dummy write or artificial resize. Existing admission remains; electrical cycling schedules no hide/restore work.
 
-One minimal live observation path retains physical-change detection. It does not grant durable authority: calls, touches and publication retain their operation-specific checks for identity, force/surface/geometry, owned components, power and required paths, including the existing `getLimits()` power exception. Same-tick native changes must not reuse an earlier positive proof. Safe proof reuse within an operation known not to mutate physical state is unchanged.
+One minimal live observation path retains physical-change detection. It does not grant durable authority: calls, touches and publication retain their operation-specific checks for identity, force/surface/geometry, owned components and required paths, including reachable static `getLimits()` metadata. Same-tick native changes must not reuse an earlier positive proof. Safe proof reuse within an operation known not to mutate physical state is unchanged.
 
 Saved-program and Console selections retain their distinct principals. An idle Console selection must still be released after definitive path revocation even with the saved program stopped and no frame ready. Temporary incomplete proofs keep existing blocked/pending semantics; no silent wire fallback is added. Status reads report retained status under their existing contract rather than secretly retrying maintenance.
 
@@ -176,7 +176,9 @@ Saved-program and Console selections retain their distinct principals. An idle C
 
 `monitor_touch`, `monitor_resize`, peripheral attach/detach and all existing payloads, ordering and deduplication rules remain unchanged. Committed geometry is readable when resize is delivered; touches never use obsolete visible geometry as if it were current. Deconstruction marking/cancellation is not actual topology removal and must not clear cells or invent a resize.
 
-No new public error code is introduced. Existing `E_ARGUMENT`, `E_RANGE`, `E_UNPOWERED`, `E_UNREACHABLE`, `E_NETWORK_PENDING`, `E_BUSY`, `E_CAPACITY`, `E_LIMIT`, `E_NOT_FOUND` and unsupported-state handling retain their operation-specific meanings. In particular, ordinary queue backpressure does not turn an already accepted model update into a new guest-call failure or permit partial group publication.
+Monitor registration/cancellation maintains exact run/generation recipient membership in existing computer order. Notification ticks visit only pending touches and resized displays, retaining display order, three-recipient service and latest-geometry coalescing; empty notification lanes do no discovery work. Migration inventories legacy membership once during synchronized initialization/configuration. Ordinary load preserves pending jobs and recipient cursors without rebuilding them or renewing credits. Unsupported membership is retained and refuses notification admission, not silently replaced.
+
+No new public error code is introduced. Existing `E_ARGUMENT`, `E_RANGE`, `E_UNREACHABLE`, `E_NETWORK_PENDING`, `E_BUSY`, `E_CAPACITY`, `E_LIMIT`, `E_NOT_FOUND` and unsupported-state handling retain their operation-specific meanings. In particular, ordinary queue backpressure does not turn an already accepted model update into a new guest-call failure or permit partial group publication.
 
 Existing physical/model/selection, pending/staging/retirement, native-object, work and allocation ceilings remain binding. Frozen actual-tick maintenance reservations and spent credits survive repeated entry and cold load. This change does not raise limits to make a benchmark pass or promise zero-cost physical observation.
 

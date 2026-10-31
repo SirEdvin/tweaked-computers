@@ -1,6 +1,6 @@
 # Computer runtime v1 (development)
 
-Target: Factorio 2.0.77. Native named callbacks only: no interpreter, OS,
+Current verification target: Factorio 2.1.23. Native named callbacks only: no interpreter, OS,
 filesystem, coroutine suspension or host-object API. The normative contracts
 are `openspec/api/{common,native-language}.md`
 and `openspec/specs/computer-runtime/lua-api.md` in the source repository.
@@ -27,6 +27,13 @@ the old generation, then queues start once if exported. No other name auto-runs
 or auto-subscribes. Stop cancels that generation's
 registrations/timers/events. State, source and logs remain. Reset State requires
 a stopped/faulted computer. Failed candidate validation leaves the old run intact.
+
+Status artwork is demand-driven: static devices retain their existing render
+object until their identity, geometry or status changes. Running computer status
+frames are due on the existing 10-tick animation boundaries. Stop/fault cancels
+that animation membership; electrical cycling does not change custom-device
+status. A missing native render object is rediscovered by the existing due
+physical observation, not a separate every-tick artwork sweep.
 
 All calls use dots, not colons. Exact argument counts are enforced:
 
@@ -62,10 +69,11 @@ Timer durations are positive safe integer ticks. Equal deadlines use creation
 order. Recurring overdue work coalesces, including already queued notifications:
 one event retains its first scheduled_tick and accumulates missed intervals;
 the next deadline stays aligned. One-shots are consumed on queue admission.
-Cancellation still removes admitted work. Power loss removes transient events,
-pauses callbacks and clears owned outputs through host cleanup; restoration
-keeps the same generation, retains timers/state, requests current-input resync
-and notifies retained power_restored subscribers. Cold load is not restoration.
+Cancellation still removes admitted work. Custom devices need no electricity:
+electrical loss/restoration does not pause callbacks, discard events or clear
+owned outputs. `power_restored` remains an inert compatibility registration.
+Physical invalidation, stop/fault and definitive authority loss retain their
+existing safety cleanup. Cold load does not replay startup or emit restoration.
 
 An ordinary failure can be caught with pcall. Uncaught errors fault the run;
 private quota/stop controls cannot be swallowed or forged by an error table.
@@ -96,12 +104,14 @@ Use the one existing on_tick handler; add phase hooks instead of replacing it.
   bindings. It does not destroy entities: the composite owner does that only
   after successful removal. A failed hook retains the record/recovery graph
   and returns false. Removing an identity never removes same-tick ledger entries.
-- `register_cleanup(name, function(record, run_id, reason))` installs an ephemeral
-  host safety hook; `cleanup(record,run_id,reason) -> boolean` calls hooks in name
+- `register_cleanup(name, function(record, run_id, reason, removing))` installs an ephemeral
+  host safety hook; `cleanup(record,run_id,reason,removing?) -> boolean` calls hooks in name
   order, catches each failure, and retains bounded cleanup_failures. Successful
   retry clears those failures. Hook work must be bounded by admitted owned
   resources, independent of guest credits/source. Never mutate scheduler order
   from a teardown callback. Clear only outputs still owned by that exact run ID.
+  Registry removal passes `removing=true`; program retirement alone does not
+  cancel physical-root native discovery.
 
 Record schema: `schema_version=1, id, generation, kind, body, children,
 force_index, surface_index, powered`. The root owns `entities[unit_number] =
@@ -117,9 +127,7 @@ Body/child LuaEntity references are host-only; never return these records to gue
   -> run_id? , diagnostic?` charge the same shared ledger. Compile refusal does
   not retire the current run. Teardown refusal prevents replacement as well.
 - `stop(id) -> cleaned`, `reset_state(id)` are explicit host actions.
-- `set_power(id,boolean,tick,spend?) -> changed` provides the power transition.
-  Call in lifecycle reconciliation before sampling. Consume needs_input_resync
-  only after the logic module establishes a new current-input sample.
+
 - `subscribe(record,event_name,handler_name,details?,spend?) -> id` shares both
   per-computer and aggregate registration limits with trusted peripheral event
   kinds. Details are copied plain Data. `unsubscribe(record,id,spend?) -> boolean`.
@@ -127,15 +135,16 @@ Body/child LuaEntity references are host-only; never return these records to gue
   copies a named payload, overrides all BaseEvent authority fields, and assigns
   a global sequence. Metadata.timer_id is host-only timer cancellation bookkeeping.
   Queue overflow visibly faults/cleans the run, not silently drops history.
-  Inactive/unpowered transient admission returns false. Size/type errors throw.
+  Inactive admission returns false. Size/type errors throw.
 - `emit(id,general_event_name,payload,tick,spend?) -> boolean` delivers matching
   registrations in creation order. All copy work is admitted before publication;
   maintenance deferral cannot deliver an unmarked partial subscriber prefix.
 - `register_services(name, function(record,tick,guard) -> method_map)` adds
   trusted `computer`/`peripheral` methods without collisions. Construct opaque
   peripheral handles with guard.namespace and guard.service. Every peripheral
-  method MUST independently prove live channel/force/surface authority, power
-  and native-work admission immediately before effects. Never return raw host
+  method MUST independently prove live channel/force/surface authority, physical
+  availability and native-work admission immediately before effects. Native radar/speaker
+  also require their native electrical/operational checks. Never return raw host
   functions/objects. No public extension registry is added.
 
 The active header stores exact source, revision, API/storage/compiler versions
@@ -155,10 +164,25 @@ lifecycle/revocation, sampling, notifications, timers, fair callbacks, rendering
 Hooks must spend before input-dependent native work/mutation and retain their
 own bounded cursor on deferral. `try_maintenance(fn)` catches only the private
 maintenance refusal; unexpected host failures remain visible. Emit precharges
-all deliveries. Power transitions precharge their complete notification envelope.
+all deliveries. Native radar/speaker electrical eligibility is checked at use;
+custom devices have no electrical-transition notification work.
 
-One callback per computer per actual tick; FIFO within each run, persisted
-round-robin cursor between runs. Timer maintenance has its own rotating cursor.
+One program callback or Console submission per computer per actual tick; FIFO
+within each queue, with the existing program/Console alternation. Event publication
+and Console ingress maintain a persisted generation-aware ready rotation. Each
+tick freezes its current members and advances the starting member even when shared
+credits refuse the entire round. A callback cannot execute a newly awakened peer
+recursively or add that peer to the already frozen round. Drained/retired queues
+leave the rotation; an open viewer alone is not execution demand.
+
+Timer mutations maintain one indexed earliest deadline per computer, without
+cancellation tombstones. Only due owners are visited; future timers do not cause
+per-tick computer searches. Due owners retain rotating service under maintenance
+pressure, equal deadlines keep timer creation order, recurring events coalesce
+without moving their original scheduled tick, and cancellation also removes an
+undispatched event. These memberships initialize once on init/configuration change,
+not on ordinary load. Unknown scheduling versions remain inert with source,
+queues, deadlines and spent credits retained for recovery.
 Insufficient aggregate headroom defers untouched runs, not faults them. The
 ledger retains per-ID work/compile/allocation spending until a later real tick.
 Source replacement, stop, removal, repeated tick dispatch and cold load cannot
@@ -175,7 +199,8 @@ state, attaching it only during synchronized admission for older saves.
 Changes preserve already-spent credits, and getLimits returns current values.
 If the per-computer budgets sum above the shared allowance, the scheduler reserves
 at most that allowance rather than permanently starving small fitting callbacks;
-actual over-budget work still faults through admission. Identity walks are prepaid before hooks can exhaust it.
+actual over-budget work still faults through admission. Ready/deadline traversal
+pays for live work, not a fictional full registry walk.
 Safety cleanup must stay bounded independently of the offending guest.
 
 ## Focused checks and evidence boundaries
@@ -197,9 +222,11 @@ ledger/scheduler snapshots, alias identity, two queued events in FIFO order and
 one immediate plus one timed call. Historical running-source upgrade evidence
 requires a genuine function-capable baseline and separate before/after receipts.
 
-Headless contracts use actual numbered vanilla fixture bodies, not the later
-powered composite prototypes. Power transitions are host-hook contract evidence;
-physical power sampling belongs to TC04. Editor/client focus, rendering/touch,
+Headless contracts use actual numbered vanilla fixture bodies, not composite
+prototypes. Historical TC03 power-transition checks were host-hook evidence;
+the current contract retains accepted historical events while generating no new
+electrical notifications. Custom composites now require no electricity.
+Editor/client focus, rendering/touch,
 multiplayer joining and production envelope/latency are not claimed here. Their
 client verification is intentionally deferred to the user/final release gate.
 Development limits are effective safety ceilings, not frozen responsiveness or

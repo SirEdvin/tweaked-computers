@@ -25,7 +25,7 @@ returns, false or empty string.
 | `db.expire(key, seconds)` | 0 or 1 | Integer simulation seconds; absent 0, accepted live expiry/deletion 1 |
 | `db.ttl(key)` | integer | -2 absent; -1 persistent; otherwise rounded remaining seconds |
 | `db.persist(key)` | 0 or 1 | 1 only when removing a live existing deadline |
-| `db.getLimits()` | copied map | Static reachable capacities, including while unpowered |
+| `db.getLimits()` | copied map | Static reachable capacities |
 
 All hash commands reject a live string with `E_WRONGTYPE` (message contains
 WRONGTYPE). HSET/HDEL preserve an existing hash deadline unless HDEL removes the
@@ -42,7 +42,7 @@ if incremental physical cleanup has not reached it.
 For a live key TTL is nearest-second `floor((deadline-tick+30)/60)`, half seconds
 up. Zero can still mean a live key, unlike -2. SET removes expiry, hash mutation
 preserves it, EXPIRE replaces it, PERSIST removes it. A new hash after expiry has
-no old fields or deadline. Pause/server downtime does not advance ticks; unpowered
+no old fields or deadline. Pause/server downtime does not advance ticks; physically unavailable
 or carried tagged items do consume ongoing simulation time. Cold load/replacement
 does not renew TTL.
 
@@ -71,7 +71,7 @@ are catchable; fatal shared callback/allocation exhaustion faults the run.
 Common call bytes 65,536 / entries 4,096 and callback allocations/work still apply.
 Metadata reservation is separate from content so a full accepted database can be
 saved/mined. Reads count logical expiry immediately; bounded background reclamation
-visits unpowered databases too and never resurrects expired values. Limits are
+services physically unavailable databases too and never resurrects expired values. Limits are
 alpha safety ceilings, not real-time guarantees.
 
 ## Catch a wrong-type read safely
@@ -113,4 +113,4 @@ for two-computer sharing and a separate private database.
 If a value appears missing, check which physical name/color you wrapped, type and
 TTL. If WRONGTYPE occurs, use type/hgetall or deliberately replace with SET; do not
 treat a hash as a serialized string. Missing after transport may be legitimate
-expiry. No power means active calls fail, not empty results. See [troubleshooting](../troubleshooting.md).
+expiry. No electricity is needed; invalid physical authority refuses calls, never fabricates empty results. See [troubleshooting](../troubleshooting.md).

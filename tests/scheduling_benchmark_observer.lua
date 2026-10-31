@@ -42,7 +42,7 @@ function M.install()
     for _,entry in ipairs({
       {'scripts.scheduler',{'dispatch','advance_timers'}},
       {'scripts.registry',{'record'}},
-      {'scripts.lifecycle',{'has_power','sample_power','observe_monitor','connector'}},
+      {'scripts.lifecycle',{'has_power','observe_monitor','connector'}},
       {'scripts.network',{'discover','real_edges','validate_witness'}},
       {'scripts.services.peripheral',{'reconcile_one','check_outputs','authority'}},
       {'scripts.services.kv',{'reclaim'}},
@@ -54,6 +54,11 @@ function M.install()
         module[name]=function(...) M.count(entry[1]..':'..name); return fn(...) end
       end
     end
+    local lifecycle=require('scripts.lifecycle')
+    if lifecycle.sample_power then
+      local sample=lifecycle.sample_power
+      lifecycle.sample_power=function(...) M.count('scripts.lifecycle:sample_power'); return sample(...) end
+    else assert(type(lifecycle.available)=='function','unsupported lifecycle observer layout') end
     local native=rendering
     rendering=setmetatable({draw_sprite=function(options)
       M.count(options.sprite:match('^tc%-status%-') and 'art:create' or 'render:create')

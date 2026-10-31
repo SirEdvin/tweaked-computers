@@ -16,7 +16,7 @@ unwired members. Discovery still traverses actual mod-owned wires only.
 
 All methods use dot syntax. Extra arguments, combined color masks and implicit
 number/string coercion are rejected. Ordinary failures are catchable ApiError
-values (`E_ARGUMENT`, `E_RANGE`, `E_LIMIT`, `E_UNPOWERED`, `E_UNREACHABLE`,
+values (`E_ARGUMENT`, `E_RANGE`, `E_LIMIT`, `E_UNREACHABLE`,
 `E_NETWORK_PENDING`); rejected calls leave the model unchanged. Shared callback
 budget exhaustion is fatal, not a recoverable yield. Earlier accepted effects
 remain committed.
@@ -86,10 +86,10 @@ clamped. Same dimensions preserve cells. New independent displays use defaults.
 Bounded pending regrouping explicitly refuses discovery with E_NETWORK_PENDING;
 retry on a later callback/tick, not in a busy loop.
 
-Every member must be electrically powered. Outages hide world output and refuse
-active methods, retaining contents, palette, scale, cursor and identities. Power
-restoration redraws retained contents without a fabricated resize. Writer stop
-or cable removal does not clear the display. Save/load retains committed models,
+Every member must remain physically valid; no electricity is required. Electrical
+changes neither hide output nor pause methods or create restoration work. Physical
+identity, scope, geometry and ownership are checked afresh at use and publication.
+Writer stop or cable removal does not clear the display. Save/load retains committed models,
 render progress, actual draw handles and shared spent credits; no user source or
 render mutation runs on load. Unknown monitor state versions remain inert with
 recovery data preserved.
@@ -97,11 +97,11 @@ recovery data preserved.
 ## Native world feedback and marking
 
 Monitor content now uses explicit sprite layers above the body but below native
-wires, selection and information icons. Mark the visible monitor body, not its
-private power carrier. Mark/cancel does not clear cells, change cursor/palette or
+wires, selection and information icons. Mark the visible monitor body.
+Mark/cancel does not clear cells, change cursor/palette or
 regroup an array; only actual removal follows normal split/resize behavior.
-Power loss hides content, not the engine's deconstruction order. No custom X is
-drawn. Old saved render objects are rebuilt through admitted rendering/cleanup,
+Electrical changes affect neither content nor the engine's deconstruction order.
+No custom X is drawn. Old saved render objects are rebuilt through admitted rendering/cleanup,
 not on_load, while the committed display model remains intact.
 
 The genuine red X's visible contrast and layering still require native graphical
@@ -116,13 +116,14 @@ It passes native game actions through and does not block reuse of held Ctrl;
 there is no extra linked building/mining action. The actual clicked member must
 be within native player reach and belong to the player's force/surface.
 Bezel, letterboxing, outside, GUI-hover/focus and
-unpowered interactions are ignored. Each player activation is separate.
+physically unavailable interactions are ignored. Monitors need no electricity.
+Each player activation is separate.
 
 Register `computer.on('monitor_touch','touched')` or
 `computer.on('monitor_resize','resized')`. Both add these fields to BaseEvent:
 `peripheral`, `wire` (red preferred when both reachable), `wires` (red then green).
 One event per subscription, not per physical path/tile/color. Authority is freshly
-proved at delivery; jobs retain recipient run IDs, so a later run cannot inherit
+proved at delivery; jobs retain recipient run IDs and generations, so a later run cannot inherit
 an earlier activation. Touch adds `x`, `y`, `player_index`, `sample_tick`.
 Resize adds `old_width`, `old_height`, `width`, `height`, `reason` (`tiles`/`scale`).
 Resize jobs and already queued resize snapshots coalesce to the latest geometry
@@ -132,6 +133,12 @@ work admission, covering another writer's intervening callback in the same tick.
 Removed identities discard pending jobs. Resize waits through peripheral outages;
 transient touch is dropped if its display/player no longer qualifies. Computer
 queue overflow visibly faults that run through existing output cleanup.
+
+Registration and cancellation maintain the recipient set; notification ticks visit
+only pending touches/resizes, never settled displays or unrelated computers.
+Resize delivery retains display order and coalesces repeated changes into one job.
+Cold load preserves those jobs, paid cursors and recipient membership; it does not
+reconstruct them or execute callbacks in `on_load`.
 
 ## Bounds and alpha evidence
 

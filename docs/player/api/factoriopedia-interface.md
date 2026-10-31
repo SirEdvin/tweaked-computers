@@ -14,9 +14,9 @@ Research **Recipe Searcher** (`tc-recipe-searcher`). This unlocks the searcher, 
 and [Production Statistics](production-statistics.md);
 Circuit Computers alone does not unlock the interface. Craft one interface from
 10 steel plates, 5 advanced circuits and 2 processing units (2 seconds).
-Place its 1×1 body, supply 30 kW, and connect its Network contacts directly to a
+Place its electricity-free 1×1 body and connect its Network contacts directly to a
 computer's Network on red or green. Ordinary opening shows copyable identity and
-power status only; there is no catalogue-browser panel. No item/fluid input is needed.
+physical availability/status only; there is no catalogue-browser panel. No item/fluid input is needed.
 
 ## Methods
 
@@ -29,7 +29,7 @@ Each method returns exactly one value. Extra arguments, including nil, are refus
 | `getFluid(name)` | Fluid record in the fluid namespace |
 | `listItems()` | Complete dense item-name array, ascending bytewise order |
 | `listFluids()` | Complete dense fluid-name array, ascending bytewise order |
-| `getLimits()` | Current common resource allowances; available without peripheral power |
+| `getLimits()` | Current common resource allowances |
 
 Equal item/fluid names remain independent. Alternative Factoriopedia entries are
 reported, never followed. Research and surface do not filter the catalogue.
@@ -85,14 +85,14 @@ Editing any returned map/array cannot change later results or the factory.
 ## Failures and limits
 
 Calls recheck bound identity, same force/surface, explicit-color Network path and
-power. Unpowered devices remain discoverable/passive relays; only `getLimits()`
-is power-exempt. Captured methods never retarget a replacement.
+physical availability. The custom device needs no electricity. Captured methods
+never retarget a replacement.
 
 `E_ARGUMENT` means invalid arity/type/empty name; `E_RANGE` with `field="name"`
 means an unknown exact name; `E_UNSUPPORTED` means required metadata cannot be
 represented as finite Data; `E_ENGINE` means native metadata access failed.
-Existing `E_UNPOWERED`, `E_UNREACHABLE`, network and retired-run errors apply.
-Authority, input admission and power may fail before semantic name validation.
+Existing `E_UNREACHABLE`, network and retired-run errors apply.
+Authority and input admission may fail before semantic name validation.
 
 Results use existing common Data/work/allocation limits, not a new catalogue quota.
 The baseline `table_entries=1024`, `data_nodes`, `data_depth`, `string_bytes` and
