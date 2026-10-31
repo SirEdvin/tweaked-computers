@@ -397,6 +397,8 @@ local function reconcile_one(computer,wire,tick,spend)
     local failure
     if not ok then
       if type(next_inventory)~='table' or not next_inventory.code then error(next_inventory,0) end
+      -- Pending discovery is not proof that previously observed paths detached.
+      if next_inventory.code=='E_NETWORK_PENDING' then view.diagnostic=next_inventory; return end
       failure=next_inventory; next_inventory={}
     end
     if not failure then retire_dashboard_bindings(computer,wire,next_inventory,spend) end
