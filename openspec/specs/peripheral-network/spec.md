@@ -102,6 +102,11 @@ Registered computers SHALL receive channel-qualified attachment/detachment event
 - **WHEN** a detached peripheral's notification handler raises an error
 - **THEN** the connection remains revoked and host-owned output cleanup is not skipped.
 
+#### Scenario: Unrelated native adoption is pending
+- **WHEN** discovery reports `E_NETWORK_PENDING` while a newly wired native carrier awaits enrollment
+- **THEN** the last complete attachment observation is retained without spurious detach/attach notifications or revoking unrelated output whose selected witness remains live
+- **AND** current calls still require a complete live proof, output safety checks still clear genuinely lost authority, and completed enrollment publishes only the actual attachment change.
+
 ### Requirement: Logical displays do not introduce hidden network bridges
 A merged monitor SHALL expose one display identity through any wired member in its group. Shared display contents MUST NOT create an unwired path between different member connectors or bridge red and green channels.
 

@@ -100,7 +100,10 @@ per tick. Computers without interest or pending work are not searched to find
 notification work. Removing the last registration retires that interest without
 discarding accepted snapshot notifications or an unfinished host job. Definitive
 selected-wire Dashboard detachment also retires its registrations and queued clicks;
-incomplete discovery does not permanently retire a connected registration. The 60-tick topology
+incomplete discovery does not permanently retire a connected registration. Topology
+observation also retains its last complete inventory on `E_NETWORK_PENDING`, without
+false detach/attach notifications or revoking an independently live output witness.
+This does not authorize calls from that inventory or suspend output safety checks. The 60-tick topology
 ceiling is development tuning, not a measured maximum-world release guarantee;
 maintenance pressure is explicitly `E_NETWORK_PENDING`, never silent success.
 Queries and calls do not use this notification cache as authority. Every call

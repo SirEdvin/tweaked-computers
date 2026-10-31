@@ -211,6 +211,56 @@ function M.run()
   runtime.subscribe(c,'peripheral_attach','changed'); runtime.subscribe(c,'peripheral_detach','changed')
   peripheral.reconcile_one(c,'red',game.tick,nop); assert(#c.queue==0)
   output(io,c,'red')
+  local owner=io.output_owner; local view=c.network_views.red.inventory
+  local native=assert(surface.create_entity{name='radar',position={9,6},force='player'})
+  assert(connector(db,'red').connect_to(native.get_wire_connector(red,true)))
+  for _=1,3 do
+    peripheral.reconcile_one(c,'red',game.tick,nop)
+    assert(c.network_views.red.diagnostic.code=='E_NETWORK_PENDING')
+    assert(io.output_owner==owner and c.network_views.red.inventory==view and #c.queue==0,
+      'pending unrelated adoption revoked a live output or published false transitions')
+    assert(graph.validate_witness(c,'red',owner.path,nop))
+    error_is('E_NETWORK_PENDING',function() inventory(c,'red') end)
+    peripheral.check_outputs(game.tick,nop); assert(io.output_owner==owner)
+  end
+  graph.adopt_tick(game.tick,nop); local adopted=assert(registry.by_entity(native))
+  peripheral.reconcile_one(c,'red',game.tick,nop)
+  assert(io.output_owner==owner and #c.queue==1 and c.queue[1].event.name=='peripheral_attach'
+    and c.queue[1].event.peripheral==adopted.id and not c.network_views.red.diagnostic)
+  assert(lifecycle.remove(adopted.id,'fixture-adoption',true))
+  peripheral.reconcile_one(c,'red',game.tick,nop)
+  assert(#c.queue==2 and c.queue[2].event.name=='peripheral_detach' and c.queue[2].event.peripheral==adopted.id)
+  c.queue={}; c.queue_bytes=0
+  report('pending-adoption-preserves-live-output-and-observation-with-exact-native-transitions')
+  local pending=assert(surface.create_entity{name='radar',position={9,6},force='player'})
+  assert(connector(db,'red').connect_to(pending.get_wire_connector(red,true)))
+  disconnect(db,io,'red')
+  peripheral.reconcile_one(c,'red',game.tick,nop)
+  error_is('E_NETWORK_PENDING',function() inventory(c,'red') end)
+  peripheral.check_outputs(game.tick,nop)
+  assert(not io.output_owner and io.children.output.get_control_behavior().sections_count==0,
+    'pending adoption hid a real selected-path loss')
+  pending.destroy(); graph.adopt_tick(game.tick,nop); connect(db,io,'red'); output(io,c,'red')
+  report('pending-adoption-does-not-authorize-calls-or-hide-selected-wire-loss')
+  for i,loss in ipairs({'scope','unavailable','destroyed','writer'}) do
+    local writer=build(surface,'computer',24+i*8,0); writer.status='running'; writer.run_id=writer.id..'/fixture'
+    local device=build(surface,'logic',24+i*8,3); connect(writer,device,'red'); output(device,writer,'red')
+    peripheral.reconcile_one(writer,'red',game.tick,nop)
+    local carrier=assert(surface.create_entity{name='radar',position={24+i*8,-4},force='player'})
+    assert(connector(writer,'red').connect_to(carrier.get_wire_connector(red,true)))
+    peripheral.reconcile_one(writer,'red',game.tick,nop); assert(device.output_owner)
+    if loss=='scope' then device.body.force=game.forces['tc05-foreign']
+    elseif loss=='unavailable' then device.availability_version=99
+    elseif loss=='destroyed' then device.body.destroy()
+    else writer.run_id=writer.id..'/next-generation' end
+    peripheral.check_outputs(game.tick,nop)
+    assert(not device.output_owner and device.children.output.get_control_behavior().sections_count==0,
+      'pending adoption retained invalid '..loss..' authority')
+    carrier.destroy(); graph.adopt_tick(game.tick,nop)
+    assert(lifecycle.remove(device.id,'fixture-pending-loss',true))
+    assert(lifecycle.remove(writer.id,'fixture-pending-loss',true))
+  end
+  report('pending-adoption-still-clears-scope-unavailable-destroyed-and-writer-generation-loss')
   disconnect(c,db,'red'); peripheral.reconcile_one(c,'red',game.tick,nop)
   assert(not io.output_owner and io.children.output.get_control_behavior().sections_count==0)
   local failure_source="function changed(e) error('detach handler failed') end"
@@ -271,6 +321,8 @@ function M.run()
   local power=assert(surface.create_entity{name='electric-energy-interface',position={-3,5},force='player'})
   power.power_production=1000000; power.power_usage=0
   f().c=c.id; f().db=db.id; f().io=io.id; f().power=power; f().pole=substation
+  f().lamp=assert(surface.create_entity{name='small-lamp',position={6,5},force='player'})
+  assert(f().lamp.get_wire_connector(red,true).connect_to(connector(io,'red','output')))
   report('cold-fixture-armed-with-authentic-native-source-and-physical-identities')
   log('TC_CONTRACT_TOTAL '..f().groups)
 end
@@ -290,13 +342,15 @@ local function unchanged()
   assert(now.view==s.view and now.owner==s.owner and now.machine==s.machine,'cold aliases changed')
   assert(now.outputs==s.outputs and now.interests==s.interests and now.adoption==s.adoption,'cold membership aliases changed')
   assert(now.outputs.records[f().io].record==registry.record(f().io) and #now.interests.order==2)
-  local pending=now.adoption.order[1]
-  assert(#now.adoption.order==2 and pending.computer==registry.record(f().stopped) and pending.wire=='red')
+  local pending=now.adoption.entries[f().stopped..'/red']
+  assert(#now.adoption.order==3 and pending.computer==registry.record(f().stopped) and pending.wire=='red')
   local faulted=registry.computer(f().faulted_discovery)
   assert(faulted.status=='faulted' and faulted.state.boots==1 and not registry.by_entity(f().speaker))
   assert(now.adoption.entries[faulted.id..'/red'].computer==faulted)
   assert(pending.computer.status=='stopped' and pending.generation==pending.computer.generation and not registry.by_entity(f().native))
   assert(registry.record(f().io).output_owner.computer_id==f().c)
+  assert(now.view[f().io] and registry.computer(f().c).network_views.red.diagnostic.code=='E_NETWORK_PENDING')
+  assert(not registry.by_entity(f().live_native) and graph.validate_witness(registry.computer(f().c),'red',now.owner.path,nop))
 end
 function M.on_load()
   loaded=true
@@ -310,12 +364,23 @@ function M.on_tick(event)
     local ctx=admission.context(registry.get().ledger,c.id,fixture.snapshot.ledger_tick)
     assert(ctx.machine==fixture.snapshot.machine and ctx.ledger.total==fixture.snapshot.total)
     assert(not admission.reserve(ctx,'work',limits.callback_work+1-ctx.machine.work))
-    disconnect(c,db,'red'); fixture.phase='resuming'; fixture.resume_tick=event.tick
-    runtime.enqueue(c,'check',{name='fixture_check'},event.tick)
+    error_is('E_NETWORK_PENDING',function() inventory(c,'red') end)
+    fixture.phase='adopting'; fixture.resume_tick=event.tick
   elseif fixture.phase=='armed' then loaded=false end
   if fixture.phase=='done' then return end
   scheduler.tick(event.tick)
   assert(c.status=='running',c.diagnostic and c.diagnostic.message)
+  if fixture.phase=='adopting' then
+    assert(event.tick-fixture.resume_tick<120,'cold adoption deadline exceeded')
+    assert(io.output_owner==fixture.snapshot.owner and c.state.boots==1)
+    if not c.state.events or #c.state.events<1 or event.tick<fixture.resume_tick+4 then return end
+    local adopted=assert(registry.by_entity(fixture.live_native))
+    assert(#c.state.events==1 and c.state.events[1].name=='peripheral_attach' and c.state.events[1].peripheral==adopted.id)
+    assert(fixture.lamp.energy>0 and fixture.lamp.get_signal({type='virtual',name='signal-A',quality='normal'},defines.wire_connector_id.circuit_red)==7)
+    log('TC_CONTRACT cold-pending-adoption-preserves-native-output-owner-and-exactly-one-attach-without-startup-replay')
+    disconnect(c,db,'red'); fixture.phase='resuming'; fixture.resume_tick=event.tick
+    runtime.enqueue(c,'check',{name='fixture_check'},event.tick)
+  end
   if fixture.phase=='resuming' then
     assert(event.tick-fixture.resume_tick<120,'cold topology resumption deadline exceeded: '..serpent.line(c.state))
   end
@@ -355,14 +420,28 @@ function M.on_tick(event)
     assert(lifecycle.remove(removed.id,'fixture-discovery-removal',true))
     assert(not root.native_adoption.entries[removed.id..'/red'],'removed root retained discovery demand')
     fixture.faulted_discovery=first.id; fixture.speaker=native_speaker
+    fixture.live_native=assert(c.body.surface.create_entity{name='radar',position={9,0},force='player'})
+    assert(connector(db,'red').connect_to(fixture.live_native.get_wire_connector(defines.wire_connector_id.circuit_red,true)))
+    local owner=io.output_owner; local view=c.network_views.red.inventory
+    peripheral.reconcile_one(c,'red',event.tick,nop)
+    assert(io.output_owner==owner and c.network_views.red.inventory==view and #c.queue==0)
     log('TC_CONTRACT membership-migration-preserves-accepted-state-and-stopped-native-discovery-pending')
     fixture.phase='frozen'; fixture.snapshot=snapshot()
     game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED'); return
   end
-  if fixture.phase=='resuming' and c.state.checked and c.state.events and #c.state.events==2 then
+  if fixture.phase=='resuming' and c.state.checked and c.state.events and #c.state.events==4 then
     assert(c.state.boots==1 and not io.output_owner and io.children.output.get_control_behavior().sections_count==0)
-    assert(c.state.events[1].name=='peripheral_detach' and c.state.events[2].name=='peripheral_detach')
-    assert(c.state.events[1].wire=='red' and c.state.events[1].peripheral<c.state.events[2].peripheral)
+    local original={}; local native=assert(registry.by_entity(fixture.live_native))
+    assert(c.state.events[1].name=='peripheral_attach' and c.state.events[1].peripheral==native.id)
+    for i=2,4 do
+      local e=c.state.events[i]
+      assert(e.name=='peripheral_detach' and e.wire=='red')
+      if i>2 then assert(c.state.events[i-1].peripheral<e.peripheral) end
+      if e.peripheral~=native.id then original[#original+1]=e end
+    end
+    assert(#original==2 and original[1].peripheral<original[2].peripheral)
+    assert((original[1].peripheral==db.id and original[2].peripheral==io.id)
+      or (original[1].peripheral==io.id and original[2].peripheral==db.id))
     assert(c.state.db==db.id and c.state.wire=='red' and c.state.position.x==db.body.position.x)
     local native=assert(registry.by_entity(fixture.native)); local stopped=registry.computer(fixture.stopped)
     assert(native.kind=='radar' and #registry.get().native_adoption.order==0 and stopped.status=='stopped' and not stopped.active)
