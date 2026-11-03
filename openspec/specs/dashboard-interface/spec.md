@@ -10,7 +10,7 @@ Let computers configure a physical peripheral's native machine-style window with
 Ordinary opening of a Dashboard SHALL show its configured native window, exact copyable peripheral identity and availability. The window SHALL belong to the opening player, not replace world monitors or another machine's UI. Empty dashboards SHALL show a meaningful unconfigured state without running a program.
 
 #### Scenario: Open without a writer
-- **WHEN** an authorized player opens a powered dashboard with no connected running computer
+- **WHEN** an authorized player opens a dashboard with no connected running computer
 - **THEN** its last accepted content is available, or it shows the unconfigured state if it has none
 - **AND** opening does not configure the device, subscribe a computer or execute guest code.
 
@@ -38,7 +38,7 @@ Programs SHALL update label/button text and button enablement by tab slot and st
 - **THEN** the retained histories are not erased and no duplicate widgets appear.
 
 ### Requirement: Shared wired configuration authority
-The `dashboard` peripheral SHALL use existing explicit-wire discovery, identity, power, shared-access and typed-error contracts. All authorized computers SHALL share one committed model in synchronized call order. Neither configuring a button nor subscribing SHALL grant exclusive ownership, a hidden network bridge or remote player access.
+The `dashboard` peripheral SHALL use existing explicit-wire discovery, identity, shared-access and typed-error contracts. All authorized computers SHALL share one committed model in synchronized call order. Neither configuring a button nor subscribing SHALL grant exclusive ownership, a hidden network bridge or remote player access.
 
 #### Scenario: Competing writers
 - **WHEN** two authorized computers update the same label in synchronized order
@@ -62,7 +62,7 @@ Each accepted button activation SHALL be scheduled for every explicit subscripti
 - **THEN** that pending delivery cannot activate the stale control.
 
 ### Requirement: Existing event lifecycle and pressure semantics
-Dashboard subscriptions and pending clicks SHALL follow existing run retirement, power, queue-capacity and cancellation rules. New clicks SHALL NOT accumulate for stopped or unpowered computers. Delivery to one subscriber SHALL NOT depend on another subscriber's handler succeeding. No unbounded private click backlog or automatic retry of a delivered action SHALL be introduced.
+Dashboard subscriptions and pending clicks SHALL follow existing run retirement, queue-capacity and cancellation rules. New clicks SHALL NOT accumulate for stopped or faulted computers. Delivery to one subscriber SHALL NOT depend on another subscriber's handler succeeding. No unbounded private click backlog or automatic retry of a delivered action SHALL be introduced.
 
 #### Scenario: Full recipient queue
 - **WHEN** one recipient's queue cannot accept a click but another recipient can
@@ -117,11 +117,11 @@ The combined dashboard definition, retained chart data and reserved line-buffer 
 - **THEN** another valid fixed-shape sample replaces its oldest sample without unbounded retained growth.
 
 ### Requirement: Power and player access
-Dashboard calls except limit inspection SHALL require live peripheral power. Opening and every action SHALL revalidate player identity, force, surface, reach and permissions. An unpowered dashboard SHALL retain its model while presenting an explicit unavailable state and refusing button actions. Different viewers SHALL retain independent UI sessions without expanding computer authority.
+Dashboard calls SHALL require no electricity. Opening and every action SHALL revalidate player identity, force, surface, reach and permissions. Electrical changes SHALL not disable controls or hide the retained model; actual identity/authority failures SHALL remain explicit. Different viewers SHALL retain independent UI sessions without expanding computer authority.
 
 #### Scenario: Outage and restoration
-- **WHEN** an open dashboard loses power and later regains it
-- **THEN** actions are disabled during the outage, data is not erased and the valid retained model can be displayed after restoration.
+- **WHEN** electrical supply around an open dashboard disappears and returns
+- **THEN** its model and authorized actions remain available without generating clicks, samples or restoration work.
 
 ### Requirement: Lifecycle-safe presentation
 Save/load SHALL preserve accepted dashboard state without executing guest code or modifying storage on load. Rendering/session state SHALL not become application data. Library changes, window closure, tab replacement, removal and authority loss SHALL retire affected GUI/render resources without clearing unrelated histories or leaving orphaned renderings.
@@ -148,3 +148,18 @@ Acceptance SHALL verify the exact packaged mod and dependency versions on Factor
 - **WHEN** the implementation is accepted
 - **THEN** maintained programs demonstrate mixed tabs, button delivery, rolling wrap and supported duration bars with inspected native captures
 - **AND** separate evidence covers two viewers/two subscribers, rejection atomicity, resource cleanup, mined data and configuration-only copies without changing production budgets to pass.
+
+### Requirement: Viewer-owned dashboard refresh
+Only open authorized dashboard sessions with dirty content or due refresh work SHALL receive UI service. Closing or invalidating a session SHALL remove its refresh membership. No viewer SHALL mean no recurring dashboard rendering, chart materialization or availability polling; accepted models and chart histories remain retained.
+
+#### Scenario: Closed dashboard population
+- **WHEN** many dashboards retain content but no player has them open
+- **THEN** ordinary ticks perform no per-dashboard UI discovery or chart rendering, and later opening shows current accepted content.
+
+#### Scenario: Visible dirty chart
+- **WHEN** an open viewer has a changed visible chart while other charts are closed or hidden
+- **THEN** existing coalescing, fairness and chart budgets service eligible visible work without repeatedly rebuilding unchanged charts.
+
+#### Scenario: Independent viewers
+- **WHEN** one player closes or loses authority while another remains authorized
+- **THEN** only the affected session is retired; the other viewer continues normal refresh and shared model state is preserved.

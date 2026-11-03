@@ -59,7 +59,7 @@ The handler SHALL broadcast one output set identically on red and green. Writes 
 - **AND** identities differing only by explicit versus omitted defaults are duplicates, not independent outputs.
 
 ### Requirement: Tick-sampled change subscriptions
-Programs SHALL subscribe named handlers to explicit red or green inputs, optionally filtered by identity. Subscription-count limits SHALL be checked only when the user registers. Accepted subscriptions SHALL sample native inputs each powered simulation tick without internal inventory ceilings or persisted processing jobs. Only changes, requested initial observations or resynchronization SHALL emit events. Comparisons SHALL use effective identities and counts, not order.
+Named handlers SHALL subscribe to explicit red/green inputs with optional identity filters. Count limits SHALL apply only at registration. Accepted subscriptions SHALL observe native inputs each tick without inventory caps or persisted jobs. Only changes or requested initial/resync observations SHALL emit events. Native hints may skip unchanged reads but MUST NOT skip connectivity checks or initial/resync. Comparisons SHALL use effective identities/counts, not order.
 
 #### Scenario: Unchanged input
 - **WHEN** consecutive selected input snapshots and connectivity are identical, possibly with different array ordering or omitted versus explicit default fields
@@ -96,7 +96,7 @@ The API SHALL distinguish sample tick from callback-dispatch tick and document n
 - **THEN** the output becomes observable according to native circuit propagation, not through a fabricated immediate recursive signal event.
 
 ### Requirement: Last-writer authority and fail-safe cleanup
-The output set SHALL record its last successful writer's computer identity, run generation and access channel. Stop, fault, power loss, invalidation or loss of that writer's access SHALL clear its still-owned output. Cleanup MUST run independently of user callbacks.
+The output set SHALL record its last successful writer's computer identity, run generation and access channel. Stop, fault, invalidation or loss of that writer's access SHALL clear its still-owned output. Cleanup MUST run independently of user callbacks.
 
 #### Scenario: A newer writer remains authoritative
 - **WHEN** computer A writes, computer B overwrites, and A then stops
@@ -116,13 +116,6 @@ Save/load SHALL retain valid output values, ownership and subscriptions without 
 #### Scenario: Reload with a legacy combined subscription
 - **WHEN** a retained signal subscription has both, missing or invalid input selection
 - **THEN** the run faults before queued callbacks dispatch, clears its still-owned outputs and discards pending callbacks without silently choosing a wire; the user must update source and restart.
-
-### Requirement: Input and network power policy
-An unpowered handler SHALL not execute peripheral services or emit owned output. Subscription resumption SHALL rebaseline current inputs and mark resynchronization, without replaying an unbounded backlog of unobserved changes.
-
-#### Scenario: Restore handler power
-- **WHEN** an authorized subscription survives a handler power interruption
-- **THEN** it receives a current resync sample after restoration and outputs remain zero until a new successful write.
 
 ### Requirement: Combinator-style read-only signal panel
 The Logic Handler inspector SHALL present one Input signals area and an adjacent Output signals area at normal supported widths. Red and green input entries SHALL appear together in the input area using native-style wire-colored slot backgrounds, grouped by wire with textual identification. The UI SHALL NOT expose expressions, conditions, signal pickers, count editors or output toggles.
@@ -164,14 +157,14 @@ The Output signals area SHALL show the handler's own emitted bank, with an expli
 - **THEN** the inspector shows only this handler's contribution, not the combined output-network totals.
 
 #### Scenario: Writer or handler loses authority or power
-- **WHEN** existing fail-safe reconciliation clears the handler's output
+- **WHEN** existing fail-safe reconciliation clears the handler's output after authority loss (electrical changes alone no longer clear it)
 - **THEN** the next successful inspector update shows the cleared bank without replaying a write or restoring the former owner.
 
 ### Requirement: Bounded live signal observation
 Signal trays SHALL appear before refresh and query native inputs and own output directly, independently of subscriptions. No native inventory SHALL be rejected or truncated by mod size ceilings. Refresh scheduling and presentation SHALL preserve responsiveness without caching service reads or adding persisted sampling/sorting/validation jobs. Separate-tick observations SHALL remain distinguishable; closing inspection SHALL not affect subscriptions or output ownership.
 
 #### Scenario: Signals change with the inspector open
-- **WHEN** powered inputs change and the inspector refreshes
+- **WHEN** inputs change and the inspector refreshes
 - **THEN** it displays fresh native observations without reopening or altering subscriptions.
 
 #### Scenario: Query exceeds supported signal capacity
@@ -182,3 +175,41 @@ Signal trays SHALL appear before refresh and query native inputs and own output 
 - **WHEN** an input is genuinely unavailable while the other input and own output remain available
 - **THEN** all trays stay visible, the unavailable input is marked honestly and the other regions continue updating
 - **AND** retained presentation state is never returned as a fresh service read or mistaken for an empty successful sample.
+
+### Requirement: Subscription-owned observation membership
+Only inputs with active accepted subscriptions SHALL receive recurring subscription observation. Membership SHALL change with registration, cancellation, run retirement and endpoint invalidation, not by rediscovering subscriptions across all computers every tick. One physical input/color observation SHALL serve its subscribers with independent filters and isolated delivery.
+
+#### Scenario: Many computers without subscriptions
+- **WHEN** computers run timers, receive messages or remain idle without signal subscriptions
+- **THEN** none receives a signal-work discovery or subscription-sampling visit merely because it exists or is running.
+
+#### Scenario: One-tick native pulse
+- **WHEN** an actively subscribed input changes for one observable circuit step within the supported envelope
+- **THEN** that change is observed at tick-level responsiveness even when its computer is waiting or has queued callbacks; callback dispatch latency remains separately bounded.
+
+#### Scenario: Shared connector and separate colors
+- **WHEN** multiple subscriptions use one physical input/color and another subscription uses the other color
+- **THEN** the common native observation is shared without merging red/green, selected-wire authority, independent filters or previous observations.
+
+#### Scenario: Last subscriber leaves
+- **WHEN** the last subscription for an input/color is canceled or retired
+- **THEN** that input leaves recurring subscription work immediately; queued canceled notifications cannot run and no dormant polling remains.
+
+#### Scenario: Initial resync and false-positive change flag
+- **WHEN** an initial/resync observation is owed or a native change hint is spuriously true
+- **THEN** required observations still occur and actual effective values/connectivity decide ordinary change delivery, not the hint alone.
+
+#### Scenario: Insufficient sample admission
+- **WHEN** the supported tick observation cannot be completed under current bounds
+- **THEN** affected runs follow the existing explicit sampling-failure/fault cleanup rather than silently skipping a pulse, inventing unchanged input or switching to slower polling.
+
+### Requirement: Electricity-independent logic service
+Logic Handler reads, subscriptions and outputs SHALL operate without electricity. Factory power changes SHALL neither erase a valid output bank nor manufacture a signal resync. Physical identity, input roles, selected-wire authority and last-writer fail-safe rules SHALL remain enforced.
+
+#### Scenario: No power network
+- **WHEN** a valid computer and Logic Handler are wired together outside electrical coverage
+- **THEN** reads, subscriptions and native output replacement work normally with isolated input/network/output roles.
+
+#### Scenario: Native factory signal changes during outage
+- **WHEN** an external powered producer loses supply while the mod-built handler remains valid
+- **THEN** any resulting native signal change is observed normally; the handler itself does not enter a power-paused state.

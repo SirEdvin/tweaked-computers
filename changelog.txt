@@ -1,4 +1,24 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.19
+Date: 2026-11-04
+  Features:
+    - Saved programs use named function declarations only. Rewrite legacy table-form source manually; there is no automatic conversion. Rejected source remains recoverable.
+    - All nine custom device families require no electricity. Native radars and programmable speakers retain their normal electricity and live authority checks.
+    - Demand-owned ready queues, timer deadlines, signal observations, lifecycle maintenance and open UI refresh replace ordinary idle discovery sweeps.
+  Bugfixes:
+    - Pending native-carrier adoption preserves complete observations and valid output ownership instead of falsely detaching unchanged peripherals.
+  Info:
+    - ALPHA. Benchmarks are incomplete and performance/scaling is unverified. The user explicitly waived benchmark completion for release, not correctness or safety.
+    - Retains 0.1.18 compatibility with all Factorio 2.1 patches; tested on 2.1.23 with base and Space Age, not every patch or modpack.
+    - Back up the complete save and matching mod set before upgrading. Computer items remain plain hardware; ordinary pickup/replacement loses computer contents and legacy programmed item payloads are not imported. Restore both save and old mods for rollback, never downgrade the upgraded save in place.
+---------------------------------------------------------------------------------------------------
+Version: 0.1.18
+Date: 2026-10-29
+  Changes:
+    - Accept any Factorio 2.1 version of base and optional Space Age instead of requiring exactly 2.1.23.
+  Info:
+    - Metadata-only compatibility release; runtime code and save behavior are unchanged from 0.1.17. Verification remains on 2.1.23, not every 2.1 patch. Back up saves before upgrading.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.17
 Date: 2026-10-29
   Features:

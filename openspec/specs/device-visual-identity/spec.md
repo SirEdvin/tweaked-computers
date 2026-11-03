@@ -28,10 +28,10 @@ Visible red/green terminals and role symbols SHALL match the actual wire attachm
 - **THEN** both wires terminate on their depicted contacts without floating in empty space, crossing an unrelated role or covering monitor content.
 
 ### Requirement: Coherent icons and status cues
-Inventory/recipe icons SHALL depict the same device family as the world sprites and remain distinguishable at ordinary icon size. Off, unpowered, active and fault states SHALL have compact understandable cues without replacing native deconstruction markers or flooding the sprite with status text.
+Inventory/recipe icons SHALL depict the same device family as the world sprites and remain distinguishable at ordinary icon size. Stopped, active and fault states SHALL have compact understandable cues without replacing native deconstruction markers or flooding the sprite with status text.
 
 #### Scenario: Inspect inventory and factory
-- **WHEN** the player matches an inventory item to a placed device and then changes its power/run state
+- **WHEN** the player matches an inventory item to a placed device and then changes its run/operational state
 - **THEN** the identity stays recognizable and status changes are visible without changing the device's apparent type.
 
 ### Requirement: Reviewable reproducible asset delivery
@@ -42,7 +42,7 @@ The artwork deliverable SHALL include editable sources, reproducible export inst
 - **THEN** the reviewer can inspect all five identities and socket alignments from a complete contact sheet and trace the shipped sprites to their sources without recreating an opaque manual workflow.
 
 ### Requirement: Selected Service Rack six-device family
-The six devices SHALL adopt the selected Service Rack (AR2 candidate B) identity. Recipe Searcher SHALL retain its 1×1 footprint and follow five-device requirements. Cardinal bodies, item icons, shadows and status sheets SHALL match the preview; technology icons SHALL depict the selected computer and scanner. Adoption MUST NOT alter gameplay, research ownership, unlock effects, power, physical contacts/selection or monitor alpha/interior/touch geometry.
+The six devices SHALL adopt the selected Service Rack (AR2 candidate B) identity. Recipe Searcher SHALL retain its 1×1 footprint and follow five-device requirements. Cardinal bodies, item icons, shadows and status sheets SHALL match the preview; technology icons SHALL depict the selected computer and scanner. Adoption MUST NOT alter gameplay, research ownership, unlock effects, native-device power, physical contacts/selection or monitor alpha/interior/touch geometry.
 
 #### Scenario: Identify the selected six-device family
 - **WHEN** all six devices appear beside vanilla machinery at ordinary zoom, in inventory and in their research entries
@@ -76,3 +76,18 @@ Radar asset reuse SHALL be documented through version-pinned native references a
 #### Scenario: Archive and visual audit
 - **WHEN** the implementation is reviewed for release
 - **THEN** the archive contains no copied Factorio distributions/assets, transformation provenance is available, and evidence shows unchanged ordinary radar plus scaled advanced radar, aligned wiring and normal animation.
+
+### Requirement: Power-free status and demand-owned art updates
+Custom-device world/status/UI presentation SHALL not show missing electricity as a fault or unavailable state. Status art SHALL update only for affected dirty identities or an actual due animation transition, without scanning all devices each tick. Native radar/speaker graphics, warnings and animation SHALL remain unchanged.
+
+#### Scenario: Custom device outside electrical coverage
+- **WHEN** each custom family is viewed in the native client without an electrical network
+- **THEN** its intended artwork and contacts remain legible, no electrical warning or helper appears, and genuine stopped/fault/physical-invalid states remain distinguishable.
+
+#### Scenario: Unchanged artwork
+- **WHEN** devices retain the same operational state across ordinary ticks
+- **THEN** the mod performs no per-device status discovery or redundant native sprite update; a later run/fault/lifecycle change updates only affected art.
+
+#### Scenario: Native exception appearance
+- **WHEN** a native radar or programmable speaker loses power
+- **THEN** native visual feedback remains intact without adding a custom recurring power watcher.

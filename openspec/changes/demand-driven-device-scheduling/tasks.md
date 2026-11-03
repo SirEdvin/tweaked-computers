@@ -37,6 +37,13 @@ Execution boundary: this checklist is implementation work, not work performed by
 
 ## 5. Cross-system acceptance and measured performance
 
+Release disposition (2026-11-04): the user explicitly waived completion of the
+benchmark campaign for 0.1.19 ALPHA. Row 5.4 remains unchecked and unaccepted;
+partial historical results and portable-runner smoke are not a completed
+performance/scaling measurement. All non-benchmark correctness and safety gates
+remain required. This release waiver does not change the measurement contract or
+authorize archival.
+
 - [x] 5.1 Run the exact packaged candidate through focused contracts and production-context native integration in both base and Space Age on the harness-pinned Factorio 2.1.23. Include the new scheduling fixture, lifecycle/native circuit, monitor, KV, catalogue/statistics/dashboard, modem and speaker paths. Verify required runtime phase markers, exact case counts, zero exits and normal cleanup; a create-only smoke or an earlier partial pass is not a cold runtime pass.
 - [x] 5.2 Run separate-process old-archive upgrade and ordinary reload with mixed active/idle devices, legacy power-paused runs, queued commands/events, timer/subscription cancellation, accepted large signal observations, output ownership, partially prepared frames and dirty maintenance. Verify the first ordinary tick already excludes obsolete power/global discovery work, all accepted data/credits survive, no startup/native effect replays and unknown-version state remains recoverable. Keep immutable old-save/archive hashes and a pre-upgrade rollback copy.
 - [x] 5.3 Add structural visit counters to an explicitly instrumented test archive, extending existing maintenance/monitor demand tooling rather than adding a production telemetry framework. Verify zero extra timer/dispatch/signal discovery visits as unrelated idle populations grow; measure due physical observation separately. Cover no devices, each idle family, one subscribed controller among idle peers, shared-input fan-out, future timers, native idle carriers, open/closed UI, pending expiry and all-active work. No fixed new numeric limit or budget increase may substitute for a passing invariant.

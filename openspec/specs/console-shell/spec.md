@@ -24,7 +24,7 @@ The Console SHALL provide a single-line Lua input at its bottom, Enter submissio
 - **THEN** no command or peripheral operation is created.
 
 ### Requirement: Shared independent scratch environment
-Each computer SHALL have one shell environment shared by its authorized players and isolated from every other computer and from saved-program locals. Shell execution SHALL be available on a powered, valid computer while its saved program is stopped or running. Ordinary shell assignment SHALL not change explicit application state; explicit API state writes remain real effects.
+Each computer SHALL have one shell environment shared by its authorized players and isolated from every other computer and from saved-program locals. Shell execution SHALL be available on a valid computer regardless of electrical coverage while its saved program is stopped or running. Ordinary shell assignment SHALL not change explicit application state; explicit API state writes remain real effects.
 
 #### Scenario: Use a previous binding from another player
 - **WHEN** player A successfully assigns `p` and player B subsequently submits `print(p.getSize())` on the same computer
@@ -116,7 +116,7 @@ Window closing, save/load, and multiplayer late joining SHALL preserve shell val
 - **AND** both clients use the same retained shell bindings for the next command without desynchronizing.
 
 ### Requirement: Explicit shell lifecycle and reset
-Successful Run/Apply, explicit computer Stop, and confirmed Reset Shell SHALL clear shell values, cancel pending commands, and release shell-owned transient resources. Failed activation, window closing, automatic program faults, and power loss SHALL not discard the committed shell environment. Reset Shell SHALL not stop the saved program or reset its explicit state.
+Successful Run/Apply, explicit computer Stop, and confirmed Reset Shell SHALL clear shell values, cancel pending commands, and release shell-owned transient resources. Failed activation, window closing, automatic program faults, and electrical supply changes SHALL not discard the committed shell environment. Reset Shell SHALL not stop the saved program or reset its explicit state.
 
 #### Scenario: Restart the computer
 - **WHEN** a new saved program activation succeeds
@@ -129,12 +129,12 @@ Successful Run/Apply, explicit computer Stop, and confirmed Reset Shell SHALL cl
 - **AND** the saved program, editor drafts, explicit application state, KV contents, and monitor contents are not erased.
 
 #### Scenario: Power interruption
-- **WHEN** the computer loses and later regains power
-- **THEN** no shell commands execute while unpowered, shell-owned logic output clears, and committed shell values survive
-- **AND** old submitted commands are not silently replayed after restoration.
+- **WHEN** electrical supply around the computer disappears and returns
+- **THEN** committed shell values, queued commands and valid shell-owned output remain unaffected
+- **AND** pending submissions execute at most once under normal scheduling, not through a restoration replay.
 
 ### Requirement: Live effects with independent ownership
-Shell peripheral calls SHALL use the existing real service contracts and live force, surface, wire, generation, and power checks. Shell-owned logic output and monitor synchronization selection SHALL be distinguishable from program-owned resources. Existing shared-write ordering and exclusivity rules SHALL apply, without granting a shell privileged access.
+Shell peripheral calls SHALL use the existing real service contracts and live force, surface, wire, generation, and native radar/speaker power checks; custom-device services require no electricity. Shell-owned logic output and monitor synchronization selection SHALL be distinguishable from program-owned resources. Existing shared-write ordering and exclusivity rules SHALL apply, without granting a shell privileged access.
 
 #### Scenario: Detect a stale wrapper
 - **WHEN** a wrapped peripheral is disconnected, replaced, or regrouped before the next command
@@ -175,7 +175,7 @@ Shell input, retained values, pending submissions, compilation, execution, seria
 #### Scenario: Preserve accepted order across a save
 - **WHEN** two admitted submissions are pending at a save boundary
 - **THEN** each is considered at most once in its admitted order after reload, with execution-time authority rechecked
-- **AND** commands invalidated by reset, power loss, closed authorization, or removal are canceled visibly rather than executed later with stale authority.
+- **AND** commands invalidated by reset, closed authorization, or removal are canceled visibly rather than executed later with stale authority.
 
 ### Requirement: Authoritative GUI input routing
 Every submission and reset SHALL require the exact opened computer UI, active Console context, current session identity, and current player access. Shell controls SHALL not act on source editing, other tabs, unrelated windows, or gameplay. Delayed execution SHALL recheck access and session generation.
@@ -231,3 +231,18 @@ If a previously committed shell root contains a newly reserved built-in name, su
 - **WHEN** the user confirms the existing Reset Shell action after a collision
 - **THEN** the colliding scratch environment is cleared through the normal reset lifecycle
 - **AND** subsequent commands can use the new built-ins without changing the saved program, application state or historical Console output.
+
+### Requirement: Runnable-only Console service
+Admitting a Console command SHALL wake that computer through existing shared scheduling. A computer with no queued program event or Console submission SHALL receive no dispatch visit. Open Console viewers may request bounded UI refresh without manufacturing executable work or renewing shared credits.
+
+#### Scenario: Console on an otherwise idle computer
+- **WHEN** a player submits a command to a valid stopped computer outside electrical coverage
+- **THEN** the command becomes runnable, executes once and leaves execution membership after its queue drains.
+
+#### Scenario: Viewer is not execution demand
+- **WHEN** a player leaves an unchanged Console window open without submitting commands
+- **THEN** only the open-session refresh policy remains eligible; no empty callback or repeated shell dispatch occurs.
+
+#### Scenario: UI closes or authorization changes
+- **WHEN** a viewer closes or loses access to its session
+- **THEN** its UI refresh membership is removed and pending commands follow existing authorization/cancellation rules without affecting another valid viewer.

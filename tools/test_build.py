@@ -374,6 +374,66 @@ getLimits()''',
 
 
 class CanonicalContractTests(unittest.TestCase):
+    def scheduling_replacement(self, capability, name, canonical):
+        import hashlib
+        import re
+        delta = build.ROOT / 'openspec/changes/demand-driven-device-scheduling/specs' / capability / 'spec.md'
+        if not delta.is_file():
+            return False
+        pattern = r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|^## |\Z)'
+        replacements = {
+            ('computer-runtime', 'Stop and power semantics'): ('Electricity-independent computer lifecycle',),
+            ('device-lifecycle', 'Electricity and passive wire continuity'): ('Power-free custom composite devices',),
+            ('device-lifecycle', 'Consolidated live monitor observation'):
+                ('Demand-owned lifecycle maintenance', 'Fresh operation-boundary monitor authority'),
+            ('logic-handler', 'Input and network power policy'): ('Electricity-independent logic service',),
+        }
+        targets = replacements.get((capability, name), (name,))
+        if (capability, name) in replacements:
+            self.assertNotIn(name, canonical)
+        blocks = {}
+        for section in re.split(r'^## ', delta.read_text(), flags=re.M):
+            if section.startswith(('ADDED Requirements', 'MODIFIED Requirements')):
+                blocks.update(dict(re.findall(pattern, section, re.M | re.S)))
+        if name not in blocks and (capability, name) not in replacements:
+            return False
+        for target in targets:
+            self.assertIn(target, blocks)
+            self.assertIn(target, canonical)
+            expected = blocks[target].strip()
+            actual = canonical[target].strip()
+            # Three descriptions are shortened without changing their scenarios.
+            concise = {
+                ('device-lifecycle', 'Base-game progression and queryable limits'):
+                    ('its specified six-pack research', 'its six-pack research'),
+            }
+            if (capability, target) in concise:
+                expected = expected.replace(*concise[capability, target])
+            hashes = {
+                ('logic-handler', 'Tick-sampled change subscriptions'): '89f221710e94cbb612f265143d541f80b7f944792a9ed8ff79554ad10a20e36a',
+                ('speaker-peripheral', 'Native power and immediate revocation'): 'd6eee14a87aa6948bd2a8f6f0b3adf1e2eb353779e69aa03217282bb11787fd8',
+            }
+            if (capability, target) in hashes:
+                self.assertEqual(hashlib.sha256(actual.encode()).hexdigest(), hashes[capability, target])
+                self.assertEqual(expected.split('#### Scenario:', 1)[1], actual.split('#### Scenario:', 1)[1])
+            else:
+                self.assertEqual(actual, expected)
+        return True
+
+    def test_scheduling_union_checks_complete_replacements(self):
+        import re
+        pattern = r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|^## |\Z)'
+        for delta in (build.ROOT / 'openspec/changes/demand-driven-device-scheduling/specs').glob('*/spec.md'):
+            canonical = dict(re.findall(pattern, (build.ROOT / 'openspec/specs' / delta.parent.name / 'spec.md').read_text(), re.M | re.S))
+            for name, _ in re.findall(pattern, delta.read_text(), re.M | re.S):
+                with self.subTest(capability=delta.parent.name, requirement=name):
+                    self.assertTrue(self.scheduling_replacement(delta.parent.name, name, canonical))
+            first = next(iter(canonical))
+            if self.scheduling_replacement(delta.parent.name, first, canonical):
+                damaged = dict(canonical, **{first: canonical[first] + 'lost safety clause'})
+                with self.assertRaises(AssertionError):
+                    self.scheduling_replacement(delta.parent.name, first, damaged)
+
     def test_explicit_inventory_covers_canonical_files_only(self):
         expected = {p.relative_to(build.ROOT).as_posix()
                     for folder in ('api', 'specs')
@@ -484,6 +544,9 @@ class CanonicalContractTests(unittest.TestCase):
                         r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|^## |\Z)',
                         delta.read_text(), re.M | re.S):
                     with self.subTest(change=change, capability=delta.parent.name, requirement=name):
+                        current = dict(re.findall(r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|\Z)', canonical, re.M | re.S))
+                        if self.scheduling_replacement(delta.parent.name, name, current):
+                            continue
                         if (delta.parent.name,name)==('device-lifecycle','Mining preserves user data'):
                             name='Device-specific mining data policy'
                         if delta.parent.name == 'program-source':
@@ -532,6 +595,8 @@ class CanonicalContractTests(unittest.TestCase):
                                       delta.parent.name / 'spec.md').read_text(), re.M | re.S))
                 for name, body in re.findall(pattern, delta.read_text(), re.M | re.S):
                     with self.subTest(change=change, capability=delta.parent.name, requirement=name):
+                        if self.scheduling_replacement(delta.parent.name, name, canonical):
+                            continue
                         self.assertIn(name, canonical)
                         self.assertEqual(body.split('#### Scenario:', 1)[0].strip(),
                                          canonical[name].split('#### Scenario:', 1)[0].strip())

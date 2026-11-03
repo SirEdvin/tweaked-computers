@@ -23,12 +23,12 @@ The mod SHALL provide a device-local inspector for KV Database, Monitor, Logic H
 - **THEN** the same devices support ordinary inspector opening while retaining identities, wires, data and output ownership.
 
 #### Scenario: Basic Factoriopedia Interface inspector
-- **WHEN** an authorized player normally opens a powered or unpowered Factoriopedia Interface
+- **WHEN** an authorized player normally opens a Factoriopedia Interface with or without electrical coverage
 - **THEN** the exact peripheral name is copyable and its type and availability are visible through the existing player-scoped inspector
 - **AND** opening or refreshing performs no item/fluid catalogue enumeration, metadata query, world mutation or guest execution.
 
 #### Scenario: Basic Production Statistics inspector
-- **WHEN** an authorized player opens a powered or unpowered statistics device
+- **WHEN** an authorized player opens a statistics device with or without electrical coverage
 - **THEN** its exact peripheral name remains selectable/copyable and its availability is explicit
 - **AND** opening or refreshing the inspector performs no production-statistics queries, exposes no force/surface selector and executes no guest program.
 
@@ -85,15 +85,15 @@ Opening, refreshing and acting on an inspector SHALL revalidate the player, exac
 - **THEN** the other player's selection and window remain independent, without creating a device writer or executing a program.
 
 ### Requirement: Non-mutating inspection and explicit availability
-Inspectors SHALL NOT execute guest code, edit data/configuration, create subscriptions, claim output ownership or alter display contents. Identity/status inspection SHALL remain available without power. KV contents, target inventories and live logic input queries SHALL respect service power restrictions; unavailable details SHALL be labelled rather than represented as an empty successful result.
+Inspectors SHALL NOT execute guest code, edit data/configuration, create subscriptions, claim output ownership or alter display contents. Custom-device identity, KV contents, target inventories and live logic input queries SHALL require no electricity. Current identity, scope and access checks SHALL remain mandatory; unavailable details SHALL be labelled rather than represented as an empty successful result.
 
 #### Scenario: Unpowered peripheral
-- **WHEN** an authorized player opens an unpowered peripheral
-- **THEN** the name remains copyable and the UI explicitly reports unpowered status
-- **AND** active detail queries are not performed, retained data is not erased and old detail snapshots are not presented as current.
+- **WHEN** an authorized player opens a custom peripheral without electrical coverage
+- **THEN** the name remains copyable and its normally supported details are available without an unpowered label
+- **AND** actual validation failures remain explicit, retained data is not erased and stale snapshots are not presented as current.
 
 #### Scenario: Browse without effects
-- **WHEN** a player opens, selects, refreshes and closes a powered inspector
+- **WHEN** a player opens, selects, refreshes and closes an inspector
 - **THEN** database values/deadlines, factory settings, output ownership, program state and monitor model revisions remain unchanged by inspection.
 
 ### Requirement: Bounded and honest refresh
@@ -139,3 +139,18 @@ Save/load SHALL NOT perform inspection work or mutate device data during load. R
 #### Scenario: Cold load with an open inspector
 - **WHEN** a save containing an open inspector is loaded in a separate process
 - **THEN** load executes no query or guest callback, and subsequent gameplay either restores a revalidated inspector or safely closes it with the device data intact.
+
+### Requirement: Open-session inspection scheduling
+Recurring inspector refresh SHALL be limited to open authorized sessions at their existing bounded refresh cadence. Opening, closing, tab changes, invalidation and content updates SHALL maintain eligible work without scanning all devices or players to rediscover it. Inspection MUST NOT register guest signal subscriptions or grant stored observations as call authority.
+
+#### Scenario: No open inspectors
+- **WHEN** many inspectable peripherals exist with no open inspector
+- **THEN** ordinary ticks do no inspector acquisition or UI work for those devices.
+
+#### Scenario: Open Logic Handler without guest subscriptions
+- **WHEN** an authorized player inspects live signals on a handler with no guest subscriber
+- **THEN** that open session obtains bounded native observations independently; closing it leaves no watcher, while no computer is added to the signal-subscription work set.
+
+#### Scenario: GUI pending or stale
+- **WHEN** an open session cannot finish a bounded refresh or loses its original identity
+- **THEN** existing pending/stale/unavailable presentation is preserved, and a replacement at the same coordinates is not silently adopted.
