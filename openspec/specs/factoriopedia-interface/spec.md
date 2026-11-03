@@ -7,11 +7,11 @@ Let computer programs discover installed item and fluid names and read their int
 ## Requirements
 
 ### Requirement: Distinct physical catalogue peripheral
-The mod SHALL provide a 1×1 Factoriopedia Interface consuming 30 kW, identified as peripheral type `factoriopedia_interface`. Its selectable body SHALL provide one Network endpoint accepting red and green wires. It SHALL have no item inventory, fluid input, crafting function, factory-signal API or dedicated catalogue GUI.
+The mod SHALL provide a 1×1 Factoriopedia Interface requiring and consuming no electricity, identified as peripheral type `factoriopedia_interface`. Its selectable body SHALL provide one Network endpoint accepting red and green wires. It SHALL have no item inventory, fluid input, crafting function, factory-signal API or dedicated catalogue GUI.
 
 #### Scenario: Place and wire the interface
-- **WHEN** a player places and powers the interface in any cardinal direction and connects its body to a computer Network
-- **THEN** discovery exposes the distinct peripheral on the connected color, with wire contacts matching the visible body and a nonselectable power helper.
+- **WHEN** a player places the interface in any cardinal direction and connects its body to a computer Network
+- **THEN** discovery exposes the distinct peripheral on the connected color, with wire contacts matching the visible body and no power helper.
 
 ### Requirement: Shared Recipe Searcher progression
 One `tc-factoriopedia-interface` SHALL cost 10 steel plates, 5 advanced circuits and 2 processing units with a two-second crafting time. Its disabled-by-default recipe SHALL unlock through the existing `tc-recipe-searcher` technology. Existing research prerequisites, science ingredients, research cost and Recipe Searcher recipe SHALL remain unchanged.
@@ -107,7 +107,7 @@ Every successful result SHALL be detached plain Data without native objects, fun
 - **THEN** lookup raises `E_UNSUPPORTED` without returning a misleading successful record.
 
 ### Requirement: Existing resource bounds without a new catalogue quota
-Catalogue operations SHALL consume the existing work, allocation and Data allowances without renewing credits or adding a feature-specific name-count cap. A list or record that cannot fit SHALL refuse explicitly without a prefix, cursor or silent truncation. `getLimits()` SHALL report current common limits and remain available without peripheral power. Successful lists SHALL not imply arbitrary modpack-size support.
+Catalogue operations SHALL consume the existing work, allocation and Data allowances without renewing credits or adding a feature-specific name-count cap. A list or record that cannot fit SHALL refuse explicitly without a prefix, cursor or silent truncation. `getLimits()` SHALL report current common limits and remain available regardless of electrical coverage. Successful lists SHALL not imply arbitrary modpack-size support.
 
 #### Scenario: Catalogue exceeds shared result capacity
 - **WHEN** the complete name array exceeds an existing Data allowance and sufficient work remains to detect that refusal
@@ -122,13 +122,11 @@ Catalogue operations SHALL consume the existing work, allocation and Data allowa
 - **THEN** that lookup does not enumerate unrelated prototypes or charge their count as its metadata work.
 
 ### Requirement: Existing network and power authority
-Calls SHALL use existing same-force, same-surface, explicit-color Network authority and exact bound device identity. Reachable unpowered interfaces SHALL remain discoverable and allow `getLimits()`, but the four catalogue methods SHALL raise `E_UNPOWERED`. Detach, replacement or scope changes SHALL revoke stale calls. Passive Network relay SHALL preserve existing color separation.
+Calls SHALL use existing same-force, same-surface, explicit-color Network authority and exact bound device identity. All methods SHALL require no electricity; missing electrical supply MUST NOT cause `E_UNPOWERED`. Detach, replacement or scope changes SHALL revoke stale calls. Passive Network relay SHALL preserve existing color separation.
 
 #### Scenario: Power disappears and returns
-- **WHEN** the interface loses electrical power
-- **THEN** catalogue calls fail while discovery, passive relay and authorized limits remain available.
-- **WHEN** power is restored
-- **THEN** newly authorized catalogue calls succeed without rebuilding the device.
+- **WHEN** electrical supply around the interface disappears and returns, or never existed
+- **THEN** catalogue calls, discovery, passive relay and authorized limits remain available under normal authority checks without rebuilding the device.
 
 #### Scenario: Captured method after replacement
 - **WHEN** a program calls a retained method after its interface is removed and replaced at the same position
@@ -149,7 +147,7 @@ Queries SHALL not change prototypes, recipes, research, inventories, fluids, nat
 The interface SHALL have a distinct Service Rack body/icon with readable cardinal views, status and Network contacts, while preserving pre-existing device artwork and geometry. Normal opening SHALL show its authorized identity/status inspector, not a vanilla carrier dialog or catalogue browser. Native Factoriopedia opening and existing item/fluid information SHALL remain unchanged.
 
 #### Scenario: Inspect and identify the new block
-- **WHEN** an authorized player opens a powered or unpowered interface without a connected computer
+- **WHEN** an authorized player opens an interface with or without electrical coverage without a connected computer
 - **THEN** its exact peripheral name is copyable and status is meaningful, without performing a catalogue scan or starting a program.
 
 #### Scenario: View beside existing devices
@@ -171,5 +169,5 @@ The feature SHALL operate on the repository's pinned Factorio 2.1.23 in base-onl
 The shipped feature SHALL include localized names, discoverable method help, the companion Lua API contract and a runnable guest example covering name lists, item/fluid lookup and absent rocket capacity. Documentation SHALL explain exact namespaces, baseline quality, units, complete-or-error lists and the difference between reference metadata and live factory feasibility.
 
 #### Scenario: Use the documented API
-- **WHEN** the documented example runs through the actual guest API against a powered, wired interface in the tested archive
+- **WHEN** the documented example runs through the actual guest API against a wired interface without requiring electrical supply in the tested archive
 - **THEN** it uses the declared methods and fields successfully, and discovery/help/package inventories include the new peripheral without removing existing methods.

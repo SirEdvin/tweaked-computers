@@ -107,7 +107,7 @@ Playback SHALL enforce finite per-speaker, per-computer and aggregate per-tick a
 - **THEN** the result remains a deterministic submission result, not a client-dependent acknowledgement or completion event.
 
 ### Requirement: Native power and immediate revocation
-Discovery and same-color relay SHALL remain power-independent. Except for `getLimits`, speaker methods SHALL require live native electrical availability. Script disablement, freezing and deconstruction SHALL refuse active service; an unfulfilled native circuit playback condition alone SHALL NOT prevent direct API playback. Every call SHALL reprove exact identity, force, surface and current wire authority before side effects.
+Discovery and same-color relay SHALL remain power-independent. Except `getLimits`, methods SHALL require live native power. Script disablement, freezing and deconstruction SHALL refuse active service; an unmet circuit playback condition alone SHALL NOT block API playback. No proactive power polling SHALL occur; calls and requested metadata SHALL check live availability. Each call SHALL reprove exact identity, force, surface and current wire authority before effects.
 
 #### Scenario: Unpowered relay
 - **WHEN** a speaker loses electrical power while its physical wires remain valid
@@ -145,7 +145,7 @@ Ordinary save/load SHALL preserve exact speaker identities and spent admission s
 - **THEN** further calls in that tick retain those deductions and a genuinely later tick renews allowances normally.
 
 #### Scenario: Stop or detach after submission
-- **WHEN** a program stops, loses power or disconnects after submitting a sound
+- **WHEN** a program stops or disconnects, or its native speaker loses power after submitting a sound
 - **THEN** it cannot submit further unauthorized audio, but the API does not promise cancellation of sound already handed to clients.
 
 ### Requirement: Explicit compatibility and exact API inventory
@@ -162,3 +162,18 @@ Acceptance SHALL exercise the exact packaged archive with base and Space Age 2.0
 - **WHEN** the release candidate is accepted
 - **THEN** native-client audio evidence verifies notes, volume, simultaneous requests, effect playback and near/far/other-force/other-surface listeners
 - **AND** connected peers verify consistent admission and no duplicate playback after reload or late joining.
+
+### Requirement: Idle speakers create no availability work
+A connected or remembered programmable speaker SHALL receive no recurring electrical-availability observation merely because it is a peripheral. Native playback, alerts, circuit settings and energy behavior SHALL remain untouched. Requested operations retain fresh availability checks and existing admission/return semantics.
+
+#### Scenario: Idle powered and unpowered speaker
+- **WHEN** a speaker is registered but no operation or metadata query targets it
+- **THEN** the mod makes no proactive power check; native audio/circuit simulation remains Factorio's responsibility.
+
+#### Scenario: Outage between calls
+- **WHEN** a powered speaker is used successfully and then loses supply before another method call
+- **THEN** the later active call raises E_UNPOWERED without audio or native-setting mutation; getLimits and permitted metadata remain available.
+
+#### Scenario: Computer electrical supply changes
+- **WHEN** electricity around the custom computer disappears but the native speaker remains operational
+- **THEN** valid scheduled commands continue to use the speaker without a computer power pause or changed playback allowance.

@@ -7,11 +7,11 @@ Let computer programs discover installed recipes that directly produce an item o
 ## Requirements
 
 ### Requirement: Distinct physical Recipe Searcher
-The mod SHALL provide a 1×1 Recipe Searcher consuming 30 kW, with one Network endpoint supporting red and green wires. Its selectable body SHALL be the wire target, with distinct archive/scanner-style Foundry artwork, readable status and cardinal views. It MUST NOT expose item/fluid storage, crafting execution or a dedicated recipe-search GUI.
+The mod SHALL provide a 1×1 Recipe Searcher requiring and consuming no electricity, with one Network endpoint supporting red and green wires. Its selectable body SHALL be the wire target, with distinct archive/scanner-style Foundry artwork, readable status and cardinal views. It MUST NOT expose item/fluid storage, crafting execution or a dedicated recipe-search GUI.
 
 #### Scenario: Place and connect the device
 - **WHEN** a player or robot places the device in any cardinal direction
-- **THEN** its footprint, wire contacts and artwork agree, its power helper is nonselectable, and ordinary peripheral discovery recognizes type `recipe_searcher`.
+- **THEN** its footprint, wire contacts and artwork agree, it has no power helper, and ordinary peripheral discovery recognizes type `recipe_searcher`.
 
 ### Requirement: Explicit crafting and research progression
 One `tc-recipe-searcher` item SHALL cost 10 steel plates, 5 advanced circuits and 2 processing units with 2 seconds of crafting time. Its separate technology SHALL have exactly `tc-circuit-computers` and `utility-science-pack` as direct prerequisites and cost 200 research units, each consuming one automation, one logistic and one utility science pack in 60 seconds.
@@ -102,13 +102,11 @@ The `enabled` flag SHALL reflect the requesting computer's current force recipe 
 - **THEN** each new result reports its own force's current enabled state while recipe inclusion remains unchanged.
 
 ### Requirement: Network and power authority
-Every search SHALL use the existing same-force, same-surface, explicit-color Network authority and check the current bound identity. Reachable unpowered devices SHALL remain discoverable and allow `getLimits()` but reject searches with `E_UNPOWERED`. Stale methods SHALL fail closed after detach, replacement or scope changes. The device SHALL remain a passive network relay without signal read/write services.
+Every search SHALL use the existing same-force, same-surface, explicit-color Network authority and check the current bound identity. All methods SHALL require no electricity; missing electrical supply MUST NOT cause `E_UNPOWERED`. Stale methods SHALL fail closed after detach, replacement or scope changes. The device SHALL remain a passive network relay without signal read/write services.
 
 #### Scenario: Power loss and restoration
-- **WHEN** a connected searcher loses power
-- **THEN** discovery and `getLimits()` remain usable while searches fail with `E_UNPOWERED`.
-- **WHEN** physical power is restored
-- **THEN** newly authorized calls can search again without new research or replacement.
+- **WHEN** a connected searcher has no electrical supply, or surrounding supply disappears and returns
+- **THEN** discovery, `getLimits()` and authorized searches remain usable without interruption, new research or replacement.
 
 #### Scenario: Captured call after replacement
 - **WHEN** a program retains a search method and the addressed block is removed or replaced
@@ -144,7 +142,7 @@ The new block SHALL follow existing placement, rotation, mining, cloning, bluepr
 The packaged feature SHALL include localized names, its query contract, discoverable help and a working guest example showing item/fluid searches, category refinement and `E_LIMIT` handling. Its original artwork SHALL have reproducible provenance. Verification SHALL distinguish actual client appearance and multiplayer behavior from headless or mocked evidence.
 
 #### Scenario: Player uses the packaged feature
-- **WHEN** the documented example is run from the tested archive against a powered wired searcher
+- **WHEN** the documented example is run from the tested archive against a wired searcher without requiring electrical supply
 - **THEN** its documented methods and result fields work, and the package includes the referenced API contract and artwork.
 
 #### Scenario: Native appearance review

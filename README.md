@@ -8,9 +8,15 @@ Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. No interpreter,
 OS, gameplay filesystem or dynamic guest loader is shipped; there is no command history.
 
-Version **0.1.18 ALPHA** accepts any Factorio 2.1 patch for base and optional Space
-Age. Runtime code is unchanged from 0.1.17; verification remains on 2.1.23, not
-every 2.1 patch. See [0.1.18 release notes](docs/release-0.1.18.md).
+Version **0.1.19 ALPHA** uses function-declaration-only saved programs and
+demand-driven scheduling. All nine custom device families now work without
+electricity; native radars and speakers still need their normal supply.
+**Breaking:** legacy table-form saved source must be rewritten manually; no
+automatic conversion is provided. Source and accepted data remain recoverable.
+Benchmarks are incomplete and performance/scaling is unverified; the user waived
+benchmark completion for this release, not correctness or safety checks.
+It retains 0.1.18's acceptance of all Factorio 2.1 patches; verification remains
+on 2.1.23, not every patch. See [0.1.19 release notes](docs/release-0.1.19.md).
 
 Version **0.1.17 ALPHA** adds Dashboards (optional `factorio-charts`), native-only
 Factoriopedia/Production Statistics, elapsed Console time and demand-driven monitor
@@ -86,11 +92,11 @@ fivefold default allowances and [dirty-cell animation](docs/player/monitor-anima
 Version 0.1.7 adopts the selected Foundry artwork, connected-subpixel chart and
 independent background/glyph reuse without raising budgets or changing the API.
 The [monitor performance investigation](docs/monitor-performance.md) records the
-earlier workload separately; current matched results accompany the release.
+earlier workload separately; 0.1.19's matched benchmark campaign is incomplete.
 Version 0.1.8 retains those monitor/live-budget features and adds bounded Console
 commands with live effects, shared save-backed values and confirmed reset, but no
 retained user functions or command history. See the [release notes](docs/console-shell-release.md).
-The release source is [alpha-0.1.18](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.18);
+The release source is [alpha-0.1.19](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.19);
 [0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development
@@ -119,7 +125,7 @@ Build an installable archive outside the checkout:
 Use a fresh output directory for the packaged official-engine integration smoke:
 
     python3 tools/smoke.py --factorio /path/to/factorio/bin/x64/factorio \
-      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.15.zip \
+      --archive /absolute/path/to/artifacts/tweaked-computers_0.1.19.zip \
       --output /absolute/path/to/new-smoke-directory \
       --fixture tests.integration_engine --production-context --cold
 

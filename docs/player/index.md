@@ -11,9 +11,14 @@ Factorio objects, and no command history.
 
 ## Start here
 
-**0.1.18 ALPHA** accepts all **Factorio 2.1** patches, base alone or optional Space
-Age. It only relaxes version dependencies; runtime code and save behavior are
-unchanged from 0.1.17. Verification remains on 2.1.23, not every 2.1 patch.
+**0.1.19 ALPHA** accepts all **Factorio 2.1** patches, base alone or optional Space
+Age. Verification remains on 2.1.23, not every patch. Saved programs use only named
+function declarations; legacy table-form source needs manual rewriting, not an
+automatic conversion. All nine custom device families are electricity-free;
+native radars and speakers retain their normal electricity requirements.
+Scheduling is demand-driven, but the benchmark campaign is incomplete and
+performance/scaling remains unverified. Benchmark completion was explicitly
+waived for this release; correctness and safety requirements were not waived.
 
 0.1.17 added [Dashboards](dashboard.md) with optional `factorio-charts`, native-only
 [Factoriopedia catalogues](api/factoriopedia-interface.md) and

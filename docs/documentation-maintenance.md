@@ -75,7 +75,7 @@ checks before a release.
 For runtime changes, test the exact built archive with the relevant existing
 `tools/smoke.py` fixtures and specialized harnesses in base and Space Age, including
 separate-process cold reload where applicable. Current source pins Factorio
-**2.1.23** in `info.json`; old-save migration checks additionally need their original
+**2.1.23** in the harness (the manifest accepts all 2.1 patches); old-save migration checks additionally need their original
 engine and immutable old mod archive. The current local engines are:
 
 - Headless: `gameitself/headless-2.1.23/factorio/bin/x64/factorio`.

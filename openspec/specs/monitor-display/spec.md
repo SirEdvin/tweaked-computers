@@ -48,7 +48,7 @@ Text scale SHALL support half-step values from 0.5 through 5. A change in physic
 - **THEN** the monitor remains unchanged and the program receives an E_RANGE error.
 
 ### Requirement: Character-cell touch events
-A valid world interaction with a powered display SHALL map to a 1-based character cell and emit `monitor_touch` to registered authorized computers. Border/outside clicks, GUI-hover input and unauthorized interaction MUST NOT create touch events.
+A valid world interaction with a valid display SHALL map to a 1-based character cell and emit `monitor_touch` to registered authorized computers. Border/outside clicks, GUI-hover input and unauthorized interaction MUST NOT create touch events.
 
 The shared Ctrl-click input SHALL pass through native game actions and SHALL NOT
 block reuse of held modifiers. Lua context rejection MUST NOT prevent native
@@ -64,11 +64,11 @@ inventory transfers or subsequent Ctrl shortcuts before Ctrl is released.
 - **AND** duplicated physical wiring does not duplicate that subscription's event.
 
 ### Requirement: Shared durable display state
-Authorized computers SHALL share one committed display state. Save/load SHALL preserve contents, colors, palette, cursor and scale. Writer stop or disconnect SHALL not clear the display; loss of display power SHALL hide output while retaining its model.
+Authorized computers SHALL share one committed display state. Save/load SHALL preserve contents, colors, palette, cursor and scale. Writer stop or disconnect SHALL not clear the display; electrical supply SHALL not affect its image or model.
 
 #### Scenario: Writer stops after drawing
 - **WHEN** the last drawing computer stops
-- **THEN** the powered monitor continues displaying its last committed image.
+- **THEN** the monitor continues displaying its last committed image.
 
 ### Requirement: Bounded rendering without hidden loss
 Display dimensions, cells, text payloads and rendering work SHALL be bounded and queryable. Accepted model updates SHALL be presented within the published supported latency envelope. Rendering backlog MUST NOT silently lose the most recent committed revision.
@@ -85,10 +85,10 @@ The companion Lua contract SHALL state supported glyphs, byte/cell indexing, geo
 - **THEN** the documented replacement-glyph rule is applied consistently without corrupting blit alignment or interpreting text as Factorio rich text.
 
 ### Requirement: Visible native deconstruction feedback
-Each monitor tile marked for deconstruction SHALL visibly show the native red deconstruction marker above its displayed content and decoration. Marking MUST NOT be represented only by a custom fault symbol, a hidden helper state or a console message. Feedback SHALL work on powered, unpowered and actively redrawing displays.
+Each monitor tile marked for deconstruction SHALL visibly show the native red deconstruction marker above its displayed content and decoration. Marking MUST NOT be represented only by a custom fault symbol, a hidden helper state or a console message. Feedback SHALL work on idle and actively redrawing displays, with or without electrical coverage.
 
 #### Scenario: Mark a running display
-- **WHEN** the player marks a powered monitor displaying text and changing colors
+- **WHEN** the player marks a monitor displaying text and changing colors
 - **THEN** the native red X remains legible while the tile awaits removal, regardless of continuing redraws or cursor blinking.
 
 #### Scenario: Mark part of a merged display
@@ -156,7 +156,7 @@ Buffering SHALL derive cell layout, allocation, clipping, preparation progress a
 - **THEN** its 126×84 grid of 10,584 cells is supported by automatic singleton buffering, staging, retirement and whole-frame publication.
 
 ### Requirement: Automatic snapshot presentation
-Monitor drawing SHALL buffer presentation automatically without requiring a flush or frame-control call. Successful operations SHALL update the shared model synchronously. Automatic snapshots SHALL be taken after synchronized callback dispatch, never midway through a callback. The previous complete visible image SHALL remain until its replacement is ready, except for power, geometry or identity invalidation.
+Monitor drawing SHALL buffer presentation automatically without requiring a flush or frame-control call. Successful operations SHALL update the shared model synchronously. Automatic snapshots SHALL be taken after synchronized callback dispatch, never midway through a callback. The previous complete visible image SHALL remain until its replacement is ready, except for geometry or identity invalidation.
 
 #### Scenario: Existing program draws without a new API
 - **WHEN** an existing callback clears and redraws a monitor using existing terminal methods
@@ -200,7 +200,7 @@ An explicitly selected monitor group SHALL wait for a successful mutating termin
 Snapshot retention, preparation, retirement, native objects, group size and whole-group commit work SHALL have published enforceable limits. Unsupported group registration SHALL fail before replacing the prior selection. Exhausted preparation or commit credits SHALL defer the entire remaining operation without partially publishing a frame. Guest and aggregate safety limits SHALL NOT be raised to conceal an infeasible commit.
 
 #### Scenario: Supported large group
-- **WHEN** four powered 6×6 scale-1 logical screens totaling 10,584 cells are selected within the published envelope
+- **WHEN** four 6×6 scale-1 logical screens totaling 10,584 cells are selected within the published envelope
 - **THEN** the group is supported without raising callback or shared host/maintenance ceilings
 - **AND** its entire ready publication fits the declared native-object and work limits.
 
@@ -222,7 +222,7 @@ The presenter SHALL retain bounded pending updates, coalesce superseded pending 
 - **AND** pending retention does not grow with the update history.
 
 #### Scenario: Producer becomes idle
-- **WHEN** changes stop and selected groups have completed participation with stable power, geometry and authority
+- **WHEN** changes stop and selected groups have completed participation with stable geometry and authority
 - **THEN** final visible contents match the latest accepted model within the supported latency envelope.
 
 ### Requirement: Fair demand-driven maintenance headroom
@@ -238,7 +238,7 @@ Publication headroom SHALL be requested only through bounded trusted demand and 
 - **THEN** reload preserves the next initialization step, frozen same-tick reservation and spent credits without initialization work on load.
 
 ### Requirement: Lifecycle-safe buffered state
-Save/load SHALL preserve complete visible state, accepted model state, pending snapshots, group selections, paid progress and spent same-tick credits without executing guest code on load. Power loss SHALL hide affected output without clearing its model. Geometry/identity invalidation SHALL prevent stale publication and unsafe touch mapping; removal SHALL retire all owned staged and visible objects.
+Save/load SHALL preserve complete visible state, accepted model state, pending snapshots, group selections, paid progress and spent same-tick credits without executing guest code on load. Electrical changes SHALL not hide output, clear its model or invalidate buffered work. Geometry/identity invalidation SHALL prevent stale publication and unsafe touch mapping; removal SHALL retire all owned staged and visible objects.
 
 #### Scenario: Cold load during preparation
 - **WHEN** the game is saved with an old visible frame, a partially prepared hidden frame and newer pending writes
@@ -250,9 +250,9 @@ Save/load SHALL preserve complete visible state, accepted model state, pending s
 - **AND** touches are ignored while visible and authoritative grid geometry disagree, rather than reported against the wrong image.
 
 #### Scenario: Power outage
-- **WHEN** one group member loses power
-- **THEN** that display hides without erasing model state and no replacement group frame partially publishes
-- **AND** restoration resumes or rebuilds only valid complete frames without a fabricated resize.
+- **WHEN** electrical supply around one group member disappears and returns
+- **THEN** its retained image and model remain available and buffered work follows normal whole-group admission
+- **AND** no power restoration job or fabricated resize is generated.
 
 ### Requirement: Honest compatibility and visual acceptance
 Documentation SHALL distinguish coherent snapshots, same-tick group publication and application-level frame completion. Existing terminal signatures and aliases SHALL remain available. Claims of tear-free native appearance SHALL require graphical-client evidence; headless model/visibility assertions SHALL be identified separately.
@@ -301,7 +301,7 @@ The monitor inspector SHALL show display-local tile width × height, total conne
 - **THEN** the next successful refresh shows the new scale and terminal dimensions while the physical tile dimensions/count remain unchanged.
 
 ### Requirement: Safe monitor inspector updates
-The inspector SHALL follow the originally selected physical tile while revalidating its logical-group mapping. Split or merge changes SHALL refresh the displayed name and dimensions together after commit. Removal or replacement of the selected tile SHALL invalidate the session. Powered-off monitors SHALL retain inspectable committed geometry without unblanking or modifying their saved display model.
+The inspector SHALL follow the originally selected physical tile while revalidating its logical-group mapping. Split or merge changes SHALL refresh the displayed name and dimensions together after commit. Removal or replacement of the selected tile SHALL invalidate the session. Monitors outside electrical coverage SHALL retain inspectable committed geometry without modifying their saved display model.
 
 #### Scenario: Selected tile survives a split
 - **WHEN** another tile is removed and the selected tile belongs to a new resulting rectangle
@@ -312,19 +312,19 @@ The inspector SHALL follow the originally selected physical tile while revalidat
 - **THEN** the old inspector becomes unavailable rather than attaching itself to the replacement.
 
 #### Scenario: Inspect an unpowered monitor
-- **WHEN** an authorized player opens a monitor whose power is off but committed group data is valid
-- **THEN** its name and committed tile/terminal dimensions remain readable with an unpowered label, while the world display remains blank and its model is unchanged.
+- **WHEN** an authorized player opens a monitor outside electrical coverage whose committed group data is valid
+- **THEN** its name and committed tile/terminal dimensions remain readable, its complete world image remains visible and its model is unchanged, without an unpowered label.
 
 ### Requirement: Quiescent presentation work elision
-A settled display with unchanged model, geometry, availability and ownership SHALL retain its complete native image without recurring snapshot capture, cell preparation, full-frame traversal or redundant native visibility writes. Idle presentation work SHALL NOT scale with the number of unchanged displays. Necessary live physical observation and retained-selection authority checks remain required by device lifecycle.
+A settled display with unchanged model, geometry, availability and ownership SHALL retain its complete native image without recurring snapshot capture, cell preparation, full-frame traversal or redundant native visibility writes. Idle presentation work SHALL NOT scale with the number of unchanged displays. Targeted and bounded due physical observation and retained-selection authority checks remain required by device lifecycle; they do not justify every-tick scans of settled displays.
 
 #### Scenario: Powered screens after their writer stops
-- **WHEN** four powered 6×6 displays have complete fronts, no pending preparation or retirement, no physical changes and a stopped saved program
+- **WHEN** four 6×6 displays have complete fronts, no pending preparation or retirement, no physical changes and a stopped saved program
 - **THEN** their images remain visible, including configured native cursor blink
 - **AND** subsequent unchanged ticks perform no snapshot captures, cell preparations, full-frame traversals, native-object creation/retirement or redundant visibility writes for those displays.
 
 #### Scenario: One changing screen among unchanged peers
-- **WHEN** one of four independent logical displays receives drawing updates while all 144 physical tiles remain present and powered
+- **WHEN** one of four independent logical displays receives drawing updates while all 144 physical tiles remain valid
 - **THEN** only the changing display and genuinely unfinished work receive presentation service
 - **AND** the other three displays do not acquire new presentation work merely because a program is running or another display changed.
 
@@ -382,14 +382,14 @@ Every accepted state change that affects presentation SHALL make the affected di
 - **AND** existing settings inheritance, dimension-change clearing and resize-notification semantics remain binding, without bypassing selected-group participation rules.
 
 #### Scenario: Power restoration with no new drawing
-- **WHEN** a member's power outage has hidden its logical display and power subsequently returns without a guest call
-- **THEN** the retained model can become visible again under the existing full-group power and admission rules
-- **AND** restoration neither fabricates a resize nor publishes only part of a selected replacement group.
+- **WHEN** electrical supply around a member disappears and returns without a guest call
+- **THEN** the complete retained image stays visible and electrical changes create no presentation work
+- **AND** any real pending replacement still obeys whole-group admission without a fabricated resize.
 
 #### Scenario: Waiting, blocked and retiring work
-- **WHEN** a selected round lacks participation, required power is unavailable, or objects remain to be retired
+- **WHEN** a selected round lacks participation, required identity or geometry is unavailable, or objects remain to be retired
 - **THEN** incomplete rounds do not trigger repeated snapshot capture and do not partially publish
-- **AND** participation, restoration or a renewed actual-tick work allowance resumes the appropriate deferred work, while retirement completes without another drawing call.
+- **AND** participation, valid physical repair or a renewed actual-tick work allowance resumes the appropriate deferred work, while retirement completes without another drawing call.
 
 ### Requirement: Durable demand-driven progress
 Save/load and upgrade SHALL preserve accepted model state, valid complete fronts, selections, participation, pending work, paid progress and same-tick credits. New scheduling metadata SHALL be initialized in permitted synchronized stages without guest replay or mutation on load. Unknown retained formats SHALL remain recoverable and fail closed rather than being treated as empty work.
@@ -419,5 +419,20 @@ Acceptance SHALL prove absence of unnecessary recurring work and publish matched
 
 #### Scenario: Complete and honest timing evidence
 - **WHEN** a timing report is accepted
-- **THEN** exact sample counts, completion markers, live device/power/producer assertions, cold-phase results, clean exits and tested payload hashes are verified
+- **THEN** exact sample counts, completion markers, live device/producer assertions and unchanged native-endpoint power assertions where relevant, cold-phase results, clean exits and tested payload hashes are verified
 - **AND** mean, median, p95 and maximum whole-scheduler timings are reported separately from instrumented phase attribution, including regressions and known host contention rather than an invented lower bound or speedup.
+
+### Requirement: Demand-owned monitor topology and notifications
+Monitor grouping SHALL run only for pending topology work. Resize/touch delivery SHALL visit pending notifications and registered recipients, not all display or computer identities to find them. Completing or canceling work SHALL remove its membership while retaining complete-frame publication, selected-path validation and existing bounded delivery behavior.
+
+#### Scenario: No pending monitor event
+- **WHEN** settled monitors have no topology change, resize, touch, rendering or retirement work
+- **THEN** the grouping/notification/presentation phases perform no per-monitor or per-computer discovery walk.
+
+#### Scenario: Input creates work without a producer
+- **WHEN** a real touch, settings paste or physical transition affects a stopped-producer display
+- **THEN** only the affected pending topology, notification and presentation work becomes eligible; callbacks remain scheduled rather than inline.
+
+#### Scenario: Late physical invalidation
+- **WHEN** a silent physical change is discovered by bounded observation or a fresh operation proof
+- **THEN** stale touch mapping or staged geometry cannot publish, necessary cleanup remains pending through deferral/reload and unchanged unrelated monitors stay asleep.
