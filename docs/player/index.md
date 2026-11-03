@@ -11,8 +11,11 @@ Factorio objects, and no command history.
 
 ## Start here
 
-**0.1.17 ALPHA** targets **Factorio 2.1.23**, base alone or optional Space Age.
-It adds [Dashboards](dashboard.md) with optional `factorio-charts`, native-only
+**0.1.18 ALPHA** accepts all **Factorio 2.1** patches, base alone or optional Space
+Age. It only relaxes version dependencies; runtime code and save behavior are
+unchanged from 0.1.17. Verification remains on 2.1.23, not every 2.1 patch.
+
+0.1.17 added [Dashboards](dashboard.md) with optional `factorio-charts`, native-only
 [Factoriopedia catalogues](api/factoriopedia-interface.md) and
 [Production Statistics](api/production-statistics.md), elapsed [Console](console.md)
 time and demand-driven [monitor maintenance](monitor-animation.md).

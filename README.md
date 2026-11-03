@@ -1,12 +1,16 @@
 # Tweaked Computers — ALPHA
 
-Native circuit computers for Factorio 2.1.23, with base alone or optional Space Age.
+Native circuit computers for Factorio 2.1, with base alone or optional Space Age.
 The integrated alpha implements native guarded callbacks, a five-tab single-document editor,
 same-color peripheral discovery, merging world monitors, string/hash KV storage,
 logic I/O, typed factory configuration and data-bearing device lifecycle.
 Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. No interpreter,
 OS, gameplay filesystem or dynamic guest loader is shipped; there is no command history.
+
+Version **0.1.18 ALPHA** accepts any Factorio 2.1 patch for base and optional Space
+Age. Runtime code is unchanged from 0.1.17; verification remains on 2.1.23, not
+every 2.1 patch. See [0.1.18 release notes](docs/release-0.1.18.md).
 
 Version **0.1.17 ALPHA** adds Dashboards (optional `factorio-charts`), native-only
 Factoriopedia/Production Statistics, elapsed Console time and demand-driven monitor
@@ -86,7 +90,7 @@ earlier workload separately; current matched results accompany the release.
 Version 0.1.8 retains those monitor/live-budget features and adds bounded Console
 commands with live effects, shared save-backed values and confirmed reset, but no
 retained user functions or command history. See the [release notes](docs/console-shell-release.md).
-The release source is [alpha-0.1.17](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.17);
+The release source is [alpha-0.1.18](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.18);
 [0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development
