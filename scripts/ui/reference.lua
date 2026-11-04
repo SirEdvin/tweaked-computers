@@ -8,12 +8,15 @@ local function height(text,kind,width)
   -- Conservative wrapping allowance for the shipped fonts. Native word_wrap
   -- performs display wrapping; never insert line breaks into copied text.
   local columns=math.max(12,math.floor((width-24)/(kind=='heading' and 12 or 8)))
-  local lines=1; local used=0
-  for word in text:gmatch('%S+') do
-    local _,length=word:gsub('[^\128-\191]','')
-    if used>0 and used+1+length>columns then lines=lines+1; used=0 end
-    local rows=math.floor(math.max(0,length-1)/columns)
-    lines=lines+rows; used=(used>0 and used+1 or 0)+length-rows*columns
+  local lines=0
+  for line in (text..'\n'):gmatch('([^\n]*)\n') do
+    lines=lines+1; local used=0
+    for word in line:gmatch('%S+') do
+      local _,length=word:gsub('[^\128-\191]','')
+      if used>0 and used+1+length>columns then lines=lines+1; used=0 end
+      local rows=math.floor(math.max(0,length-1)/columns)
+      lines=lines+rows; used=(used>0 and used+1 or 0)+length-rows*columns
+    end
   end
   return lines*(kind=='heading' and 26 or 20)+12
 end

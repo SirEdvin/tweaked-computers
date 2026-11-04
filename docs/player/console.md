@@ -14,6 +14,11 @@ program callback or Console command runs per computer per simulation tick, with
 fair alternation when both queues have work. An open prompt without submissions
 does not schedule empty commands. Queue order and spent credits survive save/load.
 
+Parsing tries the line as an expression first, then as statements only when that
+grammar does not match. Both attempts share the compilation allowance. A runtime
+failure never triggers a second execution as statements: earlier effects remain
+committed and are not replayed by parser fallback.
+
 ## Try a monitor
 
 Wire a computer NETWORK socket to a monitor NETWORK socket on red; neither needs electricity.
@@ -75,6 +80,7 @@ and diagnostics are marked **Shell**, not confused with saved-source errors.
 line. Follow-off keeps output live without automatic scrolling. Incoming changed
 text may clear native selection; select/copy between arrivals. Unchanged text is
 not reassigned. Re-enable Follow to resume tailing. Command status stays visible.
+There is no Refresh action or separate snapshot view.
 The same 64-entry / 16,384-byte history bound applies in either mode: discarded
 output cannot be recovered, and truncation is reported even while Follow is off.
 

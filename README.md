@@ -8,13 +8,21 @@ Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. No interpreter,
 OS, gameplay filesystem or dynamic guest loader is shipped; there is no command history.
 
-Version **0.1.19 ALPHA** uses function-declaration-only saved programs and
+Version **0.1.20 ALPHA** ships a separate [public Lua declaration library](api/README.md)
+as the authoritative API reference. The website and searchable in-game Reference
+are generated from the same complete types, overloads, errors and examples.
+Guest behavior, save formats and budgets are unchanged from 0.1.19. Verified on
+Factorio **2.1.23**, base and Space Age; other 2.1 patches are accepted, not individually
+verified. See [0.1.20 release notes](docs/release-0.1.20.md).
+
+Version **0.1.19 ALPHA** introduced function-declaration-only saved programs and
 demand-driven scheduling. All nine custom device families now work without
 electricity; native radars and speakers still need their normal supply.
 **Breaking:** legacy table-form saved source must be rewritten manually; no
 automatic conversion is provided. Source and accepted data remain recoverable.
 Benchmarks are incomplete and performance/scaling is unverified; the user waived
-benchmark completion for this release, not correctness or safety checks.
+benchmark completion for 0.1.19, not correctness or safety checks. That performance
+limitation remains in 0.1.20.
 It retains 0.1.18's acceptance of all Factorio 2.1 patches; verification remains
 on 2.1.23, not every patch. See [0.1.19 release notes](docs/release-0.1.19.md).
 
@@ -96,7 +104,7 @@ earlier workload separately; 0.1.19's matched benchmark campaign is incomplete.
 Version 0.1.8 retains those monitor/live-budget features and adds bounded Console
 commands with live effects, shared save-backed values and confirmed reset, but no
 retained user functions or command history. See the [release notes](docs/console-shell-release.md).
-The release source is [alpha-0.1.19](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.19);
+The release source is [alpha-0.1.20](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.20);
 [0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development
@@ -131,11 +139,13 @@ Use a fresh output directory for the packaged official-engine integration smoke:
 
 The harness exercises base and Space Age; cold phases use isolated localhost-only
 servers and acknowledged console shutdown. It never launches a graphical client.
-Current source/API contracts live in `openspec/specs/` and `openspec/api/`.
+Behavioral requirements live in `openspec/specs/`; the authoritative public API
+is the separate [Lua declaration library](api/README.md). Both the website and
+offline in-game Reference are generated from that library.
 All eleven completed changes retain their planning history under
 `openspec/changes/archive/2026-10-{19,20,21}-*/`. All five new feature contracts and
-their complete API companions are canonical and packaged without active-change dependencies.
-The monitor buffering companion documents automatic snapshots, every
+their complete typed API definitions are canonical and packaged without active-change dependencies.
+The [monitor declaration](api/monitor.d.lua) documents automatic snapshots, every
 1..6-by-1..6 rectangle and optional selected-group publication.
 [Consolidated acceptance](docs/sc4-final-acceptance.md) binds automated native,
 connected-peer and packaged-engine receipts to verified production bytes.

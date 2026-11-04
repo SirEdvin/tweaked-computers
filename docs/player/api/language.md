@@ -78,146 +78,25 @@ Nonfinite values cannot cross state/API boundaries. Use dot calls everywhere.
 
 ## Approved globals and libraries
 
-The [live Console](../console.md) is a separate, bounded evaluation mode: it also
-accepts statements/expressions and nonreserved scratch-global assignments, and
-provides `print(...)`. Its save-backed values are not saved-program locals.
-The saved-program grammar and global-write prohibition still
-apply to saved handler programs. Both modes use the same guards and tick ledger.
-
-Globals in both modes: `assert`, `error`, `ipairs`, `pairs`, `next`, `pcall`,
-`xpcall`, `select`, `tonumber`, `tostring`, `type`, `print`, `rawget`, `rawset`,
-`rawlen`, `rawequal`, `unpack`, `_VERSION`; read-only `math`, `string`, `table`,
-`colors`/`colours`, `computer`, `peripheral`. `_VERSION` is exactly `Lua 5.2`:
-the language family, not a promise of unrestricted libraries or host access.
-
-| Library | Complete members |
-| --- | --- |
-| math | abs, ceil, floor, min, max, sqrt, fmod, modf, sin, cos, tan, asin, acos, atan, atan2, deg, rad, exp, log, pi |
-| string | byte, char, len, sub, lower, upper, reverse, rep, format, find |
-| table | concat, insert, remove, sort, pack, unpack |
-| colors / colours | 16 colors plus gray/grey and lightGray/lightGrey aliases; [exact constants](monitor.md#colors-and-glyphs) |
-
-These follow bounded Lua-style primitive operations, not arbitrary native-library
-fallback. Math validates finite operands/results. Numeric-string arithmetic and
-conversion is metered; invalid `tonumber` returns nil. `tostring` never exposes
-native addresses. `string.find(s, needle, init, true)` requires **explicit true**
-for plain search and returns first,last or one nil. No patterns. `string.sub`/byte
-operate on byte indexes, not Unicode; char operands are 0–255. Formatting validates
-width/precision/output amplification before work. Large repetition/concatenation
-can refuse before allocating output. Table mutation requires guest-owned plain
-tables; dense-sequence helpers reject unsuitable inputs. Sort stages before
-publication and comparator guest calls consume the same ledger. Pack/unpack and
-select preserve nil arity but remain within tuple limits. Iterator exhaustion
-returns one nil; absent remove returns one nil. Returned defensive API snapshots
-are usable guest tables, not references to service internals.
+The [live Console](../console.md) is a separate bounded expression/statement mode;
+its saved scratch values are not saved-program locals. Both modes use the same
+guards and tick ledger. Consult the generated [global helpers](globals.md),
+[math](math.md), [string](string.md), [table](table.md) and [colors](colors.md)
+for complete members, argument positions, return arity and restrictions.
 
 ## Standard helper signatures
 
-`...` below is bounded by tuple_entries (128), including protected status prefixes.
-These helpers operate only inside a callback; they grant no persistent/host access.
-
-| Global signature | Returns / behavior |
-| --- | --- |
-| `type(value)` | Lua type-name string |
-| `tostring(value)` | Primitive string or stable descriptive table/function/handle name; no addresses |
-| `tonumber(value, base?)` | Number or one nil for invalid conversion; base 2–36 requires string |
-| `assert(value, ...)` | value,... if truthy; otherwise raise first message or default |
-| `error(value)` | Does not return; raises supplied guest value without a host stack-level API |
-| `pcall(fn, ...)` | true,results... or false,error for ordinary failure; fatal budget/stop escapes |
-| `xpcall(fn, handler, ...)` | true,results... or false,first handler result (one nil if no result); both callbacks share current admission |
-| `print(...)` | No values; one bounded Console entry, safe strings joined with tabs; zero arguments write an empty entry |
-| `rawget(t, key)` | One stored value, including nil; explicit nil/NaN keys read as absent |
-| `rawset(t, key, value)` | Identical t; nil deletes; key/value/capacity/admission checked before mutation |
-| `rawlen(value)` | String byte length or guest-table native border, not map entry count |
-| `rawequal(a, b)` | Native equality of approved primitives/identities without copying references |
-| `unpack(t, i?, j?)` | Identical function to table.unpack; same bounds and nil holes |
-| `select("#", ...)` | Argument count, including nils |
-| `select(index, ...)` | Suffix tuple; nonzero integer, negative counts from end |
-| `next(table, previous_key?)` | key,value or one nil at end; guest table only |
-| `pairs(table)` | Iterator, table, nil; no sorted-order guarantee |
-| `ipairs(table)` | Iterator, table, 0; stops at first absent 1-based value |
-
-| Math signature | Returns / domain |
-| --- | --- |
-| `math.abs(x)`, `ceil(x)`, `floor(x)`, `sqrt(x)` | One finite number |
-| `math.min(x, ...)`, `max(x, ...)` | One number; at least one operand |
-| `math.fmod(x, y)` | Remainder |
-| `math.modf(x)` | Integer part, fractional part |
-| `math.sin(x)`, `cos(x)`, `tan(x)` | Trigonometric result, radians |
-| `math.asin(x)`, `acos(x)`, `atan(x)`, `atan2(y, x)` | Angle in radians; finite-domain results required |
-| `math.deg(x)`, `rad(x)` | Radians→degrees / degrees→radians |
-| `math.exp(x)`, `log(x, base?)` | Exponential / logarithm; nonfinite result refused |
-| `math.pi` | Read-only numeric constant |
-
-The Math table abbreviates member prefixes: e.g. `ceil` means `math.ceil`.
-Numeric-string operands are converted under byte-work admission. Native math
-errors/nonfinite results do not become valid Data; no random/seed API exists.
-
-| String signature | Returns / defaults |
-| --- | --- |
-| `string.len(s)` | Byte length |
-| `string.sub(s, i?, j?)` | Byte slice; defaults 1,length; negative indexes from end, clipped |
-| `string.byte(s, i?, j?)` | Byte-number tuple; default i=1, j=i; empty range yields zero values |
-| `string.char(...)` | String from integer bytes 0–255 |
-| `string.lower(s)`, `upper(s)`, `reverse(s)` | Byte-string transform |
-| `string.rep(s, n, separator?)` | Repetition with default empty separator; nonpositive n yields empty |
-| `string.format(format, ...)` | Bounded formatted string; conversions c,d,i,o,u,x,X,e,E,f,g,G,q,s and literal %% |
-| `string.find(s, needle, init?, true)` | first,last byte indexes or one nil; default init=1, plain=true required |
-
-Negative string indexes are relative to length; finite numeric indexes are clipped
-using the helper's Lua-style floor/ceiling rules. String inputs/results are at most
-16,384 bytes. Formatting can refuse a conservative estimated output even if a
-particular formatted result would be shorter. No patterns or Unicode processing.
-
-| Table signature | Returns / defaults |
-| --- | --- |
-| `table.pack(...)` | Temporary table with slots and n counting nils; not necessarily persistable Data |
-| `table.unpack(t, i?, j?)` | Tuple including holes; default i=1, j=#t; bounded indexes/tuple width |
-| `table.concat(t, separator?, i?, j?)` | String from dense string/number sequence; defaults empty separator,1,length |
-| `table.insert(t, value)` / `table.insert(t, position, value)` | None; append / insert into dense sequence |
-| `table.remove(t, position?)` | One removed value or one nil; default final position |
-| `table.sort(t, less?)` | None; staged dense-sequence sort, default primitive <; optional guest comparator |
-
-Table helpers require guest-owned plain tables and bounded inventory (1,024 entries).
-Pack may contain nil holes plus n, so do not store it as Data without conversion.
-Sort failure does not publish a partially sorted target, but comparator effects on
-other guest/API state are not a callback-wide transaction. Never depend on hash
-iteration order for factory decisions: sort a bounded list when order matters.
+Signatures and domains now come only from the public declaration library and its
+[generated type index](types.md). Lua 5.2 names do not imply unrestricted native
+libraries, host objects, string-method syntax or permission to bypass runtime guards.
 
 ## Printing, raw helpers and error transformation
 
-`print("value", false, nil, 3, nil)` stores `value\tfalse\tnil\t3\tnil`
-as one entry without an added newline. The displayed Console substitutes one
-space per tab; stored bytes remain intact. Tables/functions/handles use safe
-descriptions, never addresses or recursive inspection. `unpack` and `table.unpack`
-share the stable description `table function`. No chat, stdout or monitor output
-is produced. Saved printing uses the existing `computer.log` sink; that API keeps
-its one-string/no-results signature. Console printing keeps Shell command prefixes.
-Formatting and retention are admitted before appending or evicting; failures
-publish no partial entry. Successful earlier output survives later faults.
-
-Raw table operations require guest-owned plain tables, including defensive
-snapshots. API namespaces, peripheral facades and foreign tables are refused.
-`rawset` preserves aliases, accepts transient self-references, and can replace or
-delete at full capacity; nil/NaN write keys are invalid. `rawget` preserves false
-versus absent nil. Required positional arguments must be supplied (explicit nil
-counts); extra arguments follow native raw-helper behavior and still pay call
-bounds. `rawequal` may compare an authentic facade/function with itself without
-revealing contents. String comparisons are bounded and metered. None of this
-widens Data or Console retention: cycles/functions/reference keys are still
-invalid where those persistence domains forbid them. `unpack` keeps i=1..1025,
-j=0..1024, defaults 1/#t and at most 128 results, including explicit nil holes.
-
-`xpcall(fn, handler, ...)` requires approved functions. Trailing arguments retain
-nil holes and aliases. Success prepends true to exact results, including zero
-results; status counts toward the 128-value limit. On ordinary failure the handler
-gets one safe error: guest references retain identity; host diagnostic records
-are defensively copied. Only its first result is returned after false, including
-nil when absent. An ordinary handler error follows native, bounded message-handler
-re-entry; exact terminal wording is not guaranteed. Work/allocation/depth/tuple
-exhaustion and saved-program stop bypass both protected helpers, never reaching
-a guest handler as private control values. No protection rolls back earlier state,
-printing or peripheral effects. Console still cannot call `computer.stop()`.
+Use the generated [printing, raw-helper and protected-call reference](globals.md).
+Its distinctions include nil tuple positions, defensive versus identity-preserving
+errors, Console logging, bounded handler re-entry and fatal control that cannot be
+caught. [Common types and errors](common.md) and the [Console guide](../console.md)
+cover the corresponding execution and retention boundaries.
 
 New built-ins are reserved public/private top-level declaration names, not ordinary
 locals/parameters. An older colliding active

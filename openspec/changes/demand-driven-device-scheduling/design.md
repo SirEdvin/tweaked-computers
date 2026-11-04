@@ -2,7 +2,7 @@
 
 ## Context
 
-See [proposal.md](proposal.md) for motivation and [lua-api.md](lua-api.md) for the externally visible compatibility changes. Baseline inspected: `63612f9c109d1a3c21d3029b7d2c32df85f4ed49` on planning branch `plan/demand-driven-device-scheduling`. This branch also contains the independent `function-only-programs` proposal; neither change has been implemented here. Reconcile shared runtime/Console spec hunks when applying them, without coupling scheduling to a source-language rewrite.
+See [proposal.md](proposal.md) for motivation and [lua-api.md](api-reconciliation.md) for the externally visible compatibility changes. Baseline inspected: `63612f9c109d1a3c21d3029b7d2c32df85f4ed49` on planning branch `plan/demand-driven-device-scheduling`. This branch also contains the independent `function-only-programs` proposal; neither change has been implemented here. Reconcile shared runtime/Console spec hunks when applying them, without coupling scheduling to a source-language rewrite.
 
 Observed source:
 

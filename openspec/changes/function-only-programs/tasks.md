@@ -1,5 +1,10 @@
 # Tasks
 
+Documentation ownership follow-up: checked paths below record the original work.
+The former companions are now reconciled in [API reconciliation](api-reconciliation.md);
+use canonical `api/**/*.d.lua`, the language guide and retained `examples/` sources.
+Never restore `lua-api.md` during a later sync; task completion/evidence is unchanged.
+
 Every checkbox below requires complete implementation and acceptance evidence. Use the existing local tools and exact-package harnesses described in `design.md`; keep budgets, deadlines, authority checks and meaningful assertions intact. No hosted test CI, converter, fallback or new dependency is part of this work.
 
 ## 1. Canonical runnable content and authoring documentation

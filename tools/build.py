@@ -6,56 +6,34 @@ import json
 import re
 from pathlib import Path
 import zipfile
+from api_reference import check_freshness
 
 ROOT = Path(__file__).resolve().parents[1]
 TOP = ('info.json', 'data.lua', 'data-final-fixes.lua', 'control.lua', 'settings.lua', 'README.md', 'LICENSE', 'changelog.txt')
 DIRS = ('scripts', 'prototypes', 'locale', 'vendor', 'assets', 'docs', 'examples', 'tests')
 CONTRACT_FILES = (
-    'openspec/api/common.md',
-    'openspec/api/native-language.md',
-    'openspec/api/examples.md',
-    'openspec/api/device-experience.md',
     'openspec/specs/computer-runtime/spec.md',
-    'openspec/specs/computer-runtime/lua-api.md',
-    'openspec/specs/computer-runtime/base-globals-api.md',
     'openspec/specs/console-shell/spec.md',
-    'openspec/specs/console-shell/lua-api.md',
     'openspec/specs/device-configurator/spec.md',
-    'openspec/specs/device-configurator/lua-api.md',
-    'openspec/specs/device-configurator/configuration-catalog.md',
-    'openspec/specs/device-configurator/configuration-catalog.json',
     'openspec/specs/device-lifecycle/spec.md',
-    'openspec/specs/device-lifecycle/lua-api.md',
     'openspec/specs/device-visual-identity/spec.md',
     'openspec/specs/kv-database/spec.md',
-    'openspec/specs/kv-database/lua-api.md',
     'openspec/specs/logic-handler/spec.md',
-    'openspec/specs/logic-handler/lua-api.md',
     'openspec/specs/monitor-display/spec.md',
-    'openspec/specs/monitor-display/lua-api.md',
-    'openspec/specs/monitor-display/buffering-api.md',
     'openspec/specs/peripheral-network/spec.md',
-    'openspec/specs/peripheral-network/lua-api.md',
     'openspec/specs/program-editor/spec.md',
-    'openspec/specs/program-editor/lua-api.md',
     'openspec/specs/recipe-searcher/spec.md',
-    'openspec/specs/recipe-searcher/lua-api.md',
     'openspec/specs/factoriopedia-interface/spec.md',
-    'openspec/specs/factoriopedia-interface/lua-api.md',
     'openspec/specs/production-statistics/spec.md',
-    'openspec/specs/production-statistics/lua-api.md',
     'openspec/specs/dashboard-interface/spec.md',
-    'openspec/specs/dashboard-interface/lua-api.md',
     'openspec/specs/program-source/spec.md',
-    'openspec/specs/program-source/lua-api.md',
     'openspec/specs/peripheral-inspection/spec.md',
     'openspec/specs/radar-modem/spec.md',
-    'openspec/specs/radar-modem/lua-api.md',
     'openspec/specs/speaker-peripheral/spec.md',
-    'openspec/specs/speaker-peripheral/lua-api.md',
 )
 
 def build(destination):
+    check_freshness(ROOT)
     info = json.loads((ROOT / 'info.json').read_text())
     prefix = f"{info['name']}_{info['version']}"
     destination = Path(destination).resolve()
@@ -87,6 +65,7 @@ def build(destination):
         if not (ROOT / name).is_file():
             raise ValueError(f'missing required package file: {name}')
     files = [ROOT / name for name in TOP]
+    files += [ROOT / 'api/README.md', *sorted((ROOT / 'api').rglob('*.d.lua'))]
     for name in DIRS:
         directory = ROOT / name
         if directory.exists():

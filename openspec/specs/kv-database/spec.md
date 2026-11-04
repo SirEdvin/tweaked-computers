@@ -18,7 +18,7 @@ Each physical KV peripheral SHALL own an independent database shared by all auth
 - **THEN** the operation reports an argument error without coercion or mutation.
 
 ### Requirement: Minimal string and key commands
-The peripheral SHALL implement `get`, `set`, `del`, `exists` and `type` exactly as documented in `lua-api.md`. Missing values SHALL remain distinguishable from empty strings. SET SHALL replace a previous string or hash and remove its existing TTL.
+The peripheral SHALL implement `get`, `set`, `del`, `exists` and `type` exactly as documented in `api/kv-database.d.lua`. Missing values SHALL remain distinguishable from empty strings. SET SHALL replace a previous string or hash and remove its existing TTL.
 
 #### Scenario: Overwrite an expiring hash
 - **WHEN** SET succeeds on an expiring hash key

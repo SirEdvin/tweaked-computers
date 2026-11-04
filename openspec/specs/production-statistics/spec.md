@@ -39,7 +39,7 @@ Queries SHALL accept only `item`, `fluid` and `pollution` and always use the per
 - **THEN** the call fails with the documented argument/range error and does not read another scope.
 
 ### Requirement: Separate statistical operations
-The exact public method set SHALL be `getTotals`, `getRates`, `getHistory` and the standard `getLimits`. The statistical methods SHALL be synchronous read-only calls with distinct signatures and result shapes defined in `lua-api.md`. They SHALL NOT require subscriptions, jobs, sessions, background recording or a running computer during the observed historical period.
+The exact public method set SHALL be `getTotals`, `getRates`, `getHistory` and the standard `getLimits`. The statistical methods SHALL be synchronous read-only calls with distinct signatures and result shapes defined in `api/production-statistics.d.lua`. They SHALL NOT require subscriptions, jobs, sessions, background recording or a running computer during the observed historical period.
 
 #### Scenario: Read existing factory history
 - **WHEN** a new statistics device is placed in an established factory
@@ -57,7 +57,7 @@ The exact public method set SHALL be `getTotals`, `getRates`, `getHistory` and t
 - **THEN** subsequent totals reflect the current native maps rather than stale values or a fabricated lifetime total.
 
 ### Requirement: Bulk native window averages
-`getRates(kind, window)` SHALL return both directions for every key recorded in their respective native count maps, replacing counts with the engine's average rate for the selected window. Rates SHALL use native per-minute units, preserve item qualities and include recorded entries whose selected-window rate is zero. It SHALL support every pinned native flow-precision window named in `lua-api.md`.
+`getRates(kind, window)` SHALL return both directions for every key recorded in their respective native count maps, replacing counts with the engine's average rate for the selected window. Rates SHALL use native per-minute units, preserve item qualities and include recorded entries whose selected-window rate is zero. It SHALL support every pinned native flow-precision window named in `api/production-statistics.d.lua`.
 
 #### Scenario: Old activity outside the short window
 - **WHEN** a recorded entry has cumulative activity but no activity in the selected short window

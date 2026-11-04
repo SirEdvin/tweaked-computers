@@ -1,4 +1,4 @@
-schema: spec-driven
+schema: tc-spec-driven
 
 # Project context (optional)
 # Add only constraints that should guide OpenSpec artifacts and workflows.
@@ -14,7 +14,10 @@ rules:
     - Run at least two rounds of clarification before finalizing proposal
     - If you not sure, don't assume, just ask
     - When planning new limits in specification, always confirm that they are necessary
-    - When introducing new peripherals or changes for peripherals always introduce extra artifact - new api specification for this peripheral
+    - Record explicit API Impact and compatibility; changed public contracts require complete change-scoped api/**/*.d.lua artifacts, never Markdown API companions.
+  lua-api:
+    - Use the canonical public library format, full affected-file replacements and explicit removal records; retain complete descriptions and exact arity.
+    - Run python tools/player_docs.py --check --change NAME; a discovered glob is not complete review.
 
 # Per-operation guidance (optional)
 # Add advisory guidance for how apply and archive work should be conducted.
@@ -27,3 +30,12 @@ rules:
 #   archive:
 #     guidance:
 #       - Summarize the archive outcome before finishing
+operations:
+  apply:
+    guidance:
+      - For tc-spec-driven changes, validate API applicability and every typed artifact before applying; reconcile canonical api/ and regenerate both references before marking implementation complete.
+      - A no-impact decision requires source/design review; reopen it when its fingerprint becomes stale. Do not invent declarations to satisfy conditional file-existence status.
+  archive:
+    guidance:
+      - Verify accepted API changes are already canonical and both references are fresh. Synchronize only behavioral spec.md files; typed drafts and removal records remain historical change artifacts.
+      - Do not restore retired Markdown API companions or automatically archive unrelated changes.

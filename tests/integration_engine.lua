@@ -199,6 +199,9 @@ function M.on_tick(event)
     assert(observer.state.shared_status=='expired' and observer.state.private_status=='absent')
     report('stopped-controller-output-cleanup-and-shared-whole-key-expiry')
     runtime.stop(observer.id); for _,id in ipairs(x.busy) do runtime.stop(id) end
+    -- The retained speaker example needs its documented powered red-wire endpoint.
+    local speaker=assert(lifecycle.build(assert(game.surfaces[1].create_entity{name='programmable-speaker',position={3,-3},force='player'})))
+    wire(speaker.body,c,'red','network')
     x.phase='examples'; x.example_names={'logic','kv','monitor','peripheral','configurator','sections','recipe_searcher','factoriopedia','inventory'}; x.example_index=1; x.since=event.tick
     for _,program in ipairs(contract_programs) do x.example_names[#x.example_names+1]=program.name end
   elseif x.phase=='examples' then

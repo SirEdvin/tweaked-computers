@@ -35,6 +35,10 @@ certification. Historical releases are immutable.
 
 ## Install and compatibility
 
+Current documentation-path note: this release's old companion inventory is
+historical. The current checkout uses `api/**/*.d.lua` and generated references;
+see [the migration map](api-migration.md). This does not change the release bytes.
+
 Use the existing [Factorio Mod Portal listing](https://mods.factorio.com/mod/tweaked-computers)
 or the installable `tweaked-computers_0.1.10.zip` asset from
 [alpha-0.1.10](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.10).

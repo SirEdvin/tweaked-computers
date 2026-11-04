@@ -1,0 +1,10 @@
+---@meta
+-- Full proposed replacement for the matching canonical api/<file>.d.lua.
+-- Use the existing api/ format: public dot calls, described parameters/returns,
+-- exact result arity, described fields, defaults/domains/errors/lifecycle notes.
+-- Replace this instructional template with real declarations; do not promote it.
+-- Unchanged canonical files supply dependencies and must not be duplicated here.
+-- For whole-file removal, use ONLY comments instead of declarations, including:
+-- Removes: api/<file>.d.lua
+-- Identities: <exact removed public identities, comma-separated>
+-- Keep the proposal API Impact inventory and design consistent with that record.

@@ -11,10 +11,10 @@ calls, not a catalogue GUI. No item/fluid input is needed.
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot; removal/destruction of a device is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
-   the Mod Portal, select **0.1.19 ALPHA**, enable it, and restart when prompted.
+   the Mod Portal, select **0.1.20 ALPHA**, enable it, and restart when prompted.
    This version accepts all Factorio 2.1 patches. Stay on 0.1.14 for Factorio 2.0.77.
-3. For manual installation, download `tweaked-computers_0.1.19.zip` from the
-   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.19)
+3. For manual installation, download `tweaked-computers_0.1.20.zip` from the
+   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.20)
    and place it in your Factorio
    user-data `mods` directory without unpacking it. Remove conflicting duplicate
    versions, enable the mod, and restart. The ZIP's internal folder must match its
@@ -25,7 +25,10 @@ calls, not a catalogue GUI. No item/fluid input is needed.
    names require their corresponding installed prototypes. This guide does not
    claim other Factorio 2.1 patches or arbitrary mod combinations are verified.
 
-0.1.19 requires function-declaration-only saved programs; rewrite legacy
+0.1.20 generates the website and in-game Reference from one public typed Lua
+library. It does not change guest behavior, save formats or budgets from 0.1.19.
+
+Since 0.1.19, saved programs require function declarations only; rewrite legacy
 table-form source manually before running it. No automatic conversion is provided.
 All nine custom device families work without electricity; native radars and
 speakers still require supply. Scheduling benchmarks are incomplete and

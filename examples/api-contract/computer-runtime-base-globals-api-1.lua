@@ -1,0 +1,16 @@
+function start(event)
+  local values = table.pack(false, nil, 3)
+  assert(unpack == table.unpack)
+  print(_VERSION, unpack(values, 1, values.n))
+  local t = {}
+  assert(rawequal(rawset(t, "ready", false), t))
+  assert(rawget(t, "ready") == false)
+  assert(rawlen("hello") == 5)
+  local ok, message = xpcall(function()
+    error("sample failure")
+  end, function(problem)
+    return "handled: " .. tostring(problem)
+  end)
+  assert(ok == false)
+  print(message)
+end

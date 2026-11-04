@@ -2,7 +2,7 @@
 
 Goal: deliver the demand-driven scheduler and power-free custom devices specified in this change, preserving native radar/speaker electricity and all non-power safety contracts.
 
-Architecture: refactor the existing Lua scheduler and subsystem mutation paths into retained ready/deadline/watch/owner/pending membership. No second execution framework or new user setting. Baseline inspected: `63612f9c109d1a3c21d3029b7d2c32df85f4ed49`; see [design.md](design.md), [API compatibility](lua-api.md) and the [editable complete cycle](tick-cycle.excalidraw).
+Architecture: refactor the existing Lua scheduler and subsystem mutation paths into retained ready/deadline/watch/owner/pending membership. No second execution framework or new user setting. Baseline inspected: `63612f9c109d1a3c21d3029b7d2c32df85f4ed49`; see [design.md](design.md), [API compatibility](api-reconciliation.md) and the [editable complete cycle](tick-cycle.excalidraw).
 
 Execution boundary: this checklist is implementation work, not work performed by the proposal. All boxes remain unchecked. Apply requires a new explicit user request. Use focused failing regressions before each nontrivial change, preserve their failure output, implement the smallest root-cause change, then rerun them. No commit/push/release or archive permission is implied by this plan.
 
