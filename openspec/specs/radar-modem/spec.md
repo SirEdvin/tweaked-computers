@@ -28,7 +28,7 @@ The vanilla `radar` and optional advanced radar SHALL expose peripheral type `mo
 - **AND** later wiring it to a valid computer network permits enrollment without rebuilding it.
 
 ### Requirement: Familiar wireless modem methods
-A modem SHALL provide strict dot-call `open(channel)`, `isOpen(channel)`, `close(channel)`, `closeAll()`, `transmit(channel, replyChannel, payload)`, `isWireless()` and `getLimits()` as specified in `lua-api.md`. Channels SHALL be integers from 0 through 65535. `isWireless()` SHALL return true for both tiers. Wired-modem remote methods, rednet and blocking event waits SHALL NOT be provided.
+A modem SHALL provide strict dot-call `open(channel)`, `isOpen(channel)`, `close(channel)`, `closeAll()`, `transmit(channel, replyChannel, payload)`, `isWireless()` and `getLimits()` as specified in `api/modem.d.lua`. Channels SHALL be integers from 0 through 65535. `isWireless()` SHALL return true for both tiers. Wired-modem remote methods, rednet and blocking event waits SHALL NOT be provided.
 
 #### Scenario: Validate channel arguments
 - **WHEN** a call supplies a fractional, out-of-range or incorrectly typed channel, a colon-call receiver or an extra argument

@@ -89,6 +89,10 @@ exercised in Space Age. History remains removed by explicit user approval.
 
 ## Promotion and reproducibility
 
+Current documentation-path note: the historical package inventory below is
+unchanged evidence. Today's authoritative API is `api/**/*.d.lua`; behavioral
+requirements remain in `openspec/specs/`. See [the migration map](api-migration.md).
+
 The user approved "sync now" for all five changes on 2026-10-19. Current CLI
 status/rule snapshots are retained under SC4 `approved-sync/`. Baseline specs are
 established first; redesign modifications preserve baseline scenarios; buffering

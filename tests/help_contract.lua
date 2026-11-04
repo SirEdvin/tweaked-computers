@@ -1,6 +1,7 @@
 -- Static help checked against the same inventory used by actual compiled guests.
 local help=require('scripts.ui.help')
 local inventory=require('tests.api_inventory')
+local api_reference=require('scripts.ui.api-reference')
 local M={}
 function M.run()
   for _,topic in ipairs(help.topics) do
@@ -36,19 +37,29 @@ function M.run()
       local signature='\n'..method..'('
       local first,last=topic.text:find(signature,1,true)
       assert(first,'missing signature '..kind..'.'..method)
-      assert(not topic.text:find(signature,last+1,true),'duplicate entry '..kind..'.'..method)
       starts[#starts+1]={pos=first,method=method}; count=count+1
     end
     for _,method in ipairs(starts) do
-      local matched=0
+      local matched=0; local signatures={}
       for i,part in ipairs(topic.blocks) do
         if part.kind=='signature' and part.text:sub(1,#method.method+1)==method.method..'(' then
           matched=matched+1
-          assert(topic.blocks[i+1].kind=='prose' and topic.blocks[i+1].text:find('Returns:',1,true)==1,
-            'method results/caveats must be an isolated readable block '..kind..'.'..method.method)
+          assert(not signatures[part.text],'duplicate overload '..kind..'.'..method.method)
+          signatures[part.text]=true
+          local parameters,returns=false,false
+          for j=i+1,#topic.blocks do
+            local next=topic.blocks[j]
+            if next.kind=='signature' then break end
+            if next.kind=='heading' and next.text=='Parameters' then parameters=true end
+            if next.kind=='heading' and next.text=='Returns' then returns=true end
+          end
+          assert(parameters and returns,'isolated parameter/result sections '..kind..'.'..method.method)
         end
       end
-      assert(matched==1,'method must have exactly one native signature block '..kind..'.'..method.method)
+      local expected_count=1
+      if kind=='discovery' and method.method=='find' then expected_count=11 end
+      if kind=='monitor' and (method.method=='blit' or method.method=='setPaletteColor' or method.method=='setPaletteColour') then expected_count=2 end
+      assert(matched==expected_count,'exact native overload inventory '..kind..'.'..method.method)
     end
     assert(count>0); total=total+count; family_count=family_count+1
   end
@@ -59,23 +70,39 @@ function M.run()
     if topic.category=='Computer' then
       local found=false
       for i,part in ipairs(topic.blocks) do
-        if part.kind=='signature' and part.text=='log(text)' then
-          assert(topic.blocks[i+1].text=='Returns: no values.')
-          assert(topic.blocks[i+2].text:find('Writes bounded plain output to Console.',1,true));found=true
+        if part.kind=='signature' and part.text=='log(text: string)' then
+          assert(not part.text:find(' -> ',1,true))
+          for j=i+1,#topic.blocks do
+            if topic.blocks[j].kind=='signature' then break end
+            if topic.blocks[j].text:find('No result positions.',1,true)==1 then found=true end
+          end
         end
       end
       assert(found,'computer.log documents its actual empty return tuple, not its output effect')
     end
   end
   local mon=help.topics[help.peripheral_topic('monitor')].text
-  assert(mon:find('setPaletteColor(color, rgb) or setPaletteColor(color, r, g, b)',1,true))
-  assert(mon:find('setPaletteColour(color, rgb) or setPaletteColour(color, r, g, b)',1,true))
+  assert(mon:find('setPaletteColor(color: TC.Color, rgb: integer)',1,true))
+  assert(mon:find('setPaletteColour(color: TC.Color, rgb: integer)',1,true))
   for _,alias in ipairs({'TextColour','BackgroundColour','PaletteColour'}) do
     assert(mon:find('get'..alias..'(',1,true) and mon:find('set'..alias..'(',1,true))
   end
   assert(mon:find('monitor_touch',1,true) and mon:find('monitor_resize',1,true))
   assert(help.text:find('modem_message',1,true) and help.text:find('signal_changed',1,true))
   assert(help.text:find('xpcall',1,true) and help.text:find('Reset Shell',1,true))
+  local by_id={}
+  for _,topic in ipairs(help.topics) do if topic.id then assert(not by_id[topic.id]); by_id[topic.id]=topic end end
+  local types=0
+  for name,location in pairs(help.type_topics) do
+    local topic=assert(by_id[location.topic],name)
+    assert(topic.text:find(name,1,true),'unreachable exact public name '..name)
+    types=types+1
+  end
+  for _,name in ipairs({'TC.Config.SignalID','TC.Config.Read.SignalID','TC.MonitorTouch','TC.SignalChanged','TC.DashboardLine','TC.Limits'}) do
+    assert(help.type_topics[name],name)
+  end
+  helpers.write_file('typed-api-reference.json',helpers.table_to_json(api_reference),false)
+  log('TC_HELP_PUBLIC_RECORDS '..types)
   log('TC_HELP_METHOD_TOTAL '..total..' families='..family_count)
 end
 return M

@@ -1,0 +1,3656 @@
+{
+  "format_version": 1,
+  "source_count": 40,
+  "heading_count": 354,
+  "sources": [
+    {
+      "path": "docs/player/api/common.md",
+      "sha256": "7419c036c4b630eef37e3bc7052e7b428e21538e3fbf9f512a9cf5db8e1e81bd",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Shared Lua rules, types, errors and limits",
+          "destinations": [
+            "api/common.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 10,
+          "heading": "Types",
+          "destinations": [
+            "api/common.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 53,
+          "heading": "Errors",
+          "destinations": [
+            "api/common.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 88,
+          "heading": "Scheduling and availability",
+          "destinations": [
+            "api/common.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 127,
+          "heading": "Effective safety ceilings",
+          "destinations": [
+            "api/common.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/computer.md",
+      "sha256": "2ab71eb252f9569636cea5f0d0f3cf83b1b9d42bd029255a1028404dcec53a4b",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Computer callbacks and state",
+          "destinations": [
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 18,
+          "heading": "Complete method reference",
+          "destinations": [
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 56,
+          "heading": "General events",
+          "destinations": [
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 82,
+          "heading": "TimerEvent",
+          "destinations": [
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 96,
+          "heading": "Run lifecycle and errors",
+          "destinations": [
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/configurator.md",
+      "sha256": "8626d8d666b4d38953b485596c0c82e5fc2855274b2500052eb3eda3f49ee8ad",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Configurator: factory circuit settings",
+          "destinations": [
+            "api/configurator.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 10,
+          "heading": "Complete methods",
+          "destinations": [
+            "api/configurator.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 29,
+          "heading": "Device and schema records",
+          "destinations": [
+            "api/configurator.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 66,
+          "heading": "Read and patch",
+          "destinations": [
+            "api/configurator.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 105,
+          "heading": "Constant-combinator sections",
+          "destinations": [
+            "api/configurator.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 131,
+          "heading": "Bounds, programs and troubleshooting",
+          "destinations": [
+            "api/configurator.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/dashboard.md",
+      "sha256": "15faf7140ebfda0dd719cf77ef8d8598838608eb10d54e4a7739193a42b861b2",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Dashboard API",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 10,
+          "heading": "Base methods",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 29,
+          "heading": "Complete definitions",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 57,
+          "heading": "Scheduled buttons",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 92,
+          "heading": "Optional line and duration methods",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 101,
+          "heading": "`appendSample(slot, id, values)`",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 119,
+          "heading": "`setBars(slot, id, bars)`",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 134,
+          "heading": "`clearChart(slot, id)`",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 140,
+          "heading": "Capacity, errors and lifetime",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/lifecycle.md",
+            "docs/player/console.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/factoriopedia-interface.md",
+      "sha256": "54260734fc5b4b7b283f818d7ac1a9c91a1a09033020a7bb43c26fa8b56cff39",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Factoriopedia Interface",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 11,
+          "heading": "Setup",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 21,
+          "heading": "Methods",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 37,
+          "heading": "Records",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 85,
+          "heading": "Failures and limits",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 105,
+          "heading": "Example",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/kv.md",
+      "sha256": "fd9bfa455511ad5942308a2f4b26359e1aaf9d781377a11a7d68591943ae1bc5",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "KV database",
+          "destinations": [
+            "api/kv-database.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 10,
+          "heading": "Complete commands",
+          "destinations": [
+            "api/kv-database.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 35,
+          "heading": "Expiry",
+          "destinations": [
+            "api/kv-database.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 49,
+          "heading": "Atomicity, errors and capacities",
+          "destinations": [
+            "api/kv-database.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 77,
+          "heading": "Catch a wrong-type read safely",
+          "destinations": [
+            "api/kv-database.d.lua",
+            "api/generated/limits.d.lua",
+            "examples/api-contract/player-kv-1.lua"
+          ]
+        },
+        {
+          "line": 100,
+          "heading": "Mining and shared storage",
+          "destinations": [
+            "api/kv-database.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/lifecycle.md",
+            "docs/player/console.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/language.md",
+      "sha256": "caea3f95711bfc59a56aa2ce26f02e4f1155f3af8ed55f35e75fbba3288a87aa",
+      "action": "retain-guide",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Bounded native Lua language",
+          "destinations": [
+            "docs/player/api/language.md",
+            "openspec/specs/program-source/spec.md",
+            "examples/function-program.lua"
+          ]
+        },
+        {
+          "line": 33,
+          "heading": "Declaration scope and calls",
+          "destinations": [
+            "docs/player/api/language.md",
+            "openspec/specs/program-source/spec.md"
+          ]
+        },
+        {
+          "line": 79,
+          "heading": "Approved globals and libraries",
+          "destinations": [
+            "api/globals.d.lua",
+            "api/colors.d.lua"
+          ]
+        },
+        {
+          "line": 114,
+          "heading": "Standard helper signatures",
+          "destinations": [
+            "api/globals.d.lua",
+            "api/colors.d.lua"
+          ]
+        },
+        {
+          "line": 187,
+          "heading": "Printing, raw helpers and error transformation",
+          "destinations": [
+            "docs/player/api/language.md",
+            "openspec/specs/program-source/spec.md",
+            "api/globals.d.lua"
+          ]
+        },
+        {
+          "line": 230,
+          "heading": "Excluded features",
+          "destinations": [
+            "docs/player/api/language.md",
+            "openspec/specs/program-source/spec.md"
+          ]
+        },
+        {
+          "line": 242,
+          "heading": "Failure and persistence",
+          "destinations": [
+            "docs/player/api/language.md",
+            "openspec/specs/program-source/spec.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/limits.md",
+      "sha256": "e58d6473912aa5d47a79c5a74087fbe56d0bd960adfa2b93bc9b18e8f5b15d05",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Common effective limits",
+          "destinations": [
+            "api/generated/limits.d.lua",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 10,
+          "heading": "Live mod settings",
+          "destinations": [
+            "api/generated/limits.d.lua",
+            "docs/player/monitor-animation.md",
+            "docs/player/budget-settings.md"
+          ]
+        },
+        {
+          "line": 40,
+          "heading": "Maintenance and shared headroom",
+          "destinations": [
+            "api/generated/limits.d.lua",
+            "docs/player/monitor-animation.md",
+            "docs/player/budget-settings.md"
+          ]
+        },
+        {
+          "line": 70,
+          "heading": "Default common limits",
+          "destinations": [
+            "api/generated/limits.d.lua",
+            "docs/player/monitor-animation.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/logic.md",
+      "sha256": "9340ccc9c6346aed45c7954b84a1cd3fcebad97fef4684ebd095c974528a5dc3",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Logic handler input, output and subscriptions",
+          "destinations": [
+            "api/logic-handler.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 10,
+          "heading": "Complete methods",
+          "destinations": [
+            "api/logic-handler.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 50,
+          "heading": "Subscriptions",
+          "destinations": [
+            "api/logic-handler.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 84,
+          "heading": "Fail-safe ownership and persistence",
+          "destinations": [
+            "api/logic-handler.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/lifecycle.md",
+            "docs/player/console.md"
+          ]
+        },
+        {
+          "line": 102,
+          "heading": "Bounds and use",
+          "destinations": [
+            "api/logic-handler.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/modem.md",
+      "sha256": "b9d5b6822a820aae51697ce4c686992ba8368cb0ad834eedd69d55ccba4e4541",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Radar modems",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 26,
+          "heading": "Local wire authority, radio channels",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 41,
+          "heading": "Seven methods",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 70,
+          "heading": "Messages and named handlers",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 113,
+          "heading": "Bounds and datagram failure",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/radio-operations.md"
+          ]
+        },
+        {
+          "line": 153,
+          "heading": "Space Age advanced tier",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/radio-operations.md"
+          ]
+        },
+        {
+          "line": 178,
+          "heading": "Saves and moving devices",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/radio-operations.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/monitor.md",
+      "sha256": "4ec9e9ae0dab7fd44af38e88f3bae82ac8b7f93642b195127be0827115b39f1f",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Merged monitors and terminal methods",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/monitor.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 21,
+          "heading": "Automatic buffered presentation",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 57,
+          "heading": "Complete terminal reference",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 89,
+          "heading": "Colors and glyphs",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 120,
+          "heading": "Geometry, identity and availability",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/monitor.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 143,
+          "heading": "Touch and resize events",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/monitor.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 167,
+          "heading": "Bounds, example and troubleshooting",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/monitor.md",
+            "docs/player/lifecycle.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/peripheral.md",
+      "sha256": "7ee6ec3de5eababb2781102ae4886e04d11fa337460b47fd0d6b8db25bcf37ed",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Peripheral discovery and calls",
+          "destinations": [
+            "api/peripheral.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 16,
+          "heading": "Complete methods",
+          "destinations": [
+            "api/peripheral.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 57,
+          "heading": "Wrappers and stale identities",
+          "destinations": [
+            "api/peripheral.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 69,
+          "heading": "Synchronized monitor presentation",
+          "destinations": [
+            "api/peripheral.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 101,
+          "heading": "Events",
+          "destinations": [
+            "api/peripheral.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 140,
+          "heading": "Use and troubleshooting",
+          "destinations": [
+            "api/peripheral.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/lifecycle.md",
+            "docs/player/console.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/production-statistics.md",
+      "sha256": "2276df0697d6161023bbbade93cd9e605edfa4799bd02c462c252a59d53bcc06",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Production Statistics",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 7,
+          "heading": "Build and connect",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 19,
+          "heading": "Methods",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 35,
+          "heading": "Scope, directions and shapes",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 59,
+          "heading": "Windows and historical order",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 80,
+          "heading": "Whole result or explicit refusal",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 106,
+          "heading": "Run the tutorials",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 125,
+          "heading": "Save, upgrade and rollback",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/recipe-searcher.md",
+      "sha256": "c12cffdeab7c705c4569e83737913ddda4afacf5c06e7f138aa2dd9048cb2179",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Recipe Searcher",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 9,
+          "heading": "Discovery and calls",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md",
+            "examples/api-contract/player-recipe-searcher-1.lua"
+          ]
+        },
+        {
+          "line": 39,
+          "heading": "Complete results, not a prefix",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 55,
+          "heading": "Recipe record",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 109,
+          "heading": "Freshness, authority and lifecycle",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 135,
+          "heading": "Errors and example",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/schemas.md",
+      "sha256": "2770c37ef2c6bb50feaab91f37a68a142be80e35ae2831ca08d99acb3da36ec4",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Configurator nested types and enums",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 16,
+          "heading": "ArithmeticCombinatorParameterOperation",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.ArithmeticCombinatorParameterOperation",
+            "api/generated/configurator.d.lua#TC.Config.Read.ArithmeticCombinatorParameterOperation"
+          ]
+        },
+        {
+          "line": 22,
+          "heading": "ArithmeticCombinatorParameters",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.ArithmeticCombinatorParameters",
+            "api/generated/configurator.d.lua#TC.Config.Read.ArithmeticCombinatorParameters"
+          ]
+        },
+        {
+          "line": 37,
+          "heading": "BlueprintQualityID",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.BlueprintQualityID",
+            "api/generated/configurator.d.lua#TC.Config.Read.BlueprintQualityID"
+          ]
+        },
+        {
+          "line": 45,
+          "heading": "CircuitConditionDefinition",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.CircuitConditionDefinition",
+            "api/generated/configurator.d.lua#TC.Config.Read.CircuitConditionDefinition"
+          ]
+        },
+        {
+          "line": 56,
+          "heading": "CircuitNetworkSelection",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.CircuitNetworkSelection",
+            "api/generated/configurator.d.lua#TC.Config.Read.CircuitNetworkSelection"
+          ]
+        },
+        {
+          "line": 65,
+          "heading": "ComparatorString",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.ComparatorString",
+            "api/generated/configurator.d.lua#TC.Config.Read.ComparatorString"
+          ]
+        },
+        {
+          "line": 71,
+          "heading": "DeciderCombinatorCondition",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.DeciderCombinatorCondition",
+            "api/generated/configurator.d.lua#TC.Config.Read.DeciderCombinatorCondition"
+          ]
+        },
+        {
+          "line": 85,
+          "heading": "DeciderCombinatorOutput",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.DeciderCombinatorOutput",
+            "api/generated/configurator.d.lua#TC.Config.Read.DeciderCombinatorOutput"
+          ]
+        },
+        {
+          "line": 96,
+          "heading": "DeciderCombinatorParameters",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.DeciderCombinatorParameters",
+            "api/generated/configurator.d.lua#TC.Config.Read.DeciderCombinatorParameters"
+          ]
+        },
+        {
+          "line": 105,
+          "heading": "DisplayPanelMessageDefinition",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.DisplayPanelMessageDefinition",
+            "api/generated/configurator.d.lua#TC.Config.Read.DisplayPanelMessageDefinition"
+          ]
+        },
+        {
+          "line": 115,
+          "heading": "ItemCountType",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.ItemCountType",
+            "api/generated/configurator.d.lua#TC.Config.Read.ItemCountType"
+          ]
+        },
+        {
+          "line": 121,
+          "heading": "LogisticFilter",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LogisticFilter",
+            "api/generated/configurator.d.lua#TC.Config.Read.LogisticFilter"
+          ]
+        },
+        {
+          "line": 137,
+          "heading": "ProgrammableSpeakerCircuitParameters",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.ProgrammableSpeakerCircuitParameters",
+            "api/generated/configurator.d.lua#TC.Config.Read.ProgrammableSpeakerCircuitParameters"
+          ]
+        },
+        {
+          "line": 148,
+          "heading": "QualityCondition",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.QualityCondition",
+            "api/generated/configurator.d.lua#TC.Config.Read.QualityCondition"
+          ]
+        },
+        {
+          "line": 154,
+          "heading": "QualityID",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.QualityID",
+            "api/generated/configurator.d.lua#TC.Config.Read.QualityID"
+          ]
+        },
+        {
+          "line": 160,
+          "heading": "SelectorCombinatorParameterOperation",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.SelectorCombinatorParameterOperation",
+            "api/generated/configurator.d.lua#TC.Config.Read.SelectorCombinatorParameterOperation"
+          ]
+        },
+        {
+          "line": 166,
+          "heading": "SelectorCombinatorParameters",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.SelectorCombinatorParameters",
+            "api/generated/configurator.d.lua#TC.Config.Read.SelectorCombinatorParameters"
+          ]
+        },
+        {
+          "line": 209,
+          "heading": "SignalFilter",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.SignalFilter",
+            "api/generated/configurator.d.lua#TC.Config.Read.SignalFilter"
+          ]
+        },
+        {
+          "line": 215,
+          "heading": "SignalID",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.SignalID",
+            "api/generated/configurator.d.lua#TC.Config.Read.SignalID"
+          ]
+        },
+        {
+          "line": 225,
+          "heading": "SignalIDBase",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.SignalIDBase",
+            "api/generated/configurator.d.lua#TC.Config.Read.SignalIDBase"
+          ]
+        },
+        {
+          "line": 234,
+          "heading": "SignalIDType",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.SignalIDType",
+            "api/generated/configurator.d.lua#TC.Config.Read.SignalIDType"
+          ]
+        },
+        {
+          "line": 240,
+          "heading": "SpaceLocationID",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.SpaceLocationID",
+            "api/generated/configurator.d.lua#TC.Config.Read.SpaceLocationID"
+          ]
+        },
+        {
+          "line": 246,
+          "heading": "boolean",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 252,
+          "heading": "float",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 258,
+          "heading": "int32",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 264,
+          "heading": "nil",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 270,
+          "heading": "string",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 276,
+          "heading": "table",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 282,
+          "heading": "uint32",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 286,
+          "heading": "Normalization",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 310,
+          "heading": "Native enum names",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 312,
+          "heading": "defines.control_behavior.cargo_landing_pad.exclusive_mode",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 316,
+          "heading": "defines.control_behavior.inserter.hand_read_mode",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 320,
+          "heading": "defines.control_behavior.lamp.color_mode",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 324,
+          "heading": "defines.control_behavior.logistic_container.exclusive_mode",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 328,
+          "heading": "defines.control_behavior.mining_drill.resource_read_mode",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 332,
+          "heading": "defines.control_behavior.roboport.read_items_mode",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 336,
+          "heading": "defines.control_behavior.rocket_silo.read_mode",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 340,
+          "heading": "defines.control_behavior.transport_belt.content_read_mode",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 344,
+          "heading": "defines.logistic_section_type",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 348,
+          "heading": "defines.wire_connector_id",
+          "destinations": [
+            "api/generated/configurator.d.lua",
+            "api/configurator.d.lua",
+            "api/common.d.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/settings.md",
+      "sha256": "67c610db43e1ee498a8e40317dcc9e763abfae4594160509644a4359d3f12c35",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Supported configurator settings",
+          "destinations": [
+            "api/configurator.d.lua"
+          ]
+        },
+        {
+          "line": 15,
+          "heading": "Accumulator",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaAccumulatorControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaAccumulatorControlBehavior"
+          ]
+        },
+        {
+          "line": 22,
+          "heading": "AgriculturalTower",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaAgriculturalTowerControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaAgriculturalTowerControlBehavior"
+          ]
+        },
+        {
+          "line": 32,
+          "heading": "ArithmeticCombinator",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaArithmeticCombinatorControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaArithmeticCombinatorControlBehavior"
+          ]
+        },
+        {
+          "line": 38,
+          "heading": "ArtilleryTurret",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaArtilleryTurretControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaArtilleryTurretControlBehavior"
+          ]
+        },
+        {
+          "line": 48,
+          "heading": "AssemblingMachine",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaAssemblingMachineControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaAssemblingMachineControlBehavior"
+          ]
+        },
+        {
+          "line": 66,
+          "heading": "AsteroidCollector",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaAsteroidCollectorControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaAsteroidCollectorControlBehavior"
+          ]
+        },
+        {
+          "line": 78,
+          "heading": "CargoLandingPad",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaCargoLandingPadControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaCargoLandingPadControlBehavior"
+          ]
+        },
+        {
+          "line": 84,
+          "heading": "Combinator",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaCombinatorControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaCombinatorControlBehavior"
+          ]
+        },
+        {
+          "line": 88,
+          "heading": "ConstantCombinator",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaConstantCombinatorControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaConstantCombinatorControlBehavior"
+          ]
+        },
+        {
+          "line": 96,
+          "heading": "Container",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaContainerControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaContainerControlBehavior"
+          ]
+        },
+        {
+          "line": 102,
+          "heading": "Base control behavior",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaControlBehavior"
+          ]
+        },
+        {
+          "line": 106,
+          "heading": "DeciderCombinator",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaDeciderCombinatorControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaDeciderCombinatorControlBehavior"
+          ]
+        },
+        {
+          "line": 112,
+          "heading": "DisplayPanel",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaDisplayPanelControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaDisplayPanelControlBehavior"
+          ]
+        },
+        {
+          "line": 118,
+          "heading": "Furnace",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaFurnaceControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaFurnaceControlBehavior"
+          ]
+        },
+        {
+          "line": 135,
+          "heading": "GenericOnOff",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaGenericOnOffControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaGenericOnOffControlBehavior"
+          ]
+        },
+        {
+          "line": 144,
+          "heading": "Inserter",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaInserterControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaInserterControlBehavior"
+          ]
+        },
+        {
+          "line": 158,
+          "heading": "Lamp",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaLampControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaLampControlBehavior"
+          ]
+        },
+        {
+          "line": 173,
+          "heading": "Loader",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaLoaderControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaLoaderControlBehavior"
+          ]
+        },
+        {
+          "line": 184,
+          "heading": "LogisticContainer",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaLogisticContainerControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaLogisticContainerControlBehavior"
+          ]
+        },
+        {
+          "line": 192,
+          "heading": "MiningDrill",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaMiningDrillControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaMiningDrillControlBehavior"
+          ]
+        },
+        {
+          "line": 203,
+          "heading": "ProgrammableSpeaker",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaProgrammableSpeakerControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaProgrammableSpeakerControlBehavior"
+          ]
+        },
+        {
+          "line": 210,
+          "heading": "ProxyContainer",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaProxyContainerControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaProxyContainerControlBehavior"
+          ]
+        },
+        {
+          "line": 216,
+          "heading": "Pump",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaPumpControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaPumpControlBehavior"
+          ]
+        },
+        {
+          "line": 226,
+          "heading": "Radar",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaRadarControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaRadarControlBehavior"
+          ]
+        },
+        {
+          "line": 230,
+          "heading": "RailSignalBase",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaRailSignalBaseControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaRailSignalBaseControlBehavior"
+          ]
+        },
+        {
+          "line": 242,
+          "heading": "Reactor",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaReactorControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaReactorControlBehavior"
+          ]
+        },
+        {
+          "line": 250,
+          "heading": "Roboport",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaRoboportControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaRoboportControlBehavior"
+          ]
+        },
+        {
+          "line": 263,
+          "heading": "RocketSilo",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaRocketSiloControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaRocketSiloControlBehavior"
+          ]
+        },
+        {
+          "line": 269,
+          "heading": "SelectorCombinator",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaSelectorCombinatorControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaSelectorCombinatorControlBehavior"
+          ]
+        },
+        {
+          "line": 275,
+          "heading": "SpacePlatformHub",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaSpacePlatformHubControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaSpacePlatformHubControlBehavior"
+          ]
+        },
+        {
+          "line": 288,
+          "heading": "Splitter",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaSplitterControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaSplitterControlBehavior"
+          ]
+        },
+        {
+          "line": 300,
+          "heading": "StorageTank",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaStorageTankControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaStorageTankControlBehavior"
+          ]
+        },
+        {
+          "line": 306,
+          "heading": "TrainStop",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaTrainStopControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaTrainStopControlBehavior"
+          ]
+        },
+        {
+          "line": 325,
+          "heading": "TransportBelt",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaTransportBeltControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaTransportBeltControlBehavior"
+          ]
+        },
+        {
+          "line": 336,
+          "heading": "Turret",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaTurretControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaTurretControlBehavior"
+          ]
+        },
+        {
+          "line": 349,
+          "heading": "Wall",
+          "destinations": [
+            "api/generated/configurator.d.lua#TC.Config.LuaWallControlBehavior",
+            "api/generated/configurator.d.lua#TC.Config.Read.LuaWallControlBehavior"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "docs/player/api/speaker.md",
+      "sha256": "56a12487f5917a1b65fc6ddd7d0e4f53be3f54d6ac424f5b730159758707e3a9",
+      "action": "generate",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Programmable speaker",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 7,
+          "heading": "Calls and returns",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 11,
+          "heading": "getInstruments()",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 15,
+          "heading": "getNotes(instrument)",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 19,
+          "heading": "playNote(instrument [, volume [, pitch]])",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 23,
+          "heading": "playSound(path [, volume])",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 27,
+          "heading": "getSounds([prefix [, after]])",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 33,
+          "heading": "getLimits()",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 51,
+          "heading": "Admission, power and audible output",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 63,
+          "heading": "Programs, installation and rollback",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "docs/player/getting-started.md",
+            "docs/player/inspectors.md",
+            "docs/player/lifecycle.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/api/common.md",
+      "sha256": "d0cff445af2531b2ce491686036fe0790e9a10a780f1dc6a35bffdeb95d3cad2",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Shared Lua API contract, version 1",
+          "destinations": [
+            "api/common.d.lua",
+            "api/events.d.lua",
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Calling convention and version",
+          "destinations": [
+            "api/common.d.lua",
+            "api/events.d.lua",
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 14,
+          "heading": "Shared types",
+          "destinations": [
+            "api/common.d.lua",
+            "api/events.d.lua",
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 65,
+          "heading": "Errors",
+          "destinations": [
+            "api/common.d.lua",
+            "api/events.d.lua",
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 88,
+          "heading": "Scheduling and lifecycle",
+          "destinations": [
+            "api/common.d.lua",
+            "api/events.d.lua",
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 107,
+          "heading": "Queryable limits",
+          "destinations": [
+            "api/common.d.lua",
+            "api/events.d.lua",
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 131,
+          "heading": "Compatibility boundaries",
+          "destinations": [
+            "api/common.d.lua",
+            "api/events.d.lua",
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        },
+        {
+          "line": 138,
+          "heading": "Console-specific boundary",
+          "destinations": [
+            "api/common.d.lua",
+            "api/events.d.lua",
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/api/device-experience.md",
+      "sha256": "9b908d88c21de11181de774ffa0f06685f998bae743d17117297d828d963fe6a",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Lua and editor compatibility contract",
+          "destinations": [
+            "docs/editor-interaction-contract.md",
+            "docs/player/editor.md"
+          ]
+        },
+        {
+          "line": 3,
+          "heading": "Public Lua remains version 1",
+          "destinations": [
+            "docs/editor-interaction-contract.md",
+            "docs/player/editor.md"
+          ]
+        },
+        {
+          "line": 11,
+          "heading": "Complete editor action placement",
+          "destinations": [
+            "docs/editor-interaction-contract.md",
+            "docs/player/editor.md"
+          ]
+        },
+        {
+          "line": 34,
+          "heading": "Concrete user workflow acceptance",
+          "destinations": [
+            "docs/editor-interaction-contract.md",
+            "docs/player/editor.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/api/examples.md",
+      "sha256": "1ad5379e65bedb593b866e881905cf2868f02150bad104d53ca4c088c6b71b01",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Integrated Lua examples and acceptance cases",
+          "destinations": [
+            "docs/player/factory.md",
+            "docs/api-migration-acceptance.md"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Case A: a configured, monitored stock controller",
+          "destinations": [
+            "docs/player/factory.md",
+            "docs/api-migration-acceptance.md",
+            "examples/api-contract/api-examples-1.lua"
+          ]
+        },
+        {
+          "line": 145,
+          "heading": "Case B: discover both colors without mixing them",
+          "destinations": [
+            "docs/player/factory.md",
+            "docs/api-migration-acceptance.md"
+          ]
+        },
+        {
+          "line": 149,
+          "heading": "Case C: precise cache expiration and type failures",
+          "destinations": [
+            "docs/player/factory.md",
+            "docs/api-migration-acceptance.md"
+          ]
+        },
+        {
+          "line": 153,
+          "heading": "Case D: signal events and multiple writers",
+          "destinations": [
+            "docs/player/factory.md",
+            "docs/api-migration-acceptance.md"
+          ]
+        },
+        {
+          "line": 157,
+          "heading": "Case E: configurator inspection and containment",
+          "destinations": [
+            "docs/player/factory.md",
+            "docs/api-migration-acceptance.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/api/native-language.md",
+      "sha256": "02dda66cbe133ce41dbb52a5c4cfbe7bbc50fbadea3cd0d0526cc6c672e7f47f",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Bounded native Lua language contract",
+          "destinations": [
+            "docs/player/api/language.md",
+            "api/globals.d.lua",
+            "api/colors.d.lua",
+            "docs/api-migration-acceptance.md"
+          ]
+        },
+        {
+          "line": 7,
+          "heading": "Accepted document shape",
+          "destinations": [
+            "docs/player/api/language.md",
+            "api/globals.d.lua",
+            "api/colors.d.lua",
+            "docs/api-migration-acceptance.md"
+          ]
+        },
+        {
+          "line": 15,
+          "heading": "Exclusions",
+          "destinations": [
+            "docs/player/api/language.md",
+            "api/globals.d.lua",
+            "api/colors.d.lua",
+            "docs/api-migration-acceptance.md"
+          ]
+        },
+        {
+          "line": 26,
+          "heading": "Approved standard surface",
+          "destinations": [
+            "docs/player/api/language.md",
+            "api/globals.d.lua",
+            "api/colors.d.lua",
+            "docs/api-migration-acceptance.md"
+          ]
+        },
+        {
+          "line": 37,
+          "heading": "Enforced boundaries",
+          "destinations": [
+            "docs/player/api/language.md",
+            "api/globals.d.lua",
+            "api/colors.d.lua",
+            "docs/api-migration-acceptance.md"
+          ]
+        },
+        {
+          "line": 47,
+          "heading": "Failure and acceptance",
+          "destinations": [
+            "docs/player/api/language.md",
+            "api/globals.d.lua",
+            "api/colors.d.lua",
+            "docs/api-migration-acceptance.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/computer-runtime/base-globals-api.md",
+      "sha256": "5d01f91637b4e0a57a9dd1abcd9b50dee96081bfd2eb42643369408874a87d21",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Expanded Lua base-global contract",
+          "destinations": [
+            "api/globals.d.lua",
+            "api/common.d.lua",
+            "docs/player/api/language.md",
+            "docs/player/console.md"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Compatibility target and inventory",
+          "destinations": [
+            "api/globals.d.lua",
+            "api/common.d.lua",
+            "docs/player/api/language.md",
+            "docs/player/console.md"
+          ]
+        },
+        {
+          "line": 26,
+          "heading": "Printing",
+          "destinations": [
+            "api/globals.d.lua",
+            "api/common.d.lua",
+            "docs/player/api/language.md",
+            "docs/player/console.md"
+          ]
+        },
+        {
+          "line": 36,
+          "heading": "Raw helpers and identity",
+          "destinations": [
+            "api/globals.d.lua",
+            "api/common.d.lua",
+            "docs/player/api/language.md",
+            "docs/player/console.md"
+          ]
+        },
+        {
+          "line": 59,
+          "heading": "xpcall and fatal controls",
+          "destinations": [
+            "api/globals.d.lua",
+            "api/common.d.lua",
+            "docs/player/api/language.md",
+            "docs/player/console.md"
+          ]
+        },
+        {
+          "line": 70,
+          "heading": "Errors, lifetime and versioning",
+          "destinations": [
+            "api/globals.d.lua",
+            "api/common.d.lua",
+            "docs/player/api/language.md",
+            "docs/player/console.md"
+          ]
+        },
+        {
+          "line": 78,
+          "heading": "Explicit compatibility exclusions",
+          "destinations": [
+            "api/globals.d.lua",
+            "api/common.d.lua",
+            "docs/player/api/language.md",
+            "docs/player/console.md"
+          ]
+        },
+        {
+          "line": 82,
+          "heading": "Illustrative acceptance programs",
+          "destinations": [
+            "api/globals.d.lua",
+            "api/common.d.lua",
+            "docs/player/api/language.md",
+            "docs/player/console.md",
+            "examples/api-contract/computer-runtime-base-globals-api-1.lua"
+          ]
+        },
+        {
+          "line": 111,
+          "heading": "Reference basis",
+          "destinations": [
+            "api/globals.d.lua",
+            "api/common.d.lua",
+            "docs/player/api/language.md",
+            "docs/player/console.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/computer-runtime/lua-api.md",
+      "sha256": "8496b37b110f7bbf037817456fce408deb1e19ae822bf17e9cc2fd463531fc7e",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Computer Lua API v1",
+          "destinations": [
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/computer-runtime/spec.md",
+            "api/globals.d.lua",
+            "api/events.d.lua",
+            "docs/player/api/language.md"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Source document",
+          "destinations": [
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/computer-runtime/spec.md",
+            "api/globals.d.lua",
+            "api/events.d.lua",
+            "docs/player/api/language.md",
+            "examples/api-contract/computer-runtime-lua-api-1.lua"
+          ]
+        },
+        {
+          "line": 27,
+          "heading": "Identity, time, state and diagnostics",
+          "destinations": [
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/computer-runtime/spec.md",
+            "api/globals.d.lua",
+            "api/events.d.lua",
+            "docs/player/api/language.md"
+          ]
+        },
+        {
+          "line": 44,
+          "heading": "General event registration",
+          "destinations": [
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/computer-runtime/spec.md",
+            "api/globals.d.lua",
+            "api/events.d.lua",
+            "docs/player/api/language.md"
+          ]
+        },
+        {
+          "line": 57,
+          "heading": "Timers",
+          "destinations": [
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/computer-runtime/spec.md",
+            "api/globals.d.lua",
+            "api/events.d.lua",
+            "docs/player/api/language.md"
+          ]
+        },
+        {
+          "line": 89,
+          "heading": "Recoverable and fatal errors",
+          "destinations": [
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/computer-runtime/spec.md",
+            "api/globals.d.lua",
+            "api/events.d.lua",
+            "docs/player/api/language.md",
+            "examples/api-contract/computer-runtime-lua-api-2.lua"
+          ]
+        },
+        {
+          "line": 113,
+          "heading": "Expanded Lua base globals",
+          "destinations": [
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/computer-runtime/spec.md",
+            "api/globals.d.lua",
+            "api/events.d.lua",
+            "docs/player/api/language.md",
+            "examples/api-contract/computer-runtime-base-globals-api-1.lua"
+          ]
+        },
+        {
+          "line": 160,
+          "heading": "Required contract checks",
+          "destinations": [
+            "api/computer.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/computer-runtime/spec.md",
+            "api/globals.d.lua",
+            "api/events.d.lua",
+            "docs/player/api/language.md",
+            "docs/api-migration-acceptance.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/console-shell/lua-api.md",
+      "sha256": "0e84655319b60a05995ba5e69613c637889198f8fdcca3d4fce8e3be0ad7efd3",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Console Lua shell contract",
+          "destinations": [
+            "docs/player/console.md",
+            "api/computer.d.lua",
+            "api/peripheral.d.lua",
+            "openspec/specs/console-shell/spec.md"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Entering and evaluating a line",
+          "destinations": [
+            "docs/player/console.md",
+            "api/computer.d.lua",
+            "api/peripheral.d.lua",
+            "openspec/specs/console-shell/spec.md"
+          ]
+        },
+        {
+          "line": 21,
+          "heading": "Output",
+          "destinations": [
+            "docs/player/console.md",
+            "api/computer.d.lua",
+            "api/peripheral.d.lua",
+            "openspec/specs/console-shell/spec.md"
+          ]
+        },
+        {
+          "line": 34,
+          "heading": "Retained values",
+          "destinations": [
+            "docs/player/console.md",
+            "api/computer.d.lua",
+            "api/peripheral.d.lua",
+            "openspec/specs/console-shell/spec.md"
+          ]
+        },
+        {
+          "line": 54,
+          "heading": "Computer and peripheral APIs",
+          "destinations": [
+            "docs/player/console.md",
+            "api/computer.d.lua",
+            "api/peripheral.d.lua",
+            "openspec/specs/console-shell/spec.md"
+          ]
+        },
+        {
+          "line": 77,
+          "heading": "Session lifetime",
+          "destinations": [
+            "docs/player/console.md",
+            "api/computer.d.lua",
+            "api/peripheral.d.lua",
+            "openspec/specs/console-shell/spec.md"
+          ]
+        },
+        {
+          "line": 95,
+          "heading": "Admission, errors, and effects",
+          "destinations": [
+            "docs/player/console.md",
+            "api/computer.d.lua",
+            "api/peripheral.d.lua",
+            "openspec/specs/console-shell/spec.md"
+          ]
+        },
+        {
+          "line": 117,
+          "heading": "Illustrative acceptance sequence",
+          "destinations": [
+            "docs/player/console.md",
+            "api/computer.d.lua",
+            "api/peripheral.d.lua",
+            "openspec/specs/console-shell/spec.md",
+            "examples/api-contract/console-shell-lua-api-1.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/dashboard-interface/lua-api.md",
+      "sha256": "b6c98c261bc6ba8a3af79a0e0183b25ca788a7acdd67341854baec53ee1ccc83",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Dashboard Lua API v1",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/dashboard-interface/spec.md",
+            "api/events.d.lua",
+            "docs/player/console.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Discovery and exact methods",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/dashboard-interface/spec.md",
+            "api/events.d.lua",
+            "docs/player/console.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 32,
+          "heading": "Tabs and layout",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/dashboard-interface/spec.md",
+            "api/events.d.lua",
+            "docs/player/console.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 55,
+          "heading": "Rolling line charts",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/dashboard-interface/spec.md",
+            "api/events.d.lua",
+            "docs/player/console.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 66,
+          "heading": "Snapshot duration bars",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/dashboard-interface/spec.md",
+            "api/events.d.lua",
+            "docs/player/console.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 74,
+          "heading": "Shared retained accounting and errors",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/dashboard-interface/spec.md",
+            "api/events.d.lua",
+            "docs/player/console.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 102,
+          "heading": "Buttons and subscriptions",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/dashboard-interface/spec.md",
+            "api/events.d.lua",
+            "docs/player/console.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 121,
+          "heading": "Lifecycle and optional dependency",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/dashboard-interface/spec.md",
+            "api/events.d.lua",
+            "docs/player/console.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 129,
+          "heading": "Minimal base program",
+          "destinations": [
+            "api/dashboard.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/dashboard-interface/spec.md",
+            "api/events.d.lua",
+            "docs/player/console.md",
+            "docs/player/lifecycle.md",
+            "examples/dashboard-program.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/device-configurator/configuration-catalog.md",
+      "sha256": "464879614ba3d2075dd3df345590e243ba28ff9df92668ce8c2bf0df829a6ea8",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Factorio 2.0.77 configuration coverage catalogue",
+          "destinations": [
+            "tools/data/configuration-catalog.json",
+            "api/generated/configurator.d.lua",
+            "docs/configuration-catalog-provenance.md"
+          ]
+        },
+        {
+          "line": 9,
+          "heading": "Coverage",
+          "destinations": [
+            "tools/data/configuration-catalog.json",
+            "api/generated/configurator.d.lua",
+            "docs/configuration-catalog-provenance.md"
+          ]
+        },
+        {
+          "line": 50,
+          "heading": "Interpretation and authority",
+          "destinations": [
+            "tools/data/configuration-catalog.json",
+            "api/generated/configurator.d.lua",
+            "docs/configuration-catalog-provenance.md"
+          ]
+        },
+        {
+          "line": 62,
+          "heading": "Verification obligation",
+          "destinations": [
+            "tools/data/configuration-catalog.json",
+            "api/generated/configurator.d.lua",
+            "docs/configuration-catalog-provenance.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/device-configurator/lua-api.md",
+      "sha256": "a95894959673a863c9a0f8a3a83e3e593fb819d53ede9669afaff3b27705e6e7",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Configurator Lua API v1",
+          "destinations": [
+            "api/configurator.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/device-configurator/spec.md",
+            "api/generated/configurator.d.lua"
+          ]
+        },
+        {
+          "line": 7,
+          "heading": "Device discovery and inspection",
+          "destinations": [
+            "api/configurator.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/device-configurator/spec.md",
+            "api/generated/configurator.d.lua"
+          ]
+        },
+        {
+          "line": 43,
+          "heading": "Capability schemas",
+          "destinations": [
+            "api/configurator.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/device-configurator/spec.md",
+            "api/generated/configurator.d.lua"
+          ]
+        },
+        {
+          "line": 82,
+          "heading": "Configuration reads and updates",
+          "destinations": [
+            "api/configurator.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/device-configurator/spec.md",
+            "api/generated/configurator.d.lua"
+          ]
+        },
+        {
+          "line": 102,
+          "heading": "Constant-combinator sections",
+          "destinations": [
+            "api/configurator.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/device-configurator/spec.md",
+            "api/generated/configurator.d.lua"
+          ]
+        },
+        {
+          "line": 119,
+          "heading": "Example: inspect devices, then configure only applicable inserters",
+          "destinations": [
+            "api/configurator.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/device-configurator/spec.md",
+            "api/generated/configurator.d.lua",
+            "examples/api-contract/device-configurator-lua-api-1.lua"
+          ]
+        },
+        {
+          "line": 151,
+          "heading": "Required cases",
+          "destinations": [
+            "api/configurator.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/device-configurator/spec.md",
+            "api/generated/configurator.d.lua",
+            "docs/api-migration-acceptance.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/device-lifecycle/lua-api.md",
+      "sha256": "24bcd51b545ffacd0a97ad70c373975ad9bf58e8143559fd4d3f6bec5fa8d8a7",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Lifecycle effects on Lua APIs",
+          "destinations": [
+            "docs/player/lifecycle.md",
+            "docs/api-migration-acceptance.md",
+            "openspec/specs/device-lifecycle/spec.md"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Identity and data matrix",
+          "destinations": [
+            "docs/player/lifecycle.md",
+            "docs/api-migration-acceptance.md",
+            "openspec/specs/device-lifecycle/spec.md"
+          ]
+        },
+        {
+          "line": 38,
+          "heading": "API observations",
+          "destinations": [
+            "docs/player/lifecycle.md",
+            "docs/api-migration-acceptance.md",
+            "openspec/specs/device-lifecycle/spec.md"
+          ]
+        },
+        {
+          "line": 57,
+          "heading": "Persistence cases to exercise",
+          "destinations": [
+            "docs/player/lifecycle.md",
+            "docs/api-migration-acceptance.md",
+            "openspec/specs/device-lifecycle/spec.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/factoriopedia-interface/lua-api.md",
+      "sha256": "e0a41497151e62bd8a29a508ef7e836f1a0f76ef78b9b6df085e2664b467538f",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Factoriopedia Interface Lua API",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/factoriopedia-interface/spec.md"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Discovery and method inventory",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/factoriopedia-interface/spec.md"
+          ]
+        },
+        {
+          "line": 21,
+          "heading": "Names and catalogue scope",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/factoriopedia-interface/spec.md"
+          ]
+        },
+        {
+          "line": 30,
+          "heading": "Common record fields",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/factoriopedia-interface/spec.md"
+          ]
+        },
+        {
+          "line": 49,
+          "heading": "Item record",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/factoriopedia-interface/spec.md"
+          ]
+        },
+        {
+          "line": 71,
+          "heading": "Rocket-count semantics",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/factoriopedia-interface/spec.md"
+          ]
+        },
+        {
+          "line": 89,
+          "heading": "Quality semantics",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/factoriopedia-interface/spec.md"
+          ]
+        },
+        {
+          "line": 93,
+          "heading": "Fluid record",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/factoriopedia-interface/spec.md"
+          ]
+        },
+        {
+          "line": 110,
+          "heading": "Completeness, ownership and limits",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/factoriopedia-interface/spec.md"
+          ]
+        },
+        {
+          "line": 120,
+          "heading": "Authority, availability and persistence",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/factoriopedia-interface/spec.md"
+          ]
+        },
+        {
+          "line": 128,
+          "heading": "Errors",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/factoriopedia-interface/spec.md"
+          ]
+        },
+        {
+          "line": 147,
+          "heading": "Guest example",
+          "destinations": [
+            "api/factoriopedia-interface.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/factoriopedia-interface/spec.md",
+            "examples/api-contract/factoriopedia-interface-lua-api-1.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/kv-database/lua-api.md",
+      "sha256": "005321fd01103046a587b9e8573bee15f32848354c6242732f936294ba6dc839",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "KV database Lua API v1",
+          "destinations": [
+            "api/kv-database.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/kv-database/spec.md"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Data and commands",
+          "destinations": [
+            "api/kv-database.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/kv-database/spec.md"
+          ]
+        },
+        {
+          "line": 31,
+          "heading": "Expiration",
+          "destinations": [
+            "api/kv-database.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/kv-database/spec.md"
+          ]
+        },
+        {
+          "line": 46,
+          "heading": "Atomicity and errors",
+          "destinations": [
+            "api/kv-database.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/kv-database/spec.md"
+          ]
+        },
+        {
+          "line": 54,
+          "heading": "Example: cache one machine's state",
+          "destinations": [
+            "api/kv-database.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/kv-database/spec.md",
+            "examples/api-contract/kv-database-lua-api-1.lua"
+          ]
+        },
+        {
+          "line": 76,
+          "heading": "Required cases",
+          "destinations": [
+            "api/kv-database.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/kv-database/spec.md",
+            "docs/api-migration-acceptance.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/logic-handler/lua-api.md",
+      "sha256": "3bc39d72125e9718cf4b2cb3aeb031025decbb733e7fc2b59a6825ffe70492cf",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Logic handler Lua API v1",
+          "destinations": [
+            "api/logic-handler.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/logic-handler/spec.md",
+            "api/events.d.lua",
+            "docs/player/console.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Methods",
+          "destinations": [
+            "api/logic-handler.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/logic-handler/spec.md",
+            "api/events.d.lua",
+            "docs/player/console.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 40,
+          "heading": "Subscriptions",
+          "destinations": [
+            "api/logic-handler.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/logic-handler/spec.md",
+            "api/events.d.lua",
+            "docs/player/console.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 93,
+          "heading": "Output ownership and failure",
+          "destinations": [
+            "api/logic-handler.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/logic-handler/spec.md",
+            "api/events.d.lua",
+            "docs/player/console.md",
+            "docs/player/lifecycle.md"
+          ]
+        },
+        {
+          "line": 106,
+          "heading": "Example: threshold control",
+          "destinations": [
+            "api/logic-handler.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/logic-handler/spec.md",
+            "api/events.d.lua",
+            "docs/player/console.md",
+            "docs/player/lifecycle.md",
+            "examples/api-contract/logic-handler-lua-api-1.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/monitor-display/buffering-api.md",
+      "sha256": "a74c2428e64f591e7da2f54a3587dc810d9e9a97198e7d5c01ee3b9a8d232ddb",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Buffered monitor Lua API contract",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Compatibility and automatic buffering",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 13,
+          "heading": "Supported geometry and buffer sizing",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 40,
+          "heading": "Selection API",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 61,
+          "heading": "Update rounds and group publication",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 69,
+          "heading": "Status data",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 84,
+          "heading": "Limits and errors",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 121,
+          "heading": "Lifecycle",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 131,
+          "heading": "Illustrative selection example",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md",
+            "examples/api-contract/monitor-display-buffering-api-1.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/monitor-display/lua-api.md",
+      "sha256": "7883ecb8bf2512b52abe1a7152930a90b2b177cbe9cb6126b2af639b8f13ba4a",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Monitor Lua API v1",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 7,
+          "heading": "Methods",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 35,
+          "heading": "Colors and cell geometry",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 71,
+          "heading": "Merge, split and resize",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 79,
+          "heading": "Events",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 102,
+          "heading": "Example: a touchable status display",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md",
+            "examples/api-contract/monitor-display-lua-api-1.lua"
+          ]
+        },
+        {
+          "line": 137,
+          "heading": "Demand-driven scheduling contract",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 139,
+          "heading": "Public surface and exact results",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 158,
+          "heading": "Presentation demand and synchronization",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 167,
+          "heading": "Availability, authority and physical changes",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 175,
+          "heading": "Events, errors and limits",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        },
+        {
+          "line": 185,
+          "heading": "Persistence and acceptance",
+          "destinations": [
+            "api/monitor.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/monitor-display/spec.md",
+            "api/events.d.lua",
+            "api/peripheral.d.lua",
+            "docs/monitor.md",
+            "docs/player/monitor-animation.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/peripheral-network/lua-api.md",
+      "sha256": "8d20beb054d38ffd3f92171895f71b0bf03da278111e25856515b82dbc72038e",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Peripheral discovery Lua API v1",
+          "destinations": [
+            "api/peripheral.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/peripheral-network/spec.md",
+            "api/events.d.lua"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Discovery and calls",
+          "destinations": [
+            "api/peripheral.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/peripheral-network/spec.md",
+            "api/events.d.lua"
+          ]
+        },
+        {
+          "line": 42,
+          "heading": "Reachability rules",
+          "destinations": [
+            "api/peripheral.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/peripheral-network/spec.md",
+            "api/events.d.lua"
+          ]
+        },
+        {
+          "line": 52,
+          "heading": "Attachment events",
+          "destinations": [
+            "api/peripheral.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/peripheral-network/spec.md",
+            "api/events.d.lua"
+          ]
+        },
+        {
+          "line": 76,
+          "heading": "Example: inspect both channels without bridging them",
+          "destinations": [
+            "api/peripheral.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/peripheral-network/spec.md",
+            "api/events.d.lua",
+            "examples/api-contract/peripheral-network-lua-api-1.lua"
+          ]
+        },
+        {
+          "line": 91,
+          "heading": "Required cases",
+          "destinations": [
+            "api/peripheral.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/peripheral-network/spec.md",
+            "api/events.d.lua",
+            "docs/api-migration-acceptance.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/production-statistics/lua-api.md",
+      "sha256": "98b171c5cf69c9b508494af0bb3715115d04ed39489b38066df927408b0f3eb3",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Production Statistics Lua API v1",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/production-statistics/spec.md"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Discovery and exact method set",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/production-statistics/spec.md"
+          ]
+        },
+        {
+          "line": 20,
+          "heading": "Scope and inputs",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/production-statistics/spec.md"
+          ]
+        },
+        {
+          "line": 32,
+          "heading": "Native time windows",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/production-statistics/spec.md"
+          ]
+        },
+        {
+          "line": 47,
+          "heading": "Direction and units",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/production-statistics/spec.md"
+          ]
+        },
+        {
+          "line": 57,
+          "heading": "Snapshot shapes",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/production-statistics/spec.md"
+          ]
+        },
+        {
+          "line": 61,
+          "heading": "TotalsSnapshot",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/production-statistics/spec.md"
+          ]
+        },
+        {
+          "line": 87,
+          "heading": "RatesSnapshot",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/production-statistics/spec.md"
+          ]
+        },
+        {
+          "line": 93,
+          "heading": "HistorySnapshot",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/production-statistics/spec.md"
+          ]
+        },
+        {
+          "line": 107,
+          "heading": "Freshness, safety and limits",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/production-statistics/spec.md"
+          ]
+        },
+        {
+          "line": 117,
+          "heading": "Authority, errors and lifecycle",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/production-statistics/spec.md"
+          ]
+        },
+        {
+          "line": 137,
+          "heading": "Example: query the three categories and operations",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/production-statistics/spec.md",
+            "examples/api-contract/production-statistics-lua-api-1.lua"
+          ]
+        },
+        {
+          "line": 164,
+          "heading": "Pinned primary references and evidence status",
+          "destinations": [
+            "api/production-statistics.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/production-statistics/spec.md",
+            "docs/api-migration-acceptance.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/program-editor/lua-api.md",
+      "sha256": "6588a7e4d7c1b7e541e68979e0ad0d0d1b684a097d1ecc07d653c0a3b6e00cc3",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Editor-related Lua contract and authoring cases",
+          "destinations": [
+            "docs/editor-interaction-contract.md",
+            "docs/player/editor.md",
+            "api/computer.d.lua"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Source entry and lifecycle",
+          "destinations": [
+            "docs/editor-interaction-contract.md",
+            "docs/player/editor.md",
+            "api/computer.d.lua"
+          ]
+        },
+        {
+          "line": 21,
+          "heading": "Guest-visible diagnostics",
+          "destinations": [
+            "docs/editor-interaction-contract.md",
+            "docs/player/editor.md",
+            "api/computer.d.lua"
+          ]
+        },
+        {
+          "line": 27,
+          "heading": "Minimal in-game program",
+          "destinations": [
+            "docs/editor-interaction-contract.md",
+            "docs/player/editor.md",
+            "api/computer.d.lua",
+            "examples/api-contract/program-editor-lua-api-1.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/program-source/lua-api.md",
+      "sha256": "4bac32a799c7515936fa6ae47a938441fe3ae8cf5edfe0617768361e0db41f5a",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Saved-program declaration contract",
+          "destinations": [
+            "docs/player/api/language.md",
+            "openspec/specs/program-source/spec.md",
+            "api/computer.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Grammar and names",
+          "destinations": [
+            "docs/player/api/language.md",
+            "openspec/specs/program-source/spec.md",
+            "api/computer.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 15,
+          "heading": "Scope and values",
+          "destinations": [
+            "docs/player/api/language.md",
+            "openspec/specs/program-source/spec.md",
+            "api/computer.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 23,
+          "heading": "Calls and registration",
+          "destinations": [
+            "docs/player/api/language.md",
+            "openspec/specs/program-source/spec.md",
+            "api/computer.d.lua",
+            "api/common.d.lua"
+          ]
+        },
+        {
+          "line": 39,
+          "heading": "Example: immediate and recurring work",
+          "destinations": [
+            "docs/player/api/language.md",
+            "openspec/specs/program-source/spec.md",
+            "api/computer.d.lua",
+            "api/common.d.lua",
+            "examples/function-program.lua"
+          ]
+        },
+        {
+          "line": 61,
+          "heading": "Errors, admission and lifecycle",
+          "destinations": [
+            "docs/player/api/language.md",
+            "openspec/specs/program-source/spec.md",
+            "api/computer.d.lua",
+            "api/common.d.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/radar-modem/lua-api.md",
+      "sha256": "6e1077177a0e7c237860bf2211b1acb87e94089d6f0352a305c2235c088ebfcc",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Radar modem Lua API v1",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/radar-modem/spec.md",
+            "api/events.d.lua"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Discovery and tiers",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/radar-modem/spec.md",
+            "api/events.d.lua"
+          ]
+        },
+        {
+          "line": 17,
+          "heading": "Methods",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/radar-modem/spec.md",
+            "api/events.d.lua"
+          ]
+        },
+        {
+          "line": 37,
+          "heading": "Shared channel ownership",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/radar-modem/spec.md",
+            "api/events.d.lua"
+          ]
+        },
+        {
+          "line": 45,
+          "heading": "Payload",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/radar-modem/spec.md",
+            "api/events.d.lua"
+          ]
+        },
+        {
+          "line": 53,
+          "heading": "Event registration and schema",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/radar-modem/spec.md",
+            "api/events.d.lua"
+          ]
+        },
+        {
+          "line": 83,
+          "heading": "Routing and event admission",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/radar-modem/spec.md",
+            "api/events.d.lua"
+          ]
+        },
+        {
+          "line": 99,
+          "heading": "Persistence and identity",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/radar-modem/spec.md",
+            "api/events.d.lua"
+          ]
+        },
+        {
+          "line": 107,
+          "heading": "Queryable limits",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/radar-modem/spec.md",
+            "api/events.d.lua"
+          ]
+        },
+        {
+          "line": 120,
+          "heading": "Required cases",
+          "destinations": [
+            "api/modem.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/radar-modem/spec.md",
+            "api/events.d.lua",
+            "docs/api-migration-acceptance.md"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/recipe-searcher/lua-api.md",
+      "sha256": "b1b7aed85c82656a9d3da0e840826cf528233ab81606a2fa4b122909685d3dca",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Recipe Searcher Lua API v1",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/recipe-searcher/spec.md"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Discovery and calling convention",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/recipe-searcher/spec.md"
+          ]
+        },
+        {
+          "line": 20,
+          "heading": "Query inputs",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/recipe-searcher/spec.md"
+          ]
+        },
+        {
+          "line": 31,
+          "heading": "Completeness and limits",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/recipe-searcher/spec.md"
+          ]
+        },
+        {
+          "line": 40,
+          "heading": "RecipeInfo",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/recipe-searcher/spec.md"
+          ]
+        },
+        {
+          "line": 62,
+          "heading": "IngredientInfo",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/recipe-searcher/spec.md"
+          ]
+        },
+        {
+          "line": 74,
+          "heading": "ProductInfo",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/recipe-searcher/spec.md"
+          ]
+        },
+        {
+          "line": 93,
+          "heading": "SurfaceConditionInfo",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/recipe-searcher/spec.md"
+          ]
+        },
+        {
+          "line": 99,
+          "heading": "Availability and freshness",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/recipe-searcher/spec.md"
+          ]
+        },
+        {
+          "line": 105,
+          "heading": "Errors",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/recipe-searcher/spec.md"
+          ]
+        },
+        {
+          "line": 125,
+          "heading": "Identity, persistence and lifecycle",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/recipe-searcher/spec.md"
+          ]
+        },
+        {
+          "line": 135,
+          "heading": "Example: search, refine and read metadata",
+          "destinations": [
+            "api/recipe-searcher.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/recipe-searcher/spec.md",
+            "examples/recipe-searcher-program.lua"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "openspec/specs/speaker-peripheral/lua-api.md",
+      "sha256": "36e55720b823c071191ffe23b2f7691b63bad779cf86cba3800ebf95d7b5e50b",
+      "action": "retire",
+      "sections": [
+        {
+          "line": 1,
+          "heading": "Speaker Lua API v1",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/speaker-peripheral/spec.md"
+          ]
+        },
+        {
+          "line": 5,
+          "heading": "Discovery and method inventory",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/speaker-peripheral/spec.md"
+          ]
+        },
+        {
+          "line": 22,
+          "heading": "Notes",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/speaker-peripheral/spec.md"
+          ]
+        },
+        {
+          "line": 34,
+          "heading": "Sound paths",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/speaker-peripheral/spec.md"
+          ]
+        },
+        {
+          "line": 42,
+          "heading": "Sound discovery",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/speaker-peripheral/spec.md"
+          ]
+        },
+        {
+          "line": 63,
+          "heading": "Admission, timing and audibility",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/speaker-peripheral/spec.md"
+          ]
+        },
+        {
+          "line": 75,
+          "heading": "Availability, identity and native coexistence",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/speaker-peripheral/spec.md"
+          ]
+        },
+        {
+          "line": 86,
+          "heading": "Limits",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/speaker-peripheral/spec.md"
+          ]
+        },
+        {
+          "line": 104,
+          "heading": "Errors",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/speaker-peripheral/spec.md"
+          ]
+        },
+        {
+          "line": 123,
+          "heading": "Example: discover, choose and play",
+          "destinations": [
+            "api/speaker.d.lua",
+            "api/generated/limits.d.lua",
+            "openspec/specs/speaker-peripheral/spec.md",
+            "examples/api-contract/speaker-peripheral-lua-api-1.lua"
+          ]
+        }
+      ]
+    }
+  ]
+}

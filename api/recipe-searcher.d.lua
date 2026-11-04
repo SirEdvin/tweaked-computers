@@ -1,0 +1,124 @@
+---@meta
+
+---Exact native product namespace; no quality, temperature, signal or text search.
+---@alias TC.ProductType 'item'|'fluid'
+
+---Complete native ingredient entry, preserved in recipe order without aggregation.
+---Optional fields appear only when supplied by the engine for the stated kind;
+---never invent a quality or conflate exact and interval temperatures.
+---@class TC.RecipeIngredient
+---@field type TC.ProductType Ingredient namespace.
+---@field name string Exact installed prototype name.
+---@field amount number Finite required quantity, not expected probabilistic yield.
+---@field ignored_by_stats? number Finite native modifier for either kind.
+---@field quality_min? string Item-only native quality lower bound when supplied.
+---@field quality_max? string Item-only native quality upper bound when supplied.
+---@field quality_change? number Item-only finite native quality modifier.
+---@field spoil_weight? number Item-only finite native spoil modifier.
+---@field temperature? number Fluid-only exact finite temperature in degrees Celsius.
+---@field minimum_temperature? number Fluid-only finite lower temperature bound.
+---@field maximum_temperature? number Fluid-only finite upper temperature bound.
+---@field fluidbox_index? integer Fluid-only native fluidbox index.
+---@field fluidbox_multiplier? integer Fluid-only native fluidbox multiplier.
+
+---Shared probability interval: ordered finite bounds in 0..1. Intervals can
+---correlate different products; marginal probability alone loses that correlation.
+---@class TC.ProbabilityInterval
+---@field min number Inclusive native lower endpoint in 0..1, at most max.
+---@field max number Native upper endpoint in 0..1, at least min.
+
+---Complete native product entry, not just the queried output. Quantity is exactly
+---one fixed amount OR the pair amount_min/amount_max according to native readback.
+---Preserve duplicates, zero modifiers and order. Never multiply amounts by chance,
+---add productivity, predict quality or synthesize recipes. Optional kind-specific
+---fields are absent for the other kind and when the engine does not supply them.
+---@class TC.RecipeProduct
+---@field type TC.ProductType Product namespace.
+---@field name string Exact installed prototype name.
+---@field probability number Finite marginal independent_probability*(shared_probability.max-shared_probability.min).
+---@field independent_probability number Native independent probability in 0..1.
+---@field shared_probability TC.ProbabilityInterval Native shared interval, not independent per-product chance.
+---@field amount? number Fixed finite quantity; excludes ranged quantity fields.
+---@field amount_min? number Finite minimum; present together with amount_max instead of amount.
+---@field amount_max? number Finite maximum; present together with amount_min instead of amount.
+---@field ignored_by_stats? number Finite native statistics modifier, either kind.
+---@field ignored_by_productivity? number Finite native productivity modifier, either kind.
+---@field extra_count_fraction? number Item-only finite native extra-count fraction.
+---@field percent_spoiled? number Item-only finite native spoil fraction.
+---@field affected_by_quality? boolean Item-only native quality flag when present.
+---@field always_fresh? boolean Item-only native freshness flag when present.
+---@field reset_freshness_on_craft? boolean Item-only native reset flag when present.
+---@field quality_min? string Item-only native minimum quality name.
+---@field quality_max? string Item-only native maximum quality name.
+---@field quality_change? number Item-only finite quality modifier.
+---@field spoil_weight? number Item-only finite spoil modifier.
+---@field temperature? number Fluid-only finite temperature in degrees Celsius.
+---@field fluidbox_index? integer Fluid-only native fluidbox index.
+
+---Declared surface condition, kept in native order. Negative-infinite lower and
+---positive-infinite upper bounds become absent fields, not zero or nonfinite Data.
+---Retain the condition even when both bounds are absent; no other nonfinite value
+---is accepted. Metadata does not filter recipes by the current surface.
+---@class TC.SurfaceCondition
+---@field property string Exact native surface-property name.
+---@field min? number Finite lower bound; absent means unbounded below.
+---@field max? number Finite upper bound; absent means unbounded above.
+
+---Fresh recipe snapshot. Required fields remain present when false or empty.
+---This is declared recipe metadata, not machine feasibility, expected output,
+---technology objects, localized labels/icons or every native prototype property.
+---@class TC.RecipeInfo
+---@field name string Internal recipe name; bytewise sorting/deduplication identity.
+---@field category string First native 2.1 crafting category, compatibility primary.
+---@field additional_categories string[] Sorted unique remaining categories, excluding primary.
+---@field energy number Finite base crafting seconds at speed 1, not electrical energy.
+---@field enabled boolean Current enabled state in the requesting computer's force.
+---@field enabled_by_default boolean Prototype's initial enabled flag, not current research.
+---@field hidden boolean Native hidden flag.
+---@field hidden_from_player_crafting boolean Native player-crafting visibility flag.
+---@field hidden_from_flow_stats boolean Native statistics visibility flag.
+---@field hidden_in_factoriopedia boolean Native Factoriopedia visibility flag.
+---@field ingredients TC.RecipeIngredient[] Complete ordered native ingredient list.
+---@field products TC.RecipeProduct[] Complete ordered native product list, not only matching products.
+---@field surface_conditions TC.SurfaceCondition[] Complete declared conditions, empty when unrestricted.
+
+---Read-only electricity-free physical recipe catalogue. Exact force/surface/path
+---and generation checks apply on every call, including captured/Console methods.
+---No global recipe library, physical product input, query GUI, mutable database,
+---job/session, retained authoritative cache or new event is introduced. Cold load
+---runs no guest source/query; new calls use installed prototypes/current force.
+---Queries never unlock recipes, configure machines, reserve/consume/produce items.
+---Returned Data can be saved only if separate state limits admit it; snapshot
+---success is not permission to persist a facade or a guarantee of storage capacity.
+---
+---All complete results are bounded by Data string/table/node/depth/byte rules and
+---shared work/allocation, in addition to recipe_search_results. No prefix, count,
+---cursor or pagination is returned. Unexpected/unrepresentable native fields fail
+---E_UNSUPPORTED rather than disappearing; native failures/missing force recipe are
+---E_ENGINE, never fabricated enabled values. Physical authority precedes provider
+---validation; earlier admission can fail before later semantic/count checks.
+---@class TC.RecipeSearcher
+local Searcher = {}
+
+---Find every installed recipe with at least one matching declared product, once,
+---sorted bytewise by recipe name. Secondary/probabilistic products count. Include
+---hidden, disabled, modded and recycling recipes; no surface/machine/research,
+---quality or temperature filter. Native product arrays are not deduplicated.
+---
+---Optional category matches primary OR additional categories, before the fixed
+---50-result ceiling. Known category/no matches succeeds empty; unknown product/
+---category is E_RANGE. More than 50 is E_LIMIT with field='results', never a prefix.
+---Separate exact-category searches may be combined/deduplicated by a caller, but
+---one category can itself exceed 50 or other budgets. No same-tick retry guarantee.
+---Wrong type/arity/empty names are E_ARGUMENT; overlong strings/results E_LIMIT;
+---fatal E_BUDGET remains noncatchable and spent credits are not renewed.
+---@param product_type TC.ProductType Required exact item or fluid namespace.
+---@param product_name string Nonempty exact installed prototype name within string_bytes.
+---@param category? string Exact registered recipe category; omitted/nil means all categories.
+---@return TC.RecipeInfo[] recipes Exactly one complete dense array, possibly empty; never nil.
+function Searcher.findRecipes(product_type, product_name, category) end
+
+---Read effective common limits plus fixed recipe_search_results=50. This is not
+---a new adjustable setting or a promise every smaller snapshot fits all budgets.
+---@return TC.RecipeSearcherLimits limits Independent current limit map.
+function Searcher.getLimits() end

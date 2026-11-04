@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Native named-handler execution
-The saved-program runtime SHALL execute one active function-declaration document using named, non-suspending native Lua handlers conforming to the `program-source` contract and `lua-api.md`. It MUST NOT interpret Lua instructions, introduce a VM fallback, expose a filesystem, or emulate an operating-system shell. The independent Console SHALL obey the bounded `console-shell` contract; it does not relax saved-handler syntax, create background callbacks or replace the saved program.
+The saved-program runtime SHALL execute one active function-declaration document using named, non-suspending native Lua handlers conforming to the `program-source` contract and `api/computer.d.lua`. It MUST NOT interpret Lua instructions, introduce a VM fallback, expose a filesystem, or emulate an operating-system shell. The independent Console SHALL obey the bounded `console-shell` contract; it does not relax saved-handler syntax, create background callbacks or replace the saved program.
 
 #### Scenario: Start an event-driven program
 - **WHEN** the player runs a valid document defining an exported `start` function

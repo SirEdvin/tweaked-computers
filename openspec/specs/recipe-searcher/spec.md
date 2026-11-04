@@ -84,7 +84,7 @@ A successful search SHALL return exactly one dense array of unique recipe record
 - **THEN** the recipe appears once and successful arrays have the same name-sorted order.
 
 ### Requirement: Full defensive recipe records
-Each recipe record SHALL follow `lua-api.md`, including identity, primary/additional categories, ingredients, products, base crafting seconds, visibility, default/current enabled state and surface constraints. Amount ranges, probabilities, fluid temperatures and documented ingredient/product modifiers SHALL remain distinguishable. Returned records SHALL be detached finite plain Data, without native objects, methods or omitted entries disguised as a complete recipe.
+Each recipe record SHALL follow `api/recipe-searcher.d.lua`, including identity, primary/additional categories, ingredients, products, base crafting seconds, visibility, default/current enabled state and surface constraints. Amount ranges, probabilities, fluid temperatures and documented ingredient/product modifiers SHALL remain distinguishable. Returned records SHALL be detached finite plain Data, without native objects, methods or omitted entries disguised as a complete recipe.
 
 #### Scenario: Complex production record
 - **WHEN** a recipe has multiple products, ranged/probabilistic quantities, fluid temperatures or surface restrictions

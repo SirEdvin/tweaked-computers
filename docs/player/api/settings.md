@@ -1,356 +1,116 @@
-# Supported configurator settings
-
-Guest circuit-control settings supported on Factorio 2.1.23, preserving the 2.0 field vocabulary.
-Fuel/display fields map to native read_fuel/records; logistic-container and landing-pad
-modes also accept send_contents_and_set_requests for simultaneous reading/requesting.
-Storage-tank read_contents=true preserves an existing segment-read mode; false disables reading.
-These tables include inherited roots. Read current getCapabilities before writing:
-prototype/expansion/mode restrictions can make a listed field unavailable.
-Types link to the [complete nested schemas](schemas.md). All calls, patch semantics
-and target-network rules are in the [configurator reference](configurator.md).
-
-Boolean values are true/false, not numeric modes. Clearable means explicit patch
-clear is accepted; it can normalize to native defaults rather than nil.
-
-## Accumulator
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `output_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `read_charge` | boolean | no | Current native applicability |
-
-## AgriculturalTower
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_enable_disable` | boolean | no | Current native applicability |
-| `connect_to_logistic_network` | boolean | no | Current native applicability |
-| `logistic_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `read_contents` | boolean | no | Current native applicability |
-
-## ArithmeticCombinator
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `parameters` | [ArithmeticCombinatorParameters](schemas.md#schema-arithmeticcombinatorparameters) | yes | Current native applicability |
-
-## ArtilleryTurret
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_enable_disable` | boolean | no | Current native applicability |
-| `connect_to_logistic_network` | boolean | no | Current native applicability |
-| `logistic_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `read_ammo` | boolean | no | Current native applicability |
-
-## AssemblingMachine
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_enable_disable` | boolean | no | Current native applicability |
-| `circuit_read_contents` | boolean | no | Current native applicability |
-| `circuit_read_ingredients` | boolean | no | Current native applicability |
-| `circuit_read_recipe_finished` | boolean | no | Current native applicability |
-| `circuit_read_working` | boolean | no | Current native applicability |
-| `circuit_recipe_finished_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `circuit_set_recipe` | boolean | no | Current native applicability |
-| `circuit_working_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `connect_to_logistic_network` | boolean | no | Current native applicability |
-| `include_fuel` | boolean | no | Requires fuel inventory |
-| `include_in_crafting` | boolean | no | Current native applicability |
-| `logistic_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-
-## AsteroidCollector
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_enable_disable` | boolean | no | Current native applicability |
-| `connect_to_logistic_network` | boolean | no | Unavailable: native inherited switch is ineffective |
-| `include_hands` | boolean | no | Current native applicability |
-| `logistic_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `read_content` | boolean | no | Current native applicability |
-| `set_filter` | boolean | no | Current native applicability |
-
-## CargoLandingPad
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_exclusive_mode_of_operation` | `none`, `send_contents`, `set_requests` | no | set_requests requires space travel |
-
-## Combinator
-
-No writable root settings on this base behavior; derived families list their inherited settings below.
-
-## ConstantCombinator
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `enabled` | boolean | no | Current native applicability |
-
-Also supports [constant-combinator section methods](configurator.md#constant-combinator-sections).
-
-## Container
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `read_contents` | boolean | no | Current native applicability |
-
-## Base control behavior
-
-No writable root settings on this base behavior; derived families list their inherited settings below.
-
-## DeciderCombinator
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `parameters` | [DeciderCombinatorParameters](schemas.md#schema-decidercombinatorparameters) | yes | Current native applicability |
-
-## DisplayPanel
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `messages` | dense array ≤128 of [DisplayPanelMessageDefinition](schemas.md#schema-displaypanelmessagedefinition) | no | Current native applicability |
-
-## Furnace
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_enable_disable` | boolean | no | Current native applicability |
-| `circuit_read_contents` | boolean | no | Current native applicability |
-| `circuit_read_ingredients` | boolean | no | Current native applicability |
-| `circuit_read_recipe_finished` | boolean | no | Current native applicability |
-| `circuit_read_working` | boolean | no | Current native applicability |
-| `circuit_recipe_finished_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `circuit_working_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `connect_to_logistic_network` | boolean | no | Current native applicability |
-| `include_fuel` | boolean | no | Requires fuel inventory |
-| `include_in_crafting` | boolean | no | Current native applicability |
-| `logistic_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-
-## GenericOnOff
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_enable_disable` | boolean | no | Current native applicability |
-| `connect_to_logistic_network` | boolean | no | Current native applicability |
-| `logistic_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-
-## Inserter
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_enable_disable` | boolean | no | Current native applicability |
-| `circuit_hand_read_mode` | `hold`, `pulse` | no | Current native applicability |
-| `circuit_read_hand_contents` | boolean | no | Current native applicability |
-| `circuit_set_filters` | boolean | no | Current native applicability |
-| `circuit_set_stack_size` | boolean | no | Current native applicability |
-| `circuit_stack_control_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `connect_to_logistic_network` | boolean | no | Current native applicability |
-| `logistic_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-
-## Lamp
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `blue_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_enable_disable` | boolean | no | Current native applicability |
-| `color_mode` | `color_mapping`, `components`, `packed_rgb` | no | Current native applicability |
-| `connect_to_logistic_network` | boolean | no | Current native applicability |
-| `green_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `logistic_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `red_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `rgb_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `use_colors` | boolean | no | Current native applicability |
-
-## Loader
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_enable_disable` | boolean | no | Current native applicability |
-| `circuit_read_transfers` | boolean | no | Current native applicability |
-| `circuit_set_filters` | boolean | no | Current native applicability |
-| `connect_to_logistic_network` | boolean | no | Current native applicability |
-| `logistic_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-
-## LogisticContainer
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | no | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_condition_enabled` | boolean | no | Current native applicability |
-| `circuit_exclusive_mode_of_operation` | `none`, `send_contents`, `set_requests` | no | Requester/buffer only |
-
-## MiningDrill
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_enable_disable` | boolean | no | Current native applicability |
-| `circuit_read_resources` | boolean | no | Current native applicability |
-| `connect_to_logistic_network` | boolean | no | Current native applicability |
-| `logistic_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `resource_read_mode` | `entire_patch`, `this_miner` | no | Current native applicability |
-
-## ProgrammableSpeaker
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | no | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_parameters` | [ProgrammableSpeakerCircuitParameters](schemas.md#schema-programmablespeakercircuitparameters) | no | Current native applicability |
-
-## ProxyContainer
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `read_contents` | boolean | no | Current native applicability |
-
-## Pump
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_enable_disable` | boolean | no | Current native applicability |
-| `connect_to_logistic_network` | boolean | no | Current native applicability |
-| `logistic_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `set_filter` | boolean | no | Current native applicability |
-
-## Radar
-
-No writable root settings on this base behavior; derived families list their inherited settings below.
-
-## RailSignalBase
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `blue_signal` | [SignalID](schemas.md#schema-signalid) | yes | Chain signal only |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | no | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `close_signal` | boolean | no | Current native applicability |
-| `green_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `orange_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `read_signal` | boolean | no | Current native applicability |
-| `red_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-
-## Reactor
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `read_fuel` | boolean | no | Current native applicability |
-| `read_temperature` | boolean | no | Current native applicability |
-| `temperature_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-
-## Roboport
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `available_construction_output_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `available_logistic_output_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `read_items_mode` | `logistics`, `missing_requests`, `none` | no | Current native applicability |
-| `read_logistics` | boolean | no | Current native applicability |
-| `read_robot_stats` | boolean | no | Current native applicability |
-| `roboport_count_output_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `total_construction_output_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `total_logistic_output_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-
-## RocketSilo
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `read_mode` | `logistic_inventory`, `none`, `orbital_requests` | no | Current native applicability |
-
-## SelectorCombinator
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `parameters` | [SelectorCombinatorParameters](schemas.md#schema-selectorcombinatorparameters) | no | operation_variant |
-
-## SpacePlatformHub
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `damage_taken_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `read_contents` | boolean | no | Current native applicability |
-| `read_damage_taken` | boolean | no | Current native applicability |
-| `read_moving_from` | boolean | no | Current native applicability |
-| `read_moving_to` | boolean | no | Current native applicability |
-| `read_speed` | boolean | no | Current native applicability |
-| `send_to_platform` | boolean | no | Current native applicability |
-| `speed_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-
-## Splitter
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `input_left_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | no | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `input_right_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | no | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `output_left_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | no | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `output_right_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | no | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `set_filter` | boolean | no | Current native applicability |
-| `set_input_side` | boolean | no | Current native applicability |
-| `set_output_side` | boolean | no | Current native applicability |
-
-## StorageTank
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `read_contents` | boolean | no | Current native applicability |
-
-## TrainStop
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_enable_disable` | boolean | no | Current native applicability |
-| `connect_to_logistic_network` | boolean | no | Current native applicability |
-| `logistic_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `priority_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `read_from_train` | boolean | no | Current native applicability |
-| `read_stopped_train` | boolean | no | Current native applicability |
-| `read_trains_count` | boolean | no | Current native applicability |
-| `send_to_train` | boolean | no | Current native applicability |
-| `set_priority` | boolean | no | Current native applicability |
-| `set_trains_limit` | boolean | no | Current native applicability |
-| `stopped_train_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `trains_count_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `trains_limit_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-
-## TransportBelt
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_enable_disable` | boolean | no | Current native applicability |
-| `connect_to_logistic_network` | boolean | no | Current native applicability |
-| `logistic_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `read_contents` | boolean | no | Current native applicability |
-| `read_contents_mode` | `entire_belt_hold`, `hold`, `pulse` | no | Current native applicability |
-
-## Turret
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `circuit_enable_disable` | boolean | no | Current native applicability |
-| `connect_to_logistic_network` | boolean | no | Current native applicability |
-| `ignore_unlisted_targets_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | no | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `logistic_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | yes | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `read_ammo` | boolean | no | Ammo/fluid turret only |
-| `set_ignore_unlisted_targets` | boolean | no | Current native applicability |
-| `set_priority_list` | boolean | no | Current native applicability |
-
-## Wall
-
-| Setting | Type | Clearable | Restriction |
-| --- | --- | --- | --- |
-| `circuit_condition` | [CircuitConditionDefinition](schemas.md#schema-circuitconditiondefinition) | no | Use constant or second_signal, not both; Only role-appropriate wildcards |
-| `open_gate` | boolean | no | Current native applicability |
-| `output_signal` | [SignalID](schemas.md#schema-signalid) | yes | Installed signal prototype; Explicit signal type required |
-| `read_sensor` | boolean | no | Current native applicability |
+<!-- Generated by tools/player_docs.py from api/**/*.d.lua; do not edit. -->
+
+<a id="supported-configurator-settings"></a>
+<a id="accumulator"></a>
+<a id="agriculturaltower"></a>
+<a id="arithmeticcombinator"></a>
+<a id="artilleryturret"></a>
+<a id="assemblingmachine"></a>
+<a id="asteroidcollector"></a>
+<a id="cargolandingpad"></a>
+<a id="combinator"></a>
+<a id="constantcombinator"></a>
+<a id="container"></a>
+<a id="base-control-behavior"></a>
+<a id="decidercombinator"></a>
+<a id="displaypanel"></a>
+<a id="furnace"></a>
+<a id="genericonoff"></a>
+<a id="inserter"></a>
+<a id="lamp"></a>
+<a id="loader"></a>
+<a id="logisticcontainer"></a>
+<a id="miningdrill"></a>
+<a id="programmablespeaker"></a>
+<a id="proxycontainer"></a>
+<a id="pump"></a>
+<a id="radar"></a>
+<a id="railsignalbase"></a>
+<a id="reactor"></a>
+<a id="roboport"></a>
+<a id="rocketsilo"></a>
+<a id="selectorcombinator"></a>
+<a id="spaceplatformhub"></a>
+<a id="splitter"></a>
+<a id="storagetank"></a>
+<a id="trainstop"></a>
+<a id="transportbelt"></a>
+<a id="turret"></a>
+<a id="wall"></a>
+
+# Configurator settings: write inputs and readback
+
+Each linked definition has complete fields, domains and behavior notes. In game, search its exact public name in Reference.
+
+- [TC.Config.LuaAccumulatorControlBehavior](types/TC.Config.LuaAccumulatorControlBehavior.md#symbol-TC.Config.LuaAccumulatorControlBehavior)
+- [TC.Config.LuaAgriculturalTowerControlBehavior](types/TC.Config.LuaAgriculturalTowerControlBehavior.md#symbol-TC.Config.LuaAgriculturalTowerControlBehavior)
+- [TC.Config.LuaArithmeticCombinatorControlBehavior](types/TC.Config.LuaArithmeticCombinatorControlBehavior.md#symbol-TC.Config.LuaArithmeticCombinatorControlBehavior)
+- [TC.Config.LuaArtilleryTurretControlBehavior](types/TC.Config.LuaArtilleryTurretControlBehavior.md#symbol-TC.Config.LuaArtilleryTurretControlBehavior)
+- [TC.Config.LuaAssemblingMachineControlBehavior](types/TC.Config.LuaAssemblingMachineControlBehavior.md#symbol-TC.Config.LuaAssemblingMachineControlBehavior)
+- [TC.Config.LuaAsteroidCollectorControlBehavior](types/TC.Config.LuaAsteroidCollectorControlBehavior.md#symbol-TC.Config.LuaAsteroidCollectorControlBehavior)
+- [TC.Config.LuaCargoLandingPadControlBehavior](types/TC.Config.LuaCargoLandingPadControlBehavior.md#symbol-TC.Config.LuaCargoLandingPadControlBehavior)
+- [TC.Config.LuaCombinatorControlBehavior](types/TC.Config.LuaCombinatorControlBehavior.md#symbol-TC.Config.LuaCombinatorControlBehavior)
+- [TC.Config.LuaConstantCombinatorControlBehavior](types/TC.Config.LuaConstantCombinatorControlBehavior.md#symbol-TC.Config.LuaConstantCombinatorControlBehavior)
+- [TC.Config.LuaContainerControlBehavior](types/TC.Config.LuaContainerControlBehavior.md#symbol-TC.Config.LuaContainerControlBehavior)
+- [TC.Config.LuaControlBehavior](types/TC.Config.LuaControlBehavior.md#symbol-TC.Config.LuaControlBehavior)
+- [TC.Config.LuaDeciderCombinatorControlBehavior](types/TC.Config.LuaDeciderCombinatorControlBehavior.md#symbol-TC.Config.LuaDeciderCombinatorControlBehavior)
+- [TC.Config.LuaDisplayPanelControlBehavior](types/TC.Config.LuaDisplayPanelControlBehavior.md#symbol-TC.Config.LuaDisplayPanelControlBehavior)
+- [TC.Config.LuaFurnaceControlBehavior](types/TC.Config.LuaFurnaceControlBehavior.md#symbol-TC.Config.LuaFurnaceControlBehavior)
+- [TC.Config.LuaGenericOnOffControlBehavior](types/TC.Config.LuaGenericOnOffControlBehavior.md#symbol-TC.Config.LuaGenericOnOffControlBehavior)
+- [TC.Config.LuaInserterControlBehavior](types/TC.Config.LuaInserterControlBehavior.md#symbol-TC.Config.LuaInserterControlBehavior)
+- [TC.Config.LuaLampControlBehavior](types/TC.Config.LuaLampControlBehavior.md#symbol-TC.Config.LuaLampControlBehavior)
+- [TC.Config.LuaLoaderControlBehavior](types/TC.Config.LuaLoaderControlBehavior.md#symbol-TC.Config.LuaLoaderControlBehavior)
+- [TC.Config.LuaLogisticContainerControlBehavior](types/TC.Config.LuaLogisticContainerControlBehavior.md#symbol-TC.Config.LuaLogisticContainerControlBehavior)
+- [TC.Config.LuaMiningDrillControlBehavior](types/TC.Config.LuaMiningDrillControlBehavior.md#symbol-TC.Config.LuaMiningDrillControlBehavior)
+- [TC.Config.LuaProgrammableSpeakerControlBehavior](types/TC.Config.LuaProgrammableSpeakerControlBehavior.md#symbol-TC.Config.LuaProgrammableSpeakerControlBehavior)
+- [TC.Config.LuaProxyContainerControlBehavior](types/TC.Config.LuaProxyContainerControlBehavior.md#symbol-TC.Config.LuaProxyContainerControlBehavior)
+- [TC.Config.LuaPumpControlBehavior](types/TC.Config.LuaPumpControlBehavior.md#symbol-TC.Config.LuaPumpControlBehavior)
+- [TC.Config.LuaRadarControlBehavior](types/TC.Config.LuaRadarControlBehavior.md#symbol-TC.Config.LuaRadarControlBehavior)
+- [TC.Config.LuaRailSignalBaseControlBehavior](types/TC.Config.LuaRailSignalBaseControlBehavior.md#symbol-TC.Config.LuaRailSignalBaseControlBehavior)
+- [TC.Config.LuaReactorControlBehavior](types/TC.Config.LuaReactorControlBehavior.md#symbol-TC.Config.LuaReactorControlBehavior)
+- [TC.Config.LuaRoboportControlBehavior](types/TC.Config.LuaRoboportControlBehavior.md#symbol-TC.Config.LuaRoboportControlBehavior)
+- [TC.Config.LuaRocketSiloControlBehavior](types/TC.Config.LuaRocketSiloControlBehavior.md#symbol-TC.Config.LuaRocketSiloControlBehavior)
+- [TC.Config.LuaSelectorCombinatorControlBehavior](types/TC.Config.LuaSelectorCombinatorControlBehavior.md#symbol-TC.Config.LuaSelectorCombinatorControlBehavior)
+- [TC.Config.LuaSpacePlatformHubControlBehavior](types/TC.Config.LuaSpacePlatformHubControlBehavior.md#symbol-TC.Config.LuaSpacePlatformHubControlBehavior)
+- [TC.Config.LuaSplitterControlBehavior](types/TC.Config.LuaSplitterControlBehavior.md#symbol-TC.Config.LuaSplitterControlBehavior)
+- [TC.Config.LuaStorageTankControlBehavior](types/TC.Config.LuaStorageTankControlBehavior.md#symbol-TC.Config.LuaStorageTankControlBehavior)
+- [TC.Config.LuaTrainStopControlBehavior](types/TC.Config.LuaTrainStopControlBehavior.md#symbol-TC.Config.LuaTrainStopControlBehavior)
+- [TC.Config.LuaTransportBeltControlBehavior](types/TC.Config.LuaTransportBeltControlBehavior.md#symbol-TC.Config.LuaTransportBeltControlBehavior)
+- [TC.Config.LuaTurretControlBehavior](types/TC.Config.LuaTurretControlBehavior.md#symbol-TC.Config.LuaTurretControlBehavior)
+- [TC.Config.LuaWallControlBehavior](types/TC.Config.LuaWallControlBehavior.md#symbol-TC.Config.LuaWallControlBehavior)
+- [TC.Config.Read.LuaAccumulatorControlBehavior](types/TC.Config.Read.LuaAccumulatorControlBehavior.md#symbol-TC.Config.Read.LuaAccumulatorControlBehavior)
+- [TC.Config.Read.LuaAgriculturalTowerControlBehavior](types/TC.Config.Read.LuaAgriculturalTowerControlBehavior.md#symbol-TC.Config.Read.LuaAgriculturalTowerControlBehavior)
+- [TC.Config.Read.LuaArithmeticCombinatorControlBehavior](types/TC.Config.Read.LuaArithmeticCombinatorControlBehavior.md#symbol-TC.Config.Read.LuaArithmeticCombinatorControlBehavior)
+- [TC.Config.Read.LuaArtilleryTurretControlBehavior](types/TC.Config.Read.LuaArtilleryTurretControlBehavior.md#symbol-TC.Config.Read.LuaArtilleryTurretControlBehavior)
+- [TC.Config.Read.LuaAssemblingMachineControlBehavior](types/TC.Config.Read.LuaAssemblingMachineControlBehavior.md#symbol-TC.Config.Read.LuaAssemblingMachineControlBehavior)
+- [TC.Config.Read.LuaAsteroidCollectorControlBehavior](types/TC.Config.Read.LuaAsteroidCollectorControlBehavior.md#symbol-TC.Config.Read.LuaAsteroidCollectorControlBehavior)
+- [TC.Config.Read.LuaCargoLandingPadControlBehavior](types/TC.Config.Read.LuaCargoLandingPadControlBehavior.md#symbol-TC.Config.Read.LuaCargoLandingPadControlBehavior)
+- [TC.Config.Read.LuaCombinatorControlBehavior](types/TC.Config.Read.LuaCombinatorControlBehavior.md#symbol-TC.Config.Read.LuaCombinatorControlBehavior)
+- [TC.Config.Read.LuaConstantCombinatorControlBehavior](types/TC.Config.Read.LuaConstantCombinatorControlBehavior.md#symbol-TC.Config.Read.LuaConstantCombinatorControlBehavior)
+- [TC.Config.Read.LuaContainerControlBehavior](types/TC.Config.Read.LuaContainerControlBehavior.md#symbol-TC.Config.Read.LuaContainerControlBehavior)
+- [TC.Config.Read.LuaControlBehavior](types/TC.Config.Read.LuaControlBehavior.md#symbol-TC.Config.Read.LuaControlBehavior)
+- [TC.Config.Read.LuaDeciderCombinatorControlBehavior](types/TC.Config.Read.LuaDeciderCombinatorControlBehavior.md#symbol-TC.Config.Read.LuaDeciderCombinatorControlBehavior)
+- [TC.Config.Read.LuaDisplayPanelControlBehavior](types/TC.Config.Read.LuaDisplayPanelControlBehavior.md#symbol-TC.Config.Read.LuaDisplayPanelControlBehavior)
+- [TC.Config.Read.LuaFurnaceControlBehavior](types/TC.Config.Read.LuaFurnaceControlBehavior.md#symbol-TC.Config.Read.LuaFurnaceControlBehavior)
+- [TC.Config.Read.LuaGenericOnOffControlBehavior](types/TC.Config.Read.LuaGenericOnOffControlBehavior.md#symbol-TC.Config.Read.LuaGenericOnOffControlBehavior)
+- [TC.Config.Read.LuaInserterControlBehavior](types/TC.Config.Read.LuaInserterControlBehavior.md#symbol-TC.Config.Read.LuaInserterControlBehavior)
+- [TC.Config.Read.LuaLampControlBehavior](types/TC.Config.Read.LuaLampControlBehavior.md#symbol-TC.Config.Read.LuaLampControlBehavior)
+- [TC.Config.Read.LuaLoaderControlBehavior](types/TC.Config.Read.LuaLoaderControlBehavior.md#symbol-TC.Config.Read.LuaLoaderControlBehavior)
+- [TC.Config.Read.LuaLogisticContainerControlBehavior](types/TC.Config.Read.LuaLogisticContainerControlBehavior.md#symbol-TC.Config.Read.LuaLogisticContainerControlBehavior)
+- [TC.Config.Read.LuaMiningDrillControlBehavior](types/TC.Config.Read.LuaMiningDrillControlBehavior.md#symbol-TC.Config.Read.LuaMiningDrillControlBehavior)
+- [TC.Config.Read.LuaProgrammableSpeakerControlBehavior](types/TC.Config.Read.LuaProgrammableSpeakerControlBehavior.md#symbol-TC.Config.Read.LuaProgrammableSpeakerControlBehavior)
+- [TC.Config.Read.LuaProxyContainerControlBehavior](types/TC.Config.Read.LuaProxyContainerControlBehavior.md#symbol-TC.Config.Read.LuaProxyContainerControlBehavior)
+- [TC.Config.Read.LuaPumpControlBehavior](types/TC.Config.Read.LuaPumpControlBehavior.md#symbol-TC.Config.Read.LuaPumpControlBehavior)
+- [TC.Config.Read.LuaRadarControlBehavior](types/TC.Config.Read.LuaRadarControlBehavior.md#symbol-TC.Config.Read.LuaRadarControlBehavior)
+- [TC.Config.Read.LuaRailSignalBaseControlBehavior](types/TC.Config.Read.LuaRailSignalBaseControlBehavior.md#symbol-TC.Config.Read.LuaRailSignalBaseControlBehavior)
+- [TC.Config.Read.LuaReactorControlBehavior](types/TC.Config.Read.LuaReactorControlBehavior.md#symbol-TC.Config.Read.LuaReactorControlBehavior)
+- [TC.Config.Read.LuaRoboportControlBehavior](types/TC.Config.Read.LuaRoboportControlBehavior.md#symbol-TC.Config.Read.LuaRoboportControlBehavior)
+- [TC.Config.Read.LuaRocketSiloControlBehavior](types/TC.Config.Read.LuaRocketSiloControlBehavior.md#symbol-TC.Config.Read.LuaRocketSiloControlBehavior)
+- [TC.Config.Read.LuaSelectorCombinatorControlBehavior](types/TC.Config.Read.LuaSelectorCombinatorControlBehavior.md#symbol-TC.Config.Read.LuaSelectorCombinatorControlBehavior)
+- [TC.Config.Read.LuaSpacePlatformHubControlBehavior](types/TC.Config.Read.LuaSpacePlatformHubControlBehavior.md#symbol-TC.Config.Read.LuaSpacePlatformHubControlBehavior)
+- [TC.Config.Read.LuaSplitterControlBehavior](types/TC.Config.Read.LuaSplitterControlBehavior.md#symbol-TC.Config.Read.LuaSplitterControlBehavior)
+- [TC.Config.Read.LuaStorageTankControlBehavior](types/TC.Config.Read.LuaStorageTankControlBehavior.md#symbol-TC.Config.Read.LuaStorageTankControlBehavior)
+- [TC.Config.Read.LuaTrainStopControlBehavior](types/TC.Config.Read.LuaTrainStopControlBehavior.md#symbol-TC.Config.Read.LuaTrainStopControlBehavior)
+- [TC.Config.Read.LuaTransportBeltControlBehavior](types/TC.Config.Read.LuaTransportBeltControlBehavior.md#symbol-TC.Config.Read.LuaTransportBeltControlBehavior)
+- [TC.Config.Read.LuaTurretControlBehavior](types/TC.Config.Read.LuaTurretControlBehavior.md#symbol-TC.Config.Read.LuaTurretControlBehavior)
+- [TC.Config.Read.LuaWallControlBehavior](types/TC.Config.Read.LuaWallControlBehavior.md#symbol-TC.Config.Read.LuaWallControlBehavior)

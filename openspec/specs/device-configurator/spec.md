@@ -32,7 +32,7 @@ Each listed device SHALL provide an opaque identity, prototype name, entity type
 - **THEN** its old identifier cannot configure the replacement and discovery supplies a new identifier.
 
 ### Requirement: Full pinned circuit-control coverage
-The configurator SHALL describe and support every writable setting exposed by Factorio 2.0.77 circuit-control behavior interfaces, including inherited fields and constant-combinator sections. `configuration-catalog.json` and `configuration-catalog.md` SHALL inventory this surface; native constraints SHALL remain explicit.
+The configurator SHALL describe and support every writable setting exposed by Factorio 2.0.77 circuit-control behavior interfaces, including inherited fields and constant-combinator sections. `api/generated/configurator.d.lua` and `docs/configuration-catalog-provenance.md` SHALL inventory this surface; native constraints SHALL remain explicit.
 
 #### Scenario: Not merely enable/disable
 - **WHEN** a compatible target exposes combinator parameters, train-stop controls, recipe controls, lamp colors, display-panel messages or other catalogued settings

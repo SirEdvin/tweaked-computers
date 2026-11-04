@@ -1,10 +1,10 @@
 # Computer runtime v1 (development)
 
 Current verification target: Factorio 2.1.23. Native named callbacks only: no interpreter, OS,
-filesystem, coroutine suspension or host-object API. The normative contracts
-are `openspec/api/{common,native-language}.md`
-and `openspec/specs/computer-runtime/lua-api.md` in the source repository.
-The `openspec/specs/program-source/{spec,lua-api}.md` contract defines the saved-program grammar.
+filesystem, coroutine suspension or host-object API. The normative public contracts
+are [common rules](../api/common.d.lua), [computer](../api/computer.d.lua) and
+[globals](../api/globals.d.lua). Behavioral requirements remain in
+`openspec/specs/`; the [language guide](player/api/language.md) explains the saved-program grammar.
 
 ## Player contract
 
@@ -35,23 +35,8 @@ that animation membership; electrical cycling does not change custom-device
 status. A missing native render object is rediscovered by the existing due
 physical observation, not a separate every-tick artwork sweep.
 
-All calls use dots, not colons. Exact argument counts are enforced:
-
-| Call | Result |
-| --- | --- |
-| `computer.getID()`, `getLabel()`, `getTick()` | opaque ID, optional label, simulation tick |
-| `computer.setLabel(label?)` | no values; nil clears; bounded strings only |
-| `computer.getLimits()` | defensive effective development limits |
-| `computer.getState(key)` | one copied Data value or one nil |
-| `computer.setState(key,value)` | no values; atomic copied nonnil Data replacement |
-| `computer.deleteState(key)` | boolean presence/deletion |
-| `computer.log(text)` | no values; bounded string diagnostic ring |
-| `computer.stop()` | does not return, even inside pcall |
-| `computer.on(event_name,handler_name)` | independent opaque subscription ID |
-| `computer.off(id)` | boolean; another computer/run's ID is invalid |
-| `computer.after(ticks,handler_name,payload?)` | one-shot timer ID |
-| `computer.every(ticks,handler_name,payload?)` | recurring timer ID |
-| `computer.cancelTimer(id)` | removes deadline and admitted event; boolean |
+All calls use dots, not colons. Exact arguments and result arity are documented
+in the generated [Computer reference](player/api/computer.md).
 
 State is finite booleans/numbers/strings, dense arrays or string-keyed maps.
 False/empty strings are values; deletion is separate. Cycles, metatables,

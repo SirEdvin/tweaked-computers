@@ -7,7 +7,7 @@ Run a player's event-driven factory program through bounded native Lua callbacks
 ## Requirements
 
 ### Requirement: Native named-handler execution
-The saved-program runtime SHALL execute one active function-declaration document using named, non-suspending native Lua handlers conforming to the `program-source` contract and `lua-api.md`. It MUST NOT interpret Lua instructions, introduce a VM fallback, expose a filesystem, or emulate an operating-system shell. The independent Console SHALL obey the bounded `console-shell` contract; it does not relax saved-handler syntax, create background callbacks or replace the saved program.
+The saved-program runtime SHALL execute one active function-declaration document using named, non-suspending native Lua handlers conforming to the `program-source` contract and `api/computer.d.lua`. It MUST NOT interpret Lua instructions, introduce a VM fallback, expose a filesystem, or emulate an operating-system shell. The independent Console SHALL obey the bounded `console-shell` contract; it does not relax saved-handler syntax, create background callbacks or replace the saved program.
 
 #### Scenario: Start an event-driven program
 - **WHEN** the player runs a valid document defining an exported `start` function
@@ -130,7 +130,7 @@ The runtime SHALL identify its API/source ABI and storage schema. Unsupported re
 - **AND** other compatible computers continue operating.
 
 ### Requirement: Shared bounded Lua base globals
-Saved programs and Console commands SHALL expose `print`, `xpcall`, `rawequal`, `rawget`, `rawset`, `rawlen`, `unpack` and `_VERSION` alongside the existing approved globals, according to `lua-api.md`. `_VERSION` SHALL equal `Lua 5.2`; `unpack` SHALL alias bounded `table.unpack`. This expansion SHALL NOT expose host facilities, metatables, mutable libraries, dynamic code loading or additional standard-library members.
+Saved programs and Console commands SHALL expose `print`, `xpcall`, `rawequal`, `rawget`, `rawset`, `rawlen`, `unpack` and `_VERSION` alongside the existing approved globals, according to `api/globals.d.lua`. `_VERSION` SHALL equal `Lua 5.2`; `unpack` SHALL alias bounded `table.unpack`. This expansion SHALL NOT expose host facilities, metatables, mutable libraries, dynamic code loading or additional standard-library members.
 
 #### Scenario: Use the same helpers in both modes
 - **WHEN** a saved callback or Console command reads each added function and `_VERSION`

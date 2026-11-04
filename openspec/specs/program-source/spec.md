@@ -7,7 +7,7 @@ Accept saved computer programs as exported function declarations with optional p
 ## Requirements
 
 ### Requirement: Declaration-form saved programs
-The system SHALL accept saved documents only when they contain one or more exported `function name(...) ... end` declarations, optional top-level `local function` helpers, comments and empty statements. It SHALL derive the existing API-v1 named-handler inventory from the exported declarations. Declaration names SHALL be unique across the top level and follow the naming rules in `lua-api.md`.
+The system SHALL accept saved documents only when they contain one or more exported `function name(...) ... end` declarations, optional top-level `local function` helpers, comments and empty statements. It SHALL derive the existing API-v1 named-handler inventory from the exported declarations. Declaration names SHALL be unique across the top level and follow the naming rules in `docs/player/api/language.md`.
 
 #### Scenario: Run a document without a wrapper
 - **WHEN** the player validates, saves and runs a document with exported `start` and `sample` functions

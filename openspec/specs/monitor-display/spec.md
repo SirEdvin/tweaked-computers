@@ -26,7 +26,7 @@ Grouping and identity changes SHALL be deterministic for the same ordered world 
 - **AND** affected computers receive the required detach/attach/resize notifications.
 
 ### Requirement: CC-shaped terminal methods
-The monitor SHALL implement the complete terminal-method subset documented in `lua-api.md`, including cursor/blink, write, clear, scrolling, blit, colors, palettes and text scale. Color/Colour aliases SHALL behave identically. Writes SHALL clip rather than wrap automatically.
+The monitor SHALL implement the complete terminal-method subset documented in `api/monitor.d.lua`, including cursor/blink, write, clear, scrolling, blit, colors, palettes and text scale. Color/Colour aliases SHALL behave identically. Writes SHALL clip rather than wrap automatically.
 
 #### Scenario: Write beyond the right edge
 - **WHEN** a program writes text extending past the last column

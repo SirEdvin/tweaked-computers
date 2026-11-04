@@ -27,7 +27,7 @@ One `tc-factoriopedia-interface` SHALL cost 10 steel plates, 5 advanced circuits
 - **THEN** the new recipe becomes enabled without resetting research, disabling unrelated recipes or changing existing devices.
 
 ### Requirement: Exact typed metadata lookup
-`getItem(name)` and `getFluid(name)` SHALL each accept exactly one nonempty, case-sensitive installed prototype name in their respective namespace and return exactly one detailed record defined in `lua-api.md`. Unknown names SHALL raise `E_RANGE`; invalid arity, empty names or wrong argument types SHALL raise the documented argument error rather than returning an empty record.
+`getItem(name)` and `getFluid(name)` SHALL each accept exactly one nonempty, case-sensitive installed prototype name in their respective namespace and return exactly one detailed record defined in `api/factoriopedia-interface.d.lua`. Unknown names SHALL raise `E_RANGE`; invalid arity, empty names or wrong argument types SHALL raise the documented argument error rather than returning an empty record.
 
 #### Scenario: Shared item and fluid name
 - **WHEN** an item and a fluid have the same internal name
@@ -96,7 +96,7 @@ Fluid records SHALL expose native `default_temperature`, `max_temperature`, `gas
 - **THEN** lookup preserves the installed native values rather than clamping, substituting water's properties or dropping zero values.
 
 ### Requirement: Detached finite data and explicit omissions
-Every successful result SHALL be detached plain Data without native objects, functions or metatables. Required fields SHALL preserve false, zero and empty arrays; optional fields SHALL be absent only for the reasons defined in `lua-api.md`. Unrepresentable metadata SHALL fail explicitly rather than silently omit required information or substitute another prototype.
+Every successful result SHALL be detached plain Data without native objects, functions or metatables. Required fields SHALL preserve false, zero and empty arrays; optional fields SHALL be absent only for the reasons defined in `api/factoriopedia-interface.d.lua`. Unrepresentable metadata SHALL fail explicitly rather than silently omit required information or substitute another prototype.
 
 #### Scenario: Caller changes returned data
 - **WHEN** a caller edits a returned name list, fuel-category array or detail record

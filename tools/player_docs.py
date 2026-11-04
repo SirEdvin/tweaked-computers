@@ -7,11 +7,22 @@ examples to a separate verification ZIP for the existing official-engine harness
 import argparse
 import hashlib
 import json
+import os
 import re
+import shutil
+import tempfile
 from pathlib import Path
 import zipfile
 from html.parser import HTMLParser
 from urllib.parse import unquote, urlsplit
+
+from lua_api import (export_api, api_records, validate_api_records,
+                     api_blocks, api_markdown, api_lua)
+from limit_docs import declarations as limit_declarations
+from configuration_catalog import SOURCE as CONFIGURATION_SOURCE
+import api_migration
+import api_reference
+from lua_api import validate_api_inventory
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs/player'
@@ -73,134 +84,6 @@ def guest_example(name):
 
 
 def generated():
-    catalog = json.loads((CONTRACT / 'specs/device-configurator/configuration-catalog.json').read_text())
-    ledger = json.loads(text('docs/configuration-coverage.json'))
-    indexed = {(f['behavior'], f['field']): f for f in ledger['fields']}
-    def typename(t):
-        if isinstance(t, str):
-            if t in ('QualityID', 'SpaceLocationID'):
-                return 'registered ' + ('quality' if t == 'QualityID' else 'location') + ' name string'
-            if t.startswith('defines.'):
-                return ', '.join('`' + x + '`' for x in catalog['enum_values'][t])
-            if t in catalog['concepts'] and t not in ('boolean', 'float', 'int32', 'uint32', 'string', 'nil', 'table'):
-                return '[' + t + '](schemas.md#schema-' + t.lower() + ')'
-            return {'int32': 'integer −2147483648…2147483647', 'uint32': 'integer 0…4294967295',
-                    'float': 'finite number', 'string': 'string ≤256 bytes, no NUL', 'table': 'bounded plain table'}.get(t, t)
-        kind = t['complex_type']
-        if kind == 'literal':
-            return '`' + str(t['value']) + '`'
-        if kind == 'type':
-            return typename(t['value'])
-        if kind == 'array':
-            return 'dense array ≤128 of ' + typename(t['value'])
-        if kind == 'union':
-            return ' or '.join(typename(x) for x in t['options'])
-        if kind == 'table':
-            return '{' + '; '.join('`' + f['name'] + ('?' if f['optional'] else '') + '`: ' + typename(f['type']) for f in t.get('parameters', [])) + '}'
-        if kind == 'builtin':
-            return 'bounded primitive; see the type name/ranges above'
-        return 'bounded plain ' + kind
-    out = ['# Supported configurator settings', '',
-           'Guest circuit-control settings supported on Factorio 2.1.23, preserving the 2.0 field vocabulary.',
-           'Fuel/display fields map to native read_fuel/records; logistic-container and landing-pad',
-           'modes also accept send_contents_and_set_requests for simultaneous reading/requesting.',
-           'Storage-tank read_contents=true preserves an existing segment-read mode; false disables reading.',
-           'These tables include inherited roots. Read current getCapabilities before writing:',
-           'prototype/expansion/mode restrictions can make a listed field unavailable.',
-           'Types link to the [complete nested schemas](schemas.md). All calls, patch semantics',
-           'and target-network rules are in the [configurator reference](configurator.md).', '',
-           'Boolean values are true/false, not numeric modes. Clearable means explicit patch',
-           'clear is accepted; it can normalize to native defaults rather than nil.', '']
-    for b in catalog['behaviors']:
-        family = b['class'].removeprefix('Lua').removesuffix('ControlBehavior') or 'Base control behavior'
-        out += ['## ' + family, '']
-        if not b['writable_fields']:
-            out += ['No writable root settings on this base behavior; derived families list their inherited settings below.', '']
-            continue
-        out += ['| Setting | Type | Clearable | Restriction |', '| --- | --- | --- | --- |']
-        for f in b['writable_fields']:
-            l = indexed[(b['class'], f['name'])]
-            clear = f['optional'] and f['write_type'] in ('CircuitConditionDefinition', 'SignalID', 'ArithmeticCombinatorParameters', 'DeciderCombinatorParameters', 'SelectorCombinatorParameters') if isinstance(f['write_type'], str) else False
-            restrictions = {
-                'fuel_inventory_required': 'Requires fuel inventory',
-                'rail_chain_signal_only': 'Chain signal only',
-                'logistic_mode_requester_or_buffer': 'Requester/buffer only',
-                'native_asteroid_no_logistic_connection': 'Unavailable: native inherited switch is ineffective',
-                'ammo_or_fluid_turret_required': 'Ammo/fluid turret only',
-                'set_requests_requires_space_travel': 'set_requests requires space travel',
-                'registered_signal': 'Installed signal prototype',
-                'explicit_signal_type': 'Explicit signal type required',
-                'condition_operand_exclusive': 'Use constant or second_signal, not both',
-                'condition_signal_roles': 'Only role-appropriate wildcards',
-            }
-            restriction = '; '.join(str(restrictions.get(c, c)) for c in l['constraints']) or 'Current native applicability'
-            out += ['| `' + f['name'] + '` | ' + typename(f['write_type']) + ' | ' + ('yes' if clear else 'no') + ' | ' + restriction + ' |']
-        if b['section_adapter']:
-            out += ['', 'Also supports [constant-combinator section methods](configurator.md#constant-combinator-sections).']
-        out += ['']
-    schemas = ['# Configurator nested types and enums', '',
-               'This is the player-readable schema companion to [supported settings](settings.md).',
-               'Fields marked optional may be omitted; required fields must be present.',
-               'Unknown fields are refused. Arrays are dense and at most 128 items. Strings',
-               'are at most 256 bytes and cannot contain NUL. Numbers are finite; guest integer',
-               'bounds remain exact. Prototype identities use installed names, never objects.', '',
-               'SignalID/SignalIDBase require explicit type and name; quality defaults normal',
-               'where supported. Conditional fulfilled is read-only and excluded. Quality/location',
-               'object unions normalize to registered name strings. Selector fields must belong',
-               'to the selected operation; default select. See [normalization](#normalization).', '']
-    for name, concept in sorted(catalog['concepts'].items()):
-        schemas += ['<a id="schema-' + name.lower() + '"></a>', '', '## ' + name, '']
-        if name in ('QualityID', 'SpaceLocationID'):
-            schemas += [typename(name), '']
-            continue
-        t = concept['type']
-        if isinstance(t, dict) and t.get('complex_type') == 'builtin':
-            schemas += [typename(name) if name != 'nil' else 'Absence only, never a stored Data value or implicit clear patch.', '']
-            continue
-        if not isinstance(t, dict) or t.get('complex_type') != 'table':
-            schemas += [typename(t), '']
-            continue
-        schemas += ['| Field | Type | Required |', '| --- | --- | --- |']
-        for f in t.get('parameters', []):
-            if name == 'CircuitConditionDefinition' and f['name'] == 'fulfilled':
-                continue
-            required = not f['optional'] or name in ('SignalID', 'SignalIDBase') and f['name'] in ('type', 'name')
-            schemas += ['| `' + f['name'] + '` | ' + typename(f['type']) + ' | ' + ('yes' if required else 'no') + ' |']
-        for variant in t.get('variant_parameter_groups', []):
-            schemas += ['', 'For operation **' + variant['name'] + '** only:', '',
-                        '| Field | Type | Required |', '| --- | --- | --- |']
-            for f in variant['parameters']:
-                schemas += ['| `' + f['name'] + '` | ' + typename(f['type']) + ' | ' + ('no' if f['optional'] else 'yes') + ' |']
-        if name == 'LogisticFilter':
-            schemas += ['', 'Section filters additionally require `index`: integer 1–128. The list is dense',
-                        'but indexes can be sparse. Duplicate indexes/identities refuse; nonzero min',
-                        'requires explicit exact quality. max must not be below min.']
-        schemas += ['']
-    schemas += ['## Normalization', '',
-                '- Conditions: constant/second_signal exclusive; comparator defaults <, constant 0.',
-                '  >=, <=, != normalize to ≥, ≤, ≠. fulfilled is observation-only.',
-                '- CircuitNetworkSelection omitted red/green means true for each.',
-                '- Arithmetic defaults operation *, missing numeric operands 0; signal operands',
-                '  replace corresponding constants. Each output needs each first input.',
-                '- Decider compare_type defaults or; output constant defaults 1,',
-                '  copy_count_from_input defaults true, networks default both. Each output needs',
-                '  an each condition. Ordinary condition first allows anything/everything;',
-                '  ordinary second and ordinary signal roots reject wildcards.',
-                '- Selector defaults select, index_constant 0, select_max true. count has optional',
-                '  count_signal; random defaults random_update_interval 0 (ticks). stack-size',
-                '  and rocket-capacity accept no operation-specific fields. quality-filter accepts',
-                '  registered quality/quality-comparator; quality-transfer requires destination',
-                '  signal, defaults select_quality_from_signal false and static normal; selecting',
-                '  signal quality uses quality_source_signal instead of static source.',
-                '- SignalFilter/QualityCondition readback includes normal and comparator = defaults.',
-                '  BlueprintQualityID defaults name normal. Ordinary signal quality defaults normal.',
-                '- LogisticFilter min defaults 0; registered nauvis is the default item import location.',
-                '  Section multiplier readback preserves native float32 precision.',
-                '- Native enum values are strings, not defines ordinals. Speaker instrument/note',
-                '  IDs are zero-based and validated against the actual target catalogue.', '',
-                '## Native enum names', '']
-    for name, values in sorted(catalog['enum_values'].items()):
-        schemas += ['### ' + name, '', ', '.join('`' + v + '`' for v in values), '']
     examples = ['# Complete runnable programs', '',
                 'Copy a whole code block into the [single-document editor](editor.md), Validate,',
                 'Save, then Run. These are the exact shipped source documents, with host wrappers',
@@ -210,80 +93,37 @@ def generated():
                 'claiming graphical keyboard/focus/touch delivery.', '']
     for name, intro in EXAMPLES.items():
         examples += ['## ' + name, '', intro, '', '```lua', guest_example(name), '```', '']
-    limits = re.findall(r'(\w+)\s*=\s*(\d+)', text('scripts/runtime/limits.lua'))
-    limit_page = ['# Common effective limits', '',
-                  'All integer keys returned by computer.getLimits(). Version keys identify the',
-                  'API/compiler/storage representation rather than capacities. Work/compile/allocation',
-                  'units are implementation admission units, not milliseconds or measured host bytes.',
-                  'Tick-keyed counters persist through same-tick load/replacement. Maintenance is',
-                  'reserved inside host_work_per_tick, never added on top. These alpha limits are',
-                  'provisional safety ceilings, not simultaneous maximum-world guarantees.', '',
-                  '## Live mod settings', '',
-                  'Open **Settings → Mod settings → Map** to change the five runtime-global',
-                  'budgets below while playing. They apply to every player and computer in the',
-                  'save, without restarting the map. The table lists defaults; computer.getLimits()',
-                  'returns the current effective values in a defensive copy.', '',
-                  '| Setting | Limit key | Default | Allowed range |',
-                  '| --- | --- | ---: | ---: |',
-                  '| Compilation work per computer per tick (`tc-compile-work`) | `compile_work` | 1250000 | 1–100000000 |',
-                  '| Execution work per computer per tick (`tc-callback-work`) | `callback_work` | 500000 | 1–100000000 |',
-                  '| Guest allocations per computer per tick (`tc-callback-allocations`) | `callback_allocations` | 81920 | 1–100000000 |',
-                  '| Shared host work per tick (`tc-host-work-per-tick`) | `host_work_per_tick` | 5000000 | 200001–1000000000 |',
-                  '| World maintenance work per tick (`tc-maintenance-work-per-tick`) | `maintenance_work_per_tick` | 200000 | 200000–100000000 requested |', '',
-                  'Compilation, execution and allocation defaults are five times the original',
-                  'allowances. The shared host default is also five times larger so it can admit',
-                  'them. The maintenance default remains 200000 admission units.',
-                  'Prefer a shared ceiling at least as large as all three per-computer budgets',
-                  'combined plus maintenance. A smaller shared budget can defer callbacks or',
-                  'cause E_BUDGET when actual work exceeds its remaining allowance.', '',
-                  'Changes never reset spending: raising a budget adds only the difference;',
-                  'lowering it below already-spent credits refuses further charged operations',
-                  'until a later tick or another increase. Existing faulted programs still require',
-                  'Run to restart. Validate, Run validation and callback reconstruction share',
-                  'compilation credits. Higher budgets may reduce UPS; these are not speed or',
-                  'frame-rate controls. Source, state, depth, monitor and other structural caps',
-                  'remain unchanged.', '',
-                  '### Maintenance and shared headroom', '',
-                  'The effective maintenance ceiling is `min(requested maintenance, host_work_per_tick - 1)`.',
-                  'The requested setting is preserved, so raising host work can make more of it',
-                  'effective. This never raises the shared host setting. At least one guest unit',
-                  'remains, but one unit cannot run a useful callback: choose host headroom for',
-                  'your actual programs, preferably the three per-computer budgets plus maintenance.',
-                  'Maintenance covers discovery, physical validation, signal sampling, timers, notifications and',
-                  'monitor preparation/publication/retirement. More maintenance can reduce guest',
-                  'headroom; it does not automatically increase callback or monitor capacities.', '',
-                  'Values below 200000 are deliberately unsupported in this alpha. The renderer',
-                  'keeps its 60000 baseline reservation, alternating adaptive reservations up to',
-                  '160000 and its separate 160000 whole-commit ceiling. Keeping the existing floor',
-                  'preserves baseline non-render service opportunities for indivisible topology',
-                  'work; lowering it needs separate feasibility measurements/reconciliation, not',
-                  'just a smaller integer setting. Larger settings do not widen render commits.',
-                  'The 100000000 upper bound is a provisional configurable-work safety ceiling,',
-                  'not a measured CPU allowance or recommendation.', '',
-                  'Live changes retain both ledgers, world/guest state and the frozen render',
-                  'reservation. Even a previously captured maintenance callback reads the live',
-                  'ceiling. No credit is refunded: guests cannot reuse maintenance already spent',
-                  'after a decrease, and maintenance cannot reuse guest credits after an increase.',
-                  'Reducing host work below combined spending preserves that spending and refuses',
-                  'further charged work until a later tick or sufficient increase; it cannot undo',
-                  'earlier effects. A saved spent count above the current ceiling is valid and',
-                  'stays refused on same-tick reload. No paid reconciliation or on_load mutation',
-                  'is needed; ordinary synchronized admission resets counters only on a new tick.', '',
-                  '## Default common limits', '',
-                  '| Key | Default value |', '| --- | ---: |']
-    limit_page += ['| `' + k + '` | ' + v + ' |' for k, v in limits]
-    limit_page += ['', 'Device-specific limits: [monitor](monitor.md#bounds-example-and-troubleshooting),',
-                   '[KV](kv.md#atomicity-errors-and-capacities), [logic](logic.md#bounds-and-use),',
-                   '[configurator](configurator.md#bounds-programs-and-troubleshooting),',
-                   '[Recipe Searcher](recipe-searcher.md#complete-results-not-a-prefix).',
-                   'See [shared rules](common.md) for Data accounting and refusal behavior.', '',
-                   'Logic native results and trusted signal snapshots are not generic Data payloads.',
-                   'Their cardinality is not bounded by the table/node/byte keys above. Circuit queues',
-                   'still consume entries and envelope bytes, excluding native graphs; this is not a',
-                   'total-memory bound. Removed `signal_slots`, `filter_signals`, `active_logic_handlers`',
-                   'and `aggregate_owned_outputs` keys are absent, not configurable replacements.', '']
-    return {'api/settings.md': '\n'.join(out), 'api/schemas.md': '\n'.join(schemas),
-            'examples.md': '\n'.join(examples), 'api/limits.md': '\n'.join(limit_page)}
+
+    examples += ['## Retained API examples', '',
+                 'These complete sources were preserved from the former API companions.',
+                 'Use a separate stopped computer for each program; do not concatenate programs.',
+                 'The [wiring guide](getting-started.md), [factory setup](factory.md) and',
+                 '[current typed reference](api/types.md) explain their device roles and limits.',
+                 'Historical source identities below are provenance, not alternate API contracts.', '']
+    seen = set()
+    for record in api_migration.examples():
+        if record['destination'] in seen:
+            continue
+        seen.add(record['destination'])
+        examples += ['### ' + Path(record['destination']).stem, '']
+        if record['path'] == 'openspec/api/examples.md':
+            examples += ['Use one computer, one database, one Logic Handler, one Configurator and a 2×2 monitor rectangle.',
+                         'Join their NETWORK ports on red. Separately connect a stock-reading chest to INPUT red,',
+                         'and OUTPUT green plus Configurator TARGET green to the powered inserters.',
+                         'Enable chest content reading manually; the program configures inserters, not the chest.', '']
+        elif record['kind'] == 'console':
+            examples += ['These are separate live Console commands, not a saved program. Replace the example',
+                         '`tc-42` with your red-connected monitor name. Run each line in order; the write',
+                         'changes the real monitor. Stop/Run or confirmed Reset Shell clears these bindings.', '']
+        else:
+            examples += ['Connect the peripherals named in the source on their stated discovery color.',
+                         'Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.',
+                         'Custom devices need no electricity; native radars, speakers and factory targets keep',
+                         'their own power requirements. Validate, Save, then Run; inspect Console and the device.', '']
+        examples += ['Source identity: `' + record['path'] + ':' + str(record['index']) + '`.', '',
+                     '```' + ('lua' if record['kind'] == 'program' else 'text'),
+                     api_migration.example_source(record), '```', '']
+    return {'examples.md': '\n'.join(examples)}
 
 
 def inventory():
@@ -332,10 +172,9 @@ def inventory():
     helpers['math'] = re.findall(r"'([a-z0-9]+)'", math_list[1]) + ['pi']
     helpers['string'] = sorted(set(re.findall(r'str\.([a-z]+)=function', sandbox_source)) | {'lower', 'upper', 'reverse'})
     helpers['table'] = sorted(set(re.findall(r'tab\.([a-z]+)=function', sandbox_source)))
-    language_page = (DOCS / 'api/language.md').read_text()
     for family, entries in helpers.items():
         for name in entries:
-            if not re.search(r'\b' + name + r'\b', language_page):
+            if not re.search(r'\b' + name + r'\b', all_docs):
                 raise ValueError(f'undocumented standard helper {family}.{name}')
     for name in names['colors'] + manifest['events']:
         if name not in all_docs:
@@ -348,8 +187,8 @@ def inventory():
                         'device-configurator': ['api/configurator.md', 'api/settings.md', 'api/schemas.md']}
     contract_inventory = {}
     for cap, pageset in capability_pages.items():
-        contract = CONTRACT / manifest['capabilities'][cap]['contract']
-        specification = contract.with_name('spec.md')
+        contract = ROOT / manifest['contract_root'] / manifest['capabilities'][cap]['contract']
+        specification = ROOT / manifest['capabilities'][cap]['specification']
         assert contract.is_file() and specification.is_file()
         for page in pageset:
             assert (DOCS / page).is_file()
@@ -361,13 +200,13 @@ def inventory():
             'reviewed_player_pages': pageset,
         }
     shell_root=CONTRACT / 'specs/console-shell'
-    for name in ('spec.md', 'lua-api.md'):
+    for name in ('spec.md',):
         assert (shell_root / name).is_file(), 'missing Console contract'
     assert 'console.md' in text('mkdocs.yml') and (DOCS / 'console.md').is_file()
     assert 'no command history' in (DOCS / 'console.md').read_text().lower()
-    for file in ['api/common.md', 'api/native-language.md']:
-        assert (CONTRACT / file).is_file()
-    catalog = json.loads((CONTRACT / 'specs/device-configurator/configuration-catalog.json').read_text())
+    for file in ['api/common.d.lua', 'api/globals.d.lua', 'docs/player/api/language.md']:
+        assert (ROOT / file).is_file()
+    catalog = json.loads(CONFIGURATION_SOURCE.read_text())
     return {'exports': {k: sorted(v) for k, v in actual.items()},
             'export_count': sum(len(v) for v in actual.values()),
             'configurator': {'behavior_classes': len(catalog['behaviors']),
@@ -378,7 +217,7 @@ def inventory():
                                     for path in manifest.get('contract_extensions', [])],
             'standard_helpers': helpers,
             'colors': names['colors'], 'capability_pages': capability_pages,
-            'inventory_kind': 'Static implementation-export/signature presence plus reviewed companion contracts; not runtime or graphical acceptance'}
+            'inventory_kind': 'Independent implementation exports, typed public declarations and behavioral specs; not runtime or graphical acceptance'}
 
 
 def site_links(folder):
@@ -412,13 +251,23 @@ def site_links(folder):
 def fixture_archive(source, destination):
     blocks = []
     for p in sorted(DOCS.rglob('*.md')):
+        if p.read_text().startswith(api_reference.NOTICE):
+            continue  # Definition examples/signatures are not saved programs.
         for i, m in enumerate(re.finditer(r'```lua\n(.*?)\n```', p.read_text(), re.S), 1):
-            blocks.append((str(p.relative_to(ROOT)) + ':' + str(i), m[1]))
+            blocks.append((str(p.relative_to(ROOT)) + ':' + str(i), m[1], None))
     assert blocks, 'no runnable examples'
+    for record in api_migration.examples():
+        source_text = api_migration.example_source(record)
+        identity = record['path'] + ':' + str(record['index'])
+        if record['kind'] == 'console':
+            for index, line in enumerate(source_text.splitlines(), 1):
+                blocks.append((identity + ':command-' + str(index), line, 'shell'))
+        else:
+            assert any(code == source_text for _, code, _ in blocks), 'lost runnable example: ' + identity
     fixture = ["local compiler=require('scripts.runtime.compiler')", "local admission=require('scripts.runtime.admission')",
                'local M={}', 'function M.run()']
-    for name, code in blocks:
-        fixture += ['do local plan,err=compiler.compile(' + quote_lua(code) + ',admission.context(admission.new(),"docs",0))',
+    for name, code, mode in blocks:
+        fixture += ['do local plan,err=compiler.compile(' + quote_lua(code) + ',admission.context(admission.new(),"docs",0),' + ('"shell"' if mode else 'nil') + ')',
                     'assert(plan, ' + quote_lua(name + ': ') + '..(err and err.message or "unknown compiler refusal"))',
                     'log(' + quote_lua('TC_CONTRACT ' + name) + ') end']
     fixture += ['log("TC_CONTRACT_TOTAL ' + str(len(blocks)) + '")', 'end', 'return M']
@@ -437,19 +286,55 @@ def fixture_archive(source, destination):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--check', action='store_true')
+    ap.add_argument('--change', help='read-only proposed API overlay check; requires --check')
     ap.add_argument('--site', type=Path)
     ap.add_argument('--fixture-archive', type=Path)
     ap.add_argument('--fixture-output', type=Path)
     ap.add_argument('--report', type=Path)
+    ap.add_argument('--luals', type=Path, default=os.environ.get('LUALS_BIN') or shutil.which('lua-language-server'))
     args = ap.parse_args()
-    for path, body in generated().items():
-        p = DOCS / path
-        if args.check:
-            if not p.is_file() or p.read_text() != body: raise ValueError('stale player documentation: ' + path)
-        else:
-            p.parent.mkdir(parents=True, exist_ok=True); p.write_text(body)
+    if args.change and (not args.check or args.site or args.fixture_archive or args.fixture_output):
+        ap.error('--change requires --check and cannot build a site or fixture')
+    if not args.luals:
+        ap.error('set LUALS_BIN or --luals to the verified tools/luals-lock.json binary')
+    if args.change:
+        from api_changes import check_change
+        evidence = Path(tempfile.mkdtemp(prefix='tc-api-change-', dir=os.environ['TMPDIR']))
+        report = check_change(ROOT, args.change, args.luals, evidence / 'verification')
+        report['export_evidence'] = str(evidence)
+        if args.report:
+            args.report.parent.mkdir(parents=True, exist_ok=True)
+            args.report.write_text(json.dumps(report, indent=2) + '\n')
+        print(json.dumps(report))
+        return
+    limits_path = ROOT / 'api/generated/limits.d.lua'
+    limits = limit_declarations()
+    if args.check:
+        api_reference.check_products({'api/generated/limits.d.lua': limits})
+    else:
+        limits_path.write_text(limits)
+    evidence = Path(tempfile.mkdtemp(prefix='tc-api-export-', dir=os.environ['TMPDIR']))
+    records = api_records(export_api(ROOT / 'api', args.luals, evidence))
+    products, topics, locations = api_reference.generate(records)
+    products.update({'docs/player/' + path: body for path, body in generated().items()})
+    products['docs/api-migration.md'] = api_migration.appendix()
+    provenance = api_reference.provenance(products)
+    products['docs/api-reference-provenance.json'] = json.dumps(provenance, indent=2, sort_keys=True) + '\n'
+    if args.check:
+        api_reference.check_products(products)
+    else:
+        for relative, body in products.items():
+            path = ROOT / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(body)
     report = inventory()
-    report['generated_pages'] = list(generated())
+    validate_api_inventory(records, report)
+    report['migration'] = api_migration.validate(records)
+    report['public_definitions'] = len(records)
+    report['api_topics'] = len(topics)
+    report['locations'] = locations
+    report['export_evidence'] = str(evidence)
+    report['generated_pages'] = sorted(p for p in products if p.endswith('.md'))
     report['documentation_pages'] = len(list(DOCS.rglob('*.md')))
     report['source_hashes'] = {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
                                for p in sorted((ROOT / 'scripts').rglob('*.lua'))}

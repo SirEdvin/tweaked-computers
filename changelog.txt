@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.20
+Date: 2026-11-04
+  Features:
+    - Ship a separate public Lua declaration library as the authoritative player API reference, including overloads, nested types, errors and lifecycle restrictions.
+    - Generate the website and searchable in-game Reference from the same declarations; preserve selectable text, complete examples and contextual navigation.
+  Changes:
+    - Retire duplicate maintained Markdown API contracts while preserving examples, tutorials and behavioral requirements. Future API-changing proposals carry typed Lua artifacts.
+  Info:
+    - No guest API, save format, runtime budget or scheduling behavior change from 0.1.19. Function-only saved programs and plain-hardware computer items remain unchanged.
+    - ALPHA for Factorio 2.1; verified on 2.1.23 with base and Space Age, not every patch or modpack. Scheduling performance remains unverified; this release adds no benchmark or connected-multiplayer certification.
+    - Back up the complete save and matching mod set before upgrading. Restore both for rollback; never downgrade an upgraded save in place.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.19
 Date: 2026-11-04
   Features:

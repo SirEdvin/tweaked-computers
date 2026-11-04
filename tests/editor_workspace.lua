@@ -14,6 +14,7 @@ local admission=require('scripts.runtime.admission')
 local limits=require('scripts.runtime.limits')
 local lifecycle=require('scripts.lifecycle')
 local help=require('scripts.ui.help')
+local reference=require('scripts.ui.reference')
 local help_contract=require('tests.help_contract')
 local defs=require('scripts.device-definitions')
 local compiler=require('scripts.runtime.compiler')
@@ -352,29 +353,40 @@ function M.run()
     group('workspace-reference-complete-categories-search-select-no-overwrite',function()
       tab(f,4); local r=f.content.reference; local s=model.session(a.index)
       assert(#s.reference_entries==#help.topics and #r.topics.items==#help.topics)
-      local combined=''; for _,topic in ipairs(help.topics) do if not (topic.id or ''):find('tutorial.',1,true) then combined=combined..topic.text end end
-      assert(combined==help.text..'\n','categorized reference dropped or duplicated text')
+      local combined={}; for _,topic in ipairs(help.topics) do if not (topic.id or ''):find('tutorial.',1,true) then combined[#combined+1]=topic.text end end
+      assert(table.concat(combined,'\n\n')==help.text,'categorized reference dropped or duplicated text')
       select(r.filters.category,5); assert(#s.reference_entries==11)
-      local titles={['Discovery and identity']=true,['Logic handler']=true,['KV database']=true,
-        Monitor=true,Dashboard=true,Configurator=true,['Recipe Searcher']=true,['Factoriopedia Interface']=true,['Production Statistics']=true,['Radar modem']=true,['Programmable speaker']=true}
+      local titles={['peripheral.discovery']=true,['peripheral.logic_handler']=true,['peripheral.kv_database']=true,
+        ['peripheral.monitor']=true,['peripheral.dashboard']=true,['peripheral.configurator']=true,['peripheral.recipe_searcher']=true,
+        ['peripheral.factoriopedia_interface']=true,['peripheral.production_statistics']=true,['peripheral.modem']=true,['peripheral.speaker']=true}
       for _,index in ipairs(s.reference_entries) do
-        local title=help.topics[index].title; assert(titles[title]); titles[title]=nil
+        local title=help.topics[index].id; assert(titles[title]); titles[title]=nil
       end
       assert(next(titles)==nil)
       r.filters.search.text='RADAR MODEM'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
-      assert(#s.reference_entries==1 and reference_text(r):find('transmit',1,true)
-        and reference_text(r):find('modem_message',1,true))
+      assert(#s.reference_entries==2)
+      for _,index in ipairs(s.reference_entries) do
+        assert(help.topics[index].id=='peripheral.discovery' or help.topics[index].id=='peripheral.modem')
+        if help.topics[index].id=='peripheral.modem' then assert(help.topics[index].text:find('transmit',1,true)
+          and help.topics[index].text:find('modem_message',1,true)) end
+      end
       r.filters.search.text='playNote'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(#s.reference_entries==1 and reference_text(r):find('getSounds',1,true))
       r.filters.search.text='RECIPE SEARCHER'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
-      assert(#s.reference_entries==2 and reference_text(r):find('findRecipes',1,true))
-      local recipe_matches={['Recipe Searcher']=true,['Production Statistics']=true}
+      assert(#s.reference_entries==3)
+      local recipe_matches={['peripheral.discovery']=true,['peripheral.recipe_searcher']=true,['peripheral.production_statistics']=true}
       for _,index in ipairs(s.reference_entries) do
-        local title=help.topics[index].title; assert(recipe_matches[title]); recipe_matches[title]=nil
+        local title=help.topics[index].id; assert(recipe_matches[title]); recipe_matches[title]=nil
+        if title=='peripheral.recipe_searcher' then assert(help.topics[index].text:find('findRecipes',1,true)) end
       end
       assert(next(recipe_matches)==nil,'shared-unlock search must retain both families')
       r.filters.search.text='PRODUCTION STATISTICS'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
-      assert(#s.reference_entries==1 and reference_text(r):find('getHistory',1,true) and reference_text(r):find('getTotals',1,true))
+      assert(#s.reference_entries==2)
+      for _,index in ipairs(s.reference_entries) do
+        local topic=help.topics[index]
+        assert(topic.id=='peripheral.discovery' or topic.id=='peripheral.production_statistics')
+        if topic.id=='peripheral.production_statistics' then assert(topic.text:find('getHistory',1,true) and topic.text:find('getTotals',1,true)) end
+      end
       r.filters.search.text='KV DATABASE'; editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(#s.reference_entries==1 and reference_text(r):find('hgetall',1,true))
       assert(not r.actions,'Reference has no action controls')
@@ -382,6 +394,17 @@ function M.run()
       assert(r.reference_text.children[1]==kept and kept.selection,'unchanged navigation must retain native widgets/selection')
       r.filters.search.text=string.rep('s',129); editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(r.filters.search.text=='KV DATABASE' and s.search=='KV DATABASE')
+      select(r.filters.category,8); r.filters.search.text='TC.Config.Read.SignalID'
+      editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
+      local exact_type
+      for i,index in ipairs(s.reference_entries) do if help.topics[index].id=='type.TC.Config.Read.SignalID' then exact_type=i end end
+      assert(exact_type,'named nested readback type must remain reachable')
+      select(r.topics,exact_type)
+      assert(reference_text(r):find('quality',1,true) and reference_text(r):find('name',1,true))
+      reference.show(r.reference_text,{title='Newline regression',blocks={{kind='prose',text='first\nsecond\nthird'}}},700)
+      assert(r.reference_text.children[1].style.minimal_height==3*20+12,'literal newlines need native height')
+      editor.refresh(a)
+      assert(c.source.text==exact,'type browsing must not change the dirty draft')
       select(r.filters.category,6); r.filters.search.text='Starter controller'
       editor.on_text{player_index=a.index,element=r.filters.search,tick=tick}
       assert(#s.reference_entries==1 and not r.actions)
@@ -659,7 +682,7 @@ function M.run()
         if (topic.id or ''):find('tutorial.',1,true)==1 then tutorials=tutorials+1 end
       end
       local expected=0; for _ in pairs(help.tutorials) do expected=expected+1 end
-      assert(tutorials==expected and #help.categories==7)
+      assert(tutorials==expected and #help.categories==8 and help.categories[8]=='Types')
       if #original_game.players==0 then log('TC_WORKSPACE_CLIENT_SKIPPED no client-created player; all GUI checks are mocks') end
     end)
   end)

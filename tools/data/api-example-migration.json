@@ -1,0 +1,204 @@
+{
+  "format_version": 1,
+  "indexing": "one-based Lua-only fence index; source hashes exclude fence boundary newlines",
+  "examples": [
+    {
+      "path": "docs/player/api/kv.md",
+      "index": 1,
+      "line": 82,
+      "sha256": "0cde28a197c4194ddeea29cfb1925edb6dc56f5d7c2879fa4f7cbcb9f33de0f1",
+      "kind": "program",
+      "destination": "examples/api-contract/player-kv-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "docs/player/api/language.md",
+      "index": 1,
+      "line": 6,
+      "sha256": "5f6fe0704335a87c30e7f1a448ce44524f9551e43b6fbd3945355d819a89204a",
+      "kind": "program",
+      "destination": "examples/function-program.lua",
+      "form": "source"
+    },
+    {
+      "path": "docs/player/api/recipe-searcher.md",
+      "index": 1,
+      "line": 13,
+      "sha256": "415ba1d6c28d6e62e606990afbd33739e332c4685cbd373e15a5513c09052a32",
+      "kind": "program",
+      "destination": "examples/api-contract/player-recipe-searcher-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/api/examples.md",
+      "index": 1,
+      "line": 27,
+      "sha256": "2a428d4af089e1b618d9db595d886f7414ead10da1e85dcdec78e0b46e882ba3",
+      "kind": "program",
+      "destination": "examples/api-contract/api-examples-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/computer-runtime/base-globals-api.md",
+      "index": 1,
+      "line": 86,
+      "sha256": "0df13a8effb19503f4d63234dd22ca32e099272dfbaa5ddece6e99c8d7b5968b",
+      "kind": "program",
+      "destination": "examples/api-contract/computer-runtime-base-globals-api-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/computer-runtime/lua-api.md",
+      "index": 1,
+      "line": 11,
+      "sha256": "4e274259f6d67150b063fabad2333646b347b536ac00e5b29715e0302298149a",
+      "kind": "program",
+      "destination": "examples/api-contract/computer-runtime-lua-api-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/computer-runtime/lua-api.md",
+      "index": 2,
+      "line": 93,
+      "sha256": "d7355a43c3a2de8833c5facf27034b4e3e69445f8ff788c2181b3d014323dc77",
+      "kind": "program",
+      "destination": "examples/api-contract/computer-runtime-lua-api-2.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/computer-runtime/lua-api.md",
+      "index": 3,
+      "line": 139,
+      "sha256": "0df13a8effb19503f4d63234dd22ca32e099272dfbaa5ddece6e99c8d7b5968b",
+      "kind": "program",
+      "destination": "examples/api-contract/computer-runtime-base-globals-api-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/console-shell/lua-api.md",
+      "index": 1,
+      "line": 121,
+      "sha256": "00df9093341025cf35b4befba99ad87eb9ef3550990887167d4d135dbbf73a3a",
+      "kind": "console",
+      "destination": "examples/api-contract/console-shell-lua-api-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/dashboard-interface/lua-api.md",
+      "index": 1,
+      "line": 133,
+      "sha256": "0f55e9c742893b0be3e598c540e2e4cf1c53f0540f0b2a5e3ffcc8d60345102a",
+      "kind": "program",
+      "destination": "examples/dashboard-program.lua",
+      "form": "module"
+    },
+    {
+      "path": "openspec/specs/device-configurator/lua-api.md",
+      "index": 1,
+      "line": 121,
+      "sha256": "bae1af66174bff388431f5404ff1bf96ea895a5b91d499054d30d232a09c38e2",
+      "kind": "program",
+      "destination": "examples/api-contract/device-configurator-lua-api-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/factoriopedia-interface/lua-api.md",
+      "index": 1,
+      "line": 151,
+      "sha256": "bd98e21f71857afc2f4d68fa47344aaa6ff09ec8946198dc81079f5db6ae65c1",
+      "kind": "program",
+      "destination": "examples/api-contract/factoriopedia-interface-lua-api-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/kv-database/lua-api.md",
+      "index": 1,
+      "line": 56,
+      "sha256": "ded9ed5087f8ea708a508a65c37ac56a84faa519cd0dc2a49f13f3b979fd16ec",
+      "kind": "program",
+      "destination": "examples/api-contract/kv-database-lua-api-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/logic-handler/lua-api.md",
+      "index": 1,
+      "line": 108,
+      "sha256": "9742ca0d1385c0ce4ddf174d6009b7ab615875b39f23921c53632443f187800a",
+      "kind": "program",
+      "destination": "examples/api-contract/logic-handler-lua-api-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/monitor-display/buffering-api.md",
+      "index": 1,
+      "line": 135,
+      "sha256": "0bec2c3469ec9411d6d1a05b2b11d2810901add399579f14a0c06198c9fa806e",
+      "kind": "program",
+      "destination": "examples/api-contract/monitor-display-buffering-api-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/monitor-display/lua-api.md",
+      "index": 1,
+      "line": 104,
+      "sha256": "bc0e2c3a2e3e26d135eeafce2e0383cf74c474a7c55427f9e306ce0094b344a2",
+      "kind": "program",
+      "destination": "examples/api-contract/monitor-display-lua-api-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/peripheral-network/lua-api.md",
+      "index": 1,
+      "line": 78,
+      "sha256": "2f1e4ba118b5d9249711fd5278f83e5ee3a0bdbe9358e80d570783287b0775d9",
+      "kind": "program",
+      "destination": "examples/api-contract/peripheral-network-lua-api-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/production-statistics/lua-api.md",
+      "index": 1,
+      "line": 141,
+      "sha256": "f7dd0b7e912eb81ea446120bfca63740eb4e7caa0576b4d2d424e748f0fb4291",
+      "kind": "program",
+      "destination": "examples/api-contract/production-statistics-lua-api-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/program-editor/lua-api.md",
+      "index": 1,
+      "line": 29,
+      "sha256": "7fe080015a216b930484945e02a04d201973a9c2ff94e295452bbff2f9e4b211",
+      "kind": "program",
+      "destination": "examples/api-contract/program-editor-lua-api-1.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/program-source/lua-api.md",
+      "index": 1,
+      "line": 41,
+      "sha256": "5f6fe0704335a87c30e7f1a448ce44524f9551e43b6fbd3945355d819a89204a",
+      "kind": "program",
+      "destination": "examples/function-program.lua",
+      "form": "source"
+    },
+    {
+      "path": "openspec/specs/recipe-searcher/lua-api.md",
+      "index": 1,
+      "line": 139,
+      "sha256": "846cfeadc91ce9611595b66bbbd73930ffd53881b9d89a1043b22685312fe96d",
+      "kind": "program",
+      "destination": "examples/recipe-searcher-program.lua",
+      "form": "module"
+    },
+    {
+      "path": "openspec/specs/speaker-peripheral/lua-api.md",
+      "index": 1,
+      "line": 127,
+      "sha256": "c0f0f988f5ceaac576dcf6a20dc1ad45f340e776fbee1d20361bbb03f12be908",
+      "kind": "program",
+      "destination": "examples/api-contract/speaker-peripheral-lua-api-1.lua",
+      "form": "source"
+    }
+  ]
+}

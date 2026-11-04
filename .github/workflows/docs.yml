@@ -3,7 +3,26 @@ name: Player documentation
 on:
   push:
     branches: [main]
-    paths: ['docs/player/**', 'mkdocs.yml', 'requirements-docs.txt', '.github/workflows/docs.yml']
+    paths:
+      - 'docs/player/**'
+      - 'api/**'
+      - 'tools/data/**'
+      - 'tools/player_docs.py'
+      - 'tools/api_reference.py'
+      - 'tools/api_migration.py'
+      - 'tools/api_changes.py'
+      - 'tools/lua_api.py'
+      - 'tools/luals-*'
+      - 'tools/limit_docs.py'
+      - 'tools/configuration_catalog.py'
+      - 'tools/configuration_docs.py'
+      - 'tools/planning_examples.py'
+      - 'docs/api-coverage.json'
+      - 'docs/api-reference-provenance.json'
+      - 'examples/**'
+      - 'mkdocs.yml'
+      - 'requirements-docs.txt'
+      - '.github/workflows/docs.yml'
   workflow_dispatch:
     inputs:
       publish_ref:

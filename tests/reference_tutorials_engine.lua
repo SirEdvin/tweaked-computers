@@ -97,7 +97,10 @@ local function inventory(x,tick)
   local function check(topic,methods)
     local signatures={}
     for _,block in ipairs(topic.blocks) do
-      if block.kind=='signature' then signatures[assert(block.text:match('^([%w_]+)%('))]=true end
+      if block.kind=='signature' then
+        local name=block.text:match('^([%w_]+)%(')
+        if name then signatures[name]=true end -- A facade type/alias is not a method.
+      end
     end
     local names={}
     for name in pairs(methods) do assert(signatures[name],'undocumented live method '..name);names[#names+1]=name end
@@ -115,7 +118,7 @@ local function inventory(x,tick)
   -- sandbox.lua installs the fatal stop intrinsic after service composition;
   -- tests.api_inventory additionally exercises it as a compiled guest member.
   namespaces.computer.stop=true
-  check(assert(topics.Computer),namespaces.computer)
+  check(assert(topics.computer),namespaces.computer)
   check(assert(topics['peripheral.discovery']),namespaces.peripheral)
   local seen={}
   for _,entry in ipairs(x.programs) do

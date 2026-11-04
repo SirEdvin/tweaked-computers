@@ -1002,3 +1002,673 @@ function inspect(event)
   computer.log((stock.status or "expired") .. " / private=" .. independent.get("observer"))
 end
 ```
+
+## Retained API examples
+
+These complete sources were preserved from the former API companions.
+Use a separate stopped computer for each program; do not concatenate programs.
+The [wiring guide](getting-started.md), [factory setup](factory.md) and
+[current typed reference](api/types.md) explain their device roles and limits.
+Historical source identities below are provenance, not alternate API contracts.
+
+### player-kv-1
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `docs/player/api/kv.md:1`.
+
+```lua
+function start(event)
+  local db = peripheral.find("kv_database", "red")
+  if not db then
+    computer.log("Connect a database on red NETWORK")
+    return
+  end
+  local ok, value = pcall(db.get, "counter")
+  if ok then
+    computer.log(value or "No counter yet")
+  elseif type(value) == "table" then
+    computer.log(value.code .. ": " .. value.message)
+  else
+    computer.log(tostring(value))
+  end
+end
+```
+
+### function-program
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `docs/player/api/language.md:1`.
+
+```lua
+local function increment(value)
+  return value + 1
+end
+
+function start(event)
+  local total = sample()
+  print("Initial sample count:", total)
+  computer.every(60, "sample")
+end
+
+function sample(event)
+  local total = increment(computer.getState("samples") or 0)
+  computer.setState("samples", total)
+  return total
+end
+```
+
+### player-recipe-searcher-1
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `docs/player/api/recipe-searcher.md:1`.
+
+```lua
+function start(event)
+    local searcher = peripheral.find("recipe_searcher", "red")
+    assert(searcher, "Connect a Recipe Searcher on red")
+    local recipes = searcher.findRecipes("item", "iron-plate", "smelting")
+    local limits = searcher.getLimits()
+end
+```
+
+### api-examples-1
+
+Use one computer, one database, one Logic Handler, one Configurator and a 2×2 monitor rectangle.
+Join their NETWORK ports on red. Separately connect a stock-reading chest to INPUT red,
+and OUTPUT green plus Configurator TARGET green to the powered inserters.
+Enable chest content reading manually; the program configures inserters, not the chest.
+
+Source identity: `openspec/api/examples.md:1`.
+
+```lua
+function start(event)
+  local io = peripheral.find("logic_handler", "red")
+  local db = peripheral.find("kv_database", "red")
+  local monitor = peripheral.find("monitor", "red")
+  local cfg = peripheral.find("configurator", "red")
+  assert(io and db and monitor and cfg, "Connect all four peripherals")
+
+  if computer.getState("enabled") == nil then
+    computer.setState("enabled", true)
+  end
+  local configured = 0
+  for _, device in ipairs(cfg.getDevices("green")) do
+    if device.type == "inserter" then
+      local caps = cfg.getCapabilities(device.id, "green")
+      local enable = caps.settings.circuit_enable_disable
+      local condition = caps.settings.circuit_condition
+      if enable and enable.writable and condition and condition.writable then
+        cfg.setConfiguration(device.id, {
+          set = {
+            circuit_enable_disable = true,
+            circuit_condition = {
+              first_signal = { type = "virtual", name = "signal-A", quality = "normal" },
+              comparator = ">", constant = 0
+            }
+          }
+        }, "green")
+        configured = configured + 1
+      end
+    end
+  end
+  assert(configured > 0, "Connect a configurable inserter to the target port")
+
+  -- Configuration/capability readback and subscriptions share one callback
+  -- ceiling. Admit the next setup phase on a later real simulation tick.
+  computer.after(1, "ready")
+end
+
+function ready(event)
+  local io = peripheral.find("logic_handler", "red")
+  local monitor = peripheral.find("monitor", "red")
+  assert(io and monitor, "Required peripheral disconnected during setup")
+  monitor.setTextScale(1)
+  io.subscribe({
+    input = "red",
+    signals = { { type = "item", name = "iron-plate", quality = "normal" } },
+    initial = true
+  }, "changed")
+  computer.on("monitor_touch", "touched")
+  computer.on("monitor_resize", "resized")
+  computer.every(60, "refresh")
+  computer.after(1, "refresh")
+end
+
+function changed(event)
+  -- Coarse refresh also exists; this wakes it promptly for stock changes.
+  computer.after(1, "refresh")
+end
+
+function touched(event)
+  local monitor = peripheral.find("monitor", "red")
+  if monitor and event.peripheral == peripheral.getName(monitor) then
+    computer.setState("enabled", not computer.getState("enabled"))
+    computer.after(1, "refresh")
+  end
+end
+
+function resized(event)
+  computer.after(1, "refresh")
+end
+
+function refresh(event)
+  local io = peripheral.find("logic_handler", "red")
+  local db = peripheral.find("kv_database", "red")
+  local monitor = peripheral.find("monitor", "red")
+  assert(io and db and monitor, "Required peripheral disconnected")
+
+  -- Read current native input instead of acting on an old queued sample.
+  local count = io.readSignal("red", {
+    type = "item", name = "iron-plate", quality = "normal"
+  })
+  local output = 0
+  if computer.getState("enabled") and count < 100 then output = 1 end
+  io.setOutput({
+    { signal = { type = "virtual", name = "signal-A", quality = "normal" }, count = output }
+  })
+
+  local status = "STOPPED"
+  if output == 1 then status = "FILLING" end
+  db.hset("stock:iron", "count", tostring(count),
+    "status", status, "sample_tick", tostring(computer.getTick()))
+  db.expire("stock:iron", 3)
+
+  monitor.setBackgroundColor(colors.black)
+  monitor.setTextColor(colors.white)
+  monitor.clear()
+  monitor.setCursorPos(1, 1)
+  monitor.write("Iron: " .. tostring(count))
+  monitor.setCursorPos(1, 2)
+  monitor.setTextColor(colors.lime)
+  monitor.write(status)
+  monitor.setCursorPos(1, 3)
+  monitor.write("Touch to toggle")
+end
+```
+
+### computer-runtime-base-globals-api-1
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/computer-runtime/base-globals-api.md:1`.
+
+```lua
+function start(event)
+  local values = table.pack(false, nil, 3)
+  assert(unpack == table.unpack)
+  print(_VERSION, unpack(values, 1, values.n))
+  local t = {}
+  assert(rawequal(rawset(t, "ready", false), t))
+  assert(rawget(t, "ready") == false)
+  assert(rawlen("hello") == 5)
+  local ok, message = xpcall(function()
+    error("sample failure")
+  end, function(problem)
+    return "handled: " .. tostring(problem)
+  end)
+  assert(ok == false)
+  print(message)
+end
+```
+
+### computer-runtime-lua-api-1
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/computer-runtime/lua-api.md:1`.
+
+```lua
+function start(event)
+  local boots = computer.getState("boots") or 0
+  computer.setState("boots", boots + 1)
+  computer.every(60, "sample")
+end
+
+function sample(event)
+  computer.log("Sampling at tick " .. tostring(event.tick))
+end
+```
+
+### computer-runtime-lua-api-2
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/computer-runtime/lua-api.md:2`.
+
+```lua
+function start(event)
+  local db = peripheral.find("kv_database", "red")
+  if not db then
+    computer.log("Connect a database with a complete red path")
+    return
+  end
+  local ok, value = pcall(db.get, "counter")
+  if ok then
+    computer.log(value or "No counter yet")
+  elseif type(value) == "table" then
+    computer.log(value.code .. ": " .. value.message)
+  else
+    computer.log(tostring(value))
+  end
+end
+```
+
+### console-shell-lua-api-1
+
+These are separate live Console commands, not a saved program. Replace the example
+`tc-42` with your red-connected monitor name. Run each line in order; the write
+changes the real monitor. Stop/Run or confirmed Reset Shell clears these bindings.
+
+Source identity: `openspec/specs/console-shell/lua-api.md:1`.
+
+```text
+p = peripheral.wrap("tc-42", "red")
+print(p.getSize())
+p.setCursorPos(1, 1); p.write("Shell test")
+size = p.getSize
+print(size())
+```
+
+### dashboard-program
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/dashboard-interface/lua-api.md:1`.
+
+```lua
+function start(event)
+    local panel = peripheral.find("dashboard", "red")
+    assert(panel, "Connect a Dashboard on red")
+    panel.setTab(1, {
+        title = "Overview",
+        content = {type = "column", id = "root", children = {
+            {type = "label", id = "status", text = "Ready"},
+            {type = "button", id = "ack", text = "Acknowledge"}
+        }}
+    })
+    panel.subscribe("clicked")
+end
+
+function clicked(event)
+    local panel = peripheral.wrap(event.peripheral, event.wire)
+    if event.tab == 1 and event.button == "ack" then
+        panel.setText(1, "status", "Acknowledged")
+    end
+end
+```
+
+### device-configurator-lua-api-1
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/device-configurator/lua-api.md:1`.
+
+```lua
+function start(event)
+  local cfg = peripheral.find("configurator", "red")
+  if not cfg then return end
+  for _, device in ipairs(cfg.getDevices("green")) do
+    computer.log(device.prototype .. " at " ..
+      tostring(device.position.x) .. "," .. tostring(device.position.y))
+    if device.type == "inserter" then
+      local caps = cfg.getCapabilities(device.id, "green")
+      local enable = caps.settings.circuit_enable_disable
+      local condition = caps.settings.circuit_condition
+      if enable and enable.writable and condition and condition.writable then
+        cfg.setConfiguration(device.id, {
+          set = {
+            circuit_enable_disable = true,
+            circuit_condition = {
+              comparator = ">",
+              first_signal = { type = "virtual", name = "signal-A", quality = "normal" },
+              constant = 0
+            }
+          }
+        }, "green")
+      end
+    end
+  end
+end
+```
+
+### factoriopedia-interface-lua-api-1
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/factoriopedia-interface/lua-api.md:1`.
+
+```lua
+function start(event)
+    local encyclopedia = peripheral.find("factoriopedia_interface", "red")
+    assert(encyclopedia, "Connect a Factoriopedia Interface on red")
+
+    local item = encyclopedia.getItem("iron-plate")
+    computer.log(item.name .. " stack size=" .. tostring(item.stack_size))
+    if item.rocket_capacity ~= nil then
+        computer.log("Reference items per rocket=" .. tostring(item.rocket_capacity))
+    else
+        computer.log("No finite mass-limited rocket count")
+    end
+
+    local fluid = encyclopedia.getFluid("water")
+    computer.log(fluid.name .. " temperature="
+        .. tostring(fluid.default_temperature) .. ".."
+        .. tostring(fluid.max_temperature) .. " C")
+
+    local function reportNames(method, label)
+        local ok, result = pcall(method)
+        if ok then
+            computer.log(label .. ": " .. tostring(#result))
+        elseif type(result) == "table" and result.code == "E_LIMIT" then
+            computer.log(label .. ": complete list exceeds shared Data limits")
+        else
+            error(result)
+        end
+    end
+    reportNames(encyclopedia.listItems, "Installed item names")
+    reportNames(encyclopedia.listFluids, "Installed fluid names")
+end
+```
+
+### kv-database-lua-api-1
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/kv-database/lua-api.md:1`.
+
+```lua
+function start(event)
+  local db = peripheral.find("kv_database", "red")
+  if not db then return end
+  db.hset("machine", "status", "ready", "owner", computer.getID())
+  db.expire("machine", 30)
+  computer.after(60, "inspect")
+end
+
+function inspect(event)
+  local db = peripheral.find("kv_database", "red")
+  if not db then return end
+  local fields = db.hgetall("machine")
+  computer.log(fields.status or "expired")
+  computer.log("TTL=" .. tostring(db.ttl("machine")))
+end
+```
+
+### logic-handler-lua-api-1
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/logic-handler/lua-api.md:1`.
+
+```lua
+function start(event)
+  local io = peripheral.find("logic_handler", "red")
+  if io then
+    io.subscribe({
+      input = "red",
+      signals = { { type = "item", name = "iron-plate", quality = "normal" } },
+      initial = true
+    }, "changed")
+  end
+end
+
+function changed(event)
+  local io = peripheral.wrap(event.peripheral, event.wire)
+  if not io then return end
+  local count = 0
+  for _, entry in ipairs(event.current) do
+    count = entry.count
+  end
+  local enable = 0
+  if count < 100 then enable = 1 end
+  io.setOutput({
+    { signal = { type = "virtual", name = "signal-A", quality = "normal" }, count = enable }
+  })
+end
+```
+
+### monitor-display-buffering-api-1
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/monitor-display/buffering-api.md:1`.
+
+```lua
+function start(event)
+  local members, seen = {}, {}
+  for _, wire in ipairs({"red", "green"}) do
+    for _, name in ipairs(peripheral.getNames(wire)) do
+      if not seen[name] and peripheral.getType(name, wire) == "monitor" then
+        seen[name] = true
+        members[#members + 1] = {name = name, wire = wire}
+      end
+    end
+  end
+  peripheral.setMonitorSyncGroup(members)
+  computer.log("Selected synchronized monitors")
+end
+```
+
+### monitor-display-lua-api-1
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/monitor-display/lua-api.md:1`.
+
+```lua
+function start(event)
+  computer.on("monitor_touch", "touched")
+  computer.on("monitor_resize", "resized")
+  local m = peripheral.find("monitor", "red")
+  if m then
+    m.setBackgroundColor(colors.black)
+    m.setTextColor(colors.lime)
+    m.clear()
+    m.setCursorPos(1, 1)
+    m.write("READY")
+  end
+end
+
+function touched(event)
+  local m = peripheral.wrap(event.peripheral, event.wire)
+  if m then
+    m.setCursorPos(1, 1)
+    m.write(tostring(event.x) .. "," .. tostring(event.y))
+  end
+end
+
+function resized(event)
+  local m = peripheral.wrap(event.peripheral, event.wire)
+  if m then
+    m.setCursorPos(1, 1)
+    m.write("RESIZED")
+  end
+end
+```
+
+### peripheral-network-lua-api-1
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/peripheral-network/lua-api.md:1`.
+
+```lua
+function start(event)
+  for _, wire in ipairs({ "red", "green" }) do
+    for _, name in ipairs(peripheral.getNames(wire)) do
+      local info = peripheral.describe(name, wire)
+      if info then
+        computer.log(wire .. " / " .. name .. " / " .. info.type)
+      end
+    end
+  end
+end
+```
+
+### production-statistics-lua-api-1
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/production-statistics/lua-api.md:1`.
+
+```lua
+function start()
+  local stats = peripheral.find("production_statistics", "red")
+  assert(stats, "Connect a Production Statistics device with red wire")
+  local items = stats.getTotals("item")
+  local normal = items.input.normal or {}
+  computer.log("Iron produced: " .. tostring(normal["iron-plate"] or 0))
+
+  local fluids = stats.getRates("fluid", "one_minute")
+  computer.log("Water consumed/min: " .. tostring(fluids.output.water or 0))
+
+  local pollution = stats.getTotals("pollution")
+  for name, amount in pairs(pollution.input) do
+    computer.log(name .. " emitted " .. tostring(amount))
+  end
+
+  local history = stats.getHistory("item", "iron-plate", "one_minute", "normal")
+  computer.log("Newest iron production/min: " .. tostring(history.input[1]))
+end
+```
+
+### program-editor-lua-api-1
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/program-editor/lua-api.md:1`.
+
+```lua
+function start(event)
+  computer.log("Controller started")
+  computer.on("peripheral_attach", "attached")
+end
+
+function attached(event)
+  computer.log(event.peripheral .. " attached on " .. event.wire)
+end
+```
+
+### recipe-searcher-program
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/recipe-searcher/lua-api.md:1`.
+
+```lua
+function start(event)
+    local searcher = peripheral.find("recipe_searcher", "red")
+    assert(searcher, "Connect a Recipe Searcher with a red Network wire")
+
+    local limits = searcher.getLimits()
+    assert(limits.recipe_search_results == 50)
+
+    local ok, recipes = pcall(searcher.findRecipes, "item", "iron-plate")
+    if not ok then
+        if type(recipes) ~= "table" or recipes.code ~= "E_LIMIT" then
+            error(recipes)
+        end
+        recipes = searcher.findRecipes("item", "iron-plate", "smelting")
+    end
+    for _, recipe in ipairs(recipes) do
+        computer.log(recipe.name .. " / " .. recipe.category
+            .. " / seconds=" .. tostring(recipe.energy)
+            .. " / enabled=" .. tostring(recipe.enabled))
+    end
+
+    local fluids = searcher.findRecipes("fluid", "petroleum-gas", "chemistry")
+    computer.setState("recipe_count", #recipes)
+    computer.setState("fluid_recipe_count", #fluids)
+end
+```
+
+### speaker-peripheral-lua-api-1
+
+Connect the peripherals named in the source on their stated discovery color.
+Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.
+Custom devices need no electricity; native radars, speakers and factory targets keep
+their own power requirements. Validate, Save, then Run; inspect Console and the device.
+
+Source identity: `openspec/specs/speaker-peripheral/lua-api.md:1`.
+
+```lua
+function start(event)
+  local speaker = peripheral.find("speaker", "red")
+  assert(speaker, "Connect a powered vanilla speaker on red")
+  for _, instrument in ipairs(speaker.getInstruments()) do
+    computer.log(instrument)
+  end
+  local notes = speaker.getNotes("piano")
+  assert(#notes > 0)
+  computer.log(notes[1].name)
+  computer.log(tostring(speaker.playNote("piano", 0.5, notes[1].pitch)))
+  local page = speaker.getSounds("utility/")
+  if #page.sounds > 0 then
+    computer.log(tostring(speaker.playSound(page.sounds[1], 0.5)))
+  end
+  computer.setState("speaker", peripheral.getName(speaker))
+  computer.every(60, "chime")
+end
+
+function chime(event)
+  local speaker = peripheral.wrap(computer.getState("speaker"), "red")
+  if speaker then
+    local accepted = speaker.playNote("piano", 0.25, 0)
+    if not accepted then computer.log("Speaker busy this tick") end
+  end
+end
+```

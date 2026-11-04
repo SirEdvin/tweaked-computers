@@ -1,0 +1,32 @@
+{
+  "runtime.version": "Lua 5.2",
+  "runtime.builtin": {
+    "basic": "disable",
+    "bit": "disable",
+    "bit32": "disable",
+    "builtin": "enable",
+    "coroutine": "disable",
+    "debug": "disable",
+    "ffi": "disable",
+    "io": "disable",
+    "jit": "disable",
+    "jit.profile": "disable",
+    "jit.util": "disable",
+    "math": "disable",
+    "os": "disable",
+    "package": "disable",
+    "string": "disable",
+    "table": "disable",
+    "table.new": "disable",
+    "table.clear": "disable",
+    "utf8": "disable",
+    "string.buffer": "disable"
+  },
+  "workspace.checkThirdParty": false,
+  "workspace.library": [],
+  "workspace.useGitIgnore": false,
+  "telemetry.enable": false,
+  "hover.expandAlias": false,
+  "type.inferParamType": false,
+  "docScriptPath": "/../luals-export.lua"
+}

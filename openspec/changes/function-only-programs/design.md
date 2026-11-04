@@ -48,7 +48,7 @@ Different source bytes can legitimately have different compilation costs. Re-der
 
 A host Lua module returning a source string is not itself a guest program. Retain those module interfaces, require paths and tutorial bindings; change the string's contents. Do not mechanically remove every top-level `return` or every table in `examples/` or `tests/`. Keep the deliberately paste-ready `smooth-sine-chart.lua` and exact starter equality intact.
 
-Update authoritative fenced examples in `openspec/api/` and capability companions before running `tools/planning_examples.py`. Preserve its explicit distinction between complete programs and Console/snippet content; do not scrape every fence from every historical document. Update authoring prose in `tools/player_docs.py`, then regenerate the derived player pages with that tool. Existing package tests and `--check` modes remain the freshness gates.
+Update canonical runnable sources under `examples/` before running `tools/planning_examples.py`. Preserve its explicit distinction between complete programs and Console/snippet content; the frozen migration manifest retains old source identities. API contracts now live in `api/**/*.d.lua`; regenerate both references with `tools/player_docs.py`. Existing package tests and `--check` modes remain the freshness gates. See [API reconciliation](api-reconciliation.md).
 
 No new generator, dependency or persistent source converter is needed. Extend existing focused assertions only where they do not already cover the changed language contract.
 
@@ -70,7 +70,7 @@ The implementation inventory includes these surfaces:
 | Core tests | `tests/runtime_contract.lua`, `compiler_cache_contract.lua`, `computer_contract.lua`, `computer_cold.lua`, `editor_contract.lua`, `editor_cold.lua`, `editor_workspace.lua`, `shell_contract.lua`, `shell_cold.lua`, `api_inventory.lua` |
 | Native/runtime fixtures | All source-bearing `tests/*_engine.lua`, including integration, lifecycle, device/network/logic/KV, monitor, dashboard, recipe, production-statistics, Factoriopedia, native-circuit, inspector, envelope and maintenance workloads; include client and upgrade variants |
 | Examples and in-game help | All source-bearing `examples/*.lua`, `scripts/ui/help.lua`, `scripts/ui/tutorials.lua`, including chart/baseline programs, factory and shared-data examples |
-| Authoritative API docs | `openspec/api/examples.md`, `openspec/api/native-language.md`; source, runtime/base-globals, editor, dashboard, configurator, Factoriopedia, KV, logic, monitor/buffering, network, production-statistics and recipe companions |
+| Authoritative API docs | `api/**/*.d.lua`; grammar in `docs/player/api/language.md`; retained examples under `examples/`; see `api-reconciliation.md` |
 | Maintained and historical docs | `README.md`, `changelog.txt`, all relevant `docs/` pages; observed anchors include `docs/computer-runtime.md`, `docs/kv-database.md`, `docs/player/api/language.md`, `docs/player/console.md`, `docs/release-0.1.10.md`, `docs/release-0.1.11.md`, `docs/sc4-final-acceptance.md` |
 | Planning history | `openspec/changes/archive/`, any active changes and this change; historical artifacts are not exempt |
 | Generated material | `examples/planning-programs.lua`, `docs/player/examples.md`, other affected player output, `openwiki/runtime/compiler-and-sandbox.md`, `openwiki/.claims/runtime/compiler-and-sandbox.json` and any other affected generated page/claim/index |
@@ -78,7 +78,7 @@ The implementation inventory includes these surfaces:
 
 This is a grounded starting inventory, not a claim that lexical matches alone establish completeness. Audit tracked files plus new implementation files, hidden metadata, filenames, comments, string-built programs and freshly built ZIP entries. Review context rather than blanket-deleting ordinary terms used for unrelated data structures. Keep any one-off search expressions and audit receipts outside git; do not add a permanent retired-syntax corpus as the cleanup test.
 
-Sync the four spec deltas during implementation, replace the source companion from this change and update all other affected companion examples without changing peripheral signatures. The existing `program-source` Purpose also needs a positive grammar-only replacement during implementation: delta Purpose sections do not update an existing capability. Unmodified ordinary-call, lexical-helper and named-registration requirements remain in force.
+Sync the four behavioral spec deltas during implementation; API/source companion semantics are already reconciled in `api-reconciliation.md` and must not be copied back into maintained OpenSpec. The existing `program-source` Purpose states only the accepted grammar. Unmodified ordinary-call, lexical-helper and named-registration requirements remain in force.
 
 The source delta explicitly removes and replaces the boundary, lifecycle, globals and reserved-name requirements. Their replacement blocks preserve supported scenarios but deliberately retire superseded authoring cases. This is not an implicit scenario deletion inside `MODIFIED`: OpenSpec requires that operation to retain existing scenario names. Review each removal together with its named replacement and retain all independent safety/lifecycle assertions.
 

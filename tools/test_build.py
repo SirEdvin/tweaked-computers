@@ -10,6 +10,31 @@ import build
 
 
 class PackageInventoryTests(unittest.TestCase):
+    def test_public_library_is_complete_exact_and_inert(self):
+        import hashlib
+        import json
+        expected = {'api/' + name + '.d.lua' for name in (
+            'common', 'events', 'computer', 'globals', 'colors', 'peripheral', 'monitor',
+            'kv-database', 'logic-handler', 'dashboard', 'configurator', 'recipe-searcher',
+            'factoriopedia-interface', 'production-statistics', 'modem', 'speaker',
+            'generated/configurator', 'generated/limits')}
+        expected.add('api/README.md')
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            with zipfile.ZipFile(build.build(output)) as package:
+                prefix = next(n[:-len('info.json')] for n in package.namelist() if n.endswith('/info.json'))
+                files = {n[len(prefix):] for n in package.namelist()}
+                self.assertEqual({n for n in files if n.startswith('api/')}, expected)
+                receipt = json.loads(package.read(prefix + 'package-manifest.json'))
+                for name in expected | {'scripts/ui/api-reference.lua'}:
+                    data = package.read(prefix + name)
+                    self.assertEqual(data, (build.ROOT / name).read_bytes())
+                    self.assertEqual(hashlib.sha256(data).hexdigest(), receipt['payload_sha256'][name])
+                self.assertFalse(any(n.startswith(('tools/', 'gameitself/', 'openspec/changes/', 'openspec/api/')) for n in files))
+                self.assertFalse(any(n.endswith(('lua-api.md', 'buffering-api.md', 'base-globals-api.md')) for n in files))
+        self.assertFalse(list((build.ROOT / 'openspec/specs').rglob('*api.md')))
+        for p in (build.ROOT / 'scripts').rglob('*.lua'):
+            self.assertNotRegex(p.read_text(), r"require\(['\"]api[./]")
+
     def test_optional_chart_ci_fixture_is_exact_and_not_shipped(self):
         import smoke
         path=build.ROOT/'.github/fixtures/factorio-charts/factorio-charts_1.2.0.zip'
@@ -20,8 +45,8 @@ class PackageInventoryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
             with zipfile.ZipFile(build.build(output)) as package:
                 self.assertFalse(any('/.github/' in name or name.endswith('.zip') for name in package.namelist()))
-                contracts={'openspec/specs/dashboard-interface/spec.md','openspec/specs/dashboard-interface/lua-api.md'}
-                self.assertTrue(contracts.issubset(build.CONTRACT_FILES))
+                contracts={'openspec/specs/dashboard-interface/spec.md','api/dashboard.d.lua'}
+                self.assertTrue({p for p in contracts if p.startswith('openspec/')}.issubset(build.CONTRACT_FILES))
                 prefix=next(name[:-len('info.json')] for name in package.namelist() if name.endswith('/info.json'))
                 for relative in (*contracts,'examples/dashboard-program.lua','examples/dashboard-charts.lua'):
                     self.assertEqual(package.read(prefix+relative),(build.ROOT/relative).read_bytes())
@@ -30,21 +55,25 @@ class PackageInventoryTests(unittest.TestCase):
         import re
         provider = (build.ROOT / 'scripts/services/peripheral.lua').read_text()
         types = set(re.findall(r"='([^']+)'", re.findall(r'local types=\{([^}]+)\}', provider)[0]))
-        companion = (build.ROOT / 'openspec/specs/peripheral-network/lua-api.md').read_text()
-        guide = (build.ROOT / 'docs/player/api/peripheral.md').read_text()
-        self.assertEqual(set(re.findall(r'`([^`]+)`', re.findall(r'One of (.*?); nil', companion)[0])), types)
-        self.assertEqual(set(re.findall(r'"([^"]+)"', re.findall(r'  type = ([^\n]+)', companion)[0])), types)
-        self.assertEqual(set(re.findall(r'`([^`]+)`', re.findall(r'Types: (.*?)Unknown string', guide, re.S)[0])), types)
+        declaration = (build.ROOT / 'api/peripheral.d.lua').read_text()
+        guide = (build.ROOT / 'docs/player/api/types/TC.PeripheralType.md').read_text()
+        union = re.search(r'^---@alias TC.PeripheralType (.+)$', declaration, re.M)
+        self.assertIsNotNone(union)
+        assert union is not None
+        self.assertEqual(set(re.findall(r"'([^']+)'", union[1])), types)
+        self.assertIn('---@field type TC.PeripheralType ', declaration)
+        self.assertIn('---@return TC.PeripheralType|nil type ', declaration)
+        self.assertEqual(set(re.findall(r"'([^']+)'", guide)), types)
 
-    def test_console_companion_matches_live_follow_contract(self):
-        companion = (build.ROOT / 'openspec/specs/console-shell/lua-api.md').read_text()
+    def test_console_guide_matches_live_follow_contract(self):
+        companion = ' '.join((build.ROOT / 'docs/player/console.md').read_text().split()).lower()
         spec = (build.ROOT / 'openspec/specs/console-shell/spec.md').read_text()
         self.assertIn('Follow-off SHALL keep the single Console text box live without automatic scrolling', spec)
-        self.assertIn('Follow-off keeps the single Console text box live without automatic scrolling', companion)
+        self.assertIn('follow-off keeps output live without automatic scrolling', companion)
         self.assertIn('changed text may clear native selection', companion)
         self.assertIn('unchanged text is not reassigned', companion)
-        self.assertIn('There is no Refresh action or separate snapshot view', companion)
-        self.assertNotIn('Follow-off preserves the existing snapshot', companion)
+        self.assertIn('there is no refresh action or separate snapshot view', companion)
+        self.assertNotIn('follow-off preserves the existing snapshot', companion)
 
     def test_reference_tutorials_share_executable_sources_and_have_no_actions(self):
         import re
@@ -98,7 +127,7 @@ setBars(slot, id, bars)
 clearChart(slot, id)''',
             'PRODUCTION STATISTICS': '''getTotals(kind)
 getRates(kind, window)
-getHistory(kind, name, window [, quality])
+getHistory(kind, name, window, quality?)
 getLimits()''',
             'SPEAKER': '''getInstruments()
 getNotes(instrument)
@@ -164,51 +193,62 @@ getPaletteColour(color)
 getTextScale()
 setTextScale(scale)
 getLimits()''',
-            'RECIPE SEARCHER': '''findRecipes("item"/"fluid", exact_product_name, exact_category?)
+            'RECIPE SEARCHER': '''findRecipes(product_type, product_name, category?)
 getLimits()''',
             'CONFIGURATOR': '''getDevices(target_wire)
-getDevice(id, target_wire)
-getCapabilities(id, target_wire)
-getConfiguration(id, target_wire)
-setConfiguration(id, patch, target_wire)
-getSections(id, target_wire)
-addSection(id, definition, target_wire)
-setSection(id, index, patch, target_wire)
-removeSection(id, index, target_wire)
+getDevice(device_id, target_wire)
+getCapabilities(device_id, target_wire)
+getConfiguration(device_id, target_wire)
+setConfiguration(device_id, patch, target_wire)
+getSections(device_id, target_wire)
+addSection(device_id, definition, target_wire)
+setSection(device_id, section_index, patch, target_wire)
+removeSection(device_id, section_index, target_wire)
 getLimits()''',
         }
+        import api_reference
+        from lua_api import export_api, api_records, public_fields, FAMILIES, api_blocks
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
-            archive = build.build(output)
-            with zipfile.ZipFile(archive) as package:
-                source = package.read(next(n for n in package.namelist()
-                                           if n.endswith('/scripts/ui/help.lua'))).decode()
-        reference = re.search(r'  text=\[\[(.*?)\]\]', source, re.S)
-        assert reference is not None, 'missing packaged reference'
-        text = reference[1]
-        self.assertNotIn('supply 30 kw', text.lower(), 'custom-device Reference still requires electricity')
+            records = api_records(export_api(build.ROOT / 'api', Path(os.environ['LUALS_BIN']), Path(output) / 'export'))
+            products, topics, _ = api_reference.generate(records)
+            with zipfile.ZipFile(build.build(Path(output) / 'package')) as package:
+                prefix = next(n[:-len('info.json')] for n in package.namelist() if n.endswith('/info.json'))
+                self.assertEqual(package.read(prefix + 'scripts/ui/api-reference.lua').decode(), products['scripts/ui/api-reference.lua'])
+                self.assertEqual(package.read(prefix + 'scripts/ui/help.lua'), (build.ROOT / 'scripts/ui/help.lua').read_bytes())
         for relative in ('docs/player/getting-started.md', 'docs/player/factory.md',
                          'docs/player/api/production-statistics.md', 'docs/player/api/recipe-searcher.md'):
             self.assertNotIn('30 kw', (build.ROOT / relative).read_text().lower(), relative)
         self.assertEqual(sum(len(signatures.splitlines()) for signatures in expected.values()), 103)
+        families = {'PERIPHERALS': 'peripheral', 'DASHBOARD': 'dashboard',
+                    'PRODUCTION STATISTICS': 'production_statistics', 'SPEAKER': 'speaker',
+                    'RADAR MODEM': 'modem', 'LOGIC HANDLER': 'logic_handler',
+                    'KV DATABASE': 'kv_database', 'MONITOR': 'monitor',
+                    'RECIPE SEARCHER': 'recipe_searcher', 'CONFIGURATOR': 'configurator'}
         for heading, signatures in expected.items():
-            found = re.search(r'^' + re.escape(heading) + r'\n(.*?)(?=^[A-Z][A-Z ]+\n|\Z)',
-                              text, re.M | re.S)
-            assert found is not None, 'missing topic ' + heading
-            section = found[1]
-            for signature in signatures.splitlines():
-                with self.subTest(topic=heading, signature=signature):
-                    self.assertEqual(len(re.findall(r'^' + re.escape(signature) + r' -> ',
-                                                    section, re.M)), 1)
+            family = families[heading]
+            fields = public_fields(records, FAMILIES[family])
+            topic = next(t for t in topics if t['id'] == 'peripheral.' + ('discovery' if family == 'peripheral' else family))
+            self.assertNotIn('supply 30 kw', topic['text'].lower())
+            for line in signatures.splitlines():
+                for signature in line.split(' or '):
+                    method = signature.split('(', 1)[0]
+                    actual = {method + '(' + ', '.join(p['name'] + ('?' if p['optional'] else '')
+                              for p in s['parameters']) + ')' for s in fields[method]['signatures']}
+                    self.assertIn(signature, actual, (heading, signature))
+                    for block in api_blocks(fields[method]):
+                        self.assertIn(block, topic['blocks'], (heading, method, block))
+                    typed = [b['text'] for b in topic['blocks'] if b['kind']=='signature' and b['text'].startswith(method+'(')]
+                    self.assertEqual(len(typed), len(set(typed)), (heading, method))
 
     def test_speaker_contract_samples_and_fixtures_are_packaged_without_audio_assets(self):
         # Independent expected paths: dropping an allowlist entry must fail even
         # if the rest of the build remains internally self-consistent.
         contracts = {
             'openspec/specs/speaker-peripheral/spec.md',
-            'openspec/specs/speaker-peripheral/lua-api.md',
+            'api/speaker.d.lua',
             'openspec/specs/peripheral-network/spec.md',
         }
-        self.assertTrue(contracts.issubset(build.CONTRACT_FILES))
+        self.assertTrue({p for p in contracts if p.startswith('openspec/')}.issubset(build.CONTRACT_FILES))
         required = contracts | {
             'data-final-fixes.lua', 'prototypes/speaker-audio.lua',
             'scripts/speaker.lua', 'scripts/speaker-audio.lua',
@@ -234,11 +274,10 @@ getLimits()''',
         # allowlist cannot detect an accidental removal from that allowlist.
         contracts = {
             'openspec/specs/monitor-display/spec.md',
-            'openspec/specs/monitor-display/lua-api.md',
-            'openspec/specs/monitor-display/buffering-api.md',
+            'api/monitor.d.lua',
             'openspec/specs/peripheral-network/spec.md',
         }
-        self.assertTrue(contracts.issubset(build.CONTRACT_FILES))
+        self.assertTrue({p for p in contracts if p.startswith('openspec/')}.issubset(build.CONTRACT_FILES))
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
             first = build.build(Path(output) / 'first')
             second = build.build(Path(output) / 'second')
@@ -314,20 +353,20 @@ getLimits()''',
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
                 self.assertEqual(set(planning), set(build.CONTRACT_FILES))
-                self.assertEqual(len(build.CONTRACT_FILES), 42)
+                self.assertEqual(len(build.CONTRACT_FILES), 18)
                 self.assertFalse(any(name.startswith('openspec/changes/') for name in planning))
                 for relative in ('openspec/specs/program-source/spec.md',
-                                 'openspec/specs/program-source/lua-api.md'):
+                                 'docs/player/api/language.md'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 for relative in ('scripts/services/recipe-searcher.lua', 'examples/recipe-searcher-program.lua',
                                  'docs/player/api/recipe-searcher.md', 'assets/icons/recipe_searcher.png',
                                  'scripts/services/factoriopedia-interface.lua', 'examples/factoriopedia-program.lua',
                                  'docs/player/api/factoriopedia-interface.md', 'assets/icons/factoriopedia_interface.png',
-                                 'openspec/specs/factoriopedia-interface/spec.md', 'openspec/specs/factoriopedia-interface/lua-api.md',
+                                 'openspec/specs/factoriopedia-interface/spec.md', 'api/factoriopedia-interface.d.lua',
                                  'scripts/services/production-statistics.lua', 'examples/production-statistics-program.lua',
                                  'examples/production-statistics-monitor.lua', 'docs/player/api/production-statistics.md',
                                  'assets/icons/production_statistics.png', 'openspec/specs/production-statistics/spec.md',
-                                 'openspec/specs/production-statistics/lua-api.md'):
+                                 'api/production-statistics.d.lua'):
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 for relative in ('settings.lua', 'scripts/runtime/budget-settings.lua',
                                  'locale/en/settings.cfg', 'tests/runtime_budget_engine.lua',
@@ -374,6 +413,26 @@ getLimits()''',
 
 
 class CanonicalContractTests(unittest.TestCase):
+    def relocated_api_references(self, capability, text):
+        # Only path relocation is allowed; archived behavior/scenario text stays exact.
+        targets = {
+            'computer-runtime': 'api/computer.d.lua',
+            'program-source': 'docs/player/api/language.md',
+            'recipe-searcher': 'api/recipe-searcher.d.lua',
+            'factoriopedia-interface': 'api/factoriopedia-interface.d.lua',
+            'production-statistics': 'api/production-statistics.d.lua',
+            'monitor-display': 'api/monitor.d.lua', 'kv-database': 'api/kv-database.d.lua',
+            'radar-modem': 'api/modem.d.lua',
+        }
+        if 'Saved programs and Console commands SHALL expose' in text:
+            text = text.replace('`lua-api.md`', '`api/globals.d.lua`')
+        if capability in targets:
+            text = text.replace('`lua-api.md`', '`' + targets[capability] + '`')
+        if capability == 'device-configurator':
+            text = text.replace('`configuration-catalog.json` and `configuration-catalog.md`',
+                                '`api/generated/configurator.d.lua` and `docs/configuration-catalog-provenance.md`')
+        return text
+
     def scheduling_replacement(self, capability, name, canonical):
         import hashlib
         import re
@@ -543,6 +602,7 @@ class CanonicalContractTests(unittest.TestCase):
                 for name, body in re.findall(
                         r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|^## |\Z)',
                         delta.read_text(), re.M | re.S):
+                    body = self.relocated_api_references(delta.parent.name, body)
                     with self.subTest(change=change, capability=delta.parent.name, requirement=name):
                         current = dict(re.findall(r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|\Z)', canonical, re.M | re.S))
                         if self.scheduling_replacement(delta.parent.name, name, current):
@@ -594,6 +654,7 @@ class CanonicalContractTests(unittest.TestCase):
                 canonical = dict(re.findall(pattern, (build.ROOT / 'openspec/specs' /
                                       delta.parent.name / 'spec.md').read_text(), re.M | re.S))
                 for name, body in re.findall(pattern, delta.read_text(), re.M | re.S):
+                    body = self.relocated_api_references(delta.parent.name, body)
                     with self.subTest(change=change, capability=delta.parent.name, requirement=name):
                         if self.scheduling_replacement(delta.parent.name, name, canonical):
                             continue
@@ -643,8 +704,11 @@ class CanonicalContractTests(unittest.TestCase):
     def test_packaged_contract_links_resolve_inside_inventory(self):
         import re
         from urllib.parse import unquote, urlsplit
-        files = set(build.CONTRACT_FILES)
-        for name in files:
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
+            with zipfile.ZipFile(build.build(output)) as package:
+                prefix = next(n[:-len('info.json')] for n in package.namelist() if n.endswith('/info.json'))
+                files = {n[len(prefix):] for n in package.namelist()}
+        for name in build.CONTRACT_FILES:
             if not name.endswith('.md'):
                 continue
             source = build.ROOT / name
@@ -683,6 +747,19 @@ class ShellClientSceneTests(unittest.TestCase):
 
 
 class DocumentationSiteTests(unittest.TestCase):
+    def test_typed_inputs_select_docs_without_changing_publication_boundary(self):
+        workflow = (build.ROOT / '.github/workflows/docs.yml').read_text()
+        for path in ('api/**', 'tools/data/**', 'tools/luals-*', 'tools/player_docs.py',
+                     'tools/api_reference.py', 'tools/lua_api.py', 'tools/configuration_docs.py',
+                     'docs/api-reference-provenance.json'):
+            self.assertIn("- '" + path + "'", workflow)
+        self.assertIn("if: github.ref == 'refs/heads/main'", workflow)
+        self.assertIn('refs/heads/main|refs/heads/tweaked-computers/t_e6cbf814-tc17-publish-the-complete-alpha-on-facto|refs/tags/alpha-*)', workflow)
+        self.assertIn('persist-credentials: false', workflow)
+        self.assertIn('python -m mkdocs build --strict', workflow)
+        self.assertNotIn('smoke.py', workflow)
+        self.assertNotIn('lua-language-server', workflow)
+
     def test_missing_or_empty_site_is_not_a_passing_link_check(self):
         import player_docs
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output:
