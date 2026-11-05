@@ -1,48 +1,48 @@
 ---@meta
 
----The immutable 16-entry terminal palette. Pass exactly one color, not a bitmask
----combination. Palette RGB values may change per monitor; these indices do not.
----The British spelling colours is the identical namespace. No combine, subtract,
----test or other CC color utility functions are provided.
+---This terminal palette has 16 immutable entries. Pass exactly one color, not a
+---bitmask combination. Palette RGB values can change per monitor. These indices
+---do not change. The British spelling colours identifies the same namespace.
+---The namespace has no combine, subtract, test or other CC color utility functions.
 ---@enum TC.Color
 colors = {
-    ---white palette entry; blit digit 0.
+    ---The white palette entry uses blit digit 0.
     white = 1,
-    ---orange palette entry; blit digit 1.
+    ---The orange palette entry uses blit digit 1.
     orange = 2,
-    ---magenta palette entry; blit digit 2.
+    ---The magenta palette entry uses blit digit 2.
     magenta = 4,
-    ---lightBlue palette entry; blit digit 3.
+    ---The lightBlue palette entry uses blit digit 3.
     lightBlue = 8,
-    ---yellow palette entry; blit digit 4.
+    ---The yellow palette entry uses blit digit 4.
     yellow = 16,
-    ---lime palette entry; blit digit 5.
+    ---The lime palette entry uses blit digit 5.
     lime = 32,
-    ---pink palette entry; blit digit 6.
+    ---The pink palette entry uses blit digit 6.
     pink = 64,
-    ---gray palette entry; blit digit 7.
+    ---The gray palette entry uses blit digit 7.
     gray = 128,
-    ---lightGray palette entry; blit digit 8.
+    ---The lightGray palette entry uses blit digit 8.
     lightGray = 256,
-    ---cyan palette entry; blit digit 9.
+    ---The cyan palette entry uses blit digit 9.
     cyan = 512,
-    ---purple palette entry; blit digit a.
+    ---The purple palette entry uses blit digit a.
     purple = 1024,
-    ---blue palette entry; blit digit b.
+    ---The blue palette entry uses blit digit b.
     blue = 2048,
-    ---brown palette entry; blit digit c.
+    ---The brown palette entry uses blit digit c.
     brown = 4096,
-    ---green palette entry; blit digit d.
+    ---The green palette entry uses blit digit d.
     green = 8192,
-    ---red palette entry; blit digit e.
+    ---The red palette entry uses blit digit e.
     red = 16384,
-    ---black palette entry; blit digit f.
+    ---The black palette entry uses blit digit f.
     black = 32768,
-    ---Exact British-spelling alias of gray.
+    ---This is the exact British-spelling alias of gray.
     grey = 128,
-    ---Exact British-spelling alias of lightGray.
+    ---This is the exact British-spelling alias of lightGray.
     lightGrey = 256,
 }
 
----Identical read-only color namespace, including grey/lightGrey aliases.
+---This is the same read-only color namespace, with the grey and lightGrey aliases.
 colours = colors

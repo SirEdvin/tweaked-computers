@@ -1,9 +1,9 @@
 # Live Console
 
-The Console can run a single bounded Lua line without editing or replacing your
-saved controller. Open a computer with an empty cursor and Ctrl + left
-click, then choose **Console**. Type or paste into the bottom input and press
-**Enter** or **Execute**. The native field supports its normal caret and clipboard
+The Console can run one bounded Lua line without a change to your
+saved controller. With an empty cursor, use Ctrl + left
+click to open a computer. Select **Console**. Type or paste into the bottom input.
+Press **Enter** or **Execute**. The native field supports its normal caret and clipboard
 controls. There is **no command history**, multiline continuation, OS or filesystem.
 
 **This is live, not a dry run.** Commands use the existing
@@ -14,17 +14,17 @@ program callback or Console command runs per computer per simulation tick, with
 fair alternation when both queues have work. An open prompt without submissions
 does not schedule empty commands. Queue order and spent credits survive save/load.
 
-Parsing tries the line as an expression first, then as statements only when that
-grammar does not match. Both attempts share the compilation allowance. A runtime
-failure never triggers a second execution as statements: earlier effects remain
-committed and are not replayed by parser fallback.
+The parser first tries the line as an expression. Only if that grammar does not match, it tries the line as statements.
+Both attempts share the compilation allowance. A runtime
+failure never causes a second execution as statements. Earlier effects remain
+committed. Parser fallback does not replay them.
 
 ## Try a monitor
 
-Wire a computer NETWORK socket to a monitor NETWORK socket on red; neither needs electricity.
+Wire a computer NETWORK socket to a monitor NETWORK socket on red. Neither needs electricity.
 Use **Peripherals → Red** to find the automatically updated exact logical monitor
-name. Replace `tc-monitor-4` below with that name. Return to Console and submit
-these lines individually (do not paste the entire block at once):
+name. Replace `tc-monitor-4` below with that name. Return to Console.
+Submit each line separately. Do not paste the complete block at once:
 
 ```text
 p = peripheral.wrap("tc-monitor-4", "red")
@@ -34,27 +34,26 @@ size = p.getSize
 print(size())
 ```
 
-`p` and the captured `size` method survive commands, closing/reopening and game
-save/load. Each call checks the original name, generation and wire again: a removed,
-regrouped or disconnected peripheral does not silently retarget. A missing fresh
-wrap returns nil. Earlier successful writes are not replayed on loading.
+`p` and the captured `size` method persist across commands, closing, reopening and game
+save/load. Each call checks the original name, generation and wire again.
+A removed, regrouped or disconnected peripheral does not silently change targets. A fresh
+wrap returns nil if the peripheral is absent. Loading does not replay earlier successful writes.
 
 ## Values and output
 
 - The computer has one shared shell environment. Another authorized player can
   use your bindings. Other computers and saved-program locals remain separate.
   Each viewer's unfinished input and native caret are private.
-- Expressions display their results. `false` and one `nil` are values; a call
-  returning no results displays no fabricated nil. `print(false, nil, 3)` emits
+- Expressions display their results. `false` and one `nil` are values. A call
+  with no results displays no fabricated nil. `print(false, nil, 3)` emits
   one tab-separated entry and returns no values. `print()` emits an empty entry.
-  The Console displays tabs as single spaces; stored log text retains its tabs.
-- Assignment retains nonreserved globals; assigning nil deletes a binding.
+  The Console displays tabs as single spaces. Stored log text keeps its tabs.
+- Assignment keeps nonreserved globals. Assignment of nil deletes a binding.
   Locals last only for one submission. For example, `x=5; local y=6`, then
   `print(x,y)`, prints 5 and nil.
 - Finite scalars, plain tables with scalar keys, aliases/cycles, authentic
   peripheral facades and their captured methods can be retained. Ordinary API
-  Data rules are unchanged: cyclic/mixed-key tables still cannot be passed to
-  services that require Data.
+  Data rules are unchanged. Services that require Data still refuse cyclic or mixed-key tables.
 - Local functions can calculate values within a line. User functions/closures,
   library namespaces, reference-valued table keys and host objects cannot be
   retained. `fn=function() end` fails rather than saving executable code.
@@ -62,48 +61,47 @@ wrap returns nil. Earlier successful writes are not replayed on loading.
   remain unavailable. Reserved library/API names and `print` cannot be replaced.
   [Saved programs](api/language.md) accept only plain function declarations
   and remain separate from Console. An active program's exported
-  `sample` or `start` is not a Console binding: `sample()` cannot call it here.
+  `sample` or `start` is not a Console binding. `sample()` cannot call it here.
   Direct calls between exports belong inside that saved program. A Console local
   function with the same name is only a new, unrelated function for that submission.
 
 Every entry starts with elapsed map time `[HH:MM:SS]`, using completed seconds
-at 60 simulation ticks per second. Tick 59 is `[00:00:00]`; tick 60 is
+at 60 simulation ticks per second. Tick 59 is `[00:00:00]`. Tick 60 is
 `[00:00:01]`. Hours accumulate: `[24:00:00]`, `[27:04:09]` and `[100:00:00]`
 do not wrap at midnight. This is simulation progress, not your PC clock or
-computer uptime: pauses stop it and game speed changes its real-time pace.
+computer uptime. Pauses stop this elapsed time. Game speed changes its real-time rate.
 Reopening the Console, restarting the computer or loading a save does not change
 the timestamps of retained entries.
 
 Each command echo identifies its sequence and submitting player index. Results
-and diagnostics are marked **Shell**, not confused with saved-source errors.
+and diagnostics have the **Shell** label, separate from saved-source errors.
 **Go to source line** remains for saved-program/draft diagnostics, not a shell
 line. Follow-off keeps output live without automatic scrolling. Incoming changed
-text may clear native selection; select/copy between arrivals. Unchanged text is
-not reassigned. Re-enable Follow to resume tailing. Command status stays visible.
+text can clear native selection. Select and copy text between arrivals. Unchanged text is
+not reassigned. Enable Follow again to resume automatic scrolling. Command status stays visible.
 There is no Refresh action or separate snapshot view.
-The same 64-entry / 16,384-byte history bound applies in either mode: discarded
-output cannot be recovered, and truncation is reported even while Follow is off.
+The same 64-entry / 16,384-byte history bound applies in either mode.
+Discarded output cannot be recovered. The Console reports truncation even while Follow is off.
 
 ## Effects and ownership
 
 Console shares the [base globals](api/language.md#printing-raw-helpers-and-error-transformation)
 with saved programs: rawget/rawset/rawlen/rawequal/xpcall, identical unpack and
-table.unpack, and `_VERSION == "Lua 5.2"`. Raw helpers never inspect/mutate API
+table.unpack, and `_VERSION == "Lua 5.2"`. Raw helpers never inspect or change API
 handles. They preserve transient identity but do not make built-ins or closures
 persistable. `a={}; b=a; rawset(a,"self",a)` retains its supported aliases/cycle.
 Fatal protected execution still cannot resume effects or fault the saved program.
 
-All added names are immutable globals; lexical locals/parameters may shadow them.
+All added names are immutable globals. Lexical locals and parameters can shadow them.
 If an older scratch root used a newly reserved name (such as `rawset` or `_VERSION`),
-evaluation reports named `E_UNSUPPORTED` before command effects. The old graph is
-retained, never silently shadowed or deleted. Nested table fields are unaffected.
-Use the existing two-step Reset Shell only when ready to discard that scratch
+evaluation reports named `E_UNSUPPORTED` before command effects. The old graph stays unchanged. It is never silently shadowed or deleted. Nested table fields are unaffected.
+Use the existing two-step Reset Shell only when you are ready to discard that scratch
 environment. It does not alter saved source, application state, program or old logs.
 
 A command stages its scratch values and publishes the complete new graph only
 when execution and retention validation succeed. A failing command keeps the
-previous graph. This is **not a transaction across peripherals**: earlier KV,
-configurator, monitor, explicit application-state writes and printed output remain.
+previous graph. This is **not a transaction across peripherals**. Earlier KV,
+configurator, monitor and explicit application-state writes remain. Printed output also remains.
 Ordinary shell errors do not fault the saved program.
 
 Synchronous [computer](api/computer.md), [monitor](api/monitor.md),
@@ -119,30 +117,35 @@ Shell logic output and monitor synchronization selection have their own owner,
 separate from the program run. A stopped computer can retain a shell
 output. Normal monitor selection exclusivity also applies between a shell and
 its own program. Failure/reset releases only shell-owned transient resources,
-not a later program-owned output. Model/database contents are not erased.
+not a later program-owned output. Model and database contents are not erased.
 
 ## Lifetime and limits
 
 | Action | Committed shell values | Pending work / resources |
 | --- | --- | --- |
-| Close/reopen, save/load, late join | Retain | No replay; execution rechecks opened Console authority |
+| Close/reopen, save/load, late join | Retain | No replay. Execution rechecks opened Console authority. |
 | Successful Run / Apply or explicit Stop | Clear | Cancel old session and release its transient ownership |
-| Confirmed Reset Shell | Clear | Cancel shell work only; saved program/state/source keep running unchanged |
+| Confirmed Reset Shell | Clear | Cancel shell work only. Saved program/state/source keep running unchanged. |
 | Failed activation or automatic program fault | Retain | No shell reset |
-| Custom electrical cycling | Retain | No cancellation, pause or output clearing; electricity is not an execution gate |
+| Custom electrical cycling | Retain | No cancellation, pause or output clearing. Electricity is not an execution gate. |
 | Mining/replacement, cloning, blueprint/settings transport | No transfer to new physical identity | New computer starts without the experiment |
 
 The two-step **Reset Shell → Confirm Reset Shell** is separate from Maintenance's
 **Reset State**. Reset Shell does not erase older Console logs. Unknown future
 shell schemas are refused with data intact while compatible saved programs remain
-usable. Downgrading such saves is not verified; keep backups.
+usable. Downgrades of such saves are not verified. Keep backups.
 
-[Effective limits](api/limits.md) include 4,096 command bytes, 64 bindings,
-16,384 encoded value units, 1,024 graph elements (including scalar edges and
-private metadata), 8 pending entries / 16,384 pending source bytes, and 64 retained
-session records world-wide. An admitted session occupies a slot until Reset Shell,
+[Effective limits](api/limits.md) include:
+
+- 4,096 command bytes
+- 64 bindings
+- 16,384 encoded value units
+- 1,024 graph elements, including scalar edges and private metadata
+- 8 pending entries / 16,384 pending source bytes
+- 64 retained session records world-wide.
+ An admitted session occupies a slot until Reset Shell,
 Run/Apply or Stop, even if its current values are empty. Encoding charges 16 units
-per scalar/reference/metadata item plus string bytes; this is not measured host
+per scalar/reference/metadata item plus string bytes. This is not measured host
 memory. Existing source/AST, tuple, table, callback, output and shared tick limits
 also apply. Oversized or CR/LF input is rejected, retaining the previous draft.
 
@@ -163,5 +166,5 @@ scales. Two real base clients verified late joining after effects, independent
 drafts/carets, conflicting submissions and a separate-process server restart
 without observed replay or desync. Space Age connected joining is not claimed.
 The clients used llvmpipe software rendering, not representative GPU performance.
-The feature PR records the reviewed evidence; see the repository's
+The feature PR records the reviewed evidence. See the repository's
 `docs/console-shell-validation.md` for the isolated client and late-join procedure.

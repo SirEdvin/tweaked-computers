@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.TimerId
 
-Timer identity bound to one computer/run, including its queued delivery.
+This timer identity belongs to one computer and run. It includes the timer's queued delivery.
 
 ```text
 string

@@ -15,6 +15,24 @@ The scheduled OpenWiki GitHub Actions workflow refreshes the repository wiki. Do
 
 <!-- OPENWIKI:END -->
 
+## Documentation language
+
+Use ASD-STE100 Simplified Technical English, Issue 9, for maintained mod documentation.
+This rule includes player guides, API descriptions, generated prose, and in-game help.
+Consult the official standard: https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf.
+
+- Use approved words with their approved meanings and parts of speech.
+- Use consistent technical nouns and technical verbs for Factorio, Lua, and this mod.
+- Keep procedural sentences within 20 words. Keep descriptive sentences within 25 words.
+- Give one instruction per sentence. Use the imperative for instructions.
+- Prefer active voice. Do not invent an actor or change a requirement to avoid passive voice.
+- Preserve code, identifiers, UI labels, commands, values, and API contracts exactly.
+- Preserve warnings, limitations, return arity, optionality, errors, and persistence rules.
+- Change the source of generated prose. Regenerate its outputs with the existing tools.
+- Review vocabulary, grammar, and technical meaning. A word-count check alone does not prove compliance.
+- Do not rewrite historical evidence, third-party notices, or generated OpenWiki as part of a language change.
+- Do not change OpenSpec unless the user separately requests it.
+
 ## Local Factorio verification
 
 Use headless runs for contracts/save–reload and the full client for visible UI/rendering. The locally provided engines are **2.0.77 (build 84539)**; confirm `--version` and `--help` before using a different installation.

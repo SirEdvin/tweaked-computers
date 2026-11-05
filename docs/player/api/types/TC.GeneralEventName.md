@@ -9,8 +9,8 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.GeneralEventName
 
-General registration names accepted by computer.on. start, timer,
-signal_changed and dashboard_click use their dedicated registration paths.
+The computer.on method accepts these general registration names.
+The start, timer, signal_changed and dashboard_click events use their dedicated registration paths.
 
 ```text
 'peripheral_attach'|'peripheral_detach'|'monitor_resize'|'monitor_touch'|'power_restored'|'modem_message'

@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.LuaProxyContainerControlBehavior
 
-Root settings for LuaProxyContainerControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaProxyContainerControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### read_contents (optional)
 
-Publish this entity inventory or fluid contents; belt mode is separately selected. Explicit root patch clear: not supported.
+Publish this entity inventory or fluid contents. Belt mode is selected separately. Explicit root patch clear: not supported.
 
 ```text
 boolean

@@ -9,8 +9,8 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ConfigurationSummary
 
-Native-target applicability summary, not a control-behavior handle. Discovery
-does not create a missing native control behavior just to inspect its capability.
+This record summarizes native-target applicability. It is not a control-behavior handle.
+Discovery does not create a missing native control behavior only to inspect its capability.
 
 ### behavior (optional)
 

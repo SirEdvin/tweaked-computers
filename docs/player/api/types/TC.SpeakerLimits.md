@@ -9,15 +9,15 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.SpeakerLimits
 
-Defensive effective limit map. Defaults below are not live values.
-Counts are admission envelopes, not calibrated heap, latency or FPS promises.
-Settings changes preserve spent credits; lower limits never authorize data loss.
+Independent copy of effective limits. These defaults are not current values.
+Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+Settings changes keep spent credits. Lower limits never permit data loss.
 
 Extends: TC.Limits
 
 ### speaker_computer_submissions_per_tick
 
-Combined audio submissions per computer/tick. Default: 16.
+Maximum combined audio submissions per computer per tick. Default: 16.
 
 ```text
 integer
@@ -25,7 +25,7 @@ integer
 
 ### speaker_instruments
 
-Supported instrument catalogue entries. Default: 64.
+Maximum supported instrument catalogue entries. Default: 64.
 
 ```text
 integer
@@ -33,7 +33,7 @@ integer
 
 ### speaker_notes_per_instrument
 
-Supported note entries per instrument. Default: 128.
+Maximum supported note entries per instrument. Default: 128.
 
 ```text
 integer
@@ -41,7 +41,7 @@ integer
 
 ### speaker_notes_per_tick
 
-Note submissions per physical speaker/tick. Default: 8.
+Maximum note submissions per physical speaker per tick. Default: 8.
 
 ```text
 integer
@@ -49,7 +49,7 @@ integer
 
 ### speaker_path_bytes
 
-Sound path/instrument string byte ceiling. Default: 256.
+Maximum bytes in a sound path or instrument string. Default: 256.
 
 ```text
 integer
@@ -57,7 +57,7 @@ integer
 
 ### speaker_sound_catalog_entries
 
-Supported sound-path catalogue envelope. Default: 32768.
+Supported sound-path catalogue size. Default: 32768.
 
 ```text
 integer
@@ -73,7 +73,7 @@ integer
 
 ### speaker_sounds_per_tick
 
-Sound-effect submissions per physical speaker/tick. Default: 1.
+Maximum sound-effect submissions per physical speaker per tick. Default: 1.
 
 ```text
 integer
@@ -81,7 +81,7 @@ integer
 
 ### speaker_world_submissions_per_tick
 
-Combined world audio submissions per tick. Default: 64.
+Maximum combined audio submissions in the world per tick. Default: 64.
 
 ```text
 integer

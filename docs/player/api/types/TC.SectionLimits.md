@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.SectionLimits
 
-Constant-combinator section allowances, not the complete Configurator limits.
+This record gives constant-combinator section allowances, not the complete Configurator limits.
 
 ### section_filters
 

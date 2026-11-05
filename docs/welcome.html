@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Start using Tweaked Computers in Factorio: set up a computer, run your first Lua program, then explore the API.">
+  <title>Start here · Tweaked Computers</title>
+  <link rel="stylesheet" href="api/static/rustdoc.css">
+  <script>
+    window.LUAFMT_ROOT = 'api/';
+    try {
+      var theme = localStorage.getItem('emmylua-doc-theme');
+      if (theme === 'dark' || theme === 'light') document.documentElement.setAttribute('data-theme', theme);
+    } catch (e) {}
+  </script>
+  <script src="api/static/main.js" defer></script>
+  <style>
+    .layout { grid-template-columns: 260px minmax(0, 1fr); }
+    #search-input { padding-left: 12px; }
+    .hero { padding-bottom: 24px; }
+    .hero-title { max-width: 19ch; }
+    .hero-lead { color: var(--fg); max-width: 65ch; font-size: 18px; }
+    .guide-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-top: 22px; font-family: var(--font-sans); }
+    .guide-start { display: inline-block; padding: 9px 16px; border: 1px solid var(--accent); border-radius: var(--radius); background: var(--accent-soft); font-weight: 500; }
+    .guide-note { border-left: 3px solid var(--accent); padding: 10px 18px; background: var(--bg-muted); margin: 22px 0; }
+    .guide-note p { margin: 0; }
+    .guide-steps { padding-left: 24px; }
+    .guide-steps li { margin-bottom: 16px; padding-left: 4px; }
+    .guide-links { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 28px; }
+    .guide-links h3 { margin: 0 0 4px; font-family: var(--font-sans); font-size: 17px; }
+    .guide-links p { margin: 0; }
+    .guide-footer { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--fg-muted); font-size: 14px; }
+    section { scroll-margin-top: 76px; }
+    .skip-link { position: fixed; top: -80px; left: 12px; padding: 10px 18px; background: var(--bg); z-index: 100; }
+    .skip-link:focus { top: 8px; }
+    a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 540px) {
+      .guide-links { grid-template-columns: 1fr; }
+      .hero-lead { font-size: 17px; }
+      .search-hint { display: none; }
+      #search-input { padding-right: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="docbar">
+    <div class="docbar-inner">
+      <button id="sidebar-toggle" class="icon-btn" type="button" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="false">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h12v2H2z"/></svg>
+      </button>
+      <a class="docbar-title" href="./">Tweaked Computers</a>
+      <div class="search">
+        <input id="search-input" type="search" aria-label="Search the API" placeholder="Search API…" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="search-results" aria-keyshortcuts="/ control+k">
+        <kbd class="search-hint" aria-hidden="true">/</kbd>
+        <div id="search-results" class="search-results" role="listbox" hidden></div>
+      </div>
+      <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle dark mode" aria-pressed="false">
+        <svg class="icon-moon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 0v2m0 12v2M0 8h2m12 0h2M2 2l1.5 1.5m9 9L14 14M14 2l-1.5 1.5m-9 9L2 14"/></svg>
+      </button>
+    </div>
+  </header>
+  <div id="sidebar-backdrop" hidden></div>
+  <div class="layout">
+    <nav class="sidebar" id="sidebar" aria-label="Guide navigation">
+      <div class="sidebar-category">
+        <div class="category-title">Start here</div>
+        <ul>
+          <li><a class="nav-item" href="#introduction">What is Tweaked Computers?</a></li>
+          <li><a class="nav-item" href="#setup">Set up a computer</a></li>
+          <li><a class="nav-item" href="#first-program">Your first program</a></li>
+          <li><a class="nav-item" href="#next">Where to go next</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-category">
+        <div class="category-title">API reference</div>
+        <ul>
+          <li><a class="nav-item" href="api/">Browse the API</a></li>
+          <li><a class="nav-item" href="api/class/TC.Computer.html">Computer</a></li>
+          <li><a class="nav-item" href="api/class/TC.PeripheralLibrary.html">Peripheral discovery</a></li>
+          <li><a class="nav-item" href="api/class/TC.Monitor.html">Monitors</a></li>
+          <li><a class="nav-item" href="api/class/TC.DashboardBase.html">Dashboards</a></li>
+          <li><a class="nav-item" href="api/types/">Complete type reference</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-category">
+        <div class="category-title">Player guide</div>
+        <ul>
+          <li><a class="nav-item" href="guide.html">Overview and compatibility</a></li>
+          <li><a class="nav-item" href="getting-started/">Installation and wiring</a></li>
+          <li><a class="nav-item" href="editor/">Editor</a></li>
+          <li><a class="nav-item" href="console/">Console</a></li>
+          <li><a class="nav-item" href="examples/">Complete programs</a></li>
+          <li><a class="nav-item" href="troubleshooting/">Troubleshooting</a></li>
+        </ul>
+      </div>
+    </nav>
+    <main class="content" id="main" tabindex="-1">
+      <section class="hero" id="introduction">
+        <h1 class="hero-title" id="tweaked-computers">Program your factory.</h1>
+        <p class="hero-lead">Tweaked Computers adds programmable Lua controllers to Factorio. Use them to read circuit signals, control machines, share data, and make interactive displays.</p>
+        <p>Each computer runs one source document with named callbacks. The API gives access to computers and peripherals. It does not give access to an operating system, a filesystem, or native Factorio objects.</p>
+        <p class="lead">This mod supports Factorio 2.1. Space Age is optional.</p>
+        <div class="guide-actions">
+          <a class="guide-start" href="#setup">Set up your first computer</a>
+          <a href="api/">Open the API browser</a>
+        </div>
+      </section>
+
+      <section id="setup">
+        <h2 id="start-here">Set up a computer</h2>
+        <ol class="guide-steps">
+          <li><strong>Install the mod.</strong> First, make a backup of your save and its matching mods. Enable Tweaked Computers in Factorio’s Mods screen. Restart Factorio when it asks you to do so. This is an alpha release. Use a copy of your save for tests.</li>
+          <li><strong>Research and craft.</strong> Research <em>Native circuit computers</em>. Craft a computer. Place the computer. It does not need electricity. This first example does not need other devices or wires.</li>
+          <li><strong>Open the workspace.</strong> Clear your cursor. Close any open GUI. <strong>Ctrl + left-click</strong> the computer. You can still use ordinary clicks for wiring.</li>
+        </ol>
+        <div class="guide-note" id="alpha-warning"><p><strong>Alpha warning:</strong> make a save backup before installation, upgrades, or recovery. A mined computer item contains only the hardware. Ordinary pickup and replacement do not keep its contents. Make a save backup before you move a computer. Read the <a href="guide.html#alpha-warning">complete compatibility and verification limits</a>.</p></div>
+      </section>
+
+      <section id="first-program">
+        <h2>Your first program</h2>
+        <p>The built-in <strong>Starter example</strong> keeps a sample counter in saved computer state. It schedules a callback every 60 simulation ticks. It does not control factory machines.</p>
+        <p>In an empty Editor, choose <strong>Starter example</strong>. Or paste this complete document:</p>
+        <div class="docblock"><pre class="doc-code" tabindex="0" aria-label="Complete starter program"><code>local function increment(value)
+  return value + 1
+end
+
+function start(event)
+  local total = sample()
+  print("Initial sample count:", total)
+  computer.every(60, "sample")
+end
+
+function sample(event)
+  local total = increment(computer.getState("samples") or 0)
+  computer.setState("samples", total)
+  return total
+end
+</code></pre></div>
+        <ol class="guide-steps">
+          <li><strong>Validate the draft.</strong> Validation checks the draft. It does not save or run the program.</li>
+          <li><strong>Select Save.</strong> Save stores the source. It does not replace the active program.</li>
+          <li><strong>Select Run / Apply.</strong> This control activates the saved program.</li>
+          <li><strong>Open Console.</strong> Look for <code>Initial sample count:</code> with a number after it. The timer increases the saved counter. It does not print another line.</li>
+          <li><strong>Inspect the counter.</strong> Enter <code>computer.getState("samples")</code> in Console. Repeat the command later to see the increase. Console calls operate on the real computer. They are not isolated tests.</li>
+        </ol>
+        <div class="guide-note"><p><strong>Save is not Run. Stop is not Reset State.</strong> Stop cancels this program’s timer but keeps the counter. A subsequent start uses the saved state. If you close the workspace without Stop, the program continues to run.</p></div>
+        <p>Open the <a href="api/class/TC.Computer.html">Computer API page</a> for its methods. Select a named type in a signature to open its definition.</p>
+      </section>
+
+      <section id="next">
+        <h2>Connect the next piece</h2>
+        <p>Connect the peripheral’s Network port to the computer’s Network port with a red or green wire. The Peripherals tab shows the exact names available on that color.</p>
+        <div class="guide-links">
+          <div><h3><a href="api/class/TC.PeripheralLibrary.html">Find peripherals</a></h3><p>Find a device by type, or use its name with wrap. Select the discovery wire explicitly.</p></div>
+          <div><h3><a href="api/class/TC.Monitor.html">Write to a monitor</a></h3><p>Show text on a display in the world. Use touch events for interaction.</p></div>
+          <div><h3><a href="api/class/TC.DashboardBase.html">Make a dashboard</a></h3><p>Add labels and controls to tabs.</p></div>
+          <div><h3><a href="api/">Browse the API</a></h3><p>Find methods, parameters, return values, and links to type definitions.</p></div>
+        </div>
+      </section>
+      <footer class="guide-footer" id="source-and-developer-documentation">
+        <p><strong>API browser limitation:</strong> EmmyLua 0.25.1 omits some alias and overload details. It also misrepresents some return signatures. Use the <a href="api/types/">complete type reference</a> for exact contracts. The <a href="api/peripheral/">Peripheral reference</a> and <a href="api/globals/">Globals reference</a> retain the affected signatures.</p>
+        <p>Read the <a href="guide.html">player guide overview</a> for compatibility and test limits. The API search searches API entries only. Use Search in the player guide to search its pages and the complete reference.</p>
+        <p>Read <a href="guide.html#source-and-developer-documentation">Source and developer documentation</a> for source, issue, wiki, and license information.</p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

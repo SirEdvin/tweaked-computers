@@ -9,8 +9,8 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Event
 
-Union of all supported scheduled guest event shapes, including the inert legacy
-power event. Register by handler name, not by persisting a function value.
+This union includes all supported scheduled guest event shapes and the inert legacy power event.
+Register by handler name, not by persisting a function value.
 
 ```text
 TC.StartEvent|TC.TimerEvent|TC.PeripheralAttach|TC.PeripheralDetach|TC.PowerRestored|TC.MonitorResize|TC.MonitorTouch|TC.SignalChanged|TC.DashboardClick|TC.ModemMessage

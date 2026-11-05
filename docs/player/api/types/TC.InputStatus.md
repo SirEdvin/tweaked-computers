@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.InputStatus
 
-Physical connector status for both Logic input colors, independent of counts.
+Physical connector status for both Logic input colors, independent of signal counts.
 
 ### green_connected
 

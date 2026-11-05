@@ -9,20 +9,24 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.SignalChanged
 
-Named Logic subscription delivery. previous is the last successfully admitted
-sample or registration baseline, not the last callback that happened to run.
-Changes compare effective identities/counts and connectivity, not ordering or
+This event delivers a named Logic subscription.
+The previous field gives the last successfully admitted sample or registration
+baseline, not the last callback that ran.
+Changes compare effective identities, counts and connectivity, not ordering or
 explicit defaults. Connectivity-only changes can have an empty changes array.
-Every watched physical input/color is read once per simulation tick, sharing
-the observation across isolated subscriptions; direct reads remain fresh.
-Native circuit observations reflect the engine's update state, not guaranteed
-same-tick feedback. sample_tick is observation time; tick is dispatch time.
+
+The host reads each watched physical input/color once per simulation tick.
+Isolated subscriptions share this observation. Direct reads remain fresh.
+Native circuit observations show the engine's update state.
+They do not guarantee same-tick feedback.
+
+The sample_tick field gives observation time. The tick field gives dispatch time.
 
 Extends: TC.BaseEvent
 
 ### changes
 
-Complete effective differences; no sorting guarantee.
+Complete effective differences. The API does not guarantee sorting.
 
 ```text
 (TC.SignalChange)[]
@@ -38,7 +42,7 @@ TC.InputConnectivity
 
 ### current
 
-Isolated current native sample; no sorting guarantee.
+Isolated current native sample. The API does not guarantee sorting.
 
 ```text
 (TC.Signal)[]
@@ -62,7 +66,7 @@ TC.InputSelection
 
 ### name
 
-Logic event discriminator; not computer.on-registerable.
+Logic event discriminator. You cannot register this event through computer.on.
 
 ```text
 'signal_changed'
@@ -78,7 +82,7 @@ TC.PeripheralName
 
 ### previous
 
-Isolated prior sample; empty for initial notification.
+Isolated prior sample. This array is empty for the initial notification.
 
 ```text
 (TC.Signal)[]
@@ -94,7 +98,7 @@ TC.InputConnectivity
 
 ### resync
 
-Current-input resynchronization after physical unavailability or supported legacy upgrade, never replay or an electrical-cycle notification.
+Current-input resynchronization after physical unavailability or supported legacy upgrade. This is never replay or an electrical-cycle notification.
 
 ```text
 boolean

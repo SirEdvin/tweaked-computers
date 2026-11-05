@@ -9,9 +9,9 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.FluidInfo
 
-Fluid metadata, not a tank's temperature or achievable recipe/boiler states.
-Finite negative/equal temperature bounds and large finite gas thresholds are
-preserved; default_temperature is also native minimum, with no extra alias.
+This record gives fluid metadata, not a tank's temperature or achievable recipe/boiler states.
+It preserves finite negative/equal temperature bounds and large finite gas thresholds.
+The default_temperature field is also the native minimum, with no extra alias.
 No item weight, stack, rocket or spoilage fields appear on this record.
 
 Extends: TC.PrototypeInfo
@@ -34,7 +34,7 @@ number
 
 ### fuel_value
 
-Finite nonnegative joules per native fluid unit; preserve zero.
+Finite nonnegative joules per native fluid unit. Zero remains zero.
 
 ```text
 number

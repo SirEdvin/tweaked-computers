@@ -15,42 +15,57 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.KVDatabase
 
-Local string/hash database shared by every authorized computer and both wires
-of one physical device. Keys, fields and values are bounded byte strings,
-including empty strings and embedded NUL. Numbers/booleans/tables are not coerced.
-String and hash keys are distinct live types. The command is the atomic boundary,
-not the callback: validate every input, final capacity and copy/movement cost
-before committing. Refusal preserves old contents and deadlines; E_BUSY/E_LIMIT
-never means an empty successful hash. E_WRONGTYPE is ordinarily catchable.
+Every authorized computer and both wires of one physical device share this local string/hash database.
+Keys, fields and values are bounded byte strings, which include empty strings and embedded NUL.
+The database does not coerce numbers, booleans or tables.
+String and hash keys have distinct live types.
+
+The command is the atomic boundary, not the callback.
+Before commit, the command validates every input, final capacity and copy/movement cost.
+Refusal preserves the old contents and deadlines.
+E_BUSY and E_LIMIT never indicate an empty successful hash.
+E_WRONGTYPE is usually catchable.
 
 ### Expiry and persistence
 
-Positive expiry saves absolute current_tick+seconds*60. At tick&gt;=deadline every
-command treats the key as absent, even before background reclamation. Nonpositive
-expiry deletes a live key immediately. TTL rounds nearest simulation second:
-floor((deadline-current_tick+30)/60). A live key can have TTL zero; that is not -2.
-set clears expiry; existing-hash edits retain it unless the key is deleted;
-new expiry replaces it; persist removes it. All expiry is whole-key, never field.
-Pause stops simulation time; speed, real time and server downtime do not directly
-alter deadlines. Mining/unavailability retains the absolute deadline, so carried
-simulation time counts. Ordinary cold load never renews expiry or returns old
-expired fields. New hashes after expiry inherit neither fields nor deadline.
+Positive expiry saves the absolute deadline current_tick+seconds*60.
+At tick&gt;=deadline, every command treats the key as absent, even before background reclamation.
+Nonpositive expiry deletes a live key immediately.
+TTL rounds to the nearest simulation second: floor((deadline-current_tick+30)/60).
+A live key can have TTL zero, which is not -2.
 
-Due maintenance follows retained deadlines/cursors, not every database each tick.
-Refused cleanup retains its cursor while other fitting due work may progress;
-logical expiry is independent of cleanup admission. Accepted content and separate
-save/item metadata reservations must survive maximum-content transfer. Accounting
-failure never authorizes silent truncation/resurrection. No electricity is needed;
-active calls still reprove physical authority and getLimits is reachable metadata.
+set clears expiry.
+Edits to an existing hash retain its expiry unless they delete the key.
+New expiry replaces the deadline.
+persist removes expiry.
+Expiry always applies to the whole key, never a field.
 
-Only documented string/hash/key-expiry operations exist: no incr, scan, mget,
-conditional/expiry SET options, transactions, scripting, lists/sets/streams,
-pub/sub, field expiry, Redis server/protocol or external network connection.
+Pause stops simulation time.
+Speed, real time and server downtime do not directly change deadlines.
+Mining and unavailability retain the absolute deadline, so simulation time counts while the device is carried.
+Ordinary cold load never renews expiry or returns old expired fields.
+New hashes after expiry inherit neither fields nor the deadline.
+
+Due maintenance follows retained deadlines and cursors, not every database each tick.
+Refused cleanup retains its cursor while other due work that fits can continue.
+Logical expiry is independent of cleanup admission.
+Accepted content and separate reservations for save/item metadata must survive a transfer at maximum content capacity.
+Accounting failure never permits silent truncation or resurrection.
+
+The database needs no electricity.
+Active calls still prove physical authority again.
+getLimits is reachable metadata.
+
+Only the documented string, hash and key-expiry operations exist.
+There is no incr, scan, mget, conditional/expiry SET option, transaction or scripting support.
+There are no lists, sets, streams, pub/sub, field expiry, Redis server/protocol or external network connection.
 
 ### del
 
-Delete supplied live keys. Repeated names count at most once; require at least
-one key and validate the entire variadic command before mutation.
+Delete the supplied live keys.
+Repeated names count at most once.
+At least one key is necessary.
+The entire variadic command passes validation before any mutation.
 
 ```text
 del(key: string, ...: string) -> removed: integer
@@ -67,12 +82,13 @@ Additional byte-string keys within command_arguments.
 ### Returns
 
 removed: integer
-Number of distinct live keys actually removed.
+Number of distinct live keys that the command removed.
 
 ### exists
 
-Count existing supplied key arguments at one simulation-tick observation.
-Repeated existing arguments count repeatedly, unlike del. At least one required.
+Count the supplied key arguments that exist at one simulation-tick observation.
+Repeated arguments for existing keys count repeatedly, unlike del.
+At least one key argument is necessary.
 
 ```text
 exists(key: string, ...: string) -> count: integer
@@ -89,12 +105,13 @@ Additional byte-string keys; duplicates count independently.
 ### Returns
 
 count: integer
-Number of supplied arguments naming live keys.
+Number of supplied arguments that name live keys.
 
 ### expire
 
-Replace a live key's deadline or immediately delete it for nonpositive seconds.
-Validate exact integer duration and safe tick arithmetic before publication.
+Replace the deadline of a live key.
+For nonpositive seconds, the command immediately deletes the key instead.
+Before publication, the command validates the exact integer duration and safe tick arithmetic.
 
 ```text
 expire(key: string, seconds: integer) -> accepted: 0|1
@@ -106,16 +123,18 @@ key: string
 Bounded byte-string key of either live type.
 
 seconds: integer
-Simulation seconds; positive saves deadline, nonpositive deletes.
+Simulation seconds. A positive value saves the deadline. A nonpositive value deletes the key.
 
 ### Returns
 
 accepted: 0|1
-One for accepted expiry/deletion of a live key; zero if absent.
+One for accepted expiry or deletion of a live key. Zero if the key is absent.
 
 ### get
 
-Read a live string; E_WRONGTYPE for a live hash. Expired keys are absent.
+Read a live string.
+A live hash causes E_WRONGTYPE.
+Expired keys are absent.
 
 ```text
 get(key: string) -> value: string|nil
@@ -124,16 +143,16 @@ get(key: string) -> value: string|nil
 ### Parameters
 
 key: string
-Bounded byte-string key, including empty/NUL.
+Bounded byte-string key, which can be empty or contain NUL.
 
 ### Returns
 
 value: string|nil
-Exact stored bytes or exactly one nil when absent/expired.
+Exact stored bytes or exactly one nil for an absent or expired key.
 
 ### getLimits
 
-Read exact effective database/content/transport limits as an independent map.
+Read the exact effective database, content and transport limits as an independent map.
 
 ```text
 getLimits() -> limits: TC.KVLimits
@@ -150,8 +169,11 @@ Per-device storage and operation envelopes.
 
 ### hdel
 
-Remove fields atomically, counting each actual field once. Delete the key when
-its last field disappears; otherwise preserve its deadline. Wrong type fails.
+Remove fields atomically.
+Each removed field counts once.
+The command deletes the key when it removes the last field.
+Otherwise, the key retains its deadline.
+The wrong type causes failure.
 
 ```text
 hdel(key: string, field: string, ...: string) -> removed: integer
@@ -175,7 +197,9 @@ Number of distinct present fields removed.
 
 ### hexists
 
-Test a field; wrong live key type fails, missing key/field is ordinary absence.
+Check whether a field exists.
+The wrong live key type causes failure.
+A missing key or field is ordinary absence.
 
 ```text
 hexists(key: string, field: string) -> exists: 0|1
@@ -192,11 +216,12 @@ Bounded byte-string field name.
 ### Returns
 
 exists: 0|1
-Integer one for present, zero otherwise; not a boolean.
+Integer one if present, zero otherwise. This is not a boolean.
 
 ### hget
 
-Read one hash field. E_WRONGTYPE for a live string key.
+Read one hash field.
+A live string key causes E_WRONGTYPE.
 
 ```text
 hget(key: string, field: string) -> value: string|nil
@@ -213,13 +238,16 @@ Bounded byte-string field name.
 ### Returns
 
 value: string|nil
-Stored bytes or one nil for a missing key/field.
+Stored bytes or one nil for a missing key or field.
 
 ### hgetall
 
-Read an independent complete field map. Populate in bytewise field-name order,
-but consumers use keys, not an ordered-array guarantee. E_WRONGTYPE for strings;
-copy refusal is not an empty result. Embedded NUL/empty strings are preserved.
+Read an independent complete field map.
+The command fills the map in bytewise field-name order.
+Use keys to read the map, not an ordered-array guarantee.
+String keys cause E_WRONGTYPE.
+Copy refusal is not an empty result.
+The map preserves embedded NUL and empty strings.
 
 ```text
 hgetall(key: string) -> fields: table<string, string>
@@ -237,7 +265,8 @@ Detached map; empty map for missing key.
 
 ### hlen
 
-Count live hash fields; E_WRONGTYPE for a string.
+Count live hash fields.
+A string key causes E_WRONGTYPE.
 
 ```text
 hlen(key: string) -> count: integer
@@ -255,10 +284,14 @@ Field count, zero for a missing hash.
 
 ### hset
 
-Atomically add/update hash field/value pairs, creating an absent hash. Require
-at least one complete pair; odd/missing arguments fail before writes. Repeated
-fields use the last value and count as new only once if absent before the call.
-Existing hash deadline is retained; live string key is E_WRONGTYPE.
+Atomically add or update hash field/value pairs.
+The command creates the hash if it is absent.
+At least one complete pair is necessary.
+An odd argument count or missing arguments cause failure before writes.
+Repeated fields use the last value and count as new only once if absent before the call.
+
+An existing hash retains its deadline.
+A live string key causes E_WRONGTYPE.
 
 ```text
 hset(key: string, field: string, value: string, ...: string) -> added: integer
@@ -276,7 +309,7 @@ value: string
 First required string value.
 
 ... (zero or more positions): string
-Additional alternating field,value pairs; must have even width.
+Additional alternating field,value pairs. The number of arguments must be even.
 
 ### Returns
 
@@ -285,7 +318,8 @@ Newly added distinct fields, not the number of updates.
 
 ### persist
 
-Remove expiry without changing value/type. Already persistent/absent is harmless.
+Remove expiry without a change to the value or type.
+An already persistent or absent key causes no harm.
 
 ```text
 persist(key: string) -> removed: 0|1
@@ -299,12 +333,13 @@ Bounded byte-string key.
 ### Returns
 
 removed: 0|1
-One only when a live key's deadline was removed.
+One only when the command removed the deadline of a live key.
 
 ### set
 
-Atomically replace any prior type with a string and clear its previous expiry.
-No options/flags exist. Failed validation/capacity retains old value/deadline.
+Atomically replace any previous type with a string and clear its previous expiry.
+No options or flags exist.
+Validation or capacity failure retains the old value and deadline.
 
 ```text
 set(key: string, value: string) -> result: 'OK'
@@ -325,8 +360,9 @@ Exactly one literal success string.
 
 ### ttl
 
-Read remaining simulation seconds using nearest-second rounding. A live key
-can report zero before deadline; do not confuse that with the absent sentinel.
+Read the remaining simulation seconds with nearest-second rounding.
+A live key can report zero before its deadline.
+Zero is not the absent sentinel.
 
 ```text
 ttl(key: string) -> seconds: integer
@@ -340,11 +376,11 @@ Bounded byte-string key.
 ### Returns
 
 seconds: integer
--2 absent/expired, -1 persistent, otherwise rounded remaining seconds.
+-2 for an absent or expired key, -1 for a persistent key, otherwise rounded remaining seconds.
 
 ### type
 
-Read the live value kind without coercing or exposing implementation records.
+Read the live value kind without coercion or access to implementation records.
 
 ```text
 type(key: string) -> type: 'none'|'string'|'hash'
@@ -358,7 +394,7 @@ Bounded byte-string key.
 ### Returns
 
 type: 'none'|'string'|'hash'
-Expired/missing means none.
+An expired or missing key gives none.
 
 ## Referenced types
 

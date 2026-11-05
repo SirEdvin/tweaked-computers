@@ -9,9 +9,10 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.RecipeIngredient
 
-Complete native ingredient entry, preserved in recipe order without aggregation.
-Optional fields appear only when supplied by the engine for the stated kind;
-never invent a quality or conflate exact and interval temperatures.
+This complete native ingredient entry retains recipe order without aggregation.
+Optional fields appear only when the engine supplies them for the stated kind.
+Never invent a quality.
+Do not treat exact temperatures and temperature intervals as equivalent.
 
 ### amount
 

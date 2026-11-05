@@ -1,6 +1,6 @@
 # Tweaked Computers
 
-Build a programmable factory controller: read circuit signals, control an
+Build a programmable factory controller. Use it to read circuit signals, control an
 inserter, keep shared telemetry and draw a touchable status screen.
 
 Tweaked Computers runs bounded native Lua callbacks, not a computer OS. Each
@@ -17,22 +17,22 @@ Reference now share one public typed Lua API library, including complete nested
 types and overloads. Guest behavior, save formats and budgets are unchanged.
 
 Since 0.1.19, saved programs use only named
-function declarations; legacy table-form source needs manual rewriting, not an
-automatic conversion. All nine custom device families are electricity-free;
-native radars and speakers retain their normal electricity requirements.
+function declarations. Rewrite legacy table-form source manually. There is no
+automatic conversion. All nine custom device families are electricity-free.
+Native radars and speakers retain their normal electricity requirements.
 Scheduling is demand-driven, but the benchmark campaign is incomplete and
 performance/scaling remains unverified. Benchmark completion was explicitly
-waived for 0.1.19; correctness and safety requirements were not waived. This
+waived for 0.1.19. Correctness and safety requirements were not waived. This
 documentation release adds no performance or connected-multiplayer certification.
 
 0.1.17 added [Dashboards](dashboard.md) with optional `factorio-charts`, native-only
 [Factoriopedia catalogues](api/factoriopedia-interface.md) and
 [Production Statistics](api/production-statistics.md), elapsed [Console](console.md)
 time and demand-driven [monitor maintenance](monitor-animation.md).
-**Breaking:** computer items are plain hardware; ordinary pickup/replacement loses
-their contents, with no legacy item import. Placed computers and private drafts are
-not reset. [Back up the complete save and matching mods before upgrading](lifecycle.md#compatibility-break-and-rollback);
-restore both for rollback. Keep 0.1.14 if you remain on Factorio 2.0.77.
+**Breaking:** Computer items are plain hardware. Ordinary pickup/replacement loses
+their contents. There is no legacy item import. Placed computers and private drafts are
+not reset. [Back up the complete save and matching mods before upgrading](lifecycle.md#compatibility-break-and-rollback).
+Restore both for rollback. Keep 0.1.14 if you remain on Factorio 2.0.77.
 
 Controlled 2.1.23 base/Space Age native-client and connected-peer cases cover the
 new features, cold resume and retained data. They do not certify arbitrary mod
@@ -40,8 +40,8 @@ packs or GPU performance. Historical results below retain their original scope.
 
 Version 0.1.14 exposes complete fresh [native circuit signals](api/logic.md)
 without mod-defined signal/filter/output-slot ceilings. Reads retain native order
-and optional identity fields. Ctrl-click opens only a selected computer body;
-empty ground is inert and draft recovery remains in Maintenance. Independent
+and optional identity fields. Ctrl-click opens only a selected computer body.
+Empty ground is inert and draft recovery remains in Maintenance. Independent
 [signal trays](inspectors.md), validation, authority, fail-safe ownership and
 ordinary guest/persistence budgets remain.
 
@@ -50,7 +50,7 @@ Version 0.1.11 added [peripheral inspectors](inspectors.md),
 [guarded Lua globals](api/language.md#printing-raw-helpers-and-error-transformation)
 and a complete contextual in-game Reference. Plain function programs,
 the live maintenance setting and Service Rack artwork remain.
-The maintenance default stays 200000; no production safety ceiling is raised.
+The maintenance default stays 200000. No production safety ceiling increases.
 
 1. [Install the alpha and craft the devices](getting-started.md).
 2. [Control your first inserter](first-controller.md) with a computer and logic handler.
@@ -58,8 +58,8 @@ The maintenance default stays 200000; no production safety ceiling is raised.
    [Inspect peripherals directly](inspectors.md) to copy names and read local state.
 4. [Build the combined factory controller](factory.md), adding configuration,
    expiring database telemetry and a merged touchable monitor.
-5. Look up [Lua types, errors and limits](api/common.md), then choose a complete
-   reference: [computer](api/computer.md), [peripheral discovery](api/peripheral.md),
+5. Look up [Lua types, errors and limits](api/common.md). Then select a complete
+   reference. The available references are [computer](api/computer.md), [peripheral discovery](api/peripheral.md),
    [monitor](api/monitor.md), [database](api/kv.md), [logic](api/logic.md),
    [configurator](api/configurator.md), [Recipe Searcher](api/recipe-searcher.md),
    [radar modem](api/modem.md), [programmable speaker](api/speaker.md)
@@ -91,40 +91,40 @@ Service Rack artwork and live charts have isolated software-rendered
 base/Space Age captures. The Console has native input/size/workflow acceptance in
 both modes and actual base two-client late joining plus cold server resume.
 Recipe Searcher appearance and Ctrl-click transfers/held-modifier reuse/monitor
-touch have native checks in both modes; recipe queries also have base two-client
+touch have native checks in both modes. Recipe queries also have base two-client
 late-join/cold-server checks. The new campaign also has real inspector/Reference
 workflows, independently captured speaker PCM and actual two-client fresh/cold
 radar/speaker/inspector cases in base and Space Age. Representative cases do not
 cover every wire topology, platform, mixer configuration or IME.
 The declaration starter also has real native editor input checks in both modes.
-Historical connected-peer receipts retain their original source/scope; this
+Historical connected-peer receipts keep their original source/scope. This
 release does not claim exhaustive multiplayer compatibility or independent
 client-storage equality from server-authored peer receipts.
 These captures are not GPU benchmarks.
 Resource ceilings are provisional safety limits, not a promise of real-time latency
 or simultaneous maximum-world performance. Report failures with the mod/engine
-versions, wiring, source and error code; remove private literals before sharing.
+versions, wiring, source and error code. Remove private literals before you share a report.
 
 ## Source and developer documentation
 
 The [0.1.12 ALPHA source](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.12) includes
-source, notices and examples; report problems in its
+source, notices and examples. Report problems in its
 [issue tracker](https://github.com/SirEdvin/tweaked-computers/issues).
 The separately generated
 [developer OpenWiki](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.12/openwiki)
-explains implementation internals; this site, not that wiki, is the player and
+explains implementation internals. This site, not that wiki, is the player and
 public Lua API reference. This link identifies the source-grounded developer
 wiki snapshot independently of the repository's default branch. Generated wiki
-pages can lag source changes; source/tests and this guide remain authoritative.
+pages can lag source changes. Source/tests and this guide remain authoritative.
 
 Project source, the original industrial device family and the independently
 authored character atlas are MIT licensed. Approved historical Greg Flavored
-inputs and their complete MIT notices remain in the source/package; the new
+inputs and their complete MIT notices remain in the source/package. The new
 family does not sample them. No original CC:Tweaked font or complete
 CraftOS/Computer Core/Redis compatibility is implied.
 
 Version 0.1.10 adopts the selected Service Rack six-device family, with matching
 item and research icons. See the [artwork guide](artwork.md) and
 [identification guide](getting-started.md#research-and-craft). Published 0.1.9
-remains immutable; the new artwork does not change device geometry or certify
+remains immutable. The new artwork does not change device geometry or certify
 hardware performance.

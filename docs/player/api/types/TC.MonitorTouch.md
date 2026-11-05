@@ -9,8 +9,8 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.MonitorTouch
 
-A selected monitor character cell was activated through the supported player
-interaction. Coordinates are terminal cells, not world tiles or mosaic pixels.
+A player activated a selected monitor character cell through the supported interaction.
+Coordinates are terminal cells, not world tiles or mosaic pixels.
 
 Extends: TC.MonitorEvent
 

@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.SectionValues
 
-Section values. Addition defaults active=true, group empty, multiplier=1; local filters empty. Group joins inherit shared filters. Unknown fields refused.
+Section values. Addition defaults: active=true, empty group, multiplier=1, and empty local filters. Group joins inherit shared filters. Unknown fields are refused.
 
 ### active (optional)
 
-Section activation; addSection default true. Explicit root patch clear: not supported.
+Section activation. The addSection default is true. Explicit root patch clear: not supported.
 
 ```text
 boolean
@@ -21,7 +21,7 @@ boolean
 
 ### filters (optional)
 
-Complete section filter replacement; addSection defaults empty only for a local group. Dense array of at most 128 entries. Explicit root patch clear: not supported.
+Complete replacement for section filters. The addSection default is empty only for a local group. Dense array of at most 128 entries. Explicit root patch clear: not supported.
 
 ```text
 (TC.Config.SectionFilter)[]
@@ -29,7 +29,7 @@ Complete section filter replacement; addSection defaults empty only for a local 
 
 ### group (optional)
 
-Shared-group name; empty string is local and is addSection default. At most 256 bytes; no NUL. Explicit root patch clear: not supported.
+Shared-group name. An empty string means local. This is the addSection default. At most 256 bytes. NUL is not permitted. Explicit root patch clear: not supported.
 
 ```text
 string
@@ -37,7 +37,7 @@ string
 
 ### multiplier (optional)
 
-Section output multiplier; addSection default 1, readback uses native float32 precision. Finite number; domain -9007199254740991..9007199254740991. Explicit root patch clear: not supported.
+Section output multiplier. The addSection default is 1. Readback uses native float32 precision. Finite number. Domain: -9007199254740991..9007199254740991. Explicit root patch clear: not supported.
 
 ```text
 number

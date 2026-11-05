@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.ItemCountType
 
-Normalized readback for ItemCountType. Finite integer; domain 0..4294967295.
+Normalized readback for ItemCountType. Finite integer. Domain: 0..4294967295.
 
 ```text
 integer

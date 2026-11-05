@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.LuaWallControlBehavior
 
-Root settings for LuaWallControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaWallControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### circuit_condition (optional)
 
-Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
+Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
 
 ```text
 TC.Config.Read.CircuitConditionDefinition
@@ -29,7 +29,7 @@ boolean
 
 ### output_signal (optional)
 
-Signal used for this control behavior output (charge, gate sensor or combinator result). Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Output signal for this control behavior: accumulator charge, gate sensor, or combinator result. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.Read.SignalID

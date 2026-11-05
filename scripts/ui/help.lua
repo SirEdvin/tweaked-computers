@@ -18,98 +18,105 @@ function sample(event)
 end
 ]],
   text=[[TWEAKED COMPUTERS — Lua API v1
-One document. Native named callbacks; no OS, VM or filesystem.
-Search an exact TC.* type name for complete fields and behavior. API entries come from the shipped public declarations.
+Each computer has one source document with native named callbacks.
+There is no OS, VM, or filesystem.
+Search for an exact TC.* type name to find its fields and behavior.
+The public declaration files supply the API entries.
 
 WORKFLOW
-Editor is the writing workspace. Focus hides tabs without replacing your source.
-Console holds bounded live output; Follow off stops automatic scrolling, not updates.
-Incoming changed text may clear selection; native selection/copy works between updates.
-Console also accepts one live Lua line with Enter or Execute; no command history.
-Scratch globals/tables and peripheral bindings are shared per computer and saved.
+Editor is the workspace for source text. Focus hides tabs but keeps your source.
+Console holds live output within its limits. Follow off stops automatic scrolling, but updates continue.
+An update can clear the text selection. You can select and copy text between updates.
+Console also accepts one live Lua line through Enter or Execute. It has no command history.
+Each computer shares and saves its Console globals, tables, and peripheral bindings.
 print(p.getSize()) inspects a retained p=peripheral.wrap(name,"red") binding.
-Calls affect the real factory. Failed commands keep previous scratch values but
-do not undo earlier API effects. No retained user functions, timers or subscriptions.
-Successful Run/Apply, explicit Stop or confirmed Reset Shell clear scratch values.
-Close/reopen, save/load, program faults and power loss keep committed values.
-Peripherals inspects the red or green channel, with explicit pending results.
-Click a row to select details; click the selected row again for its Reference topic.
-There is no double-click timer. Changing wire or unavailable inventory resets selection.
-Reference filters complete help by category/search. Manually select/copy each
-paragraph or entire literal code box with native controls; browsing never edits a draft.
-Maintenance holds reviewed revision resolution, retained drafts and stopped-only reset.
-Type/paste into the source box. Validate checks the draft without effects.
-Save commits source, but does not change the active run. Run/Apply validates and
-activates the displayed saved revision only. Save first if the draft is dirty.
-Invalid candidates preserve the old run. Successful Run/Apply retains state.
-Computer items are plain hardware: ordinary pickup/replacement loses their source/state.
-Clipboard/blueprint/clone copies include saved source/label only and start stopped.
-Native undo restores pre-removal source/label/state into a new stopped identity, not a run.
-Formerly active source is reviewed recovery text; private drafts keep their old identity.
-Old computer-item payloads are ignored with no item-data recovery. Placed records/drafts,
-KV contents/deadlines and monitor data retain their existing save/item policies.
-Undo history/its original ghost is not permanent backup; keep complete save/mod backups.
-Stop cancels callbacks/timers and clears only this run's still-owned logic output.
-Reset State requires Stop and a separate confirmation; it never clears a KV.
-Close/Escape retains the draft. Reopen the same body to recover it.
-Conflict: Review opens Maintenance; read current source, then Rebase (retain draft) or
-Reload (discard your draft). The revision is checked again on either action.
-Eight bounded recovery drafts per player; no automatic dirty-draft eviction.
-Ctrl+left-click (rebindable), empty cursor/no GUI, opens an actual computer.
-Review retained drafts through Maintenance; empty-ground clicks do nothing.
-Ordinary opening of a composite peripheral opens its read-only local inspector;
-radars and programmable speakers keep their native configuration windows.
-No computer or running program is required. Select name for copy selects only the API ID;
-use native Copy, then paste into your draft. Escape retains computer drafts.
-Open inspectors and Peripherals update automatically, with bounded pages/chunks.
-KV byte strings quote empty values, escape quotes/backslashes and use hexadecimal
-byte escapes for control/high bytes and brackets. Full values remain reachable.
-Configurator lists target-side prototypes: Unique deduplicates overlapping Red
-and Green counts. Logic shows separate colored inputs and its own output bank,
-not other emitters. Logic/monitor updates are sampled every 15 ticks when admitted.
-Monitor dimensions are local connected tiles and terminal columns/rows, not pixels.
-Ctrl-click monitor touches remain distinct. Custom devices need no electricity;
-identity, geometry, permissions and live wiring still govern availability.
-All essential actions are buttons, including while the text box has focus.
+Calls operate on the real factory. A failed command keeps previous Console values.
+It does not reverse earlier API effects. Console cannot keep user functions, timers, or subscriptions.
+Successful Run/Apply, explicit Stop, or confirmed Reset Shell clears Console values.
+Close/reopen, save/load, program faults, and power loss keep committed values.
+Peripherals inspects the red or green channel. It identifies pending results explicitly.
+Click a row to select its details. Click the selected row again to open its Reference topic.
+There is no double-click timer. A wire change or unavailable inventory clears the selection.
+Reference filters the complete help by category or search text.
+Use native controls to select and copy a paragraph or a complete code box.
+Reference does not change your draft.
+Maintenance holds revision review, retained drafts, and reset controls. A reset requires a stopped program.
+Type or paste source into the source box. Validate checks the draft without effects.
+Save stores source but does not change the active run.
+Run/Apply validates and activates only the saved revision on the screen.
+Save an unsaved draft before Run/Apply. An invalid candidate keeps the previous run.
+Successful Run/Apply keeps state.
+Computer items contain only hardware. Ordinary pickup and replacement loses the computer's source and state.
+Clipboard, blueprint, and clone copies contain only saved source and label. They start stopped.
+Native undo restores the source, label, and state from before removal into a new stopped identity.
+It does not restore a run. Previously active source becomes recovery text for review.
+Private drafts keep their previous identity. Old computer-item payloads are ignored; item data cannot be recovered.
+Placed records, drafts, KV contents and deadlines, and monitor data keep their existing save and item policies.
+Undo history and its original ghost are not permanent backups. Keep complete save and mod backups.
+Stop cancels callbacks and timers. It clears only the logic output that this run still owns.
+Reset State requires Stop and a separate confirmation. It never clears a KV database.
+Close and Escape keep the draft. Reopen the same computer body to recover it.
+For a conflict, select Review to open Maintenance. Read the current source.
+Select Rebase to keep your draft, or Reload to discard it. Both controls check the revision again.
+Each player can keep eight recovery drafts within their limits. Unsaved drafts are not automatically removed.
+Ctrl+left-click opens an actual computer when your cursor is empty and no GUI is open.
+You can change this key binding. Review retained drafts in Maintenance.
+Clicks on empty ground do nothing.
+An ordinary open action on a composite peripheral opens its local read-only inspector.
+Radars and programmable speakers keep their native configuration windows.
+Inspectors do not need a computer or an active program.
+Select name for copy selects only the API ID. Use native Copy.
+Paste the ID into your draft. Escape keeps computer drafts.
+Open inspectors and Peripherals update automatically in limited pages or chunks.
+KV byte strings show empty values in quotes. They escape quotes and backslashes.
+They use hexadecimal byte escapes for control bytes, high bytes, and brackets.
+You can still read the complete values.
+Configurator lists prototypes on its target side. Unique counts each prototype once across Red and Green.
+Logic shows separate colored inputs and its own output bank. It does not show other emitters in that bank.
+Logic and monitor updates are sampled every 15 ticks when resource checks permit them.
+Monitor dimensions use connected tiles on local axes and terminal columns and rows. They are not pixel dimensions.
+Ctrl-click monitor touches remain a separate interaction. Custom devices do not need electricity.
+Identity, geometry, permissions, and current wiring still determine availability.
+All essential controls are buttons. They remain available when the text box has focus.
 
 LANGUAGE
 function start(event) ... end; function sample(event) ... end
-Plain declarations export named handlers; API version 1 is implicit. start is optional.
-sample() calls directly in this program with ordinary arguments/results and the
-same callback budget. computer.every(60, "sample") schedules a later TimerEvent.
-Names alone do not subscribe. Registration uses strings, never function values.
-Declare private local function helpers before use; they are not exported.
-Exports are read-only and forward-visible; parameters/locals shadow them normally.
-Only declarations, comments and semicolons belong at top level; at least one
-export is required. No top-level values, returns, calls or effects.
-Locals, helpers, if, loops and tables have guarded work/depth/allocation limits.
-Functions/locals are fresh per callback; keep durable values in computer state.
-Console cannot call saved-program functions. The starter samples once immediately,
-logs the returned count, then samples every 60 simulation ticks; no device required.
-No require/load, game/storage/remote, _ENV/_G, metatables, coroutine, patterns,
-random, string-method syntax or colon calls. API calls use dots.
+Plain declarations export named handlers. API version 1 is implicit. start is optional.
+sample() calls directly into this program with ordinary arguments and results. It uses the same callback budget.
+computer.every(60, "sample") schedules a later TimerEvent.
+A name alone does not register a subscription. Registration uses strings, never function values.
+Declare a private local function before use. Private helpers are not exported.
+Exports are read-only and visible before their declarations. Parameters and locals can shadow them normally.
+Only declarations, comments, and semicolons are permitted at top level. At least one export is required.
+Top-level values, returns, calls, and effects are not permitted.
+Locals, helpers, if, loops, and tables have guarded work, depth, and allocation limits.
+Each callback has new functions and locals. Keep durable values in computer state.
+Console cannot call saved-program functions. The starter samples once immediately and logs the returned count.
+It then samples every 60 simulation ticks. It does not need a peripheral.
+No require, load, game, storage, remote, _ENV, _G, metatables, coroutine, patterns,
+random, string-method syntax, or colon calls are available. API calls use dots.
 
-New global names are reserved for public/private top-level declarations, not
-body locals/parameters. Old colliding active
-source faults on synchronized reconstruction, retaining source/state; rename and
-explicitly Save/Run. A colliding Console root reports E_UNSUPPORTED before effects;
-its graph is retained until confirmed Reset Shell discards it. Nested keys are fine.
+New global names are reserved in public and private top-level declarations. Body locals and parameters are not subject to this restriction.
+Old active source with a conflicting declaration faults during synchronized reconstruction. Source and state remain available.
+Rename the declaration. Explicitly Save and Run the corrected source.
+A conflicting Console root reports E_UNSUPPORTED before effects. Its graph remains until confirmed Reset Shell discards it.
+Nested keys are permitted.
 
 COMBINED EXAMPLE
-Choose Examples for complete, small tutorials with setup, runnable code, execution
-steps, expected results and failure notes. No external file or guest import is needed.
-Small factory dashboard combines configuration, logic, a database and a monitor.
-Two-computer shared data uses two real computers and two physical databases.
-The starter needs no peripherals. One speaker note, Stock-controlled inserter and
-Find iron plate recipes teach one service each. Larger shipped programs and docs
-are supplementary; they are not required to complete these in-game tutorials.
+Choose Examples for small, complete tutorials. They contain setup instructions, executable code, procedures, expected results, and failure notes.
+They do not need external files or guest imports.
+Small factory dashboard combines configuration, logic, a database, and a monitor.
+Two-computer shared data uses two actual computers and two physical databases.
+The starter does not need peripherals.
+One speaker note, Stock-controlled inserter, and Find iron plate recipes each teach one service.
+Larger supplied programs and documents give more information. The in-game tutorials do not require them.
 
 FAILURES AND PERSISTENCE
-Saved and active sources may differ. Functions are reconstructed only on dispatch.
-No player code runs on load and startup is not replayed. Earlier successful effects
-remain after later faults. Keep full save/mod backups before changing runtimes.
-Search TC.ApiError, TC.Data and TC.Limits for the complete shared contract.
-Quotas are development ceilings, not a guaranteed real-time latency bound.
+Saved and active source can differ. Functions are reconstructed only on dispatch.
+No player code runs on load. Startup is not replayed.
+Earlier successful effects remain after later faults. Keep complete save and mod backups before you change runtimes.
+Search TC.ApiError, TC.Data, and TC.Limits for the complete shared contract.
+Quotas are development limits. They do not guarantee a real-time response interval.
 ]]
 }
 -- Categorized views of the same complete shipped reference, not a second API list.
@@ -127,11 +134,11 @@ for line in string.gmatch(M.text..'\n','([^\n]*)\n') do
   topic.text=topic.text..line..'\n'
 end
 local tutorials=require('scripts.ui.tutorials')
-tutorials.starter={title='Starter controller',purpose='Sample immediately, then retain a counter once per 60 simulation ticks. No peripheral is needed.',
-  setup='Research Native circuit computers (tc-circuit-computers) and craft one computer. No electricity, wire, second computer or external file is needed.',
-  steps='Clear the cursor and Ctrl+left-click the computer. Select and copy this entire code box with native controls, paste into an empty Editor draft, then Validate, Save and Run. The Editor starter control is an optional way to insert the same source; Reference has no action buttons.',
-  expected='Console prints Initial sample count: 1 on a fresh computer. The retained samples state is 1 immediately and increases to 2 at the first 60-tick timer. Reapplying retains the previous count; cold load does not replay start.',
-  failures='Save alone does not activate a revision. Saved program functions cannot be called from Console. Stop cancels the timer without clearing the count. Maintenance Reset State requires Stop and separate confirmation.',
+tutorials.starter={title='Starter controller',purpose='Sample immediately. Then update a saved counter every 60 simulation ticks. A peripheral is not necessary.',
+  setup='Research Native circuit computers (tc-circuit-computers). Craft one computer. Electricity, wires, a second computer, and external files are not necessary.',
+  steps='Clear the cursor. Ctrl+left-click the computer. Use native controls to select the complete code box. Copy the selection. Paste it into an empty Editor draft. Select Validate. Select Save. Select Run. The Editor starter control can insert the same source. Reference has no action buttons.',
+  expected='Console prints Initial sample count: 1 on a new computer. The saved samples state is immediately 1. It increases to 2 at the first 60-tick timer. Apply keeps the previous count. A cold load does not replay start.',
+  failures='Save alone does not activate a revision. Console cannot call saved-program functions. Stop cancels the timer but keeps the count. Maintenance Reset State requires Stop and a separate confirmation.',
   source='function-program',code=M.template}
 M.tutorials=tutorials
 local function block(topic,kind,text)

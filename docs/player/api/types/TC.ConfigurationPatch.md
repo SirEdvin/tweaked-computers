@@ -9,13 +9,14 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ConfigurationPatch
 
-Whole-root replacements, not recursive merge. Omitted roots remain unchanged.
-Empty patch is a validated no-op/readback. Explicit nil table fields are omitted,
-not clear requests; use clear only when the current schema says clearable.
+This patch replaces whole roots. It does not recursively merge values.
+Omitted roots remain unchanged. An empty patch is a validated no-op/readback.
+Explicit nil table fields count as omitted fields, not clear requests.
+Use clear only when the current schema says clearable.
 
 ### clear (optional)
 
-Unique clearable root names; no overlap with set, no read-only/unknown fields.
+Unique clearable root names. No name can overlap with set or identify a read-only or unknown field.
 
 ```text
 (string)[]

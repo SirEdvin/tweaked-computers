@@ -5,9 +5,12 @@ on:
     branches: [main]
     paths:
       - 'docs/player/**'
+      - 'docs/welcome.html'
       - 'api/**'
       - 'tools/data/**'
       - 'tools/player_docs.py'
+      - 'tools/website.py'
+      - 'tools/emmy-*.json'
       - 'tools/api_reference.py'
       - 'tools/api_migration.py'
       - 'tools/api_changes.py'
@@ -69,7 +72,18 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install --require-hashes -r requirements-docs.txt
-      - run: python -m mkdocs build --strict
+      - name: Build player site
+        run: |
+          if [ -f tools/website.py ]; then
+            export TMPDIR="$RUNNER_TEMP"
+            TOOL=$(mktemp -d "$TMPDIR/tc-emmy-XXXXXX")
+            curl --fail --location --retry 2 "$(jq -er .url tools/emmy-lock.json)" -o "$TOOL/emmy.tar.gz"
+            printf '%s  %s\n' "$(jq -er .sha256 tools/emmy-lock.json)" "$TOOL/emmy.tar.gz" | sha256sum --check
+            tar -xzf "$TOOL/emmy.tar.gz" -C "$TOOL"
+            python tools/website.py --emmy "$TOOL/emmylua_doc_cli"
+          else
+            python -m mkdocs build --strict
+          fi
       - name: Record published source
         env:
           SOURCE_SHA: ${{ steps.source.outputs.sha }}

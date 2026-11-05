@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.LuaTrainStopControlBehavior
 
-Root settings for LuaTrainStopControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaTrainStopControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### circuit_condition (optional)
 
-Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.Read.CircuitConditionDefinition
@@ -37,7 +37,7 @@ boolean
 
 ### logistic_condition (optional)
 
-Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.Read.CircuitConditionDefinition
@@ -45,7 +45,7 @@ TC.Config.Read.CircuitConditionDefinition
 
 ### priority_signal (optional)
 
-Signal controlling train-stop priority. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal controlling train-stop priority. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.Read.SignalID
@@ -101,7 +101,7 @@ boolean
 
 ### stopped_train_signal (optional)
 
-Signal carrying stopped train identity. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal carrying stopped train identity. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.Read.SignalID
@@ -109,7 +109,7 @@ TC.Config.Read.SignalID
 
 ### trains_count_signal (optional)
 
-Signal carrying the incoming-train count. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal carrying the incoming-train count. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.Read.SignalID
@@ -117,7 +117,7 @@ TC.Config.Read.SignalID
 
 ### trains_limit_signal (optional)
 
-Signal controlling the incoming-train limit. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal controlling the incoming-train limit. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.Read.SignalID

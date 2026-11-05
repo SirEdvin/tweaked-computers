@@ -9,8 +9,9 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.PeripheralType
 
-Closed shipped peripheral families. Computers are passive graph vertices, not
-discoverable programmable peripheral facades. Unknown string searches are empty.
+These are the only shipped peripheral families.
+Computers are passive graph vertices, not discoverable programmable peripheral facades.
+Searches for unknown strings give empty results.
 
 ```text
 'monitor'|'kv_database'|'logic_handler'|'configurator'|'recipe_searcher'|'factoriopedia_interface'|'production_statistics'|'dashboard'|'modem'|'speaker'

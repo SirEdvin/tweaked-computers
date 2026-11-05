@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.SelectorCombinatorParameters
 
-Normalized readback for SelectorCombinatorParameters. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields.
+Normalized readback for SelectorCombinatorParameters. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields.
 
 ```text
 TC.Config.Read.SelectorCombinatorParameters.Select|TC.Config.Read.SelectorCombinatorParameters.Count|TC.Config.Read.SelectorCombinatorParameters.Random|TC.Config.Read.SelectorCombinatorParameters.QualityTransfer|TC.Config.Read.SelectorCombinatorParameters.RocketCapacity|TC.Config.Read.SelectorCombinatorParameters.StackSize|TC.Config.Read.SelectorCombinatorParameters.QualityFilter

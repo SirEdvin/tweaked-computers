@@ -9,15 +9,15 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ConfiguratorLimits
 
-Defensive effective limit map. Defaults below are not live values.
-Counts are admission envelopes, not calibrated heap, latency or FPS promises.
-Settings changes preserve spent credits; lower limits never authorize data loss.
+Independent copy of effective limits. These defaults are not current values.
+Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+Settings changes keep spent credits. Lower limits never permit data loss.
 
 Extends: TC.Limits
 
 ### configuration_bytes
 
-Normalized configuration accounting byte ceiling. Default: 16384.
+Maximum accounting bytes in a normalized configuration. Default: 16384.
 
 ```text
 integer
@@ -25,7 +25,7 @@ integer
 
 ### configuration_nodes
 
-Normalized configuration node ceiling. Default: 4096.
+Maximum nodes in a normalized configuration. Default: 4096.
 
 ```text
 integer
@@ -33,7 +33,7 @@ integer
 
 ### patch_fields
 
-Fields in one Configurator patch. Default: 32.
+Maximum fields in one Configurator patch. Default: 32.
 
 ```text
 integer
@@ -41,7 +41,7 @@ integer
 
 ### section_filters
 
-Supported filters in one Configurator section. Default: 128.
+Maximum supported filters in one Configurator section. Default: 128.
 
 ```text
 integer
@@ -49,7 +49,7 @@ integer
 
 ### sections
 
-Supported target section count. Default: 32.
+Maximum supported target sections. Default: 32.
 
 ```text
 integer
@@ -57,7 +57,7 @@ integer
 
 ### target_edges
 
-Configurator target-network traversal edge ceiling. Default: 512.
+Maximum edges in Configurator target-network traversal. Default: 512.
 
 ```text
 integer
@@ -65,7 +65,7 @@ integer
 
 ### target_nodes
 
-Configurator target-network traversal node ceiling. Default: 256.
+Maximum nodes in Configurator target-network traversal. Default: 256.
 
 ```text
 integer

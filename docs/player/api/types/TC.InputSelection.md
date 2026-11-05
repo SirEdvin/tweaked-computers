@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.InputSelection
 
-Required Logic input selection, independent of the discovery wire.
+The Logic input selection is required and independent of the discovery wire.
 
 ```text
 TC.Wire

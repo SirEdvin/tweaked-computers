@@ -14,44 +14,55 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.Computer
 
-The current computer's dot-call API. A saved document contains exported function
-declarations and optional private local functions; start is optional. Save only
-commits source; Run/Apply validates then activates a new generation. Failed
-candidate validation preserves the old run. Successful replacement retires old
-timers/subscriptions/queued work and still-owned outputs, then queues start.
+This API provides dot calls for the current computer.
+A saved document contains exported function declarations and optional private
+local functions. The start handler is optional. Save only commits source.
+Run/Apply validates a new generation before activation.
+
+Failed candidate validation preserves the old run.
+Successful replacement retires old timers, subscriptions, queued work and
+still-owned outputs. It then queues start.
 Explicit application state survives unless the user deliberately resets it.
-Each callback has fresh locals/functions; only explicit supported storage lasts.
+Each callback has fresh locals and functions. Only explicit supported storage lasts.
 
 ### Scheduling
 
-Synchronized processing first reconciles lifecycle/physical changes and revokes
-stale authority, then samples watched Logic inputs, advances timers and host
-notifications, dispatches callbacks/Console, and performs bounded presentation
-and housekeeping. Native circuit propagation is not zero-latency feedback.
-Simulation events and Console commands share a persisted ready rotation. At
-most one item per computer runs in an actual tick, with FIFO queues and fair
-program/Console alternation. New work awakened during a dispatch joins a later
-round. A callback completes or faults, never suspends its Lua stack. Future
-timers are indexed by earliest deadline, not visited every tick while waiting.
-Ordinary cold load retains pending order, registrations and same-tick credits;
-it does not rerun startup or already completed effects. Custom computers need
-no electricity; electrical cycling does not pause or discard accepted work.
+Synchronized processing first reconciles lifecycle and physical changes and
+revokes stale authority. It then samples watched Logic inputs, advances timers
+and host notifications, and dispatches callbacks and Console commands.
+Finally, it performs bounded presentation and housekeeping.
+Native circuit propagation is not zero-latency feedback.
+
+Simulation events and Console commands share a persisted ready rotation.
+At most one item per computer runs in an actual tick.
+The scheduler uses FIFO queues and fair program/Console alternation.
+New work that becomes ready during a dispatch joins a later round.
+A callback completes or faults. It never suspends its Lua stack.
+
+The scheduler indexes future timers by earliest deadline instead of visiting
+them every tick while they wait. Ordinary cold load retains pending order,
+registrations and same-tick credits. It does not repeat startup or completed effects.
+Custom computers need no electricity. Electrical cycling does not pause or
+discard accepted work.
 
 ### Context
 
-Console shares real application state and per-computer admission but has its
-own scratch graph, output attribution and transient ownership. on, off, after,
-every, cancelTimer and stop are saved-program-only (E_UNSUPPORTED in Console).
-No filesystem, wall clock, direct signal API, direct computer messages, on_tick,
-guest stop/fault cleanup callback or implicit transaction is provided.
+Console shares real application state and per-computer admission.
+It has its own scratch graph, output attribution and transient ownership.
+Only saved programs can call on, off, after, every, cancelTimer and stop.
+These methods raise E_UNSUPPORTED in Console.
+The API provides no filesystem, wall clock, direct signal API or direct computer messages.
+It provides no on_tick, guest stop/fault cleanup callback or implicit transaction.
 
 ### after
 
-Schedule one named saved handler. The absolute deadline is current tick plus
-delay; that addition must stay within the safe integer domain (E_RANGE).
-Copy the optional payload at registration. One-shot ownership is consumed once
-when its event is admitted, but cancelTimer can still remove a queued delivery.
-E_CAPACITY refuses a full timer inventory; Console is E_UNSUPPORTED.
+Schedule one named saved handler. The absolute deadline is the current tick
+plus the delay. This addition must stay within the safe integer domain, or the
+method raises E_RANGE. The method copies the optional payload at registration.
+Event admission consumes one-shot ownership once, but cancelTimer can still
+remove a queued delivery. A full timer inventory causes E_CAPACITY.
+
+Console calls cause E_UNSUPPORTED.
 
 ```text
 after(delay_ticks: integer, handler_name: TC.HandlerName, payload?: TC.Data) -> id: TC.TimerId
@@ -66,7 +77,7 @@ handler_name: TC.HandlerName
 Export in the active saved document.
 
 payload (optional): TC.Data
-Omission/nil means no payload field; nonnil Data is copied.
+Omission or nil means no payload field. The method copies nonnil Data.
 
 ### Returns
 
@@ -76,7 +87,8 @@ New one-shot identity owned by this run.
 ### cancelTimer
 
 Cancel both a future deadline and any matching queued undispatched event.
-E_ARGUMENT rejects another computer/run's identity; Console is E_UNSUPPORTED.
+An identity from another computer or run causes E_ARGUMENT.
+Console calls cause E_UNSUPPORTED.
 
 ```text
 cancelTimer(timer_id: TC.TimerId) -> removed: boolean
@@ -94,7 +106,8 @@ True if pending deadline or queued delivery existed.
 
 ### deleteState
 
-Remove one state key. Returns one boolean; repeated removal is harmless.
+Remove one state key. This method returns one boolean.
+Repeated removal causes no harm.
 
 ```text
 deleteState(key: string) -> removed: boolean
@@ -112,10 +125,11 @@ True only when a present value was removed.
 
 ### every
 
-Schedule recurring named callbacks at aligned absolute deadlines. Overdue
-intervals coalesce into one TC.TimerEvent with missed count, never a burst.
-Stop/fault/activation cancels them. Admission and Console restrictions match
-after; pause, speed and wall-clock downtime do not change simulation deadlines.
+Schedule recurring named callbacks at aligned absolute deadlines.
+Overdue intervals coalesce into one TC.TimerEvent with a missed count, never a burst.
+Stop, fault or activation cancels these callbacks.
+Admission and Console restrictions are the same as for after.
+Pause, speed and wall-clock downtime do not change simulation deadlines.
 
 ```text
 every(interval_ticks: integer, handler_name: TC.HandlerName, payload?: TC.Data) -> id: TC.TimerId
@@ -130,7 +144,7 @@ handler_name: TC.HandlerName
 Export in the active saved document.
 
 payload (optional): TC.Data
-Omission/nil means no payload; otherwise a registration copy.
+Omission or nil means no payload. Otherwise, the method copies the payload at registration.
 
 ### Returns
 
@@ -139,7 +153,7 @@ New recurring identity owned by this run.
 
 ### getID
 
-Return the current placed identity; labels and native object IDs are not addresses.
+Return the current placed identity. Labels and native object IDs are not addresses.
 
 ```text
 getID() -> id: TC.ComputerId
@@ -174,7 +188,7 @@ Exactly one string or one nil when unset.
 ### getLimits
 
 Read a defensive complete map of effective limits and representation versions.
-Defaults are not live values; changing settings does not replenish spent credit.
+Defaults are not live values. A settings change does not replenish spent credit.
 
 ```text
 getLimits() -> limits: TC.Limits
@@ -191,9 +205,11 @@ Current common limits, not a native settings object.
 
 ### getState
 
-Read a defensive snapshot of explicit application state. Missing is one nil;
-false and an empty string/table remain valid present values. Copy admission may
-fail with E_LIMIT/E_BUDGET; failure is never reported as absence.
+Read a defensive snapshot of explicit application state.
+For an absent value, this method returns one nil.
+False, an empty string and an empty table remain valid present values.
+Copy admission can fail with E_LIMIT/E_BUDGET.
+The method never reports failure as absence.
 
 ```text
 getState(key: string) -> value: TC.Data|nil
@@ -228,13 +244,15 @@ Current tick for this dispatched execution.
 
 ### log
 
-Append one bounded diagnostic entry; returns no values. Requires a string,
-unlike print. Formatting/retention admission precedes publication; old entries
-may be evicted by existing Console retention. Console calls are shell-attributed.
-The shell attribution prefix counts toward console_bytes; oversized output is
-E_LIMIT, never a partial successful append. Saved programs require exactly one
-argument. The current Console override ignores additional guarded arguments;
-this is a context-specific compatibility exception, not general permissive arity.
+Append one bounded diagnostic entry. This method returns no values.
+Unlike print, this method requires a string. Formatting and retention admission
+precede publication. Existing Console retention can evict old entries.
+
+Console attributes its calls to the shell. The shell attribution prefix counts
+toward console_bytes. Oversized output causes E_LIMIT, never a partial successful append.
+Saved programs require exactly one argument.
+The current Console override ignores additional guarded arguments.
+This compatibility exception applies only to Console, not to arity in general.
 
 ```text
 log(text: string)
@@ -251,9 +269,10 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### off
 
-Cancel this run's registration. E_ARGUMENT rejects another computer/run's ID.
-Provider-specific lifecycle cleanup also applies to Logic/Dashboard registrations.
-Console is E_UNSUPPORTED; this cannot edit a saved run from its shell.
+Cancel this run's registration.
+An ID from another computer or run causes E_ARGUMENT.
+Provider-specific lifecycle cleanup also applies to Logic and Dashboard registrations.
+Console calls cause E_UNSUPPORTED. The shell cannot use this method to change a saved run.
 
 ```text
 off(subscription_id: TC.SubscriptionId) -> removed: boolean
@@ -271,13 +290,17 @@ True if the registration existed; false if already absent.
 
 ### on
 
-Register a named general-event handler in this run. Each call deliberately
-creates an independent registration, not a replacement. Handler name must be an
-export in the active source. Registrations survive reload without startup replay.
-power_restored is accepted only for compatibility and produces no new events.
-No initial inventory is delivered; discover explicitly after registration.
-E_ARGUMENT rejects names; E_CAPACITY refuses excess registrations. Console is
-E_UNSUPPORTED. General subscriptions are not bound to one incidental device.
+Register a named general-event handler in this run.
+Each call creates an independent registration, not a replacement.
+The handler name must be an export in the active source.
+Registrations survive reload without startup replay.
+The method accepts power_restored only for compatibility.
+The power_restored registration produces no new events.
+
+The method delivers no initial inventory. Discover explicitly after registration.
+Invalid names cause E_ARGUMENT. Excess registrations cause E_CAPACITY.
+Console calls cause E_UNSUPPORTED.
+General subscriptions are not bound to one incidental device.
 
 ```text
 on(event_name: TC.GeneralEventName, handler_name: TC.HandlerName) -> id: TC.SubscriptionId
@@ -298,8 +321,9 @@ New identity bound to this computer/run.
 
 ### setLabel
 
-Set or clear the label atomically. Duplicate labels are allowed. Returns no
-values. E_ARGUMENT rejects a non-string or a label beyond identifier_bytes.
+Set or clear the label atomically. Duplicate labels are permitted.
+This method returns no values. A non-string or a label beyond identifier_bytes
+causes E_ARGUMENT.
 
 ```text
 setLabel(label?: string)
@@ -308,7 +332,7 @@ setLabel(label?: string)
 ### Parameters
 
 label (optional): string
-Omission/nil clears; otherwise a bounded byte string.
+Omission or nil clears the label. Otherwise, supply a bounded byte string.
 
 ### Returns
 
@@ -316,10 +340,13 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### setState
 
-Validate/copy the complete value before atomically replacing one state key.
-Returns no values. E_ARGUMENT/E_LIMIT reject invalid Data; E_CAPACITY refuses
-the final retained size without changing the old value. Earlier writes survive
-a later callback error. Nil is not deletion; use deleteState explicitly.
+This method validates and copies the complete value before it atomically replaces one state key.
+It returns no values. Invalid Data causes E_ARGUMENT/E_LIMIT.
+If the final retained size exceeds capacity, the method raises E_CAPACITY and
+leaves the old value unchanged.
+
+Earlier writes survive a later callback error. Nil does not delete a value.
+Use deleteState explicitly.
 
 ```text
 setState(key: string, value: TC.Data)
@@ -339,10 +366,11 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### stop
 
-Does not return normally. End the active saved run through host-controlled
-cleanup, cancelling its work and clearing only its still-owned Logic output.
-pcall/xpcall cannot defeat stop. Source/state/logs and other writers' effects
-remain. In Console this throws ordinary E_UNSUPPORTED instead of stopping.
+This method does not return normally. It ends the active saved run through
+host-controlled cleanup. Cleanup cancels the run's work and clears only its
+still-owned Logic output. Guest pcall/xpcall cannot prevent stop.
+Source, state, logs and other writers' effects remain.
+In Console, this method throws ordinary E_UNSUPPORTED instead of stopping the run.
 
 ```text
 stop()
@@ -360,36 +388,45 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### computer
 
-The current computer's dot-call API. A saved document contains exported function
-declarations and optional private local functions; start is optional. Save only
-commits source; Run/Apply validates then activates a new generation. Failed
-candidate validation preserves the old run. Successful replacement retires old
-timers/subscriptions/queued work and still-owned outputs, then queues start.
+This API provides dot calls for the current computer.
+A saved document contains exported function declarations and optional private
+local functions. The start handler is optional. Save only commits source.
+Run/Apply validates a new generation before activation.
+
+Failed candidate validation preserves the old run.
+Successful replacement retires old timers, subscriptions, queued work and
+still-owned outputs. It then queues start.
 Explicit application state survives unless the user deliberately resets it.
-Each callback has fresh locals/functions; only explicit supported storage lasts.
+Each callback has fresh locals and functions. Only explicit supported storage lasts.
 
 ### Scheduling
 
-Synchronized processing first reconciles lifecycle/physical changes and revokes
-stale authority, then samples watched Logic inputs, advances timers and host
-notifications, dispatches callbacks/Console, and performs bounded presentation
-and housekeeping. Native circuit propagation is not zero-latency feedback.
-Simulation events and Console commands share a persisted ready rotation. At
-most one item per computer runs in an actual tick, with FIFO queues and fair
-program/Console alternation. New work awakened during a dispatch joins a later
-round. A callback completes or faults, never suspends its Lua stack. Future
-timers are indexed by earliest deadline, not visited every tick while waiting.
-Ordinary cold load retains pending order, registrations and same-tick credits;
-it does not rerun startup or already completed effects. Custom computers need
-no electricity; electrical cycling does not pause or discard accepted work.
+Synchronized processing first reconciles lifecycle and physical changes and
+revokes stale authority. It then samples watched Logic inputs, advances timers
+and host notifications, and dispatches callbacks and Console commands.
+Finally, it performs bounded presentation and housekeeping.
+Native circuit propagation is not zero-latency feedback.
+
+Simulation events and Console commands share a persisted ready rotation.
+At most one item per computer runs in an actual tick.
+The scheduler uses FIFO queues and fair program/Console alternation.
+New work that becomes ready during a dispatch joins a later round.
+A callback completes or faults. It never suspends its Lua stack.
+
+The scheduler indexes future timers by earliest deadline instead of visiting
+them every tick while they wait. Ordinary cold load retains pending order,
+registrations and same-tick credits. It does not repeat startup or completed effects.
+Custom computers need no electricity. Electrical cycling does not pause or
+discard accepted work.
 
 ### Context
 
-Console shares real application state and per-computer admission but has its
-own scratch graph, output attribution and transient ownership. on, off, after,
-every, cancelTimer and stop are saved-program-only (E_UNSUPPORTED in Console).
-No filesystem, wall clock, direct signal API, direct computer messages, on_tick,
-guest stop/fault cleanup callback or implicit transaction is provided.
+Console shares real application state and per-computer admission.
+It has its own scratch graph, output attribution and transient ownership.
+Only saved programs can call on, off, after, every, cancelTimer and stop.
+These methods raise E_UNSUPPORTED in Console.
+The API provides no filesystem, wall clock, direct signal API or direct computer messages.
+It provides no on_tick, guest stop/fault cleanup callback or implicit transaction.
 
 ```text
 TC.Computer

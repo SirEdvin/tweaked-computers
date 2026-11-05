@@ -9,9 +9,10 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.StatisticsWindow
 
-Required symbolic native precision, never a guessed integer enum. Histories
-always have 300 samples; nominal spacing is window duration/300, but no absolute
-bucket timestamps are fabricated from the query tick.
+The native precision must be symbolic, never a guessed integer enum.
+Histories always have 300 samples.
+Nominal spacing is window duration/300.
+The API does not invent absolute bucket timestamps from the query tick.
 
 'five_seconds': Five simulation seconds.
 

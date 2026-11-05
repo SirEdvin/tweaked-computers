@@ -9,8 +9,9 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.PowerRestored
 
-Legacy accepted event only. power_restored remains a legal general registration
-name but no new events are produced. Custom computers need no electricity.
+This event is accepted only for legacy compatibility.
+The power_restored name remains a permitted general registration name.
+The host produces no new power_restored events. Custom computers need no electricity.
 Historical admitted records retain normal ordering and cancellation.
 
 Extends: TC.BaseEvent

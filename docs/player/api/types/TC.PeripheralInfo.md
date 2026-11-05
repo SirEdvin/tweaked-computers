@@ -9,9 +9,10 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.PeripheralInfo
 
-Detached physical metadata, not a LuaEntity or a reusable authority proof.
-Positions and footprints describe a monitor's logical rectangle; terminal axes
-and dimensions are separate. Native carriers remain discoverable without power.
+This is detached physical metadata, not a LuaEntity or a reusable authority proof.
+Positions and footprints describe the logical rectangle of a monitor.
+Terminal axes and dimensions are separate.
+Native carriers remain discoverable without power.
 
 ### direction
 
@@ -31,7 +32,7 @@ TC.Footprint
 
 ### label (optional)
 
-Descriptive, nonunique label; absent when unset.
+Descriptive label, not necessarily unique. Absent when unset.
 
 ```text
 string
@@ -55,7 +56,7 @@ TC.PeripheralName
 
 ### position
 
-World coordinates of the device/logical monitor center.
+World coordinates of the device center or logical monitor center.
 
 ```text
 TC.Position
@@ -63,7 +64,7 @@ TC.Position
 
 ### powered
 
-Live physical availability; valid custom devices need no electricity.
+Live physical availability. Valid custom devices need no electricity.
 
 ```text
 boolean

@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.LuaDisplayPanelControlBehavior
 
-Root settings for LuaDisplayPanelControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaDisplayPanelControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### messages (optional)
 
-Complete display-panel message list; compatibility name maps to native 2.1 records. Explicit root patch clear: not supported.
+Complete display-panel message list. This compatibility name maps to native 2.1 records. Explicit root patch clear: not supported.
 
 ```text
 (TC.Config.Read.DisplayPanelMessageDefinition)[]

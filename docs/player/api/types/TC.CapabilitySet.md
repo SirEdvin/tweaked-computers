@@ -9,10 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.CapabilitySet
 
-Live target capability, independent of a returned value snapshot. Native
-disabled and condition fulfilled values are observations only, never settings.
-Space-travel absence removes request-setting modes; target subtype/fuel/mode
-restrictions remain visible instead of claiming an unimplemented adapter.
+This record describes live target capability, independent of a returned value snapshot.
+Native disabled and condition fulfilled values are observations only, never settings.
+Space-travel absence removes request-setting modes.
+Target subtype, fuel and mode restrictions remain visible.
+The record does not report these restrictions as an unimplemented adapter.
 
 ### api_version
 
@@ -24,7 +25,7 @@ Exact public schema version.
 
 ### behavior (optional)
 
-Supported native behavior class; absent for unsupported/protected targets.
+Supported native behavior class. This field is absent for unsupported or protected targets.
 
 ```text
 string

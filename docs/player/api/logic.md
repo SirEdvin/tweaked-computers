@@ -13,61 +13,78 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.LogicHandler
 
-Circuit I/O facade with independent INPUT, NETWORK and OUTPUT ports. The
-discovery wire and input selector are different: a red NETWORK path may read
-green INPUT. No internal feedthrough exists; external input/output wiring may
-deliberately create feedback. Output is one bank mirrored to both connectors,
-not independent color banks or total external network counts.
+This circuit I/O facade has independent INPUT, NETWORK and OUTPUT ports.
+The discovery wire and input selector are different.
+A red NETWORK path can read green INPUT.
+There is no internal feedthrough, but external input/output wiring can deliberately cause feedback.
+Both connectors mirror one output bank.
+The output is not independent color banks or total external network counts.
 
 ### Signals and native inventory
 
-Effective identity is (type or item, name, quality or normal). Native reads
-preserve order and omitted fields without validation/sorting/normalization or
-stable-order promises. Caller filters/output validate installed signal types and
-prototypes, exact signed-32 counts, and unique effective identities; wildcard
-pseudo-signals are refused. Recipe names include installed mod recipes regardless
-of research/products. Same-name different types/qualities never merge.
-There is no mod-defined signal/filter/output count cap. Native index/count
-domains remain (output section indexes are uint16), and fixed service/dispatch
-work is metered. Native graph transfer bypasses generic Data ceilings, NOT guest
-execution, arbitrary growth or explicit state/KV/Console retention. It is not a
-calibrated universal memory/tick promise. Every direct read/baseline is fresh.
+The effective identity is (type or item, name, quality or normal).
+Native reads preserve order and omitted fields without validation, sorting or normalization.
+They do not guarantee stable order.
+Caller filters and output require installed signal types and prototypes, exact signed-32 counts, and unique effective identities.
+Validation refuses wildcard pseudo-signals.
+
+Recipe names include installed mod recipes, independent of research or products.
+Signals with the same name but different types or qualities never merge.
+The mod sets no count cap for signals, filters or output.
+Native index and count domains still apply; output section indexes are uint16.
+Metering still applies to fixed service and dispatch work.
+
+Native graph transfer bypasses generic Data ceilings.
+This exception does not apply to guest execution, arbitrary growth or explicit state/KV/Console retention.
+It is not a calibrated universal guarantee for memory or ticks.
+Every direct read and baseline is fresh.
 
 ### Subscriptions
 
-Register a declared saved handler by name, never persist a closure. Registration
-belongs to this run and exact discovery-color binding; another color does not
-silently take it over. Counts are checked on registration. Filters are uncapped
-by cardinality; non-growing edits to native arrays can build large requests.
-One fresh native read per watched physical input/color each simulation tick
-serves independent filters/events. No subscription means no discovery visit.
-Notifications compare effective counts/identities and connectivity, not order or
-explicit-default spelling. See TC.SignalChanged for baseline/admission semantics.
-Cancel/retire/removal releases watches and cancelled queued deliveries. Native
-updates do not promise within-tick transients or immediate output feedback.
+Register a declared saved handler by name.
+Never persist a closure.
+Registration belongs to this run and the exact discovery-color binding.
+Another color does not silently take ownership of the registration.
+Registration checks the counts.
+
+Filters have no cardinality cap.
+Non-growing edits to native arrays can build large requests.
+Each simulation tick uses one fresh native read per watched physical input/color for independent filters and events.
+Without a subscription, there is no discovery visit.
+
+Notifications compare effective counts, identities and connectivity, not order or explicit-default spelling.
+See TC.SignalChanged for baseline and admission semantics.
+Cancellation, retirement and removal release watches and cancelled queued deliveries.
+Native updates do not guarantee within-tick transients or immediate output feedback.
 
 ### Shared output ownership and lifetime
 
-Every successful setOutput/clearOutput transfers the entire bank to this
-computer/run/discovery binding; failure does not. Stop, fault, physical
-invalidity/removal, force/surface change or selected-path loss clears its
-still-owned output through host cleanup. A stopping prior writer must not clear
-a newer writer's bank. Cleanup precedes later unauthorized calls and retains the
-published physical observation envelope. It is not a general factory rollback:
-state/KV/monitor contents and Configurator-applied settings remain committed.
-Ordinary load retains valid ownership without republishing or creating a new
-owner. Clones/new placement start empty. Electrical cycling has no effect.
-Console writes instead belong to the shell-session identity. A saved-program
-fault does not clear shell-owned output; explicit Stop, successful Run/Apply or
-Reset Shell retires that shell's still-owned bank. Closing the window or cold
-load retains it. Neither execution owner may clear a newer writer's output.
-Legacy subscriptions with both/missing/invalid input fault before queued replay,
-clear still-owned output and require source correction/restart. Valid single-color
-load retains exact identities; legacy resync is current observation, not replay.
+Every successful setOutput or clearOutput transfers the entire bank to this computer/run/discovery binding.
+Failure does not transfer ownership.
+Host cleanup clears still-owned output after Stop, fault, physical invalidity or removal, force/surface change, or selected-path loss.
+When a previous writer stops, it must not clear a newer writer's bank.
+Cleanup occurs before later unauthorized calls and retains the published physical observation envelope.
+This is not a general factory rollback: state/KV/monitor contents and Configurator-applied settings remain committed.
+
+Ordinary load retains valid ownership without republication or a new owner.
+Clones and new placement start empty.
+Electrical cycling has no effect.
+
+Console writes instead belong to the shell-session identity.
+A saved-program fault does not clear shell-owned output.
+Explicit Stop, successful Run/Apply or Reset Shell retires the bank that the shell still owns.
+Window closure and cold load retain that bank.
+Neither execution owner may clear a newer writer's output.
+
+Legacy subscriptions with both, missing or invalid input fault before queued replay.
+They clear still-owned output and require source correction and restart.
+Valid single-color load retains exact identities.
+Legacy resync is a current observation, not replay.
 
 ### clearOutput
 
-Equivalent to setOutput({}), including last-writer ownership. Zero results.
+This method is equivalent to setOutput({}), with the same last-writer ownership.
+It returns zero values.
 
 ```text
 clearOutput()
@@ -83,7 +100,7 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### getInputStatus
 
-Inspect actual input connector connectivity, not whether any count is nonzero.
+Inspect the actual input connector connectivity, not whether any count is nonzero.
 
 ```text
 getInputStatus() -> status: TC.InputStatus
@@ -100,9 +117,9 @@ Both physical input colors' connection status.
 
 ### getLimits
 
-Read effective common registration/work policy plus sampling/notification
-envelopes. Removed signal_slots, filter_signals, active_logic_handlers and
-aggregate_owned_outputs fields are absent, not replacement configuration knobs.
+Read the effective common registration/work policy and sampling/notification envelopes.
+The removed signal_slots, filter_signals, active_logic_handlers and aggregate_owned_outputs fields are absent.
+They are not replacement configuration controls.
 
 ```text
 getLimits() -> limits: TC.LogicLimits
@@ -119,8 +136,9 @@ Defensive limit map; not a native signal cardinality cap.
 
 ### getOutput
 
-Read this handler's configured native output contribution only, not totals from
-other devices on either connected network. Native section is the source of truth.
+Read only the configured native output contribution of this handler.
+The result excludes totals from other devices on either connected network.
+The native section is the source of truth.
 
 ```text
 getOutput() -> signals: (TC.Signal)[]
@@ -137,8 +155,9 @@ Detached configured contribution, empty for no output.
 
 ### readSignal
 
-Read one signal from a freshly queried selected native input. Absent signal is
-zero, including disconnected input; inspect connectivity separately if needed.
+Read one signal from a fresh native query of the selected input.
+An absent signal is zero, also when the input is disconnected.
+If necessary, inspect connectivity separately.
 
 ```text
 readSignal(input: TC.InputSelection, signal: TC.SignalId) -> count: TC.Int32
@@ -147,7 +166,7 @@ readSignal(input: TC.InputSelection, signal: TC.SignalId) -> count: TC.Int32
 ### Parameters
 
 input: TC.InputSelection
-Mandatory red/green INPUT color, not discovery wire.
+Mandatory red or green INPUT color, not the discovery wire.
 
 signal: TC.SignalId
 Installed non-wildcard identity; defaults apply as documented.
@@ -159,8 +178,9 @@ Native signed count; absent means zero, not nil.
 
 ### readSignals
 
-Read the complete selected native input as a fresh detached array. Preserve
-native ordering/optional fields; no cached observation or sorted-prefix result.
+Read the complete selected native input as a fresh detached array.
+The array preserves native order and optional fields.
+The result is not a cached observation or a sorted prefix.
 
 ```text
 readSignals(input: TC.InputSelection) -> signals: (TC.Signal)[]
@@ -169,7 +189,7 @@ readSignals(input: TC.InputSelection) -> signals: (TC.Signal)[]
 ### Parameters
 
 input: TC.InputSelection
-Mandatory red/green INPUT color.
+Mandatory red or green INPUT color.
 
 ### Returns
 
@@ -179,9 +199,11 @@ Complete fresh input, possibly empty.
 ### setOutput
 
 Atomically replace the entire output bank and transfer last-writer ownership.
-Require dense unique effective identities and exact Int32 counts; zero entries
-are omitted. Duplicate default aliases, wildcard/prototype/count/index errors
-fail before mutation. Both OUTPUT colors receive the one bank. Zero results.
+The input must contain dense unique effective identities and exact Int32 counts.
+The method omits zero entries.
+Duplicate default aliases and wildcard, prototype, count or index errors cause failure before mutation.
+Both OUTPUT colors receive the one bank.
+The method returns zero values.
 
 ```text
 setOutput(signals: (TC.Signal)[])
@@ -190,7 +212,7 @@ setOutput(signals: (TC.Signal)[])
 ### Parameters
 
 signals: (TC.Signal)[]
-Complete desired contribution; empty array clears.
+Complete desired contribution. An empty array clears the bank.
 
 ### Returns
 
@@ -198,10 +220,11 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### subscribe
 
-Register a named saved callback using a fresh baseline. E_ARGUMENT rejects
-invalid/missing/both input, handler or malformed filter; unknown/wildcard signal
-prototypes or qualities are E_RANGE. E_CAPACITY refuses excess registrations.
-Console is E_UNSUPPORTED, including captured-method and peripheral.call routes.
+Register a named saved callback with a fresh baseline.
+Invalid or missing input, both input, an invalid or missing handler, or a malformed filter causes E_ARGUMENT.
+Unknown or wildcard signal prototypes or qualities cause E_RANGE.
+Excess registrations cause E_CAPACITY.
+Console causes E_UNSUPPORTED, also through captured methods and peripheral.call.
 
 ```text
 subscribe(options: TC.SignalSubscriptionOptions, handler_name: TC.HandlerName) -> id: TC.SubscriptionId
@@ -210,10 +233,10 @@ subscribe(options: TC.SignalSubscriptionOptions, handler_name: TC.HandlerName) -
 ### Parameters
 
 options: TC.SignalSubscriptionOptions
-Exact validated selection/filter/initial options.
+Exact validated selection, filter and initial options.
 
 handler_name: TC.HandlerName
-Declared export receiving TC.SignalChanged.
+Declared export that receives TC.SignalChanged.
 
 ### Returns
 
@@ -222,8 +245,9 @@ New run-bound exact peripheral/wire registration.
 
 ### unsubscribe
 
-Remove this run/binding's registration and its queued undispatched samples.
-Another computer/run/binding is invalid; Console is E_UNSUPPORTED.
+Remove the registration for this run/binding and its queued samples that await dispatch.
+A different computer, run or binding is invalid.
+Console causes E_UNSUPPORTED.
 
 ```text
 unsubscribe(subscription_id: TC.SubscriptionId) -> removed: boolean

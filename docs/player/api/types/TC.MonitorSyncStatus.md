@@ -9,15 +9,16 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.MonitorSyncStatus
 
-Defensive presentation selection/status snapshot. none means no selection,
-empty members, sequence zero and absent tick; a definitive release may retain
-a diagnostic. waiting means incomplete round participation. preparing includes
-sealed, queued and commit-waiting work, not visible completion. blocked takes
-priority over preparing/waiting while proof or geometry capacity is unavailable.
+This is a defensive snapshot of presentation selection and status.
+none means no selection, empty members, sequence zero and an absent tick.
+A definitive release can retain a diagnostic.
+waiting means incomplete round participation.
+preparing includes sealed, queued and commit-waiting work, not visible completion.
+blocked has priority over preparing and waiting while proof or geometry capacity is unavailable.
 
 ### diagnostic (optional)
 
-Latest retained blockage/release reason.
+Latest retained reason for blockage or release.
 
 ```text
 TC.MonitorDiagnostic
@@ -33,7 +34,7 @@ Canonical logical identities, sorted by name.
 
 ### presented_sequence
 
-Nonnegative safe sequence of last complete group publication.
+Nonnegative safe sequence of the last complete group publication.
 
 ```text
 integer
@@ -41,7 +42,7 @@ integer
 
 ### presented_tick (optional)
 
-Actual publication tick; absent until first publication.
+Actual publication tick. Absent until the first publication.
 
 ```text
 TC.Tick

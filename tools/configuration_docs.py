@@ -4,37 +4,37 @@ import json
 
 # Meanings live beside the normalizer, not in a second signature/type catalogue.
 FIELDS = {
-    'output_signal': 'Signal used for this control behavior output (charge, gate sensor or combinator result).',
+    'output_signal': 'Output signal for this control behavior: accumulator charge, gate sensor, or combinator result.',
     'read_charge': 'Publish accumulator charge percentage to the circuit network.',
     'circuit_condition': 'Circuit comparison used by this native control behavior.',
     'circuit_enable_disable': 'Let the circuit condition control the entity enable state.',
     'connect_to_logistic_network': 'Enable the native logistic-network connection where applicable.',
-    'logistic_condition': 'Logistic-network comparison; clearing uses native reset semantics.',
-    'read_contents': 'Publish this entity inventory or fluid contents; belt mode is separately selected.',
-    'parameters': 'Complete combinator parameter object, replacing rather than merging its prior fields.',
-    'read_ammo': 'Publish contained ammunition/fluid; unavailable on an electric turret.',
-    'circuit_read_contents': 'Publish ingredient/product/in-crafting contents and supported native inventories.',
+    'logistic_condition': 'Logistic-network comparison. Clearing uses native reset rules.',
+    'read_contents': 'Publish this entity inventory or fluid contents. Belt mode is selected separately.',
+    'parameters': 'Complete combinator parameter object. It replaces previous fields; it does not merge them.',
+    'read_ammo': 'Publish contained ammunition or fluid. This field is unavailable on an electric turret.',
+    'circuit_read_contents': 'Publish ingredient, product, and in-crafting contents and supported native inventories.',
     'circuit_read_ingredients': 'Publish the current recipe ingredient requirements as signals.',
     'circuit_read_recipe_finished': 'Publish the recipe-completion signal when a craft finishes.',
     'circuit_read_working': 'Publish the working-state signal.',
     'circuit_recipe_finished_signal': 'Signal identity used for recipe completion.',
     'circuit_set_recipe': 'Select the machine recipe from circuit signals.',
     'circuit_working_signal': 'Signal identity used for working state.',
-    'include_fuel': 'Include the fuel inventory; compatibility name maps to native 2.1 read_fuel.',
-    'include_in_crafting': 'Include materials currently committed to crafting.',
+    'include_fuel': 'Include the fuel inventory. This compatibility name maps to native 2.1 read_fuel.',
+    'include_in_crafting': 'Include materials already committed to crafting.',
     'include_hands': 'Include asteroid contents captured in collector hands.',
     'read_content': 'Publish asteroid collector contents to the circuit network.',
-    'set_filter': 'Select this native entity fluid/item filter from circuit signals.',
-    'circuit_exclusive_mode_of_operation': 'Compatibility mode combining native read_contents and set_requests switches; both uses send_contents_and_set_requests.',
+    'set_filter': 'Select this native entity fluid or item filter from circuit signals.',
+    'circuit_exclusive_mode_of_operation': 'Compatibility mode for native read_contents and set_requests switches. Their combined mode is send_contents_and_set_requests.',
     'enabled': 'Enable the constant combinator output.',
-    'messages': 'Complete display-panel message list; compatibility name maps to native 2.1 records.',
-    'circuit_hand_read_mode': 'Choose hold versus pulse for inserter hand-content reporting.',
+    'messages': 'Complete display-panel message list. This compatibility name maps to native 2.1 records.',
+    'circuit_hand_read_mode': 'Select hold or pulse for reporting inserter hand contents.',
     'circuit_read_hand_contents': 'Publish inserter hand contents.',
-    'circuit_set_filters': 'Select inserter/loader filters from circuit signals.',
+    'circuit_set_filters': 'Select inserter or loader filters from circuit signals.',
     'circuit_set_stack_size': 'Use the configured stack-control signal to set inserter stack size.',
     'circuit_stack_control_signal': 'Signal whose count controls inserter stack size.',
     'blue_signal': 'Blue color-component input for lamps, or blue-state output for chain signals.',
-    'color_mode': 'Select lamp color-mapping, separate-component or packed-RGB interpretation.',
+    'color_mode': 'Select lamp color-mapping, separate-component, or packed-RGB interpretation.',
     'green_signal': 'Green color-component input for lamps, or green-state rail output.',
     'red_signal': 'Red color-component input for lamps, or red-state rail output.',
     'rgb_signal': 'Signal carrying packed lamp RGB.',
@@ -52,13 +52,13 @@ FIELDS = {
     'temperature_signal': 'Signal carrying reactor temperature.',
     'available_construction_output_signal': 'Signal for available construction robots.',
     'available_logistic_output_signal': 'Signal for available logistic robots.',
-    'read_items_mode': 'Select logistics contents, missing requests or no item reporting.',
-    'read_logistics': 'Legacy logistics-content reporting switch; prefer read_items_mode.',
-    'read_robot_stats': 'Publish native logistic/construction robot statistics.',
+    'read_items_mode': 'Select logistics contents, missing requests, or no item reporting.',
+    'read_logistics': 'Legacy switch for reporting logistics contents. Prefer read_items_mode.',
+    'read_robot_stats': 'Publish native statistics for logistic and construction robots.',
     'roboport_count_output_signal': 'Signal carrying the roboport count.',
     'total_construction_output_signal': 'Signal for total construction robots.',
     'total_logistic_output_signal': 'Signal for total logistic robots.',
-    'read_mode': 'Select rocket-silo logistic inventory, orbital requests or no reporting.',
+    'read_mode': 'Select rocket-silo logistic inventory, orbital requests, or no reporting.',
     'damage_taken_signal': 'Signal carrying platform damage taken.',
     'read_damage_taken': 'Publish platform damage taken.',
     'read_moving_from': 'Publish the current platform connection origin.',
@@ -85,85 +85,85 @@ FIELDS = {
     'read_contents_mode': 'Select belt pulse, local hold or whole-belt hold reporting.',
     'ignore_unlisted_targets_condition': 'Condition for ignoring targets outside the turret priority list.',
     'set_ignore_unlisted_targets': 'Enable condition-controlled exclusion of unlisted targets.',
-    'set_priority_list': 'Derive turret target priorities from circuit signals.',
+    'set_priority_list': 'Get turret target priorities from circuit signals.',
     'open_gate': 'Control the associated gate using the circuit condition.',
     'read_sensor': 'Publish the associated gate sensor state.',
-    'first_constant': 'First numeric operand; a supplied first_signal takes precedence in normalization.',
-    'first_signal': 'First signal operand; wildcard permission depends on its enclosing concept/role.',
-    'first_signal_networks': 'Networks contributing to the first operand; omitted members normalize true.',
-    'operation': 'Exact operation discriminator; only that variant fields are accepted.',
-    'second_constant': 'Second numeric operand; second_signal takes precedence in arithmetic normalization.',
-    'second_signal': 'Second signal operand; wildcard pseudo-signals are not accepted here.',
-    'second_signal_networks': 'Networks contributing to the second operand; omitted members normalize true.',
-    'name': 'Exact prototype/quality identity named by the enclosing concept; no localization lookup.',
-    'quality': 'Exact installed quality name; normalization defaults normal where this concept permits omission.',
-    'type': 'Signal prototype namespace; SignalID/SignalIDBase require an explicit input type.',
-    'comparator': 'Comparison symbol; >=, <= and != normalize to ≥, ≤ and ≠.',
-    'constant': 'Numeric operand or output count; enclosing concept determines the normalization default.',
-    'green': 'Include green circuit values; omitted member normalizes true.',
-    'red': 'Include red circuit values; omitted member normalizes true.',
-    'compare_type': 'Join this decider condition using and/or; default or.',
-    'copy_count_from_input': 'Copy decider input count rather than fixed constant; default true.',
-    'networks': 'Decider-output contributing networks; default includes both.',
-    'signal': 'Decider output signal, required on input but absent in a cleared native output. An each signal requires an each condition.',
+    'first_constant': 'First numeric operand. A supplied first_signal replaces this constant during normalization.',
+    'first_signal': 'First signal operand. Wildcard permission depends on the enclosing concept and role.',
+    'first_signal_networks': 'Networks that supply the first operand. An omitted member becomes true during normalization.',
+    'operation': 'Exact operation discriminator. Only fields for that variant are accepted.',
+    'second_constant': 'Second numeric operand. A supplied second_signal replaces this constant during arithmetic normalization.',
+    'second_signal': 'Second signal operand. Wildcard pseudo-signals are not accepted here.',
+    'second_signal_networks': 'Networks that supply the second operand. An omitted member becomes true during normalization.',
+    'name': 'Exact prototype or quality identity for the enclosing concept. No localization lookup occurs.',
+    'quality': 'Exact installed quality name. Normalization uses normal when this concept permits omission.',
+    'type': 'Signal prototype namespace. SignalID and SignalIDBase require an explicit input type.',
+    'comparator': 'Comparison symbol. >=, <=, and != normalize to ≥, ≤, and ≠.',
+    'constant': 'Numeric operand or output count. The enclosing concept determines the normalization default.',
+    'green': 'Include green circuit values. An omitted member becomes true during normalization.',
+    'red': 'Include red circuit values. An omitted member becomes true during normalization.',
+    'compare_type': 'Join this decider condition with and or or. The default is or.',
+    'copy_count_from_input': 'Copy the decider input count instead of using a fixed constant. The default is true.',
+    'networks': 'Networks that supply decider outputs. The default includes both.',
+    'signal': 'Decider output signal. It is required on input but can be absent in a cleared native output. An each signal requires an each condition.',
     'conditions': 'Complete ordered decider condition array.',
     'outputs': 'Complete ordered decider output array.',
     'condition': 'Display-message visibility condition.',
     'icon': 'Display-message signal icon identity.',
-    'text': 'Display-message text, bounded and without NUL.',
-    'import_from': 'Installed import location; current adapter defaults item imports to registered nauvis when available.',
-    'max': 'Maximum requested count, not below a supplied minimum.',
-    'min': 'Minimum requested count; defaults zero. Nonzero filtered counts require exact quality.',
+    'text': 'Display-message text within its byte limit. NUL is not permitted.',
+    'import_from': 'Installed import location. The current adapter uses registered nauvis for item imports by default when available.',
+    'max': 'Maximum requested count. This cannot be less than a supplied minimum.',
+    'min': 'Minimum requested count. The default is zero. A nonzero filtered count requires exact quality.',
     'minimum_delivery_count': 'Minimum native delivery quantity for this filter.',
-    'value': 'Signal filter; absent value means an empty slot, not a numeric zero signal.',
-    'instrument_id': 'Zero-based native instrument index, validated against this target speaker.',
+    'value': 'Signal filter. An absent value means an empty slot, not a numeric zero signal.',
+    'instrument_id': 'Zero-based native instrument index. The target speaker determines valid indexes.',
     'note_id': 'Zero-based note index in the selected target instrument.',
     'signal_value_is_pitch': 'Use the circuit signal value as the native note pitch index.',
     'stop_playing_sounds': 'Native circuit-speaker stop-playing switch.',
-    'count_signal': 'Optional selector count-output signal, only for count operation.',
-    'quality_filter': 'Installed quality/comparator selector filter, only for quality-filter.',
-    'quality_destination_signal': 'Quality-transfer destination signal; required on input but may be absent in native readback.',
+    'count_signal': 'Optional selector count-output signal. This applies only to the count operation.',
+    'quality_filter': 'Installed quality and comparator selector filter. This applies only to quality-filter.',
+    'quality_destination_signal': 'Quality-transfer destination signal. Input requires this field; native readback can omit it.',
     'quality_source_signal': 'Quality-transfer source when selecting quality from a signal.',
-    'quality_source_static': 'Static quality-transfer source; default normal when not using a signal.',
-    'select_quality_from_signal': 'Choose signal quality rather than static quality; default false.',
-    'random_update_interval': 'Selector random refresh interval in simulation ticks; default zero.',
-    'index_constant': 'Selector constant index; defaults zero when no index signal is supplied.',
-    'index_signal': 'Selector index signal; when supplied normalization omits index_constant.',
-    'select_max': 'Select from maximum rather than minimum end; default true.',
-    'active': 'Section activation; addSection default true.',
-    'group': 'Shared-group name; empty string is local and is addSection default.',
-    'multiplier': 'Section output multiplier; addSection default 1, readback uses native float32 precision.',
-    'filters': 'Complete section filter replacement; addSection defaults empty only for a local group.',
-    'index': 'Explicit native filter slot index; sparse slots allowed in a dense unique-index array.',
+    'quality_source_static': 'Static quality-transfer source. The default is normal when a signal is not used.',
+    'select_quality_from_signal': 'Select quality from a signal instead of static quality. The default is false.',
+    'random_update_interval': 'Selector random refresh interval in simulation ticks. The default is zero.',
+    'index_constant': 'Selector constant index. The default is zero when no index signal is supplied.',
+    'index_signal': 'Selector index signal. When supplied, normalization omits index_constant.',
+    'select_max': 'Select from the maximum end instead of the minimum end. The default is true.',
+    'active': 'Section activation. The addSection default is true.',
+    'group': 'Shared-group name. An empty string means local. This is the addSection default.',
+    'multiplier': 'Section output multiplier. The addSection default is 1. Readback uses native float32 precision.',
+    'filters': 'Complete replacement for section filters. The addSection default is empty only for a local group.',
+    'index': 'Explicit native filter slot index. A dense array can contain sparse slot indexes, but each index must be unique.',
 }
 NOTES = {
-    'SignalID': 'Explicit type/name required on input; output includes explicit type/name/quality. Default quality normal. Wildcards depend on role, not general SignalID permission.',
-    'SignalIDBase': 'Explicit type/name required; no quality member. Native references become exact installed names.',
-    'CircuitConditionDefinition': 'constant and second_signal are exclusive. Default comparator < and constant 0 without a second signal. fulfilled is read-only and excluded. First operand permits anything/everything but not each; ordinary second/root signals reject wildcards.',
-    'CircuitNetworkSelection': 'Omitted object or red/green members normalize to both colors enabled.',
-    'ArithmeticCombinatorParameters': 'Default operation *, missing numeric operands 0, networks both. Signal operands replace corresponding constants. First each and output each are allowed; each output requires each first input.',
-    'DeciderCombinatorCondition': 'Default comparator <, constant 0 without a second signal, compare_type or and both networks. First operand allows role-appropriate each/anything/everything.',
-    'DeciderCombinatorOutput': 'Input requires an output signal; cleared native readback can omit it. Default constant 1, copy_count_from_input true and both networks. An each signal needs an each condition in the same parameters.',
-    'DeciderCombinatorParameters': 'Complete required conditions/outputs arrays replace previous parameters. Each output requires an each first condition.',
-    'SelectorCombinatorParameters': 'Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields.',
-    'QualityCondition': 'Input accepts a registered quality string or object. Readback is an object with explicit quality (default normal) and comparator (default =); comparator aliases normalize.',
-    'SignalFilter': 'Input accepts a signal name string or object. String names select virtual when registered there, otherwise item. Object type defaults item. Readback always has name/type/quality/comparator, defaults normal and =. Wildcards are refused.',
-    'BlueprintQualityID': 'Quality name defaults to installed normal; no native prototype object is exposed.',
-    'LogisticFilter': 'Default minimum 0; current adapter defaults item import_from to registered nauvis when available. Maximum cannot be below minimum. Nonzero object-filter minimum requires explicit exact quality. Section filters additionally require index and reject duplicate slots/effective identities.',
-    'ProgrammableSpeakerCircuitParameters': 'These native circuit settings are independent of Speaker API playback. Instrument/note indexes are zero-based and checked on the target.',
+    'SignalID': 'Input requires explicit type and name. Output includes explicit type, name, and quality. The default quality is normal. Wildcard permission depends on the role, not general SignalID permission.',
+    'SignalIDBase': 'Explicit type and name are required. There is no quality member. Native references become exact installed names.',
+    'CircuitConditionDefinition': 'constant and second_signal cannot both be supplied. The default comparator is <. Without a second signal, constant defaults to 0. fulfilled is read-only and excluded. The first operand permits anything and everything, but not each. Ordinary second and root signals reject wildcards.',
+    'CircuitNetworkSelection': 'An omitted object or omitted red and green members become both colors enabled during normalization.',
+    'ArithmeticCombinatorParameters': 'The default operation is *. Missing numeric operands default to 0. Both networks are enabled by default. Signal operands replace their corresponding constants. The first and output signals can be each. An each output requires an each first input.',
+    'DeciderCombinatorCondition': 'The default comparator is <. Without a second signal, constant defaults to 0. compare_type defaults to or. Both networks are enabled by default. The first operand permits each, anything, or everything where its role permits that wildcard.',
+    'DeciderCombinatorOutput': 'Input requires an output signal. Cleared native readback can omit it. The default constant is 1. copy_count_from_input defaults to true. Both networks are enabled by default. An each signal requires an each condition in the same parameters.',
+    'DeciderCombinatorParameters': 'Complete required conditions and outputs arrays replace previous parameters. Each output requires an each first condition.',
+    'SelectorCombinatorParameters': 'The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields.',
+    'QualityCondition': 'Input accepts a registered quality string or object. Readback is an object with explicit quality and comparator. Quality defaults to normal. The comparator defaults to =. Comparator aliases normalize.',
+    'SignalFilter': 'Input accepts a signal name string or object. A string name selects virtual when registered there; otherwise, it selects item. The object type defaults to item. Readback always has name, type, quality, and comparator. Quality defaults to normal. The comparator defaults to =. Wildcards are refused.',
+    'BlueprintQualityID': 'The quality name defaults to installed normal. No native prototype object is exposed.',
+    'LogisticFilter': 'The minimum defaults to 0. The current adapter uses registered nauvis for item import_from by default when available. The maximum cannot be less than the minimum. A nonzero minimum in an object filter requires explicit exact quality. Section filters also require index. Duplicate slots and effective identities are refused.',
+    'ProgrammableSpeakerCircuitParameters': 'These native circuit settings are independent of Speaker API playback. Instrument and note indexes are zero-based. The target determines valid indexes.',
 }
 CONSTRAINTS = {
-    'registered_signal': 'Installed signal identity required.',
+    'registered_signal': 'An installed signal identity is required.',
     'explicit_signal_type': 'Input signal type must be explicit.',
     'condition_operand_exclusive': 'constant and second_signal cannot both be supplied.',
-    'condition_signal_roles': 'Only role-appropriate wildcard signals are allowed.',
-    'operation_variant': 'Only fields belonging to the selected operation are allowed.',
-    'logistic_mode_requester_or_buffer': 'Writable only on requester/buffer containers.',
-    'fuel_inventory_required': 'Requires an actual native fuel inventory.',
-    'rail_chain_signal_only': 'Available only on chain signals; ordinary rail signals cannot read/write it.',
-    'native_asteroid_no_logistic_connection': 'Native inherited connection switch is ineffective and not writable.',
-    'ammo_or_fluid_turret_required': 'Requires an ammo/fluid turret, not an electric turret.',
-    'set_requests_requires_space_travel': 'Request-setting modes require the space-travel feature; otherwise only none/send_contents.',
+    'condition_signal_roles': 'Only wildcard signals permitted for this role are allowed.',
+    'operation_variant': 'Only fields for the selected operation are allowed.',
+    'logistic_mode_requester_or_buffer': 'Writable only on requester or buffer containers.',
+    'fuel_inventory_required': 'An actual native fuel inventory is required.',
+    'rail_chain_signal_only': 'Available only on chain signals. Ordinary rail signals cannot read or write this field.',
+    'native_asteroid_no_logistic_connection': 'The inherited native connection switch has no effect and is not writable.',
+    'ammo_or_fluid_turret_required': 'An ammunition or fluid turret is required. An electric turret is not permitted.',
+    'set_requests_requires_space_travel': 'Modes that set requests require the space-travel feature. Otherwise, only none and send_contents are available.',
 }
 
 
@@ -221,21 +221,21 @@ def typed_declarations(result, metadata):
             notes = []
             if s['kind'] in ('integer', 'number'):
                 if readback and 'min' not in s and 'max' not in s:
-                    notes.append('Finite native numeric readback; generic Data limits still apply.')
+                    notes.append('Native numeric readback must be finite. Generic Data limits still apply.')
                 else:
-                    notes.append('Finite ' + s['kind'] + '; domain ' + str(s.get('min', -9007199254740991)) + '..' + str(s.get('max', 9007199254740991)) + '.')
+                    notes.append('Finite ' + s['kind'] + '. Domain: ' + str(s.get('min', -9007199254740991)) + '..' + str(s.get('max', 9007199254740991)) + '.')
             if 'max_bytes' in s:
-                notes.append(f"At most {s['max_bytes']} bytes; no NUL.")
+                notes.append(f"At most {s['max_bytes']} bytes. NUL is not permitted.")
             if 'max_items' in s:
                 notes.append(f"Dense array of at most {s['max_items']} entries.")
             if s.get('additional_fields') is False:
-                notes.append('Unknown fields refused.')
+                notes.append('Unknown fields are refused.')
             if 'prototype_registry' in s:
-                notes.append('Installed ' + s['prototype_registry'] + ' name, never a native object.')
+                notes.append('Use an installed ' + s['prototype_registry'] + ' name, not a native object.')
             for code in s.get('constraints', []):
                 notes.append(code + ': ' + CONSTRAINTS[code])
             if 'clearable' in s:
-                notes.append('Explicit root patch clear: ' + ('accepted with native reset/readback' if s['clearable'] else 'not supported') + '.')
+                notes.append('Explicit root patch clear: ' + ('accepted with native reset and readback' if s['clearable'] else 'not supported') + '.')
             return ' '.join(notes)
 
         def shape(s):
@@ -295,7 +295,7 @@ def typed_declarations(result, metadata):
                 fields.append((key, child, emit(child, name + '.' + key, FIELDS[key] + ' ' + domain(child))))
             details = description + ' ' + domain(s) + ' ' + NOTES.get(concept or name.removeprefix(prefix), '')
             for variant, spec in sorted(s.get('variants', {}).items()):
-                details += ' Operation ' + variant + ' permits ' + ', '.join(spec['fields']) + '; required: ' + (', '.join(spec['required']) or 'none') + '.'
+                details += ' Operation ' + variant + ' permits ' + ', '.join(spec['fields']) + '. Required fields: ' + (', '.join(spec['required']) or 'none') + '.'
             lines.extend(['---' + details.strip(), ('---@class ' if kind == 'object' else '---@alias ') + name + ('' if kind == 'object' else ' ' + value_type)])
             for key, child, typ in fields:
                 optional = '?' if key not in s.get('required', []) else ''
@@ -310,7 +310,7 @@ def typed_declarations(result, metadata):
             schema = {'kind': 'object', 'fields': fields, 'required': [], 'additional_fields': False}
             if readback:
                 schema = read_schema(schema)
-            families.append(emit(schema, prefix + name, 'Root settings for ' + name + '. All roots may be unset; inspect live capabilities before access.'))
+            families.append(emit(schema, prefix + name, 'Root settings for ' + name + '. All roots can be unset. Examine live capabilities before access.'))
         section = {'kind': 'object', 'fields': copy.deepcopy(result['section_fields']), 'required': [], 'additional_fields': False}
         section['fields']['filters']['items'].pop('concept', None)
         filter_schema = section['fields']['filters']['items']
@@ -322,8 +322,8 @@ def typed_declarations(result, metadata):
         emit(filter_schema, prefix + 'SectionFilter', 'Indexed native section filter. Dense array with unique slot indexes and effective identities. ' + NOTES['LogisticFilter'])
         section['fields']['filters']['items'] = dict(filter_schema, concept='SectionFilter')
         concepts['SectionFilter'] = section['fields']['filters']['items']
-        emit(section, prefix + 'SectionValues', 'Section values. Addition defaults active=true, group empty, multiplier=1; local filters empty. Group joins inherit shared filters.')
-        lines += ['---' + ('Normalized current root values; unset roots are absent.' if readback else 'Root setting replacements; select the actual behavior via live capabilities.'),
+        emit(section, prefix + 'SectionValues', 'Section values. Addition defaults: active=true, empty group, multiplier=1, and empty local filters. Group joins inherit shared filters.')
+        lines += ['---' + ('Normalized current root values. Unset roots are absent.' if readback else 'Root setting replacements. Select the actual behavior through live capabilities.'),
                   '---@alias ' + prefix + 'Values ' + '|'.join(families), '']
     for native, name in (('wire_connector_id', 'TC.WireConnectorId'),
                          ('logistic_section_type', 'TC.LogisticSectionType')):

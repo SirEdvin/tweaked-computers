@@ -9,7 +9,8 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.MonitorDiagnostic
 
-Bounded retained presentation diagnostic; no native recovery objects escape.
+This is a bounded retained presentation diagnostic.
+It gives no access to native recovery objects.
 
 ### code
 
@@ -21,7 +22,7 @@ TC.ErrorCode
 
 ### message
 
-Human-readable explanation, not stable wording.
+Human-readable explanation. The wording can change.
 
 ```text
 string

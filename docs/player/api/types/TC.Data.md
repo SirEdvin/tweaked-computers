@@ -9,45 +9,54 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Data
 
-Plain persistent data, copied across API boundaries. Numbers must be finite.
+The API copies plain persistent data across API boundaries. Numbers must be finite.
 A table is either a dense one-based array or a string-keyed map, never mixed.
-Cycles, metatables, functions, threads, userdata and native objects are refused.
-There are no nil elements; use deleteState to delete stored values. An empty
-table is a map unless a particular schema requires an array. Repeated subtrees
-are copied, not retained as cross-boundary aliases. Byte, node, depth, entry and
-key limits all apply; satisfying a LuaLS type does not bypass these checks.
+The API refuses cycles, metatables, functions, threads, userdata and native objects.
+
+There are no nil elements. Use deleteState to delete stored values.
+An empty table is a map unless a particular schema requires an array.
+
+The API copies repeated subtrees instead of retaining cross-boundary aliases.
+Byte, node, depth, entry and key limits all apply.
+A value that satisfies a LuaLS type must still pass these checks.
 
 ### Calling convention
 
 API version 1 is implicit. Namespaces and facades use dot calls, never colon
 calls or implicit self. Extra arguments and unknown option fields are errors
-unless the member explicitly supports them. Omission and nil are accepted only
-as documented; API arguments are not implicitly coerced from strings or truthy
-values. Calls are synchronous, non-yielding and non-reentrant. Each successful
-mutation is committed in dispatcher order; a callback is not a transaction.
+unless the member explicitly supports them. The API accepts omission and nil
+only as documented. The API does not implicitly coerce arguments from strings
+or truthy values. Calls are synchronous, non-yielding and non-reentrant.
+
+The dispatcher commits each successful mutation in dispatcher order.
+A callback is not a transaction.
 
 ### Exceptions
 
 Modem transmit accepts a required top-level nil message, but not nested nil.
-Detached native Logic signal graphs bypass generic Data transport limits;
-this grants no exemption for explicit state, KV, Console retention, arbitrary
-table growth or guest execution. Circuit queues still account for envelope
-bytes and entries, excluding the native graphs; this is not a total heap bound.
+Detached native Logic signal graphs bypass generic Data transport limits.
+This exception does not apply to explicit state, KV, Console retention,
+arbitrary table growth or guest execution. Circuit queues still account for
+envelope bytes and entries, but exclude the native graphs.
+This accounting is not a total heap bound.
+
 Console scratch uses its own validated graph and authentic symbolic bindings,
-not an expanded Data domain. Saved callbacks reconstruct fresh locals/functions.
-Console computer.log currently ignores trailing arguments after the text;
-saved-program computer.log retains exact one-argument validation.
+not an expanded Data domain. Saved callbacks reconstruct fresh locals and functions.
+Console computer.log currently ignores trailing arguments after the text.
+Saved-program computer.log retains exact one-argument validation.
 
 ### Authority and copies
 
-Returned records are isolated snapshots, never native LuaObjects. Identifiers
-are opaque case-sensitive strings, stable across ordinary reload but not new
-placement or cloning. Prototype names are exact installed identifiers, not
-localized labels. No table address, wall clock or player-local state orders
-collections. Check each member's ordering and native-field exceptions.
-Custom devices need no electricity; native radar/speaker active calls still
-require their own operational availability. Discovery does not grant remote
-radio authority, host globals, files, HTTP, arbitrary Factorio API or CraftOS.
+Returned records are isolated snapshots, never native LuaObjects.
+Identifiers are opaque case-sensitive strings. They stay the same across
+ordinary reload, but not new placement or cloning. Prototype names are exact
+installed identifiers, not localized labels. No table address, wall clock or
+player-local state determines collection order.
+Check each member's ordering and native-field exceptions.
+
+Custom devices need no electricity. Active calls to native radar and speaker
+devices still require their own operational availability. Discovery does not
+grant remote radio authority, host globals, files, HTTP, arbitrary Factorio API or CraftOS.
 
 ```text
 boolean|number|string|(TC.Data)[]|table<string, TC.Data>

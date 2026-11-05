@@ -9,8 +9,9 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.SignalType
 
-Installed signal kind. Recipe identities are independent of their products
-and research state; same-named item and recipe signals remain distinct.
+This value identifies an installed signal kind.
+Recipe identities are independent of their products and research state.
+Item and recipe signals with the same name remain distinct.
 
 ```text
 'item'|'fluid'|'virtual'|'recipe'|'entity'|'space-location'|'asteroid-chunk'|'quality'

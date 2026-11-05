@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.SelectorCombinatorParameters.Select
 
-Normalized readback for SelectorCombinatorParameters. Operation select. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+Normalized readback for SelectorCombinatorParameters. Operation select. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 
 ### index_constant (optional)
 
-Selector constant index; defaults zero when no index signal is supplied. Finite integer; domain -2147483648..2147483647.
+Selector constant index. The default is zero when no index signal is supplied. Finite integer. Domain: -2147483648..2147483647.
 
 ```text
 integer
@@ -21,7 +21,7 @@ integer
 
 ### index_signal (optional)
 
-Selector index signal; when supplied normalization omits index_constant. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+Selector index signal. When supplied, normalization omits index_constant. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
 ```text
 TC.Config.Read.SignalID
@@ -29,7 +29,7 @@ TC.Config.Read.SignalID
 
 ### operation
 
-Exact operation discriminator; only that variant fields are accepted.
+Exact operation discriminator. Only fields for that variant are accepted.
 
 ```text
 "select"
@@ -37,7 +37,7 @@ Exact operation discriminator; only that variant fields are accepted.
 
 ### select_max
 
-Select from maximum rather than minimum end; default true.
+Select from the maximum end instead of the minimum end. The default is true.
 
 ```text
 boolean

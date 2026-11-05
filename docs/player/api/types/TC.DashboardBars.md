@@ -9,8 +9,8 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.DashboardBars
 
-Latest duration dataset, not historical arbitrary numeric/category bars.
-Phase order is bottom-to-top stack order; use surrounding labels to explain bars.
+This node shows the latest duration dataset, not historical arbitrary numeric/category bars.
+Phase order is bottom-to-top stack order. Use surrounding labels to explain the bars.
 
 ### id
 
@@ -30,7 +30,7 @@ Nonempty dense unique phase names within identifier_bytes.
 
 ### type
 
-Duration-bar discriminator; library required for new definitions.
+Duration-bar discriminator. New definitions require the library.
 
 ```text
 'stacked_bars'

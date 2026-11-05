@@ -9,10 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.GuestValue
 
-An intentionally open transient guest value. Includes nil, ordinary guest
-tables/functions and authentic protected API handles where the called helper
-allows them. This notation does NOT authorize foreign objects, host reflection,
-persistence, arbitrary metatables or passing such values to Data-only services.
+This transient guest value has an intentionally open type.
+It includes nil, ordinary guest tables and functions, and authentic protected
+API handles where the called helper permits them.
+This notation does not authorize foreign objects, host reflection, persistence
+or arbitrary metatables. It does not authorize passing such values to Data-only services.
 
 ```text
 any

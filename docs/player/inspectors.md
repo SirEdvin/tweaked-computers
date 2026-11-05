@@ -1,7 +1,7 @@
 # Peripheral inspectors
 
-Open a KV Database, Monitor, Logic Handler, Configurator, Recipe Searcher, Factoriopedia Interface or Production Statistics
-normally to inspect it locally. You do not need a computer connection or running
+Use normal opening to inspect a peripheral locally. This applies to KV Database, Monitor, Logic Handler, Configurator,
+Recipe Searcher, Factoriopedia Interface and Production Statistics. You do not need a computer connection or running
 program. These are read-only windows, not the underlying combinator's controls.
 The localized device title, peripheral type, exact API name and availability
 appear above the scrollable details. Drag the title bar to move the window.
@@ -9,17 +9,17 @@ Close or Escape retires it without discarding computer drafts.
 
 Every inspector shows its structure immediately, before expensive queries are
 admitted. Pending is distinct from an empty successful result. Refresh failures
-retain any previous complete details with an explicit stale/error status; monitor
+keep any previous complete details with an explicit stale/error status. Monitor
 names cannot be copied while their logical identity is unresolved. Configurator
 counts remain complete, deduplicated snapshots, not partial per-wire totals.
 Long explanations are available in tooltips and Reference rather than repeated
-above the data. An older saved window may close once after the 0.1.12 upgrade;
-reopen it without losing device data or computer drafts.
+above the data. An older saved window can close once after the 0.1.12 upgrade.
+Reopen it without losing device data or computer drafts.
 
 A [Dashboard](dashboard.md) instead opens its configured interactive tabs through
 normal opening, with copyable identity and availability above those tabs. Opening,
 closing or selecting a tab does not activate a button or subscribe a computer.
-Each viewer keeps their own selected tab and scroll position; live text updates
+Each viewer keeps their own selected tab and scroll position. Live text updates
 leave unchanged controls and identity selection in place.
 
 Computers keep their [workspace](editor.md): Ctrl-click with an empty cursor.
@@ -35,7 +35,7 @@ Opening them never enumerates a catalogue, queries statistics or executes a prog
 [Factoriopedia API](api/factoriopedia-interface.md) or
 [Production Statistics API](api/production-statistics.md) from a wired computer for queries.
 
-Choose **Select name**, then use native Copy (normally Ctrl+C).
+Select **Select name**. Then use native Copy (normally Ctrl+C).
 Paste into your computer draft or another text field. The selection is only the
 API identifier: no quotes, wire suffix, labels or trailing whitespace. Selecting
 does not itself write the OS clipboard. The name box cannot rename the device.
@@ -46,9 +46,9 @@ an obsolete name as current.
 ## KV Database: complete, byte-safe snapshots
 
 Choose a key in the paged list. Every live key and its type are included in a
-successful snapshot. String values have a full detail viewer; hashes additionally
+successful snapshot. String values have a full detail viewer. Hashes also
 have a paged field list and complete selected-field details. Page controls make
-the last key and last hash field reachable. List previews are shortened; they
+the last key and last hash field reachable. List previews are shortened. They
 are not a substitute for the complete key/field/value details below.
 
 Values are divided into chunks of at most 512 original bytes. Use the value's
@@ -59,12 +59,12 @@ surrounding quotes, to recover the original value.
 The display is a reversible, ASCII-only representation:
 
 - Empty bytes are `""`, distinct from a missing key/field.
-- Quote is `\"`; backslash is `\\`.
+- Quote is `\"`. Backslash is `\\`.
 - Control bytes, bytes 127–255 and square brackets use `\xHH` with exactly two
   uppercase hexadecimal digits. For example NUL is `\x00`, byte 255 is `\xFF`,
   `[` is `\x5B` and `]` is `\x5D`.
 - Other printable ASCII bytes are literal. The high bytes of UTF-8 are escaped
-  individually too; this representation preserves bytes rather than guessing an
+  individually. This representation preserves bytes rather than guessing an
   encoding. Stored rich-text-looking data is never rendered as markup.
 
 Open inspectors update automatically under bounded admission, without Refresh or
@@ -83,10 +83,10 @@ ordinary relays and connected devices without writable settings. It does not
 list the computer-discovery network instead of the target network.
 
 Unique counts deduplicate all paths and both target wire colors. Red and Green
-are overlapping memberships: one device connected to both contributes one to
+have overlapping memberships. One device connected to both contributes one to
 each color and one to Unique. Do not add the two color columns to get a total.
 Owned helper sockets and the origin are not extra devices. A successful snapshot
-includes both color traversals; a failed traversal is pending/error, never a
+includes both color traversals. A failed traversal is pending/error, never a
 plausible partial total. Groups are sorted and paged. Automatic polling observes wiring
 changes without reading full configuration schemas or changing machine settings.
 
@@ -98,21 +98,21 @@ two slots with separate values. Adjacent Output signals shows this handler's own
 bank shared across its two output colors, not the total from other emitters.
 The decider-style recessed signal trays appear immediately, including while an
 input query is waiting. The regions scroll/reflow at narrower sizes. No slot is
-a signal picker or editor; decider conditions and output rules are not added.
+a signal picker or editor. The panel adds no decider conditions or output rules.
 
 Tooltips retain exact signed counts, signal type/name and quality. Recipe signals
 use recipe icons, not same-named item icons. Disconnected, connected-empty,
 unavailable and over-limit observations have different states. The panel attempts
 one input color every 15 ticks when shared host work is admitted, alternating
-Red and Green. Each input is published independently;
-these are not an atomic circuit snapshot. A deferred or over-limit input shows
+Red and Green. Each input is published independently.
+These are not an atomic circuit snapshot. A deferred or over-limit input shows
 its own pending/error state and retains any older sample as explicitly stale.
 It cannot block the other wire or the handler's own output bank. Disconnected
 inputs do not require a native signal-list query. The own bank is an independent
 observation too. Unchanged slots and their scrolling survive polling.
 The panel does not capture every pulse between samples. It creates no program
 subscription, writer or output publication. Refresh deadlines belong only to open,
-owned sessions: closing or losing a viewer retires them without scanning other
+owned sessions. Closing or losing a viewer retires its deadlines without scanning other
 players or installing a guest signal watcher. Refused acquisition keeps its due
 age and retained stale view while independently fitting viewers can progress.
 Existing authority/writer cleanup remains responsible for fail-safe output removal.
@@ -134,7 +134,7 @@ does not change the saved model, framebuffer or world presentation.
 
 ## Recipe Searcher, availability and access
 
-Recipe Searcher deliberately ends at identity/status; recipe searches remain
+Recipe Searcher shows only identity/status. Recipe searches remain
 computer API calls, not a dedicated search interface.
 
 Custom devices need no electricity. Committed monitor geometry remains readable
@@ -145,10 +145,10 @@ Every interaction rechecks the exact device, force, surface, reach and player
 permissions. Losing access closes the window or removes details on the next
 check. Independent viewers have independent selections. Removed/replaced devices,
 stale events and incompatible saved UI sessions cannot acquire new access.
-Save/load runs no inspector code during load; gameplay revalidates retained UI.
+Save/load runs no inspector code during load. Gameplay revalidates retained UI.
 
 Automatic observations coalesce without a request queue. Query, sorting,
 escaping and GUI work use the shared non-render maintenance budget. Under load,
-an update may remain pending and a previous snapshot is explicitly stale; this is
+an update can remain pending. A previous snapshot is then explicitly stale. This is
 not an empty successful read. Closing the window stops inspector detail polling.
 Unchanged data does not rebuild the detail widgets or steal copy selection.

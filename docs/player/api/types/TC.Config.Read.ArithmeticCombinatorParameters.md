@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.ArithmeticCombinatorParameters
 
-Normalized readback for ArithmeticCombinatorParameters. Unknown fields refused. Default operation *, missing numeric operands 0, networks both. Signal operands replace corresponding constants. First each and output each are allowed; each output requires each first input.
+Normalized readback for ArithmeticCombinatorParameters. Unknown fields are refused. The default operation is *. Missing numeric operands default to 0. Both networks are enabled by default. Signal operands replace their corresponding constants. The first and output signals can be each. An each output requires an each first input.
 
 ### first_constant (optional)
 
-First numeric operand; a supplied first_signal takes precedence in normalization. Finite integer; domain -2147483648..2147483647.
+First numeric operand. A supplied first_signal replaces this constant during normalization. Finite integer. Domain: -2147483648..2147483647.
 
 ```text
 integer
@@ -21,7 +21,7 @@ integer
 
 ### first_signal (optional)
 
-First signal operand; wildcard permission depends on its enclosing concept/role. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+First signal operand. Wildcard permission depends on the enclosing concept and role. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
 ```text
 TC.Config.Read.SignalID
@@ -29,7 +29,7 @@ TC.Config.Read.SignalID
 
 ### first_signal_networks
 
-Networks contributing to the first operand; omitted members normalize true. Unknown fields refused.
+Networks that supply the first operand. An omitted member becomes true during normalization. Unknown fields are refused.
 
 ```text
 TC.Config.Read.CircuitNetworkSelection
@@ -37,7 +37,7 @@ TC.Config.Read.CircuitNetworkSelection
 
 ### operation
 
-Exact operation discriminator; only that variant fields are accepted.
+Exact operation discriminator. Only fields for that variant are accepted.
 
 ```text
 TC.Config.Read.ArithmeticCombinatorParameterOperation
@@ -45,7 +45,7 @@ TC.Config.Read.ArithmeticCombinatorParameterOperation
 
 ### output_signal (optional)
 
-Signal used for this control behavior output (charge, gate sensor or combinator result). Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+Output signal for this control behavior: accumulator charge, gate sensor, or combinator result. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
 ```text
 TC.Config.Read.SignalID
@@ -53,7 +53,7 @@ TC.Config.Read.SignalID
 
 ### second_constant (optional)
 
-Second numeric operand; second_signal takes precedence in arithmetic normalization. Finite integer; domain -2147483648..2147483647.
+Second numeric operand. A supplied second_signal replaces this constant during arithmetic normalization. Finite integer. Domain: -2147483648..2147483647.
 
 ```text
 integer
@@ -61,7 +61,7 @@ integer
 
 ### second_signal (optional)
 
-Second signal operand; wildcard pseudo-signals are not accepted here. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+Second signal operand. Wildcard pseudo-signals are not accepted here. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
 ```text
 TC.Config.Read.SignalID
@@ -69,7 +69,7 @@ TC.Config.Read.SignalID
 
 ### second_signal_networks
 
-Networks contributing to the second operand; omitted members normalize true. Unknown fields refused.
+Networks that supply the second operand. An omitted member becomes true during normalization. Unknown fields are refused.
 
 ```text
 TC.Config.Read.CircuitNetworkSelection

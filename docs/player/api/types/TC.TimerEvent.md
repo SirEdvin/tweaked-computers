@@ -9,17 +9,20 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.TimerEvent
 
-Named timer delivery. scheduled_tick is the first due deadline; tick is actual
-callback dispatch and may be later. Recurring timers coalesce overdue intervals
-into one event and advance to the first aligned deadline after admission.
-Equal deadlines retain timer creation order through reload. Cancellation removes
-pending deadlines and queued, undispatched timer events without replay.
+This event delivers a named timer.
+The scheduled_tick field gives the first due deadline.
+The tick field gives actual callback dispatch, which can be later.
+Recurring timers coalesce overdue intervals into one event.
+They advance to the first aligned deadline after admission.
+
+Equal deadlines retain timer creation order through reload.
+Cancellation removes pending deadlines and queued, undispatched timer events without replay.
 
 Extends: TC.BaseEvent
 
 ### interval_ticks (optional)
 
-Positive recurring interval; absent for one-shot.
+Positive recurring interval. This field is absent for a one-shot timer.
 
 ```text
 integer

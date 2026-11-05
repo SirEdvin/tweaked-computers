@@ -9,12 +9,14 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ConfigurationSnapshot
 
-Fresh normalized root snapshot. Values depend on the actual behavior, described
-by TC.Config.Read.*. Unset roots are absent, not false. Getter normalization can
-fill native defaults and convert union inputs to objects; it does not apply the
-caller's 256-byte/128-element input limits to native readback. Generic Data and
-configuration result limits still apply. Native objects and read-only condition
-members never appear inside writable values.
+This record gives a fresh normalized root snapshot.
+Values depend on the actual behavior, which TC.Config.Read.* describes.
+Unset roots are absent, not false. Getter normalization can fill native defaults
+and convert union inputs to objects. It does not apply the caller's
+256-byte/128-element input limits to native readback.
+
+Generic Data and configuration result limits still apply.
+Native objects and read-only condition members never appear inside writable values.
 
 ### observations
 

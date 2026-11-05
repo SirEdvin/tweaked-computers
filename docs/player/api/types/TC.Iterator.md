@@ -9,8 +9,10 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Iterator
 
-Iterator callback shape. On a present entry returns key,value; termination
-returns exactly one nil, not zero results. Not a persistable function value.
+This type defines the iterator callback shape.
+For a present entry, the iterator returns key,value.
+At termination, it returns exactly one nil, not zero results.
+This function value cannot persist.
 
 ```text
 fun(t: TC.GuestTable, previous: TC.GuestValue): ...: TC.GuestValue

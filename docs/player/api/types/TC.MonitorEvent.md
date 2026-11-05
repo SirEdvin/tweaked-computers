@@ -9,9 +9,9 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.MonitorEvent
 
-A monitor event is delivered once per logical display per registration, even
-when both colors reach it. wires orders red before green, not alphabetically;
-wire is its first entry, not a bridge.
+The host delivers a monitor event once per logical display per registration,
+even when both colors reach it. The wires array orders red before green,
+not alphabetically. The wire field is its first entry, not a bridge.
 
 Extends: TC.BaseEvent
 
@@ -33,7 +33,7 @@ TC.Wire
 
 ### wires
 
-Authorized colors in red-before-green order; caller may choose another entry.
+Authorized colors in red-before-green order. The caller can choose another entry.
 
 ```text
 (TC.Wire)[]

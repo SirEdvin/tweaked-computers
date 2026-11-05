@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.BlueprintQualityID
 
-Accepted input for BlueprintQualityID. Unknown fields refused. Quality name defaults to installed normal; no native prototype object is exposed.
+Accepted input for BlueprintQualityID. Unknown fields are refused. The quality name defaults to installed normal. No native prototype object is exposed.
 
 ### name (optional)
 
-Exact prototype/quality identity named by the enclosing concept; no localization lookup. At most 256 bytes; no NUL.
+Exact prototype or quality identity for the enclosing concept. No localization lookup occurs. At most 256 bytes. NUL is not permitted.
 
 ```text
 string

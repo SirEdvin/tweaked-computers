@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.PeripheralName
 
-Opaque discoverable peripheral identity, not a label or native object ID.
+This opaque identity identifies a discoverable peripheral, not a label or native object ID.
 
 ```text
 string

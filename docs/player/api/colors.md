@@ -9,46 +9,46 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.Color
 
-The immutable 16-entry terminal palette. Pass exactly one color, not a bitmask
-combination. Palette RGB values may change per monitor; these indices do not.
-The British spelling colours is the identical namespace. No combine, subtract,
-test or other CC color utility functions are provided.
+This terminal palette has 16 immutable entries. Pass exactly one color, not a
+bitmask combination. Palette RGB values can change per monitor. These indices
+do not change. The British spelling colours identifies the same namespace.
+The namespace has no combine, subtract, test or other CC color utility functions.
 
-white: white palette entry; blit digit 0.
+white: The white palette entry uses blit digit 0.
 
-orange: orange palette entry; blit digit 1.
+orange: The orange palette entry uses blit digit 1.
 
-magenta: magenta palette entry; blit digit 2.
+magenta: The magenta palette entry uses blit digit 2.
 
-lightBlue: lightBlue palette entry; blit digit 3.
+lightBlue: The lightBlue palette entry uses blit digit 3.
 
-yellow: yellow palette entry; blit digit 4.
+yellow: The yellow palette entry uses blit digit 4.
 
-lime: lime palette entry; blit digit 5.
+lime: The lime palette entry uses blit digit 5.
 
-pink: pink palette entry; blit digit 6.
+pink: The pink palette entry uses blit digit 6.
 
-gray: gray palette entry; blit digit 7.
+gray: The gray palette entry uses blit digit 7.
 
-lightGray: lightGray palette entry; blit digit 8.
+lightGray: The lightGray palette entry uses blit digit 8.
 
-cyan: cyan palette entry; blit digit 9.
+cyan: The cyan palette entry uses blit digit 9.
 
-purple: purple palette entry; blit digit a.
+purple: The purple palette entry uses blit digit a.
 
-blue: blue palette entry; blit digit b.
+blue: The blue palette entry uses blit digit b.
 
-brown: brown palette entry; blit digit c.
+brown: The brown palette entry uses blit digit c.
 
-green: green palette entry; blit digit d.
+green: The green palette entry uses blit digit d.
 
-red: red palette entry; blit digit e.
+red: The red palette entry uses blit digit e.
 
-black: black palette entry; blit digit f.
+black: The black palette entry uses blit digit f.
 
-grey: Exact British-spelling alias of gray.
+grey: This is the exact British-spelling alias of gray.
 
-lightGrey: Exact British-spelling alias of lightGray.
+lightGrey: This is the exact British-spelling alias of lightGray.
 
 ```text
 white = 1
@@ -126,46 +126,46 @@ lightGrey = 256
 
 ### colors
 
-The immutable 16-entry terminal palette. Pass exactly one color, not a bitmask
-combination. Palette RGB values may change per monitor; these indices do not.
-The British spelling colours is the identical namespace. No combine, subtract,
-test or other CC color utility functions are provided.
+This terminal palette has 16 immutable entries. Pass exactly one color, not a
+bitmask combination. Palette RGB values can change per monitor. These indices
+do not change. The British spelling colours identifies the same namespace.
+The namespace has no combine, subtract, test or other CC color utility functions.
 
-white: white palette entry; blit digit 0.
+white: The white palette entry uses blit digit 0.
 
-orange: orange palette entry; blit digit 1.
+orange: The orange palette entry uses blit digit 1.
 
-magenta: magenta palette entry; blit digit 2.
+magenta: The magenta palette entry uses blit digit 2.
 
-lightBlue: lightBlue palette entry; blit digit 3.
+lightBlue: The lightBlue palette entry uses blit digit 3.
 
-yellow: yellow palette entry; blit digit 4.
+yellow: The yellow palette entry uses blit digit 4.
 
-lime: lime palette entry; blit digit 5.
+lime: The lime palette entry uses blit digit 5.
 
-pink: pink palette entry; blit digit 6.
+pink: The pink palette entry uses blit digit 6.
 
-gray: gray palette entry; blit digit 7.
+gray: The gray palette entry uses blit digit 7.
 
-lightGray: lightGray palette entry; blit digit 8.
+lightGray: The lightGray palette entry uses blit digit 8.
 
-cyan: cyan palette entry; blit digit 9.
+cyan: The cyan palette entry uses blit digit 9.
 
-purple: purple palette entry; blit digit a.
+purple: The purple palette entry uses blit digit a.
 
-blue: blue palette entry; blit digit b.
+blue: The blue palette entry uses blit digit b.
 
-brown: brown palette entry; blit digit c.
+brown: The brown palette entry uses blit digit c.
 
-green: green palette entry; blit digit d.
+green: The green palette entry uses blit digit d.
 
-red: red palette entry; blit digit e.
+red: The red palette entry uses blit digit e.
 
-black: black palette entry; blit digit f.
+black: The black palette entry uses blit digit f.
 
-grey: Exact British-spelling alias of gray.
+grey: This is the exact British-spelling alias of gray.
 
-lightGrey: Exact British-spelling alias of lightGray.
+lightGrey: This is the exact British-spelling alias of lightGray.
 
 ```text
 TC.Color
@@ -175,7 +175,7 @@ TC.Color
 
 ### colours
 
-Identical read-only color namespace, including grey/lightGrey aliases.
+This is the same read-only color namespace, with the grey and lightGrey aliases.
 
 ```text
 TC.Color

@@ -9,8 +9,9 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Callable
 
-An approved callable: guest function or exposed guarded API/helper function.
-Calling consumes the same work/depth/tuple budgets; not a persisted callback.
+An approved callable is a guest function or an exposed guarded API or helper function.
+A call consumes the same work, depth and tuple budgets.
+This callable is not a persisted callback.
 
 ```text
 fun(...: TC.GuestValue): ...: TC.GuestValue

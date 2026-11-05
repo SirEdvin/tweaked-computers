@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.CircuitNetworkSelection
 
-Accepted input for CircuitNetworkSelection. Unknown fields refused. Omitted object or red/green members normalize to both colors enabled.
+Accepted input for CircuitNetworkSelection. Unknown fields are refused. An omitted object or omitted red and green members become both colors enabled during normalization.
 
 ### green (optional)
 
-Include green circuit values; omitted member normalizes true.
+Include green circuit values. An omitted member becomes true during normalization.
 
 ```text
 boolean
@@ -21,7 +21,7 @@ boolean
 
 ### red (optional)
 
-Include red circuit values; omitted member normalizes true.
+Include red circuit values. An omitted member becomes true during normalization.
 
 ```text
 boolean

@@ -15,56 +15,72 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.Configurator
 
-Circuit-control configuration on the Configurator's distinct TARGETS port.
-The discovery wire from computer to NETWORK and each target_wire argument are
-independent mandatory colors; neither bridges circuits/discovery. Follow only
-real same-color/force/surface physical connector paths, not matching signal
-values, ghosts, isolated combinator ports, hidden radio transport or coordinates.
-Ordinary same-color native relays are supported. Owned helper entities stay
-hidden; public mod bodies can be described as protected/nonconfigurable.
+This API configures circuit control through the Configurator's separate TARGETS port.
+The discovery wire from computer to NETWORK and each target_wire argument
+are independent mandatory colors. Neither bridges circuits or discovery.
+The API follows only real physical connector paths with the same color, force and surface.
+Matching signal values, ghosts, isolated combinator ports, hidden radio transport
+and coordinates do not provide paths.
+
+The API supports ordinary same-color native relays.
+Owned helper entities stay hidden.
+Descriptions can identify public mod bodies as protected or nonconfigurable.
 
 ### Schema and normalized values
 
-TC.Config.* is generated from the existing schema normalizer, not a second
+The generator uses the existing schema normalizer for TC.Config.*, not a second
 handwritten setting inventory. Inputs are finite plain objects, bounded arrays
-and exact registered prototype names; no native quality/location objects or raw
-defines global. Signals require explicit type/name except documented SignalFilter
-string forms; quality/readback defaults and role-specific wildcards are described
-on their generated types. Missing expansion prototypes fail validation instead
-of adding a hard dependency. Only circuit-control settings are exposed: no
-arbitrary inventories, teleportation, creation, recipe execution, force edits or
-remote interface injection. Generic/inherited and modded native behaviors remain
-subject to actual applicability, not a prototype-name whitelist.
+and exact registered prototype names. Inputs exclude native quality/location
+objects and the raw defines global. Signals require explicit type/name,
+except for documented SignalFilter string forms.
+The generated types describe quality/readback defaults and role-specific wildcards.
 
-Compatibility vocabulary is retained on Factorio 2.1: include_fuel maps to
-read_fuel, messages to records, and container/landing-pad mode can represent both
-read/request switches as send_contents_and_set_requests. Tank read_contents=true
-retains an existing segment-read mode; false disables reading. No documentation
-generation changes these mappings or expands the available native setting set.
+Missing expansion prototypes fail validation instead of adding a hard dependency.
+The API exposes only circuit-control settings.
+It provides no arbitrary inventories, teleportation, creation, recipe execution,
+force edits or remote interface injection.
+Actual applicability governs generic/inherited and modded native behaviors,
+not a prototype-name whitelist.
+
+The API retains compatibility vocabulary on Factorio 2.1.
+The include_fuel name maps to read_fuel, and messages maps to records.
+Container/landing-pad mode can represent both read/request switches as send_contents_and_set_requests.
+Tank read_contents=true retains an existing segment-read mode.
+The value false disables reading.
+Documentation generation does not change these mappings or expand the available native setting set.
 
 ### Atomic update and lifetime
 
-Preflight whole patch, current identity/path, prototypes/schema, capacity and work
-before mutation. Setters run in deterministic native-safe order without simulation
-advancing between them, followed by exact native readback. Invalid fields/variants/
-read-only values or broken invariants fail before target changes. Unexpected native
-failure attempts target-local restoration; failed restoration retains recovery and
-faults that target adapter with E_ENGINE, never fake success. Creating a missing
-behavior is authorized only by an admitted nonempty update; native-created default
-behavior cannot necessarily be deleted during recovery. External effects and earlier
-successful calls are not rolled back. This is last-successful-write, not a lock/CAS.
-Player edits remain authoritative until a later explicit write. Stop, disconnect,
-read/reconnect and cold load do not undo/re-enforce already applied factory settings.
-The custom Configurator needs no electricity, but every call retains exact identity,
-force/surface and discovery/target path authority. Captured facades never retarget
-a replacement. Unsupported retained recovery remains visible, not reset by a read.
+Before mutation, the API checks the whole patch, current identity/path,
+prototypes/schema, capacity and work. Setters run in deterministic native-safe order.
+The simulation does not advance between setters. Exact native readback follows.
+Invalid fields, invalid variants, read-only values or broken invariants cause
+failure before target changes.
+
+After unexpected native failure, the adapter attempts target-local restoration.
+Failed restoration retains recovery state
+and faults that target adapter with E_ENGINE. It never reports false success.
+Only an admitted nonempty update authorizes creation of a missing behavior.
+Recovery cannot necessarily delete a native-created default behavior.
+Recovery does not roll back external effects or earlier successful calls.
+
+This is last-successful-write, not a lock/CAS.
+Player edits remain authoritative until a later explicit write.
+Stop, disconnect, read, reconnect and cold load do not undo or re-enforce
+factory settings that were already applied.
+
+The custom Configurator needs no electricity. Every call retains exact identity,
+force/surface and discovery/target path authority.
+Captured facades never retarget a replacement.
+Unsupported retained recovery remains visible. A read does not reset it.
 
 ### addSection
 
-Create a manual section and return its actual native index, not guessed length.
-Defaults active=true, group='', multiplier=1 and local filters={}. A nonempty
-group joins its shared data instead of inventing empty filters. Supplying filters
-while joining a nonempty group is E_SHARED_SCOPE. Existing sections never truncate.
+Create a manual section. The method returns the actual native index, not a guessed length.
+The defaults are active=true, group='', multiplier=1 and local filters={}.
+A nonempty group joins its shared data instead of creating empty filters.
+If you supply filters while joining a nonempty group, the method raises E_SHARED_SCOPE.
+The method never truncates existing sections.
 
 ```text
 addSection(device_id: TC.DeviceId, definition: TC.Config.SectionValues, target_wire: TC.Wire) -> section_index: integer
@@ -88,8 +104,9 @@ Actual positive native index after successful readback.
 
 ### getCapabilities
 
-Read live applicability and complete recursive schemas without creating native
-behavior. A stale identity/path fails rather than returning fabricated capability.
+Read live applicability and complete recursive schemas.
+This method does not create native behavior.
+A stale identity or path causes failure instead of fabricated capability.
 
 ```text
 getCapabilities(device_id: TC.DeviceId, target_wire: TC.Wire) -> capabilities: TC.CapabilitySet
@@ -110,8 +127,8 @@ One defensive current schema/applicability record.
 
 ### getConfiguration
 
-Read current normalized values, sorted unset roots and separate observations;
-false, missing and read-only are distinct. No behavior is created by reading.
+Read current normalized values, sorted unset roots and separate observations.
+False, missing and read-only are distinct. A read does not create behavior.
 
 ```text
 getConfiguration(device_id: TC.DeviceId, target_wire: TC.Wire) -> snapshot: TC.ConfigurationSnapshot
@@ -132,7 +149,7 @@ One complete defensive readback, not a lock.
 
 ### getDevice
 
-Look up one exact current target identity; never use coordinates as identity.
+Look up one exact current target identity. Never use coordinates as identity.
 
 ```text
 getDevice(device_id: TC.DeviceId, target_wire: TC.Wire) -> device: TC.DeviceInfo|nil
@@ -154,8 +171,8 @@ Exactly one description or one nil if missing/off this target network.
 ### getDevices
 
 Enumerate the complete target network once per exact identity, sorted by ID.
-Include unsupported/nonconfigurable real devices with reasons. Incomplete proof,
-size or work refusal is an error, never a successful partial list.
+The result includes unsupported and nonconfigurable real devices with reasons.
+Incomplete proof, size refusal or work refusal causes an error, never a successful partial list.
 
 ```text
 getDevices(target_wire: TC.Wire) -> devices: (TC.DeviceInfo)[]
@@ -173,8 +190,8 @@ One complete detached sorted array, possibly empty.
 
 ### getLimits
 
-Read effective common limits plus target traversal/configuration/patch/section
-envelopes. Actual native domains and current capabilities still constrain calls.
+Read effective common limits plus target traversal, configuration, patch and section envelopes.
+Actual native domains and current capabilities still constrain calls.
 
 ```text
 getLimits() -> limits: TC.ConfiguratorLimits
@@ -191,9 +208,10 @@ One defensive current limit map.
 
 ### getSections
 
-Read complete native sections without creating control behavior. Only compatible
-constant combinators support this; other types E_UNSUPPORTED, owned targets
-E_READ_ONLY. Native count/filter capacity beyond supported envelopes is E_LIMIT.
+Read complete native sections. This method does not create control behavior.
+Only compatible constant combinators support this method.
+Other types cause E_UNSUPPORTED. Owned targets cause E_READ_ONLY.
+A native count or filter capacity beyond supported envelopes causes E_LIMIT.
 
 ```text
 getSections(device_id: TC.DeviceId, target_wire: TC.Wire) -> sections: (TC.SectionInfo)[]
@@ -214,9 +232,10 @@ Complete native-index-ordered array, possibly empty.
 
 ### removeSection
 
-Remove one present manual section with target-local recovery/readback. A present
-nonmanual section is E_READ_ONLY, not false. Later native indexes shift; no saved
-section handle/identity is supplied. Native failed restoration retains recovery.
+Remove one present manual section with target-local recovery and readback.
+A present nonmanual section causes E_READ_ONLY, not false.
+Later native indexes shift. The API supplies no saved section handle or identity.
+Failed native restoration retains recovery state.
 
 ```text
 removeSection(device_id: TC.DeviceId, section_index: integer, target_wire: TC.Wire) -> removed: boolean
@@ -228,7 +247,7 @@ device_id: TC.DeviceId
 Exact constant-combinator target ID.
 
 section_index: integer
-Native index in 1..4294967295; missing valid index is ordinary absence.
+Native index in 1..4294967295. A missing valid index is ordinary absence.
 
 target_wire: TC.Wire
 Required selected TARGETS color.
@@ -240,12 +259,15 @@ True when removed; false if that valid index was already absent.
 
 ### setConfiguration
 
-Validate and apply whole-root replacements atomically with native readback.
-Unknown roots/nested fields, repeated clear/set overlap, unsupported domains and
-mode invariants refuse before mutation. Clear can normalize to native defaults,
-not nil. E_READ_ONLY protects observations/protected targets/nonclearable fields;
-E_UNSUPPORTED covers native applicability. Generic admission and fatal budgets
-remain unchanged. See Configurator lifecycle notes for native recovery limits.
+This method validates whole-root replacements before it applies them atomically
+with native readback. Unknown roots/nested fields, repeated clear/set overlap,
+unsupported domains and mode invariants cause refusal before mutation.
+Clear can normalize to native defaults, not nil.
+E_READ_ONLY protects observations, protected targets and nonclearable fields.
+E_UNSUPPORTED applies to native applicability.
+
+Generic admission and fatal budgets remain unchanged.
+See Configurator lifecycle notes for native recovery limits.
 
 ```text
 setConfiguration(device_id: TC.DeviceId, patch: TC.ConfigurationPatch, target_wire: TC.Wire) -> snapshot: TC.ConfigurationSnapshot
@@ -257,7 +279,7 @@ device_id: TC.DeviceId
 Exact current target ID.
 
 patch: TC.ConfigurationPatch
-Entire candidate patch; empty is a checked no-op/readback.
+Entire candidate patch. An empty patch is a checked no-op/readback.
 
 target_wire: TC.Wire
 Required selected TARGETS color.
@@ -269,11 +291,15 @@ One actual normalized post-update readback.
 
 ### setSection
 
-Replace selected section fields with full preflight/rollback/readback. Missing
-section E_NOT_FOUND; nonmanual E_READ_ONLY. Shared contents are never written:
-filters require final group='', explicitly supplied if detaching. Detachment
-preserves the current effective filters before any explicit replacement. No silent
-detach or out-of-scope group overwrite; empty patch still checks manual authority.
+Replace selected section fields with full preflight, rollback and readback.
+A missing section causes E_NOT_FOUND. A nonmanual section causes E_READ_ONLY.
+
+The method never writes shared contents. Filters require final group=''.
+For detachment, supply group='' explicitly.
+Detachment preserves the current effective filters before any explicit replacement.
+
+The method does not silently detach or overwrite a group outside its scope.
+An empty patch still checks manual authority.
 
 ```text
 setSection(device_id: TC.DeviceId, section_index: integer, patch: TC.SectionPatch, target_wire: TC.Wire) -> section: TC.SectionInfo
@@ -285,10 +311,10 @@ device_id: TC.DeviceId
 Exact constant-combinator target ID.
 
 section_index: integer
-Current native index in 1..4294967295; re-enumerate after removals.
+Current native index in 1..4294967295. Enumerate the sections again after removals.
 
 patch: TC.SectionPatch
-Explicit supported replacements; no nonempty clear array.
+Explicit supported replacements. The clear array must not be nonempty.
 
 target_wire: TC.Wire
 Required selected TARGETS color.

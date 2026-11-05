@@ -9,10 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.BaseEvent
 
-Host-owned event envelope copied for each delivery. Handlers run through the
-scheduler, never recursively from service/GUI calls. Earlier effects are not
-replayed on ordinary load. Queue overflow faults the affected saved run and
-clears its still-owned Logic outputs; it is not a successful empty event.
+The host copies this host-owned event envelope for each delivery.
+Handlers run through the scheduler, never recursively from service or GUI calls.
+Ordinary load does not replay earlier effects.
+Queue overflow faults the affected saved run and clears its still-owned Logic outputs.
+Overflow is not a successful empty event.
 
 ### computer_id
 
@@ -24,7 +25,7 @@ TC.ComputerId
 
 ### name
 
-Event discriminator; each concrete event lists its name.
+Event discriminator. Each concrete event lists its name.
 
 ```text
 string

@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.LuaSpacePlatformHubControlBehavior
 
-Root settings for LuaSpacePlatformHubControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaSpacePlatformHubControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### damage_taken_signal (optional)
 
-Signal carrying platform damage taken. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal carrying platform damage taken. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.SignalID
@@ -21,7 +21,7 @@ TC.Config.SignalID
 
 ### read_contents (optional)
 
-Publish this entity inventory or fluid contents; belt mode is separately selected. Explicit root patch clear: not supported.
+Publish this entity inventory or fluid contents. Belt mode is selected separately. Explicit root patch clear: not supported.
 
 ```text
 boolean
@@ -69,7 +69,7 @@ boolean
 
 ### speed_signal (optional)
 
-Signal carrying current platform speed. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal carrying current platform speed. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.SignalID

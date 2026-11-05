@@ -9,11 +9,12 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.HistorySnapshot
 
-Two dense 300-value arrays from native get_flow_count(sample_index, count=false).
-Index 1 is newest, index 300 oldest. Values are finite per-game-minute rates;
-preserve native zero/short-history behavior. No trimming, reversing, interpolation,
-GUI smoothing, timestamp synthesis or cross-quality aggregation. History can
-predate the physical peripheral; no guest collector startup is needed.
+This snapshot contains two dense 300-value arrays from native get_flow_count(sample_index, count=false).
+Index 1 is newest; index 300 is oldest.
+Values are finite per-game-minute rates.
+The arrays preserve native zero and short-history behavior.
+There is no trimming, reversing, interpolation, GUI smoothing, timestamp synthesis or cross-quality aggregation.
+History can predate the physical peripheral; no guest collector startup is necessary.
 
 ### input
 

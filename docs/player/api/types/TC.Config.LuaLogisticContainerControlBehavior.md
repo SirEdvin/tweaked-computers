@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.LuaLogisticContainerControlBehavior
 
-Root settings for LuaLogisticContainerControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaLogisticContainerControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### circuit_condition (optional)
 
-Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
+Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
 
 ```text
 TC.Config.CircuitConditionDefinition
@@ -29,7 +29,7 @@ boolean
 
 ### circuit_exclusive_mode_of_operation (optional)
 
-Compatibility mode combining native read_contents and set_requests switches; both uses send_contents_and_set_requests. logistic_mode_requester_or_buffer: Writable only on requester/buffer containers. Explicit root patch clear: not supported.
+Compatibility mode for native read_contents and set_requests switches. Their combined mode is send_contents_and_set_requests. logistic_mode_requester_or_buffer: Writable only on requester or buffer containers. Explicit root patch clear: not supported.
 
 ```text
 "none"|"send_contents"|"set_requests"|"send_contents_and_set_requests"

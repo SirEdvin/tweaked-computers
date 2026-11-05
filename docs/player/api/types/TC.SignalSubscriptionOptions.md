@@ -9,11 +9,12 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.SignalSubscriptionOptions
 
-Named input-change subscription options. Unknown fields fail before registration.
+Options for named input-change subscriptions.
+Unknown fields cause failure before registration.
 
 ### initial (optional)
 
-Default false; true requests a next-sample initial event with empty previous.
+Default false. A true value requests an initial event at the next sample, with empty previous.
 
 ```text
 boolean
@@ -21,7 +22,7 @@ boolean
 
 ### input
 
-Required explicit red or green; no default/both selector.
+Required explicit red or green. There is no default or both selector.
 
 ```text
 TC.InputSelection
@@ -29,7 +30,7 @@ TC.InputSelection
 
 ### signals (optional)
 
-Omitted/nil means all; otherwise nonempty dense unique effective identities.
+Omission or nil selects all signals. Otherwise, supply a nonempty dense array of unique effective identities.
 
 ```text
 (TC.SignalId)[]

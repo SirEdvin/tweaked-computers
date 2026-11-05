@@ -17,79 +17,103 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.Monitor
 
-Shared byte-cell terminal facade; obtain with peripheral.find('monitor', wire)
-or a checked wrap. Initial cursor (1,1), blink false, text white, background
-black and scale 1. Every writer shares cursor, colors, palette and contents.
-Calls mutate the model synchronously; getters see it even while an older
-complete image is displayed. Earlier accepted calls survive later failures.
-All paths retain exact physical/identity/scope/geometry checks; no electricity
-or electrical helper is required. Unavailability may hide but never erase state.
+This is a shared byte-cell terminal facade.
+Use peripheral.find('monitor', wire) or a checked wrap to get the facade.
+Initial settings are cursor (1,1), blink false, white text, black background and scale 1.
+Every writer shares the cursor, colors, palette and contents.
+
+Calls change the model synchronously.
+Getters read that model even while the display shows an older complete image.
+Earlier accepted calls survive later failures.
+All paths retain exact physical, identity, scope and geometry checks.
+No electricity or electrical helper is necessary.
+Unavailability can hide state but never erase it.
 
 ### Cells, palette and geometry
 
-Text is byte/cell indexed, not Unicode. Printable ASCII occupies bytes 32..126.
-Bytes 128..159 are 2x3 mosaics: subtract 128; bits 0..4 select foreground in the
-first five row-major subcells, with the sixth/background unchanged. Swapping
-foreground/background supplies complementary patterns. Other bytes display one
-replacement box each. No newline, tab, carriage return, escape or Factorio rich
-text is interpreted. UTF-8 is not decoded. Glyph art is not a CC font promise.
-Palette changes recolor existing indices rather than changing stored cell colors.
+Text uses byte/cell indexes, not Unicode.
+Printable ASCII occupies bytes 32..126.
+Bytes 128..159 are 2x3 mosaics.
+Subtract 128 to get the mosaic bits.
+Bits 0..4 select the foreground in the first five row-major subcells; the sixth subcell remains the background.
+An exchange of foreground and background gives complementary patterns.
+
+Other bytes each display one replacement box.
+The monitor does not interpret newline, tab, carriage return, escape or Factorio rich text.
+It does not decode UTF-8.
+Glyph art does not guarantee a CC font.
+Palette changes recolor existing indices instead of changing stored cell colors.
 Default palette by digit 0..f: F0F0F0, F2B233, E57FD8, 99B2F2, DEDE6C, 7FCC19,
 F2B2CC, 4C4C4C, 999999, 4C99B2, B266E5, 3366CC, 7F664C, 57A64E, CC4C4C, 111111.
 
-Complete logical rectangles support independent local width/height 1..6 tiles,
-all half-step scales 0.5..5 and cardinal orientations. Irregular/oversized walls
-partition deterministically, not into one L-shaped framebuffer. For local W,H:
+Complete logical rectangles support independent local width and height of 1..6 tiles, all half-step scales 0.5..5, and cardinal orientations.
+Irregular or oversized walls partition deterministically, not into one L-shaped framebuffer.
+For local W,H:
 columns=max(1,floor((64*W-4)/(6*scale))) and
-rows=max(1,floor((64*H-4)/(9*scale))). Query getSize, not a square-size guess.
-X is right and Y down as seen from the designated display top, not world axes.
-The grid is centered inside a two-logical-unit bezel; cells are 6x9 times scale.
+rows=max(1,floor((64*H-4)/(9*scale))).
+Query getSize instead of guessing a square size.
 
-Grouping is geometric, independent of wiring. A wired member grants access to
-the logical screen but never bridges other members' circuits. Merge/split keeps
-surviving cursor/colors/scale/palette; new split identities are not old aliases.
-Changed character dimensions clear the resulting buffer with retained colors;
-cursor/blink are not clamped. Absorbed identities detach. Geometry-changing
-migration is not guaranteed to preserve images; ordinary cold load retains state.
+X is right and Y is down from the designated display top, not along world axes.
+The grid is centered inside a two-logical-unit bezel.
+Cells are 6x9 times scale.
+
+Grouping is geometric and independent of wiring.
+A wired member grants access to the logical screen but never bridges the circuits of other members.
+Merge and split retain the surviving cursor, colors, scale and palette.
+New split identities are not old aliases.
+
+Changed character dimensions clear the resulting buffer with retained colors.
+The cursor and blink are not clamped.
+Absorbed identities detach.
+Migration that changes geometry does not guarantee image preservation.
+Ordinary cold load retains state.
 
 ### Automatic complete-frame presentation
 
-After synchronized callback dispatch, dirty eligible screens offer immutable
-snapshots; unchanged screens are not polled into new frames. Calls before seal
-coalesce. Newest pending work can replace pending work, not an admitted snapshot.
-Old complete fronts remain during preparation; a callback's partial row edits
-are nevertheless its complete current model at seal. There is no flush,
-beginFrame/endFrame, debounce, term.redirect or window API. Group selection on
-peripheral synchronizes member participation/publication, not producer clocks.
-A valid no-op setter participates; getters and rejected calls do not. Stopped
-writers leave valid fronts visible; pending host work can finish independently.
-Native cursor blink needs no guest polling. Settings paste/physical changes also
-drive host work. Per-call admission, copy-on-write and retained limits still apply.
+After synchronized callback dispatch, dirty eligible screens offer immutable snapshots.
+Unchanged screens do not cause polling for new frames.
+Calls before seal coalesce.
+The newest pending work can replace pending work, not an admitted snapshot.
+
+Old complete fronts remain during preparation.
+A callback's partial row edits are nevertheless its complete current model at seal.
+There is no flush, beginFrame/endFrame, debounce, term.redirect or window API.
+Group selection on peripheral synchronizes member participation and publication, not producer clocks.
+A valid no-op setter participates; getters and rejected calls do not.
+
+Stopped writers leave valid fronts visible.
+Pending host work can finish independently.
+Native cursor blink needs no guest polling.
+Settings paste and physical changes also cause host work.
+Per-call admission, copy-on-write and retained limits still apply.
 
 ### Events and lifecycle
 
-Register monitor_resize/monitor_touch through computer.on; see their TC event
-types. Touch ignores bezel/outside/GUI hover and obsolete visible geometry.
-One activation produces one event per registration, not per tile/path/color.
-Resize is queued after committed geometry; pending notifications may coalesce.
-Host notification service advances at most three recipients per call and
-retains unadmitted progress. A transient touch is dropped if its display/player
-becomes unavailable; resize work survives temporary display unavailability.
-Deconstruction marking alone is not removal and does not clear or resize.
-Cold load preserves models, fronts, selection/participation, pending snapshots
-and paid progress without guest replay. Unsupported retained state is recoverable
-but inactive, not silently reset. Bounds are safety envelopes, not measured FPS,
-universal heap guarantees or completed maximum-latency acceptance.
+Register monitor_resize and monitor_touch through computer.on.
+See their TC event types.
+Touch ignores the bezel, outside areas, GUI hover and obsolete visible geometry.
+One activation produces one event per registration, not per tile, path or color.
+Resize enters the queue after geometry commit; pending notifications can coalesce.
+
+The host notification service advances at most three recipients per call and retains unadmitted progress.
+A transient touch is dropped if its display or player becomes unavailable.
+Resize work survives temporary display unavailability.
+Deconstruction marking alone is not removal and does not clear or resize the display.
+
+Cold load preserves models, fronts, selection, participation, pending snapshots and paid progress without guest replay.
+Unsupported retained state is recoverable but inactive; no silent reset occurs.
+Bounds are safety envelopes, not measured FPS, universal heap guarantees or completed maximum-latency acceptance.
 
 ### blit
 
-With string foreground, validate all three equal-length byte strings before
-writing/advancing cursor. Foreground/background contain lowercase 0..f only.
-The current compatibility exception accepts nil/false foreground, uses current
-colors and ignores the third argument; all three positions are still required.
-No partial write on invalid strings, admission or unsafe cursor arithmetic.
-Returns zero values in both forms. This documents existing behavior, not a new
-permission for omitted arguments or general color coercion.
+With string foreground, the method validates all three equal-length byte strings before writes or cursor movement.
+Foreground and background contain only lowercase 0..f.
+The current compatibility exception accepts nil or false foreground.
+That form uses current colors and ignores the third argument, but all three positions remain required.
+
+Invalid strings, failed admission or unsafe cursor arithmetic cause no partial write.
+Both forms return zero values.
+This is existing behavior, not new permission for omitted arguments or general color coercion.
 
 ```text
 blit(text: string, foreground: string, background: string)
@@ -114,7 +138,7 @@ No result positions. See the behavior notes for normal-return versus failure sem
 blit(text: string, foreground: nil|false, background: TC.GuestValue)
 ```
 
-text is literal bounded bytes; nil/false foreground uses current colors; background is required but ignored, subject to guarded argument admission. Returns zero values.
+text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to guarded argument admission. The method returns zero values.
 
 ### Parameters
 
@@ -122,10 +146,10 @@ text: string
 Literal cell bytes, bounded by write_bytes.
 
 foreground: nil|false
-text is literal bounded bytes; nil/false foreground uses current colors; background is required but ignored, subject to guarded argument admission. Returns zero values.
+text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to guarded argument admission. The method returns zero values.
 
 background: TC.GuestValue
-text is literal bounded bytes; nil/false foreground uses current colors; background is required but ignored, subject to guarded argument admission. Returns zero values.
+text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to guarded argument admission. The method returns zero values.
 
 ### Returns
 
@@ -133,7 +157,9 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### clear
 
-Fill all cells with spaces/current colors; cursor unchanged. Zero results.
+Fill all cells with spaces and current colors.
+The cursor stays unchanged.
+The method returns zero values.
 
 ```text
 clear()
@@ -149,8 +175,11 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### clearLine
 
-Clear the current row when visible; offscreen is a valid no-op. Cursor unchanged.
-Returns zero values; a successful no-op still participates in a selected round.
+If the current row is visible, clear it.
+An offscreen row is a valid no-op.
+The cursor stays unchanged.
+The method returns zero values.
+A successful no-op still participates in a selected round.
 
 ```text
 clearLine()
@@ -183,7 +212,7 @@ One valid single color mask.
 
 ### getBackgroundColour
 
-Exact alias of getBackgroundColor, including result arity.
+This is an exact alias of getBackgroundColor, with the same result arity.
 
 Read the shared background palette index.
 
@@ -202,7 +231,7 @@ One valid single color mask.
 
 ### getCursorBlink
 
-Read stored blink state even when the cursor is offscreen and invisible.
+Read the stored blink state even when the cursor is offscreen and invisible.
 
 ```text
 getCursorBlink() -> enabled: boolean
@@ -239,10 +268,11 @@ Signed safe-integer character row.
 
 ### getLimits
 
-Read a defensive monitor-specific limit map. This is reachable metadata, not
-permission to draw without current physical authority. Public dispatch requires
-zero arguments (E_ARGUMENT otherwise), including explicit nil. No common keys
-are implied beyond the actual monitor-specific map.
+Read a defensive monitor-specific limit map.
+This is reachable metadata, not permission to draw without current physical authority.
+Public dispatch requires zero arguments.
+Any argument, also explicit nil, causes E_ARGUMENT.
+No common keys are implied beyond the actual monitor-specific map.
 
 ```text
 getLimits() -> limits: TC.MonitorLimits
@@ -259,7 +289,8 @@ Current monitor/model/presentation envelopes.
 
 ### getPaletteColor
 
-Read current palette channels; preserve three ordered result positions.
+Read the current palette channels.
+The method preserves three ordered result positions.
 
 ```text
 getPaletteColor(color: TC.Color) -> r: number, g: number, b: number
@@ -283,9 +314,10 @@ Blue finite channel in 0..1.
 
 ### getPaletteColour
 
-Exact alias of getPaletteColor, including all three results.
+This is an exact alias of getPaletteColor, with all three results unchanged.
 
-Read current palette channels; preserve three ordered result positions.
+Read the current palette channels.
+The method preserves three ordered result positions.
 
 ```text
 getPaletteColour(color: TC.Color) -> r: number, g: number, b: number
@@ -309,7 +341,7 @@ Blue finite channel in 0..1.
 
 ### getSize
 
-Read current model geometry, not physical tiles or an older visible snapshot.
+Read the current model geometry, not physical tiles or an older visible snapshot.
 
 ```text
 getSize() -> width: integer, height: integer
@@ -346,7 +378,7 @@ One valid single color mask.
 
 ### getTextColour
 
-Exact alias of getTextColor, with identical result arity and behavior.
+This is an exact alias of getTextColor, with identical result arity and behavior.
 
 Read the shared foreground palette index.
 
@@ -365,7 +397,8 @@ One valid single color mask.
 
 ### getTextScale
 
-Read shared text scale; independent of world footprint or client GUI scale.
+Read the shared text scale.
+It is independent of the world footprint and client GUI scale.
 
 ```text
 getTextScale() -> scale: number
@@ -382,7 +415,7 @@ One of the half steps 0.5,1,1.5,2,2.5,3,3.5,4,4.5,5.
 
 ### isColor
 
-The only supported monitor tier is color-capable.
+The only supported monitor tier has color capability.
 
 ```text
 isColor() -> supported: true
@@ -399,9 +432,10 @@ Exactly one true result.
 
 ### isColour
 
-Exact alias of isColor; returns exactly one true value.
+This is an exact alias of isColor.
+It returns exactly one true value.
 
-The only supported monitor tier is color-capable.
+The only supported monitor tier has color capability.
 
 ```text
 isColour() -> supported: true
@@ -418,9 +452,12 @@ Exactly one true result.
 
 ### scroll
 
-Move contents vertically; new rows are spaces/current colors. Positive moves
-up, negative down. Magnitude at least the height clears the screen without a
-proportional loop. Cursor unchanged; returns zero values.
+Move contents vertically.
+New rows contain spaces and current colors.
+Positive values move contents up; negative values move them down.
+A magnitude at least equal to the height clears the screen without a proportional loop.
+The cursor stays unchanged.
+The method returns zero values.
 
 ```text
 scroll(lines: integer)
@@ -429,7 +466,7 @@ scroll(lines: integer)
 ### Parameters
 
 lines: integer
-Signed safe-integer row offset; no float/string coercion.
+Signed safe-integer row offset. There is no float or string coercion.
 
 ### Returns
 
@@ -437,7 +474,8 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### setBackgroundColor
 
-Set the background used by later writes/clears. Returns zero values.
+Set the background for later writes and clears.
+The method returns zero values.
 
 ```text
 setBackgroundColor(color: TC.Color)
@@ -454,9 +492,10 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### setBackgroundColour
 
-Exact alias of setBackgroundColor, including zero results.
+This is an exact alias of setBackgroundColor, with the same zero results.
 
-Set the background used by later writes/clears. Returns zero values.
+Set the background for later writes and clears.
+The method returns zero values.
 
 ```text
 setBackgroundColour(color: TC.Color)
@@ -473,7 +512,9 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### setCursorBlink
 
-Set shared blink state; no guest polling is needed. Returns zero values.
+Set the shared blink state.
+No guest polling is necessary.
+The method returns zero values.
 
 ```text
 setCursorBlink(enabled: boolean)
@@ -482,7 +523,7 @@ setCursorBlink(enabled: boolean)
 ### Parameters
 
 enabled: boolean
-Required exact boolean, not truthiness coercion.
+Required exact boolean, without truthiness coercion.
 
 ### Returns
 
@@ -490,8 +531,10 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### setCursorPos
 
-Set exact shared cursor coordinates; offscreen positions are legal. Clipping
-occurs on writes, not by clamping the cursor. Returns zero values.
+Set the exact shared cursor coordinates.
+Offscreen positions are permitted.
+Writes use clipping; the cursor is not clamped.
+The method returns zero values.
 
 ```text
 setCursorPos(x: integer, y: integer)
@@ -511,9 +554,11 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### setPaletteColor
 
-Set one shared palette entry, recoloring all cells using that index. Exactly
-two call shapes: color,rgb or color,r,g,b. Never a three-argument partial RGB
-form, nil-filled optional channels or rounded integer. Returns zero values.
+Set one shared palette entry.
+This recolors all cells that use that index.
+There are exactly two call shapes: color,rgb or color,r,g,b.
+The method does not accept a three-argument partial RGB form, nil-filled optional channels or a rounded integer.
+The method returns zero values.
 
 ```text
 setPaletteColor(color: TC.Color, r: number, g: number, b: number)
@@ -541,7 +586,7 @@ No result positions. See the behavior notes for normal-return versus failure sem
 setPaletteColor(color: TC.Color, rgb: integer)
 ```
 
-rgb is one packed integer 0..16777215 (0xRRGGBB), not a unit red channel; returns zero values.
+rgb is one packed integer 0..16777215 (0xRRGGBB), not a unit red channel. The method returns zero values.
 
 ### Parameters
 
@@ -549,7 +594,7 @@ color: TC.Color
 Exact palette index to replace.
 
 rgb: integer
-rgb is one packed integer 0..16777215 (0xRRGGBB), not a unit red channel; returns zero values.
+rgb is one packed integer 0..16777215 (0xRRGGBB), not a unit red channel. The method returns zero values.
 
 ### Returns
 
@@ -557,11 +602,13 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### setPaletteColour
 
-Exact alias of setPaletteColor, preserving both overloads and zero results.
+This is an exact alias of setPaletteColor, with both overloads and zero results unchanged.
 
-Set one shared palette entry, recoloring all cells using that index. Exactly
-two call shapes: color,rgb or color,r,g,b. Never a three-argument partial RGB
-form, nil-filled optional channels or rounded integer. Returns zero values.
+Set one shared palette entry.
+This recolors all cells that use that index.
+There are exactly two call shapes: color,rgb or color,r,g,b.
+The method does not accept a three-argument partial RGB form, nil-filled optional channels or a rounded integer.
+The method returns zero values.
 
 ```text
 setPaletteColour(color: TC.Color, r: number, g: number, b: number)
@@ -589,7 +636,7 @@ No result positions. See the behavior notes for normal-return versus failure sem
 setPaletteColour(color: TC.Color, rgb: integer)
 ```
 
-rgb is one packed integer 0..16777215 (0xRRGGBB), not a unit red channel; returns zero values.
+rgb is one packed integer 0..16777215 (0xRRGGBB), not a unit red channel. The method returns zero values.
 
 ### Parameters
 
@@ -597,7 +644,7 @@ color: TC.Color
 Exact palette index to replace.
 
 rgb: integer
-rgb is one packed integer 0..16777215 (0xRRGGBB), not a unit red channel; returns zero values.
+rgb is one packed integer 0..16777215 (0xRRGGBB), not a unit red channel. The method returns zero values.
 
 ### Returns
 
@@ -605,8 +652,10 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### setTextColor
 
-Set foreground; recoloring existing cells requires palette changes instead.
-Returns zero values. Combined color masks are invalid.
+Set the foreground.
+Palette changes are necessary to recolor existing cells.
+The method returns zero values.
+Combined color masks are invalid.
 
 ```text
 setTextColor(color: TC.Color)
@@ -623,10 +672,12 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### setTextColour
 
-Exact alias of setTextColor, including admission and zero results.
+This is an exact alias of setTextColor, with the same admission and zero results.
 
-Set foreground; recoloring existing cells requires palette changes instead.
-Returns zero values. Combined color masks are invalid.
+Set the foreground.
+Palette changes are necessary to recolor existing cells.
+The method returns zero values.
+Combined color masks are invalid.
 
 ```text
 setTextColour(color: TC.Color)
@@ -643,10 +694,12 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### setTextScale
 
-Set a half-step scale and recalculate dimensions. If dimensions change, clear
-the model with current colors and queue resize; retain cursor/blink. Geometry
-changes invalidate staging/round participation and can block an oversized sync
-group. No implicit widening of its cell allowance. Returns zero values.
+Set a half-step scale.
+The method recalculates dimensions.
+If dimensions change, it clears the model with current colors and queues resize, but retains the cursor and blink.
+Geometry changes invalidate staging and round participation, and can block an oversized sync group.
+The cell allowance does not implicitly increase.
+The method returns zero values.
 
 ```text
 setTextScale(scale: number)
@@ -655,7 +708,7 @@ setTextScale(scale: number)
 ### Parameters
 
 scale: number
-Exact half-step from 0.5 through 5; no numeric coercion.
+Exact half-step from 0.5 through 5. There is no numeric coercion.
 
 ### Returns
 
@@ -663,9 +716,11 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### write
 
-Write bytes at the cursor, clipping without wrapping. Advance X by complete
-byte length even offscreen; reject unsafe final cursor arithmetic before any
-mutation. Numeric text is not implicitly converted. Returns zero values.
+Write bytes at the cursor with clipping but no wrapping.
+The method advances X by the complete byte length, even offscreen.
+It rejects unsafe final cursor arithmetic before any mutation.
+It does not implicitly convert numeric text.
+The method returns zero values.
 
 ```text
 write(text: string)
@@ -674,7 +729,7 @@ write(text: string)
 ### Parameters
 
 text: string
-Bounded bytes; control/rich-text bytes are literal cells.
+Bounded bytes. Control and rich-text bytes are literal cells.
 
 ### Returns
 

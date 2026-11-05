@@ -9,15 +9,15 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.LogicLimits
 
-Defensive effective limit map. Defaults below are not live values.
-Counts are admission envelopes, not calibrated heap, latency or FPS promises.
-Settings changes preserve spent credits; lower limits never authorize data loss.
+Independent copy of effective limits. These defaults are not current values.
+Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+Settings changes keep spent credits. Lower limits never permit data loss.
 
 Extends: TC.Limits
 
 ### notification_latency_ticks
 
-Published Logic notification envelope; event.tick may follow sample_tick. Default: 60.
+Published tick bound for Logic notifications. event.tick can be later than sample_tick. Default: 60.
 
 ```text
 integer
@@ -25,7 +25,7 @@ integer
 
 ### sample_interval_ticks
 
-Physical watched Logic input sampling interval in simulation ticks. Default: 1.
+Sampling interval for a watched physical Logic input, in simulation ticks. Default: 1.
 
 ```text
 integer

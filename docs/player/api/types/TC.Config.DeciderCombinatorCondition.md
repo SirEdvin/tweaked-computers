@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.DeciderCombinatorCondition
 
-Accepted input for DeciderCombinatorCondition. Unknown fields refused. Default comparator &lt;, constant 0 without a second signal, compare_type or and both networks. First operand allows role-appropriate each/anything/everything.
+Accepted input for DeciderCombinatorCondition. Unknown fields are refused. The default comparator is &lt;. Without a second signal, constant defaults to 0. compare_type defaults to or. Both networks are enabled by default. The first operand permits each, anything, or everything where its role permits that wildcard.
 
 ### comparator (optional)
 
-Comparison symbol; &gt;=, &lt;= and != normalize to ≥, ≤ and ≠.
+Comparison symbol. &gt;=, &lt;=, and != normalize to ≥, ≤, and ≠.
 
 ```text
 TC.Config.ComparatorString
@@ -21,7 +21,7 @@ TC.Config.ComparatorString
 
 ### compare_type (optional)
 
-Join this decider condition using and/or; default or.
+Join this decider condition with and or or. The default is or.
 
 ```text
 "and"|"or"
@@ -29,7 +29,7 @@ Join this decider condition using and/or; default or.
 
 ### constant (optional)
 
-Numeric operand or output count; enclosing concept determines the normalization default. Finite integer; domain -2147483648..2147483647.
+Numeric operand or output count. The enclosing concept determines the normalization default. Finite integer. Domain: -2147483648..2147483647.
 
 ```text
 integer
@@ -37,7 +37,7 @@ integer
 
 ### first_signal (optional)
 
-First signal operand; wildcard permission depends on its enclosing concept/role. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+First signal operand. Wildcard permission depends on the enclosing concept and role. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
 ```text
 TC.Config.SignalID
@@ -45,7 +45,7 @@ TC.Config.SignalID
 
 ### first_signal_networks (optional)
 
-Networks contributing to the first operand; omitted members normalize true. Unknown fields refused.
+Networks that supply the first operand. An omitted member becomes true during normalization. Unknown fields are refused.
 
 ```text
 TC.Config.CircuitNetworkSelection
@@ -53,7 +53,7 @@ TC.Config.CircuitNetworkSelection
 
 ### second_signal (optional)
 
-Second signal operand; wildcard pseudo-signals are not accepted here. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+Second signal operand. Wildcard pseudo-signals are not accepted here. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
 ```text
 TC.Config.SignalID
@@ -61,7 +61,7 @@ TC.Config.SignalID
 
 ### second_signal_networks (optional)
 
-Networks contributing to the second operand; omitted members normalize true. Unknown fields refused.
+Networks that supply the second operand. An omitted member becomes true during normalization. Unknown fields are refused.
 
 ```text
 TC.Config.CircuitNetworkSelection

@@ -9,10 +9,10 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.PeripheralAttach
 
-Physical attachment transition, not an initial inventory when registering.
-Discover explicitly after registration if a current inventory is needed.
-Transitions are channel-qualified; detach precedes replacement attach for the
-same binding. Electricity loss alone does not detach a native carrier.
+This event reports a physical attachment transition, not an initial inventory at registration.
+If you need a current inventory, discover explicitly after registration.
+Transitions are channel-qualified. Detach precedes replacement attach for the same binding.
+Electricity loss alone does not detach a native carrier.
 
 Extends: TC.BaseEvent
 

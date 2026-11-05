@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.SelectorCombinatorParameters.QualityFilter
 
-Normalized readback for SelectorCombinatorParameters. Operation quality-filter. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+Normalized readback for SelectorCombinatorParameters. Operation quality-filter. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 
 ### operation
 
-Exact operation discriminator; only that variant fields are accepted.
+Exact operation discriminator. Only fields for that variant are accepted.
 
 ```text
 "quality-filter"
@@ -21,7 +21,7 @@ Exact operation discriminator; only that variant fields are accepted.
 
 ### quality_filter (optional)
 
-Installed quality/comparator selector filter, only for quality-filter. Unknown fields refused.
+Installed quality and comparator selector filter. This applies only to quality-filter. Unknown fields are refused.
 
 ```text
 TC.Config.Read.QualityCondition

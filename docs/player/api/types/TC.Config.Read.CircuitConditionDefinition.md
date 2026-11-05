@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.CircuitConditionDefinition
 
-Normalized readback for CircuitConditionDefinition. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. constant and second_signal are exclusive. Default comparator &lt; and constant 0 without a second signal. fulfilled is read-only and excluded. First operand permits anything/everything but not each; ordinary second/root signals reject wildcards.
+Normalized readback for CircuitConditionDefinition. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. constant and second_signal cannot both be supplied. The default comparator is &lt;. Without a second signal, constant defaults to 0. fulfilled is read-only and excluded. The first operand permits anything and everything, but not each. Ordinary second and root signals reject wildcards.
 
 ### comparator
 
-Comparison symbol; &gt;=, &lt;= and != normalize to ≥, ≤ and ≠.
+Comparison symbol. &gt;=, &lt;=, and != normalize to ≥, ≤, and ≠.
 
 ```text
 TC.Config.Read.ComparatorString
@@ -21,7 +21,7 @@ TC.Config.Read.ComparatorString
 
 ### constant (optional)
 
-Numeric operand or output count; enclosing concept determines the normalization default. Finite integer; domain -2147483648..2147483647.
+Numeric operand or output count. The enclosing concept determines the normalization default. Finite integer. Domain: -2147483648..2147483647.
 
 ```text
 integer
@@ -29,7 +29,7 @@ integer
 
 ### first_signal (optional)
 
-First signal operand; wildcard permission depends on its enclosing concept/role. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+First signal operand. Wildcard permission depends on the enclosing concept and role. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
 ```text
 TC.Config.Read.SignalID
@@ -37,7 +37,7 @@ TC.Config.Read.SignalID
 
 ### second_signal (optional)
 
-Second signal operand; wildcard pseudo-signals are not accepted here. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+Second signal operand. Wildcard pseudo-signals are not accepted here. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
 ```text
 TC.Config.Read.SignalID

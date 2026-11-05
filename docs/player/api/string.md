@@ -9,15 +9,16 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.StringLibrary
 
-Bounded byte-string helpers, not Unicode or Lua-pattern facilities. Strings
-are immutable; input/output/work checks precede opaque native operations.
-Use dot calls: string.sub(s,...) rather than the forbidden string-method syntax.
+These bounded helpers operate on byte strings, not Unicode or Lua patterns.
+Strings are immutable. Input, output and work checks precede opaque native operations.
+Use dot calls: string.sub(s,...) instead of the forbidden string-method syntax.
 
 ### byte
 
-Return each byte in the normalized range. Omitted/nil i defaults 1; j defaults
-i (or 1), NOT string length. Empty range returns zero values; result width is
-bounded by tuple_entries. Embedded NUL returns numeric zero.
+Return each byte in the normalized range.
+Omitted or nil i defaults to 1. The default for j is i (or 1), not string length.
+An empty range returns zero values. The result width cannot exceed tuple_entries.
+Embedded NUL returns numeric zero.
 
 ```text
 byte(s: string, i?: TC.Numeric, j?: TC.Numeric) -> ...: integer
@@ -41,7 +42,7 @@ Byte codes 0..255 in order, possibly zero results.
 
 ### char
 
-Construct bytes from exact integer codes; zero inputs return an empty string.
+Construct bytes from exact integer codes. Zero inputs return an empty string.
 
 ```text
 char(...: integer) -> text: string
@@ -59,9 +60,12 @@ Constructed byte string including any NUL values.
 
 ### find
 
-Literal search ONLY: plain must be explicitly true. No Lua patterns/captures.
-A match returns first,last (inclusive); no match returns exactly one nil.
-Finite init is normalized; omitted/nil init means 1, negative counts from end.
+This helper searches only for literal text. The plain argument must be explicitly true.
+The helper supports no Lua patterns or captures.
+A match returns first,last (inclusive). No match returns exactly one nil.
+
+The helper normalizes finite init. Omitted or nil init means 1.
+A negative init counts from the end.
 
 ```text
 find(s: string, needle: string, init: TC.Numeric|nil, plain: true) -> first: integer, last: integer
@@ -76,10 +80,10 @@ needle: string
 Literal bounded search bytes, including an empty string.
 
 init: TC.Numeric|nil
-Third position; explicit nil selects default 1.
+Third position. Explicit nil selects the default 1.
 
 plain: true
-Required fourth position; any other value is refused.
+Required fourth position. The helper refuses any other value.
 
 ### Returns
 
@@ -87,7 +91,7 @@ first: integer
 One-based first matching byte when found.
 
 last: integer
-Inclusive final matching byte; empty match may precede first.
+Inclusive final matching byte. An empty match can precede first.
 
 ```text
 find(s: string, needle: string, init: TC.Numeric|nil, plain: true) -> absent: nil
@@ -104,10 +108,10 @@ needle: string
 Literal bounded search bytes, including an empty string.
 
 init: TC.Numeric|nil
-Third position; explicit nil selects default 1.
+Third position. Explicit nil selects the default 1.
 
 plain: true
-Required fourth position; any other value is refused.
+Required fourth position. The helper refuses any other value.
 
 ### Returns
 
@@ -116,10 +120,13 @@ No match returns exactly one nil (absent), not two nil values.
 
 ### format
 
-Bounded native formatting. Supports cdiouxXeEfgGqs and literal percent; checks
-width/precision/operand count and conservative output size before formatting.
-%s uses safe tostring, %q requires a string, numeric operands must be finite.
-No recursive table formatting or arbitrary format extension is provided.
+This helper does bounded native formatting.
+It supports cdiouxXeEfgGqs and literal percent.
+Before formatting, it checks width, precision, operand count and conservative output size.
+
+The %s conversion uses safe tostring. The %q conversion requires a string.
+Numeric operands must be finite.
+The helper provides no recursive table formatting or arbitrary format extension.
 
 ```text
 format(format: string, ...: TC.GuestValue) -> text: string
@@ -131,7 +138,7 @@ format: string
 Bounded format string with supported conversions only.
 
 ... (zero or more positions): TC.GuestValue
-Conversion operands; each conversion validates its domain.
+Conversion operands. Each conversion validates its domain.
 
 ### Returns
 
@@ -176,8 +183,9 @@ Independent lowercase string value.
 
 ### rep
 
-Repeat a string with separators between copies. Nonpositive n returns an empty
-string; exact safe integer n required. Oversized output fails before allocation.
+Repeat a string with separators between copies.
+Nonpositive n returns an empty string. The value n must be an exact safe integer.
+Oversized output causes failure before allocation.
 
 ```text
 rep(s: string, n: integer, sep?: string) -> text: string
@@ -189,7 +197,7 @@ s: string
 Bounded source bytes.
 
 n: integer
-Safe integer repetition count; nonpositive means empty.
+Safe integer repetition count. A nonpositive value means empty.
 
 sep (optional): string
 Omitted/nil means empty separator.
@@ -219,8 +227,9 @@ Bytes in reverse order.
 
 ### sub
 
-Slice bytes with normalized Lua-style indexes. Negative indexes count from
-the end; finite numeric strings are allowed. Omission/nil defaults i=1,j=#s.
+Slice bytes with normalized Lua-style indexes.
+Negative indexes count from the end. Finite numeric strings are permitted.
+Omission or nil defaults to i=1,j=#s.
 
 ```text
 sub(s: string, i?: TC.Numeric, j?: TC.Numeric) -> text: string
@@ -264,9 +273,9 @@ Independent uppercase string value.
 
 ### string
 
-Bounded byte-string helpers, not Unicode or Lua-pattern facilities. Strings
-are immutable; input/output/work checks precede opaque native operations.
-Use dot calls: string.sub(s,...) rather than the forbidden string-method syntax.
+These bounded helpers operate on byte strings, not Unicode or Lua patterns.
+Strings are immutable. Input, output and work checks precede opaque native operations.
+Use dot calls: string.sub(s,...) instead of the forbidden string-method syntax.
 
 ```text
 TC.StringLibrary

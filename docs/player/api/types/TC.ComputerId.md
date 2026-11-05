@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ComputerId
 
-Opaque identity of the current placed computer, not a message address.
+This opaque identity identifies the current placed computer, not a message address.
 
 ```text
 string

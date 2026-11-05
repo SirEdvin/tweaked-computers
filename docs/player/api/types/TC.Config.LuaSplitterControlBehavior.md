@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.LuaSplitterControlBehavior
 
-Root settings for LuaSplitterControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaSplitterControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### input_left_condition (optional)
 
-Condition selecting the splitter left input side. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
+Condition selecting the splitter left input side. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
 
 ```text
 TC.Config.CircuitConditionDefinition
@@ -21,7 +21,7 @@ TC.Config.CircuitConditionDefinition
 
 ### input_right_condition (optional)
 
-Condition selecting the splitter right input side. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
+Condition selecting the splitter right input side. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
 
 ```text
 TC.Config.CircuitConditionDefinition
@@ -29,7 +29,7 @@ TC.Config.CircuitConditionDefinition
 
 ### output_left_condition (optional)
 
-Condition selecting the splitter left output side. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
+Condition selecting the splitter left output side. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
 
 ```text
 TC.Config.CircuitConditionDefinition
@@ -37,7 +37,7 @@ TC.Config.CircuitConditionDefinition
 
 ### output_right_condition (optional)
 
-Condition selecting the splitter right output side. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
+Condition selecting the splitter right output side. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
 
 ```text
 TC.Config.CircuitConditionDefinition
@@ -45,7 +45,7 @@ TC.Config.CircuitConditionDefinition
 
 ### set_filter (optional)
 
-Select this native entity fluid/item filter from circuit signals. Explicit root patch clear: not supported.
+Select this native entity fluid or item filter from circuit signals. Explicit root patch clear: not supported.
 
 ```text
 boolean

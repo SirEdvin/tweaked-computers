@@ -18,9 +18,10 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.Dashboard
 
-Dashboard facade with base controls, and chart methods only when compatible
-factorio-charts is active. Narrow by the actual method inventory; missing methods
-are absent, not stubs. Retained definitions may still contain charts without it.
+This Dashboard facade has base controls. Chart methods are present only when
+compatible factorio-charts is active. Narrow the type by the actual method inventory.
+Missing methods are absent, not stubs.
+Retained definitions can still contain charts without the library.
 
 ```text
 TC.DashboardBase|TC.ChartDashboard
@@ -30,48 +31,61 @@ TC.DashboardBase|TC.ChartDashboard
 
 ### TC.DashboardBase
 
-Shared physical Dashboard. Its six numbered slots are ordered by occupied slot;
-empty slots produce no button. Zero configured tabs is valid. Players choose the
-visible tab, not API calls. Removing a viewer's selected tab picks the lowest
-remaining slot or unconfigured screen, without changing other valid selections.
-All writers/wires share retained layout, control text and chart state. No power
-is required; every call retains live identity/scope/path checks.
+This facade controls a shared physical Dashboard.
+Its six numbered slots appear in occupied-slot order. Empty slots produce no button.
+Zero configured tabs is valid. Players choose the visible tab, not API calls.
+
+If a viewer's selected tab is removed, the Dashboard selects the lowest remaining slot
+or the unconfigured screen. Other valid selections do not change.
+All writers and wires share retained layout, control text and chart state.
+The Dashboard requires no power. Every call retains live identity, scope and path checks.
 
 ### Atomicity and capacity
 
-Validate the complete candidate, retained final model and return admission before
-publication. The shared dashboard_state_bytes allowance includes layout/control
-text, bar dataset, full line capacity/running totals and model metadata. This is
-accounted storage, not calibrated native heap; ordinary Data/work/queue limits
-remain. Lower limits retain accepted data and permit reads/removal/non-growth,
-not truncation. Native rendering has separate host-owned lifetime/admission.
+Before publication, the API validates the complete candidate, retained final
+model and return admission. The shared dashboard_state_bytes allowance includes
+layout/control text, bar dataset, full line capacity, running totals and model metadata.
+This allowance measures accounted storage, not calibrated native heap.
+Ordinary Data, work and queue limits remain.
+Lower limits retain accepted data and permit reads, removal and non-growth,
+not truncation. Native rendering has separate host-owned lifetime and admission.
+
 Visible collecting, pending and error states distinguish absent samples from
-deferred/refused rendering. A render that cannot fit a fresh budget remains
-visibly refused; reopening does not authorize oversized work or reset budgets.
-Wrong arity/shape/fields/kind/duplicate IDs are E_ARGUMENT; invalid slot/capacity/
-format/nonfinite values or renderer domain E_RANGE; missing addressed widget/tab
-E_NOT_FOUND except getTab/removeTab absences. Unsupported charts/schema are
-E_UNSUPPORTED, retained capacity E_CAPACITY, transport envelope E_LIMIT. Fatal
-guest budget remains E_BUDGET. Error wording/precedence after admission is not API.
+deferred or refused rendering. A render that cannot fit a fresh budget remains
+visibly refused. A reopened view does not authorize oversized work or reset budgets.
+
+Incorrect arity, shape, fields or kind, and duplicate IDs cause E_ARGUMENT.
+Invalid slot, capacity or format, nonfinite values or an invalid renderer domain cause E_RANGE.
+A missing addressed widget or tab causes E_NOT_FOUND, except for getTab/removeTab absences.
+Unsupported charts or schema cause E_UNSUPPORTED.
+Retained capacity refusal causes E_CAPACITY. Transport envelope refusal causes E_LIMIT.
+
+Fatal guest budget exhaustion remains E_BUDGET.
+Error wording and precedence after admission are not API contracts.
 
 ### Lifetime and optional dependency
 
-Ordinary reload preserves model, chart order/reservations and legitimate queued
-deliveries without startup replay. Closing windows/stopping producers does not
-clear content. Mining carries versioned definitions/history/latest bars but new
-placement has a new identity and no subscriptions/viewers/render handles. Invalid
-saved schema is retained for recovery. Blueprints/clones/settings copy transfer
-definitions only, never another device's sample history; existing targets keep
-only their own compatible history. Dependency removal preserves model/data and
-releases presentation; reinstall reconstructs it, never reruns the producer.
-Absent chart methods disappear from getMethods/new facades. Stale captured chart
-methods fail safely. New chart-containing definitions are refused without the
-library, but retained charts can be inspected/removed and base controls updated.
+Ordinary reload preserves the model, chart order/reservations and legitimate
+queued deliveries without startup replay. Closed windows and stopped producers
+do not clear content. Mining carries versioned definitions, history and latest bars.
+New placement has a new identity and no subscriptions, viewers or render handles.
+The Dashboard retains invalid saved schema for recovery.
+
+Blueprints, clones and settings copy transfer only definitions, never another device's sample history.
+Existing targets keep only their own compatible history.
+Dependency removal preserves the model and data, and releases presentation.
+Reinstallation reconstructs presentation. It never runs the producer again.
+
+Absent chart methods disappear from getMethods and new facades.
+Stale captured chart methods fail safely.
+The API refuses new definitions that contain charts without the library.
+Without the library, you can still inspect or remove retained charts and update base controls.
 
 ### getLimits
 
-Read common limits plus shared tab/model allowance. Renderer domain fields
-are present only with the chart library, not zero/unlimited placeholders.
+Read common limits plus the shared tab/model allowance.
+Renderer domain fields are present only with the chart library.
+The API does not supply zero or unlimited placeholders.
 
 ```text
 getLimits() -> limits: TC.DashboardLimits
@@ -88,8 +102,9 @@ Independent effective map.
 
 ### getTab
 
-Read independent configuration/current control text, NOT chart samples/history
-or private rendering state. Retained charts remain inspectable without library.
+Read independent configuration and current control text.
+The result excludes chart samples, chart history and private rendering state.
+You can inspect retained charts without the library.
 
 ```text
 getTab(slot: integer) -> definition: TC.TabDefinition|nil
@@ -125,8 +140,10 @@ True if a tab existed; false for an unused valid slot.
 
 ### setEnabled
 
-Set a button's enabled state without structural replacement. Enabled state is
-rechecked for queued delivery. Missing/wrong-kind targets fail. Zero results.
+Set a button's enabled state without structural replacement.
+The host checks the enabled state again for queued delivery.
+Missing targets or targets of the wrong kind cause failure.
+This method returns zero results.
 
 ```text
 setEnabled(slot: integer, id: string, enabled: boolean)
@@ -149,12 +166,16 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### setTab
 
-Atomically replace one complete slot. Compatible chart data survives when ID,
-kind and ordered series+capacity (line) or phases (bars) remain identical. Title,
-text, layout location and line format changes do not reset compatible data.
-Changed/removed data definitions discard only that chart's prior data. Repeating
-the same normalized definition is idempotent; structural replacement invalidates
-old button targets and queued tab clicks. Returns zero values.
+Atomically replace one complete slot.
+Compatible chart data survives when ID and kind remain identical.
+Ordered series and capacity must also remain identical for a line chart.
+Phases must remain identical for bars.
+Title, text, layout location and line format changes do not reset compatible data.
+
+Changed or removed data definitions discard only that chart's prior data.
+Repeated application of the same normalized definition is idempotent.
+Structural replacement invalidates old button targets and queued tab clicks.
+This method returns zero values.
 
 ```text
 setTab(slot: integer, definition: TC.TabDefinition)
@@ -175,7 +196,8 @@ No result positions. See the behavior notes for normal-return versus failure sem
 ### setText
 
 Replace label/button text without changing layout identity or chart history.
-Missing target is E_NOT_FOUND; wrong widget kind E_ARGUMENT. Zero results.
+A missing target causes E_NOT_FOUND. An incorrect widget kind causes E_ARGUMENT.
+This method returns zero results.
 
 ```text
 setText(slot: integer, id: string, text: string)
@@ -190,7 +212,7 @@ id: string
 Existing label/button ID, exact bounded nonempty string.
 
 text: string
-New literal text; label may be empty, button must be nonempty.
+New literal text. A label can be empty, but a button must be nonempty.
 
 ### Returns
 
@@ -198,11 +220,14 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### subscribe
 
-Subscribe this saved run to every button on this exact Dashboard/wire. Each
-call creates a distinct registration; explicitly registering both colors can
-intentionally deliver twice. Merely writing/viewing does not subscribe. All
-eligible subscribers receive clicks, not just the last writer. Console and
-undeclared handler names are refused. See TC.DashboardClick for revalidation.
+Subscribe this saved run to every button on this exact Dashboard/wire.
+Each call creates a distinct registration.
+Explicit registration on both colors can intentionally deliver twice.
+Writes or views alone do not create subscriptions.
+All eligible subscribers receive clicks, not only the last writer.
+
+The method refuses Console calls and undeclared handler names.
+See TC.DashboardClick for revalidation.
 
 ```text
 subscribe(handler_name: TC.HandlerName) -> id: TC.SubscriptionId
@@ -220,8 +245,9 @@ New exact run/device/wire registration.
 
 ### unsubscribe
 
-Cancel an exact registration and matching queued deliveries. Another binding
-or run is invalid; Console cannot edit saved-program subscriptions.
+Cancel an exact registration and matching queued deliveries.
+Another binding or run is invalid.
+Console cannot change saved-program subscriptions.
 
 ```text
 unsubscribe(subscription_id: TC.SubscriptionId) -> removed: boolean
@@ -241,19 +267,24 @@ True if registered, false if already absent.
 
 ### TC.ChartDashboard
 
-Dashboard with optional compatible factorio-charts loaded. These extra methods
-are absent without it. They operate on admitted definitions, not arbitrary GUI
-elements/native library objects; all base methods and authority rules remain.
+This Dashboard has the optional compatible factorio-charts library loaded.
+These extra methods are absent without the library.
+They operate on admitted definitions, not arbitrary GUI elements or native library objects.
+All base methods and authority rules remain.
 
 Extends: TC.DashboardBase
 
 ### appendSample
 
-Append one complete finite vector to all line series in lockstep. At capacity
-evict exactly the oldest vector. Missing/extra series or nonfinite derived
-arithmetic fail atomically without eviction or changing totals. No invented
-samples for closed windows, stopped programs or missed timers. Multiple writers
-follow accepted-call order. No timestamps/history-query API. Zero results.
+Append one complete finite vector to all line series in lockstep.
+At capacity, the method evicts exactly the oldest vector.
+Missing series, extra series or nonfinite derived arithmetic cause atomic failure.
+Failure does not evict data or change totals.
+
+The method does not invent samples for closed windows, stopped programs or missed timers.
+Multiple writers use accepted-call order.
+The API provides no timestamps or history queries.
+This method returns zero results.
 
 ```text
 appendSample(slot: integer, id: string, values: TC.ChartValues)
@@ -276,8 +307,8 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### clearChart
 
-Reset this chart's data/index/totals without removing its definition or reserved
-line capacity. No other chart changes. Returns zero values.
+Reset this chart's data, index and totals without removing its definition or reserved line capacity.
+No other chart changes. This method returns zero values.
 
 ```text
 clearChart(slot: integer, id: string)
@@ -297,11 +328,15 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### setBars
 
-Replace the entire latest duration dataset, not a history. Empty clears; zeros
-are valid. Every bar contains exactly configured phases, finite nonnegative
-seconds, with finite totals/padding. Preserve input bar order and native time
-axis/palette; do not interpret counts as seconds. Enforce renderer positive-width
-chart_bar_entries plus shared budgets. No partial replacement. Zero results.
+Replace the entire latest duration dataset, not a history.
+An empty dataset clears the bars. Zeros are valid.
+Every bar contains exactly the configured phases, with finite nonnegative seconds.
+Totals and padding must be finite.
+
+The method preserves input bar order and the native time axis and palette.
+Do not interpret counts as seconds.
+The renderer's positive-width chart_bar_entries limit and shared budgets apply.
+The method does not make partial replacements. It returns zero results.
 
 ```text
 setBars(slot: integer, id: string, bars: (TC.ChartValues)[])
@@ -316,7 +351,7 @@ id: string
 Existing stacked-bar ID; a line widget is invalid.
 
 bars: (TC.ChartValues)[]
-Dense ordered complete duration maps; empty clears.
+Dense ordered complete duration maps. An empty array clears the bars.
 
 ### Returns
 

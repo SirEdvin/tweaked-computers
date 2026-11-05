@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Position
 
-World coordinates in tiles, not rounded integer tile positions.
+These world coordinates use tiles, not rounded integer tile positions.
 
 ### x
 

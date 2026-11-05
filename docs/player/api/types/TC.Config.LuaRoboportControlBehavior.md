@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.LuaRoboportControlBehavior
 
-Root settings for LuaRoboportControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaRoboportControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### available_construction_output_signal (optional)
 
-Signal for available construction robots. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal for available construction robots. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.SignalID
@@ -21,7 +21,7 @@ TC.Config.SignalID
 
 ### available_logistic_output_signal (optional)
 
-Signal for available logistic robots. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal for available logistic robots. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.SignalID
@@ -29,7 +29,7 @@ TC.Config.SignalID
 
 ### read_items_mode (optional)
 
-Select logistics contents, missing requests or no item reporting. Explicit root patch clear: not supported.
+Select logistics contents, missing requests, or no item reporting. Explicit root patch clear: not supported.
 
 ```text
 "logistics"|"missing_requests"|"none"
@@ -37,7 +37,7 @@ Select logistics contents, missing requests or no item reporting. Explicit root 
 
 ### read_logistics (optional)
 
-Legacy logistics-content reporting switch; prefer read_items_mode. Explicit root patch clear: not supported.
+Legacy switch for reporting logistics contents. Prefer read_items_mode. Explicit root patch clear: not supported.
 
 ```text
 boolean
@@ -45,7 +45,7 @@ boolean
 
 ### read_robot_stats (optional)
 
-Publish native logistic/construction robot statistics. Explicit root patch clear: not supported.
+Publish native statistics for logistic and construction robots. Explicit root patch clear: not supported.
 
 ```text
 boolean
@@ -53,7 +53,7 @@ boolean
 
 ### roboport_count_output_signal (optional)
 
-Signal carrying the roboport count. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal carrying the roboport count. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.SignalID
@@ -61,7 +61,7 @@ TC.Config.SignalID
 
 ### total_construction_output_signal (optional)
 
-Signal for total construction robots. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal for total construction robots. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.SignalID
@@ -69,7 +69,7 @@ TC.Config.SignalID
 
 ### total_logistic_output_signal (optional)
 
-Signal for total logistic robots. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal for total logistic robots. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.SignalID

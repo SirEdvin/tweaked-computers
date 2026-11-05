@@ -9,14 +9,15 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ItemStatisticsSnapshot
 
-Item totals/rates shape. Totals leaves are produced/consumed item counts since
-the native applicable reset, not lifetime guarantees or sums of stored samples.
-Rates leaves are native per-game-minute averages for the caller's window. The
-native cumulative count map still selects keys whose current-window rate is zero.
+This snapshot contains item totals or rates.
+Total leaves count produced or consumed items since the applicable native reset.
+They are not lifetime guarantees or sums of stored samples.
+Rate leaves are native per-game-minute averages for the caller's window.
+The native cumulative count map still selects keys whose current-window rate is zero.
 
 ### input
 
-Produced item counts or per-minute rates by quality/name.
+Produced item counts or per-minute rates by quality and name.
 
 ```text
 TC.QualityStatisticsCounts
@@ -24,7 +25,7 @@ TC.QualityStatisticsCounts
 
 ### output
 
-Consumed item counts or per-minute rates by quality/name.
+Consumed item counts or per-minute rates by quality and name.
 
 ```text
 TC.QualityStatisticsCounts
@@ -32,7 +33,7 @@ TC.QualityStatisticsCounts
 
 ### tick
 
-Query read tick, not newest bucket end timestamp.
+Query read tick, not the end timestamp of the newest bucket.
 
 ```text
 TC.Tick

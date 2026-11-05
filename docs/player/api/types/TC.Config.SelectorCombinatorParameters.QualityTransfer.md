@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.SelectorCombinatorParameters.QualityTransfer
 
-Accepted input for SelectorCombinatorParameters. Operation quality-transfer. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+Accepted input for SelectorCombinatorParameters. Operation quality-transfer. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 
 ### operation
 
-Exact operation discriminator; only that variant fields are accepted.
+Exact operation discriminator. Only fields for that variant are accepted.
 
 ```text
 "quality-transfer"
@@ -21,7 +21,7 @@ Exact operation discriminator; only that variant fields are accepted.
 
 ### quality_destination_signal
 
-Quality-transfer destination signal; required on input but may be absent in native readback. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+Quality-transfer destination signal. Input requires this field; native readback can omit it. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
 ```text
 TC.Config.SignalID
@@ -29,7 +29,7 @@ TC.Config.SignalID
 
 ### quality_source_signal (optional)
 
-Quality-transfer source when selecting quality from a signal. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+Quality-transfer source when selecting quality from a signal. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
 ```text
 TC.Config.SignalIDBase
@@ -37,7 +37,7 @@ TC.Config.SignalIDBase
 
 ### quality_source_static (optional)
 
-Static quality-transfer source; default normal when not using a signal. Unknown fields refused.
+Static quality-transfer source. The default is normal when a signal is not used. Unknown fields are refused.
 
 ```text
 TC.Config.BlueprintQualityID
@@ -45,7 +45,7 @@ TC.Config.BlueprintQualityID
 
 ### select_quality_from_signal (optional)
 
-Choose signal quality rather than static quality; default false.
+Select quality from a signal instead of static quality. The default is false.
 
 ```text
 boolean

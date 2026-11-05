@@ -9,12 +9,16 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.SectionInfo
 
-Complete native section readback. Index is a position, not stable identity;
-removing an earlier section shifts later indexes. Filter array contains occupied
-slots in native slot order; sparse slot indexes are carried explicitly. Native
-capacity filters_count is not the number of populated array entries. Nonmanual
-sections are readable but protected. Shared-group filters require explicit local
-detachment before writes; multiplier readback preserves native float32 rounding.
+This record gives complete native section readback.
+The index is a position, not a stable identity.
+Removal of an earlier section shifts later indexes.
+The filter array contains occupied slots in native slot order.
+It includes sparse slot indexes explicitly.
+The native capacity filters_count is not the number of populated array entries.
+
+Nonmanual sections are readable but protected.
+Shared-group filters require explicit local detachment before writes.
+Multiplier readback preserves native float32 rounding.
 
 ### active
 
@@ -50,7 +54,7 @@ integer
 
 ### group
 
-Shared-group name; empty means local.
+Shared-group name. An empty name means local.
 
 ```text
 string

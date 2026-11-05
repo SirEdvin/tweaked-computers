@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.LuaRocketSiloControlBehavior
 
-Root settings for LuaRocketSiloControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaRocketSiloControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### read_mode (optional)
 
-Select rocket-silo logistic inventory, orbital requests or no reporting. Explicit root patch clear: not supported.
+Select rocket-silo logistic inventory, orbital requests, or no reporting. Explicit root patch clear: not supported.
 
 ```text
 "logistic_inventory"|"none"|"orbital_requests"

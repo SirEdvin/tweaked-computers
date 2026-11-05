@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.LuaAccumulatorControlBehavior
 
-Root settings for LuaAccumulatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaAccumulatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### output_signal (optional)
 
-Signal used for this control behavior output (charge, gate sensor or combinator result). Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Output signal for this control behavior: accumulator charge, gate sensor, or combinator result. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.SignalID

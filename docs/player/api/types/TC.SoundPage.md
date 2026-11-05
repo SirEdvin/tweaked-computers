@@ -9,12 +9,13 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.SoundPage
 
-One complete sound-discovery page; no total/approximate count or query handle.
-Empty means sounds={} with next absent. Even a full final page omits next.
+One complete sound-discovery page, without a total count, approximate count or query handle.
+An empty page has sounds={} and no next field.
+Even a full final page omits next.
 
 ### next (optional)
 
-Last emitted path only when another matching valid path exists; pass as after.
+Last emitted path, only when another matching valid path exists. Pass this value as after.
 
 ```text
 string

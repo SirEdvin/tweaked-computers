@@ -9,21 +9,24 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.FieldSchema
 
-Public normalized recursive field schema, not raw engine documentation JSON.
-Only keys appropriate to kind are present. Enum values are symbolic strings,
-never host defines ordinals. Internal native_enum/concept metadata is excluded.
-Required/readable/writable/clearable are independent; a recognized field may be
-unavailable in the current entity mode and carries its restriction reason.
+This public normalized recursive field schema is not raw engine documentation JSON.
+Only keys applicable to kind are present. Enum values are symbolic strings,
+never host defines ordinals. The schema excludes internal native_enum/concept metadata.
+
+Required, readable, writable and clearable are independent properties.
+A recognized field can be unavailable in the current entity mode.
+That field includes its restriction reason.
+
 Known constraints include registered_signal, explicit_signal_type,
 condition_operand_exclusive, condition_signal_roles, operation_variant,
 logistic_mode_requester_or_buffer, fuel_inventory_required, rail_chain_signal_only,
 native_asteroid_no_logistic_connection, ammo_or_fluid_turret_required and
-set_requests_requires_space_travel. Section readback can additionally report
+set_requests_requires_space_travel. Section readback can also report
 nonmanual_section and shared_group_detach_first as unavailable_reason.
 
 ### additional_fields (optional)
 
-Unknown object keys are refused when this flag is present.
+The schema refuses unknown object keys when this flag is present.
 
 ```text
 false
@@ -39,7 +42,7 @@ Union alternatives in normalization order.
 
 ### clearable
 
-Whether an explicit root patch clear is supported; not implicit nil assignment.
+Whether the field supports an explicit root patch clear, not implicit nil assignment.
 
 ```text
 boolean
@@ -87,7 +90,7 @@ number
 
 ### max_bytes (optional)
 
-Maximum string bytes; input identity strings also reject NUL.
+Maximum string bytes. Input identity strings must not contain NUL.
 
 ```text
 integer
@@ -127,7 +130,7 @@ boolean
 
 ### required (optional)
 
-Required object keys; variant-required keys are separately described.
+Required object keys. The schema describes variant-required keys separately.
 
 ```text
 (string)[]

@@ -9,8 +9,8 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.MonitorRef
 
-Explicit selection reference; exactly these fields are accepted, no facade,
-coordinates, extra keys or implicit wire fallback.
+This explicit selection reference accepts exactly these fields.
+There is no facade, coordinate, extra key or implicit wire fallback.
 
 ### name
 

@@ -9,9 +9,10 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.StatisticsCounts
 
-Native per-name finite numeric map. Missing opposite-side entries are not filled
-with zero. Preserve recorded zeros/empty maps and native numeric precision; no
-alphabetical/traversal or arbitrary-precision integer promise.
+This native map contains finite numbers for each name.
+The map does not add zero entries for names present only on the opposite side.
+It preserves recorded zeros, empty maps and native numeric precision.
+There is no guarantee of alphabetical order, traversal order or arbitrary-precision integers.
 
 ```text
 table<string, number>

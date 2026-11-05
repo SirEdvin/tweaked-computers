@@ -9,15 +9,16 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.DashboardLine
 
-Rolling chart in the unchanged library viewport. Requires compatible
-factorio-charts when publishing a new definition. X means sample order, not
-timestamps/irregular-time interpolation. Empty/one-sample data may show no line.
-The renderer determines series order from its sums; configured name order is
-not a promise of stable series colors as values change.
+This rolling chart uses the unchanged library viewport.
+Publication of a new definition requires compatible factorio-charts.
+X means sample order, not timestamps or irregular-time interpolation.
+Empty data or one-sample data can show no line.
+The renderer determines series order from its sums.
+Configured name order does not guarantee stable series colors as values change.
 
 ### capacity
 
-Required sample capacity at least 2; reserve full fixed shape on definition.
+Required sample capacity of at least 2. The definition reserves the full fixed shape.
 
 ```text
 integer
@@ -25,7 +26,7 @@ integer
 
 ### format (optional)
 
-Omitted/nil or the existing false compatibility case defaults number; percent values already use percent units, time uses seconds.
+Omission, nil or the existing false compatibility case defaults to number. Percent values already use percent units. Time uses seconds.
 
 ```text
 'number'|'percent'|'time'|false
@@ -41,7 +42,7 @@ string
 
 ### series
 
-Nonempty dense unique names; at most chart_line_series.
+Nonempty dense array of unique names. The maximum count is chart_line_series.
 
 ```text
 (string)[]

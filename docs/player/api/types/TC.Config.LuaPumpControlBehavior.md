@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.LuaPumpControlBehavior
 
-Root settings for LuaPumpControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaPumpControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### circuit_condition (optional)
 
-Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.CircuitConditionDefinition
@@ -37,7 +37,7 @@ boolean
 
 ### logistic_condition (optional)
 
-Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.CircuitConditionDefinition
@@ -45,7 +45,7 @@ TC.Config.CircuitConditionDefinition
 
 ### set_filter (optional)
 
-Select this native entity fluid/item filter from circuit signals. Explicit root patch clear: not supported.
+Select this native entity fluid or item filter from circuit signals. Explicit root patch clear: not supported.
 
 ```text
 boolean

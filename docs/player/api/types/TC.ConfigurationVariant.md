@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ConfigurationVariant
 
-One discriminator-dependent field set in a native-normalized schema.
+This record defines one discriminator-dependent field set in a native-normalized schema.
 
 ### fields
 

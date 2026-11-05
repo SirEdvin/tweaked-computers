@@ -70,7 +70,7 @@ class PackageInventoryTests(unittest.TestCase):
         spec = (build.ROOT / 'openspec/specs/console-shell/spec.md').read_text()
         self.assertIn('Follow-off SHALL keep the single Console text box live without automatic scrolling', spec)
         self.assertIn('follow-off keeps output live without automatic scrolling', companion)
-        self.assertIn('changed text may clear native selection', companion)
+        self.assertIn('changed text can clear native selection', companion)
         self.assertIn('unchanged text is not reassigned', companion)
         self.assertIn('there is no refresh action or separate snapshot view', companion)
         self.assertNotIn('follow-off preserves the existing snapshot', companion)

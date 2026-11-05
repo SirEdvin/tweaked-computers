@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.QualityCondition
 
-Normalized readback for QualityCondition. Unknown fields refused. Input accepts a registered quality string or object. Readback is an object with explicit quality (default normal) and comparator (default =); comparator aliases normalize.
+Normalized readback for QualityCondition. Unknown fields are refused. Input accepts a registered quality string or object. Readback is an object with explicit quality and comparator. Quality defaults to normal. The comparator defaults to =. Comparator aliases normalize.
 
 ### comparator
 
-Comparison symbol; &gt;=, &lt;= and != normalize to ≥, ≤ and ≠.
+Comparison symbol. &gt;=, &lt;=, and != normalize to ≥, ≤, and ≠.
 
 ```text
 TC.Config.Read.ComparatorString
@@ -21,7 +21,7 @@ TC.Config.Read.ComparatorString
 
 ### quality
 
-Exact installed quality name; normalization defaults normal where this concept permits omission.
+Exact installed quality name. Normalization uses normal when this concept permits omission.
 
 ```text
 string

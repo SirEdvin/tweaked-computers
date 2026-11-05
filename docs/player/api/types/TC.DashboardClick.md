@@ -9,11 +9,13 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.DashboardClick
 
-Left-button activation of an enabled native Dashboard button. tick is the
-activation tick, not necessarily dispatch. Each explicit subscription gets its
-own event; configuring/viewing a panel alone does not subscribe. Layout identity,
-enabled state, player access, subscription/run and selected path are rechecked
-before delivery. No guest callback runs within the GUI event handler.
+This event reports left-button activation of an enabled native Dashboard button.
+The tick field gives the activation tick, not necessarily the dispatch tick.
+Each explicit subscription gets its own event.
+Panel configuration or viewing alone does not create a subscription.
+Before delivery, the host checks layout identity, enabled state, player access,
+subscription/run and selected path again.
+No guest callback runs within the GUI event handler.
 
 Extends: TC.BaseEvent
 

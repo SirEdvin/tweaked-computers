@@ -9,7 +9,8 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.DashboardRow
 
-Horizontal native layout. Empty children are allowed; dense order is display order.
+This node defines a horizontal native layout.
+The children array can be empty. Its dense order is the display order.
 
 ### children
 

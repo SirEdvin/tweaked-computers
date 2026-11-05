@@ -9,8 +9,9 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.InputConnectivity
 
-Selected-color input connection state. Only the selected red or green field is
-present; the other is absent. Initial previous connectivity is false.
+This record gives the input connection state for the selected color.
+Only the selected red or green field is present. The other field is absent.
+Initial previous connectivity is false.
 
 ### green (optional)
 

@@ -9,14 +9,15 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.MathLibrary
 
-Guarded finite numeric helpers. Numeric strings convert explicitly through the
-helper; all supplied operands (including otherwise ignored extras) are checked.
-Nonfinite operands fail; a nonfinite native result is E_RANGE. No random,
-randomseed, huge or fallback to other host math functions is exposed.
+These guarded numeric helpers require finite values.
+The helper explicitly converts numeric strings.
+It checks all supplied operands, including extra operands that it otherwise ignores.
+Nonfinite operands cause failure. A nonfinite native result causes E_RANGE.
+The library exposes no random, randomseed, huge or fallback to other host math functions.
 
 ### abs
 
-Absolute value with finite-input/result validation.
+This helper returns the absolute value and validates finite input and result.
 
 ```text
 abs(x: TC.Numeric, ...: TC.Numeric) -> result: number
@@ -28,7 +29,7 @@ x: TC.Numeric
 Finite numeric operand.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -37,7 +38,8 @@ Absolute value of x.
 
 ### acos
 
-Principal inverse cosine; outside the native domain is refused.
+This helper returns the principal inverse cosine.
+It refuses operands outside the native domain.
 
 ```text
 acos(x: TC.Numeric, ...: TC.Numeric) -> angle: number
@@ -49,7 +51,7 @@ x: TC.Numeric
 Finite value in -1..1.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -58,7 +60,8 @@ Principal angle in radians.
 
 ### asin
 
-Principal inverse sine; outside the native domain is a refused nonfinite result.
+This helper returns the principal inverse sine.
+An operand outside the native domain produces a nonfinite result, which the helper refuses.
 
 ```text
 asin(x: TC.Numeric, ...: TC.Numeric) -> angle: number
@@ -70,7 +73,7 @@ x: TC.Numeric
 Finite value in -1..1.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -79,7 +82,7 @@ Principal angle in radians.
 
 ### atan
 
-Principal inverse tangent of one finite value.
+This helper returns the principal inverse tangent of one finite value.
 
 ```text
 atan(x: TC.Numeric, ...: TC.Numeric) -> angle: number
@@ -91,7 +94,7 @@ x: TC.Numeric
 Finite numeric operand.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -100,7 +103,7 @@ Principal angle in radians.
 
 ### atan2
 
-Two-argument native inverse tangent, preserving y,x argument order.
+This helper returns the two-argument native inverse tangent and preserves y,x argument order.
 
 ```text
 atan2(y: TC.Numeric, x: TC.Numeric, ...: TC.Numeric) -> angle: number
@@ -115,7 +118,7 @@ x: TC.Numeric
 Finite horizontal component.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -136,7 +139,7 @@ x: TC.Numeric
 Finite numeric operand.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -145,7 +148,7 @@ Smallest integral value not below x.
 
 ### cos
 
-Native cosine of a finite angle in radians.
+This helper returns the native cosine of a finite angle in radians.
 
 ```text
 cos(x: TC.Numeric, ...: TC.Numeric) -> result: number
@@ -157,7 +160,7 @@ x: TC.Numeric
 Finite angle in radians.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -166,7 +169,7 @@ Cosine value.
 
 ### deg
 
-Convert radians to degrees, refusing nonfinite output.
+Convert radians to degrees. The helper refuses nonfinite output.
 
 ```text
 deg(x: TC.Numeric, ...: TC.Numeric) -> angle: number
@@ -178,7 +181,7 @@ x: TC.Numeric
 Finite angle in radians.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -187,7 +190,8 @@ Finite angle in degrees.
 
 ### exp
 
-Natural exponential; overflow to a nonfinite value is E_RANGE.
+This helper returns the natural exponential.
+Overflow to a nonfinite value causes E_RANGE.
 
 ```text
 exp(x: TC.Numeric, ...: TC.Numeric) -> result: number
@@ -199,7 +203,7 @@ x: TC.Numeric
 Finite exponent.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -220,7 +224,7 @@ x: TC.Numeric
 Finite numeric operand.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -229,7 +233,8 @@ Largest integral value not above x.
 
 ### fmod
 
-Native remainder using a quotient rounded toward zero; not floor modulo.
+This helper returns the native remainder with a quotient rounded toward zero,
+not floor modulo.
 
 ```text
 fmod(x: TC.Numeric, y: TC.Numeric, ...: TC.Numeric) -> result: number
@@ -241,10 +246,10 @@ x: TC.Numeric
 Finite dividend.
 
 y: TC.Numeric
-Finite nonzero divisor; nonfinite result is refused.
+Finite nonzero divisor. The helper refuses a nonfinite result.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -253,9 +258,10 @@ Remainder with the dividend's sign.
 
 ### log
 
-Natural logarithm when base is omitted; explicit base selects that logarithm.
-Unlike omission, explicitly supplied nil is not a numeric operand and fails.
-Inputs must yield a finite native result; invalid domains are refused.
+This helper returns the natural logarithm when base is omitted.
+An explicit base selects that logarithm.
+Unlike omission, explicitly supplied nil is not a numeric operand and causes failure.
+Inputs must give a finite native result. The helper refuses invalid domains.
 
 ```text
 log(x: TC.Numeric, base?: TC.Numeric, ...: TC.Numeric) -> result: number
@@ -267,10 +273,10 @@ x: TC.Numeric
 Positive finite numeric operand.
 
 base (optional): TC.Numeric
-Optional positive finite base other than one; explicit nil refused.
+Optional positive finite base other than one. The helper refuses explicit nil.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -279,7 +285,8 @@ Finite logarithm value.
 
 ### max
 
-Largest supplied finite value; at least one operand is required.
+This helper returns the largest supplied finite value.
+It requires at least one operand.
 
 ```text
 max(x: TC.Numeric, ...: TC.Numeric) -> result: number
@@ -300,7 +307,8 @@ Maximum converted numeric value.
 
 ### min
 
-Smallest supplied finite value; at least one operand is required.
+This helper returns the smallest supplied finite value.
+It requires at least one operand.
 
 ```text
 min(x: TC.Numeric, ...: TC.Numeric) -> result: number
@@ -333,7 +341,7 @@ x: TC.Numeric
 Finite numeric operand.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -345,7 +353,7 @@ Signed remaining fractional part.
 
 ### pi
 
-The host pi constant, read-only; not a random/configurable value.
+The read-only host pi constant, not a random or configurable value.
 
 ```text
 number
@@ -353,7 +361,7 @@ number
 
 ### rad
 
-Convert degrees to radians, refusing nonfinite output.
+Convert degrees to radians. The helper refuses nonfinite output.
 
 ```text
 rad(x: TC.Numeric, ...: TC.Numeric) -> angle: number
@@ -365,7 +373,7 @@ x: TC.Numeric
 Finite angle in degrees.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -374,7 +382,7 @@ Finite angle in radians.
 
 ### sin
 
-Native sine of a finite angle in radians.
+This helper returns the native sine of a finite angle in radians.
 
 ```text
 sin(x: TC.Numeric, ...: TC.Numeric) -> result: number
@@ -386,7 +394,7 @@ x: TC.Numeric
 Finite angle in radians.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -395,7 +403,8 @@ Sine value.
 
 ### sqrt
 
-Square root; a negative operand produces refused nonfinite native output.
+This helper returns the square root.
+A negative operand produces nonfinite native output, which the helper refuses.
 
 ```text
 sqrt(x: TC.Numeric, ...: TC.Numeric) -> result: number
@@ -407,7 +416,7 @@ x: TC.Numeric
 Finite nonnegative operand.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -416,7 +425,7 @@ Nonnegative square root.
 
 ### tan
 
-Native tangent; nonfinite results are refused.
+This helper returns the native tangent. It refuses nonfinite results.
 
 ```text
 tan(x: TC.Numeric, ...: TC.Numeric) -> result: number
@@ -428,7 +437,7 @@ x: TC.Numeric
 Finite angle in radians.
 
 ... (zero or more positions): TC.Numeric
-Extra operands are validated/charged, then ignored natively.
+The helper validates and charges extra operands. The native function then ignores them.
 
 ### Returns
 
@@ -439,10 +448,11 @@ Finite tangent value.
 
 ### math
 
-Guarded finite numeric helpers. Numeric strings convert explicitly through the
-helper; all supplied operands (including otherwise ignored extras) are checked.
-Nonfinite operands fail; a nonfinite native result is E_RANGE. No random,
-randomseed, huge or fallback to other host math functions is exposed.
+These guarded numeric helpers require finite values.
+The helper explicitly converts numeric strings.
+It checks all supplied operands, including extra operands that it otherwise ignores.
+Nonfinite operands cause failure. A nonfinite native result causes E_RANGE.
+The library exposes no random, randomseed, huge or fallback to other host math functions.
 
 ```text
 TC.MathLibrary

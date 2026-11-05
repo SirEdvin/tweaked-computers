@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Tuple
 
-Packed transient argument tuple, not a dense Data array when it contains nil.
+This packed transient argument tuple is not a dense Data array when it contains nil.
 
 ### [integer]
 
-One-based nonnil value at that position; holes represent nil.
+One-based nonnil value at that position. Holes represent nil.
 
 ```text
 TC.GuestValue

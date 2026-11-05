@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.SignalFilter.Variant1
 
-Union alternative. Unknown fields refused. Unknown fields refused.
+Union alternative. Unknown fields are refused. Unknown fields are refused.
 
 ### comparator (optional)
 
-Comparison symbol; &gt;=, &lt;= and != normalize to ≥, ≤ and ≠.
+Comparison symbol. &gt;=, &lt;=, and != normalize to ≥, ≤, and ≠.
 
 ```text
 TC.Config.ComparatorString
@@ -21,7 +21,7 @@ TC.Config.ComparatorString
 
 ### name
 
-Exact prototype/quality identity named by the enclosing concept; no localization lookup. At most 256 bytes; no NUL.
+Exact prototype or quality identity for the enclosing concept. No localization lookup occurs. At most 256 bytes. NUL is not permitted.
 
 ```text
 string
@@ -29,7 +29,7 @@ string
 
 ### quality (optional)
 
-Exact installed quality name; normalization defaults normal where this concept permits omission. At most 256 bytes; no NUL. Installed quality name, never a native object.
+Exact installed quality name. Normalization uses normal when this concept permits omission. At most 256 bytes. NUL is not permitted. Use an installed quality name, not a native object.
 
 ```text
 string
@@ -37,7 +37,7 @@ string
 
 ### type (optional)
 
-Signal prototype namespace; SignalID/SignalIDBase require an explicit input type.
+Signal prototype namespace. SignalID and SignalIDBase require an explicit input type.
 
 ```text
 TC.Config.SignalIDType

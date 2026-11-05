@@ -1,121 +1,146 @@
 ---@meta
 
----Dashboard facade with base controls, and chart methods only when compatible
----factorio-charts is active. Narrow by the actual method inventory; missing methods
----are absent, not stubs. Retained definitions may still contain charts without it.
+---This Dashboard facade has base controls. Chart methods are present only when
+---compatible factorio-charts is active. Narrow the type by the actual method inventory.
+---Missing methods are absent, not stubs.
+---Retained definitions can still contain charts without the library.
 ---@alias TC.Dashboard TC.DashboardBase|TC.ChartDashboard
 
----Recursive declarative layout. Every node ID is a nonempty exact bounded string,
----unique across the whole tab, including containers; another tab may reuse it.
----Unknown fields fail. Text is literal, never LocalisedString or Factorio rich text.
+---This type defines a recursive declarative layout.
+---Every node ID is a nonempty exact bounded string.
+---The ID must be unique across the whole tab, including containers.
+---Another tab can use the same ID. Unknown fields cause failure.
+---Text is literal, never LocalisedString or Factorio rich text.
 ---@alias TC.DashboardNode TC.DashboardRow|TC.DashboardColumn|TC.DashboardLabel|TC.DashboardButton|TC.DashboardLine|TC.DashboardBars
 
----Horizontal native layout. Empty children are allowed; dense order is display order.
+---This node defines a horizontal native layout.
+---The children array can be empty. Its dense order is the display order.
 ---@class TC.DashboardRow
 ---@field type 'row' Horizontal-container discriminator.
 ---@field id string Nonempty tab-unique ID within identifier_bytes.
 ---@field children TC.DashboardNode[] Dense ordered children, possibly empty.
 
----Vertical native layout, using host spacing and a bounded scroll area.
+---This node defines a vertical native layout with host spacing and a bounded scroll area.
 ---@class TC.DashboardColumn
 ---@field type 'column' Vertical-container discriminator.
 ---@field id string Nonempty tab-unique ID within identifier_bytes.
 ---@field children TC.DashboardNode[] Dense ordered children, possibly empty.
 
----Wrapping literal text label, with no interpreted markup or arbitrary styles.
+---This literal text label wraps. It has no interpreted markup or arbitrary styles.
 ---@class TC.DashboardLabel
 ---@field type 'label' Label discriminator.
 ---@field id string Nonempty tab-unique ID within identifier_bytes.
----@field text string Literal bounded text; empty is valid.
+---@field text string Literal bounded text. An empty string is valid.
 
----Native left-click button; it produces events only for explicit subscriptions.
+---This native left-click button produces events only for explicit subscriptions.
 ---@class TC.DashboardButton
 ---@field type 'button' Button discriminator.
 ---@field id string Nonempty tab-unique ID within identifier_bytes.
 ---@field text string Nonempty literal bounded caption.
----@field enabled? boolean Omitted/nil defaults true; false prevents activation/delivery.
+---@field enabled? boolean Omission or nil defaults to true. False prevents activation and delivery.
 
----Rolling chart in the unchanged library viewport. Requires compatible
----factorio-charts when publishing a new definition. X means sample order, not
----timestamps/irregular-time interpolation. Empty/one-sample data may show no line.
----The renderer determines series order from its sums; configured name order is
----not a promise of stable series colors as values change.
+---This rolling chart uses the unchanged library viewport.
+---Publication of a new definition requires compatible factorio-charts.
+---X means sample order, not timestamps or irregular-time interpolation.
+---Empty data or one-sample data can show no line.
+---The renderer determines series order from its sums.
+---Configured name order does not guarantee stable series colors as values change.
 ---@class TC.DashboardLine
 ---@field type 'line' Rolling-line discriminator.
 ---@field id string Nonempty tab-unique ID within identifier_bytes.
----@field series string[] Nonempty dense unique names; at most chart_line_series.
----@field capacity integer Required sample capacity at least 2; reserve full fixed shape on definition.
----@field format? 'number'|'percent'|'time'|false Omitted/nil or the existing false compatibility case defaults number; percent values already use percent units, time uses seconds.
+---@field series string[] Nonempty dense array of unique names. The maximum count is chart_line_series.
+---@field capacity integer Required sample capacity of at least 2. The definition reserves the full fixed shape.
+---@field format? 'number'|'percent'|'time'|false Omission, nil or the existing false compatibility case defaults to number. Percent values already use percent units. Time uses seconds.
 
----Latest duration dataset, not historical arbitrary numeric/category bars.
----Phase order is bottom-to-top stack order; use surrounding labels to explain bars.
+---This node shows the latest duration dataset, not historical arbitrary numeric/category bars.
+---Phase order is bottom-to-top stack order. Use surrounding labels to explain the bars.
 ---@class TC.DashboardBars
----@field type 'stacked_bars' Duration-bar discriminator; library required for new definitions.
+---@field type 'stacked_bars' Duration-bar discriminator. New definitions require the library.
 ---@field id string Nonempty tab-unique ID within identifier_bytes.
 ---@field phases string[] Nonempty dense unique phase names within identifier_bytes.
 
----Complete tab definition; no implicit partial layout merge. Explicit nil for an
----optional node field means omission/default. No text entry, images, fonts, style
----names, drawing coordinates, chart-click callbacks or guest formatters are exposed.
+---This record defines a complete tab. There is no implicit partial layout merge.
+---Explicit nil for an optional node field means omission/default.
+---The API exposes no text entry, images, fonts, style names, drawing coordinates,
+---chart-click callbacks or guest formatters.
 ---@class TC.TabDefinition
 ---@field title string Nonempty literal bounded tab caption.
 ---@field content TC.DashboardNode Root of the tab-unique declarative node tree.
 
----One full chart vector. Keys must match exactly the configured series/phases;
----unknown/missing keys fail. Line values are finite; bar durations additionally
----must be nonnegative seconds. Derived sums/ranges/padding must remain finite.
+---This map gives one full chart vector.
+---Keys must match the configured series or phases exactly.
+---Unknown or missing keys cause failure. Line values must be finite.
+---Bar durations must also be nonnegative seconds.
+---Derived sums, ranges and padding must remain finite.
 ---@alias TC.ChartValues table<string, number>
 
----Shared physical Dashboard. Its six numbered slots are ordered by occupied slot;
----empty slots produce no button. Zero configured tabs is valid. Players choose the
----visible tab, not API calls. Removing a viewer's selected tab picks the lowest
----remaining slot or unconfigured screen, without changing other valid selections.
----All writers/wires share retained layout, control text and chart state. No power
----is required; every call retains live identity/scope/path checks.
+---This facade controls a shared physical Dashboard.
+---Its six numbered slots appear in occupied-slot order. Empty slots produce no button.
+---Zero configured tabs is valid. Players choose the visible tab, not API calls.
+---
+---If a viewer's selected tab is removed, the Dashboard selects the lowest remaining slot
+---or the unconfigured screen. Other valid selections do not change.
+---All writers and wires share retained layout, control text and chart state.
+---The Dashboard requires no power. Every call retains live identity, scope and path checks.
 ---
 ---### Atomicity and capacity
----Validate the complete candidate, retained final model and return admission before
----publication. The shared dashboard_state_bytes allowance includes layout/control
----text, bar dataset, full line capacity/running totals and model metadata. This is
----accounted storage, not calibrated native heap; ordinary Data/work/queue limits
----remain. Lower limits retain accepted data and permit reads/removal/non-growth,
----not truncation. Native rendering has separate host-owned lifetime/admission.
+---Before publication, the API validates the complete candidate, retained final
+---model and return admission. The shared dashboard_state_bytes allowance includes
+---layout/control text, bar dataset, full line capacity, running totals and model metadata.
+---This allowance measures accounted storage, not calibrated native heap.
+---Ordinary Data, work and queue limits remain.
+---Lower limits retain accepted data and permit reads, removal and non-growth,
+---not truncation. Native rendering has separate host-owned lifetime and admission.
+---
 ---Visible collecting, pending and error states distinguish absent samples from
----deferred/refused rendering. A render that cannot fit a fresh budget remains
----visibly refused; reopening does not authorize oversized work or reset budgets.
----Wrong arity/shape/fields/kind/duplicate IDs are E_ARGUMENT; invalid slot/capacity/
----format/nonfinite values or renderer domain E_RANGE; missing addressed widget/tab
----E_NOT_FOUND except getTab/removeTab absences. Unsupported charts/schema are
----E_UNSUPPORTED, retained capacity E_CAPACITY, transport envelope E_LIMIT. Fatal
----guest budget remains E_BUDGET. Error wording/precedence after admission is not API.
+---deferred or refused rendering. A render that cannot fit a fresh budget remains
+---visibly refused. A reopened view does not authorize oversized work or reset budgets.
+---
+---Incorrect arity, shape, fields or kind, and duplicate IDs cause E_ARGUMENT.
+---Invalid slot, capacity or format, nonfinite values or an invalid renderer domain cause E_RANGE.
+---A missing addressed widget or tab causes E_NOT_FOUND, except for getTab/removeTab absences.
+---Unsupported charts or schema cause E_UNSUPPORTED.
+---Retained capacity refusal causes E_CAPACITY. Transport envelope refusal causes E_LIMIT.
+---
+---Fatal guest budget exhaustion remains E_BUDGET.
+---Error wording and precedence after admission are not API contracts.
 ---
 ---### Lifetime and optional dependency
----Ordinary reload preserves model, chart order/reservations and legitimate queued
----deliveries without startup replay. Closing windows/stopping producers does not
----clear content. Mining carries versioned definitions/history/latest bars but new
----placement has a new identity and no subscriptions/viewers/render handles. Invalid
----saved schema is retained for recovery. Blueprints/clones/settings copy transfer
----definitions only, never another device's sample history; existing targets keep
----only their own compatible history. Dependency removal preserves model/data and
----releases presentation; reinstall reconstructs it, never reruns the producer.
----Absent chart methods disappear from getMethods/new facades. Stale captured chart
----methods fail safely. New chart-containing definitions are refused without the
----library, but retained charts can be inspected/removed and base controls updated.
+---Ordinary reload preserves the model, chart order/reservations and legitimate
+---queued deliveries without startup replay. Closed windows and stopped producers
+---do not clear content. Mining carries versioned definitions, history and latest bars.
+---New placement has a new identity and no subscriptions, viewers or render handles.
+---The Dashboard retains invalid saved schema for recovery.
+---
+---Blueprints, clones and settings copy transfer only definitions, never another device's sample history.
+---Existing targets keep only their own compatible history.
+---Dependency removal preserves the model and data, and releases presentation.
+---Reinstallation reconstructs presentation. It never runs the producer again.
+---
+---Absent chart methods disappear from getMethods and new facades.
+---Stale captured chart methods fail safely.
+---The API refuses new definitions that contain charts without the library.
+---Without the library, you can still inspect or remove retained charts and update base controls.
 ---@class TC.DashboardBase
 local Dashboard = {}
 
----Atomically replace one complete slot. Compatible chart data survives when ID,
----kind and ordered series+capacity (line) or phases (bars) remain identical. Title,
----text, layout location and line format changes do not reset compatible data.
----Changed/removed data definitions discard only that chart's prior data. Repeating
----the same normalized definition is idempotent; structural replacement invalidates
----old button targets and queued tab clicks. Returns zero values.
+---Atomically replace one complete slot.
+---Compatible chart data survives when ID and kind remain identical.
+---Ordered series and capacity must also remain identical for a line chart.
+---Phases must remain identical for bars.
+---Title, text, layout location and line format changes do not reset compatible data.
+---
+---Changed or removed data definitions discard only that chart's prior data.
+---Repeated application of the same normalized definition is idempotent.
+---Structural replacement invalidates old button targets and queued tab clicks.
+---This method returns zero values.
 ---@param slot integer Numbered slot 1..6, independent of current visible tab order.
 ---@param definition TC.TabDefinition Complete validated tab/layout definition.
 function Dashboard.setTab(slot, definition) end
 
----Read independent configuration/current control text, NOT chart samples/history
----or private rendering state. Retained charts remain inspectable without library.
+---Read independent configuration and current control text.
+---The result excludes chart samples, chart history and private rendering state.
+---You can inspect retained charts without the library.
 ---@param slot integer Numbered slot 1..6.
 ---@return TC.TabDefinition|nil definition One snapshot or one nil for an unused slot.
 function Dashboard.getTab(slot) end
@@ -126,67 +151,84 @@ function Dashboard.getTab(slot) end
 function Dashboard.removeTab(slot) end
 
 ---Replace label/button text without changing layout identity or chart history.
----Missing target is E_NOT_FOUND; wrong widget kind E_ARGUMENT. Zero results.
+---A missing target causes E_NOT_FOUND. An incorrect widget kind causes E_ARGUMENT.
+---This method returns zero results.
 ---@param slot integer Existing numbered tab slot 1..6.
 ---@param id string Existing label/button ID, exact bounded nonempty string.
----@param text string New literal text; label may be empty, button must be nonempty.
+---@param text string New literal text. A label can be empty, but a button must be nonempty.
 function Dashboard.setText(slot, id, text) end
 
----Set a button's enabled state without structural replacement. Enabled state is
----rechecked for queued delivery. Missing/wrong-kind targets fail. Zero results.
+---Set a button's enabled state without structural replacement.
+---The host checks the enabled state again for queued delivery.
+---Missing targets or targets of the wrong kind cause failure.
+---This method returns zero results.
 ---@param slot integer Existing numbered tab slot 1..6.
 ---@param id string Existing button ID.
 ---@param enabled boolean Required exact boolean; no truthiness conversion.
 function Dashboard.setEnabled(slot, id, enabled) end
 
----Subscribe this saved run to every button on this exact Dashboard/wire. Each
----call creates a distinct registration; explicitly registering both colors can
----intentionally deliver twice. Merely writing/viewing does not subscribe. All
----eligible subscribers receive clicks, not just the last writer. Console and
----undeclared handler names are refused. See TC.DashboardClick for revalidation.
+---Subscribe this saved run to every button on this exact Dashboard/wire.
+---Each call creates a distinct registration.
+---Explicit registration on both colors can intentionally deliver twice.
+---Writes or views alone do not create subscriptions.
+---All eligible subscribers receive clicks, not only the last writer.
+---
+---The method refuses Console calls and undeclared handler names.
+---See TC.DashboardClick for revalidation.
 ---@param handler_name TC.HandlerName Declared export receiving scheduled clicks.
 ---@return TC.SubscriptionId id New exact run/device/wire registration.
 function Dashboard.subscribe(handler_name) end
 
----Cancel an exact registration and matching queued deliveries. Another binding
----or run is invalid; Console cannot edit saved-program subscriptions.
+---Cancel an exact registration and matching queued deliveries.
+---Another binding or run is invalid.
+---Console cannot change saved-program subscriptions.
 ---@param subscription_id TC.SubscriptionId Identity from this run/Dashboard/wire.
 ---@return boolean removed True if registered, false if already absent.
 function Dashboard.unsubscribe(subscription_id) end
 
----Read common limits plus shared tab/model allowance. Renderer domain fields
----are present only with the chart library, not zero/unlimited placeholders.
+---Read common limits plus the shared tab/model allowance.
+---Renderer domain fields are present only with the chart library.
+---The API does not supply zero or unlimited placeholders.
 ---@return TC.DashboardLimits limits Independent effective map.
 function Dashboard.getLimits() end
 
----Dashboard with optional compatible factorio-charts loaded. These extra methods
----are absent without it. They operate on admitted definitions, not arbitrary GUI
----elements/native library objects; all base methods and authority rules remain.
+---This Dashboard has the optional compatible factorio-charts library loaded.
+---These extra methods are absent without the library.
+---They operate on admitted definitions, not arbitrary GUI elements or native library objects.
+---All base methods and authority rules remain.
 ---@class TC.ChartDashboard: TC.DashboardBase
 local ChartDashboard = {}
 
----Append one complete finite vector to all line series in lockstep. At capacity
----evict exactly the oldest vector. Missing/extra series or nonfinite derived
----arithmetic fail atomically without eviction or changing totals. No invented
----samples for closed windows, stopped programs or missed timers. Multiple writers
----follow accepted-call order. No timestamps/history-query API. Zero results.
+---Append one complete finite vector to all line series in lockstep.
+---At capacity, the method evicts exactly the oldest vector.
+---Missing series, extra series or nonfinite derived arithmetic cause atomic failure.
+---Failure does not evict data or change totals.
+---
+---The method does not invent samples for closed windows, stopped programs or missed timers.
+---Multiple writers use accepted-call order.
+---The API provides no timestamps or history queries.
+---This method returns zero results.
 ---@param slot integer Existing numbered tab slot 1..6.
 ---@param id string Existing line-chart ID; a bar widget is invalid.
 ---@param values TC.ChartValues Exactly the configured series names with finite values.
 function ChartDashboard.appendSample(slot, id, values) end
 
----Replace the entire latest duration dataset, not a history. Empty clears; zeros
----are valid. Every bar contains exactly configured phases, finite nonnegative
----seconds, with finite totals/padding. Preserve input bar order and native time
----axis/palette; do not interpret counts as seconds. Enforce renderer positive-width
----chart_bar_entries plus shared budgets. No partial replacement. Zero results.
+---Replace the entire latest duration dataset, not a history.
+---An empty dataset clears the bars. Zeros are valid.
+---Every bar contains exactly the configured phases, with finite nonnegative seconds.
+---Totals and padding must be finite.
+---
+---The method preserves input bar order and the native time axis and palette.
+---Do not interpret counts as seconds.
+---The renderer's positive-width chart_bar_entries limit and shared budgets apply.
+---The method does not make partial replacements. It returns zero results.
 ---@param slot integer Existing numbered tab slot 1..6.
 ---@param id string Existing stacked-bar ID; a line widget is invalid.
----@param bars TC.ChartValues[] Dense ordered complete duration maps; empty clears.
+---@param bars TC.ChartValues[] Dense ordered complete duration maps. An empty array clears the bars.
 function ChartDashboard.setBars(slot, id, bars) end
 
----Reset this chart's data/index/totals without removing its definition or reserved
----line capacity. No other chart changes. Returns zero values.
+---Reset this chart's data, index and totals without removing its definition or reserved line capacity.
+---No other chart changes. This method returns zero values.
 ---@param slot integer Existing numbered tab slot 1..6.
 ---@param id string Existing line or stacked-bar widget ID.
 function ChartDashboard.clearChart(slot, id) end

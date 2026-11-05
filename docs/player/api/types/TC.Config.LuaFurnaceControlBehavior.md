@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.LuaFurnaceControlBehavior
 
-Root settings for LuaFurnaceControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaFurnaceControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### circuit_condition (optional)
 
-Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.CircuitConditionDefinition
@@ -29,7 +29,7 @@ boolean
 
 ### circuit_read_contents (optional)
 
-Publish ingredient/product/in-crafting contents and supported native inventories. Explicit root patch clear: not supported.
+Publish ingredient, product, and in-crafting contents and supported native inventories. Explicit root patch clear: not supported.
 
 ```text
 boolean
@@ -61,7 +61,7 @@ boolean
 
 ### circuit_recipe_finished_signal (optional)
 
-Signal identity used for recipe completion. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal identity used for recipe completion. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.SignalID
@@ -69,7 +69,7 @@ TC.Config.SignalID
 
 ### circuit_working_signal (optional)
 
-Signal identity used for working state. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal identity used for working state. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.SignalID
@@ -85,7 +85,7 @@ boolean
 
 ### include_fuel (optional)
 
-Include the fuel inventory; compatibility name maps to native 2.1 read_fuel. fuel_inventory_required: Requires an actual native fuel inventory. Explicit root patch clear: not supported.
+Include the fuel inventory. This compatibility name maps to native 2.1 read_fuel. fuel_inventory_required: An actual native fuel inventory is required. Explicit root patch clear: not supported.
 
 ```text
 boolean
@@ -93,7 +93,7 @@ boolean
 
 ### include_in_crafting (optional)
 
-Include materials currently committed to crafting. Explicit root patch clear: not supported.
+Include materials already committed to crafting. Explicit root patch clear: not supported.
 
 ```text
 boolean
@@ -101,7 +101,7 @@ boolean
 
 ### logistic_condition (optional)
 
-Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.CircuitConditionDefinition

@@ -9,15 +9,15 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.DashboardLimits
 
-Defensive effective limit map. Defaults below are not live values.
-Counts are admission envelopes, not calibrated heap, latency or FPS promises.
-Settings changes preserve spent credits; lower limits never authorize data loss.
+Independent copy of effective limits. These defaults are not current values.
+Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+Settings changes keep spent credits. Lower limits never permit data loss.
 
 Extends: TC.Limits
 
 ### chart_bar_entries (optional)
 
-Optional renderer positive-width bar domain; absent without factorio-charts.
+Optional positive-width bar domain supported by the renderer. This field is absent without factorio-charts.
 
 ```text
 integer
@@ -25,7 +25,7 @@ integer
 
 ### chart_line_series (optional)
 
-Optional renderer-supported line-series count; absent without factorio-charts.
+Optional maximum line-series count supported by the renderer. This field is absent without factorio-charts.
 
 ```text
 integer
@@ -33,7 +33,7 @@ integer
 
 ### dashboard_state_bytes
 
-Retained dashboard model accounting bytes shared by all writers/tabs. Default: 65536.
+Accounting bytes for the retained Dashboard model, shared by all writers and tabs. Default: 65536.
 
 ```text
 integer
@@ -41,7 +41,7 @@ integer
 
 ### dashboard_tabs
 
-Numbered Dashboard tab slots; empty slots need not be configured. Default: 6.
+Number of Dashboard tab slots. Empty slots do not require configuration. Default: 6.
 
 ```text
 integer

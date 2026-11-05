@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.ProgrammableSpeakerCircuitParameters
 
-Accepted input for ProgrammableSpeakerCircuitParameters. Unknown fields refused. These native circuit settings are independent of Speaker API playback. Instrument/note indexes are zero-based and checked on the target.
+Accepted input for ProgrammableSpeakerCircuitParameters. Unknown fields are refused. These native circuit settings are independent of Speaker API playback. Instrument and note indexes are zero-based. The target determines valid indexes.
 
 ### instrument_id
 
-Zero-based native instrument index, validated against this target speaker. Finite integer; domain 0..4294967295.
+Zero-based native instrument index. The target speaker determines valid indexes. Finite integer. Domain: 0..4294967295.
 
 ```text
 integer
@@ -21,7 +21,7 @@ integer
 
 ### note_id
 
-Zero-based note index in the selected target instrument. Finite integer; domain 0..4294967295.
+Zero-based note index in the selected target instrument. Finite integer. Domain: 0..4294967295.
 
 ```text
 integer

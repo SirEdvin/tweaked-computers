@@ -9,11 +9,13 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ModemMessage
 
-Accepted radar datagram delivered through a modem_message registration. Numeric
-channels are distinct from wire colors. A dual-color receiver gets one event
-per registration/receiver, with authorized wires ordered red before green. Data is isolated for
-each delivery. Radio does not expose remote peripherals or sender authority.
-No ACK, automatic reply, retry, retained mailbox or guaranteed reception exists.
+This event delivers an accepted radar datagram through a modem_message registration.
+Numeric channels are distinct from wire colors.
+A dual-color receiver gets one event per registration/receiver.
+Authorized wires are in red-before-green order. Each delivery has isolated data.
+
+Radio does not expose remote peripherals or sender authority.
+There is no ACK, automatic reply, retry, retained mailbox or guaranteed reception.
 
 Extends: TC.BaseEvent
 
@@ -27,7 +29,7 @@ integer
 
 ### distance (optional)
 
-Euclidean distance in tiles on one surface; absent across surfaces.
+Euclidean distance in tiles on one surface. This field is absent across surfaces.
 
 ```text
 number
@@ -35,7 +37,7 @@ number
 
 ### message (optional)
 
-Copied message; absent for explicit top-level nil.
+Copied message. This field is absent for explicit top-level nil.
 
 ```text
 TC.Data

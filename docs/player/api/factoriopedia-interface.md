@@ -15,37 +15,52 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.FactoriopediaInterface
 
-Read-only installed item/fluid catalogue, including hidden, Factoriopedia-hidden,
-parameter and modded prototypes. Native item subtypes share the item namespace;
-equal item/fluid names remain distinct. Research and current surface never filter
-metadata. Alternatives are reported, not followed. No quality/filter/page/cursor,
-bulk-detail/recipe/entity argument exists; explicit extra nil is still wrong arity.
+This API provides a read-only catalog of installed items and fluids.
+The catalog includes hidden, Factoriopedia-hidden, parameter and modded prototypes.
+Native item subtypes share the item namespace.
+Items and fluids with the same name remain distinct.
+Research and current surface never filter metadata.
+The API reports alternatives, but does not follow them.
 
-Custom interface needs no electricity. Each call, including getLimits, rechecks
-exact bound identity/generation, force/surface and selected physical color. New
-placement never retargets an old facade. Console-restored bindings have the same
-live checks; ordinary load runs no query/rebuild/guest startup or credit renewal.
-Methods have no world effects or per-device catalogue state/cache/query session.
-Each result is detached finite Data: mutation cannot change native state or a
-later return. Persisted copies still need their separate state allowance.
+There is no quality, filter, page, cursor, bulk-detail, recipe or entity argument.
+An explicit extra nil is still incorrect arity.
+
+The custom interface needs no electricity.
+Each call, including getLimits, checks the exact bound identity/generation,
+force/surface and selected physical color again.
+New placement never retargets an old facade.
+Console-restored bindings have the same live checks.
+Ordinary load runs no query, rebuild, guest startup or credit renewal.
+
+Methods have no world effects or per-device catalog state, cache or query session.
+Each result is detached finite Data.
+Mutation cannot change native state or a later return.
+Persisted copies still need their separate state allowance.
 
 ### Completeness and failure
 
-Full sorted lists may fail existing table/node/depth/string/result-byte and work/
-allocation budgets even when exact-name lookup fits. No new catalogue quota,
-pagination, successful prefix, truncation or asynchronous index is introduced.
-The native circuit transfer exception does not apply. Native materialization
-costs are not bounded CPU/heap claims; do not busy-retry permanent size failures.
-Wrong types/arity/empty name: E_ARGUMENT. Unknown name: E_RANGE field='name'.
-Over-envelope: E_LIMIT. Unrepresentable/nonfinite metadata: E_UNSUPPORTED.
-Native access failure: E_ENGINE, never invented values. Physical failures retain
-E_UNREACHABLE/E_NETWORK_PENDING/E_LIMIT; retired caller E_NOT_FOUND. Fatal
-E_BUDGET bypasses ordinary error handling; input/authority/work admission may
-precede provider validation. No catalogue method has an electrical E_UNPOWERED.
+Full sorted lists can fail existing table/node/depth/string/result-byte and
+work/allocation budgets even when exact-name lookup fits.
+The API adds no catalog quota, pagination, successful prefix, truncation or asynchronous index.
+The native circuit transfer exception does not apply.
+Native materialization costs do not establish CPU or heap bounds.
+Do not busy-retry permanent size failures.
+
+Incorrect types, incorrect arity or an empty name cause E_ARGUMENT.
+An unknown name causes E_RANGE with field='name'.
+An exceeded envelope causes E_LIMIT.
+Unrepresentable or nonfinite metadata causes E_UNSUPPORTED.
+Native access failure causes E_ENGINE, never invented values.
+
+Physical failures retain E_UNREACHABLE/E_NETWORK_PENDING/E_LIMIT.
+A retired caller causes E_NOT_FOUND.
+Fatal E_BUDGET bypasses ordinary error handling.
+Input, authority and work admission can precede provider validation.
+No catalog method has an electrical E_UNPOWERED.
 
 ### getFluid
 
-Read one exact installed fluid record; unknown names are errors, not nil.
+Read one exact installed fluid record. Unknown names cause errors, not nil.
 
 ```text
 getFluid(name: string) -> fluid: TC.FluidInfo
@@ -63,7 +78,7 @@ One detached baseline fluid record.
 
 ### getItem
 
-Read one exact installed item/subtype record; unknown names are errors, not nil.
+Read one exact installed item/subtype record. Unknown names cause errors, not nil.
 
 ```text
 getItem(name: string) -> item: TC.ItemInfo
@@ -81,7 +96,7 @@ One detached baseline item record.
 
 ### getLimits
 
-Read current common limits; no feature-specific count field is added.
+Read current common limits. The result adds no feature-specific count field.
 
 ```text
 getLimits() -> limits: TC.Limits
@@ -116,7 +131,7 @@ One complete dense name array, possibly empty.
 ### listItems
 
 List every installed item name once, sorted bytewise, including hidden items.
-No details, localization ordering, aliasing, fuzzy lookup or silent truncation.
+The result has no details, localization ordering, aliasing, fuzzy lookup or silent truncation.
 
 ```text
 listItems() -> names: (string)[]
@@ -129,7 +144,7 @@ No parameters.
 ### Returns
 
 names: (string)[]
-One complete dense name array; empty is valid, never nil.
+One complete dense name array. An empty array is valid. The result is never nil.
 
 ## Referenced types
 

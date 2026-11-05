@@ -9,9 +9,10 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.GuestTable
 
-Transient guest-owned plain table or detached snapshot. Helpers reject protected
-namespaces/facades and foreign tables. Transient reference keys, aliases/cycles
-are possible, but ordinary Data and Console retention have stricter rules.
+This type is a transient guest-owned plain table or detached snapshot.
+Helpers reject protected namespaces, protected facades and foreign tables.
+Transient reference keys, aliases and cycles are possible.
+Ordinary Data and Console retention have stricter rules.
 
 ```text
 table<TC.GuestValue, TC.GuestValue>

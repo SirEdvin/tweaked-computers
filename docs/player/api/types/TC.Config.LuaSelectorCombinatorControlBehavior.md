@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.LuaSelectorCombinatorControlBehavior
 
-Root settings for LuaSelectorCombinatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaSelectorCombinatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### parameters (optional)
 
-Complete combinator parameter object, replacing rather than merging its prior fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed. Explicit root patch clear: not supported.
+Complete combinator parameter object. It replaces previous fields; it does not merge them. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed. Explicit root patch clear: not supported.
 
 ```text
 TC.Config.SelectorCombinatorParameters

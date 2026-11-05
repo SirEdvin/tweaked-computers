@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.LuaRailSignalBaseControlBehavior.blue_signal
 
-Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields refused. rail_chain_signal_only: Available only on chain signals; ordinary rail signals cannot read/write it. Explicit root patch clear: accepted with native reset/readback. Unknown fields refused. rail_chain_signal_only: Available only on chain signals; ordinary rail signals cannot read/write it. Explicit root patch clear: accepted with native reset/readback. Explicit type/name required on input; output includes explicit type/name/quality. Default quality normal. Wildcards depend on role, not general SignalID permission.
+Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields are refused. rail_chain_signal_only: Available only on chain signals. Ordinary rail signals cannot read or write this field. Explicit root patch clear: accepted with native reset and readback. Unknown fields are refused. rail_chain_signal_only: Available only on chain signals. Ordinary rail signals cannot read or write this field. Explicit root patch clear: accepted with native reset and readback. Input requires explicit type and name. Output includes explicit type, name, and quality. The default quality is normal. Wildcard permission depends on the role, not general SignalID permission.
 
 ### name
 
-Exact prototype/quality identity named by the enclosing concept; no localization lookup. At most 256 bytes; no NUL. Explicit root patch clear: not supported.
+Exact prototype or quality identity for the enclosing concept. No localization lookup occurs. At most 256 bytes. NUL is not permitted. Explicit root patch clear: not supported.
 
 ```text
 string
@@ -21,7 +21,7 @@ string
 
 ### quality (optional)
 
-Exact installed quality name; normalization defaults normal where this concept permits omission. At most 256 bytes; no NUL. Installed quality name, never a native object. Explicit root patch clear: not supported.
+Exact installed quality name. Normalization uses normal when this concept permits omission. At most 256 bytes. NUL is not permitted. Use an installed quality name, not a native object. Explicit root patch clear: not supported.
 
 ```text
 string
@@ -29,7 +29,7 @@ string
 
 ### type
 
-Signal prototype namespace; SignalID/SignalIDBase require an explicit input type. Explicit root patch clear: not supported.
+Signal prototype namespace. SignalID and SignalIDBase require an explicit input type. Explicit root patch clear: not supported.
 
 ```text
 TC.Config.SignalIDType

@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.LuaCargoLandingPadControlBehavior
 
-Root settings for LuaCargoLandingPadControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaCargoLandingPadControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### circuit_exclusive_mode_of_operation (optional)
 
-Compatibility mode combining native read_contents and set_requests switches; both uses send_contents_and_set_requests. set_requests_requires_space_travel: Request-setting modes require the space-travel feature; otherwise only none/send_contents. Explicit root patch clear: not supported.
+Compatibility mode for native read_contents and set_requests switches. Their combined mode is send_contents_and_set_requests. set_requests_requires_space_travel: Modes that set requests require the space-travel feature. Otherwise, only none and send_contents are available. Explicit root patch clear: not supported.
 
 ```text
 "none"|"send_contents"|"set_requests"|"send_contents_and_set_requests"

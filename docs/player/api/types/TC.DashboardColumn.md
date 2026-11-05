@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.DashboardColumn
 
-Vertical native layout, using host spacing and a bounded scroll area.
+This node defines a vertical native layout with host spacing and a bounded scroll area.
 
 ### children
 

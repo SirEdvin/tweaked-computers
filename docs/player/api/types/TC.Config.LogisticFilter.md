@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.LogisticFilter
 
-Accepted input for LogisticFilter. Unknown fields refused. Default minimum 0; current adapter defaults item import_from to registered nauvis when available. Maximum cannot be below minimum. Nonzero object-filter minimum requires explicit exact quality. Section filters additionally require index and reject duplicate slots/effective identities.
+Accepted input for LogisticFilter. Unknown fields are refused. The minimum defaults to 0. The current adapter uses registered nauvis for item import_from by default when available. The maximum cannot be less than the minimum. A nonzero minimum in an object filter requires explicit exact quality. Section filters also require index. Duplicate slots and effective identities are refused.
 
 ### import_from (optional)
 
-Installed import location; current adapter defaults item imports to registered nauvis when available. At most 256 bytes; no NUL. Installed space_location name, never a native object.
+Installed import location. The current adapter uses registered nauvis for item imports by default when available. At most 256 bytes. NUL is not permitted. Use an installed space_location name, not a native object.
 
 ```text
 string
@@ -21,7 +21,7 @@ string
 
 ### max (optional)
 
-Maximum requested count, not below a supplied minimum. Finite integer; domain 0..4294967295.
+Maximum requested count. This cannot be less than a supplied minimum. Finite integer. Domain: 0..4294967295.
 
 ```text
 TC.Config.ItemCountType
@@ -29,7 +29,7 @@ TC.Config.ItemCountType
 
 ### min (optional)
 
-Minimum requested count; defaults zero. Nonzero filtered counts require exact quality. Finite integer; domain -2147483648..2147483647.
+Minimum requested count. The default is zero. A nonzero filtered count requires exact quality. Finite integer. Domain: -2147483648..2147483647.
 
 ```text
 integer
@@ -37,7 +37,7 @@ integer
 
 ### minimum_delivery_count (optional)
 
-Minimum native delivery quantity for this filter. Finite integer; domain 0..4294967295.
+Minimum native delivery quantity for this filter. Finite integer. Domain: 0..4294967295.
 
 ```text
 TC.Config.ItemCountType
@@ -45,7 +45,7 @@ TC.Config.ItemCountType
 
 ### value (optional)
 
-Signal filter; absent value means an empty slot, not a numeric zero signal.
+Signal filter. An absent value means an empty slot, not a numeric zero signal.
 
 ```text
 TC.Config.SignalFilter

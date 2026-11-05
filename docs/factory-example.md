@@ -2,8 +2,8 @@
 
 This controller combines the original device types using native named callbacks. It requires
 Factorio 2.1.23, base alone or Space Age. Back up your save before installing the
-alpha candidate. Client typing, focus, zoom and multiplayer checks are still yours;
-headless tests use explicit player/GUI doubles, not a real graphical player.
+alpha candidate. You must still do client typing, focus, zoom and multiplayer checks.
+Headless tests use explicit player/GUI doubles, not a real graphical player.
 
 ## Build and wire
 
@@ -15,7 +15,7 @@ Use a separate stock-reading chest to control the threshold. Enable **Read
 contents** in that stock chest's native circuit GUI. Put five iron plates in it.
 
 Wire visible Network bodies and the distinct Logic Input/Output and Configurator
-Targets contacts; do not treat the isolated roles as internally connected:
+Targets contacts. Do not treat the isolated roles as internally connected:
 
     COMPUTER NETWORK --red-- KV NETWORK --red-- MONITOR member NETWORK
                                  |
@@ -33,28 +33,28 @@ There is no internal connection between these roles. Vanilla poles can relay the
 separate TARGETS network, but never computer discovery. A red-to-green chain is
 not a discovery path. NETWORK carries no mod-generated signal protocol.
 
-Keep exactly one reachable device of each peripheral type for the controller;
+Keep exactly one reachable device of each peripheral type for the controller.
 `find` returns all matches in sorted-name order, and assignment selects the first.
-For a larger factory, inspect names and bind deliberately with `wrap(name, wire)`.
+For a larger factory, inspect names. Bind explicitly with `wrap(name, wire)`.
 The shared monitor does not create an unwired bridge between its members.
 
 ## Enter the source
 
 The optional Recipe Searcher is a separate late-game research, with exactly
-Circuit Computers and utility science as direct prerequisites: 200 red/green/utility
+Circuit Computers and utility science as direct prerequisites. Research requires 200 red/green/utility
 pack sets at 60 seconds each. Craft it from 10 steel plates, 5 advanced circuits
-and 2 processing units in 2 seconds, then wire its body to the red
+and 2 processing units in 2 seconds. Then wire its body to the red
 Network. It needs no product inventory or fluid input. Run the separate
 [recipe-searcher-program.lua](../examples/recipe-searcher-program.lua) document
 to inspect item/fluid recipes without replacing any machine configuration.
 
-Open the computer with Ctrl + left-click after clearing the cursor.
+Clear the cursor. Open the computer with Ctrl + left-click.
 Copy the document between the outer long
-brackets in [factory-controller.lua](../examples/factory-controller.lua), not the
-host wrapper `return [[...]]`, into the source text box. Validate, **Save**, then
-**Run**. This saved program is one document: there are no filenames or imports.
+brackets in [factory-controller.lua](../examples/factory-controller.lua) into the source text box.
+Do not copy the host wrapper `return [[...]]`. Select Validate. Select **Save**. Then select
+**Run**. This saved program is one document. There are no filenames or imports.
 The separate live Console can experiment without replacing this controller.
-The source is also shipped in the installed ZIP; it does not execute through
+The installed ZIP also contains the source. It does not execute through
 `require` inside the guest.
 
 The initial handler inspects/configures connected inserters to `signal-A > 0`.
@@ -74,63 +74,63 @@ Telemetry is a string-valued hash `stock:iron` containing `count`, `status` and
 `sample_tick`. Each refresh renews its three-simulation-second whole-key deadline.
 The merged display shows iron count, FILLING/STOPPED and “Touch to toggle”. With
 an empty cursor and no other GUI open, Ctrl+left-click a character cell (rebindable
-in Controls). The monitor event toggles the computer's copied persistent state;
-the next refresh changes output. Borders are not cells. UTF-8 is byte-indexed,
+in Controls). The monitor event toggles the computer's copied persistent state.
+The next refresh changes output. Borders are not cells. UTF-8 is byte-indexed,
 not a Unicode terminal, and drawing never interprets rich text.
 
 ## Shared versus independent databases
 
 Place a second computer and a second physical database. Connect the second
 computer's NETWORK red to the first database NETWORK. Connect its NETWORK green
-only to the second database NETWORK; do not also create a complete green path to
-the first database. Paste, Save and Run
-[shared-telemetry.lua](../examples/shared-telemetry.lua).
+only to the second database NETWORK. Do not also create a complete green path to
+the first database. Paste
+[shared-telemetry.lua](../examples/shared-telemetry.lua). Select Save. Then select Run.
 
-The observer writes its ID into `observer` in the shared red database, writes
-`private` into the independent green database and reads the controller's shared
+The observer writes its ID into `observer` in the shared red database. It writes
+`private` into the independent green database. It reads the controller's shared
 hash every 60 ticks. Its own state/log shows the shared count/status while the
 independent database has no `stock:iron` telemetry. Both databases can be on other
 same-color networks too, but one physical database always has one contents table,
 not separate color copies. No direct computer-message service is involved.
 
-Stop the controller: its still-owned output clears immediately, its recent
-monitor image and already-applied target settings remain, and shared telemetry
-expires after its retained absolute deadline. The observer then reports expired;
-its independent marker remains private. Another successful writer can overwrite
-a shared value; stopping an older writer cannot clear a newer writer's bank.
+Stop the controller. Its still-owned output clears immediately. Its recent
+monitor image and already-applied target settings remain. Shared telemetry
+expires after its retained absolute deadline. The observer then reports expired.
+Its independent marker remains private. Another successful writer can overwrite
+a shared value. Stopping an older writer cannot clear a newer writer's bank.
 
 ## Save, Apply and recovery exercise
 
-Change `count < 100` to `count < 3` in the editor. Save without Apply: the old active
-revision still fills at stock=5. Apply/Run the saved revision: a new run retains
+Change `count < 100` to `count < 3` in the editor. Save without Apply. The old active
+revision still fills at stock=5. Apply/Run the saved revision. A new run keeps
 `enabled` state, cancels old timers/subscriptions and now stops at stock=5. An
 invalid candidate never retires the old run. Close/Escape retains an unsaved draft.
-For conflicts, use Maintenance → Review current saved source and explicitly Rebase or Reload; never silently
+For conflicts, use Maintenance → Review current saved source. Explicitly select Rebase or Reload. Never silently
 replace another player's newer source. Stop before confirming Reset State.
 
 A cold save/load retains active/saved source, enabled state, timer/subscription
 IDs, database deadlines and the monitor model without replaying startup. Applied
-inserter settings remain native settings: a player's later changes are not
+inserter settings remain native settings. A player's later changes are not
 periodically enforced by readback or reconnection. Mining stores committed
-computer source/state and database contents/deadlines in tagged items; replacement
+computer source/state and database contents/deadlines in tagged items. Replacement
 has a new stopped identity. Blueprints/clones include source/settings, not runtime
 state, database content or active output. The editor can review formerly active
 source separately from the saved source and unsaved player draft.
 
 ## Troubleshooting
 
-- Missing peripheral: open Peripherals; inspect automatic red and green observations separately.
+- Missing peripheral: open Peripherals. Inspect automatic red and green observations separately.
   Check actual NETWORK ports, force/surface and physical same-color paths.
 - Target absent: check TARGETS color, actual isolated native connector and relay
   wires. Being visible in computer discovery does not authorize factory targets.
 - No movement: check supply/destination, inserter direction/power, read-contents
   stock chest and native condition readback. Wait for circuit/in-flight settling.
-- E_BUSY/pending: retry on a later named timer; do not spin. E_BUDGET faults the
+- E_BUSY/pending: retry on a later named timer. Do not use a busy loop. E_BUDGET faults the
   run and clears its bank. Divide extra factory work into bounded named callbacks.
 - Unavailable monitor: every member must be physically valid and owned. No electricity
   is required. Buffer contents remain stored.
-- Wire loss: output is fail-safe; this example faults on missing required services,
-  not an automatic reconnect manager. Fix wiring, review diagnostics, then Run.
+- Wire loss: output is fail-safe. This example faults on missing required services.
+  It is not an automatic reconnect manager. Repair the wiring. Review diagnostics. Then select Run.
 
 Full APIs: [computer](computer-runtime.md), [editor](program-editor.md),
 [discovery](peripheral-network.md), [logic](logic-handler.md),

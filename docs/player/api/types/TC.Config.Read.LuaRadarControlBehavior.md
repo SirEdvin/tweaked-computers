@@ -9,4 +9,4 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.LuaRadarControlBehavior
 
-Root settings for LuaRadarControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaRadarControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.

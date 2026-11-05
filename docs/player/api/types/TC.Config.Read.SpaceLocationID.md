@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.SpaceLocationID
 
-Normalized readback for SpaceLocationID. Installed space_location name, never a native object.
+Normalized readback for SpaceLocationID. Use an installed space_location name, not a native object.
 
 ```text
 string

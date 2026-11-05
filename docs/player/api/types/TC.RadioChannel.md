@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.RadioChannel
 
-Finite exact numeric radio channel 0..65535, unrelated to red/green circuit wire.
+A radio channel is a finite exact number in 0..65535, unrelated to the red or green circuit wire.
 Channels are shared routing identifiers, not security credentials.
 
 ```text

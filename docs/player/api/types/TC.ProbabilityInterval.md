@@ -9,8 +9,9 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ProbabilityInterval
 
-Shared probability interval: ordered finite bounds in 0..1. Intervals can
-correlate different products; marginal probability alone loses that correlation.
+A shared probability interval has ordered finite bounds in 0..1.
+Intervals can correlate different products.
+Marginal probability alone loses that correlation.
 
 ### max
 

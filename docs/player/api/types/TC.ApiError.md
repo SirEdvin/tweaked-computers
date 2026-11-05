@@ -9,18 +9,21 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ApiError
 
-A fresh defensive ordinary API error table. pcall returns false,error for
-ordinary failures; first check type(error)==table because guest assertions can
-throw strings. Expected absence is documented per method and is not an error.
-Failed admission never means a successful empty result or permission to delete
-accepted content. E_ENGINE rolls back the current operation where supported;
-failed rollback faults that adapter and retains an explicit recovery record.
+This table is a fresh defensive copy of an ordinary API error.
+For ordinary failures, pcall returns false,error. First check type(error)==table
+because guest assertions can throw strings. Each method documents expected
+absence, which is not an error. Failed admission never means a successful empty
+result or permission to delete accepted content.
 
-Fatal work/allocation/depth/tuple exhaustion and saved-program stop bypass guest
-pcall/xpcall; their private controls are not exposed as ApiError values. Faults
-retain source/state/logs and earlier successful effects, except still-owned
-Logic output is cleared by host cleanup. Candidate validation failure preserves
-the previous active run; a newly activated run's failure does not restore it.
+For E_ENGINE, the adapter rolls back the current operation where supported.
+A failed rollback faults that adapter and retains an explicit recovery record.
+
+Fatal work, allocation, depth or tuple exhaustion and saved-program stop bypass
+guest pcall/xpcall. The API does not expose their private controls as ApiError values.
+Faults retain source, state, logs and earlier successful effects, except
+still-owned Logic output. Host cleanup clears that output.
+Candidate validation failure preserves the previous active run.
+A failure in a newly activated run does not restore the previous run.
 
 ### code
 
@@ -48,7 +51,7 @@ string
 
 ### message
 
-Human-readable explanation; wording is not stable.
+Human-readable explanation. The wording is not stable.
 
 ```text
 string

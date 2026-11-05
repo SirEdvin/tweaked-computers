@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Values
 
-Root setting replacements; select the actual behavior via live capabilities.
+Root setting replacements. Select the actual behavior through live capabilities.
 
 ```text
 TC.Config.LuaAccumulatorControlBehavior|TC.Config.LuaAgriculturalTowerControlBehavior|TC.Config.LuaArithmeticCombinatorControlBehavior|TC.Config.LuaArtilleryTurretControlBehavior|TC.Config.LuaAssemblingMachineControlBehavior|TC.Config.LuaAsteroidCollectorControlBehavior|TC.Config.LuaCargoLandingPadControlBehavior|TC.Config.LuaCombinatorControlBehavior|TC.Config.LuaConstantCombinatorControlBehavior|TC.Config.LuaContainerControlBehavior|TC.Config.LuaControlBehavior|TC.Config.LuaDeciderCombinatorControlBehavior|TC.Config.LuaDisplayPanelControlBehavior|TC.Config.LuaFurnaceControlBehavior|TC.Config.LuaGenericOnOffControlBehavior|TC.Config.LuaInserterControlBehavior|TC.Config.LuaLampControlBehavior|TC.Config.LuaLoaderControlBehavior|TC.Config.LuaLogisticContainerControlBehavior|TC.Config.LuaMiningDrillControlBehavior|TC.Config.LuaProgrammableSpeakerControlBehavior|TC.Config.LuaProxyContainerControlBehavior|TC.Config.LuaPumpControlBehavior|TC.Config.LuaRadarControlBehavior|TC.Config.LuaRailSignalBaseControlBehavior|TC.Config.LuaReactorControlBehavior|TC.Config.LuaRoboportControlBehavior|TC.Config.LuaRocketSiloControlBehavior|TC.Config.LuaSelectorCombinatorControlBehavior|TC.Config.LuaSpacePlatformHubControlBehavior|TC.Config.LuaSplitterControlBehavior|TC.Config.LuaStorageTankControlBehavior|TC.Config.LuaTrainStopControlBehavior|TC.Config.LuaTransportBeltControlBehavior|TC.Config.LuaTurretControlBehavior|TC.Config.LuaWallControlBehavior

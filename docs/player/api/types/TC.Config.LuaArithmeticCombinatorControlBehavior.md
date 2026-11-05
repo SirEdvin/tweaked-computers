@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.LuaArithmeticCombinatorControlBehavior
 
-Root settings for LuaArithmeticCombinatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaArithmeticCombinatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### parameters (optional)
 
-Complete combinator parameter object, replacing rather than merging its prior fields. Unknown fields refused. Explicit root patch clear: accepted with native reset/readback.
+Complete combinator parameter object. It replaces previous fields; it does not merge them. Unknown fields are refused. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.ArithmeticCombinatorParameters

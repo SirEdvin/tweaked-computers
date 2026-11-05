@@ -9,9 +9,10 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Numeric
 
-Number or numeric string accepted by guarded numeric helpers only. Strings
-must convert to numbers; finite operands/results are required where stated.
-This helper compatibility does not add coercion to computer/peripheral APIs.
+Only guarded numeric helpers accept this number or numeric string type.
+Strings must convert to numbers.
+Operands and results must be finite where stated.
+This helper compatibility does not add coercion to computer or peripheral APIs.
 
 ```text
 number|string

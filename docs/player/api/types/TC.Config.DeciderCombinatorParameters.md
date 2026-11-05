@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.DeciderCombinatorParameters
 
-Accepted input for DeciderCombinatorParameters. Unknown fields refused. Complete required conditions/outputs arrays replace previous parameters. Each output requires an each first condition.
+Accepted input for DeciderCombinatorParameters. Unknown fields are refused. Complete required conditions and outputs arrays replace previous parameters. Each output requires an each first condition.
 
 ### conditions
 

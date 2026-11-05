@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.SignalFilter
 
-Accepted input for SignalFilter.  Input accepts a signal name string or object. String names select virtual when registered there, otherwise item. Object type defaults item. Readback always has name/type/quality/comparator, defaults normal and =. Wildcards are refused.
+Accepted input for SignalFilter.  Input accepts a signal name string or object. A string name selects virtual when registered there; otherwise, it selects item. The object type defaults to item. Readback always has name, type, quality, and comparator. Quality defaults to normal. The comparator defaults to =. Wildcards are refused.
 
 ```text
 TC.Config.SignalFilter.Variant1|string

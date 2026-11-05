@@ -9,9 +9,9 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.MonitorLimits
 
-Defensive effective limit map. Defaults below are not live values.
-Counts are admission envelopes, not calibrated heap, latency or FPS promises.
-Settings changes preserve spent credits; lower limits never authorize data loss.
+Independent copy of effective limits. These defaults are not current values.
+Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+Settings changes keep spent credits. Lower limits never permit data loss.
 
 ### aggregate_cells
 
@@ -39,7 +39,7 @@ integer
 
 ### peripheral_call_bytes
 
-Ordinary peripheral call transport/accounting byte envelope. Default: 65536.
+Byte allowance for ordinary peripheral call transport and accounting. Default: 65536.
 
 ```text
 integer
@@ -47,7 +47,7 @@ integer
 
 ### peripheral_call_entries
 
-Ordinary peripheral call transport entry envelope. Default: 4096.
+Entry allowance for ordinary peripheral call transport. Default: 4096.
 
 ```text
 integer
@@ -55,7 +55,7 @@ integer
 
 ### render_cells_per_tick
 
-Bounded presentation preparation cell allowance. Default: 1024.
+Cell allowance for presentation preparation. Default: 1024.
 
 ```text
 integer
@@ -63,7 +63,7 @@ integer
 
 ### render_commit_objects
 
-Rendering-object envelope for an admitted commit. Default: 42352.
+Rendering-object allowance for an admitted commit. Default: 42352.
 
 ```text
 integer
@@ -71,7 +71,7 @@ integer
 
 ### render_commit_work
 
-Maximum indivisible render commit work; raising maintenance does not widen it. Default: 160000.
+Maximum indivisible render commit work. An increase to maintenance does not increase this limit. Default: 160000.
 
 ```text
 integer
@@ -79,7 +79,7 @@ integer
 
 ### render_latency_ticks
 
-Presentation envelope in ticks; not a measured client FPS guarantee. Default: 256.
+Published tick bound for presentation. This is not a measured client FPS guarantee. Default: 256.
 
 ```text
 integer
@@ -87,7 +87,7 @@ integer
 
 ### render_object_limit
 
-Derived native rendering-object envelope. Default: 203872.
+Calculated native rendering-object allowance. Default: 203872.
 
 ```text
 integer
@@ -95,7 +95,7 @@ integer
 
 ### render_retained_cells
 
-Derived total retained presentation-cell envelope. Default: 362336.
+Calculated allowance for all retained presentation cells. Default: 362336.
 
 ```text
 integer
@@ -103,7 +103,7 @@ integer
 
 ### render_retired_cells
 
-Cells awaiting host presentation retirement. Default: 10584.
+Maximum cells awaiting removal from host presentation. Default: 10584.
 
 ```text
 integer
@@ -111,7 +111,7 @@ integer
 
 ### render_retired_frames
 
-Presentation frames awaiting retirement. Default: 256.
+Maximum presentation frames awaiting removal. Default: 256.
 
 ```text
 integer
@@ -119,7 +119,7 @@ integer
 
 ### render_snapshot_cells
 
-Cells retained by immutable presentation snapshots. Default: 80000.
+Maximum cells retained by immutable presentation snapshots. Default: 80000.
 
 ```text
 integer
@@ -127,7 +127,7 @@ integer
 
 ### render_staging_cells
 
-Cells reserved for staged presentation. Default: 10584.
+Maximum cells reserved for staged presentation. Default: 10584.
 
 ```text
 integer
@@ -135,7 +135,7 @@ integer
 
 ### render_staging_frames
 
-Staged presentation frame count. Default: 256.
+Maximum staged presentation frames. Default: 256.
 
 ```text
 integer
@@ -143,7 +143,7 @@ integer
 
 ### sync_group_cells
 
-Aggregate terminal cells in one synchronization selection. Default: 10584.
+Total terminal cells in one synchronization selection. Default: 10584.
 
 ```text
 integer
@@ -159,7 +159,7 @@ integer
 
 ### sync_group_refs
 
-Maximum supplied physical monitor selection references. Default: 8.
+Maximum number of supplied physical monitor selection references. Default: 8.
 
 ```text
 integer
@@ -167,7 +167,7 @@ integer
 
 ### sync_groups_per_run
 
-Monitor synchronization selections per execution owner. Default: 1.
+Maximum monitor synchronization selections per execution owner. Default: 1.
 
 ```text
 integer
@@ -191,7 +191,7 @@ integer
 
 ### write_bytes
 
-Maximum text bytes supplied to one monitor write/blit operation. Default: 16384.
+Maximum text bytes for one monitor write or blit operation. Default: 16384.
 
 ```text
 integer

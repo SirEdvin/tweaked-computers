@@ -1,40 +1,39 @@
 # Tweaked Computers — ALPHA
 
-Native circuit computers for Factorio 2.1, with base alone or optional Space Age.
-The integrated alpha implements native guarded callbacks, a five-tab single-document editor,
-same-color peripheral discovery, merging world monitors, string/hash KV storage,
-logic I/O, typed factory configuration and data-bearing device lifecycle.
+This mod supplies native circuit computers for Factorio 2.1, with base alone or optional Space Age.
+The integrated alpha has native guarded callbacks, a five-tab single-document editor,
+same-color peripheral discovery and merging world monitors.
+It also has string/hash KV storage, logic I/O, typed factory configuration and a data-bearing device lifecycle.
 Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
-save-backed scratch bindings, independent of the saved program. No interpreter,
-OS, gameplay filesystem or dynamic guest loader is shipped; there is no command history.
+save-backed scratch bindings, independent of the saved program. The mod has no interpreter,
+OS, gameplay filesystem or dynamic guest loader. There is no command history.
 
-Version **0.1.20 ALPHA** ships a separate [public Lua declaration library](api/README.md)
+Version **0.1.20 ALPHA** includes a separate [public Lua declaration library](api/README.md)
 as the authoritative API reference. The website and searchable in-game Reference
 are generated from the same complete types, overloads, errors and examples.
-Guest behavior, save formats and budgets are unchanged from 0.1.19. Verified on
-Factorio **2.1.23**, base and Space Age; other 2.1 patches are accepted, not individually
-verified. See [0.1.20 release notes](docs/release-0.1.20.md).
+Guest behavior, save formats and budgets are unchanged from 0.1.19. Verification used
+Factorio **2.1.23**, base and Space Age. The mod accepts other 2.1 patches, but verification does not cover each patch. See [0.1.20 release notes](docs/release-0.1.20.md).
 
 Version **0.1.19 ALPHA** introduced function-declaration-only saved programs and
 demand-driven scheduling. All nine custom device families now work without
-electricity; native radars and speakers still need their normal supply.
-**Breaking:** legacy table-form saved source must be rewritten manually; no
-automatic conversion is provided. Source and accepted data remain recoverable.
-Benchmarks are incomplete and performance/scaling is unverified; the user waived
+electricity. Native radars and speakers still need their normal supply.
+**Breaking:** Rewrite legacy table-form saved source manually. There is no
+automatic conversion. Source and accepted data remain recoverable.
+Benchmarks are incomplete. Performance and scaling are unverified. The user waived
 benchmark completion for 0.1.19, not correctness or safety checks. That performance
 limitation remains in 0.1.20.
-It retains 0.1.18's acceptance of all Factorio 2.1 patches; verification remains
+It keeps 0.1.18's acceptance of all Factorio 2.1 patches. Verification remains
 on 2.1.23, not every patch. See [0.1.19 release notes](docs/release-0.1.19.md).
 
 Version **0.1.17 ALPHA** adds Dashboards (optional `factorio-charts`), native-only
 Factoriopedia/Production Statistics, elapsed Console time and demand-driven monitor
-maintenance. **Breaking:** computer items are plain hardware; ordinary pickup and
-replacement loses their contents, and legacy item payloads are not imported.
-Placed records/active programs/private drafts are not reset. Back up the complete
-save and matching mod set first; restore both for rollback, never downgrade in place.
+maintenance. **Breaking:** Computer items are plain hardware. Ordinary pickup and
+replacement loses their contents. The mod does not import legacy item payloads.
+Placed records, active programs and private drafts are not reset. Back up the complete
+save and matching mod set first. For rollback, restore both. Never downgrade in place.
 See [0.1.17 release notes](docs/release-0.1.17.md) for all six changes and exact
 verification scope. Controlled 2.1.23 base/Space Age client and connected-peer
-acceptance is available; software rendering is not a representative GPU benchmark.
+acceptance is available. Software rendering is not a representative GPU benchmark.
 Keep 0.1.14 if you remain on Factorio 2.0.77.
 
 Version 0.1.14 exposes complete fresh native circuit signals and native
@@ -56,15 +55,15 @@ All five feature specifications are finalized and archived on main.
 
 Version 0.1.10 added [plain function programs](docs/player/api/language.md),
 the [live maintenance setting](docs/player/api/limits.md#maintenance-and-shared-headroom),
-independent fault diagnostics and the selected [Service Rack six-device artwork](docs/player/artwork.md),
-including both research icons. The maintenance default stays **200000**;
-the benchmark's provisional 300000 recommendation is not adopted.
+and independent fault diagnostics. It also added the selected [Service Rack six-device artwork](docs/player/artwork.md),
+including both research icons. The maintenance default stays **200000**.
+The mod does not adopt the benchmark's provisional 300000 recommendation.
 See [historical 0.1.10 release notes](docs/release-0.1.10.md).
 
 Version 0.1.9 added the separately researched
-[Recipe Searcher](docs/player/api/recipe-searcher.md): a now electricity-free 1×1 read-only
-item/fluid recipe catalogue peripheral, with complete sorted metadata and an
-explicit 50-result ceiling after category filtering. It also adds recipe circuit
+[Recipe Searcher](docs/player/api/recipe-searcher.md). This 1×1 read-only peripheral supplies an
+item/fluid recipe catalogue. It now operates without electricity. It has complete sorted metadata and an
+explicit 50-result ceiling after category filtering. Version 0.1.9 also adds recipe circuit
 signals, monitor stacks of 50, readable Console tabs and native Ctrl-click
 preservation. Logic calls now require explicit red or green, not the old both
 selector. See [0.1.9 release notes](docs/release-0.1.9.md) and the original
@@ -75,20 +74,20 @@ selector. See [0.1.9 release notes](docs/release-0.1.9.md) and the original
 - [Public source](https://github.com/SirEdvin/tweaked-computers) and [issues](https://github.com/SirEdvin/tweaked-computers/issues).
 - [Documentation build and deployment](docs/documentation-maintenance.md).
 
-This is a user-test alpha, not stable or universally client-verified. Back up saves.
+This alpha is for user tests. It is not stable, and client verification does not cover every environment. Back up saves.
 Service Rack artwork and live monitor charts have isolated base/Space Age graphical
 checks with software rendering. Console input/workflows have native-client checks
 in both modes and actual base two-client late-join/cold-server acceptance.
 Recipe Searcher appearance and Ctrl-click transfers/modifier reuse/monitor touch
-have native checks in both modes; recipe queries also have actual base two-client
+have native checks in both modes. Recipe queries also have actual base two-client
 late-join/cold-server checks. The five-feature campaign adds native inspector/Reference,
 radar and independently recorded speaker audio checks, plus actual two-client fresh/cold
 cases in base and Space Age. These finite receipts do not certify every platform,
 wire topology, third-party mod or simultaneous maximum-world workload. Full-world
-performance limits are provisional; software rendering is not a GPU benchmark.
+performance limits are provisional. Software rendering is not a GPU benchmark.
 Install from the [Factorio Mod Portal](https://mods.factorio.com/mod/tweaked-computers)
 and follow the guide above. Report problems with engine/mod versions, wiring,
-source and diagnostics; remove private literals before sharing.
+source and diagnostics. Remove private literals before you share a report.
 
 The source includes a separate [developer OpenWiki](openwiki/quickstart.md).
 See the [0.1.5 monitor buffering evidence](docs/monitor-buffer-verification.md),
@@ -100,31 +99,30 @@ fivefold default allowances and [dirty-cell animation](docs/player/monitor-anima
 Version 0.1.7 adopts the selected Foundry artwork, connected-subpixel chart and
 independent background/glyph reuse without raising budgets or changing the API.
 The [monitor performance investigation](docs/monitor-performance.md) records the
-earlier workload separately; 0.1.19's matched benchmark campaign is incomplete.
-Version 0.1.8 retains those monitor/live-budget features and adds bounded Console
-commands with live effects, shared save-backed values and confirmed reset, but no
+earlier workload separately. The matched benchmark campaign for 0.1.19 is incomplete.
+Version 0.1.8 keeps those monitor/live-budget features. It adds bounded Console
+commands with live effects, shared save-backed values and confirmed reset. There are no
 retained user functions or command history. See the [release notes](docs/console-shell-release.md).
-The release source is [alpha-0.1.20](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.20);
+The release source is [alpha-0.1.20](https://github.com/SirEdvin/tweaked-computers/tree/alpha-0.1.20).
 [0.1.1 release notes](docs/alpha-release.md) remain historical.
 
 ## Development
 
-Validation runs locally, not in GitHub CI. Follow the [local checks](docs/documentation-maintenance.md#required-local-validation);
-documentation publishing and optional OpenWiki updates remain automated.
+Validation runs locally, not in GitHub CI. Follow the [local checks](docs/documentation-maintenance.md#required-local-validation).
+Documentation publishing and optional OpenWiki updates remain automated.
 
-Use the [granular scheduling benchmarks](docs/scheduling-benchmarks.md) before
-changing device scheduling: isolated idle/active cases, separate timing/profile/
-structural lanes, and a portable Markdown report with exact-archive evidence.
+Before you change device scheduling, use the [granular scheduling benchmarks](docs/scheduling-benchmarks.md).
+These include isolated idle and active cases, separate timing, profile and structural lanes, and a portable Markdown report with exact-archive evidence.
 
 The finalized radar integration provides [locally wired native radar modems](docs/player/api/modem.md)
 and an optional Space Age interplanetary tier. Native hidden radio links do not
-grant discovery authority; the seven-method API has bounded channel datagrams.
-This ships in 0.1.11, without changing immutable 0.1.10.
+grant discovery authority. The seven-method API has bounded channel datagrams.
+Version 0.1.11 includes this integration. The immutable 0.1.10 release stays unchanged.
 The finalized speaker integration exposes the unmodified vanilla
 programmable speaker as a [physically wired speaker peripheral](docs/player/api/speaker.md).
 Its six methods provide installed catalogues and bounded, synchronous positional
-notes/effects. It adds no replacement entity, playback queue or completion event;
-native circuits, settings, mining results and GUI remain vanilla.
+notes/effects. It adds no replacement entity, playback queue or completion event.
+Native circuits, settings, mining results and GUI remain vanilla.
 
 Build an installable archive outside the checkout:
 
@@ -137,23 +135,23 @@ Use a fresh output directory for the packaged official-engine integration smoke:
       --output /absolute/path/to/new-smoke-directory \
       --fixture tests.integration_engine --production-context --cold
 
-The harness exercises base and Space Age; cold phases use isolated localhost-only
-servers and acknowledged console shutdown. It never launches a graphical client.
-Behavioral requirements live in `openspec/specs/`; the authoritative public API
+The harness exercises base and Space Age. Cold phases use isolated localhost-only
+servers and acknowledged console shutdown. It never starts a graphical client.
+Behavioral requirements are in `openspec/specs/`. The authoritative public API
 is the separate [Lua declaration library](api/README.md). Both the website and
 offline in-game Reference are generated from that library.
 All eleven completed changes retain their planning history under
 `openspec/changes/archive/2026-10-{19,20,21}-*/`. All five new feature contracts and
-their complete typed API definitions are canonical and packaged without active-change dependencies.
+their complete typed API definitions are canonical. The package does not depend on active changes.
 The [monitor declaration](api/monitor.d.lua) documents automatic snapshots, every
 1..6-by-1..6 rectangle and optional selected-group publication.
 [Consolidated acceptance](docs/sc4-final-acceptance.md) binds automated native,
 connected-peer and packaged-engine receipts to verified production bytes.
-This remains alpha: finite llvmpipe observations are not hardware FPS, universal
-real-time guarantees or user manual/aesthetic approval.
+This remains alpha. Finite llvmpipe observations do not establish hardware FPS, universal
+real-time guarantees or user approval of the manual or appearance.
 
 Project source is [MIT licensed](LICENSE). Pinned Phobos parser source retains
 [its license](vendor/phobos/LICENSE.txt), [notice](vendor/phobos/NOTICE.md) and
-manifest. Selected Greg Flavored MIT artwork retains its notices; the glyph atlas
+manifest. Selected Greg Flavored MIT artwork keeps its notices. The glyph atlas
 is independently authored, not an imported CC:Tweaked font. See assets/README.md
 and assets/manifest.json for provenance and reproducible transforms.

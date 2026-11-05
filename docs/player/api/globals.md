@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### _VERSION
 
-Fixed guest language-family label, not unrestricted Lua 5.2 compatibility.
+This fixed label identifies the guest language family, not unrestricted Lua 5.2 compatibility.
 
 ```text
 string
@@ -23,9 +23,10 @@ _VERSION = "Lua 5.2"
 
 ### assert
 
-On truthy value return value followed by the exact supplied trailing tuple,
-including nil holes. On false/nil raise the first trailing value or the native
-assertion message. This is ordinary failure, not a transaction rollback.
+For a truthy value, this helper returns value followed by the exact supplied
+trailing tuple, including nil holes. For false or nil, it raises the first
+trailing value or the native assertion message.
+This is ordinary failure, not a transaction rollback.
 
 ```text
 assert(value: TC.GuestValue, ...: TC.GuestValue) -> value: TC.GuestValue, ...: TC.GuestValue
@@ -34,10 +35,10 @@ assert(value: TC.GuestValue, ...: TC.GuestValue) -> value: TC.GuestValue, ...: T
 ### Parameters
 
 value: TC.GuestValue
-Predicate; only false and nil fail.
+Predicate. Only false and nil fail.
 
 ... (zero or more positions): TC.GuestValue
-Trailing results; first is used as failure message when truthy.
+Trailing results. The helper uses the first value as the failure message when that value is truthy.
 
 ### Returns
 
@@ -51,9 +52,10 @@ Identical trailing positions, possibly zero.
 
 ### error
 
-Does not return normally. Raise an ordinary guest error, including explicit
-nil or a guest value; no source-level argument is exposed. Protected calls may
-catch it. Prior state/output/peripheral effects remain committed.
+This helper does not return normally. It raises an ordinary guest error,
+including explicit nil or a guest value. It exposes no source-level argument.
+Protected calls can catch the error.
+Earlier state, output and peripheral effects remain committed.
 
 ```text
 error(value?: TC.GuestValue)
@@ -62,7 +64,7 @@ error(value?: TC.GuestValue)
 ### Parameters
 
 value (optional): TC.GuestValue
-Error value; omission behaves as nil.
+Error value. Omission has the same effect as nil.
 
 ### Returns
 
@@ -72,9 +74,11 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### ipairs
 
-Return exactly iterator,table,0. Advance integer indexes from one until the
-first absent slot; false is present. Iterator returns index,value while present
-and exactly one nil at termination. Native Logic arrays retain their domain.
+Return exactly iterator,table,0.
+The iterator advances integer indexes from one until the first absent slot.
+False is present. The iterator returns index,value for a present slot.
+At termination, it returns exactly one nil.
+Native Logic arrays retain their domain.
 
 ```text
 ipairs(t: TC.GuestTable) -> iterator: TC.Iterator, state: TC.GuestTable, initial: integer
@@ -94,15 +98,16 @@ state: TC.GuestTable
 Identical table.
 
 initial: integer
-Always zero; explicit third result.
+Always zero. This is an explicit third result.
 
 <a id="symbol-next"></a>
 
 ### next
 
-Advance native guest-table iteration. No ordering guarantee. First call uses
-omission/nil key. A present entry returns key,value; completion returns exactly
-one nil. Invalid previous key and protected/foreign table access fail normally.
+Advance native guest-table iteration. The helper does not guarantee order.
+The first call uses an omitted or nil key.
+A present entry returns key,value. Completion returns exactly one nil.
+An invalid previous key or access to a protected or foreign table causes ordinary failure.
 
 ```text
 next(t: TC.GuestTable, key?: TC.GuestValue) -> key: TC.GuestValue, value: TC.GuestValue
@@ -114,7 +119,7 @@ t: TC.GuestTable
 Guest-owned table/snapshot to iterate.
 
 key (optional): TC.GuestValue
-Previously returned key; omission/nil starts iteration.
+Previously returned key. Omission or nil starts iteration.
 
 ### Returns
 
@@ -136,7 +141,7 @@ t: TC.GuestTable
 Guest-owned table/snapshot to iterate.
 
 key (optional): TC.GuestValue
-Previously returned key; omission/nil starts iteration.
+Previously returned key. Omission or nil starts iteration.
 
 ### Returns
 
@@ -147,8 +152,9 @@ Iteration completion returns exactly one nil (absent), with no value position.
 
 ### pairs
 
-Return exactly iterator,table,nil for generic iteration. Values retain identity;
-this grants no access to protected/private host tables and promises no sorting.
+Return exactly iterator,table,nil for generic iteration.
+Values retain identity. This helper grants no access to protected or private host tables.
+It does not guarantee sorting.
 
 ```text
 pairs(t: TC.GuestTable) -> iterator: TC.Iterator, state: TC.GuestTable, initial: nil
@@ -168,19 +174,22 @@ state: TC.GuestTable
 Identical table.
 
 initial: nil
-Explicit initial control value; this position is present.
+Explicit initial control value. This position is present.
 
 <a id="symbol-pcall"></a>
 
 ### pcall
 
-Call an approved function with exactly the trailing tuple. Success returns
-true followed by every original result; ordinary failure returns false and
-exactly one safe error. Guest-owned table errors preserve identity; unowned
-error records are defensively copied. Unlike xpcall, throwing a protected API
-handle makes pcall's own error-snapshot step refuse with E_ARGUMENT rather than
-returning that handle. Status counts toward tuple width. Fatal
-budget/stop control always escapes and never becomes a guest error value.
+Call an approved function with exactly the trailing tuple.
+Success returns true followed by every original result.
+Ordinary failure returns false and exactly one safe error.
+Guest-owned table errors preserve identity.
+The helper makes defensive copies of unowned error records.
+
+Unlike xpcall, pcall cannot return a protected API handle as an error.
+If the function throws such a handle, pcall's own error-snapshot step refuses with E_ARGUMENT.
+Status counts toward tuple width.
+Fatal budget/stop control always escapes and never becomes a guest error value.
 
 ```text
 pcall(fn: TC.Callable, ...: TC.GuestValue) -> ok: boolean, ...: TC.GuestValue
@@ -197,7 +206,7 @@ Exact forwarded arguments, preserving nil and aliases.
 ### Returns
 
 ok: boolean
-True on normal completion; false on ordinary failure.
+True on normal completion. False on ordinary failure.
 
 ... (zero or more positions): TC.GuestValue
 Success results (possibly zero) or exactly one safe failure value.
@@ -206,12 +215,14 @@ Success results (possibly zero) or exactly one safe failure value.
 
 ### print
 
-Append one Console entry using safe tostring joined with tabs, without an
-added newline. Zero arguments append an empty entry. Returns no values.
-Complete formatting/admission occurs before append/eviction; oversized output
-is E_LIMIT with no partial entry. Earlier output survives later failures.
-Saved output uses computer.log; Console retains shell attribution. Native
-display shows tabs as spaces without changing raw retained/copyable bytes.
+Append one Console entry with safe tostring values joined by tabs, without an added newline.
+Zero arguments append an empty entry. This helper returns no values.
+Complete formatting and admission occur before append or eviction.
+Oversized output causes E_LIMIT with no partial entry.
+Earlier output survives later failures.
+
+Saved output uses computer.log. Console retains shell attribution.
+The native display shows tabs as spaces without changing raw retained/copyable bytes.
 
 ```text
 print(...: TC.GuestValue)
@@ -220,7 +231,7 @@ print(...: TC.GuestValue)
 ### Parameters
 
 ... (zero or more positions): TC.GuestValue
-Ordered values to format; nil and false are retained.
+Ordered values to format. Nil and false remain in the output.
 
 ### Returns
 
@@ -230,9 +241,9 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### rawequal
 
-Require both positions, including explicit nil. Compare approved guest values
-with raw identity/equality; no copies or metamethods. Authentic facades and
-functions can be compared without exposing their protected fields.
+This helper requires both positions, including explicit nil.
+It compares approved guest values with raw identity/equality, without copies or metamethods.
+It can compare authentic facades and functions without exposing their protected fields.
 
 ```text
 rawequal(a: TC.GuestValue, b: TC.GuestValue) -> equal: boolean
@@ -255,9 +266,10 @@ Whether native raw equality holds.
 
 ### rawget
 
-Raw lookup in a guest-owned table. Require both arguments; explicit nil or NaN
-key returns one nil. Return the identical stored value, without copying or
-metamethods. Protected namespaces/facades and foreign tables are refused.
+This helper does a raw lookup in a guest-owned table.
+Both arguments are required. An explicit nil or NaN key returns one nil.
+The helper returns the identical stored value without copying or metamethods.
+It refuses protected namespaces, protected facades and foreign tables.
 
 ```text
 rawget(t: TC.GuestTable, key: TC.GuestValue) -> value: TC.GuestValue
@@ -269,19 +281,20 @@ t: TC.GuestTable
 Guest-owned plain table, not a protected API handle.
 
 key: TC.GuestValue
-Required key position; explicit nil/NaN means absent.
+Required key position. Explicit nil or NaN means absent.
 
 ### Returns
 
 value: TC.GuestValue
-Exactly one stored value or nil; aliases are retained.
+Exactly one stored value or nil. Aliases remain unchanged.
 
 <a id="symbol-rawlen"></a>
 
 ### rawlen
 
-Require one argument. Byte length for strings; native border for guest tables,
-not map cardinality. Protected API tables and foreign values are refused.
+This helper requires one argument.
+It returns byte length for strings or the native border for guest tables,
+not map cardinality. It refuses protected API tables and foreign values.
 
 ```text
 rawlen(value: string|TC.GuestTable) -> length: integer
@@ -301,10 +314,13 @@ Nonnegative byte length or native sequence border.
 
 ### rawset
 
-Raw guest-table assignment with ordinary indexed-write ownership, key, value,
-growth, work and allocation checks before mutation. Require all three positions;
-nil value deletes. Nil/NaN keys are invalid. Replacement/deletion at full width
-is allowed when admitted. Refused writes leave every alias unchanged.
+This helper does a raw guest-table assignment.
+Before mutation, it applies ordinary indexed-write ownership, key, value, growth,
+work and allocation checks. All three positions are required.
+A nil value deletes the key. Nil and NaN keys are invalid.
+
+The helper permits replacement or deletion at full width when admission succeeds.
+Refused writes leave every alias unchanged.
 
 ```text
 rawset(t: TC.GuestTable, key: TC.GuestValue, value: TC.GuestValue) -> table: TC.GuestTable
@@ -319,7 +335,7 @@ key: TC.GuestValue
 Valid nonnil, non-NaN guest key, including transient references.
 
 value: TC.GuestValue
-Required value position; nil deletes the key.
+Required value position. Nil deletes the key.
 
 ### Returns
 
@@ -330,10 +346,11 @@ Identical input table, not a defensive copy.
 
 ### select
 
-Return the trailing tuple width for '#', or its suffix at a nonzero integer
-index. Positive beyond-end index yields zero values; negative indexes count
-from the end. Index/tuple bounds are enforced; zero and too-negative indexes
-fail. Nil positions are never collapsed.
+Return the trailing tuple width for '#', or its suffix at a nonzero integer index.
+A positive index beyond the end returns zero values.
+Negative indexes count from the end. Index and tuple bounds apply.
+Zero and too-negative indexes cause failure.
+The helper never collapses nil positions.
 
 ```text
 select(index: integer|'#', ...: TC.GuestValue) -> ...: TC.GuestValue
@@ -342,7 +359,7 @@ select(index: integer|'#', ...: TC.GuestValue) -> ...: TC.GuestValue
 ### Parameters
 
 index: integer|'#'
-Required selector; integer within the tuple domain.
+Required selector. An integer must be within the tuple domain.
 
 ... (zero or more positions): TC.GuestValue
 Ordered input tuple, possibly empty.
@@ -356,12 +373,12 @@ Suffix positions or one integer width for '#'.
 select(index: '#', ...: TC.GuestValue) -> count: integer
 ```
 
-index '#' selects count: the exact number of trailing positions, including nil; returns one integer.
+The index '#' selects count, the exact number of trailing positions, including nil. This overload returns one integer.
 
 ### Parameters
 
 index: '#'
-index '#' selects count: the exact number of trailing positions, including nil; returns one integer.
+The index '#' selects count, the exact number of trailing positions, including nil. This overload returns one integer.
 
 ... (zero or more positions): TC.GuestValue
 Ordered input tuple, possibly empty.
@@ -369,16 +386,18 @@ Ordered input tuple, possibly empty.
 ### Returns
 
 count: integer
-index '#' selects count: the exact number of trailing positions, including nil; returns one integer.
+The index '#' selects count, the exact number of trailing positions, including nil. This overload returns one integer.
 
 <a id="symbol-tonumber"></a>
 
 ### tonumber
 
-Convert a number or bounded numeric string, returning exactly one nil for an
-ordinary invalid value. With explicit base, require a string and integer base
-2..36; invalid base/type is a catchable argument failure. Omitted/nil base uses
-ordinary numeric conversion. Conversion does not widen API numeric domains.
+Convert a number or bounded numeric string.
+An ordinary invalid value returns exactly one nil.
+An explicit base requires a string and an integer base in 2..36.
+An invalid base or type causes a catchable argument failure.
+An omitted or nil base uses ordinary numeric conversion.
+Conversion does not widen API numeric domains.
 
 ```text
 tonumber(value?: TC.GuestValue, base?: integer) -> number: number|nil
@@ -387,10 +406,10 @@ tonumber(value?: TC.GuestValue, base?: integer) -> number: number|nil
 ### Parameters
 
 value (optional): TC.GuestValue
-Number/string to convert; other ordinary values yield nil.
+Number/string to convert. Other ordinary values return nil.
 
 base (optional): integer
-Optional integer radix 2..36; nil uses normal conversion.
+Optional integer radix 2..36. Nil uses normal conversion.
 
 ### Returns
 
@@ -401,9 +420,11 @@ Converted number, or exactly one nil on invalid text/value.
 
 ### tostring
 
-Stable safe formatting: tables become table, protected handles API handle,
-guest functions guest function, approved callables their stable label. Never
-addresses, recursive inspection or metatable calls. Omission formats nil.
+This helper uses stable safe formatting.
+Tables become table, protected handles become API handle, and guest functions
+become guest function. Approved callables become their stable label.
+The helper never uses addresses, recursive inspection or metatable calls.
+Omission formats nil.
 
 ```text
 tostring(value?: TC.GuestValue) -> text: string
@@ -423,9 +444,10 @@ Bounded safe description or primitive representation.
 
 ### type
 
-Return the Lua type name; omission is treated as nil. No native object access
-is granted. Standard helpers still pay argument/result tuple/work bounds;
-extra arguments follow each native helper's handling rather than service arity.
+Return the Lua type name. Omission has the same effect as nil.
+This helper does not grant native object access.
+Standard helpers still obey argument/result tuple and work bounds.
+Each native helper determines how it handles extra arguments, rather than service arity.
 
 ```text
 type(value?: TC.GuestValue) -> name: 'nil'|'boolean'|'number'|'string'|'table'|'function'
@@ -434,7 +456,7 @@ type(value?: TC.GuestValue) -> name: 'nil'|'boolean'|'number'|'string'|'table'|'
 ### Parameters
 
 value (optional): TC.GuestValue
-Value to inspect; omission/nil has type nil.
+Value to inspect. Omission or nil has type nil.
 
 ### Returns
 
@@ -445,11 +467,13 @@ Guest-visible primitive kind.
 
 ### unpack
 
-Identical function to table.unpack, with the same stable table function label.
+This is the identical function to table.unpack, with the same stable table function label.
 
-Return positions i..j exactly, including nil holes. Omitted/nil bounds default
-1 and #t, not t.n; use explicit packed.n to retain trailing nil. Empty range
-returns zero values. Current guest table index and tuple ceilings apply.
+Return positions i..j exactly, including nil holes.
+Omitted or nil bounds default to 1 and #t, not t.n.
+Use explicit packed.n to retain trailing nil.
+An empty range returns zero values.
+Current guest table index and tuple ceilings apply.
 
 ```text
 unpack(t: TC.GuestTable, i?: integer, j?: integer) -> ...: TC.GuestValue
@@ -458,13 +482,13 @@ unpack(t: TC.GuestTable, i?: integer, j?: integer) -> ...: TC.GuestValue
 ### Parameters
 
 t: TC.GuestTable
-Guest-owned plain table; may be sparse.
+Guest-owned plain table. This table can be sparse.
 
 i (optional): integer
-Start, default 1; domain 1..table_entries+1.
+Start, default 1. The domain is 1..table_entries+1.
 
 j (optional): integer
-End, default native #t; domain 0..table_entries.
+End, default native #t. The domain is 0..table_entries.
 
 ### Returns
 
@@ -475,14 +499,21 @@ Exact requested range, possibly empty and nil-bearing.
 
 ### xpcall
 
-Protected call with an approved message handler. Forward exact trailing
-arguments; success is true plus exact results. Ordinary failure calls handler
-with one safe error and returns false plus ONLY its first result (one nil when
-it returns no values). Native handler re-entry is bounded; wording of an error
-inside the handler is not stable. A fatal function suppresses the handler;
-a fatal handler suppresses later handlers/effects. Neither can swallow quotas.
-Guest-owned tables and authentic protected-handle errors preserve identity;
-unowned host error records are copied. This differs from pcall's handle refusal.
+This protected call uses an approved message handler.
+It forwards exact trailing arguments. Success returns true plus exact results.
+Ordinary failure calls handler with one safe error.
+It returns false followed by only the handler's first result.
+If the handler returns no values, the second result is one nil.
+
+Native handler re-entry is bounded.
+The wording of an error inside the handler is not stable.
+A fatal failure in fn suppresses the handler.
+A fatal failure in handler suppresses later handlers and effects.
+Neither can suppress quota controls.
+
+Guest-owned tables and authentic protected-handle errors preserve identity.
+The helper copies unowned host error records.
+This differs from pcall's handle refusal.
 
 ```text
 xpcall(fn: TC.Callable, handler: TC.Callable, ...: TC.GuestValue) -> ok: boolean, ...: TC.GuestValue
@@ -502,7 +533,7 @@ Exact arguments forwarded only to fn.
 ### Returns
 
 ok: boolean
-True on completion; false after ordinary failure handling.
+True on completion. False after ordinary failure handling.
 
 ... (zero or more positions): TC.GuestValue
 Exact success tuple or exactly one transformed failure value.

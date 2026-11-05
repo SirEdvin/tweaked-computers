@@ -28,32 +28,32 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs/player'
 CONTRACT = ROOT / 'openspec'
 EXAMPLES = {
-    'dashboard-program': 'Research Native circuit computers; build a Dashboard and computer; neither needs electricity. Connect Network red. Validate, Save and Run, then close the computer, normally open the Dashboard and left-click Acknowledge. The status changes from Ready to Acknowledged through the saved clicked handler. No chart library is required; Console cannot subscribe.',
-    'dashboard-charts': 'Use the same electricity-free red-wired Dashboard setup. Optionally enable unmodified factorio-charts 1.2.0 for rolling lines and seconds-only duration bars; without it labels/buttons still work. Twelve startup samples wrap an eight-slot line before opening. Scroll Overview for both charts, switch among six tabs and acknowledge a button. Live label updates preserve the selected tab and unchanged identity selection. X positions mean sample order, not wall time; this is not the native production widget.',
-    'production-statistics-program': 'Research Recipe Searcher, craft a Production Statistics device and connect Network red to the computer; neither needs electricity. Validate, Save and Run. Logs local native item/fluid/pollution totals and rates, then newest/oldest iron history in both directions. Empty input and complete-result E_LIMIT refusal are distinct; work/allocation exhaustion remains fatal. This small Console example is not an unlimited export.',
-    'production-statistics-monitor': 'Connect a Production Statistics device and monitor on red; neither needs electricity; use a display of at least 14 columns and 7 rows. Validate, Save and Run, then wait 120 ticks. Displays one-minute iron rates and both 300-sample native histories, oldest-left/newest-right with a shared peak scale. No history is accumulated. Query refused means E_LIMIT, not empty data; No activity means both native series are zero.',
-    'factoriopedia-program': 'Research Recipe Searcher and craft an electricity-free Factoriopedia Interface. Connect its Network to a computer on red. Validate, Save and Run the complete document. Logs item reference rocket capacity, water bounds and both complete name lists (or E_LIMIT); no live silo/tank feasibility is inferred.',
-    'reference-speaker': 'The in-game Reference → Examples → One speaker note tutorial includes complete research, power, red-wire setup, execution steps and expected results. This is the same small program, not an external prerequisite.',
-    'reference-recipe': 'The in-game Find iron plate recipes tutorial connects one electricity-free Recipe Searcher on red and prints actual smelting matches. This supplementary copy uses the exact same source.',
-    'reference-factory': 'The in-game Small factory dashboard tutorial includes the exact four-peripheral and chest/inserter setup, red discovery/INPUT and green TARGETS/OUTPUT separation. It teaches one inserter, a three-second KV hash and a two-line monitor; use its complete in-game setup.',
-    'reference-writer': 'Computer 1 of the self-contained Two-computer shared data tutorial. Run this writer on the shared red database before running shared-telemetry on computer 2 with the shared red and a different physical green database.',
-    'speaker-alarm': 'Connect a powered vanilla programmable-speaker to a computer Network on red. Plays one positional effect every 120 ticks. False admission waits for the next timer, never a same-tick retry. Stop prevents future calls, not cancellation of an already submitted sample.',
-    'speaker-melody': 'Connect a powered vanilla programmable-speaker on red. Discovers zero-based piano indices and requests one note every 30 ticks; advances only after admission. This is simulation scheduling, not sample-accurate sequencing. Disconnect/power errors fault the program; reconnect and Run again.',
-    'speaker-catalogue': 'Connect a powered vanilla programmable-speaker on red. Fetches at most one page per callback and stores the last page and cumulative count as plain state. Completes without a busy loop. The bounded Console history is not a complete catalogue export; inspect last_page while paging or reuse the continuation pattern with your own storage.',
-    'modem-sender': 'Wire one computer to one powered native radar on red. Run modem-receiver on a different computer/radar on the same force and surface first. Sends on numeric channel 200 every 60 ticks and receives explicit replies on 201; these numbers are not wire colors.',
-    'modem-receiver': 'Wire a second computer to its own powered native radar on red, without connecting the two discovery graphs. Start this receiver before modem-sender. Shares channel 200 on the physical radar, registers a named handler and replies explicitly; no ACK/retry guarantee or remote peripheral authority.',
-    'function-program': 'Place a computer; no electricity, peripheral or wire is required. In an empty Editor draft, choose Insert starter (or paste this whole document), Validate, Save, then Run. Insertion and validation do not save or execute anything. The first dispatch calls `sample()` immediately and logs its returned count in Console; the `samples` value in explicit computer state increases once, then once more at the first 60-tick timer deadline. Private `increment` is declared before use and is not exported. `sample` is forward-visible and registration uses its string name, not its function value. Each callback has fresh locals/functions; reapplying keeps the explicit count, while ordinary reload does not replay `start`. These functions are not callable from the live Console.',
-    'recipe-searcher-program': 'Research Recipe Searcher separately and connect its Network directly to a computer on red; neither needs electricity. Paste the whole document, Validate, Save and Run. Searches item/fluid products and refines E_LIMIT by exact category; a single category may still exceed 50 or other budgets.',
-    'peripheral-program': 'Wire a computer NETWORK to any device NETWORK on red. Inspect each color in Peripherals; read program output in Console.',
-    'logic-controller': 'Follow [your first inserter controller](first-controller.md). Stock INPUT red, discovery NETWORK red, OUTPUT to the inserter.',
-    'kv-program': 'Connect one electricity-free database NETWORK on red. Save/Run; inspect the delayed status/TTL in Console.',
-    'monitor-program': 'Connect an electricity-free monitor NETWORK on red. Run, then activate a character cell; use matching adjacent tiles to test resize.',
-    'monitor-plot-program': 'Connect up to four electricity-free logical monitors on red/green. Uses one shared sine sample and replaces one complete row per screen, retaining older rows as a rolling trace. Startup discovery, geometry inspection, selection and clearing are deliberately sliced across callbacks. Checks at most eight names per color; red wins duplicate names. Resize/detach events restart discovery; unavailable screens are retried periodically. This is not a full-grid repaint or an unlimited factory/network benchmark.',
-    'smooth-sine-chart': 'Connect up to four electricity-free logical monitors on red/green. Draws a connected green line using 2×3 mosaic subpixels instead of text markers, with a gray axis. Samples one phase and updates all selected screens every two ticks, submitting only rows whose glyphs or colors changed. Uses scale 2 when a footprint axis exceeds three tiles, otherwise scale 1, and bounds grids to 32 columns / 22 rows. Ships with version 0.1.7 and its runtime/presenter optimizations; older published archives retain their original example. Paste the complete source, then Validate, Save and Run. Do not run other content writers on the same screens with this row-cached example. See the [subpixel design and verification boundaries](monitor-animation.md).',
-    'configurator-program': 'Discovery NETWORK red; separate TARGETS green to one inserter. Sets A > 4, not A > 0. Supply an external A signal of at least 5 for motion.',
-    'configurator-sections': 'Discovery NETWORK red; TARGETS green to one constant combinator. Adds a section, activates it and saves its actual index in computer state; it intentionally writes no signal filters.',
+    'dashboard-program': 'Research Native circuit computers. Build a Dashboard and a computer. Neither device needs electricity. Connect Network red. Select Validate. Select Save. Select Run. Close the computer. Open the Dashboard normally. Left-click Acknowledge. The saved clicked handler changes the status from Ready to Acknowledged. A chart library is not necessary. Console cannot subscribe.',
+    'dashboard-charts': 'Use the same Dashboard setup with red wiring and no electricity. Optionally enable unmodified factorio-charts 1.2.0 for rolling lines and duration bars in seconds. Without it, labels and buttons still work. Twelve startup samples wrap an eight-slot line before the window opens. Scroll Overview to see both charts. Switch among six tabs. Acknowledge a button. Live label updates keep the selected tab and unchanged identity selection. X positions use sample order, not wall time. This is not the native production widget.',
+    'production-statistics-program': 'Research Recipe Searcher. Craft a Production Statistics device. Connect Network red to the computer. Neither device needs electricity. Select Validate. Select Save. Select Run. The program logs local native item, fluid, and pollution totals and rates. It then logs the newest and oldest iron history for production and consumption. Empty input differs from an E_LIMIT refusal of the complete result. Work or allocation exhaustion remains fatal. This small Console example is not an unlimited export.',
+    'production-statistics-monitor': 'Connect a Production Statistics device and monitor on red. Neither device needs electricity. Use a display with at least 14 columns and 7 rows. Select Validate. Select Save. Select Run. Wait 120 ticks. The display shows one-minute iron rates and both 300-sample native histories. The oldest sample is on the left. The newest sample is on the right. Both series use one peak scale. The program does not accumulate history. Query refused means E_LIMIT, not empty data. No activity means both native series are zero.',
+    'factoriopedia-program': 'Research Recipe Searcher. Craft a Factoriopedia Interface. It does not need electricity. Connect its Network to a computer on red. Paste the complete document. Select Validate. Select Save. Select Run. The program logs the item reference rocket capacity, water bounds, and both complete name lists, or E_LIMIT. These results do not prove that a current silo or tank can perform an operation.',
+    'reference-speaker': 'Open Reference → Examples → One speaker note in the game. The tutorial contains research, power, red-wire setup, execution procedures, and expected results. This is the same program. The in-game tutorial does not require this external copy.',
+    'reference-recipe': 'The in-game Find iron plate recipes tutorial uses one Recipe Searcher connected on red. The device does not need electricity. The tutorial prints actual smelting matches. This additional copy uses exactly the same source.',
+    'reference-factory': 'Use the complete in-game Small factory dashboard setup. It specifies four peripherals, the chest and inserter, and separate wiring. Discovery and INPUT use red. TARGETS and OUTPUT use green. The tutorial controls one inserter, a KV hash with a three-second TTL, and two monitor rows.',
+    'reference-writer': 'This is computer 1 in the complete Two-computer shared data tutorial. Run this writer on the shared red database first. Then run shared-telemetry on computer 2. Computer 2 uses the shared red database and a different physical database on green.',
+    'speaker-alarm': 'Connect a powered vanilla programmable-speaker to a computer Network on red. The program plays one positional effect every 120 ticks. After a false result, it waits for the next timer. It does not retry in the same tick. Stop prevents future calls. It cannot cancel a submitted sample.',
+    'speaker-melody': 'Connect a powered vanilla programmable-speaker on red. The program finds zero-based piano indices and requests one note every 30 ticks. It advances only after the audio quota permits submission. This uses simulation scheduling, not audio-sample timing. A disconnection or power error faults the program. Reconnect the speaker. Select Run again.',
+    'speaker-catalogue': 'Connect a powered vanilla programmable-speaker on red. The program gets at most one page per callback. It stores the last page and cumulative count as plain state. It completes without a busy loop. Console history has limits and is not a complete catalogue export. Examine last_page during paging, or use the continuation pattern with your own storage.',
+    'modem-sender': 'Connect one computer to one powered native radar with a red wire. First, run modem-receiver on a different computer and radar in the same force and surface. The sender transmits on numeric channel 200 every 60 ticks. It receives explicit replies on 201. These numbers are not wire colors.',
+    'modem-receiver': 'Connect a second computer to its own powered native radar with a red wire. Do not connect the two discovery graphs. Start this receiver before modem-sender. It shares channel 200 on the physical radar, registers a named handler, and replies explicitly. It guarantees neither ACK nor retries. It gives no authority over remote peripherals.',
+    'function-program': 'Place a computer. Electricity, peripherals, and wires are not necessary. In an empty Editor draft, choose Insert starter or paste this complete document. Select Validate. Select Save. Select Run. Insertion and validation do not save or execute code. The first dispatch immediately calls `sample()` and logs its result in Console. The explicit `samples` state increases once. It increases again at the first 60-tick timer deadline. Private `increment` is declared before use and is not exported. `sample` is visible before its declaration. Registration uses its string name, not its function value. Each callback has new locals and functions. Apply keeps the explicit count. An ordinary reload does not replay `start`. The live Console cannot call these functions.',
+    'recipe-searcher-program': 'Research Recipe Searcher separately. Connect its Network directly to a computer on red. Neither device needs electricity. Paste the complete document. Select Validate. Select Save. Select Run. The program searches item and fluid products. After E_LIMIT, it restricts the search to an exact category. One category can still exceed 50 results or other budgets.',
+    'peripheral-program': 'Connect a computer NETWORK to a device NETWORK with a red wire. Examine each color in Peripherals. Read program output in Console.',
+    'logic-controller': 'Follow [your first inserter controller](first-controller.md). Stock uses INPUT red. Discovery uses NETWORK red. OUTPUT connects to the inserter.',
+    'kv-program': 'Connect one database NETWORK on red. The database does not need electricity. Select Save. Select Run. Examine the delayed status and TTL in Console.',
+    'monitor-program': 'Connect a monitor NETWORK on red. The monitor does not need electricity. Select Run. Activate a character cell. Use matching adjacent tiles to test resize.',
+    'monitor-plot-program': 'Connect at most four logical monitors on red or green. They do not need electricity. The program uses one shared sine sample and replaces one complete row per screen. It keeps older rows as a rolling trace. Startup discovery, geometry checks, selection, and clearing use separate callbacks. It checks at most eight names per color. Red has priority for duplicate names. Resize or detach events restart discovery. It periodically retries unavailable screens. This is not a complete-grid repaint or an unlimited factory or network benchmark.',
+    'smooth-sine-chart': 'Connect at most four logical monitors on red or green. They do not need electricity. The program draws a connected green line with 2×3 mosaic subpixels and a gray axis. It does not use text markers. It samples one phase and updates all selected screens every two ticks. It submits only rows with changed glyphs or colors. It uses scale 2 when a footprint axis exceeds three tiles. Otherwise, it uses scale 1. Grids have at most 32 columns and 22 rows. This example ships with version 0.1.7 and its runtime and presenter optimizations. Older published archives keep their original example. Paste the complete source. Select Validate. Select Save. Select Run. Do not run other content writers on these screens. This example caches rows. See the [subpixel design and verification boundaries](monitor-animation.md).',
+    'configurator-program': 'Connect discovery NETWORK red. Connect separate TARGETS green to one inserter. The program sets A > 4, not A > 0. Supply an external A signal of at least 5 to move the inserter.',
+    'configurator-sections': 'Connect discovery NETWORK red. Connect TARGETS green to one constant combinator. The program adds a section, activates it, and saves its actual index in computer state. It deliberately writes no signal filters.',
     'factory-controller': 'Follow the complete [factory wiring tutorial](factory.md). Keep one device per type reachable. Paste this whole document.',
-    'shared-telemetry': 'Use the [second-computer setup](factory.md#second-computer-shared-and-private-data): shared database on red, separate physical database on green.',
+    'shared-telemetry': 'Use the [second-computer setup](factory.md#second-computer-shared-and-private-data). Connect the shared database on red. Connect a separate physical database on green.',
 }
 
 
@@ -85,21 +85,21 @@ def guest_example(name):
 
 def generated():
     examples = ['# Complete runnable programs', '',
-                'Copy a whole code block into the [single-document editor](editor.md), Validate,',
-                'Save, then Run. These are the exact shipped source documents, with host wrappers',
-                'removed. There is no guest require/file import. Small fixtures are not unlimited',
-                'factory managers; keep the described topology. Runtime effects were exercised by',
-                'the implementation harness; documentation checks compile these blocks without',
-                'claiming graphical keyboard/focus/touch delivery.', '']
+                'Copy a complete code block into the [single-document editor](editor.md).',
+                'Select Validate. Select Save. Select Run.',
+                'These are the exact supplied source documents without their host wrappers.',
+                'There is no guest require or file import. These small fixtures are not unlimited factory managers.',
+                'Keep the specified topology. The implementation harness tested runtime effects.',
+                'Documentation checks compile these blocks. They do not prove graphical keyboard, focus, or touch behavior.', '']
     for name, intro in EXAMPLES.items():
         examples += ['## ' + name, '', intro, '', '```lua', guest_example(name), '```', '']
 
     examples += ['## Retained API examples', '',
-                 'These complete sources were preserved from the former API companions.',
-                 'Use a separate stopped computer for each program; do not concatenate programs.',
+                 'These complete sources come from the former API companions.',
+                 'Use a separate stopped computer for each program. Do not combine programs.',
                  'The [wiring guide](getting-started.md), [factory setup](factory.md) and',
                  '[current typed reference](api/types.md) explain their device roles and limits.',
-                 'Historical source identities below are provenance, not alternate API contracts.', '']
+                 'The historical source identities below record the origins of these examples. They are not alternative API contracts.', '']
     seen = set()
     for record in api_migration.examples():
         if record['destination'] in seen:
@@ -108,18 +108,19 @@ def generated():
         examples += ['### ' + Path(record['destination']).stem, '']
         if record['path'] == 'openspec/api/examples.md':
             examples += ['Use one computer, one database, one Logic Handler, one Configurator and a 2×2 monitor rectangle.',
-                         'Join their NETWORK ports on red. Separately connect a stock-reading chest to INPUT red,',
-                         'and OUTPUT green plus Configurator TARGET green to the powered inserters.',
-                         'Enable chest content reading manually; the program configures inserters, not the chest.', '']
+                         'Join their NETWORK ports on red. Separately connect a stock-reading chest to INPUT red.',
+                         'Connect OUTPUT green and Configurator TARGET green to the powered inserters.',
+                         'Enable chest content reading manually. The program configures inserters, not the chest.', '']
         elif record['kind'] == 'console':
-            examples += ['These are separate live Console commands, not a saved program. Replace the example',
-                         '`tc-42` with your red-connected monitor name. Run each line in order; the write',
-                         'changes the real monitor. Stop/Run or confirmed Reset Shell clears these bindings.', '']
+            examples += ['These are separate live Console commands, not a saved program.',
+                         'Replace the example `tc-42` with your red-connected monitor name.',
+                         'Run each line in order. The write changes the real monitor.',
+                         'Stop, Run, or confirmed Reset Shell clears these bindings.', '']
         else:
             examples += ['Connect the peripherals named in the source on their stated discovery color.',
                          'Keep discovery NETWORK, Logic INPUT/OUTPUT and Configurator TARGET wiring separate.',
-                         'Custom devices need no electricity; native radars, speakers and factory targets keep',
-                         'their own power requirements. Validate, Save, then Run; inspect Console and the device.', '']
+                         'Custom devices do not need electricity. Native radars, speakers, and factory targets keep their own power requirements.',
+                         'Select Validate. Select Save. Select Run. Examine Console and the device.', '']
         examples += ['Source identity: `' + record['path'] + ':' + str(record['index']) + '`.', '',
                      '```' + ('lua' if record['kind'] == 'program' else 'text'),
                      api_migration.example_source(record), '```', '']

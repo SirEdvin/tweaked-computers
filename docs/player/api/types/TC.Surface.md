@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Surface
 
-Plain surface identity, never a LuaSurface or cross-surface authority.
+This record gives a plain surface identity, never a LuaSurface or cross-surface authority.
 
 ### index
 

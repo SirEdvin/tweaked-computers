@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.QualityCondition
 
-Accepted input for QualityCondition.  Input accepts a registered quality string or object. Readback is an object with explicit quality (default normal) and comparator (default =); comparator aliases normalize.
+Accepted input for QualityCondition.  Input accepts a registered quality string or object. Readback is an object with explicit quality and comparator. Quality defaults to normal. The comparator defaults to =. Comparator aliases normalize.
 
 ```text
 TC.Config.QualityCondition.Variant1|string

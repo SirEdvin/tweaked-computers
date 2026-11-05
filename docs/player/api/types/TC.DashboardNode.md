@@ -9,9 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.DashboardNode
 
-Recursive declarative layout. Every node ID is a nonempty exact bounded string,
-unique across the whole tab, including containers; another tab may reuse it.
-Unknown fields fail. Text is literal, never LocalisedString or Factorio rich text.
+This type defines a recursive declarative layout.
+Every node ID is a nonempty exact bounded string.
+The ID must be unique across the whole tab, including containers.
+Another tab can use the same ID. Unknown fields cause failure.
+Text is literal, never LocalisedString or Factorio rich text.
 
 ```text
 TC.DashboardRow|TC.DashboardColumn|TC.DashboardLabel|TC.DashboardButton|TC.DashboardLine|TC.DashboardBars

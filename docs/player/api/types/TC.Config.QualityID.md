@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.QualityID
 
-Accepted input for QualityID. At most 256 bytes; no NUL. Installed quality name, never a native object.
+Accepted input for QualityID. At most 256 bytes. NUL is not permitted. Use an installed quality name, not a native object.
 
 ```text
 string

@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Tick
 
-Simulation tick: integer 0..9007199254740991, not wall-clock time.
+A simulation tick is an integer in 0..9007199254740991, not wall-clock time.
 
 ```text
 integer

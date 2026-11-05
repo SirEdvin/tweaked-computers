@@ -15,36 +15,44 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.RecipeSearcher
 
-Read-only electricity-free physical recipe catalogue. Exact force/surface/path
-and generation checks apply on every call, including captured/Console methods.
-No global recipe library, physical product input, query GUI, mutable database,
-job/session, retained authoritative cache or new event is introduced. Cold load
-runs no guest source/query; new calls use installed prototypes/current force.
-Queries never unlock recipes, configure machines, reserve/consume/produce items.
-Returned Data can be saved only if separate state limits admit it; snapshot
-success is not permission to persist a facade or a guarantee of storage capacity.
+This physical recipe catalogue is read-only and needs no electricity.
+Exact force, surface, path and generation checks apply to every call, also through captured methods and Console.
+There is no global recipe library, physical product input, query GUI or mutable database.
+There is no job/session, retained authoritative cache or new event.
 
-All complete results are bounded by Data string/table/node/depth/byte rules and
-shared work/allocation, in addition to recipe_search_results. No prefix, count,
-cursor or pagination is returned. Unexpected/unrepresentable native fields fail
-E_UNSUPPORTED rather than disappearing; native failures/missing force recipe are
-E_ENGINE, never fabricated enabled values. Physical authority precedes provider
-validation; earlier admission can fail before later semantic/count checks.
+Cold load runs no guest source or query.
+New calls use installed prototypes and the current force.
+Queries never unlock recipes, configure machines, or reserve, consume or produce items.
+Only separate state limits can admit returned Data for saving.
+Snapshot success is not permission to persist a facade or a guarantee of storage capacity.
+
+All complete results obey Data string, table, node, depth and byte rules, shared work/allocation limits, and recipe_search_results.
+The method returns no prefix, count, cursor or pagination.
+Unexpected native fields or fields that cannot be represented cause E_UNSUPPORTED; they do not silently disappear.
+Native failures or a missing force recipe cause E_ENGINE, never invented enabled values.
+Physical authority checks occur before provider validation.
+Earlier admission can fail before later semantic or count checks.
 
 ### findRecipes
 
-Find every installed recipe with at least one matching declared product, once,
-sorted bytewise by recipe name. Secondary/probabilistic products count. Include
-hidden, disabled, modded and recycling recipes; no surface/machine/research,
-quality or temperature filter. Native product arrays are not deduplicated.
+Find every installed recipe with at least one matching declared product.
+Each recipe appears once, in bytewise recipe-name order.
+Secondary and probabilistic products count.
+Results include hidden, disabled, modded and recycling recipes.
+There is no surface, machine, research, quality or temperature filter.
+Native product arrays retain duplicates.
 
-Optional category matches primary OR additional categories, before the fixed
-50-result ceiling. Known category/no matches succeeds empty; unknown product/
-category is E_RANGE. More than 50 is E_LIMIT with field='results', never a prefix.
-Separate exact-category searches may be combined/deduplicated by a caller, but
-one category can itself exceed 50 or other budgets. No same-tick retry guarantee.
-Wrong type/arity/empty names are E_ARGUMENT; overlong strings/results E_LIMIT;
-fatal E_BUDGET remains noncatchable and spent credits are not renewed.
+The optional category matches primary or additional categories before the fixed 50-result ceiling applies.
+A known category without matches succeeds with an empty result.
+An unknown product or category causes E_RANGE.
+More than 50 results cause E_LIMIT with field='results', never a prefix.
+
+A caller can combine and deduplicate separate exact-category searches.
+But one category can itself exceed 50 results or other budgets.
+There is no same-tick retry guarantee.
+Wrong types, wrong arity or empty names cause E_ARGUMENT.
+Overlong strings or results cause E_LIMIT.
+Fatal E_BUDGET remains noncatchable, and spent credits do not renew.
 
 ```text
 findRecipes(product_type: TC.ProductType, product_name: string, category?: string) -> recipes: (TC.RecipeInfo)[]
@@ -59,17 +67,18 @@ product_name: string
 Nonempty exact installed prototype name within string_bytes.
 
 category (optional): string
-Exact registered recipe category; omitted/nil means all categories.
+Exact registered recipe category. Omission or nil selects all categories.
 
 ### Returns
 
 recipes: (TC.RecipeInfo)[]
-Exactly one complete dense array, possibly empty; never nil.
+Exactly one complete dense array, which can be empty but never nil.
 
 ### getLimits
 
-Read effective common limits plus fixed recipe_search_results=50. This is not
-a new adjustable setting or a promise every smaller snapshot fits all budgets.
+Read the effective common limits with fixed recipe_search_results=50.
+This is not a new adjustable setting.
+There is no guarantee that every smaller snapshot fits all budgets.
 
 ```text
 getLimits() -> limits: TC.RecipeSearcherLimits

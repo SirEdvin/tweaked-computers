@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.SpaceLocationID
 
-Accepted input for SpaceLocationID. At most 256 bytes; no NUL. Installed space_location name, never a native object.
+Accepted input for SpaceLocationID. At most 256 bytes. NUL is not permitted. Use an installed space_location name, not a native object.
 
 ```text
 string

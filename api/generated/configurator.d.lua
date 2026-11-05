@@ -6,911 +6,911 @@
 ---Accepted input for ArithmeticCombinatorParameterOperation.
 ---@alias TC.Config.ArithmeticCombinatorParameterOperation "*"|"/"|"+"|"-"|"%"|"^"|"<<"|">>"|"AND"|"OR"|"XOR"
 
----Accepted input for ArithmeticCombinatorParameters. Unknown fields refused. Default operation *, missing numeric operands 0, networks both. Signal operands replace corresponding constants. First each and output each are allowed; each output requires each first input.
+---Accepted input for ArithmeticCombinatorParameters. Unknown fields are refused. The default operation is *. Missing numeric operands default to 0. Both networks are enabled by default. Signal operands replace their corresponding constants. The first and output signals can be each. An each output requires an each first input.
 ---@class TC.Config.ArithmeticCombinatorParameters
----@field first_constant? integer First numeric operand; a supplied first_signal takes precedence in normalization. Finite integer; domain -2147483648..2147483647.
----@field first_signal? TC.Config.SignalID First signal operand; wildcard permission depends on its enclosing concept/role. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field first_signal_networks? TC.Config.CircuitNetworkSelection Networks contributing to the first operand; omitted members normalize true. Unknown fields refused.
----@field operation? TC.Config.ArithmeticCombinatorParameterOperation Exact operation discriminator; only that variant fields are accepted.
----@field output_signal? TC.Config.SignalID Signal used for this control behavior output (charge, gate sensor or combinator result). Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field second_constant? integer Second numeric operand; second_signal takes precedence in arithmetic normalization. Finite integer; domain -2147483648..2147483647.
----@field second_signal? TC.Config.SignalID Second signal operand; wildcard pseudo-signals are not accepted here. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field second_signal_networks? TC.Config.CircuitNetworkSelection Networks contributing to the second operand; omitted members normalize true. Unknown fields refused.
+---@field first_constant? integer First numeric operand. A supplied first_signal replaces this constant during normalization. Finite integer. Domain: -2147483648..2147483647.
+---@field first_signal? TC.Config.SignalID First signal operand. Wildcard permission depends on the enclosing concept and role. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field first_signal_networks? TC.Config.CircuitNetworkSelection Networks that supply the first operand. An omitted member becomes true during normalization. Unknown fields are refused.
+---@field operation? TC.Config.ArithmeticCombinatorParameterOperation Exact operation discriminator. Only fields for that variant are accepted.
+---@field output_signal? TC.Config.SignalID Output signal for this control behavior: accumulator charge, gate sensor, or combinator result. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field second_constant? integer Second numeric operand. A supplied second_signal replaces this constant during arithmetic normalization. Finite integer. Domain: -2147483648..2147483647.
+---@field second_signal? TC.Config.SignalID Second signal operand. Wildcard pseudo-signals are not accepted here. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field second_signal_networks? TC.Config.CircuitNetworkSelection Networks that supply the second operand. An omitted member becomes true during normalization. Unknown fields are refused.
 
----Accepted input for BlueprintQualityID. Unknown fields refused. Quality name defaults to installed normal; no native prototype object is exposed.
+---Accepted input for BlueprintQualityID. Unknown fields are refused. The quality name defaults to installed normal. No native prototype object is exposed.
 ---@class TC.Config.BlueprintQualityID
----@field name? string Exact prototype/quality identity named by the enclosing concept; no localization lookup. At most 256 bytes; no NUL.
+---@field name? string Exact prototype or quality identity for the enclosing concept. No localization lookup occurs. At most 256 bytes. NUL is not permitted.
 
----Accepted input for CircuitConditionDefinition. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. constant and second_signal are exclusive. Default comparator < and constant 0 without a second signal. fulfilled is read-only and excluded. First operand permits anything/everything but not each; ordinary second/root signals reject wildcards.
+---Accepted input for CircuitConditionDefinition. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. constant and second_signal cannot both be supplied. The default comparator is <. Without a second signal, constant defaults to 0. fulfilled is read-only and excluded. The first operand permits anything and everything, but not each. Ordinary second and root signals reject wildcards.
 ---@class TC.Config.CircuitConditionDefinition
----@field comparator? TC.Config.ComparatorString Comparison symbol; >=, <= and != normalize to ≥, ≤ and ≠.
----@field constant? integer Numeric operand or output count; enclosing concept determines the normalization default. Finite integer; domain -2147483648..2147483647.
----@field first_signal? TC.Config.SignalID First signal operand; wildcard permission depends on its enclosing concept/role. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field second_signal? TC.Config.SignalID Second signal operand; wildcard pseudo-signals are not accepted here. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+---@field comparator? TC.Config.ComparatorString Comparison symbol. >=, <=, and != normalize to ≥, ≤, and ≠.
+---@field constant? integer Numeric operand or output count. The enclosing concept determines the normalization default. Finite integer. Domain: -2147483648..2147483647.
+---@field first_signal? TC.Config.SignalID First signal operand. Wildcard permission depends on the enclosing concept and role. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field second_signal? TC.Config.SignalID Second signal operand. Wildcard pseudo-signals are not accepted here. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
----Accepted input for CircuitNetworkSelection. Unknown fields refused. Omitted object or red/green members normalize to both colors enabled.
+---Accepted input for CircuitNetworkSelection. Unknown fields are refused. An omitted object or omitted red and green members become both colors enabled during normalization.
 ---@class TC.Config.CircuitNetworkSelection
----@field green? boolean Include green circuit values; omitted member normalizes true.
----@field red? boolean Include red circuit values; omitted member normalizes true.
+---@field green? boolean Include green circuit values. An omitted member becomes true during normalization.
+---@field red? boolean Include red circuit values. An omitted member becomes true during normalization.
 
 ---Accepted input for ComparatorString.
 ---@alias TC.Config.ComparatorString "="|">"|"<"|"≥"|">="|"≤"|"<="|"≠"|"!="
 
----Accepted input for DeciderCombinatorCondition. Unknown fields refused. Default comparator <, constant 0 without a second signal, compare_type or and both networks. First operand allows role-appropriate each/anything/everything.
+---Accepted input for DeciderCombinatorCondition. Unknown fields are refused. The default comparator is <. Without a second signal, constant defaults to 0. compare_type defaults to or. Both networks are enabled by default. The first operand permits each, anything, or everything where its role permits that wildcard.
 ---@class TC.Config.DeciderCombinatorCondition
----@field comparator? TC.Config.ComparatorString Comparison symbol; >=, <= and != normalize to ≥, ≤ and ≠.
----@field compare_type? "and"|"or" Join this decider condition using and/or; default or.
----@field constant? integer Numeric operand or output count; enclosing concept determines the normalization default. Finite integer; domain -2147483648..2147483647.
----@field first_signal? TC.Config.SignalID First signal operand; wildcard permission depends on its enclosing concept/role. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field first_signal_networks? TC.Config.CircuitNetworkSelection Networks contributing to the first operand; omitted members normalize true. Unknown fields refused.
----@field second_signal? TC.Config.SignalID Second signal operand; wildcard pseudo-signals are not accepted here. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field second_signal_networks? TC.Config.CircuitNetworkSelection Networks contributing to the second operand; omitted members normalize true. Unknown fields refused.
+---@field comparator? TC.Config.ComparatorString Comparison symbol. >=, <=, and != normalize to ≥, ≤, and ≠.
+---@field compare_type? "and"|"or" Join this decider condition with and or or. The default is or.
+---@field constant? integer Numeric operand or output count. The enclosing concept determines the normalization default. Finite integer. Domain: -2147483648..2147483647.
+---@field first_signal? TC.Config.SignalID First signal operand. Wildcard permission depends on the enclosing concept and role. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field first_signal_networks? TC.Config.CircuitNetworkSelection Networks that supply the first operand. An omitted member becomes true during normalization. Unknown fields are refused.
+---@field second_signal? TC.Config.SignalID Second signal operand. Wildcard pseudo-signals are not accepted here. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field second_signal_networks? TC.Config.CircuitNetworkSelection Networks that supply the second operand. An omitted member becomes true during normalization. Unknown fields are refused.
 
----Accepted input for DeciderCombinatorOutput. Unknown fields refused. Input requires an output signal; cleared native readback can omit it. Default constant 1, copy_count_from_input true and both networks. An each signal needs an each condition in the same parameters.
+---Accepted input for DeciderCombinatorOutput. Unknown fields are refused. Input requires an output signal. Cleared native readback can omit it. The default constant is 1. copy_count_from_input defaults to true. Both networks are enabled by default. An each signal requires an each condition in the same parameters.
 ---@class TC.Config.DeciderCombinatorOutput
----@field constant? integer Numeric operand or output count; enclosing concept determines the normalization default. Finite integer; domain -2147483648..2147483647.
----@field copy_count_from_input? boolean Copy decider input count rather than fixed constant; default true.
----@field networks? TC.Config.CircuitNetworkSelection Decider-output contributing networks; default includes both. Unknown fields refused.
----@field signal TC.Config.SignalID Decider output signal, required on input but absent in a cleared native output. An each signal requires an each condition. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+---@field constant? integer Numeric operand or output count. The enclosing concept determines the normalization default. Finite integer. Domain: -2147483648..2147483647.
+---@field copy_count_from_input? boolean Copy the decider input count instead of using a fixed constant. The default is true.
+---@field networks? TC.Config.CircuitNetworkSelection Networks that supply decider outputs. The default includes both. Unknown fields are refused.
+---@field signal TC.Config.SignalID Decider output signal. It is required on input but can be absent in a cleared native output. An each signal requires an each condition. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
----Accepted input for DeciderCombinatorParameters. Unknown fields refused. Complete required conditions/outputs arrays replace previous parameters. Each output requires an each first condition.
+---Accepted input for DeciderCombinatorParameters. Unknown fields are refused. Complete required conditions and outputs arrays replace previous parameters. Each output requires an each first condition.
 ---@class TC.Config.DeciderCombinatorParameters
 ---@field conditions (TC.Config.DeciderCombinatorCondition)[] Complete ordered decider condition array. Dense array of at most 128 entries.
 ---@field outputs (TC.Config.DeciderCombinatorOutput)[] Complete ordered decider output array. Dense array of at most 128 entries.
 
----Accepted input for DisplayPanelMessageDefinition. Unknown fields refused.
+---Accepted input for DisplayPanelMessageDefinition. Unknown fields are refused.
 ---@class TC.Config.DisplayPanelMessageDefinition
----@field condition TC.Config.CircuitConditionDefinition Display-message visibility condition. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed.
----@field icon TC.Config.SignalID Display-message signal icon identity. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field text string Display-message text, bounded and without NUL. At most 256 bytes; no NUL.
+---@field condition TC.Config.CircuitConditionDefinition Display-message visibility condition. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed.
+---@field icon TC.Config.SignalID Display-message signal icon identity. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field text string Display-message text within its byte limit. NUL is not permitted. At most 256 bytes. NUL is not permitted.
 
----Accepted input for ItemCountType. Finite integer; domain 0..4294967295.
+---Accepted input for ItemCountType. Finite integer. Domain: 0..4294967295.
 ---@alias TC.Config.ItemCountType integer
 
----Accepted input for LogisticFilter. Unknown fields refused. Default minimum 0; current adapter defaults item import_from to registered nauvis when available. Maximum cannot be below minimum. Nonzero object-filter minimum requires explicit exact quality. Section filters additionally require index and reject duplicate slots/effective identities.
+---Accepted input for LogisticFilter. Unknown fields are refused. The minimum defaults to 0. The current adapter uses registered nauvis for item import_from by default when available. The maximum cannot be less than the minimum. A nonzero minimum in an object filter requires explicit exact quality. Section filters also require index. Duplicate slots and effective identities are refused.
 ---@class TC.Config.LogisticFilter
----@field import_from? string Installed import location; current adapter defaults item imports to registered nauvis when available. At most 256 bytes; no NUL. Installed space_location name, never a native object.
----@field max? TC.Config.ItemCountType Maximum requested count, not below a supplied minimum. Finite integer; domain 0..4294967295.
----@field min? integer Minimum requested count; defaults zero. Nonzero filtered counts require exact quality. Finite integer; domain -2147483648..2147483647.
----@field minimum_delivery_count? TC.Config.ItemCountType Minimum native delivery quantity for this filter. Finite integer; domain 0..4294967295.
----@field value? TC.Config.SignalFilter Signal filter; absent value means an empty slot, not a numeric zero signal.
+---@field import_from? string Installed import location. The current adapter uses registered nauvis for item imports by default when available. At most 256 bytes. NUL is not permitted. Use an installed space_location name, not a native object.
+---@field max? TC.Config.ItemCountType Maximum requested count. This cannot be less than a supplied minimum. Finite integer. Domain: 0..4294967295.
+---@field min? integer Minimum requested count. The default is zero. A nonzero filtered count requires exact quality. Finite integer. Domain: -2147483648..2147483647.
+---@field minimum_delivery_count? TC.Config.ItemCountType Minimum native delivery quantity for this filter. Finite integer. Domain: 0..4294967295.
+---@field value? TC.Config.SignalFilter Signal filter. An absent value means an empty slot, not a numeric zero signal.
 
----Accepted input for ProgrammableSpeakerCircuitParameters. Unknown fields refused. These native circuit settings are independent of Speaker API playback. Instrument/note indexes are zero-based and checked on the target.
+---Accepted input for ProgrammableSpeakerCircuitParameters. Unknown fields are refused. These native circuit settings are independent of Speaker API playback. Instrument and note indexes are zero-based. The target determines valid indexes.
 ---@class TC.Config.ProgrammableSpeakerCircuitParameters
----@field instrument_id integer Zero-based native instrument index, validated against this target speaker. Finite integer; domain 0..4294967295.
----@field note_id integer Zero-based note index in the selected target instrument. Finite integer; domain 0..4294967295.
+---@field instrument_id integer Zero-based native instrument index. The target speaker determines valid indexes. Finite integer. Domain: 0..4294967295.
+---@field note_id integer Zero-based note index in the selected target instrument. Finite integer. Domain: 0..4294967295.
 ---@field signal_value_is_pitch boolean Use the circuit signal value as the native note pitch index.
 ---@field stop_playing_sounds boolean Native circuit-speaker stop-playing switch.
 
----Union alternative. Unknown fields refused. Unknown fields refused.
+---Union alternative. Unknown fields are refused. Unknown fields are refused.
 ---@class TC.Config.QualityCondition.Variant1
----@field comparator? TC.Config.ComparatorString Comparison symbol; >=, <= and != normalize to ≥, ≤ and ≠.
----@field quality? string Exact installed quality name; normalization defaults normal where this concept permits omission. At most 256 bytes; no NUL.
+---@field comparator? TC.Config.ComparatorString Comparison symbol. >=, <=, and != normalize to ≥, ≤, and ≠.
+---@field quality? string Exact installed quality name. Normalization uses normal when this concept permits omission. At most 256 bytes. NUL is not permitted.
 
----Accepted input for QualityCondition.  Input accepts a registered quality string or object. Readback is an object with explicit quality (default normal) and comparator (default =); comparator aliases normalize.
+---Accepted input for QualityCondition.  Input accepts a registered quality string or object. Readback is an object with explicit quality and comparator. Quality defaults to normal. The comparator defaults to =. Comparator aliases normalize.
 ---@alias TC.Config.QualityCondition TC.Config.QualityCondition.Variant1|string
 
----Accepted input for QualityID. At most 256 bytes; no NUL. Installed quality name, never a native object.
+---Accepted input for QualityID. At most 256 bytes. NUL is not permitted. Use an installed quality name, not a native object.
 ---@alias TC.Config.QualityID string
 
 ---Accepted input for SelectorCombinatorParameterOperation.
 ---@alias TC.Config.SelectorCombinatorParameterOperation "select"|"count"|"random"|"quality-transfer"|"rocket-capacity"|"stack-size"|"quality-filter"
 
----Accepted input for SelectorCombinatorParameters. Operation select. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+---Accepted input for SelectorCombinatorParameters. Operation select. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 ---@class TC.Config.SelectorCombinatorParameters.Select
----@field index_constant? integer Selector constant index; defaults zero when no index signal is supplied. Finite integer; domain -2147483648..2147483647.
----@field index_signal? TC.Config.SignalID Selector index signal; when supplied normalization omits index_constant. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field operation? "select" Exact operation discriminator; only that variant fields are accepted.
----@field select_max? boolean Select from maximum rather than minimum end; default true.
+---@field index_constant? integer Selector constant index. The default is zero when no index signal is supplied. Finite integer. Domain: -2147483648..2147483647.
+---@field index_signal? TC.Config.SignalID Selector index signal. When supplied, normalization omits index_constant. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field operation? "select" Exact operation discriminator. Only fields for that variant are accepted.
+---@field select_max? boolean Select from the maximum end instead of the minimum end. The default is true.
 
----Accepted input for SelectorCombinatorParameters. Operation count. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+---Accepted input for SelectorCombinatorParameters. Operation count. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 ---@class TC.Config.SelectorCombinatorParameters.Count
----@field count_signal? TC.Config.SignalID Optional selector count-output signal, only for count operation. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field operation "count" Exact operation discriminator; only that variant fields are accepted.
+---@field count_signal? TC.Config.SignalID Optional selector count-output signal. This applies only to the count operation. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field operation "count" Exact operation discriminator. Only fields for that variant are accepted.
 
----Accepted input for SelectorCombinatorParameters. Operation random. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+---Accepted input for SelectorCombinatorParameters. Operation random. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 ---@class TC.Config.SelectorCombinatorParameters.Random
----@field operation "random" Exact operation discriminator; only that variant fields are accepted.
----@field random_update_interval? integer Selector random refresh interval in simulation ticks; default zero. Finite integer; domain 0..4294967295.
+---@field operation "random" Exact operation discriminator. Only fields for that variant are accepted.
+---@field random_update_interval? integer Selector random refresh interval in simulation ticks. The default is zero. Finite integer. Domain: 0..4294967295.
 
----Accepted input for SelectorCombinatorParameters. Operation quality-transfer. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+---Accepted input for SelectorCombinatorParameters. Operation quality-transfer. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 ---@class TC.Config.SelectorCombinatorParameters.QualityTransfer
----@field operation "quality-transfer" Exact operation discriminator; only that variant fields are accepted.
----@field quality_destination_signal TC.Config.SignalID Quality-transfer destination signal; required on input but may be absent in native readback. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field quality_source_signal? TC.Config.SignalIDBase Quality-transfer source when selecting quality from a signal. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field quality_source_static? TC.Config.BlueprintQualityID Static quality-transfer source; default normal when not using a signal. Unknown fields refused.
----@field select_quality_from_signal? boolean Choose signal quality rather than static quality; default false.
+---@field operation "quality-transfer" Exact operation discriminator. Only fields for that variant are accepted.
+---@field quality_destination_signal TC.Config.SignalID Quality-transfer destination signal. Input requires this field; native readback can omit it. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field quality_source_signal? TC.Config.SignalIDBase Quality-transfer source when selecting quality from a signal. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field quality_source_static? TC.Config.BlueprintQualityID Static quality-transfer source. The default is normal when a signal is not used. Unknown fields are refused.
+---@field select_quality_from_signal? boolean Select quality from a signal instead of static quality. The default is false.
 
----Accepted input for SelectorCombinatorParameters. Operation rocket-capacity. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+---Accepted input for SelectorCombinatorParameters. Operation rocket-capacity. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 ---@class TC.Config.SelectorCombinatorParameters.RocketCapacity
----@field operation "rocket-capacity" Exact operation discriminator; only that variant fields are accepted.
+---@field operation "rocket-capacity" Exact operation discriminator. Only fields for that variant are accepted.
 
----Accepted input for SelectorCombinatorParameters. Operation stack-size. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+---Accepted input for SelectorCombinatorParameters. Operation stack-size. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 ---@class TC.Config.SelectorCombinatorParameters.StackSize
----@field operation "stack-size" Exact operation discriminator; only that variant fields are accepted.
+---@field operation "stack-size" Exact operation discriminator. Only fields for that variant are accepted.
 
----Accepted input for SelectorCombinatorParameters. Operation quality-filter. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+---Accepted input for SelectorCombinatorParameters. Operation quality-filter. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 ---@class TC.Config.SelectorCombinatorParameters.QualityFilter
----@field operation "quality-filter" Exact operation discriminator; only that variant fields are accepted.
----@field quality_filter? TC.Config.QualityCondition Installed quality/comparator selector filter, only for quality-filter.
+---@field operation "quality-filter" Exact operation discriminator. Only fields for that variant are accepted.
+---@field quality_filter? TC.Config.QualityCondition Installed quality and comparator selector filter. This applies only to quality-filter.
 
----Accepted input for SelectorCombinatorParameters. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields.
+---Accepted input for SelectorCombinatorParameters. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields.
 ---@alias TC.Config.SelectorCombinatorParameters TC.Config.SelectorCombinatorParameters.Select|TC.Config.SelectorCombinatorParameters.Count|TC.Config.SelectorCombinatorParameters.Random|TC.Config.SelectorCombinatorParameters.QualityTransfer|TC.Config.SelectorCombinatorParameters.RocketCapacity|TC.Config.SelectorCombinatorParameters.StackSize|TC.Config.SelectorCombinatorParameters.QualityFilter
 
----Union alternative. Unknown fields refused. Unknown fields refused.
+---Union alternative. Unknown fields are refused. Unknown fields are refused.
 ---@class TC.Config.SignalFilter.Variant1
----@field comparator? TC.Config.ComparatorString Comparison symbol; >=, <= and != normalize to ≥, ≤ and ≠.
----@field name string Exact prototype/quality identity named by the enclosing concept; no localization lookup. At most 256 bytes; no NUL.
----@field quality? string Exact installed quality name; normalization defaults normal where this concept permits omission. At most 256 bytes; no NUL. Installed quality name, never a native object.
----@field type? TC.Config.SignalIDType Signal prototype namespace; SignalID/SignalIDBase require an explicit input type.
+---@field comparator? TC.Config.ComparatorString Comparison symbol. >=, <=, and != normalize to ≥, ≤, and ≠.
+---@field name string Exact prototype or quality identity for the enclosing concept. No localization lookup occurs. At most 256 bytes. NUL is not permitted.
+---@field quality? string Exact installed quality name. Normalization uses normal when this concept permits omission. At most 256 bytes. NUL is not permitted. Use an installed quality name, not a native object.
+---@field type? TC.Config.SignalIDType Signal prototype namespace. SignalID and SignalIDBase require an explicit input type.
 
----Accepted input for SignalFilter.  Input accepts a signal name string or object. String names select virtual when registered there, otherwise item. Object type defaults item. Readback always has name/type/quality/comparator, defaults normal and =. Wildcards are refused.
+---Accepted input for SignalFilter.  Input accepts a signal name string or object. A string name selects virtual when registered there; otherwise, it selects item. The object type defaults to item. Readback always has name, type, quality, and comparator. Quality defaults to normal. The comparator defaults to =. Wildcards are refused.
 ---@alias TC.Config.SignalFilter TC.Config.SignalFilter.Variant1|string
 
----Accepted input for SignalID. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit type/name required on input; output includes explicit type/name/quality. Default quality normal. Wildcards depend on role, not general SignalID permission.
+---Accepted input for SignalID. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Input requires explicit type and name. Output includes explicit type, name, and quality. The default quality is normal. Wildcard permission depends on the role, not general SignalID permission.
 ---@class TC.Config.SignalID
----@field name string Exact prototype/quality identity named by the enclosing concept; no localization lookup. At most 256 bytes; no NUL.
----@field quality? string Exact installed quality name; normalization defaults normal where this concept permits omission. At most 256 bytes; no NUL. Installed quality name, never a native object.
----@field type TC.Config.SignalIDType Signal prototype namespace; SignalID/SignalIDBase require an explicit input type.
+---@field name string Exact prototype or quality identity for the enclosing concept. No localization lookup occurs. At most 256 bytes. NUL is not permitted.
+---@field quality? string Exact installed quality name. Normalization uses normal when this concept permits omission. At most 256 bytes. NUL is not permitted. Use an installed quality name, not a native object.
+---@field type TC.Config.SignalIDType Signal prototype namespace. SignalID and SignalIDBase require an explicit input type.
 
----Accepted input for SignalIDBase. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit type/name required; no quality member. Native references become exact installed names.
+---Accepted input for SignalIDBase. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit type and name are required. There is no quality member. Native references become exact installed names.
 ---@class TC.Config.SignalIDBase
----@field name string Exact prototype/quality identity named by the enclosing concept; no localization lookup. At most 256 bytes; no NUL.
----@field type TC.Config.SignalIDType Signal prototype namespace; SignalID/SignalIDBase require an explicit input type.
+---@field name string Exact prototype or quality identity for the enclosing concept. No localization lookup occurs. At most 256 bytes. NUL is not permitted.
+---@field type TC.Config.SignalIDType Signal prototype namespace. SignalID and SignalIDBase require an explicit input type.
 
 ---Accepted input for SignalIDType.
 ---@alias TC.Config.SignalIDType "item"|"fluid"|"virtual"|"entity"|"recipe"|"space-location"|"asteroid-chunk"|"quality"
 
----Accepted input for SpaceLocationID. At most 256 bytes; no NUL. Installed space_location name, never a native object.
+---Accepted input for SpaceLocationID. At most 256 bytes. NUL is not permitted. Use an installed space_location name, not a native object.
 ---@alias TC.Config.SpaceLocationID string
 
----Root settings for LuaAccumulatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaAccumulatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaAccumulatorControlBehavior
----@field output_signal? TC.Config.SignalID Signal used for this control behavior output (charge, gate sensor or combinator result). Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field output_signal? TC.Config.SignalID Output signal for this control behavior: accumulator charge, gate sensor, or combinator result. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field read_charge? boolean Publish accumulator charge percentage to the circuit network. Explicit root patch clear: not supported.
 
----Root settings for LuaAgriculturalTowerControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaAgriculturalTowerControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaAgriculturalTowerControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
----@field read_contents? boolean Publish this entity inventory or fluid contents; belt mode is separately selected. Explicit root patch clear: not supported.
+---@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
+---@field read_contents? boolean Publish this entity inventory or fluid contents. Belt mode is selected separately. Explicit root patch clear: not supported.
 
----Root settings for LuaArithmeticCombinatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaArithmeticCombinatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaArithmeticCombinatorControlBehavior
----@field parameters? TC.Config.ArithmeticCombinatorParameters Complete combinator parameter object, replacing rather than merging its prior fields. Unknown fields refused. Explicit root patch clear: accepted with native reset/readback.
+---@field parameters? TC.Config.ArithmeticCombinatorParameters Complete combinator parameter object. It replaces previous fields; it does not merge them. Unknown fields are refused. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaArtilleryTurretControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaArtilleryTurretControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaArtilleryTurretControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
----@field read_ammo? boolean Publish contained ammunition/fluid; unavailable on an electric turret. Explicit root patch clear: not supported.
+---@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
+---@field read_ammo? boolean Publish contained ammunition or fluid. This field is unavailable on an electric turret. Explicit root patch clear: not supported.
 
----Root settings for LuaAssemblingMachineControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaAssemblingMachineControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaAssemblingMachineControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
----@field circuit_read_contents? boolean Publish ingredient/product/in-crafting contents and supported native inventories. Explicit root patch clear: not supported.
+---@field circuit_read_contents? boolean Publish ingredient, product, and in-crafting contents and supported native inventories. Explicit root patch clear: not supported.
 ---@field circuit_read_ingredients? boolean Publish the current recipe ingredient requirements as signals. Explicit root patch clear: not supported.
 ---@field circuit_read_recipe_finished? boolean Publish the recipe-completion signal when a craft finishes. Explicit root patch clear: not supported.
 ---@field circuit_read_working? boolean Publish the working-state signal. Explicit root patch clear: not supported.
----@field circuit_recipe_finished_signal? TC.Config.SignalID Signal identity used for recipe completion. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_recipe_finished_signal? TC.Config.SignalID Signal identity used for recipe completion. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_set_recipe? boolean Select the machine recipe from circuit signals. Explicit root patch clear: not supported.
----@field circuit_working_signal? TC.Config.SignalID Signal identity used for working state. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_working_signal? TC.Config.SignalID Signal identity used for working state. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field include_fuel? boolean Include the fuel inventory; compatibility name maps to native 2.1 read_fuel. fuel_inventory_required: Requires an actual native fuel inventory. Explicit root patch clear: not supported.
----@field include_in_crafting? boolean Include materials currently committed to crafting. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field include_fuel? boolean Include the fuel inventory. This compatibility name maps to native 2.1 read_fuel. fuel_inventory_required: An actual native fuel inventory is required. Explicit root patch clear: not supported.
+---@field include_in_crafting? boolean Include materials already committed to crafting. Explicit root patch clear: not supported.
+---@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaAsteroidCollectorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaAsteroidCollectorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaAsteroidCollectorControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
----@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. native_asteroid_no_logistic_connection: Native inherited connection switch is ineffective and not writable. Explicit root patch clear: not supported.
+---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. native_asteroid_no_logistic_connection: The inherited native connection switch has no effect and is not writable. Explicit root patch clear: not supported.
 ---@field include_hands? boolean Include asteroid contents captured in collector hands. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field read_content? boolean Publish asteroid collector contents to the circuit network. Explicit root patch clear: not supported.
----@field set_filter? boolean Select this native entity fluid/item filter from circuit signals. Explicit root patch clear: not supported.
+---@field set_filter? boolean Select this native entity fluid or item filter from circuit signals. Explicit root patch clear: not supported.
 
----Root settings for LuaCargoLandingPadControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaCargoLandingPadControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaCargoLandingPadControlBehavior
----@field circuit_exclusive_mode_of_operation? "none"|"send_contents"|"set_requests"|"send_contents_and_set_requests" Compatibility mode combining native read_contents and set_requests switches; both uses send_contents_and_set_requests. set_requests_requires_space_travel: Request-setting modes require the space-travel feature; otherwise only none/send_contents. Explicit root patch clear: not supported.
+---@field circuit_exclusive_mode_of_operation? "none"|"send_contents"|"set_requests"|"send_contents_and_set_requests" Compatibility mode for native read_contents and set_requests switches. Their combined mode is send_contents_and_set_requests. set_requests_requires_space_travel: Modes that set requests require the space-travel feature. Otherwise, only none and send_contents are available. Explicit root patch clear: not supported.
 
----Root settings for LuaCombinatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaCombinatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaCombinatorControlBehavior
 
----Root settings for LuaConstantCombinatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaConstantCombinatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaConstantCombinatorControlBehavior
 ---@field enabled? boolean Enable the constant combinator output. Explicit root patch clear: not supported.
 
----Root settings for LuaContainerControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaContainerControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaContainerControlBehavior
----@field read_contents? boolean Publish this entity inventory or fluid contents; belt mode is separately selected. Explicit root patch clear: not supported.
+---@field read_contents? boolean Publish this entity inventory or fluid contents. Belt mode is selected separately. Explicit root patch clear: not supported.
 
----Root settings for LuaControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaControlBehavior
 
----Root settings for LuaDeciderCombinatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaDeciderCombinatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaDeciderCombinatorControlBehavior
----@field parameters? TC.Config.DeciderCombinatorParameters Complete combinator parameter object, replacing rather than merging its prior fields. Unknown fields refused. Explicit root patch clear: accepted with native reset/readback.
+---@field parameters? TC.Config.DeciderCombinatorParameters Complete combinator parameter object. It replaces previous fields; it does not merge them. Unknown fields are refused. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaDisplayPanelControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaDisplayPanelControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaDisplayPanelControlBehavior
----@field messages? (TC.Config.DisplayPanelMessageDefinition)[] Complete display-panel message list; compatibility name maps to native 2.1 records. Dense array of at most 128 entries. Explicit root patch clear: not supported.
+---@field messages? (TC.Config.DisplayPanelMessageDefinition)[] Complete display-panel message list. This compatibility name maps to native 2.1 records. Dense array of at most 128 entries. Explicit root patch clear: not supported.
 
----Root settings for LuaFurnaceControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaFurnaceControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaFurnaceControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
----@field circuit_read_contents? boolean Publish ingredient/product/in-crafting contents and supported native inventories. Explicit root patch clear: not supported.
+---@field circuit_read_contents? boolean Publish ingredient, product, and in-crafting contents and supported native inventories. Explicit root patch clear: not supported.
 ---@field circuit_read_ingredients? boolean Publish the current recipe ingredient requirements as signals. Explicit root patch clear: not supported.
 ---@field circuit_read_recipe_finished? boolean Publish the recipe-completion signal when a craft finishes. Explicit root patch clear: not supported.
 ---@field circuit_read_working? boolean Publish the working-state signal. Explicit root patch clear: not supported.
----@field circuit_recipe_finished_signal? TC.Config.SignalID Signal identity used for recipe completion. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field circuit_working_signal? TC.Config.SignalID Signal identity used for working state. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_recipe_finished_signal? TC.Config.SignalID Signal identity used for recipe completion. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field circuit_working_signal? TC.Config.SignalID Signal identity used for working state. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field include_fuel? boolean Include the fuel inventory; compatibility name maps to native 2.1 read_fuel. fuel_inventory_required: Requires an actual native fuel inventory. Explicit root patch clear: not supported.
----@field include_in_crafting? boolean Include materials currently committed to crafting. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field include_fuel? boolean Include the fuel inventory. This compatibility name maps to native 2.1 read_fuel. fuel_inventory_required: An actual native fuel inventory is required. Explicit root patch clear: not supported.
+---@field include_in_crafting? boolean Include materials already committed to crafting. Explicit root patch clear: not supported.
+---@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaGenericOnOffControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaGenericOnOffControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaGenericOnOffControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaInserterControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaInserterControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaInserterControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
----@field circuit_hand_read_mode? "hold"|"pulse" Choose hold versus pulse for inserter hand-content reporting. Explicit root patch clear: not supported.
+---@field circuit_hand_read_mode? "hold"|"pulse" Select hold or pulse for reporting inserter hand contents. Explicit root patch clear: not supported.
 ---@field circuit_read_hand_contents? boolean Publish inserter hand contents. Explicit root patch clear: not supported.
----@field circuit_set_filters? boolean Select inserter/loader filters from circuit signals. Explicit root patch clear: not supported.
+---@field circuit_set_filters? boolean Select inserter or loader filters from circuit signals. Explicit root patch clear: not supported.
 ---@field circuit_set_stack_size? boolean Use the configured stack-control signal to set inserter stack size. Explicit root patch clear: not supported.
----@field circuit_stack_control_signal? TC.Config.SignalID Signal whose count controls inserter stack size. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_stack_control_signal? TC.Config.SignalID Signal whose count controls inserter stack size. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaLampControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaLampControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaLampControlBehavior
----@field blue_signal? TC.Config.SignalID Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field blue_signal? TC.Config.SignalID Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
----@field color_mode? "color_mapping"|"components"|"packed_rgb" Select lamp color-mapping, separate-component or packed-RGB interpretation. Explicit root patch clear: not supported.
+---@field color_mode? "color_mapping"|"components"|"packed_rgb" Select lamp color-mapping, separate-component, or packed-RGB interpretation. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field green_signal? TC.Config.SignalID Green color-component input for lamps, or green-state rail output. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
----@field red_signal? TC.Config.SignalID Red color-component input for lamps, or red-state rail output. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field rgb_signal? TC.Config.SignalID Signal carrying packed lamp RGB. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field green_signal? TC.Config.SignalID Green color-component input for lamps, or green-state rail output. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
+---@field red_signal? TC.Config.SignalID Red color-component input for lamps, or red-state rail output. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field rgb_signal? TC.Config.SignalID Signal carrying packed lamp RGB. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field use_colors? boolean Enable circuit-selected lamp color. Explicit root patch clear: not supported.
 
----Root settings for LuaLoaderControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaLoaderControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaLoaderControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field circuit_read_transfers? boolean Pulse loader-to-container transfer counts to the circuit network. Explicit root patch clear: not supported.
----@field circuit_set_filters? boolean Select inserter/loader filters from circuit signals. Explicit root patch clear: not supported.
+---@field circuit_set_filters? boolean Select inserter or loader filters from circuit signals. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaLogisticContainerControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaLogisticContainerControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaLogisticContainerControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
 ---@field circuit_condition_enabled? boolean Apply the logistic container circuit condition. Explicit root patch clear: not supported.
----@field circuit_exclusive_mode_of_operation? "none"|"send_contents"|"set_requests"|"send_contents_and_set_requests" Compatibility mode combining native read_contents and set_requests switches; both uses send_contents_and_set_requests. logistic_mode_requester_or_buffer: Writable only on requester/buffer containers. Explicit root patch clear: not supported.
+---@field circuit_exclusive_mode_of_operation? "none"|"send_contents"|"set_requests"|"send_contents_and_set_requests" Compatibility mode for native read_contents and set_requests switches. Their combined mode is send_contents_and_set_requests. logistic_mode_requester_or_buffer: Writable only on requester or buffer containers. Explicit root patch clear: not supported.
 
----Root settings for LuaMiningDrillControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaMiningDrillControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaMiningDrillControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field circuit_read_resources? boolean Publish mining resource amounts selected by resource_read_mode. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field resource_read_mode? "entire_patch"|"this_miner" Select this miner area versus the whole resource patch. Explicit root patch clear: not supported.
 
----Root settings for LuaProgrammableSpeakerControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaProgrammableSpeakerControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaProgrammableSpeakerControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
----@field circuit_parameters? TC.Config.ProgrammableSpeakerCircuitParameters Native circuit-triggered speaker settings, separate from the Speaker playback API. Unknown fields refused. Explicit root patch clear: not supported.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
+---@field circuit_parameters? TC.Config.ProgrammableSpeakerCircuitParameters Native circuit-triggered speaker settings, separate from the Speaker playback API. Unknown fields are refused. Explicit root patch clear: not supported.
 
----Root settings for LuaProxyContainerControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaProxyContainerControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaProxyContainerControlBehavior
----@field read_contents? boolean Publish this entity inventory or fluid contents; belt mode is separately selected. Explicit root patch clear: not supported.
+---@field read_contents? boolean Publish this entity inventory or fluid contents. Belt mode is selected separately. Explicit root patch clear: not supported.
 
----Root settings for LuaPumpControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaPumpControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaPumpControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
----@field set_filter? boolean Select this native entity fluid/item filter from circuit signals. Explicit root patch clear: not supported.
+---@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
+---@field set_filter? boolean Select this native entity fluid or item filter from circuit signals. Explicit root patch clear: not supported.
 
----Root settings for LuaRadarControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaRadarControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaRadarControlBehavior
 
----Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields refused. rail_chain_signal_only: Available only on chain signals; ordinary rail signals cannot read/write it. Explicit root patch clear: accepted with native reset/readback. Unknown fields refused. rail_chain_signal_only: Available only on chain signals; ordinary rail signals cannot read/write it. Explicit root patch clear: accepted with native reset/readback. Explicit type/name required on input; output includes explicit type/name/quality. Default quality normal. Wildcards depend on role, not general SignalID permission.
+---Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields are refused. rail_chain_signal_only: Available only on chain signals. Ordinary rail signals cannot read or write this field. Explicit root patch clear: accepted with native reset and readback. Unknown fields are refused. rail_chain_signal_only: Available only on chain signals. Ordinary rail signals cannot read or write this field. Explicit root patch clear: accepted with native reset and readback. Input requires explicit type and name. Output includes explicit type, name, and quality. The default quality is normal. Wildcard permission depends on the role, not general SignalID permission.
 ---@class TC.Config.LuaRailSignalBaseControlBehavior.blue_signal
----@field name string Exact prototype/quality identity named by the enclosing concept; no localization lookup. At most 256 bytes; no NUL. Explicit root patch clear: not supported.
----@field quality? string Exact installed quality name; normalization defaults normal where this concept permits omission. At most 256 bytes; no NUL. Installed quality name, never a native object. Explicit root patch clear: not supported.
----@field type TC.Config.SignalIDType Signal prototype namespace; SignalID/SignalIDBase require an explicit input type. Explicit root patch clear: not supported.
+---@field name string Exact prototype or quality identity for the enclosing concept. No localization lookup occurs. At most 256 bytes. NUL is not permitted. Explicit root patch clear: not supported.
+---@field quality? string Exact installed quality name. Normalization uses normal when this concept permits omission. At most 256 bytes. NUL is not permitted. Use an installed quality name, not a native object. Explicit root patch clear: not supported.
+---@field type TC.Config.SignalIDType Signal prototype namespace. SignalID and SignalIDBase require an explicit input type. Explicit root patch clear: not supported.
 
----Root settings for LuaRailSignalBaseControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaRailSignalBaseControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaRailSignalBaseControlBehavior
----@field blue_signal? TC.Config.LuaRailSignalBaseControlBehavior.blue_signal Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields refused. rail_chain_signal_only: Available only on chain signals; ordinary rail signals cannot read/write it. Explicit root patch clear: accepted with native reset/readback.
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
+---@field blue_signal? TC.Config.LuaRailSignalBaseControlBehavior.blue_signal Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields are refused. rail_chain_signal_only: Available only on chain signals. Ordinary rail signals cannot read or write this field. Explicit root patch clear: accepted with native reset and readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
 ---@field close_signal? boolean Close the rail signal according to its circuit condition. Explicit root patch clear: not supported.
----@field green_signal? TC.Config.SignalID Green color-component input for lamps, or green-state rail output. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field orange_signal? TC.Config.SignalID Signal representing an orange rail-signal state. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field green_signal? TC.Config.SignalID Green color-component input for lamps, or green-state rail output. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field orange_signal? TC.Config.SignalID Signal representing an orange rail-signal state. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field read_signal? boolean Publish the native rail-signal state. Explicit root patch clear: not supported.
----@field red_signal? TC.Config.SignalID Red color-component input for lamps, or red-state rail output. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field red_signal? TC.Config.SignalID Red color-component input for lamps, or red-state rail output. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaReactorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaReactorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaReactorControlBehavior
 ---@field read_fuel? boolean Publish reactor fuel inventory and currently burning fuel. Explicit root patch clear: not supported.
 ---@field read_temperature? boolean Publish reactor temperature. Explicit root patch clear: not supported.
----@field temperature_signal? TC.Config.SignalID Signal carrying reactor temperature. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field temperature_signal? TC.Config.SignalID Signal carrying reactor temperature. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaRoboportControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaRoboportControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaRoboportControlBehavior
----@field available_construction_output_signal? TC.Config.SignalID Signal for available construction robots. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field available_logistic_output_signal? TC.Config.SignalID Signal for available logistic robots. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field read_items_mode? "logistics"|"missing_requests"|"none" Select logistics contents, missing requests or no item reporting. Explicit root patch clear: not supported.
----@field read_logistics? boolean Legacy logistics-content reporting switch; prefer read_items_mode. Explicit root patch clear: not supported.
----@field read_robot_stats? boolean Publish native logistic/construction robot statistics. Explicit root patch clear: not supported.
----@field roboport_count_output_signal? TC.Config.SignalID Signal carrying the roboport count. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field total_construction_output_signal? TC.Config.SignalID Signal for total construction robots. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field total_logistic_output_signal? TC.Config.SignalID Signal for total logistic robots. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field available_construction_output_signal? TC.Config.SignalID Signal for available construction robots. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field available_logistic_output_signal? TC.Config.SignalID Signal for available logistic robots. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field read_items_mode? "logistics"|"missing_requests"|"none" Select logistics contents, missing requests, or no item reporting. Explicit root patch clear: not supported.
+---@field read_logistics? boolean Legacy switch for reporting logistics contents. Prefer read_items_mode. Explicit root patch clear: not supported.
+---@field read_robot_stats? boolean Publish native statistics for logistic and construction robots. Explicit root patch clear: not supported.
+---@field roboport_count_output_signal? TC.Config.SignalID Signal carrying the roboport count. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field total_construction_output_signal? TC.Config.SignalID Signal for total construction robots. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field total_logistic_output_signal? TC.Config.SignalID Signal for total logistic robots. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaRocketSiloControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaRocketSiloControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaRocketSiloControlBehavior
----@field read_mode? "logistic_inventory"|"none"|"orbital_requests" Select rocket-silo logistic inventory, orbital requests or no reporting. Explicit root patch clear: not supported.
+---@field read_mode? "logistic_inventory"|"none"|"orbital_requests" Select rocket-silo logistic inventory, orbital requests, or no reporting. Explicit root patch clear: not supported.
 
----Root settings for LuaSelectorCombinatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaSelectorCombinatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaSelectorCombinatorControlBehavior
----@field parameters? TC.Config.SelectorCombinatorParameters Complete combinator parameter object, replacing rather than merging its prior fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed. Explicit root patch clear: not supported.
+---@field parameters? TC.Config.SelectorCombinatorParameters Complete combinator parameter object. It replaces previous fields; it does not merge them. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed. Explicit root patch clear: not supported.
 
----Root settings for LuaSpacePlatformHubControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaSpacePlatformHubControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaSpacePlatformHubControlBehavior
----@field damage_taken_signal? TC.Config.SignalID Signal carrying platform damage taken. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field read_contents? boolean Publish this entity inventory or fluid contents; belt mode is separately selected. Explicit root patch clear: not supported.
+---@field damage_taken_signal? TC.Config.SignalID Signal carrying platform damage taken. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field read_contents? boolean Publish this entity inventory or fluid contents. Belt mode is selected separately. Explicit root patch clear: not supported.
 ---@field read_damage_taken? boolean Publish platform damage taken. Explicit root patch clear: not supported.
 ---@field read_moving_from? boolean Publish the current platform connection origin. Explicit root patch clear: not supported.
 ---@field read_moving_to? boolean Publish the current platform connection destination. Explicit root patch clear: not supported.
 ---@field read_speed? boolean Publish current platform speed. Explicit root patch clear: not supported.
 ---@field send_to_platform? boolean Make circuit signals available to platform schedule conditions. Explicit root patch clear: not supported.
----@field speed_signal? TC.Config.SignalID Signal carrying current platform speed. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field speed_signal? TC.Config.SignalID Signal carrying current platform speed. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaSplitterControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaSplitterControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaSplitterControlBehavior
----@field input_left_condition? TC.Config.CircuitConditionDefinition Condition selecting the splitter left input side. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
----@field input_right_condition? TC.Config.CircuitConditionDefinition Condition selecting the splitter right input side. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
----@field output_left_condition? TC.Config.CircuitConditionDefinition Condition selecting the splitter left output side. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
----@field output_right_condition? TC.Config.CircuitConditionDefinition Condition selecting the splitter right output side. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
----@field set_filter? boolean Select this native entity fluid/item filter from circuit signals. Explicit root patch clear: not supported.
+---@field input_left_condition? TC.Config.CircuitConditionDefinition Condition selecting the splitter left input side. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
+---@field input_right_condition? TC.Config.CircuitConditionDefinition Condition selecting the splitter right input side. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
+---@field output_left_condition? TC.Config.CircuitConditionDefinition Condition selecting the splitter left output side. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
+---@field output_right_condition? TC.Config.CircuitConditionDefinition Condition selecting the splitter right output side. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
+---@field set_filter? boolean Select this native entity fluid or item filter from circuit signals. Explicit root patch clear: not supported.
 ---@field set_input_side? boolean Let native circuit conditions select splitter input priority. Explicit root patch clear: not supported.
 ---@field set_output_side? boolean Let native circuit conditions select splitter output priority. Explicit root patch clear: not supported.
 
----Root settings for LuaStorageTankControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaStorageTankControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaStorageTankControlBehavior
----@field read_contents? boolean Publish this entity inventory or fluid contents; belt mode is separately selected. Explicit root patch clear: not supported.
+---@field read_contents? boolean Publish this entity inventory or fluid contents. Belt mode is selected separately. Explicit root patch clear: not supported.
 
----Root settings for LuaTrainStopControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaTrainStopControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaTrainStopControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
----@field priority_signal? TC.Config.SignalID Signal controlling train-stop priority. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
+---@field priority_signal? TC.Config.SignalID Signal controlling train-stop priority. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field read_from_train? boolean Publish stopped-train contents to the circuit network. Explicit root patch clear: not supported.
 ---@field read_stopped_train? boolean Publish the stopped train identity signal. Explicit root patch clear: not supported.
 ---@field read_trains_count? boolean Publish the count of trains assigned to this stop. Explicit root patch clear: not supported.
 ---@field send_to_train? boolean Supply circuit signals to the stopped train. Explicit root patch clear: not supported.
 ---@field set_priority? boolean Enable signal-controlled train-stop priority. Explicit root patch clear: not supported.
 ---@field set_trains_limit? boolean Enable signal-controlled incoming-train limit. Explicit root patch clear: not supported.
----@field stopped_train_signal? TC.Config.SignalID Signal carrying stopped train identity. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field trains_count_signal? TC.Config.SignalID Signal carrying the incoming-train count. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field trains_limit_signal? TC.Config.SignalID Signal controlling the incoming-train limit. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field stopped_train_signal? TC.Config.SignalID Signal carrying stopped train identity. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field trains_count_signal? TC.Config.SignalID Signal carrying the incoming-train count. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field trains_limit_signal? TC.Config.SignalID Signal controlling the incoming-train limit. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaTransportBeltControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaTransportBeltControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaTransportBeltControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
----@field read_contents? boolean Publish this entity inventory or fluid contents; belt mode is separately selected. Explicit root patch clear: not supported.
+---@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
+---@field read_contents? boolean Publish this entity inventory or fluid contents. Belt mode is selected separately. Explicit root patch clear: not supported.
 ---@field read_contents_mode? "entire_belt_hold"|"hold"|"pulse" Select belt pulse, local hold or whole-belt hold reporting. Explicit root patch clear: not supported.
 
----Root settings for LuaTurretControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaTurretControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaTurretControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field ignore_unlisted_targets_condition? TC.Config.CircuitConditionDefinition Condition for ignoring targets outside the turret priority list. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
----@field read_ammo? boolean Publish contained ammunition/fluid; unavailable on an electric turret. ammo_or_fluid_turret_required: Requires an ammo/fluid turret, not an electric turret. Explicit root patch clear: not supported.
+---@field ignore_unlisted_targets_condition? TC.Config.CircuitConditionDefinition Condition for ignoring targets outside the turret priority list. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
+---@field logistic_condition? TC.Config.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
+---@field read_ammo? boolean Publish contained ammunition or fluid. This field is unavailable on an electric turret. ammo_or_fluid_turret_required: An ammunition or fluid turret is required. An electric turret is not permitted. Explicit root patch clear: not supported.
 ---@field set_ignore_unlisted_targets? boolean Enable condition-controlled exclusion of unlisted targets. Explicit root patch clear: not supported.
----@field set_priority_list? boolean Derive turret target priorities from circuit signals. Explicit root patch clear: not supported.
+---@field set_priority_list? boolean Get turret target priorities from circuit signals. Explicit root patch clear: not supported.
 
----Root settings for LuaWallControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaWallControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.LuaWallControlBehavior
----@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
+---@field circuit_condition? TC.Config.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
 ---@field open_gate? boolean Control the associated gate using the circuit condition. Explicit root patch clear: not supported.
----@field output_signal? TC.Config.SignalID Signal used for this control behavior output (charge, gate sensor or combinator result). Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field output_signal? TC.Config.SignalID Output signal for this control behavior: accumulator charge, gate sensor, or combinator result. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field read_sensor? boolean Publish the associated gate sensor state. Explicit root patch clear: not supported.
 
----Indexed native section filter. Dense array with unique slot indexes and effective identities. Default minimum 0; current adapter defaults item import_from to registered nauvis when available. Maximum cannot be below minimum. Nonzero object-filter minimum requires explicit exact quality. Section filters additionally require index and reject duplicate slots/effective identities. Unknown fields refused. Explicit root patch clear: not supported.
+---Indexed native section filter. Dense array with unique slot indexes and effective identities. The minimum defaults to 0. The current adapter uses registered nauvis for item import_from by default when available. The maximum cannot be less than the minimum. A nonzero minimum in an object filter requires explicit exact quality. Section filters also require index. Duplicate slots and effective identities are refused. Unknown fields are refused. Explicit root patch clear: not supported.
 ---@class TC.Config.SectionFilter
----@field import_from? string Installed import location; current adapter defaults item imports to registered nauvis when available. At most 256 bytes; no NUL. Installed space_location name, never a native object. Explicit root patch clear: not supported.
----@field index integer Explicit native filter slot index; sparse slots allowed in a dense unique-index array. Finite integer; domain 1..128. Explicit root patch clear: not supported.
----@field max? TC.Config.ItemCountType Maximum requested count, not below a supplied minimum. Finite integer; domain 0..4294967295. Explicit root patch clear: not supported.
----@field min? integer Minimum requested count; defaults zero. Nonzero filtered counts require exact quality. Finite integer; domain -2147483648..2147483647. Explicit root patch clear: not supported.
----@field minimum_delivery_count? TC.Config.ItemCountType Minimum native delivery quantity for this filter. Finite integer; domain 0..4294967295. Explicit root patch clear: not supported.
----@field value? TC.Config.SignalFilter Signal filter; absent value means an empty slot, not a numeric zero signal. Explicit root patch clear: not supported.
+---@field import_from? string Installed import location. The current adapter uses registered nauvis for item imports by default when available. At most 256 bytes. NUL is not permitted. Use an installed space_location name, not a native object. Explicit root patch clear: not supported.
+---@field index integer Explicit native filter slot index. A dense array can contain sparse slot indexes, but each index must be unique. Finite integer. Domain: 1..128. Explicit root patch clear: not supported.
+---@field max? TC.Config.ItemCountType Maximum requested count. This cannot be less than a supplied minimum. Finite integer. Domain: 0..4294967295. Explicit root patch clear: not supported.
+---@field min? integer Minimum requested count. The default is zero. A nonzero filtered count requires exact quality. Finite integer. Domain: -2147483648..2147483647. Explicit root patch clear: not supported.
+---@field minimum_delivery_count? TC.Config.ItemCountType Minimum native delivery quantity for this filter. Finite integer. Domain: 0..4294967295. Explicit root patch clear: not supported.
+---@field value? TC.Config.SignalFilter Signal filter. An absent value means an empty slot, not a numeric zero signal. Explicit root patch clear: not supported.
 
----Section values. Addition defaults active=true, group empty, multiplier=1; local filters empty. Group joins inherit shared filters. Unknown fields refused.
+---Section values. Addition defaults: active=true, empty group, multiplier=1, and empty local filters. Group joins inherit shared filters. Unknown fields are refused.
 ---@class TC.Config.SectionValues
----@field active? boolean Section activation; addSection default true. Explicit root patch clear: not supported.
----@field filters? (TC.Config.SectionFilter)[] Complete section filter replacement; addSection defaults empty only for a local group. Dense array of at most 128 entries. Explicit root patch clear: not supported.
----@field group? string Shared-group name; empty string is local and is addSection default. At most 256 bytes; no NUL. Explicit root patch clear: not supported.
----@field multiplier? number Section output multiplier; addSection default 1, readback uses native float32 precision. Finite number; domain -9007199254740991..9007199254740991. Explicit root patch clear: not supported.
+---@field active? boolean Section activation. The addSection default is true. Explicit root patch clear: not supported.
+---@field filters? (TC.Config.SectionFilter)[] Complete replacement for section filters. The addSection default is empty only for a local group. Dense array of at most 128 entries. Explicit root patch clear: not supported.
+---@field group? string Shared-group name. An empty string means local. This is the addSection default. At most 256 bytes. NUL is not permitted. Explicit root patch clear: not supported.
+---@field multiplier? number Section output multiplier. The addSection default is 1. Readback uses native float32 precision. Finite number. Domain: -9007199254740991..9007199254740991. Explicit root patch clear: not supported.
 
----Root setting replacements; select the actual behavior via live capabilities.
+---Root setting replacements. Select the actual behavior through live capabilities.
 ---@alias TC.Config.Values TC.Config.LuaAccumulatorControlBehavior|TC.Config.LuaAgriculturalTowerControlBehavior|TC.Config.LuaArithmeticCombinatorControlBehavior|TC.Config.LuaArtilleryTurretControlBehavior|TC.Config.LuaAssemblingMachineControlBehavior|TC.Config.LuaAsteroidCollectorControlBehavior|TC.Config.LuaCargoLandingPadControlBehavior|TC.Config.LuaCombinatorControlBehavior|TC.Config.LuaConstantCombinatorControlBehavior|TC.Config.LuaContainerControlBehavior|TC.Config.LuaControlBehavior|TC.Config.LuaDeciderCombinatorControlBehavior|TC.Config.LuaDisplayPanelControlBehavior|TC.Config.LuaFurnaceControlBehavior|TC.Config.LuaGenericOnOffControlBehavior|TC.Config.LuaInserterControlBehavior|TC.Config.LuaLampControlBehavior|TC.Config.LuaLoaderControlBehavior|TC.Config.LuaLogisticContainerControlBehavior|TC.Config.LuaMiningDrillControlBehavior|TC.Config.LuaProgrammableSpeakerControlBehavior|TC.Config.LuaProxyContainerControlBehavior|TC.Config.LuaPumpControlBehavior|TC.Config.LuaRadarControlBehavior|TC.Config.LuaRailSignalBaseControlBehavior|TC.Config.LuaReactorControlBehavior|TC.Config.LuaRoboportControlBehavior|TC.Config.LuaRocketSiloControlBehavior|TC.Config.LuaSelectorCombinatorControlBehavior|TC.Config.LuaSpacePlatformHubControlBehavior|TC.Config.LuaSplitterControlBehavior|TC.Config.LuaStorageTankControlBehavior|TC.Config.LuaTrainStopControlBehavior|TC.Config.LuaTransportBeltControlBehavior|TC.Config.LuaTurretControlBehavior|TC.Config.LuaWallControlBehavior
 
 ---Normalized readback for ArithmeticCombinatorParameterOperation.
 ---@alias TC.Config.Read.ArithmeticCombinatorParameterOperation "*"|"/"|"+"|"-"|"%"|"^"|"<<"|">>"|"AND"|"OR"|"XOR"
 
----Normalized readback for ArithmeticCombinatorParameters. Unknown fields refused. Default operation *, missing numeric operands 0, networks both. Signal operands replace corresponding constants. First each and output each are allowed; each output requires each first input.
+---Normalized readback for ArithmeticCombinatorParameters. Unknown fields are refused. The default operation is *. Missing numeric operands default to 0. Both networks are enabled by default. Signal operands replace their corresponding constants. The first and output signals can be each. An each output requires an each first input.
 ---@class TC.Config.Read.ArithmeticCombinatorParameters
----@field first_constant? integer First numeric operand; a supplied first_signal takes precedence in normalization. Finite integer; domain -2147483648..2147483647.
----@field first_signal? TC.Config.Read.SignalID First signal operand; wildcard permission depends on its enclosing concept/role. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field first_signal_networks TC.Config.Read.CircuitNetworkSelection Networks contributing to the first operand; omitted members normalize true. Unknown fields refused.
----@field operation TC.Config.Read.ArithmeticCombinatorParameterOperation Exact operation discriminator; only that variant fields are accepted.
----@field output_signal? TC.Config.Read.SignalID Signal used for this control behavior output (charge, gate sensor or combinator result). Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field second_constant? integer Second numeric operand; second_signal takes precedence in arithmetic normalization. Finite integer; domain -2147483648..2147483647.
----@field second_signal? TC.Config.Read.SignalID Second signal operand; wildcard pseudo-signals are not accepted here. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field second_signal_networks TC.Config.Read.CircuitNetworkSelection Networks contributing to the second operand; omitted members normalize true. Unknown fields refused.
+---@field first_constant? integer First numeric operand. A supplied first_signal replaces this constant during normalization. Finite integer. Domain: -2147483648..2147483647.
+---@field first_signal? TC.Config.Read.SignalID First signal operand. Wildcard permission depends on the enclosing concept and role. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field first_signal_networks TC.Config.Read.CircuitNetworkSelection Networks that supply the first operand. An omitted member becomes true during normalization. Unknown fields are refused.
+---@field operation TC.Config.Read.ArithmeticCombinatorParameterOperation Exact operation discriminator. Only fields for that variant are accepted.
+---@field output_signal? TC.Config.Read.SignalID Output signal for this control behavior: accumulator charge, gate sensor, or combinator result. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field second_constant? integer Second numeric operand. A supplied second_signal replaces this constant during arithmetic normalization. Finite integer. Domain: -2147483648..2147483647.
+---@field second_signal? TC.Config.Read.SignalID Second signal operand. Wildcard pseudo-signals are not accepted here. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field second_signal_networks TC.Config.Read.CircuitNetworkSelection Networks that supply the second operand. An omitted member becomes true during normalization. Unknown fields are refused.
 
----Normalized readback for BlueprintQualityID. Unknown fields refused. Quality name defaults to installed normal; no native prototype object is exposed.
+---Normalized readback for BlueprintQualityID. Unknown fields are refused. The quality name defaults to installed normal. No native prototype object is exposed.
 ---@class TC.Config.Read.BlueprintQualityID
----@field name string Exact prototype/quality identity named by the enclosing concept; no localization lookup.
+---@field name string Exact prototype or quality identity for the enclosing concept. No localization lookup occurs.
 
----Normalized readback for CircuitConditionDefinition. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. constant and second_signal are exclusive. Default comparator < and constant 0 without a second signal. fulfilled is read-only and excluded. First operand permits anything/everything but not each; ordinary second/root signals reject wildcards.
+---Normalized readback for CircuitConditionDefinition. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. constant and second_signal cannot both be supplied. The default comparator is <. Without a second signal, constant defaults to 0. fulfilled is read-only and excluded. The first operand permits anything and everything, but not each. Ordinary second and root signals reject wildcards.
 ---@class TC.Config.Read.CircuitConditionDefinition
----@field comparator TC.Config.Read.ComparatorString Comparison symbol; >=, <= and != normalize to ≥, ≤ and ≠.
----@field constant? integer Numeric operand or output count; enclosing concept determines the normalization default. Finite integer; domain -2147483648..2147483647.
----@field first_signal? TC.Config.Read.SignalID First signal operand; wildcard permission depends on its enclosing concept/role. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field second_signal? TC.Config.Read.SignalID Second signal operand; wildcard pseudo-signals are not accepted here. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+---@field comparator TC.Config.Read.ComparatorString Comparison symbol. >=, <=, and != normalize to ≥, ≤, and ≠.
+---@field constant? integer Numeric operand or output count. The enclosing concept determines the normalization default. Finite integer. Domain: -2147483648..2147483647.
+---@field first_signal? TC.Config.Read.SignalID First signal operand. Wildcard permission depends on the enclosing concept and role. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field second_signal? TC.Config.Read.SignalID Second signal operand. Wildcard pseudo-signals are not accepted here. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
----Normalized readback for CircuitNetworkSelection. Unknown fields refused. Omitted object or red/green members normalize to both colors enabled.
+---Normalized readback for CircuitNetworkSelection. Unknown fields are refused. An omitted object or omitted red and green members become both colors enabled during normalization.
 ---@class TC.Config.Read.CircuitNetworkSelection
----@field green boolean Include green circuit values; omitted member normalizes true.
----@field red boolean Include red circuit values; omitted member normalizes true.
+---@field green boolean Include green circuit values. An omitted member becomes true during normalization.
+---@field red boolean Include red circuit values. An omitted member becomes true during normalization.
 
 ---Normalized readback for ComparatorString.
 ---@alias TC.Config.Read.ComparatorString "="|">"|"<"|"≥"|"≤"|"≠"
 
----Normalized readback for DeciderCombinatorCondition. Unknown fields refused. Default comparator <, constant 0 without a second signal, compare_type or and both networks. First operand allows role-appropriate each/anything/everything.
+---Normalized readback for DeciderCombinatorCondition. Unknown fields are refused. The default comparator is <. Without a second signal, constant defaults to 0. compare_type defaults to or. Both networks are enabled by default. The first operand permits each, anything, or everything where its role permits that wildcard.
 ---@class TC.Config.Read.DeciderCombinatorCondition
----@field comparator TC.Config.Read.ComparatorString Comparison symbol; >=, <= and != normalize to ≥, ≤ and ≠.
----@field compare_type "and"|"or" Join this decider condition using and/or; default or.
----@field constant? integer Numeric operand or output count; enclosing concept determines the normalization default. Finite integer; domain -2147483648..2147483647.
----@field first_signal? TC.Config.Read.SignalID First signal operand; wildcard permission depends on its enclosing concept/role. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field first_signal_networks TC.Config.Read.CircuitNetworkSelection Networks contributing to the first operand; omitted members normalize true. Unknown fields refused.
----@field second_signal? TC.Config.Read.SignalID Second signal operand; wildcard pseudo-signals are not accepted here. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field second_signal_networks TC.Config.Read.CircuitNetworkSelection Networks contributing to the second operand; omitted members normalize true. Unknown fields refused.
+---@field comparator TC.Config.Read.ComparatorString Comparison symbol. >=, <=, and != normalize to ≥, ≤, and ≠.
+---@field compare_type "and"|"or" Join this decider condition with and or or. The default is or.
+---@field constant? integer Numeric operand or output count. The enclosing concept determines the normalization default. Finite integer. Domain: -2147483648..2147483647.
+---@field first_signal? TC.Config.Read.SignalID First signal operand. Wildcard permission depends on the enclosing concept and role. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field first_signal_networks TC.Config.Read.CircuitNetworkSelection Networks that supply the first operand. An omitted member becomes true during normalization. Unknown fields are refused.
+---@field second_signal? TC.Config.Read.SignalID Second signal operand. Wildcard pseudo-signals are not accepted here. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field second_signal_networks TC.Config.Read.CircuitNetworkSelection Networks that supply the second operand. An omitted member becomes true during normalization. Unknown fields are refused.
 
----Normalized readback for DeciderCombinatorOutput. Unknown fields refused. Input requires an output signal; cleared native readback can omit it. Default constant 1, copy_count_from_input true and both networks. An each signal needs an each condition in the same parameters.
+---Normalized readback for DeciderCombinatorOutput. Unknown fields are refused. Input requires an output signal. Cleared native readback can omit it. The default constant is 1. copy_count_from_input defaults to true. Both networks are enabled by default. An each signal requires an each condition in the same parameters.
 ---@class TC.Config.Read.DeciderCombinatorOutput
----@field constant integer Numeric operand or output count; enclosing concept determines the normalization default. Finite integer; domain -2147483648..2147483647.
----@field copy_count_from_input boolean Copy decider input count rather than fixed constant; default true.
----@field networks TC.Config.Read.CircuitNetworkSelection Decider-output contributing networks; default includes both. Unknown fields refused.
----@field signal? TC.Config.Read.SignalID Decider output signal, required on input but absent in a cleared native output. An each signal requires an each condition. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+---@field constant integer Numeric operand or output count. The enclosing concept determines the normalization default. Finite integer. Domain: -2147483648..2147483647.
+---@field copy_count_from_input boolean Copy the decider input count instead of using a fixed constant. The default is true.
+---@field networks TC.Config.Read.CircuitNetworkSelection Networks that supply decider outputs. The default includes both. Unknown fields are refused.
+---@field signal? TC.Config.Read.SignalID Decider output signal. It is required on input but can be absent in a cleared native output. An each signal requires an each condition. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
----Normalized readback for DeciderCombinatorParameters. Unknown fields refused. Complete required conditions/outputs arrays replace previous parameters. Each output requires an each first condition.
+---Normalized readback for DeciderCombinatorParameters. Unknown fields are refused. Complete required conditions and outputs arrays replace previous parameters. Each output requires an each first condition.
 ---@class TC.Config.Read.DeciderCombinatorParameters
 ---@field conditions (TC.Config.Read.DeciderCombinatorCondition)[] Complete ordered decider condition array.
 ---@field outputs (TC.Config.Read.DeciderCombinatorOutput)[] Complete ordered decider output array.
 
----Normalized readback for DisplayPanelMessageDefinition. Unknown fields refused.
+---Normalized readback for DisplayPanelMessageDefinition. Unknown fields are refused.
 ---@class TC.Config.Read.DisplayPanelMessageDefinition
----@field condition TC.Config.Read.CircuitConditionDefinition Display-message visibility condition. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed.
----@field icon TC.Config.Read.SignalID Display-message signal icon identity. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field text string Display-message text, bounded and without NUL.
+---@field condition TC.Config.Read.CircuitConditionDefinition Display-message visibility condition. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed.
+---@field icon TC.Config.Read.SignalID Display-message signal icon identity. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field text string Display-message text within its byte limit. NUL is not permitted.
 
----Normalized readback for ItemCountType. Finite integer; domain 0..4294967295.
+---Normalized readback for ItemCountType. Finite integer. Domain: 0..4294967295.
 ---@alias TC.Config.Read.ItemCountType integer
 
----Normalized readback for LogisticFilter. Unknown fields refused. Default minimum 0; current adapter defaults item import_from to registered nauvis when available. Maximum cannot be below minimum. Nonzero object-filter minimum requires explicit exact quality. Section filters additionally require index and reject duplicate slots/effective identities.
+---Normalized readback for LogisticFilter. Unknown fields are refused. The minimum defaults to 0. The current adapter uses registered nauvis for item import_from by default when available. The maximum cannot be less than the minimum. A nonzero minimum in an object filter requires explicit exact quality. Section filters also require index. Duplicate slots and effective identities are refused.
 ---@class TC.Config.Read.LogisticFilter
----@field import_from? string Installed import location; current adapter defaults item imports to registered nauvis when available. Installed space_location name, never a native object.
----@field max? TC.Config.Read.ItemCountType Maximum requested count, not below a supplied minimum. Finite integer; domain 0..4294967295.
----@field min integer Minimum requested count; defaults zero. Nonzero filtered counts require exact quality. Finite integer; domain -2147483648..2147483647.
----@field minimum_delivery_count? TC.Config.Read.ItemCountType Minimum native delivery quantity for this filter. Finite integer; domain 0..4294967295.
----@field value? TC.Config.Read.SignalFilter Signal filter; absent value means an empty slot, not a numeric zero signal. Unknown fields refused.
+---@field import_from? string Installed import location. The current adapter uses registered nauvis for item imports by default when available. Use an installed space_location name, not a native object.
+---@field max? TC.Config.Read.ItemCountType Maximum requested count. This cannot be less than a supplied minimum. Finite integer. Domain: 0..4294967295.
+---@field min integer Minimum requested count. The default is zero. A nonzero filtered count requires exact quality. Finite integer. Domain: -2147483648..2147483647.
+---@field minimum_delivery_count? TC.Config.Read.ItemCountType Minimum native delivery quantity for this filter. Finite integer. Domain: 0..4294967295.
+---@field value? TC.Config.Read.SignalFilter Signal filter. An absent value means an empty slot, not a numeric zero signal. Unknown fields are refused.
 
----Normalized readback for ProgrammableSpeakerCircuitParameters. Unknown fields refused. These native circuit settings are independent of Speaker API playback. Instrument/note indexes are zero-based and checked on the target.
+---Normalized readback for ProgrammableSpeakerCircuitParameters. Unknown fields are refused. These native circuit settings are independent of Speaker API playback. Instrument and note indexes are zero-based. The target determines valid indexes.
 ---@class TC.Config.Read.ProgrammableSpeakerCircuitParameters
----@field instrument_id integer Zero-based native instrument index, validated against this target speaker. Finite integer; domain 0..4294967295.
----@field note_id integer Zero-based note index in the selected target instrument. Finite integer; domain 0..4294967295.
+---@field instrument_id integer Zero-based native instrument index. The target speaker determines valid indexes. Finite integer. Domain: 0..4294967295.
+---@field note_id integer Zero-based note index in the selected target instrument. Finite integer. Domain: 0..4294967295.
 ---@field signal_value_is_pitch boolean Use the circuit signal value as the native note pitch index.
 ---@field stop_playing_sounds boolean Native circuit-speaker stop-playing switch.
 
----Normalized readback for QualityCondition. Unknown fields refused. Input accepts a registered quality string or object. Readback is an object with explicit quality (default normal) and comparator (default =); comparator aliases normalize.
+---Normalized readback for QualityCondition. Unknown fields are refused. Input accepts a registered quality string or object. Readback is an object with explicit quality and comparator. Quality defaults to normal. The comparator defaults to =. Comparator aliases normalize.
 ---@class TC.Config.Read.QualityCondition
----@field comparator TC.Config.Read.ComparatorString Comparison symbol; >=, <= and != normalize to ≥, ≤ and ≠.
----@field quality string Exact installed quality name; normalization defaults normal where this concept permits omission.
+---@field comparator TC.Config.Read.ComparatorString Comparison symbol. >=, <=, and != normalize to ≥, ≤, and ≠.
+---@field quality string Exact installed quality name. Normalization uses normal when this concept permits omission.
 
----Normalized readback for QualityID. Installed quality name, never a native object.
+---Normalized readback for QualityID. Use an installed quality name, not a native object.
 ---@alias TC.Config.Read.QualityID string
 
 ---Normalized readback for SelectorCombinatorParameterOperation.
 ---@alias TC.Config.Read.SelectorCombinatorParameterOperation "select"|"count"|"random"|"quality-transfer"|"rocket-capacity"|"stack-size"|"quality-filter"
 
----Normalized readback for SelectorCombinatorParameters. Operation select. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+---Normalized readback for SelectorCombinatorParameters. Operation select. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 ---@class TC.Config.Read.SelectorCombinatorParameters.Select
----@field index_constant? integer Selector constant index; defaults zero when no index signal is supplied. Finite integer; domain -2147483648..2147483647.
----@field index_signal? TC.Config.Read.SignalID Selector index signal; when supplied normalization omits index_constant. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field operation "select" Exact operation discriminator; only that variant fields are accepted.
----@field select_max boolean Select from maximum rather than minimum end; default true.
+---@field index_constant? integer Selector constant index. The default is zero when no index signal is supplied. Finite integer. Domain: -2147483648..2147483647.
+---@field index_signal? TC.Config.Read.SignalID Selector index signal. When supplied, normalization omits index_constant. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field operation "select" Exact operation discriminator. Only fields for that variant are accepted.
+---@field select_max boolean Select from the maximum end instead of the minimum end. The default is true.
 
----Normalized readback for SelectorCombinatorParameters. Operation count. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+---Normalized readback for SelectorCombinatorParameters. Operation count. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 ---@class TC.Config.Read.SelectorCombinatorParameters.Count
----@field count_signal? TC.Config.Read.SignalID Optional selector count-output signal, only for count operation. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field operation "count" Exact operation discriminator; only that variant fields are accepted.
+---@field count_signal? TC.Config.Read.SignalID Optional selector count-output signal. This applies only to the count operation. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field operation "count" Exact operation discriminator. Only fields for that variant are accepted.
 
----Normalized readback for SelectorCombinatorParameters. Operation random. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+---Normalized readback for SelectorCombinatorParameters. Operation random. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 ---@class TC.Config.Read.SelectorCombinatorParameters.Random
----@field operation "random" Exact operation discriminator; only that variant fields are accepted.
----@field random_update_interval integer Selector random refresh interval in simulation ticks; default zero. Finite integer; domain 0..4294967295.
+---@field operation "random" Exact operation discriminator. Only fields for that variant are accepted.
+---@field random_update_interval integer Selector random refresh interval in simulation ticks. The default is zero. Finite integer. Domain: 0..4294967295.
 
----Normalized readback for SelectorCombinatorParameters. Operation quality-transfer. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+---Normalized readback for SelectorCombinatorParameters. Operation quality-transfer. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 ---@class TC.Config.Read.SelectorCombinatorParameters.QualityTransfer
----@field operation "quality-transfer" Exact operation discriminator; only that variant fields are accepted.
----@field quality_destination_signal? TC.Config.Read.SignalID Quality-transfer destination signal; required on input but may be absent in native readback. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field quality_source_signal? TC.Config.Read.SignalIDBase Quality-transfer source when selecting quality from a signal. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
----@field quality_source_static? TC.Config.Read.BlueprintQualityID Static quality-transfer source; default normal when not using a signal. Unknown fields refused.
----@field select_quality_from_signal boolean Choose signal quality rather than static quality; default false.
+---@field operation "quality-transfer" Exact operation discriminator. Only fields for that variant are accepted.
+---@field quality_destination_signal? TC.Config.Read.SignalID Quality-transfer destination signal. Input requires this field; native readback can omit it. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field quality_source_signal? TC.Config.Read.SignalIDBase Quality-transfer source when selecting quality from a signal. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
+---@field quality_source_static? TC.Config.Read.BlueprintQualityID Static quality-transfer source. The default is normal when a signal is not used. Unknown fields are refused.
+---@field select_quality_from_signal boolean Select quality from a signal instead of static quality. The default is false.
 
----Normalized readback for SelectorCombinatorParameters. Operation rocket-capacity. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+---Normalized readback for SelectorCombinatorParameters. Operation rocket-capacity. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 ---@class TC.Config.Read.SelectorCombinatorParameters.RocketCapacity
----@field operation "rocket-capacity" Exact operation discriminator; only that variant fields are accepted.
+---@field operation "rocket-capacity" Exact operation discriminator. Only fields for that variant are accepted.
 
----Normalized readback for SelectorCombinatorParameters. Operation stack-size. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+---Normalized readback for SelectorCombinatorParameters. Operation stack-size. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 ---@class TC.Config.Read.SelectorCombinatorParameters.StackSize
----@field operation "stack-size" Exact operation discriminator; only that variant fields are accepted.
+---@field operation "stack-size" Exact operation discriminator. Only fields for that variant are accepted.
 
----Normalized readback for SelectorCombinatorParameters. Operation quality-filter. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed.
+---Normalized readback for SelectorCombinatorParameters. Operation quality-filter. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed.
 ---@class TC.Config.Read.SelectorCombinatorParameters.QualityFilter
----@field operation "quality-filter" Exact operation discriminator; only that variant fields are accepted.
----@field quality_filter? TC.Config.Read.QualityCondition Installed quality/comparator selector filter, only for quality-filter. Unknown fields refused.
+---@field operation "quality-filter" Exact operation discriminator. Only fields for that variant are accepted.
+---@field quality_filter? TC.Config.Read.QualityCondition Installed quality and comparator selector filter. This applies only to quality-filter. Unknown fields are refused.
 
----Normalized readback for SelectorCombinatorParameters. Default operation select. select defaults index_constant 0 and select_max true; a signal index replaces the constant. random defaults interval 0 ticks. Input quality-transfer requires quality_destination_signal, while native readback can omit it; defaults select_quality_from_signal false and static normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields.
+---Normalized readback for SelectorCombinatorParameters. The default operation is select. For select, index_constant defaults to 0 and select_max defaults to true. A signal index replaces the constant. For random, the interval defaults to 0 ticks. Input quality-transfer requires quality_destination_signal; native readback can omit it. select_quality_from_signal defaults to false. Static quality defaults to normal. Readback keeps only the selected source. stack-size and rocket-capacity have no operation-specific fields.
 ---@alias TC.Config.Read.SelectorCombinatorParameters TC.Config.Read.SelectorCombinatorParameters.Select|TC.Config.Read.SelectorCombinatorParameters.Count|TC.Config.Read.SelectorCombinatorParameters.Random|TC.Config.Read.SelectorCombinatorParameters.QualityTransfer|TC.Config.Read.SelectorCombinatorParameters.RocketCapacity|TC.Config.Read.SelectorCombinatorParameters.StackSize|TC.Config.Read.SelectorCombinatorParameters.QualityFilter
 
----Normalized readback for SignalFilter. Unknown fields refused. Input accepts a signal name string or object. String names select virtual when registered there, otherwise item. Object type defaults item. Readback always has name/type/quality/comparator, defaults normal and =. Wildcards are refused.
+---Normalized readback for SignalFilter. Unknown fields are refused. Input accepts a signal name string or object. A string name selects virtual when registered there; otherwise, it selects item. The object type defaults to item. Readback always has name, type, quality, and comparator. Quality defaults to normal. The comparator defaults to =. Wildcards are refused.
 ---@class TC.Config.Read.SignalFilter
----@field comparator TC.Config.Read.ComparatorString Comparison symbol; >=, <= and != normalize to ≥, ≤ and ≠.
----@field name string Exact prototype/quality identity named by the enclosing concept; no localization lookup.
----@field quality string Exact installed quality name; normalization defaults normal where this concept permits omission. Installed quality name, never a native object.
----@field type TC.Config.Read.SignalIDType Signal prototype namespace; SignalID/SignalIDBase require an explicit input type.
+---@field comparator TC.Config.Read.ComparatorString Comparison symbol. >=, <=, and != normalize to ≥, ≤, and ≠.
+---@field name string Exact prototype or quality identity for the enclosing concept. No localization lookup occurs.
+---@field quality string Exact installed quality name. Normalization uses normal when this concept permits omission. Use an installed quality name, not a native object.
+---@field type TC.Config.Read.SignalIDType Signal prototype namespace. SignalID and SignalIDBase require an explicit input type.
 
----Normalized readback for SignalID. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit type/name required on input; output includes explicit type/name/quality. Default quality normal. Wildcards depend on role, not general SignalID permission.
+---Normalized readback for SignalID. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Input requires explicit type and name. Output includes explicit type, name, and quality. The default quality is normal. Wildcard permission depends on the role, not general SignalID permission.
 ---@class TC.Config.Read.SignalID
----@field name string Exact prototype/quality identity named by the enclosing concept; no localization lookup.
----@field quality string Exact installed quality name; normalization defaults normal where this concept permits omission. Installed quality name, never a native object.
----@field type TC.Config.Read.SignalIDType Signal prototype namespace; SignalID/SignalIDBase require an explicit input type.
+---@field name string Exact prototype or quality identity for the enclosing concept. No localization lookup occurs.
+---@field quality string Exact installed quality name. Normalization uses normal when this concept permits omission. Use an installed quality name, not a native object.
+---@field type TC.Config.Read.SignalIDType Signal prototype namespace. SignalID and SignalIDBase require an explicit input type.
 
----Normalized readback for SignalIDBase. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit type/name required; no quality member. Native references become exact installed names.
+---Normalized readback for SignalIDBase. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit type and name are required. There is no quality member. Native references become exact installed names.
 ---@class TC.Config.Read.SignalIDBase
----@field name string Exact prototype/quality identity named by the enclosing concept; no localization lookup.
----@field type TC.Config.Read.SignalIDType Signal prototype namespace; SignalID/SignalIDBase require an explicit input type.
+---@field name string Exact prototype or quality identity for the enclosing concept. No localization lookup occurs.
+---@field type TC.Config.Read.SignalIDType Signal prototype namespace. SignalID and SignalIDBase require an explicit input type.
 
 ---Normalized readback for SignalIDType.
 ---@alias TC.Config.Read.SignalIDType "item"|"fluid"|"virtual"|"entity"|"recipe"|"space-location"|"asteroid-chunk"|"quality"
 
----Normalized readback for SpaceLocationID. Installed space_location name, never a native object.
+---Normalized readback for SpaceLocationID. Use an installed space_location name, not a native object.
 ---@alias TC.Config.Read.SpaceLocationID string
 
----Root settings for LuaAccumulatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaAccumulatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaAccumulatorControlBehavior
----@field output_signal? TC.Config.Read.SignalID Signal used for this control behavior output (charge, gate sensor or combinator result). Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field output_signal? TC.Config.Read.SignalID Output signal for this control behavior: accumulator charge, gate sensor, or combinator result. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field read_charge? boolean Publish accumulator charge percentage to the circuit network. Explicit root patch clear: not supported.
 
----Root settings for LuaAgriculturalTowerControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaAgriculturalTowerControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaAgriculturalTowerControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
----@field read_contents? boolean Publish this entity inventory or fluid contents; belt mode is separately selected. Explicit root patch clear: not supported.
+---@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
+---@field read_contents? boolean Publish this entity inventory or fluid contents. Belt mode is selected separately. Explicit root patch clear: not supported.
 
----Root settings for LuaArithmeticCombinatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaArithmeticCombinatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaArithmeticCombinatorControlBehavior
----@field parameters? TC.Config.Read.ArithmeticCombinatorParameters Complete combinator parameter object, replacing rather than merging its prior fields. Unknown fields refused. Explicit root patch clear: accepted with native reset/readback.
+---@field parameters? TC.Config.Read.ArithmeticCombinatorParameters Complete combinator parameter object. It replaces previous fields; it does not merge them. Unknown fields are refused. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaArtilleryTurretControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaArtilleryTurretControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaArtilleryTurretControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
----@field read_ammo? boolean Publish contained ammunition/fluid; unavailable on an electric turret. Explicit root patch clear: not supported.
+---@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
+---@field read_ammo? boolean Publish contained ammunition or fluid. This field is unavailable on an electric turret. Explicit root patch clear: not supported.
 
----Root settings for LuaAssemblingMachineControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaAssemblingMachineControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaAssemblingMachineControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
----@field circuit_read_contents? boolean Publish ingredient/product/in-crafting contents and supported native inventories. Explicit root patch clear: not supported.
+---@field circuit_read_contents? boolean Publish ingredient, product, and in-crafting contents and supported native inventories. Explicit root patch clear: not supported.
 ---@field circuit_read_ingredients? boolean Publish the current recipe ingredient requirements as signals. Explicit root patch clear: not supported.
 ---@field circuit_read_recipe_finished? boolean Publish the recipe-completion signal when a craft finishes. Explicit root patch clear: not supported.
 ---@field circuit_read_working? boolean Publish the working-state signal. Explicit root patch clear: not supported.
----@field circuit_recipe_finished_signal? TC.Config.Read.SignalID Signal identity used for recipe completion. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_recipe_finished_signal? TC.Config.Read.SignalID Signal identity used for recipe completion. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_set_recipe? boolean Select the machine recipe from circuit signals. Explicit root patch clear: not supported.
----@field circuit_working_signal? TC.Config.Read.SignalID Signal identity used for working state. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_working_signal? TC.Config.Read.SignalID Signal identity used for working state. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field include_fuel? boolean Include the fuel inventory; compatibility name maps to native 2.1 read_fuel. fuel_inventory_required: Requires an actual native fuel inventory. Explicit root patch clear: not supported.
----@field include_in_crafting? boolean Include materials currently committed to crafting. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field include_fuel? boolean Include the fuel inventory. This compatibility name maps to native 2.1 read_fuel. fuel_inventory_required: An actual native fuel inventory is required. Explicit root patch clear: not supported.
+---@field include_in_crafting? boolean Include materials already committed to crafting. Explicit root patch clear: not supported.
+---@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaAsteroidCollectorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaAsteroidCollectorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaAsteroidCollectorControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
----@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. native_asteroid_no_logistic_connection: Native inherited connection switch is ineffective and not writable. Explicit root patch clear: not supported.
+---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. native_asteroid_no_logistic_connection: The inherited native connection switch has no effect and is not writable. Explicit root patch clear: not supported.
 ---@field include_hands? boolean Include asteroid contents captured in collector hands. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field read_content? boolean Publish asteroid collector contents to the circuit network. Explicit root patch clear: not supported.
----@field set_filter? boolean Select this native entity fluid/item filter from circuit signals. Explicit root patch clear: not supported.
+---@field set_filter? boolean Select this native entity fluid or item filter from circuit signals. Explicit root patch clear: not supported.
 
----Root settings for LuaCargoLandingPadControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaCargoLandingPadControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaCargoLandingPadControlBehavior
----@field circuit_exclusive_mode_of_operation? "none"|"send_contents"|"set_requests"|"send_contents_and_set_requests" Compatibility mode combining native read_contents and set_requests switches; both uses send_contents_and_set_requests. set_requests_requires_space_travel: Request-setting modes require the space-travel feature; otherwise only none/send_contents. Explicit root patch clear: not supported.
+---@field circuit_exclusive_mode_of_operation? "none"|"send_contents"|"set_requests"|"send_contents_and_set_requests" Compatibility mode for native read_contents and set_requests switches. Their combined mode is send_contents_and_set_requests. set_requests_requires_space_travel: Modes that set requests require the space-travel feature. Otherwise, only none and send_contents are available. Explicit root patch clear: not supported.
 
----Root settings for LuaCombinatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaCombinatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaCombinatorControlBehavior
 
----Root settings for LuaConstantCombinatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaConstantCombinatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaConstantCombinatorControlBehavior
 ---@field enabled? boolean Enable the constant combinator output. Explicit root patch clear: not supported.
 
----Root settings for LuaContainerControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaContainerControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaContainerControlBehavior
----@field read_contents? boolean Publish this entity inventory or fluid contents; belt mode is separately selected. Explicit root patch clear: not supported.
+---@field read_contents? boolean Publish this entity inventory or fluid contents. Belt mode is selected separately. Explicit root patch clear: not supported.
 
----Root settings for LuaControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaControlBehavior
 
----Root settings for LuaDeciderCombinatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaDeciderCombinatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaDeciderCombinatorControlBehavior
----@field parameters? TC.Config.Read.DeciderCombinatorParameters Complete combinator parameter object, replacing rather than merging its prior fields. Unknown fields refused. Explicit root patch clear: accepted with native reset/readback.
+---@field parameters? TC.Config.Read.DeciderCombinatorParameters Complete combinator parameter object. It replaces previous fields; it does not merge them. Unknown fields are refused. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaDisplayPanelControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaDisplayPanelControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaDisplayPanelControlBehavior
----@field messages? (TC.Config.Read.DisplayPanelMessageDefinition)[] Complete display-panel message list; compatibility name maps to native 2.1 records. Explicit root patch clear: not supported.
+---@field messages? (TC.Config.Read.DisplayPanelMessageDefinition)[] Complete display-panel message list. This compatibility name maps to native 2.1 records. Explicit root patch clear: not supported.
 
----Root settings for LuaFurnaceControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaFurnaceControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaFurnaceControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
----@field circuit_read_contents? boolean Publish ingredient/product/in-crafting contents and supported native inventories. Explicit root patch clear: not supported.
+---@field circuit_read_contents? boolean Publish ingredient, product, and in-crafting contents and supported native inventories. Explicit root patch clear: not supported.
 ---@field circuit_read_ingredients? boolean Publish the current recipe ingredient requirements as signals. Explicit root patch clear: not supported.
 ---@field circuit_read_recipe_finished? boolean Publish the recipe-completion signal when a craft finishes. Explicit root patch clear: not supported.
 ---@field circuit_read_working? boolean Publish the working-state signal. Explicit root patch clear: not supported.
----@field circuit_recipe_finished_signal? TC.Config.Read.SignalID Signal identity used for recipe completion. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field circuit_working_signal? TC.Config.Read.SignalID Signal identity used for working state. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_recipe_finished_signal? TC.Config.Read.SignalID Signal identity used for recipe completion. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field circuit_working_signal? TC.Config.Read.SignalID Signal identity used for working state. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field include_fuel? boolean Include the fuel inventory; compatibility name maps to native 2.1 read_fuel. fuel_inventory_required: Requires an actual native fuel inventory. Explicit root patch clear: not supported.
----@field include_in_crafting? boolean Include materials currently committed to crafting. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field include_fuel? boolean Include the fuel inventory. This compatibility name maps to native 2.1 read_fuel. fuel_inventory_required: An actual native fuel inventory is required. Explicit root patch clear: not supported.
+---@field include_in_crafting? boolean Include materials already committed to crafting. Explicit root patch clear: not supported.
+---@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaGenericOnOffControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaGenericOnOffControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaGenericOnOffControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaInserterControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaInserterControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaInserterControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
----@field circuit_hand_read_mode? "hold"|"pulse" Choose hold versus pulse for inserter hand-content reporting. Explicit root patch clear: not supported.
+---@field circuit_hand_read_mode? "hold"|"pulse" Select hold or pulse for reporting inserter hand contents. Explicit root patch clear: not supported.
 ---@field circuit_read_hand_contents? boolean Publish inserter hand contents. Explicit root patch clear: not supported.
----@field circuit_set_filters? boolean Select inserter/loader filters from circuit signals. Explicit root patch clear: not supported.
+---@field circuit_set_filters? boolean Select inserter or loader filters from circuit signals. Explicit root patch clear: not supported.
 ---@field circuit_set_stack_size? boolean Use the configured stack-control signal to set inserter stack size. Explicit root patch clear: not supported.
----@field circuit_stack_control_signal? TC.Config.Read.SignalID Signal whose count controls inserter stack size. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_stack_control_signal? TC.Config.Read.SignalID Signal whose count controls inserter stack size. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaLampControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaLampControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaLampControlBehavior
----@field blue_signal? TC.Config.Read.SignalID Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field blue_signal? TC.Config.Read.SignalID Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
----@field color_mode? "color_mapping"|"components"|"packed_rgb" Select lamp color-mapping, separate-component or packed-RGB interpretation. Explicit root patch clear: not supported.
+---@field color_mode? "color_mapping"|"components"|"packed_rgb" Select lamp color-mapping, separate-component, or packed-RGB interpretation. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field green_signal? TC.Config.Read.SignalID Green color-component input for lamps, or green-state rail output. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
----@field red_signal? TC.Config.Read.SignalID Red color-component input for lamps, or red-state rail output. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field rgb_signal? TC.Config.Read.SignalID Signal carrying packed lamp RGB. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field green_signal? TC.Config.Read.SignalID Green color-component input for lamps, or green-state rail output. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
+---@field red_signal? TC.Config.Read.SignalID Red color-component input for lamps, or red-state rail output. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field rgb_signal? TC.Config.Read.SignalID Signal carrying packed lamp RGB. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field use_colors? boolean Enable circuit-selected lamp color. Explicit root patch clear: not supported.
 
----Root settings for LuaLoaderControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaLoaderControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaLoaderControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field circuit_read_transfers? boolean Pulse loader-to-container transfer counts to the circuit network. Explicit root patch clear: not supported.
----@field circuit_set_filters? boolean Select inserter/loader filters from circuit signals. Explicit root patch clear: not supported.
+---@field circuit_set_filters? boolean Select inserter or loader filters from circuit signals. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaLogisticContainerControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaLogisticContainerControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaLogisticContainerControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
 ---@field circuit_condition_enabled? boolean Apply the logistic container circuit condition. Explicit root patch clear: not supported.
----@field circuit_exclusive_mode_of_operation? "none"|"send_contents"|"set_requests"|"send_contents_and_set_requests" Compatibility mode combining native read_contents and set_requests switches; both uses send_contents_and_set_requests. logistic_mode_requester_or_buffer: Writable only on requester/buffer containers. Explicit root patch clear: not supported.
+---@field circuit_exclusive_mode_of_operation? "none"|"send_contents"|"set_requests"|"send_contents_and_set_requests" Compatibility mode for native read_contents and set_requests switches. Their combined mode is send_contents_and_set_requests. logistic_mode_requester_or_buffer: Writable only on requester or buffer containers. Explicit root patch clear: not supported.
 
----Root settings for LuaMiningDrillControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaMiningDrillControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaMiningDrillControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field circuit_read_resources? boolean Publish mining resource amounts selected by resource_read_mode. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field resource_read_mode? "entire_patch"|"this_miner" Select this miner area versus the whole resource patch. Explicit root patch clear: not supported.
 
----Root settings for LuaProgrammableSpeakerControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaProgrammableSpeakerControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaProgrammableSpeakerControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
----@field circuit_parameters? TC.Config.Read.ProgrammableSpeakerCircuitParameters Native circuit-triggered speaker settings, separate from the Speaker playback API. Unknown fields refused. Explicit root patch clear: not supported.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
+---@field circuit_parameters? TC.Config.Read.ProgrammableSpeakerCircuitParameters Native circuit-triggered speaker settings, separate from the Speaker playback API. Unknown fields are refused. Explicit root patch clear: not supported.
 
----Root settings for LuaProxyContainerControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaProxyContainerControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaProxyContainerControlBehavior
----@field read_contents? boolean Publish this entity inventory or fluid contents; belt mode is separately selected. Explicit root patch clear: not supported.
+---@field read_contents? boolean Publish this entity inventory or fluid contents. Belt mode is selected separately. Explicit root patch clear: not supported.
 
----Root settings for LuaPumpControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaPumpControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaPumpControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
----@field set_filter? boolean Select this native entity fluid/item filter from circuit signals. Explicit root patch clear: not supported.
+---@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
+---@field set_filter? boolean Select this native entity fluid or item filter from circuit signals. Explicit root patch clear: not supported.
 
----Root settings for LuaRadarControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaRadarControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaRadarControlBehavior
 
----Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields refused. rail_chain_signal_only: Available only on chain signals; ordinary rail signals cannot read/write it. Explicit root patch clear: accepted with native reset/readback. Unknown fields refused. rail_chain_signal_only: Available only on chain signals; ordinary rail signals cannot read/write it. Explicit root patch clear: accepted with native reset/readback. Explicit type/name required on input; output includes explicit type/name/quality. Default quality normal. Wildcards depend on role, not general SignalID permission.
+---Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields are refused. rail_chain_signal_only: Available only on chain signals. Ordinary rail signals cannot read or write this field. Explicit root patch clear: accepted with native reset and readback. Unknown fields are refused. rail_chain_signal_only: Available only on chain signals. Ordinary rail signals cannot read or write this field. Explicit root patch clear: accepted with native reset and readback. Input requires explicit type and name. Output includes explicit type, name, and quality. The default quality is normal. Wildcard permission depends on the role, not general SignalID permission.
 ---@class TC.Config.Read.LuaRailSignalBaseControlBehavior.blue_signal
----@field name string Exact prototype/quality identity named by the enclosing concept; no localization lookup. Explicit root patch clear: not supported.
----@field quality string Exact installed quality name; normalization defaults normal where this concept permits omission. Installed quality name, never a native object. Explicit root patch clear: not supported.
----@field type TC.Config.Read.SignalIDType Signal prototype namespace; SignalID/SignalIDBase require an explicit input type. Explicit root patch clear: not supported.
+---@field name string Exact prototype or quality identity for the enclosing concept. No localization lookup occurs. Explicit root patch clear: not supported.
+---@field quality string Exact installed quality name. Normalization uses normal when this concept permits omission. Use an installed quality name, not a native object. Explicit root patch clear: not supported.
+---@field type TC.Config.Read.SignalIDType Signal prototype namespace. SignalID and SignalIDBase require an explicit input type. Explicit root patch clear: not supported.
 
----Root settings for LuaRailSignalBaseControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaRailSignalBaseControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaRailSignalBaseControlBehavior
----@field blue_signal? TC.Config.Read.LuaRailSignalBaseControlBehavior.blue_signal Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields refused. rail_chain_signal_only: Available only on chain signals; ordinary rail signals cannot read/write it. Explicit root patch clear: accepted with native reset/readback.
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
+---@field blue_signal? TC.Config.Read.LuaRailSignalBaseControlBehavior.blue_signal Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields are refused. rail_chain_signal_only: Available only on chain signals. Ordinary rail signals cannot read or write this field. Explicit root patch clear: accepted with native reset and readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
 ---@field close_signal? boolean Close the rail signal according to its circuit condition. Explicit root patch clear: not supported.
----@field green_signal? TC.Config.Read.SignalID Green color-component input for lamps, or green-state rail output. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field orange_signal? TC.Config.Read.SignalID Signal representing an orange rail-signal state. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field green_signal? TC.Config.Read.SignalID Green color-component input for lamps, or green-state rail output. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field orange_signal? TC.Config.Read.SignalID Signal representing an orange rail-signal state. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field read_signal? boolean Publish the native rail-signal state. Explicit root patch clear: not supported.
----@field red_signal? TC.Config.Read.SignalID Red color-component input for lamps, or red-state rail output. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field red_signal? TC.Config.Read.SignalID Red color-component input for lamps, or red-state rail output. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaReactorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaReactorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaReactorControlBehavior
 ---@field read_fuel? boolean Publish reactor fuel inventory and currently burning fuel. Explicit root patch clear: not supported.
 ---@field read_temperature? boolean Publish reactor temperature. Explicit root patch clear: not supported.
----@field temperature_signal? TC.Config.Read.SignalID Signal carrying reactor temperature. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field temperature_signal? TC.Config.Read.SignalID Signal carrying reactor temperature. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaRoboportControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaRoboportControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaRoboportControlBehavior
----@field available_construction_output_signal? TC.Config.Read.SignalID Signal for available construction robots. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field available_logistic_output_signal? TC.Config.Read.SignalID Signal for available logistic robots. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field read_items_mode? "logistics"|"missing_requests"|"none" Select logistics contents, missing requests or no item reporting. Explicit root patch clear: not supported.
----@field read_logistics? boolean Legacy logistics-content reporting switch; prefer read_items_mode. Explicit root patch clear: not supported.
----@field read_robot_stats? boolean Publish native logistic/construction robot statistics. Explicit root patch clear: not supported.
----@field roboport_count_output_signal? TC.Config.Read.SignalID Signal carrying the roboport count. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field total_construction_output_signal? TC.Config.Read.SignalID Signal for total construction robots. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field total_logistic_output_signal? TC.Config.Read.SignalID Signal for total logistic robots. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field available_construction_output_signal? TC.Config.Read.SignalID Signal for available construction robots. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field available_logistic_output_signal? TC.Config.Read.SignalID Signal for available logistic robots. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field read_items_mode? "logistics"|"missing_requests"|"none" Select logistics contents, missing requests, or no item reporting. Explicit root patch clear: not supported.
+---@field read_logistics? boolean Legacy switch for reporting logistics contents. Prefer read_items_mode. Explicit root patch clear: not supported.
+---@field read_robot_stats? boolean Publish native statistics for logistic and construction robots. Explicit root patch clear: not supported.
+---@field roboport_count_output_signal? TC.Config.Read.SignalID Signal carrying the roboport count. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field total_construction_output_signal? TC.Config.Read.SignalID Signal for total construction robots. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field total_logistic_output_signal? TC.Config.Read.SignalID Signal for total logistic robots. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaRocketSiloControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaRocketSiloControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaRocketSiloControlBehavior
----@field read_mode? "logistic_inventory"|"none"|"orbital_requests" Select rocket-silo logistic inventory, orbital requests or no reporting. Explicit root patch clear: not supported.
+---@field read_mode? "logistic_inventory"|"none"|"orbital_requests" Select rocket-silo logistic inventory, orbital requests, or no reporting. Explicit root patch clear: not supported.
 
----Root settings for LuaSelectorCombinatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaSelectorCombinatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaSelectorCombinatorControlBehavior
----@field parameters? TC.Config.Read.SelectorCombinatorParameters Complete combinator parameter object, replacing rather than merging its prior fields. Unknown fields refused. operation_variant: Only fields belonging to the selected operation are allowed. Explicit root patch clear: not supported.
+---@field parameters? TC.Config.Read.SelectorCombinatorParameters Complete combinator parameter object. It replaces previous fields; it does not merge them. Unknown fields are refused. operation_variant: Only fields for the selected operation are allowed. Explicit root patch clear: not supported.
 
----Root settings for LuaSpacePlatformHubControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaSpacePlatformHubControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaSpacePlatformHubControlBehavior
----@field damage_taken_signal? TC.Config.Read.SignalID Signal carrying platform damage taken. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field read_contents? boolean Publish this entity inventory or fluid contents; belt mode is separately selected. Explicit root patch clear: not supported.
+---@field damage_taken_signal? TC.Config.Read.SignalID Signal carrying platform damage taken. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field read_contents? boolean Publish this entity inventory or fluid contents. Belt mode is selected separately. Explicit root patch clear: not supported.
 ---@field read_damage_taken? boolean Publish platform damage taken. Explicit root patch clear: not supported.
 ---@field read_moving_from? boolean Publish the current platform connection origin. Explicit root patch clear: not supported.
 ---@field read_moving_to? boolean Publish the current platform connection destination. Explicit root patch clear: not supported.
 ---@field read_speed? boolean Publish current platform speed. Explicit root patch clear: not supported.
 ---@field send_to_platform? boolean Make circuit signals available to platform schedule conditions. Explicit root patch clear: not supported.
----@field speed_signal? TC.Config.Read.SignalID Signal carrying current platform speed. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field speed_signal? TC.Config.Read.SignalID Signal carrying current platform speed. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaSplitterControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaSplitterControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaSplitterControlBehavior
----@field input_left_condition? TC.Config.Read.CircuitConditionDefinition Condition selecting the splitter left input side. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
----@field input_right_condition? TC.Config.Read.CircuitConditionDefinition Condition selecting the splitter right input side. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
----@field output_left_condition? TC.Config.Read.CircuitConditionDefinition Condition selecting the splitter left output side. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
----@field output_right_condition? TC.Config.Read.CircuitConditionDefinition Condition selecting the splitter right output side. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
----@field set_filter? boolean Select this native entity fluid/item filter from circuit signals. Explicit root patch clear: not supported.
+---@field input_left_condition? TC.Config.Read.CircuitConditionDefinition Condition selecting the splitter left input side. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
+---@field input_right_condition? TC.Config.Read.CircuitConditionDefinition Condition selecting the splitter right input side. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
+---@field output_left_condition? TC.Config.Read.CircuitConditionDefinition Condition selecting the splitter left output side. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
+---@field output_right_condition? TC.Config.Read.CircuitConditionDefinition Condition selecting the splitter right output side. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
+---@field set_filter? boolean Select this native entity fluid or item filter from circuit signals. Explicit root patch clear: not supported.
 ---@field set_input_side? boolean Let native circuit conditions select splitter input priority. Explicit root patch clear: not supported.
 ---@field set_output_side? boolean Let native circuit conditions select splitter output priority. Explicit root patch clear: not supported.
 
----Root settings for LuaStorageTankControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaStorageTankControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaStorageTankControlBehavior
----@field read_contents? boolean Publish this entity inventory or fluid contents; belt mode is separately selected. Explicit root patch clear: not supported.
+---@field read_contents? boolean Publish this entity inventory or fluid contents. Belt mode is selected separately. Explicit root patch clear: not supported.
 
----Root settings for LuaTrainStopControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaTrainStopControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaTrainStopControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
----@field priority_signal? TC.Config.Read.SignalID Signal controlling train-stop priority. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
+---@field priority_signal? TC.Config.Read.SignalID Signal controlling train-stop priority. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field read_from_train? boolean Publish stopped-train contents to the circuit network. Explicit root patch clear: not supported.
 ---@field read_stopped_train? boolean Publish the stopped train identity signal. Explicit root patch clear: not supported.
 ---@field read_trains_count? boolean Publish the count of trains assigned to this stop. Explicit root patch clear: not supported.
 ---@field send_to_train? boolean Supply circuit signals to the stopped train. Explicit root patch clear: not supported.
 ---@field set_priority? boolean Enable signal-controlled train-stop priority. Explicit root patch clear: not supported.
 ---@field set_trains_limit? boolean Enable signal-controlled incoming-train limit. Explicit root patch clear: not supported.
----@field stopped_train_signal? TC.Config.Read.SignalID Signal carrying stopped train identity. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field trains_count_signal? TC.Config.Read.SignalID Signal carrying the incoming-train count. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
----@field trains_limit_signal? TC.Config.Read.SignalID Signal controlling the incoming-train limit. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field stopped_train_signal? TC.Config.Read.SignalID Signal carrying stopped train identity. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field trains_count_signal? TC.Config.Read.SignalID Signal carrying the incoming-train count. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
+---@field trains_limit_signal? TC.Config.Read.SignalID Signal controlling the incoming-train limit. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
----Root settings for LuaTransportBeltControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaTransportBeltControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaTransportBeltControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
----@field read_contents? boolean Publish this entity inventory or fluid contents; belt mode is separately selected. Explicit root patch clear: not supported.
+---@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
+---@field read_contents? boolean Publish this entity inventory or fluid contents. Belt mode is selected separately. Explicit root patch clear: not supported.
 ---@field read_contents_mode? "entire_belt_hold"|"hold"|"pulse" Select belt pulse, local hold or whole-belt hold reporting. Explicit root patch clear: not supported.
 
----Root settings for LuaTurretControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaTurretControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaTurretControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 ---@field circuit_enable_disable? boolean Let the circuit condition control the entity enable state. Explicit root patch clear: not supported.
 ---@field connect_to_logistic_network? boolean Enable the native logistic-network connection where applicable. Explicit root patch clear: not supported.
----@field ignore_unlisted_targets_condition? TC.Config.Read.CircuitConditionDefinition Condition for ignoring targets outside the turret priority list. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
----@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
----@field read_ammo? boolean Publish contained ammunition/fluid; unavailable on an electric turret. ammo_or_fluid_turret_required: Requires an ammo/fluid turret, not an electric turret. Explicit root patch clear: not supported.
+---@field ignore_unlisted_targets_condition? TC.Config.Read.CircuitConditionDefinition Condition for ignoring targets outside the turret priority list. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
+---@field logistic_condition? TC.Config.Read.CircuitConditionDefinition Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
+---@field read_ammo? boolean Publish contained ammunition or fluid. This field is unavailable on an electric turret. ammo_or_fluid_turret_required: An ammunition or fluid turret is required. An electric turret is not permitted. Explicit root patch clear: not supported.
 ---@field set_ignore_unlisted_targets? boolean Enable condition-controlled exclusion of unlisted targets. Explicit root patch clear: not supported.
----@field set_priority_list? boolean Derive turret target priorities from circuit signals. Explicit root patch clear: not supported.
+---@field set_priority_list? boolean Get turret target priorities from circuit signals. Explicit root patch clear: not supported.
 
----Root settings for LuaWallControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+---Root settings for LuaWallControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 ---@class TC.Config.Read.LuaWallControlBehavior
----@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
+---@field circuit_condition? TC.Config.Read.CircuitConditionDefinition Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
 ---@field open_gate? boolean Control the associated gate using the circuit condition. Explicit root patch clear: not supported.
----@field output_signal? TC.Config.Read.SignalID Signal used for this control behavior output (charge, gate sensor or combinator result). Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+---@field output_signal? TC.Config.Read.SignalID Output signal for this control behavior: accumulator charge, gate sensor, or combinator result. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 ---@field read_sensor? boolean Publish the associated gate sensor state. Explicit root patch clear: not supported.
 
----Indexed native section filter. Dense array with unique slot indexes and effective identities. Default minimum 0; current adapter defaults item import_from to registered nauvis when available. Maximum cannot be below minimum. Nonzero object-filter minimum requires explicit exact quality. Section filters additionally require index and reject duplicate slots/effective identities. Unknown fields refused. Explicit root patch clear: not supported.
+---Indexed native section filter. Dense array with unique slot indexes and effective identities. The minimum defaults to 0. The current adapter uses registered nauvis for item import_from by default when available. The maximum cannot be less than the minimum. A nonzero minimum in an object filter requires explicit exact quality. Section filters also require index. Duplicate slots and effective identities are refused. Unknown fields are refused. Explicit root patch clear: not supported.
 ---@class TC.Config.Read.SectionFilter
----@field import_from? string Installed import location; current adapter defaults item imports to registered nauvis when available. Installed space_location name, never a native object. Explicit root patch clear: not supported.
----@field index integer Explicit native filter slot index; sparse slots allowed in a dense unique-index array. Finite integer; domain 1..128. Explicit root patch clear: not supported.
----@field max? TC.Config.Read.ItemCountType Maximum requested count, not below a supplied minimum. Finite integer; domain 0..4294967295. Explicit root patch clear: not supported.
----@field min integer Minimum requested count; defaults zero. Nonzero filtered counts require exact quality. Finite integer; domain -2147483648..2147483647. Explicit root patch clear: not supported.
----@field minimum_delivery_count? TC.Config.Read.ItemCountType Minimum native delivery quantity for this filter. Finite integer; domain 0..4294967295. Explicit root patch clear: not supported.
----@field value TC.Config.Read.SignalFilter Signal filter; absent value means an empty slot, not a numeric zero signal. Unknown fields refused. Explicit root patch clear: not supported.
+---@field import_from? string Installed import location. The current adapter uses registered nauvis for item imports by default when available. Use an installed space_location name, not a native object. Explicit root patch clear: not supported.
+---@field index integer Explicit native filter slot index. A dense array can contain sparse slot indexes, but each index must be unique. Finite integer. Domain: 1..128. Explicit root patch clear: not supported.
+---@field max? TC.Config.Read.ItemCountType Maximum requested count. This cannot be less than a supplied minimum. Finite integer. Domain: 0..4294967295. Explicit root patch clear: not supported.
+---@field min integer Minimum requested count. The default is zero. A nonzero filtered count requires exact quality. Finite integer. Domain: -2147483648..2147483647. Explicit root patch clear: not supported.
+---@field minimum_delivery_count? TC.Config.Read.ItemCountType Minimum native delivery quantity for this filter. Finite integer. Domain: 0..4294967295. Explicit root patch clear: not supported.
+---@field value TC.Config.Read.SignalFilter Signal filter. An absent value means an empty slot, not a numeric zero signal. Unknown fields are refused. Explicit root patch clear: not supported.
 
----Section values. Addition defaults active=true, group empty, multiplier=1; local filters empty. Group joins inherit shared filters. Unknown fields refused.
+---Section values. Addition defaults: active=true, empty group, multiplier=1, and empty local filters. Group joins inherit shared filters. Unknown fields are refused.
 ---@class TC.Config.Read.SectionValues
----@field active? boolean Section activation; addSection default true. Explicit root patch clear: not supported.
----@field filters? (TC.Config.Read.SectionFilter)[] Complete section filter replacement; addSection defaults empty only for a local group. Explicit root patch clear: not supported.
----@field group? string Shared-group name; empty string is local and is addSection default. Explicit root patch clear: not supported.
----@field multiplier? number Section output multiplier; addSection default 1, readback uses native float32 precision. Finite native numeric readback; generic Data limits still apply. Explicit root patch clear: not supported.
+---@field active? boolean Section activation. The addSection default is true. Explicit root patch clear: not supported.
+---@field filters? (TC.Config.Read.SectionFilter)[] Complete replacement for section filters. The addSection default is empty only for a local group. Explicit root patch clear: not supported.
+---@field group? string Shared-group name. An empty string means local. This is the addSection default. Explicit root patch clear: not supported.
+---@field multiplier? number Section output multiplier. The addSection default is 1. Readback uses native float32 precision. Native numeric readback must be finite. Generic Data limits still apply. Explicit root patch clear: not supported.
 
----Normalized current root values; unset roots are absent.
+---Normalized current root values. Unset roots are absent.
 ---@alias TC.Config.Read.Values TC.Config.Read.LuaAccumulatorControlBehavior|TC.Config.Read.LuaAgriculturalTowerControlBehavior|TC.Config.Read.LuaArithmeticCombinatorControlBehavior|TC.Config.Read.LuaArtilleryTurretControlBehavior|TC.Config.Read.LuaAssemblingMachineControlBehavior|TC.Config.Read.LuaAsteroidCollectorControlBehavior|TC.Config.Read.LuaCargoLandingPadControlBehavior|TC.Config.Read.LuaCombinatorControlBehavior|TC.Config.Read.LuaConstantCombinatorControlBehavior|TC.Config.Read.LuaContainerControlBehavior|TC.Config.Read.LuaControlBehavior|TC.Config.Read.LuaDeciderCombinatorControlBehavior|TC.Config.Read.LuaDisplayPanelControlBehavior|TC.Config.Read.LuaFurnaceControlBehavior|TC.Config.Read.LuaGenericOnOffControlBehavior|TC.Config.Read.LuaInserterControlBehavior|TC.Config.Read.LuaLampControlBehavior|TC.Config.Read.LuaLoaderControlBehavior|TC.Config.Read.LuaLogisticContainerControlBehavior|TC.Config.Read.LuaMiningDrillControlBehavior|TC.Config.Read.LuaProgrammableSpeakerControlBehavior|TC.Config.Read.LuaProxyContainerControlBehavior|TC.Config.Read.LuaPumpControlBehavior|TC.Config.Read.LuaRadarControlBehavior|TC.Config.Read.LuaRailSignalBaseControlBehavior|TC.Config.Read.LuaReactorControlBehavior|TC.Config.Read.LuaRoboportControlBehavior|TC.Config.Read.LuaRocketSiloControlBehavior|TC.Config.Read.LuaSelectorCombinatorControlBehavior|TC.Config.Read.LuaSpacePlatformHubControlBehavior|TC.Config.Read.LuaSplitterControlBehavior|TC.Config.Read.LuaStorageTankControlBehavior|TC.Config.Read.LuaTrainStopControlBehavior|TC.Config.Read.LuaTransportBeltControlBehavior|TC.Config.Read.LuaTurretControlBehavior|TC.Config.Read.LuaWallControlBehavior
 
 ---Native wire_connector_id symbolic names, never host enum ordinals.

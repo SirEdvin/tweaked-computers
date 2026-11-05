@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.DeviceId
 
-Opaque Configurator target identity, scoped to its physical target network.
+This opaque identity identifies a Configurator target within its physical target network.
 
 ```text
 string

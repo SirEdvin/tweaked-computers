@@ -9,7 +9,8 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Int32
 
-Exact signed integer -2147483648..2147483647. No float/string coercion.
+This value is an exact signed integer in -2147483648..2147483647.
+The API does not coerce floats or strings to this type.
 
 ```text
 integer

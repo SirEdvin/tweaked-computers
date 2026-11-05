@@ -12,13 +12,13 @@ There is no theme selector or extra gameplay dependency.
 | Computer | Folded desk with inset controls and a low display | 1×1 |
 | KV database | Offset cartridge stack and service handles | 1×1 |
 | Monitor | Bracketed flat glass and compact bezel contacts | 1×1 |
-| Logic handler | Long ceramic-terminal rail; Input / Network / Output | 3×1 |
-| Configurator | Open caliper and dial; separate Factory targets socket | 2×1 |
+| Logic handler | Long ceramic-terminal rail with Input / Network / Output | 3×1 |
+| Configurator | Open caliper and dial with a separate Factory targets socket | 2×1 |
 | Recipe Searcher | Low scanner sled with a copper optical bridge | 1×1 |
 
 **Native circuit computers** research depicts the folded desk. The separately
-researched **Recipe Searcher** technology depicts the scanner. These are two
-new matching 256px icons, not changes to research prerequisites, costs or unlocks.
+researched **Recipe Searcher** technology depicts the scanner. These two
+new 256px icons have the same style. Research prerequisites, costs and unlocks stay unchanged.
 See [research and crafting](getting-started.md#research-and-craft).
 
 ## Wiring and visible state
@@ -26,20 +26,20 @@ See [research and crafting](getting-started.md#research-and-craft).
 The redesign does not move wire contacts, selection/collision boxes, ground
 pivots or monitor touch geometry. Red and green wires still attach to the same
 native roles in every cardinal orientation. Device and role-marker colors do
-not restrict the wire color you choose; [same-color discovery rules](api/peripheral.md)
+not restrict your wire color. [Same-color discovery rules](api/peripheral.md)
 still apply. Rotate or mine the main body, not an auxiliary socket.
 
-Stopped, active, physically unavailable and fault cues remain compact. They do not replace
+The stopped, active, physically unavailable and fault indicators stay compact. They do not replace
 Factorio's native deconstruction X. Monitor glass keeps the same active interior,
-alpha boundary and display model; marking/cancelling a device does not turn a
+alpha boundary and display model. Marking or cancelling a device does not turn a
 status symbol into a removal action. See [monitor behavior](api/monitor.md) and
 [moving/preserving data](lifecycle.md).
 
 ## Original sources and evidence limits
 
 The selected meshes/materials are original project-MIT work. All 176 existing
-PNG outputs reproduce the approved Service Rack preview exactly; the two research
-icons are separately traceable additions. Historical Greg Flavored inputs and
+PNG outputs reproduce the approved Service Rack preview exactly. The two research
+icons are additions with separate traceability. Historical Greg Flavored inputs and
 complete MIT notices remain in the package, but this family does not sample them.
 The character atlas is independently authored, not an imported CC:Tweaked font.
 

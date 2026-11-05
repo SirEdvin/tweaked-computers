@@ -9,9 +9,10 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Peripheral
 
-A dynamically discovered genuine facade. Inspect getType/getMethods or use a
-literal-family find overload before assuming a concrete member exists. A plain
-lookalike table grants no authority; neither facade nor method is ordinary Data.
+This is a dynamically discovered genuine facade.
+Before use of a concrete member, check getType/getMethods or use a literal-family find overload.
+A plain lookalike table grants no authority.
+Neither a facade nor a method is ordinary Data.
 
 ```text
 TC.Monitor|TC.KVDatabase|TC.LogicHandler|TC.Configurator|TC.RecipeSearcher|TC.FactoriopediaInterface|TC.ProductionStatistics|TC.Dashboard|TC.Modem|TC.Speaker

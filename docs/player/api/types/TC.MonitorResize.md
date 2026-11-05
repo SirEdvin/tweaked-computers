@@ -9,9 +9,10 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.MonitorResize
 
-Logical terminal geometry changed. Old wrappers/coordinates may no longer be
-valid; rediscover and inspect dimensions. Notifications may coalesce to the
-latest geometry while retaining the original prior dimensions.
+The logical terminal geometry changed.
+Old wrappers or coordinates can be invalid. Rediscover the monitor.
+Inspect its dimensions. Notifications can coalesce to the latest geometry
+while they retain the original prior dimensions.
 
 Extends: TC.MonitorEvent
 

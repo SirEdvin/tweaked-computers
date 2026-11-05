@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.SignalIDBase
 
-Accepted input for SignalIDBase. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit type/name required; no quality member. Native references become exact installed names.
+Accepted input for SignalIDBase. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit type and name are required. There is no quality member. Native references become exact installed names.
 
 ### name
 
-Exact prototype/quality identity named by the enclosing concept; no localization lookup. At most 256 bytes; no NUL.
+Exact prototype or quality identity for the enclosing concept. No localization lookup occurs. At most 256 bytes. NUL is not permitted.
 
 ```text
 string
@@ -21,7 +21,7 @@ string
 
 ### type
 
-Signal prototype namespace; SignalID/SignalIDBase require an explicit input type.
+Signal prototype namespace. SignalID and SignalIDBase require an explicit input type.
 
 ```text
 TC.Config.SignalIDType

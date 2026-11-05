@@ -9,12 +9,13 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Signal
 
-Detached native signal entry. Order is native, not sorted or stable by contract.
-Zero-valued output entries are omitted; absence of a read signal means zero.
+This detached entry describes a native signal.
+The contract specifies native order, not sorted or stable order.
+Output omits zero-valued entries. An absent read signal means zero.
 
 ### count
 
-Signed count; negative counts are legal.
+Signed count. Negative counts are permitted.
 
 ```text
 TC.Int32

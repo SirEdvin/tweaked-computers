@@ -9,7 +9,9 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.StatisticsKind
 
-Statistics namespace. Pollution is surface-wide; item/fluid are surface+force.
+This namespace selects the statistics kind.
+Pollution covers the whole surface.
+Item and fluid statistics use both surface and force.
 
 ```text
 'item'|'fluid'|'pollution'

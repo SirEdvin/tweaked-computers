@@ -9,10 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.SurfaceCondition
 
-Declared surface condition, kept in native order. Negative-infinite lower and
-positive-infinite upper bounds become absent fields, not zero or nonfinite Data.
-Retain the condition even when both bounds are absent; no other nonfinite value
-is accepted. Metadata does not filter recipes by the current surface.
+This declared surface condition retains native order.
+Negative-infinite lower bounds and positive-infinite upper bounds become absent fields, not zero or nonfinite Data.
+The condition remains present even when both bounds are absent.
+No other nonfinite value is accepted.
+This metadata does not filter recipes by the current surface.
 
 ### max (optional)
 

@@ -17,43 +17,54 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.ProductionStatistics
 
-Research Recipe Searcher and wire this device's NETWORK on red or green.
-Read-only native statistics on this device's current surface. Item/fluid use its
-current force; pollution intentionally includes the whole surface, not just that
-force. Pollution statistics are source/sink flows, not airborne concentration or
-a map. No arbitrary force/surface selector, reset/write, cursor, top-N cutoff,
-all-history query, event subscription, sort option or private collector exists.
+Research Recipe Searcher.
+Connect this device's NETWORK with a red or green wire.
+The device reads native statistics on its current surface without write access.
+Item and fluid statistics use its current force.
+Pollution intentionally includes the whole surface, not only that force.
+Pollution statistics are source/sink flows, not airborne concentration or a map.
 
-Each call resolves fresh native scope/data. Native timing is preserved: current
-tick flows may not yet have merged; never add them manually. API history is raw,
-not the native GUI's sliding-window smoothing. Snapshots are detached and can
-only be retained under independent state/KV capacity. No statistics handles or
-caches persist. Mine/clone/new placement never resets or duplicates native data;
-load retains identity/wires but does not replay source or query statistics.
+There is no arbitrary force/surface selector, reset/write operation, cursor or top-N cutoff.
+There is no all-history query, event subscription, sort option or private collector.
 
-This custom device needs no electricity. Every method rechecks exact identity,
-scope and explicit-color reachability; Console captures never bypass them.
-Complete native inventories (including modded names/qualities) may still exceed
-generic Data/work/allocation limits. No circuit-only transport exception, quota
-increase, partial-success record or retry credit renewal is implied.
+Each call resolves fresh native scope and data.
+Native timing remains unchanged: current-tick flows might not yet appear in the merged data.
+Never add current-tick flows manually.
+API history is raw, without the sliding-window smoothing of the native GUI.
+
+Snapshots are detached and require independent state/KV capacity for retention.
+No statistics handles or caches persist.
+Mining, cloning and new placement never reset or duplicate native data.
+Load retains identity and wires but does not replay source or query statistics.
+
+This custom device needs no electricity.
+Every method checks exact identity, scope and explicit-color reachability again.
+Console captures never bypass those checks.
+Complete native inventories, with modded names and qualities, can still exceed generic Data, work or allocation limits.
+There is no implied circuit-only transport exception, quota increase, partial-success record or credit renewal for retries.
 
 ### Errors
 
-Wrong arity/types/empty identity or non-item quality: E_ARGUMENT. Unknown kind,
-window, identity or quality: E_RANGE. Complete result/argument bounds: E_LIMIT.
-Unsupported/nonfinite native data: E_UNSUPPORTED. Native failure: E_ENGINE, not
-fabricated zeros. Physical failures preserve E_UNREACHABLE/E_NETWORK_PENDING/
-E_LIMIT; exhausted work/allocation remains fatal E_BUDGET. Current authority and
-input admission can fail before a later provider semantic error. No successful
-prefix or retained job results from refusal; consumed credits remain consumed.
+Wrong arity, wrong types, an empty identity or non-item quality causes E_ARGUMENT.
+An unknown kind, window, identity or quality causes E_RANGE.
+Complete result or argument bounds cause E_LIMIT.
+Unsupported or nonfinite native data causes E_UNSUPPORTED.
+Native failure causes E_ENGINE, not invented zeros.
+
+Physical failures preserve E_UNREACHABLE, E_NETWORK_PENDING and E_LIMIT.
+Work or allocation exhaustion remains fatal E_BUDGET.
+Current authority and input admission can fail before a later provider semantic error.
+Refusal gives no successful prefix or retained job.
+Consumed credits remain consumed.
 
 ### getHistory
 
-Read one exact identity's complete raw native history. Registered item/fluid or
-pollution entity without activity has native zero history. Pollution also accepts
-an exact current input/output map key even without an entity prototype; it ceases
-to be valid when absent from both maps. Arbitrary unknown names fail, never produce
-invented zeros. Item native identity includes quality; other kinds use name only.
+Read the complete raw native history for one exact identity.
+A registered item, fluid or pollution entity without activity has native zero history.
+Pollution also accepts an exact current input/output map key, even without an entity prototype.
+That key becomes invalid when absent from both maps.
+Arbitrary unknown names cause failure, never invented zeros.
+Native item identity includes quality; other kinds use only the name.
 
 ```text
 getHistory(kind: TC.StatisticsKind, name: string, window: TC.StatisticsWindow, quality?: string) -> snapshot: TC.HistorySnapshot
@@ -65,13 +76,13 @@ kind: TC.StatisticsKind
 Required exact namespace.
 
 name: string
-Nonempty exact installed item/fluid/entity or current pollution key; bounded by string_bytes.
+Nonempty exact installed item, fluid or entity name, or current pollution key. The string_bytes bound applies.
 
 window: TC.StatisticsWindow
 Required symbolic history precision.
 
 quality (optional): string
-Item-only installed quality; omitted/nil means normal. Other kinds accept only omission/nil.
+Item-only installed quality. Omission or nil means normal. Other kinds accept only omission or nil.
 
 ### Returns
 
@@ -80,8 +91,9 @@ Exactly one complete 300-sample-per-side snapshot.
 
 ### getLimits
 
-Read effective common limits. History geometry/windows are not tunable budget
-fields and no statistics-specific count or settings are added.
+Read the effective common limits.
+History geometry and windows are not adjustable budget fields.
+The method adds no statistics-specific count or settings.
 
 ```text
 getLimits() -> limits: TC.Limits
@@ -98,9 +110,9 @@ Defensive effective common limit map.
 
 ### getRates
 
-Read native average per-minute flow for every recorded direction-specific key.
-Uses native flow count with no sample index, never differenced totals or privately
-averaged history. Old activity can remain as a zero current-window rate.
+Read the native average per-minute flow for every recorded direction-specific key.
+The method uses native flow count without a sample index, never differences between totals or private history averages.
+Old activity can remain as a zero current-window rate.
 
 ```text
 getRates(kind: TC.StatisticsKind, window: TC.StatisticsWindow) -> snapshot: TC.StatisticsSnapshot
@@ -121,9 +133,10 @@ Quality-nested item or flat other-kind maps of rates per game minute.
 
 ### getTotals
 
-Copy the complete native count maps, with each direction retaining exactly its
-own keys/recorded zeros. Empty maps are success, not nil. Totals reflect native
-resets/other-mod changes on the next call, not a private accumulated lifetime.
+Copy the complete native count maps.
+Each direction retains exactly its own keys and recorded zeros.
+Empty maps indicate success, not nil.
+On the next call, totals reflect native resets and changes from other mods, not a private accumulated lifetime.
 
 ```text
 getTotals(kind: TC.StatisticsKind) -> snapshot: TC.StatisticsSnapshot
@@ -132,12 +145,12 @@ getTotals(kind: TC.StatisticsKind) -> snapshot: TC.StatisticsSnapshot
 ### Parameters
 
 kind: TC.StatisticsKind
-Required exact namespace; no default or option table.
+Required exact namespace. There is no default or option table.
 
 ### Returns
 
 snapshot: TC.StatisticsSnapshot
-Quality-nested for item, flat for fluid/pollution; native total units.
+Quality-nested for item, flat for fluid or pollution. Values use native total units.
 
 ## Referenced types
 

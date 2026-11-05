@@ -9,17 +9,18 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ErrorCode
 
-Public ordinary failure code; messages are explanatory, not stable API strings.
+This public code identifies an ordinary failure.
+Messages explain the failure, but their wording is not a stable API contract.
 
-'E_ARGUMENT': Wrong type, arity, option or structure; no mutation.
+'E_ARGUMENT': The type, arity, option or structure is incorrect. No mutation occurs.
 
-'E_RANGE': Invalid numeric, enum, prototype or domain value; no mutation.
+'E_RANGE': The numeric, enum, prototype or domain value is invalid. No mutation occurs.
 
 'E_NOT_FOUND': Addressed identity or section no longer exists.
 
 'E_UNREACHABLE': No valid selected-wire path or wrong force/surface.
 
-'E_NETWORK_PENDING': Complete topology proof unavailable; retry later.
+'E_NETWORK_PENDING': Complete topology proof is unavailable. Try again later.
 
 'E_UNPOWERED': Native radar/speaker operational availability absent.
 
@@ -31,15 +32,15 @@ Public ordinary failure code; messages are explanatory, not stable API strings.
 
 'E_WRONGTYPE': Wrong live KV key type or a non-monitor in monitor synchronization selection.
 
-'E_CAPACITY': Accepted content/storage capacity would be exceeded.
+'E_CAPACITY': The request would exceed the accepted content or storage capacity.
 
 'E_LIMIT': Request exceeds a published size/complexity boundary.
 
-'E_BUSY': Host work cannot be admitted now; do not busy-wait.
+'E_BUSY': The host cannot admit this work now. Do not busy-wait.
 
-'E_ENGINE': Native adapter failure; recovery state retained on failed rollback.
+'E_ENGINE': The native adapter failed. A failed rollback retains recovery state.
 
-'E_PROGRAM': Uncaught ordinary program failure; prior effects remain committed.
+'E_PROGRAM': An ordinary program failure escaped error handling. Earlier effects remain committed.
 
 'E_BUDGET': Candidate refusal or fatal active execution budget exhaustion.
 

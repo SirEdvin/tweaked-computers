@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.QualityCondition.Variant1
 
-Union alternative. Unknown fields refused. Unknown fields refused.
+Union alternative. Unknown fields are refused. Unknown fields are refused.
 
 ### comparator (optional)
 
-Comparison symbol; &gt;=, &lt;= and != normalize to ≥, ≤ and ≠.
+Comparison symbol. &gt;=, &lt;=, and != normalize to ≥, ≤, and ≠.
 
 ```text
 TC.Config.ComparatorString
@@ -21,7 +21,7 @@ TC.Config.ComparatorString
 
 ### quality (optional)
 
-Exact installed quality name; normalization defaults normal where this concept permits omission. At most 256 bytes; no NUL.
+Exact installed quality name. Normalization uses normal when this concept permits omission. At most 256 bytes. NUL is not permitted.
 
 ```text
 string

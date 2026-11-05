@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.LuaReactorControlBehavior
 
-Root settings for LuaReactorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaReactorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### read_fuel (optional)
 
@@ -29,7 +29,7 @@ boolean
 
 ### temperature_signal (optional)
 
-Signal carrying reactor temperature. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal carrying reactor temperature. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.SignalID

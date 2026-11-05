@@ -9,11 +9,16 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.RecipeProduct
 
-Complete native product entry, not just the queried output. Quantity is exactly
-one fixed amount OR the pair amount_min/amount_max according to native readback.
-Preserve duplicates, zero modifiers and order. Never multiply amounts by chance,
-add productivity, predict quality or synthesize recipes. Optional kind-specific
-fields are absent for the other kind and when the engine does not supply them.
+This entry contains the complete native product, not only the queried output.
+Quantity is exactly one fixed amount or the pair amount_min/amount_max, as specified by native readback.
+Preserve duplicates, zero modifiers and order.
+
+Never multiply amounts by chance.
+Never add productivity.
+Never predict quality.
+Never synthesize recipes.
+
+Optional kind-specific fields are absent for the other kind and when the engine does not supply them.
 
 ### affected_by_quality (optional)
 
@@ -113,7 +118,7 @@ number
 
 ### probability
 
-Finite marginal independent_probability*(shared_probability.max-shared_probability.min).
+Finite marginal probability: independent_probability*(shared_probability.max-shared_probability.min).
 
 ```text
 number

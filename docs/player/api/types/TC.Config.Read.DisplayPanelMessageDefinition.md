@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.DisplayPanelMessageDefinition
 
-Normalized readback for DisplayPanelMessageDefinition. Unknown fields refused.
+Normalized readback for DisplayPanelMessageDefinition. Unknown fields are refused.
 
 ### condition
 
-Display-message visibility condition. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed.
+Display-message visibility condition. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed.
 
 ```text
 TC.Config.Read.CircuitConditionDefinition
@@ -21,7 +21,7 @@ TC.Config.Read.CircuitConditionDefinition
 
 ### icon
 
-Display-message signal icon identity. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+Display-message signal icon identity. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
 ```text
 TC.Config.Read.SignalID
@@ -29,7 +29,7 @@ TC.Config.Read.SignalID
 
 ### text
 
-Display-message text, bounded and without NUL.
+Display-message text within its byte limit. NUL is not permitted.
 
 ```text
 string

@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.SignalFilter
 
-Normalized readback for SignalFilter. Unknown fields refused. Input accepts a signal name string or object. String names select virtual when registered there, otherwise item. Object type defaults item. Readback always has name/type/quality/comparator, defaults normal and =. Wildcards are refused.
+Normalized readback for SignalFilter. Unknown fields are refused. Input accepts a signal name string or object. A string name selects virtual when registered there; otherwise, it selects item. The object type defaults to item. Readback always has name, type, quality, and comparator. Quality defaults to normal. The comparator defaults to =. Wildcards are refused.
 
 ### comparator
 
-Comparison symbol; &gt;=, &lt;= and != normalize to ≥, ≤ and ≠.
+Comparison symbol. &gt;=, &lt;=, and != normalize to ≥, ≤, and ≠.
 
 ```text
 TC.Config.Read.ComparatorString
@@ -21,7 +21,7 @@ TC.Config.Read.ComparatorString
 
 ### name
 
-Exact prototype/quality identity named by the enclosing concept; no localization lookup.
+Exact prototype or quality identity for the enclosing concept. No localization lookup occurs.
 
 ```text
 string
@@ -29,7 +29,7 @@ string
 
 ### quality
 
-Exact installed quality name; normalization defaults normal where this concept permits omission. Installed quality name, never a native object.
+Exact installed quality name. Normalization uses normal when this concept permits omission. Use an installed quality name, not a native object.
 
 ```text
 string
@@ -37,7 +37,7 @@ string
 
 ### type
 
-Signal prototype namespace; SignalID/SignalIDBase require an explicit input type.
+Signal prototype namespace. SignalID and SignalIDBase require an explicit input type.
 
 ```text
 TC.Config.Read.SignalIDType

@@ -9,7 +9,8 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.SignalChange
 
-One effective identity/count difference; disappearing signals use current=0.
+This record gives one effective identity/count difference.
+Signals that disappear use current=0.
 
 ### current
 

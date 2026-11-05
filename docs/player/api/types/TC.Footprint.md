@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Footprint
 
-Axis-aligned footprint in world tiles; monitor terminal axes may differ.
+This axis-aligned footprint uses world tiles. Monitor terminal axes can differ.
 
 ### height
 

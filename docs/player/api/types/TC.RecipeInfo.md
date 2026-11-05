@@ -9,13 +9,14 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.RecipeInfo
 
-Fresh recipe snapshot. Required fields remain present when false or empty.
-This is declared recipe metadata, not machine feasibility, expected output,
-technology objects, localized labels/icons or every native prototype property.
+This is a fresh recipe snapshot.
+Required fields remain present when false or empty.
+This is declared recipe metadata, not machine feasibility or expected output.
+It does not contain technology objects, localized labels/icons or every native prototype property.
 
 ### additional_categories
 
-Sorted unique remaining categories, excluding primary.
+Sorted unique remaining categories, without the primary category.
 
 ```text
 (string)[]
@@ -23,7 +24,7 @@ Sorted unique remaining categories, excluding primary.
 
 ### category
 
-First native 2.1 crafting category, compatibility primary.
+First native 2.1 crafting category, used as the primary category for compatibility.
 
 ```text
 string
@@ -95,7 +96,7 @@ Complete ordered native ingredient list.
 
 ### name
 
-Internal recipe name; bytewise sorting/deduplication identity.
+Internal recipe name. This is the identity for bytewise sorting and deduplication.
 
 ```text
 string

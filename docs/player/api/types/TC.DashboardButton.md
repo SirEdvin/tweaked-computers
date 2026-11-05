@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.DashboardButton
 
-Native left-click button; it produces events only for explicit subscriptions.
+This native left-click button produces events only for explicit subscriptions.
 
 ### enabled (optional)
 
-Omitted/nil defaults true; false prevents activation/delivery.
+Omission or nil defaults to true. False prevents activation and delivery.
 
 ```text
 boolean

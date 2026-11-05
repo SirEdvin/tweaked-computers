@@ -9,12 +9,13 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.SectionPatch
 
-Section patch with the same explicit replacement convention. No section field
-supports clear: clear must be omitted or empty, otherwise E_READ_ONLY.
+A section patch uses the same explicit replacement convention.
+No section field supports clear. The clear field must be absent or empty.
+Otherwise, the patch causes E_READ_ONLY.
 
 ### clear (optional)
 
-Only an empty array is accepted; clear filters with set.filters={} instead.
+Only an empty array is permitted. To clear filters, use set.filters={} instead.
 
 ```text
 (string)[]
@@ -22,7 +23,7 @@ Only an empty array is accepted; clear filters with set.filters={} instead.
 
 ### set (optional)
 
-Supported fields to replace; omitted fields unchanged.
+Supported fields to replace. Omitted fields remain unchanged.
 
 ```text
 TC.Config.SectionValues

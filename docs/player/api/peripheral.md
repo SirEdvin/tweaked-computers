@@ -15,39 +15,45 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.PeripheralLibrary
 
-Physical same-color discovery. Only public computer-network connectors and
-supported native radar/speaker sockets relay it. Hidden radar radio links,
-input/output/target ports, unrelated native entities, ghosts, other forces and
-other surfaces do not bridge this network. Red and green never combine into a
-path. A logical monitor reachable through one member does not internally bridge
-unwired members. KV access on both colors is one database, not a color bridge.
+Discovery uses physical paths of the same color.
+Only public computer-network connectors and supported native radar/speaker sockets relay discovery.
+Hidden radar radio links and input/output/target ports do not bridge this network.
+Unrelated native entities, ghosts, other forces and other surfaces do not bridge it.
+Red and green never combine into one path.
 
-Every target call revalidates exact identity/generation, force/surface, selected
-path and device requirements. Temporary/incomplete topology is E_NETWORK_PENDING
-or E_LIMIT, never a successful empty inventory. Native radar/speaker active
-methods require power; reachable metadata/getLimits remain usable without it.
-Wrappers and captured methods are ephemeral in saved callbacks. Persist only
-name and wire in Data and wrap again. Console alone can retain authentic symbolic
-bindings; stale restored descriptors never retarget replacement entities.
+A logical monitor reachable through one member does not internally bridge unwired members.
+KV access on both colors uses one database, not a color bridge.
 
-Attach/detach registrations observe transitions, not startup inventory. Current
-output owners and pending work have independent fail-safe observation; no
-background snapshot authorizes a later operation. Cold load retains accepted
-observations/order and paid credits without rerunning guest code.
-Background topology interest belongs to attach/detach, modem-message and
-Dashboard-click registrations plus unfinished computer/color reconciliation.
-Removing the final interest retires future observation after pending host work
-settles; already accepted snapshot notifications are not recalled. Definitive
-Dashboard selected-path loss retires its registrations/queued clicks, whereas
-incomplete discovery alone does not. Physical discovery may retain a pending
-native-adoption request from a stopped/faulted placed computer independently of
-program lifetime; program retirement does not cancel that physical-root request.
+Every target call validates exact identity, generation, force, surface, selected path and device requirements again.
+Temporary or incomplete topology causes E_NETWORK_PENDING or E_LIMIT, never a successful empty inventory.
+Active methods on native radars and speakers require power.
+Reachable metadata and getLimits remain usable without power.
+
+Wrappers and captured methods are ephemeral in saved callbacks.
+Persist only name and wire in Data.
+Then wrap again.
+Only Console can retain authentic symbolic bindings.
+Stale restored descriptors never target replacement entities.
+
+Attach/detach registrations observe transitions, not startup inventory.
+Current output owners and pending work have independent fail-safe observation.
+No background snapshot authorizes a later operation.
+Cold load retains accepted observations, their order and paid credits without another execution of guest code.
+
+Background topology interest belongs to attach/detach, modem-message and Dashboard-click registrations, and unfinished computer/color reconciliation.
+Removal of the final interest retires future observation after pending host work settles.
+This does not recall already accepted snapshot notifications.
+Definitive Dashboard selected-path loss retires its registrations and queued clicks, but incomplete discovery alone does not.
+
+Physical discovery can retain a pending native-adoption request from a stopped or faulted placed computer, independent of program lifetime.
+Program retirement does not cancel that physical-root request.
 
 ### call
 
-Invoke one public method with its exact trailing arguments/results and current
-authority. Unknown method is E_ARGUMENT. Handler-only/optional-dependency rules
-apply through this route too; no arbitrary native method forwarding exists.
+Call one public method with its exact trailing arguments, results and current authority.
+An unknown method causes E_ARGUMENT.
+Handler-only and optional-dependency rules also apply through this route.
+There is no arbitrary native method forwarding.
 
 ```text
 call(name: TC.PeripheralName, wire: TC.Wire, method: string, ...: TC.GuestValue) -> ...: TC.GuestValue
@@ -70,12 +76,12 @@ Method-specific arguments; see the selected member's contract.
 ### Returns
 
 ... (zero or more positions): TC.GuestValue
-Exact method result tuple; zero values/nil remain distinct.
+Exact method result tuple. Zero values and nil remain distinct.
 
 ### describe
 
-Read current plain metadata. Labels, positions and powered are observations,
-not authority tokens, global discovery shortcuts or native object handles.
+Read the current plain metadata.
+Labels, positions and powered are observations, not authority tokens, global discovery shortcuts or native object handles.
 
 ```text
 describe(name: TC.PeripheralName, wire: TC.Wire) -> info: TC.PeripheralInfo|nil
@@ -96,9 +102,11 @@ Independent snapshot or exactly one nil when absent.
 
 ### find
 
-Find all matching facades in sorted-name order as MULTIPLE RETURNS, not an
-array. Zero matches yield zero results. Collect with {peripheral.find(...)} or
-assign the first. Too many matches is E_LIMIT; use getNames/wrap instead.
+Find all matching facades in sorted-name order as MULTIPLE RETURNS, not an array.
+Zero matches give zero results.
+Collect the results with {peripheral.find(...)} or assign the first result.
+Too many matches cause E_LIMIT.
+In that case, use getNames/wrap instead.
 A bounded unknown string returns zero matches, not an unsupported-type error.
 
 ```text
@@ -108,7 +116,7 @@ find(type_name: string, wire: TC.Wire) -> ...: TC.Peripheral
 ### Parameters
 
 type_name: string
-Family string; literal supported names refine result type.
+Family string. Literal supported names refine the result type.
 
 wire: TC.Wire
 Required explicit discovery channel.
@@ -122,12 +130,12 @@ Zero or more genuine matching facades in sorted-name order.
 find(type_name: 'monitor', wire: TC.Wire) -> ...: TC.Monitor
 ```
 
-type_name selects monitors; results are zero or more sorted matching monitor facades.
+type_name selects monitors. Results are zero or more sorted matching monitor facades.
 
 ### Parameters
 
 type_name: 'monitor'
-type_name selects monitors; results are zero or more sorted matching monitor facades.
+type_name selects monitors. Results are zero or more sorted matching monitor facades.
 
 wire: TC.Wire
 Required explicit discovery channel.
@@ -135,18 +143,18 @@ Required explicit discovery channel.
 ### Returns
 
 ... (zero or more positions): TC.Monitor
-type_name selects monitors; results are zero or more sorted matching monitor facades.
+type_name selects monitors. Results are zero or more sorted matching monitor facades.
 
 ```text
 find(type_name: 'kv_database', wire: TC.Wire) -> ...: TC.KVDatabase
 ```
 
-type_name selects databases; results are zero or more sorted matching database facades.
+type_name selects databases. Results are zero or more sorted matching database facades.
 
 ### Parameters
 
 type_name: 'kv_database'
-type_name selects databases; results are zero or more sorted matching database facades.
+type_name selects databases. Results are zero or more sorted matching database facades.
 
 wire: TC.Wire
 Required explicit discovery channel.
@@ -154,18 +162,18 @@ Required explicit discovery channel.
 ### Returns
 
 ... (zero or more positions): TC.KVDatabase
-type_name selects databases; results are zero or more sorted matching database facades.
+type_name selects databases. Results are zero or more sorted matching database facades.
 
 ```text
 find(type_name: 'logic_handler', wire: TC.Wire) -> ...: TC.LogicHandler
 ```
 
-type_name selects Logic handlers; results are zero or more sorted matching Logic facades.
+type_name selects Logic handlers. Results are zero or more sorted matching Logic facades.
 
 ### Parameters
 
 type_name: 'logic_handler'
-type_name selects Logic handlers; results are zero or more sorted matching Logic facades.
+type_name selects Logic handlers. Results are zero or more sorted matching Logic facades.
 
 wire: TC.Wire
 Required explicit discovery channel.
@@ -173,18 +181,18 @@ Required explicit discovery channel.
 ### Returns
 
 ... (zero or more positions): TC.LogicHandler
-type_name selects Logic handlers; results are zero or more sorted matching Logic facades.
+type_name selects Logic handlers. Results are zero or more sorted matching Logic facades.
 
 ```text
 find(type_name: 'configurator', wire: TC.Wire) -> ...: TC.Configurator
 ```
 
-type_name selects Configurators; results are zero or more sorted matching Configurator facades.
+type_name selects Configurators. Results are zero or more sorted matching Configurator facades.
 
 ### Parameters
 
 type_name: 'configurator'
-type_name selects Configurators; results are zero or more sorted matching Configurator facades.
+type_name selects Configurators. Results are zero or more sorted matching Configurator facades.
 
 wire: TC.Wire
 Required explicit discovery channel.
@@ -192,18 +200,18 @@ Required explicit discovery channel.
 ### Returns
 
 ... (zero or more positions): TC.Configurator
-type_name selects Configurators; results are zero or more sorted matching Configurator facades.
+type_name selects Configurators. Results are zero or more sorted matching Configurator facades.
 
 ```text
 find(type_name: 'recipe_searcher', wire: TC.Wire) -> ...: TC.RecipeSearcher
 ```
 
-type_name selects Recipe Searchers; results are zero or more sorted matching search facades.
+type_name selects Recipe Searchers. Results are zero or more sorted matching search facades.
 
 ### Parameters
 
 type_name: 'recipe_searcher'
-type_name selects Recipe Searchers; results are zero or more sorted matching search facades.
+type_name selects Recipe Searchers. Results are zero or more sorted matching search facades.
 
 wire: TC.Wire
 Required explicit discovery channel.
@@ -211,18 +219,18 @@ Required explicit discovery channel.
 ### Returns
 
 ... (zero or more positions): TC.RecipeSearcher
-type_name selects Recipe Searchers; results are zero or more sorted matching search facades.
+type_name selects Recipe Searchers. Results are zero or more sorted matching search facades.
 
 ```text
 find(type_name: 'factoriopedia_interface', wire: TC.Wire) -> ...: TC.FactoriopediaInterface
 ```
 
-type_name selects Factoriopedia Interfaces; results are zero or more sorted matching reference facades.
+type_name selects Factoriopedia Interfaces. Results are zero or more sorted matching reference facades.
 
 ### Parameters
 
 type_name: 'factoriopedia_interface'
-type_name selects Factoriopedia Interfaces; results are zero or more sorted matching reference facades.
+type_name selects Factoriopedia Interfaces. Results are zero or more sorted matching reference facades.
 
 wire: TC.Wire
 Required explicit discovery channel.
@@ -230,18 +238,18 @@ Required explicit discovery channel.
 ### Returns
 
 ... (zero or more positions): TC.FactoriopediaInterface
-type_name selects Factoriopedia Interfaces; results are zero or more sorted matching reference facades.
+type_name selects Factoriopedia Interfaces. Results are zero or more sorted matching reference facades.
 
 ```text
 find(type_name: 'production_statistics', wire: TC.Wire) -> ...: TC.ProductionStatistics
 ```
 
-type_name selects Production Statistics; results are zero or more sorted matching statistics facades.
+type_name selects Production Statistics. Results are zero or more sorted matching statistics facades.
 
 ### Parameters
 
 type_name: 'production_statistics'
-type_name selects Production Statistics; results are zero or more sorted matching statistics facades.
+type_name selects Production Statistics. Results are zero or more sorted matching statistics facades.
 
 wire: TC.Wire
 Required explicit discovery channel.
@@ -249,18 +257,18 @@ Required explicit discovery channel.
 ### Returns
 
 ... (zero or more positions): TC.ProductionStatistics
-type_name selects Production Statistics; results are zero or more sorted matching statistics facades.
+type_name selects Production Statistics. Results are zero or more sorted matching statistics facades.
 
 ```text
 find(type_name: 'dashboard', wire: TC.Wire) -> ...: TC.Dashboard
 ```
 
-type_name selects Dashboards; results are zero or more sorted facades, with chart methods only when installed.
+type_name selects Dashboards. Results are zero or more sorted facades, with chart methods only when installed.
 
 ### Parameters
 
 type_name: 'dashboard'
-type_name selects Dashboards; results are zero or more sorted facades, with chart methods only when installed.
+type_name selects Dashboards. Results are zero or more sorted facades, with chart methods only when installed.
 
 wire: TC.Wire
 Required explicit discovery channel.
@@ -268,18 +276,18 @@ Required explicit discovery channel.
 ### Returns
 
 ... (zero or more positions): TC.Dashboard
-type_name selects Dashboards; results are zero or more sorted facades, with chart methods only when installed.
+type_name selects Dashboards. Results are zero or more sorted facades, with chart methods only when installed.
 
 ```text
 find(type_name: 'modem', wire: TC.Wire) -> ...: TC.Modem
 ```
 
-type_name selects radar modems; results are zero or more sorted matching radio facades.
+type_name selects radar modems. Results are zero or more sorted matching radio facades.
 
 ### Parameters
 
 type_name: 'modem'
-type_name selects radar modems; results are zero or more sorted matching radio facades.
+type_name selects radar modems. Results are zero or more sorted matching radio facades.
 
 wire: TC.Wire
 Required explicit discovery channel.
@@ -287,18 +295,18 @@ Required explicit discovery channel.
 ### Returns
 
 ... (zero or more positions): TC.Modem
-type_name selects radar modems; results are zero or more sorted matching radio facades.
+type_name selects radar modems. Results are zero or more sorted matching radio facades.
 
 ```text
 find(type_name: 'speaker', wire: TC.Wire) -> ...: TC.Speaker
 ```
 
-type_name selects native speakers; results are zero or more sorted matching audio facades.
+type_name selects native speakers. Results are zero or more sorted matching audio facades.
 
 ### Parameters
 
 type_name: 'speaker'
-type_name selects native speakers; results are zero or more sorted matching audio facades.
+type_name selects native speakers. Results are zero or more sorted matching audio facades.
 
 wire: TC.Wire
 Required explicit discovery channel.
@@ -306,12 +314,12 @@ Required explicit discovery channel.
 ### Returns
 
 ... (zero or more positions): TC.Speaker
-type_name selects native speakers; results are zero or more sorted matching audio facades.
+type_name selects native speakers. Results are zero or more sorted matching audio facades.
 
 ### getMethods
 
-Read sorted public method names including aliases. Optional Dashboard chart
-methods are absent when the compatible library is absent, not failing stubs.
+Read sorted public method names with their aliases.
+If the compatible library is absent, optional Dashboard chart methods are absent, not failing stubs.
 
 ```text
 getMethods(name: TC.PeripheralName, wire: TC.Wire) -> methods: (string)[]|nil
@@ -332,9 +340,10 @@ Complete independent names, or one nil when absent.
 
 ### getMonitorSyncGroup
 
-Read one independent status map. This does not drive rendering, retry topology,
-mutate selection or wait for completion. A sequence can skip coalesced pending
-frames and advances only on complete publication, never merely on preparation.
+Read one independent status map.
+This does not drive rendering, retry topology, change selection or wait for completion.
+A sequence can skip coalesced pending frames.
+It advances only on complete publication, never on preparation alone.
 
 ```text
 getMonitorSyncGroup() -> status: TC.MonitorSyncStatus
@@ -347,12 +356,13 @@ No parameters.
 ### Returns
 
 status: TC.MonitorSyncStatus
-Current retained selection/progress/diagnostic.
+Current retained selection, progress and diagnostic.
 
 ### getName
 
-Inspect an authentic facade's bound identity, even after detachment. This does
-not reauthorize target access; plain lookalike records are E_ARGUMENT.
+Inspect the bound identity of an authentic facade, even after detachment.
+This does not authorize target access again.
+Plain lookalike records cause E_ARGUMENT.
 
 ```text
 getName(facade: TC.Peripheral) -> name: TC.PeripheralName
@@ -370,8 +380,9 @@ Bound service identity.
 
 ### getNames
 
-Return the complete sorted unique current inventory for one explicit color.
-An empty array is complete success; incomplete traversal throws instead.
+Return the complete current inventory for one explicit color, sorted and without duplicates.
+An empty array indicates complete success.
+Incomplete traversal throws an error instead.
 
 ```text
 getNames(wire: TC.Wire) -> names: (TC.PeripheralName)[]
@@ -389,7 +400,8 @@ Sorted opaque service names, possibly empty.
 
 ### getType
 
-Read one reachable family name; no fallback to another wire or old generation.
+Read one reachable family name.
+There is no fallback to another wire or an old generation.
 
 ```text
 getType(name: TC.PeripheralName, wire: TC.Wire) -> type: TC.PeripheralType|nil
@@ -410,8 +422,9 @@ Exactly one family or one nil after complete absence.
 
 ### getWire
 
-Inspect an authentic facade's bound discovery color, even after detachment.
-No target access or fallback is granted; forged tables are E_ARGUMENT.
+Inspect the bound discovery color of an authentic facade, even after detachment.
+This grants no target access or fallback.
+Forged tables cause E_ARGUMENT.
 
 ```text
 getWire(facade: TC.Peripheral) -> wire: TC.Wire
@@ -429,8 +442,9 @@ Bound red/green channel.
 
 ### isPresent
 
-Test physical reachability after complete discovery. Native power loss alone
-does not make a reachable carrier absent. Invalid/incomplete proof throws.
+Check physical reachability after complete discovery.
+Native power loss alone does not make a reachable carrier absent.
+Invalid or incomplete proof throws an error.
 
 ```text
 isPresent(name: TC.PeripheralName, wire: TC.Wire) -> present: boolean
@@ -451,31 +465,45 @@ True for a current reachable identity; false when absent.
 
 ### setMonitorSyncGroup
 
-Atomically replace this run/session's single monitor synchronization selection;
-{} clears, nil does not. Returns zero values. Validate EVERY supplied path,
-including duplicates, then canonicalize by logical identity: red wins when both
-valid colors name the same display; sort by name. Equal canonical selection is
-idempotent, preserving pending work/sequence. Ordinary refusal preserves the old
-group and every model/front. No selection grants exclusive drawing authority.
+Atomically replace the single monitor synchronization selection for this run/session.
+{} clears the selection; nil does not.
+The method returns zero values.
 
-All members must be live monitors on one force/surface and fit actual summed
-cells. Another owner's selected member is E_BUSY; non-monitor is E_WRONGTYPE;
-missing path is E_UNREACHABLE; incomplete proof E_NETWORK_PENDING; malformed
-input E_ARGUMENT; excessive proof/input E_LIMIT; final capacity E_CAPACITY.
-No coordinate or implicit color fallback exists.
+The method validates every supplied path, also duplicates, before canonicalization by logical identity.
+When both valid colors name the same display, red wins.
+The method sorts members by name.
+An equal canonical selection is idempotent and preserves pending work and sequence.
+Ordinary refusal preserves the old group and every model and front.
+No selection grants exclusive drawing authority.
 
-After registration/each seal, every member needs one successful mutating call
-before the next post-dispatch snapshot; valid no-ops count, getters do not.
-Seal current models together, prepare against old complete fronts, then publish
-all in one tick. Pending snapshots may coalesce; admitted frames are immutable.
+All members must be live monitors on one force and surface.
+The sum of their actual cells must fit the allowance.
+A member that another owner selected causes E_BUSY.
+A non-monitor causes E_WRONGTYPE.
+A missing path causes E_UNREACHABLE.
+Incomplete proof causes E_NETWORK_PENDING.
+
+Malformed input causes E_ARGUMENT.
+Excessive proof or input causes E_LIMIT.
+Final capacity failure causes E_CAPACITY.
+There is no coordinate or implicit color fallback.
+
+After registration and each seal, every member needs one successful mutating call before the next post-dispatch snapshot.
+Valid no-ops count; getters do not.
+The host seals current models together and prepares them against old complete fronts.
+Then it publishes all prepared snapshots in one tick.
+Pending snapshots can coalesce; admitted frames are immutable.
+
 A static unmodified member holds the round indefinitely, without partial output.
-This aligns presentation epochs, not producers' clocks or multi-callback images.
+This aligns presentation epochs, not producer clocks or multi-callback images.
 
-Saved-run and Console-session owners are separate. Stop/fault/replacement,
-owner removal or definitive selected-path/identity loss releases the whole group
-and unpublished work, never accepted model/front contents. Temporary incomplete
-proof blocks instead. Geometry/scale changes reset participation/staging; an
-oversized retained group stays blocked until it fits or is reconfigured.
+Saved-run and Console-session owners are separate.
+Stop, fault, replacement, owner removal or definitive selected-path/identity loss releases the whole group and unpublished work.
+These events never release accepted model or front contents.
+Temporary incomplete proof blocks the group instead.
+
+Geometry and scale changes reset participation and staging.
+An oversized retained group stays blocked until it fits or its configuration changes.
 Ordinary reload preserves ownership, progress, acknowledgements and credits.
 
 ```text
@@ -485,7 +513,7 @@ setMonitorSyncGroup(members: (TC.MonitorRef)[])
 ### Parameters
 
 members: (TC.MonitorRef)[]
-Dense exact reference records; empty array clears.
+Dense exact reference records. An empty array clears the selection.
 
 ### Returns
 
@@ -494,8 +522,8 @@ No result positions. See the behavior notes for normal-return versus failure sem
 ### wrap
 
 Create a genuine dot-call facade bound to identity, entity generation and wire.
-A later stale call throws; it does not silently return an empty value or switch
-color. Opaque names do not statically identify a concrete peripheral family.
+A later stale call throws an error; it does not silently return an empty value or change color.
+Opaque names do not statically identify a concrete peripheral family.
 
 ```text
 wrap(name: TC.PeripheralName, wire: TC.Wire) -> facade: TC.Peripheral|nil
@@ -518,33 +546,38 @@ Exactly one authentic facade or one nil when absent.
 
 ### peripheral
 
-Physical same-color discovery. Only public computer-network connectors and
-supported native radar/speaker sockets relay it. Hidden radar radio links,
-input/output/target ports, unrelated native entities, ghosts, other forces and
-other surfaces do not bridge this network. Red and green never combine into a
-path. A logical monitor reachable through one member does not internally bridge
-unwired members. KV access on both colors is one database, not a color bridge.
+Discovery uses physical paths of the same color.
+Only public computer-network connectors and supported native radar/speaker sockets relay discovery.
+Hidden radar radio links and input/output/target ports do not bridge this network.
+Unrelated native entities, ghosts, other forces and other surfaces do not bridge it.
+Red and green never combine into one path.
 
-Every target call revalidates exact identity/generation, force/surface, selected
-path and device requirements. Temporary/incomplete topology is E_NETWORK_PENDING
-or E_LIMIT, never a successful empty inventory. Native radar/speaker active
-methods require power; reachable metadata/getLimits remain usable without it.
-Wrappers and captured methods are ephemeral in saved callbacks. Persist only
-name and wire in Data and wrap again. Console alone can retain authentic symbolic
-bindings; stale restored descriptors never retarget replacement entities.
+A logical monitor reachable through one member does not internally bridge unwired members.
+KV access on both colors uses one database, not a color bridge.
 
-Attach/detach registrations observe transitions, not startup inventory. Current
-output owners and pending work have independent fail-safe observation; no
-background snapshot authorizes a later operation. Cold load retains accepted
-observations/order and paid credits without rerunning guest code.
-Background topology interest belongs to attach/detach, modem-message and
-Dashboard-click registrations plus unfinished computer/color reconciliation.
-Removing the final interest retires future observation after pending host work
-settles; already accepted snapshot notifications are not recalled. Definitive
-Dashboard selected-path loss retires its registrations/queued clicks, whereas
-incomplete discovery alone does not. Physical discovery may retain a pending
-native-adoption request from a stopped/faulted placed computer independently of
-program lifetime; program retirement does not cancel that physical-root request.
+Every target call validates exact identity, generation, force, surface, selected path and device requirements again.
+Temporary or incomplete topology causes E_NETWORK_PENDING or E_LIMIT, never a successful empty inventory.
+Active methods on native radars and speakers require power.
+Reachable metadata and getLimits remain usable without power.
+
+Wrappers and captured methods are ephemeral in saved callbacks.
+Persist only name and wire in Data.
+Then wrap again.
+Only Console can retain authentic symbolic bindings.
+Stale restored descriptors never target replacement entities.
+
+Attach/detach registrations observe transitions, not startup inventory.
+Current output owners and pending work have independent fail-safe observation.
+No background snapshot authorizes a later operation.
+Cold load retains accepted observations, their order and paid credits without another execution of guest code.
+
+Background topology interest belongs to attach/detach, modem-message and Dashboard-click registrations, and unfinished computer/color reconciliation.
+Removal of the final interest retires future observation after pending host work settles.
+This does not recall already accepted snapshot notifications.
+Definitive Dashboard selected-path loss retires its registrations and queued clicks, but incomplete discovery alone does not.
+
+Physical discovery can retain a pending native-adoption request from a stopped or faulted placed computer, independent of program lifetime.
+Program retirement does not cancel that physical-root request.
 
 ```text
 TC.PeripheralLibrary

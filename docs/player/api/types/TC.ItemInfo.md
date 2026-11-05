@@ -9,19 +9,22 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ItemInfo
 
-Baseline item metadata, not an inventory stack or every quality-specific
-variant. Static native fields are direct; spoil_ticks explicitly uses normal
-quality, independent of the peripheral's own quality. No tags, current count,
-freshness, combat/module/equipment details or entity/location lookups are added.
+This record gives baseline item metadata, not an inventory stack or every quality-specific variant.
+Static native fields are direct. The spoil_ticks field explicitly uses normal
+quality, independent of the peripheral's own quality.
+The record adds no tags, current count, freshness, combat/module/equipment details
+or entity/location lookups.
 
-For positive weight, rocket_capacity=floor(default_rocket_lift_weight/weight),
-in individual items, not stacks and not rounded to complete stack multiples.
-Use resolved native weight and installed utility reference lift weight; never
-reimplement recipe weights. An overweight item has capacity zero; zero weight
-has no finite capacity and omits the field. Invalid weights/reference mass or
-inexact/nonfinite derived counts are E_UNSUPPORTED, never clamped sentinels.
+For positive weight, rocket_capacity=floor(default_rocket_lift_weight/weight).
+This count uses individual items, not stacks. It does not round to complete stack multiples.
+Use resolved native weight and installed utility reference lift weight.
+Never reimplement recipe weights. An overweight item has capacity zero.
+
+Zero weight has no finite capacity, so the record omits the field.
+Invalid weights/reference mass or inexact/nonfinite derived counts cause
+E_UNSUPPORTED, never clamped sentinels.
 The count does not inspect a particular rocket/silo, slots/cargo, launch state,
-destination, research or send_to_orbit_mode; it is not launchability permission.
+destination, research or send_to_orbit_mode. It is not launchability permission.
 
 Extends: TC.PrototypeInfo
 
@@ -35,7 +38,7 @@ string
 
 ### default_import_location (optional)
 
-Optional native location reference; never an invented Nauvis default.
+Optional native location reference. The API never invents a Nauvis default.
 
 ```text
 string
@@ -59,7 +62,7 @@ Native ordered 2.1 fuel categories, empty when absent natively.
 
 ### fuel_value
 
-Finite nonnegative joules per item; zero for nonfuel.
+Finite nonnegative joules per item. Nonfuel items have zero fuel value.
 
 ```text
 number
@@ -83,7 +86,7 @@ boolean
 
 ### rocket_capacity (optional)
 
-Nonnegative exact mass-limited individual-item count; absent only at zero weight.
+Nonnegative exact mass-limited individual-item count. This field is absent only at zero weight.
 
 ```text
 integer
@@ -91,7 +94,7 @@ integer
 
 ### spoil_result (optional)
 
-Optional spoil-result item; absence does not exclude trigger-based spoilage.
+Optional spoil-result item. Absence does not exclude trigger-based spoilage.
 
 ```text
 string
@@ -99,7 +102,7 @@ string
 
 ### spoil_ticks
 
-Nonnegative normal-quality lifetime in simulation ticks; zero means no spoilage.
+Nonnegative normal-quality lifetime in simulation ticks. Zero means no spoilage.
 
 ```text
 integer

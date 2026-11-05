@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.LuaRailSignalBaseControlBehavior
 
-Root settings for LuaRailSignalBaseControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaRailSignalBaseControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### blue_signal (optional)
 
-Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields refused. rail_chain_signal_only: Available only on chain signals; ordinary rail signals cannot read/write it. Explicit root patch clear: accepted with native reset/readback.
+Blue color-component input for lamps, or blue-state output for chain signals. Unknown fields are refused. rail_chain_signal_only: Available only on chain signals. Ordinary rail signals cannot read or write this field. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.Read.LuaRailSignalBaseControlBehavior.blue_signal
@@ -21,7 +21,7 @@ TC.Config.Read.LuaRailSignalBaseControlBehavior.blue_signal
 
 ### circuit_condition (optional)
 
-Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
+Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
 
 ```text
 TC.Config.Read.CircuitConditionDefinition
@@ -37,7 +37,7 @@ boolean
 
 ### green_signal (optional)
 
-Green color-component input for lamps, or green-state rail output. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Green color-component input for lamps, or green-state rail output. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.Read.SignalID
@@ -45,7 +45,7 @@ TC.Config.Read.SignalID
 
 ### orange_signal (optional)
 
-Signal representing an orange rail-signal state. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Signal representing an orange rail-signal state. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.Read.SignalID
@@ -61,7 +61,7 @@ boolean
 
 ### red_signal (optional)
 
-Red color-component input for lamps, or red-state rail output. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset/readback.
+Red color-component input for lamps, or red-state rail output. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.Read.SignalID

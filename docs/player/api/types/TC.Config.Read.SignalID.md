@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.SignalID
 
-Normalized readback for SignalID. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit. Explicit type/name required on input; output includes explicit type/name/quality. Default quality normal. Wildcards depend on role, not general SignalID permission.
+Normalized readback for SignalID. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit. Input requires explicit type and name. Output includes explicit type, name, and quality. The default quality is normal. Wildcard permission depends on the role, not general SignalID permission.
 
 ### name
 
-Exact prototype/quality identity named by the enclosing concept; no localization lookup.
+Exact prototype or quality identity for the enclosing concept. No localization lookup occurs.
 
 ```text
 string
@@ -21,7 +21,7 @@ string
 
 ### quality
 
-Exact installed quality name; normalization defaults normal where this concept permits omission. Installed quality name, never a native object.
+Exact installed quality name. Normalization uses normal when this concept permits omission. Use an installed quality name, not a native object.
 
 ```text
 string
@@ -29,7 +29,7 @@ string
 
 ### type
 
-Signal prototype namespace; SignalID/SignalIDBase require an explicit input type.
+Signal prototype namespace. SignalID and SignalIDBase require an explicit input type.
 
 ```text
 TC.Config.Read.SignalIDType

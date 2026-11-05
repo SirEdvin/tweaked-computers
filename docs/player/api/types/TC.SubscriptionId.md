@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.SubscriptionId
 
-Registration identity bound to one computer/run; never a saved function.
+This registration identity belongs to one computer and run. It is never a saved function.
 
 ```text
 string

@@ -1,117 +1,139 @@
 ---@meta
 
----Native note record. The containing array is one-based, pitch is zero-based.
----Labels are descriptive/case-sensitive, not MIDI/frequency/portable semitone maps.
+---This record describes a native note.
+---The containing array is one-based; pitch is zero-based.
+---Labels are descriptive and case-sensitive, not MIDI, frequency or portable semitone maps.
 ---@class TC.NoteInfo
 ---@field pitch integer Native instrument note index, from zero through note count minus one.
----@field name string Exact native note label; discover rather than hardcode labels.
+---@field name string Exact native note label. Use discovery instead of hardcoded labels.
 
----One complete sound-discovery page; no total/approximate count or query handle.
----Empty means sounds={} with next absent. Even a full final page omits next.
+---One complete sound-discovery page, without a total count, approximate count or query handle.
+---An empty page has sounds={} and no next field.
+---Even a full final page omits next.
 ---@class TC.SoundPage
 ---@field sounds string[] Unique runtime-valid paths sorted bytewise, at most speaker_sound_page_size.
----@field next? string Last emitted path only when another matching valid path exists; pass as after.
+---@field next? string Last emitted path, only when another matching valid path exists. Pass this value as after.
 
----Positional audio through the vanilla programmable-speaker prototype, not every
----entity of its type. Calls use checked physical facades; native circuit playback
----is independent. No subscription, audio queue, completion event, playback handle,
----stop/playAudio method, arbitrary file/URL loader or new global library exists.
+---This speaker supplies positional audio through the vanilla programmable-speaker prototype, not every entity of its type.
+---Calls use checked physical facades.
+---Native circuit playback is independent.
+---There is no subscription, audio queue, completion event or playback handle.
+---There is no stop/playAudio method, arbitrary file/URL loader or new global library.
 ---
 ---### Admission versus audibility
----Playback true means admitted and submitted to the engine, not heard. False means
----a physical-speaker, computer or world allowance was exhausted, without dispatch
----or queueing. Every other failure is an error. Each tick has separate note/sound
----speaker allowances and combined computer/world limits; wires, wrappers, saved
----runs and Console share their identity's credits. Zero-volume submissions count.
----Native circuit playback consumes no API quota. Validation/work happens before
----dispatch; invalid/refused calls consume no additional playback allowance, but
----already-spent work remains spent. Once dispatch is attempted, its quota remains
----spent even on native error; never auto-retry an uncertain external sound effect.
----Apply/recreation/reconnection/same-tick reload cannot renew existing credits.
+---A true playback result means admission and submission to the engine, not audible output.
+---A false result means exhaustion of a physical-speaker, computer or world allowance, without dispatch or queueing.
+---Every other failure is an error.
 ---
----Use named timers for later notes. Scheduling is not sample-accurate and no end
----time is reported. Native mixing may combine/drop accepted sounds. Playback is
----local game-effect audio at the speaker's current surface/position, not force-
----filtered and never a global fallback. Charting/listener position/view, sound-
----specific attenuation and client mixer/mute settings decide audibility. No exact
----native speaker radius, simultaneous voice count or circuit polyphony guarantee.
----Native condition/instrument/note/global mode/volume-by-signal settings neither
----control nor get rewritten by these requests. Alerts/settings/wires/power remain
----unchanged; native circuit audio and GUI/Configurator edits still coexist.
+---Each tick has separate speaker allowances for notes and sounds, and combined computer/world limits.
+---Wires, wrappers, saved runs and Console share their identity's credits.
+---Zero-volume submissions count.
+---Native circuit playback consumes no API quota.
+---
+---Validation and work occur before dispatch.
+---Invalid or refused calls consume no additional playback allowance, but already-spent work remains spent.
+---After a dispatch attempt, its quota remains spent even on native error.
+---Never automatically retry an uncertain external sound effect.
+---Apply, recreation, reconnection and same-tick reload cannot renew existing credits.
+---
+---Use named timers for later notes.
+---Scheduling is not sample-accurate, and the API reports no end time.
+---Native mixing can combine or drop accepted sounds.
+---Playback is local game-effect audio at the current surface and position of the speaker.
+---Playback has no force filter or global fallback.
+---
+---Charting, listener position and view, sound-specific attenuation, and client mixer/mute settings determine audibility.
+---There is no guarantee of an exact native speaker radius, simultaneous voice count or circuit polyphony.
+---
+---Native condition, instrument, note, global mode and volume-by-signal settings do not control these requests.
+---The requests do not rewrite those settings.
+---Alerts, settings, wires and power remain unchanged.
+---Native circuit audio and GUI/Configurator edits still coexist.
 ---
 ---### Availability and lifetime
----Except getLimits, every method requires positive electrical energy and an
----operational, non-disabled/non-frozen/not-marked-for-deconstruction native speaker.
----A false circuit playback condition alone is not an outage. Identity/force/surface/
----selected-wire proof applies to every call, including restored Console captures.
----No generic lifecycle power polling or missed-note replay is introduced. Stop,
----outage/removal/disconnection blocks future requests, not already-dispatched audio.
----Cold load/late joining never replay old submissions. Persisted identity/admission
----data is not an audio queue or saved client playback state. Facades are not Data.
+---Except getLimits, every method requires positive electrical energy and an operational native speaker.
+---The speaker must not be disabled, frozen or marked for deconstruction.
+---A false circuit playback condition alone is not an outage.
+---Every call requires identity, force, surface and selected-wire proof, also for restored Console captures.
+---There is no generic lifecycle power polling or missed-note replay.
+---
+---Stop, outage, removal and disconnection block future requests, not audio after dispatch.
+---Cold load and late joining never replay old submissions.
+---Persisted identity and admission data is not an audio queue or saved client playback state.
+---Facades are not Data.
 ---
 ---### Errors
----Wrong types/arity/empty required strings/nonfinite numbers: E_ARGUMENT. Unknown
----instrument/path or finite volume/pitch outside domain: E_RANGE. String/inventory/
----catalogue/result bounds: E_LIMIT, no successful prefix. Malformed/ambiguous or
----unavailable catalogue: E_UNSUPPORTED. Native validation/dispatch failure: E_ENGINE.
----Native outage: E_UNPOWERED except getLimits. Authority/adoption retain their
----E_UNREACHABLE/E_NETWORK_PENDING/E_LIMIT/E_CAPACITY rules. Work/allocation exhaustion
----is fatal E_BUDGET, not false. Existing admission/authority precedence remains.
----Published limits are finite initial envelopes, not measured throughput promises;
----below-count requests can still exhaust generic Data/work/allocation allowances.
+---Wrong types, wrong arity, empty required strings and nonfinite numbers cause E_ARGUMENT.
+---An unknown instrument/path or finite volume/pitch outside its domain causes E_RANGE.
+---String, inventory, catalogue or result bounds cause E_LIMIT, without a successful prefix.
+---A malformed, ambiguous or unavailable catalogue causes E_UNSUPPORTED.
+---Native validation or dispatch failure causes E_ENGINE.
+---Native outage causes E_UNPOWERED, except for getLimits.
+---
+---Authority and adoption retain their E_UNREACHABLE, E_NETWORK_PENDING, E_LIMIT and E_CAPACITY rules.
+---Work or allocation exhaustion causes fatal E_BUDGET, not false.
+---Existing admission and authority precedence remains.
+---Published limits are finite initial envelopes, not measured throughput guarantees.
+---Requests below the count limits can still exhaust generic Data, work or allocation allowances.
 ---@class TC.Speaker
 local Speaker = {}
 
 ---Request a native instrument sample independently of circuit playback settings.
----Instrument is the exact discovered name, never a localized/Minecraft alias.
+---The instrument is the exact discovered name, never a localized or Minecraft alias.
 ---@param instrument string Nonempty exact installed instrument name within speaker_path_bytes.
----@param volume? number Finite 0..1; omitted/nil defaults 1. Zero is valid and consumes quota.
----@param pitch? integer Native zero-based note index; omitted/nil defaults 0, maximum discovered note count minus one.
----@return boolean accepted True submitted; false playback allowance exhausted without dispatch/queue.
+---@param volume? number Finite 0..1. Omission or nil defaults to 1. Zero is valid and consumes quota.
+---@param pitch? integer Native zero-based note index. Omission or nil defaults to 0. The maximum is the discovered note count minus one.
+---@return boolean accepted True after submission. False means playback allowance exhaustion without dispatch or queueing.
 function Speaker.playNote(instrument, volume, pitch) end
 
----Request an engine-valid exact SoundPath, not a raw filename or URL. Native
----validation is final authority, not a plausible prefix or old discovery result.
----Valid mod-added paths can play even if absent from discovery. Supported native
----named/utility/ambient/entity-/tile-/item- path families retain their positional
----game-effect semantics. No speed/pitch/duration/loop/position/player/global option
----exists; already submitted long samples cannot be cancelled by this API.
----@param path string Nonempty exact case/whitespace/punctuation-preserving SoundPath within speaker_path_bytes.
----@param volume? number Finite 0..1; omitted/nil defaults 1, zero still consumes quota.
----@return boolean accepted True submitted; false allowance exhaustion with no dispatch.
+---Request an engine-valid exact SoundPath, not a raw filename or URL.
+---Native validation is the final authority, not a plausible prefix or an old discovery result.
+---Valid mod-added paths can play even if discovery does not list them.
+---Supported native named/utility/ambient/entity-/tile-/item- path families retain their positional game-effect semantics.
+---There is no speed, pitch, duration, loop, position, player or global option.
+---This API cannot cancel long samples after submission.
+---@param path string Nonempty exact SoundPath within speaker_path_bytes. Preserve case, whitespace and punctuation.
+---@param volume? number Finite 0..1. Omission or nil defaults to 1. Zero still consumes quota.
+---@return boolean accepted True after submission. False means allowance exhaustion without dispatch.
 function Speaker.playSound(path, volume) end
 
----Read unique exact instrument names in ascending bytewise order. Malformed or
----duplicate native names fail explicitly, never choose one or truncate. No files
----or mutable native catalogue objects are exposed.
+---Read unique exact instrument names in ascending bytewise order.
+---Malformed or duplicate native names cause explicit failure, not selection of one name or truncation.
+---The method gives no access to files or mutable native catalogue objects.
 ---@return string[] instruments Exactly one complete detached dense name array.
 function Speaker.getInstruments() end
 
----Read the selected instrument's complete native note order. Result array is
----one-based; each record's pitch is directly usable by playNote. Unknown is error.
+---Read the complete native note order for the selected instrument.
+---The result array is one-based.
+---playNote can directly use the pitch of each record.
+---An unknown instrument causes an error.
 ---@param instrument string Nonempty exact discovered instrument name within speaker_path_bytes.
 ---@return TC.NoteInfo[] notes Complete independent native-order records, not a fixed 0..24 range.
 function Speaker.getNotes(instrument) end
 
----Page the captured candidate catalogue through live native validation. Capture
----at this mod's data-final-fixes includes named sounds except private note aliases,
----and supported utility/ambient/entity/tile/item families. Deduplicate/sort before
----validation; runtime-invalid entries disappear. Later third-party additions are
----not promised discoverable, although direct playback validates them. Configuration
----changes require a fresh traversal for completeness; removed paths can invalidate
----old pages. Missing/oversized/incompatible/malformed catalogue is an error, not a
----curated subset; its failure does not disable direct playSound or other services.
----Fixed-catalogue continuation never repeats/skips eligible paths. A supplied after
----need not exist or match prefix; return earliest matches lexically greater than it.
----Changing prefix starts a different traversal, not a saved session. Budget failure
----returns no partial page or false terminal marker. Fetch bounded pages via timers,
----not an unknown-catalogue busy loop.
----@param prefix? string Literal case-sensitive prefix, not a pattern/glob; omitted/nil defaults empty.
----@param after? string Exclusive bytewise lower bound, not numeric offset; omitted/nil defaults empty. Both strings obey speaker_path_bytes.
----@return TC.SoundPage page One complete validated page and truthful optional continuation.
+---Read a page from the captured candidate catalogue through live native validation.
+---Capture at this mod's data-final-fixes includes named sounds except private note aliases, and supported utility, ambient, entity, tile and item families.
+---The method deduplicates and sorts entries before validation.
+---It removes entries that fail runtime validation.
+---Later third-party additions are not guaranteed discoverable, although direct playback validates them.
+---
+---Configuration changes require a fresh traversal for completeness.
+---Removed paths can invalidate old pages.
+---A missing, oversized, incompatible or malformed catalogue causes an error, not a selected subset.
+---Catalogue failure does not disable direct playSound or other services.
+---
+---Continuation through a fixed catalogue never repeats or skips eligible paths.
+---A supplied after need not exist or match prefix.
+---The method returns the earliest matches lexically greater than after.
+---A change to prefix starts a different traversal, not a saved session.
+---Budget failure returns no partial page or false terminal marker.
+---Fetch bounded pages through timers, not a busy loop through an unknown catalogue.
+---@param prefix? string Literal case-sensitive prefix, not a pattern or glob. Omission or nil defaults to empty.
+---@param after? string Exclusive bytewise lower bound, not a numeric offset. Omission or nil defaults to empty. Both strings obey speaker_path_bytes.
+---@return TC.SoundPage page One complete validated page with an accurate optional continuation.
 function Speaker.getSounds(prefix, after) end
 
----Read effective common and speaker-specific limits, even when native power is
----absent. Exact physical reachability/generation checks still apply.
+---Read the effective common and speaker-specific limits, even without native power.
+---Exact physical reachability and generation checks still apply.
 ---@return TC.SpeakerLimits limits One defensive current limit map.
 function Speaker.getLimits() end

@@ -1,11 +1,12 @@
 ---@meta
 
----Exact native product namespace; no quality, temperature, signal or text search.
+---This exact native product namespace does not select quality, temperature, signal or text searches.
 ---@alias TC.ProductType 'item'|'fluid'
 
----Complete native ingredient entry, preserved in recipe order without aggregation.
----Optional fields appear only when supplied by the engine for the stated kind;
----never invent a quality or conflate exact and interval temperatures.
+---This complete native ingredient entry retains recipe order without aggregation.
+---Optional fields appear only when the engine supplies them for the stated kind.
+---Never invent a quality.
+---Do not treat exact temperatures and temperature intervals as equivalent.
 ---@class TC.RecipeIngredient
 ---@field type TC.ProductType Ingredient namespace.
 ---@field name string Exact installed prototype name.
@@ -21,21 +22,27 @@
 ---@field fluidbox_index? integer Fluid-only native fluidbox index.
 ---@field fluidbox_multiplier? integer Fluid-only native fluidbox multiplier.
 
----Shared probability interval: ordered finite bounds in 0..1. Intervals can
----correlate different products; marginal probability alone loses that correlation.
+---A shared probability interval has ordered finite bounds in 0..1.
+---Intervals can correlate different products.
+---Marginal probability alone loses that correlation.
 ---@class TC.ProbabilityInterval
 ---@field min number Inclusive native lower endpoint in 0..1, at most max.
 ---@field max number Native upper endpoint in 0..1, at least min.
 
----Complete native product entry, not just the queried output. Quantity is exactly
----one fixed amount OR the pair amount_min/amount_max according to native readback.
----Preserve duplicates, zero modifiers and order. Never multiply amounts by chance,
----add productivity, predict quality or synthesize recipes. Optional kind-specific
----fields are absent for the other kind and when the engine does not supply them.
+---This entry contains the complete native product, not only the queried output.
+---Quantity is exactly one fixed amount or the pair amount_min/amount_max, as specified by native readback.
+---Preserve duplicates, zero modifiers and order.
+---
+---Never multiply amounts by chance.
+---Never add productivity.
+---Never predict quality.
+---Never synthesize recipes.
+---
+---Optional kind-specific fields are absent for the other kind and when the engine does not supply them.
 ---@class TC.RecipeProduct
 ---@field type TC.ProductType Product namespace.
 ---@field name string Exact installed prototype name.
----@field probability number Finite marginal independent_probability*(shared_probability.max-shared_probability.min).
+---@field probability number Finite marginal probability: independent_probability*(shared_probability.max-shared_probability.min).
 ---@field independent_probability number Native independent probability in 0..1.
 ---@field shared_probability TC.ProbabilityInterval Native shared interval, not independent per-product chance.
 ---@field amount? number Fixed finite quantity; excludes ranged quantity fields.
@@ -55,22 +62,24 @@
 ---@field temperature? number Fluid-only finite temperature in degrees Celsius.
 ---@field fluidbox_index? integer Fluid-only native fluidbox index.
 
----Declared surface condition, kept in native order. Negative-infinite lower and
----positive-infinite upper bounds become absent fields, not zero or nonfinite Data.
----Retain the condition even when both bounds are absent; no other nonfinite value
----is accepted. Metadata does not filter recipes by the current surface.
+---This declared surface condition retains native order.
+---Negative-infinite lower bounds and positive-infinite upper bounds become absent fields, not zero or nonfinite Data.
+---The condition remains present even when both bounds are absent.
+---No other nonfinite value is accepted.
+---This metadata does not filter recipes by the current surface.
 ---@class TC.SurfaceCondition
 ---@field property string Exact native surface-property name.
 ---@field min? number Finite lower bound; absent means unbounded below.
 ---@field max? number Finite upper bound; absent means unbounded above.
 
----Fresh recipe snapshot. Required fields remain present when false or empty.
----This is declared recipe metadata, not machine feasibility, expected output,
----technology objects, localized labels/icons or every native prototype property.
+---This is a fresh recipe snapshot.
+---Required fields remain present when false or empty.
+---This is declared recipe metadata, not machine feasibility or expected output.
+---It does not contain technology objects, localized labels/icons or every native prototype property.
 ---@class TC.RecipeInfo
----@field name string Internal recipe name; bytewise sorting/deduplication identity.
----@field category string First native 2.1 crafting category, compatibility primary.
----@field additional_categories string[] Sorted unique remaining categories, excluding primary.
+---@field name string Internal recipe name. This is the identity for bytewise sorting and deduplication.
+---@field category string First native 2.1 crafting category, used as the primary category for compatibility.
+---@field additional_categories string[] Sorted unique remaining categories, without the primary category.
 ---@field energy number Finite base crafting seconds at speed 1, not electrical energy.
 ---@field enabled boolean Current enabled state in the requesting computer's force.
 ---@field enabled_by_default boolean Prototype's initial enabled flag, not current research.
@@ -82,43 +91,52 @@
 ---@field products TC.RecipeProduct[] Complete ordered native product list, not only matching products.
 ---@field surface_conditions TC.SurfaceCondition[] Complete declared conditions, empty when unrestricted.
 
----Read-only electricity-free physical recipe catalogue. Exact force/surface/path
----and generation checks apply on every call, including captured/Console methods.
----No global recipe library, physical product input, query GUI, mutable database,
----job/session, retained authoritative cache or new event is introduced. Cold load
----runs no guest source/query; new calls use installed prototypes/current force.
----Queries never unlock recipes, configure machines, reserve/consume/produce items.
----Returned Data can be saved only if separate state limits admit it; snapshot
----success is not permission to persist a facade or a guarantee of storage capacity.
+---This physical recipe catalogue is read-only and needs no electricity.
+---Exact force, surface, path and generation checks apply to every call, also through captured methods and Console.
+---There is no global recipe library, physical product input, query GUI or mutable database.
+---There is no job/session, retained authoritative cache or new event.
 ---
----All complete results are bounded by Data string/table/node/depth/byte rules and
----shared work/allocation, in addition to recipe_search_results. No prefix, count,
----cursor or pagination is returned. Unexpected/unrepresentable native fields fail
----E_UNSUPPORTED rather than disappearing; native failures/missing force recipe are
----E_ENGINE, never fabricated enabled values. Physical authority precedes provider
----validation; earlier admission can fail before later semantic/count checks.
+---Cold load runs no guest source or query.
+---New calls use installed prototypes and the current force.
+---Queries never unlock recipes, configure machines, or reserve, consume or produce items.
+---Only separate state limits can admit returned Data for saving.
+---Snapshot success is not permission to persist a facade or a guarantee of storage capacity.
+---
+---All complete results obey Data string, table, node, depth and byte rules, shared work/allocation limits, and recipe_search_results.
+---The method returns no prefix, count, cursor or pagination.
+---Unexpected native fields or fields that cannot be represented cause E_UNSUPPORTED; they do not silently disappear.
+---Native failures or a missing force recipe cause E_ENGINE, never invented enabled values.
+---Physical authority checks occur before provider validation.
+---Earlier admission can fail before later semantic or count checks.
 ---@class TC.RecipeSearcher
 local Searcher = {}
 
----Find every installed recipe with at least one matching declared product, once,
----sorted bytewise by recipe name. Secondary/probabilistic products count. Include
----hidden, disabled, modded and recycling recipes; no surface/machine/research,
----quality or temperature filter. Native product arrays are not deduplicated.
+---Find every installed recipe with at least one matching declared product.
+---Each recipe appears once, in bytewise recipe-name order.
+---Secondary and probabilistic products count.
+---Results include hidden, disabled, modded and recycling recipes.
+---There is no surface, machine, research, quality or temperature filter.
+---Native product arrays retain duplicates.
 ---
----Optional category matches primary OR additional categories, before the fixed
----50-result ceiling. Known category/no matches succeeds empty; unknown product/
----category is E_RANGE. More than 50 is E_LIMIT with field='results', never a prefix.
----Separate exact-category searches may be combined/deduplicated by a caller, but
----one category can itself exceed 50 or other budgets. No same-tick retry guarantee.
----Wrong type/arity/empty names are E_ARGUMENT; overlong strings/results E_LIMIT;
----fatal E_BUDGET remains noncatchable and spent credits are not renewed.
+---The optional category matches primary or additional categories before the fixed 50-result ceiling applies.
+---A known category without matches succeeds with an empty result.
+---An unknown product or category causes E_RANGE.
+---More than 50 results cause E_LIMIT with field='results', never a prefix.
+---
+---A caller can combine and deduplicate separate exact-category searches.
+---But one category can itself exceed 50 results or other budgets.
+---There is no same-tick retry guarantee.
+---Wrong types, wrong arity or empty names cause E_ARGUMENT.
+---Overlong strings or results cause E_LIMIT.
+---Fatal E_BUDGET remains noncatchable, and spent credits do not renew.
 ---@param product_type TC.ProductType Required exact item or fluid namespace.
 ---@param product_name string Nonempty exact installed prototype name within string_bytes.
----@param category? string Exact registered recipe category; omitted/nil means all categories.
----@return TC.RecipeInfo[] recipes Exactly one complete dense array, possibly empty; never nil.
+---@param category? string Exact registered recipe category. Omission or nil selects all categories.
+---@return TC.RecipeInfo[] recipes Exactly one complete dense array, which can be empty but never nil.
 function Searcher.findRecipes(product_type, product_name, category) end
 
----Read effective common limits plus fixed recipe_search_results=50. This is not
----a new adjustable setting or a promise every smaller snapshot fits all budgets.
+---Read the effective common limits with fixed recipe_search_results=50.
+---This is not a new adjustable setting.
+---There is no guarantee that every smaller snapshot fits all budgets.
 ---@return TC.RecipeSearcherLimits limits Independent current limit map.
 function Searcher.getLimits() end

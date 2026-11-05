@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.QualityID
 
-Normalized readback for QualityID. Installed quality name, never a native object.
+Normalized readback for QualityID. Use an installed quality name, not a native object.
 
 ```text
 string

@@ -9,11 +9,12 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.SignalId
 
-Circuit signal identity. Logic compares (type or item, name, quality or normal).
-Native reads preserve omitted fields/order without normalization; caller writes
-validate installed prototypes and reject wildcard pseudo-signals. Configurator
-has separate schemas requiring explicit type and permitting role-specific
-wildcards. Normal is the only universally assumed quality name.
+This record identifies a circuit signal.
+Logic compares (type or item, name, quality or normal).
+Native reads preserve omitted fields and native order without normalization.
+Caller writes validate installed prototypes and reject wildcard pseudo-signals.
+Configurator has separate schemas that require an explicit type and permit
+role-specific wildcards. Normal is the only universally assumed quality name.
 
 ### name
 
@@ -25,7 +26,7 @@ string
 
 ### quality (optional)
 
-Installed quality name; effective Logic default normal.
+Installed quality name. Logic uses normal as the effective default.
 
 ```text
 string
@@ -33,7 +34,7 @@ string
 
 ### type (optional)
 
-Logic defaults item; native reads may omit it.
+Logic uses item by default. Native reads can omit this field.
 
 ```text
 TC.SignalType

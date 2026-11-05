@@ -9,4 +9,4 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.LuaCombinatorControlBehavior
 
-Root settings for LuaCombinatorControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaCombinatorControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.

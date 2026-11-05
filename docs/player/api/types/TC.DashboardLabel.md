@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.DashboardLabel
 
-Wrapping literal text label, with no interpreted markup or arbitrary styles.
+This literal text label wraps. It has no interpreted markup or arbitrary styles.
 
 ### id
 
@@ -21,7 +21,7 @@ string
 
 ### text
 
-Literal bounded text; empty is valid.
+Literal bounded text. An empty string is valid.
 
 ```text
 string

@@ -9,13 +9,13 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.KVLimits
 
-Defensive effective limit map. Defaults below are not live values.
-Counts are admission envelopes, not calibrated heap, latency or FPS promises.
-Settings changes preserve spent credits; lower limits never authorize data loss.
+Independent copy of effective limits. These defaults are not current values.
+Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+Settings changes keep spent credits. Lower limits never permit data loss.
 
 ### bytes
 
-Live KV content accounting bytes per physical database. Default: 16384.
+Maximum accounting bytes for live content per physical KV database. Default: 16384.
 
 ```text
 integer
@@ -23,7 +23,7 @@ integer
 
 ### command_arguments
 
-Total positional arguments to one KV command. Default: 128.
+Maximum total positional arguments in one KV command. Default: 128.
 
 ```text
 integer
@@ -31,7 +31,7 @@ integer
 
 ### hash_bytes
 
-Content accounting bytes in one live KV hash. Default: 8192.
+Maximum content accounting bytes in one live KV hash. Default: 8192.
 
 ```text
 integer
@@ -39,7 +39,7 @@ integer
 
 ### hash_fields
 
-Distinct fields in one live KV hash. Default: 128.
+Maximum distinct fields in one live KV hash. Default: 128.
 
 ```text
 integer
@@ -47,7 +47,7 @@ integer
 
 ### key_bytes
 
-KV key/hash-field byte ceiling; empty strings and NUL are legal. Default: 256.
+Maximum bytes in a KV key or hash field. Empty strings and NUL are permitted. Default: 256.
 
 ```text
 integer
@@ -55,7 +55,7 @@ integer
 
 ### keys
 
-Live keys per physical KV database. Default: 128.
+Maximum live keys per physical KV database. Default: 128.
 
 ```text
 integer
@@ -63,7 +63,7 @@ integer
 
 ### peripheral_call_bytes
 
-Ordinary peripheral call transport/accounting byte envelope. Default: 65536.
+Byte allowance for ordinary peripheral call transport and accounting. Default: 65536.
 
 ```text
 integer
@@ -71,7 +71,7 @@ integer
 
 ### peripheral_call_entries
 
-Ordinary peripheral call transport entry envelope. Default: 4096.
+Entry allowance for ordinary peripheral call transport. Default: 4096.
 
 ```text
 integer
@@ -79,7 +79,7 @@ integer
 
 ### reclaim_devices_per_tick
 
-Bounded due-database maintenance visits per tick. Default: 2.
+Maximum due-database maintenance visits per tick. Default: 2.
 
 ```text
 integer
@@ -87,7 +87,7 @@ integer
 
 ### reclaim_keys_per_device
 
-Bounded expired-key maintenance visits per due database. Default: 8.
+Maximum expired-key maintenance visits per due database. Default: 8.
 
 ```text
 integer
@@ -95,7 +95,7 @@ integer
 
 ### snapshot_bytes
 
-KV transfer/save snapshot allowance, separate from live content. Default: 65536.
+KV transfer and save snapshot allowance. This is separate from live content. Default: 65536.
 
 ```text
 integer
@@ -103,7 +103,7 @@ integer
 
 ### total_hash_fields
 
-Distinct live hash fields across a physical KV database. Default: 256.
+Maximum distinct live hash fields in one physical KV database. Default: 256.
 
 ```text
 integer
@@ -111,7 +111,7 @@ integer
 
 ### value_bytes
 
-KV string-value byte ceiling; values are never coerced. Default: 8192.
+Maximum bytes in a KV string value. Values are never coerced. Default: 8192.
 
 ```text
 integer

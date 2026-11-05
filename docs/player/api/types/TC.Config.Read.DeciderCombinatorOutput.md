@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.DeciderCombinatorOutput
 
-Normalized readback for DeciderCombinatorOutput. Unknown fields refused. Input requires an output signal; cleared native readback can omit it. Default constant 1, copy_count_from_input true and both networks. An each signal needs an each condition in the same parameters.
+Normalized readback for DeciderCombinatorOutput. Unknown fields are refused. Input requires an output signal. Cleared native readback can omit it. The default constant is 1. copy_count_from_input defaults to true. Both networks are enabled by default. An each signal requires an each condition in the same parameters.
 
 ### constant
 
-Numeric operand or output count; enclosing concept determines the normalization default. Finite integer; domain -2147483648..2147483647.
+Numeric operand or output count. The enclosing concept determines the normalization default. Finite integer. Domain: -2147483648..2147483647.
 
 ```text
 integer
@@ -21,7 +21,7 @@ integer
 
 ### copy_count_from_input
 
-Copy decider input count rather than fixed constant; default true.
+Copy the decider input count instead of using a fixed constant. The default is true.
 
 ```text
 boolean
@@ -29,7 +29,7 @@ boolean
 
 ### networks
 
-Decider-output contributing networks; default includes both. Unknown fields refused.
+Networks that supply decider outputs. The default includes both. Unknown fields are refused.
 
 ```text
 TC.Config.Read.CircuitNetworkSelection
@@ -37,7 +37,7 @@ TC.Config.Read.CircuitNetworkSelection
 
 ### signal (optional)
 
-Decider output signal, required on input but absent in a cleared native output. An each signal requires an each condition. Unknown fields refused. registered_signal: Installed signal identity required. explicit_signal_type: Input signal type must be explicit.
+Decider output signal. It is required on input but can be absent in a cleared native output. An each signal requires an each condition. Unknown fields are refused. registered_signal: An installed signal identity is required. explicit_signal_type: Input signal type must be explicit.
 
 ```text
 TC.Config.Read.SignalID

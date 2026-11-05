@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.SectionCapabilities
 
-Sections capability is always described; supported=false does not grant calls.
+The schema always describes sections capability. The value supported=false does not authorize calls.
 
 ### fields
 

@@ -9,9 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ChartValues
 
-One full chart vector. Keys must match exactly the configured series/phases;
-unknown/missing keys fail. Line values are finite; bar durations additionally
-must be nonnegative seconds. Derived sums/ranges/padding must remain finite.
+This map gives one full chart vector.
+Keys must match the configured series or phases exactly.
+Unknown or missing keys cause failure. Line values must be finite.
+Bar durations must also be nonnegative seconds.
+Derived sums, ranges and padding must remain finite.
 
 ```text
 table<string, number>

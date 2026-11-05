@@ -9,8 +9,10 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.StatisticsSnapshot
 
-Exactly the item quality-nested shape for kind=item, otherwise flat name maps.
-Required input/output may be empty; kind/window are not repeated in the result.
+For kind=item, the snapshot has exactly the item quality-nested shape.
+Other kinds use flat name maps.
+The required input and output maps can be empty.
+The result does not repeat kind or window.
 
 ```text
 TC.ItemStatisticsSnapshot|TC.FlatStatisticsSnapshot

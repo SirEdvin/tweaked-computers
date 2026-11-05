@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.BlueprintQualityID
 
-Normalized readback for BlueprintQualityID. Unknown fields refused. Quality name defaults to installed normal; no native prototype object is exposed.
+Normalized readback for BlueprintQualityID. Unknown fields are refused. The quality name defaults to installed normal. No native prototype object is exposed.
 
 ### name
 
-Exact prototype/quality identity named by the enclosing concept; no localization lookup.
+Exact prototype or quality identity for the enclosing concept. No localization lookup occurs.
 
 ```text
 string

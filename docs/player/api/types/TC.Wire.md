@@ -9,7 +9,8 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Wire
 
-Explicit physical circuit color. No default, both, mixed-color path or coercion.
+This value specifies the physical circuit color explicitly.
+There is no default, both selection, mixed-color path or coercion.
 
 'red': Red path, independently proved.
 

@@ -9,14 +9,14 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.TableLibrary
 
-Guarded table helpers; never mutate protected facades/namespaces or host tables.
+These guarded table helpers never mutate protected facades, protected namespaces or host tables.
 Sequence helpers require a dense one-based sequence unless stated otherwise.
 All movement, copying, growth and callback comparisons consume existing budgets.
 
 ### concat
 
-Join a dense sequence slice. Only string/number elements are accepted; numbers
-use native conversion. Complete size/work admission precedes the output copy.
+Join a dense sequence slice. Only string and number elements are permitted.
+Numbers use native conversion. Complete size and work admission precede the output copy.
 
 ```text
 concat(t: TC.GuestTable, sep?: string, i?: integer, j?: integer) -> text: string
@@ -28,24 +28,27 @@ t: TC.GuestTable
 Dense sequence containing strings/numbers in the slice.
 
 sep (optional): string
-Separator; omitted/nil means empty string.
+Separator. Omission or nil means an empty string.
 
 i (optional): integer
-First position, default 1; domain 1..n+1.
+First position, default 1. The domain is 1..n+1.
 
 j (optional): integer
-Last position, default n; domain 0..n.
+Last position, default n. The domain is 0..n.
 
 ### Returns
 
 text: string
-Joined bytes; empty range gives an empty string.
+Joined bytes. An empty range gives an empty string.
 
 ### insert
 
-Insert into a dense guest sequence, moving later slots. Returns no values.
-Two-argument form appends; three-argument form inserts at pos. Capacity/work
-admission precedes mutation; no partial shifted result on refusal.
+Insert into a dense guest sequence. The helper moves later slots.
+It returns no values. The two-argument form appends.
+The three-argument form inserts at pos.
+
+Capacity and work admission precede mutation.
+Refusal does not produce a partially shifted result.
 
 ```text
 insert(t: TC.GuestTable, pos: integer, value: TC.GuestValue)
@@ -60,7 +63,7 @@ pos: integer
 Position 1..n+1 for the three-argument form.
 
 value: TC.GuestValue
-New value; nil follows native table insertion behavior.
+New value. Nil uses native table insertion behavior.
 
 ### Returns
 
@@ -76,7 +79,7 @@ t: TC.GuestTable
 Dense mutable sequence.
 
 value: TC.GuestValue
-New value; nil follows native table insertion behavior.
+New value. Nil uses native table insertion behavior.
 
 ### Returns
 
@@ -84,8 +87,9 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### pack
 
-Pack exact argument arity in n, including trailing nil. Result is a fresh
-guest-owned table; nil positions are holes, not valid persistent Data elements.
+Pack exact argument arity in n, including trailing nil.
+The result is a fresh guest-owned table.
+Nil positions are holes, not valid persistent Data elements.
 
 ```text
 pack(...: TC.GuestValue) -> values: TC.Tuple
@@ -103,9 +107,11 @@ New tuple table with exact n.
 
 ### remove
 
-Remove and shift a dense guest sequence. Always returns exactly one value,
-including nil for empty/past-end removal. Position 0 is legal only when empty;
-n+1 is accepted. This is the documented guest arity, not host helper inference.
+Remove a value from a dense guest sequence. The helper shifts later slots.
+It always returns exactly one value, including nil for empty/past-end removal.
+Position 0 is permitted only when the sequence is empty.
+The helper accepts n+1. This is the documented guest arity, not an inference
+from the host helper.
 
 ```text
 remove(t: TC.GuestTable, pos?: integer) -> removed: TC.GuestValue
@@ -117,7 +123,7 @@ t: TC.GuestTable
 Dense mutable sequence.
 
 pos (optional): integer
-Default n; allowed 0..n+1 with the empty-only zero rule.
+Default n. The permitted range is 0..n+1, with the empty-only zero rule.
 
 ### Returns
 
@@ -126,10 +132,13 @@ Removed identical value or exactly one nil.
 
 ### sort
 
-Sort a staged copy and publish only after comparisons and final capacity
-revalidation succeed. Returns no values. A comparator uses the same guest
-work/depth budget and may have side effects; those effects are not rolled back
-on failure. The table's own staged sorted slots are not partially published.
+This helper sorts a staged copy.
+It publishes the copy only after comparisons and final capacity revalidation succeed.
+It returns no values.
+
+A comparator uses the same guest work and depth budget.
+The comparator can have side effects. Failure does not roll back those effects.
+The helper never partially publishes the table's own staged sorted slots.
 
 ```text
 sort(t: TC.GuestTable, less?: fun(a: TC.GuestValue, b: TC.GuestValue): boolean)
@@ -141,7 +150,7 @@ t: TC.GuestTable
 Dense mutable sequence.
 
 less (optional): fun(a: TC.GuestValue, b: TC.GuestValue): boolean
-Optional approved comparator; default guarded native less-than.
+Optional approved comparator. The default is guarded native less-than.
 
 ### Returns
 
@@ -149,9 +158,11 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 ### unpack
 
-Return positions i..j exactly, including nil holes. Omitted/nil bounds default
-1 and #t, not t.n; use explicit packed.n to retain trailing nil. Empty range
-returns zero values. Current guest table index and tuple ceilings apply.
+Return positions i..j exactly, including nil holes.
+Omitted or nil bounds default to 1 and #t, not t.n.
+Use explicit packed.n to retain trailing nil.
+An empty range returns zero values.
+Current guest table index and tuple ceilings apply.
 
 ```text
 unpack(t: TC.GuestTable, i?: integer, j?: integer) -> ...: TC.GuestValue
@@ -160,13 +171,13 @@ unpack(t: TC.GuestTable, i?: integer, j?: integer) -> ...: TC.GuestValue
 ### Parameters
 
 t: TC.GuestTable
-Guest-owned plain table; may be sparse.
+Guest-owned plain table. This table can be sparse.
 
 i (optional): integer
-Start, default 1; domain 1..table_entries+1.
+Start, default 1. The domain is 1..table_entries+1.
 
 j (optional): integer
-End, default native #t; domain 0..table_entries.
+End, default native #t. The domain is 0..table_entries.
 
 ### Returns
 
@@ -177,7 +188,7 @@ Exact requested range, possibly empty and nil-bearing.
 
 ### table
 
-Guarded table helpers; never mutate protected facades/namespaces or host tables.
+These guarded table helpers never mutate protected facades, protected namespaces or host tables.
 Sequence helpers require a dense one-based sequence unless stated otherwise.
 All movement, copying, growth and callback comparisons consume existing budgets.
 

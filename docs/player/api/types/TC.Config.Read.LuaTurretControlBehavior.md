@@ -9,11 +9,11 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Config.Read.LuaTurretControlBehavior
 
-Root settings for LuaTurretControlBehavior. All roots may be unset; inspect live capabilities before access. Unknown fields refused.
+Root settings for LuaTurretControlBehavior. All roots can be unset. Examine live capabilities before access. Unknown fields are refused.
 
 ### circuit_condition (optional)
 
-Circuit comparison used by this native control behavior. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+Circuit comparison used by this native control behavior. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.Read.CircuitConditionDefinition
@@ -37,7 +37,7 @@ boolean
 
 ### ignore_unlisted_targets_condition (optional)
 
-Condition for ignoring targets outside the turret priority list. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: not supported.
+Condition for ignoring targets outside the turret priority list. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: not supported.
 
 ```text
 TC.Config.Read.CircuitConditionDefinition
@@ -45,7 +45,7 @@ TC.Config.Read.CircuitConditionDefinition
 
 ### logistic_condition (optional)
 
-Logistic-network comparison; clearing uses native reset semantics. Unknown fields refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only role-appropriate wildcard signals are allowed. Explicit root patch clear: accepted with native reset/readback.
+Logistic-network comparison. Clearing uses native reset rules. Unknown fields are refused. condition_operand_exclusive: constant and second_signal cannot both be supplied. condition_signal_roles: Only wildcard signals permitted for this role are allowed. Explicit root patch clear: accepted with native reset and readback.
 
 ```text
 TC.Config.Read.CircuitConditionDefinition
@@ -53,7 +53,7 @@ TC.Config.Read.CircuitConditionDefinition
 
 ### read_ammo (optional)
 
-Publish contained ammunition/fluid; unavailable on an electric turret. ammo_or_fluid_turret_required: Requires an ammo/fluid turret, not an electric turret. Explicit root patch clear: not supported.
+Publish contained ammunition or fluid. This field is unavailable on an electric turret. ammo_or_fluid_turret_required: An ammunition or fluid turret is required. An electric turret is not permitted. Explicit root patch clear: not supported.
 
 ```text
 boolean
@@ -69,7 +69,7 @@ boolean
 
 ### set_priority_list (optional)
 
-Derive turret target priorities from circuit signals. Explicit root patch clear: not supported.
+Get turret target priorities from circuit signals. Explicit root patch clear: not supported.
 
 ```text
 boolean

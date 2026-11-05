@@ -9,9 +9,10 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.DeviceInfo
 
-Fresh complete target description. ID is opaque, not coordinates: replacement
-at the same location gets a new identity. Descriptions/settings can change while
-the identity stays the same. Nonconfigurable real targets remain in inventory.
+This record gives a fresh complete target description.
+The ID is opaque, not coordinates. A replacement at the same location gets a new identity.
+Descriptions and settings can change while the identity stays the same.
+Nonconfigurable real targets remain in the inventory.
 
 ### configurable
 
@@ -39,7 +40,7 @@ Sorted native connector enum names actually reached on that color.
 
 ### direction
 
-Native direction enum name; not restricted to cardinal directions.
+Native direction enum name. The value is not restricted to cardinal directions.
 
 ```text
 string

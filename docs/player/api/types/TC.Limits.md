@@ -9,13 +9,13 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Limits
 
-Defensive effective limit map. Defaults below are not live values.
-Counts are admission envelopes, not calibrated heap, latency or FPS promises.
-Settings changes preserve spent credits; lower limits never authorize data loss.
+Independent copy of effective limits. These defaults are not current values.
+Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+Settings changes keep spent credits. Lower limits never permit data loss.
 
 ### active_computers
 
-Maximum simultaneously active saved programs. Default: 64.
+Maximum number of saved programs that can be active at the same time. Default: 64.
 
 ```text
 integer
@@ -23,7 +23,7 @@ integer
 
 ### aggregate_subscriptions
 
-World subscription registration ceiling. Default: 1024.
+Maximum number of subscription registrations in the world. Default: 1024.
 
 ```text
 integer
@@ -31,7 +31,7 @@ integer
 
 ### api_version
 
-Guest API representation version, not a capacity. Default: 1.
+Guest API representation version. This is not a capacity. Default: 1.
 
 ```text
 integer
@@ -39,7 +39,7 @@ integer
 
 ### callback_allocations
 
-Guest allocation admission units per computer per tick; not measured heap bytes. Default: 81920. Runtime-global tc-callback-allocations; requested integer domain 1..100000000.
+Guest allocation admission units per computer per tick. These are not measured heap bytes. Default: 81920. Runtime-global setting: tc-callback-allocations. Requested integer domain: 1..100000000.
 
 ```text
 integer
@@ -55,7 +55,7 @@ integer
 
 ### callback_work
 
-Execution work units per computer per tick; not milliseconds. Default: 500000. Runtime-global tc-callback-work; requested integer domain 1..100000000.
+Execution work units per computer per tick. These are not milliseconds. Default: 500000. Runtime-global setting: tc-callback-work. Requested integer domain: 1..100000000.
 
 ```text
 integer
@@ -63,7 +63,7 @@ integer
 
 ### compile_work
 
-Shared validation/reconstruction work units per computer per tick. Default: 1250000. Runtime-global tc-compile-work; requested integer domain 1..100000000.
+Shared work units for validation and reconstruction per computer per tick. Default: 1250000. Runtime-global setting: tc-compile-work. Requested integer domain: 1..100000000.
 
 ```text
 integer
@@ -71,7 +71,7 @@ integer
 
 ### compiler_version
 
-Saved compiler representation version, not a capacity. Default: 2.
+Saved compiler representation version. This is not a capacity. Default: 2.
 
 ```text
 integer
@@ -79,7 +79,7 @@ integer
 
 ### console_bytes
 
-Retained Console text bytes and individual output limit. Default: 16384.
+Maximum retained Console text bytes and maximum individual output size. Default: 16384.
 
 ```text
 integer
@@ -87,7 +87,7 @@ integer
 
 ### console_entries
 
-Retained Console entry ceiling; oldest entries may be evicted. Default: 64.
+Maximum retained Console entries. The oldest entries can be removed. Default: 64.
 
 ```text
 integer
@@ -95,7 +95,7 @@ integer
 
 ### data_depth
 
-Generic Data nesting ceiling; native Logic transfer is exempt. Default: 16.
+Maximum nesting depth of generic Data. Native Logic transfer is exempt. Default: 16.
 
 ```text
 integer
@@ -103,7 +103,7 @@ integer
 
 ### data_nodes
 
-Generic Data graph node ceiling; native Logic transfer is exempt. Default: 4096.
+Maximum nodes in a generic Data graph. Native Logic transfer is exempt. Default: 4096.
 
 ```text
 integer
@@ -111,7 +111,7 @@ integer
 
 ### event_queue_bytes
 
-Pending event envelope/payload accounting bytes; excludes trusted native Logic graphs. Default: 65536.
+Accounting bytes for pending event envelopes and payloads. Trusted native Logic graphs are excluded. Default: 65536.
 
 ```text
 integer
@@ -119,7 +119,7 @@ integer
 
 ### event_queue_entries
 
-Pending event entries per computer; overflow faults the saved run. Default: 128.
+Maximum pending event entries per computer. Overflow faults the saved run. Default: 128.
 
 ```text
 integer
@@ -127,7 +127,7 @@ integer
 
 ### fail_safe_latency_ticks
 
-Published still-owned Logic cleanup observation envelope in ticks. Default: 1.
+Published tick bound for observing cleanup of still-owned Logic output. Default: 1.
 
 ```text
 integer
@@ -135,7 +135,7 @@ integer
 
 ### generated_source_bytes
 
-Maximum instrumented native source bytes. Default: 131072.
+Maximum number of bytes in instrumented native source. Default: 131072.
 
 ```text
 integer
@@ -143,7 +143,7 @@ integer
 
 ### handler_names
 
-Maximum exported handler names in one program. Default: 64.
+Maximum number of exported handler names in one program. Default: 64.
 
 ```text
 integer
@@ -151,7 +151,7 @@ integer
 
 ### host_hooks
 
-Trusted service-provider registrations; not guest extension permission. Default: 16.
+Maximum trusted service-provider registrations. This does not permit guest extensions. Default: 16.
 
 ```text
 integer
@@ -159,7 +159,7 @@ integer
 
 ### host_work_per_tick
 
-World host work ceiling; maintenance is reserved inside it, not added. Default: 5000000. Runtime-global tc-host-work-per-tick; requested integer domain 200001..1000000000.
+Maximum world host work. This includes reserved maintenance work; maintenance is not additional. Default: 5000000. Runtime-global setting: tc-host-work-per-tick. Requested integer domain: 200001..1000000000.
 
 ```text
 integer
@@ -167,7 +167,7 @@ integer
 
 ### identifier_bytes
 
-Maximum ordinary identifier/label bytes; specific APIs may differ. Default: 64.
+Maximum bytes in an ordinary identifier or label. Individual APIs can have different limits. Default: 64.
 
 ```text
 integer
@@ -175,7 +175,7 @@ integer
 
 ### maintenance_work_per_tick
 
-Effective world maintenance units, min(requested, host_work_per_tick - 1). Default: 200000. Runtime-global tc-maintenance-work-per-tick; requested integer domain 200000..100000000.
+Effective world maintenance units: min(requested, host_work_per_tick - 1). Default: 200000. Runtime-global setting: tc-maintenance-work-per-tick. Requested integer domain: 200000..100000000.
 
 ```text
 integer
@@ -183,7 +183,7 @@ integer
 
 ### network_edges
 
-Physical same-color discovery traversal edges. Default: 512.
+Maximum edges in physical same-color discovery traversal. Default: 512.
 
 ```text
 integer
@@ -191,7 +191,7 @@ integer
 
 ### network_nodes
 
-Physical same-color discovery traversal nodes. Default: 256.
+Maximum nodes in physical same-color discovery traversal. Default: 256.
 
 ```text
 integer
@@ -199,7 +199,7 @@ integer
 
 ### owned_children
 
-Host-owned child entities per device record. Default: 8.
+Maximum host-owned child entities per device record. Default: 8.
 
 ```text
 integer
@@ -207,7 +207,7 @@ integer
 
 ### peripheral_call_bytes
 
-Ordinary peripheral call transport/accounting byte envelope. Default: 65536.
+Byte allowance for ordinary peripheral call transport and accounting. Default: 65536.
 
 ```text
 integer
@@ -215,7 +215,7 @@ integer
 
 ### peripheral_call_entries
 
-Ordinary peripheral call transport entry envelope. Default: 4096.
+Entry allowance for ordinary peripheral call transport. Default: 4096.
 
 ```text
 integer
@@ -223,7 +223,7 @@ integer
 
 ### registry_entries
 
-Registered physical device records. Default: 4096.
+Maximum registered physical device records. Default: 4096.
 
 ```text
 integer
@@ -231,7 +231,7 @@ integer
 
 ### shell_bindings
 
-Retained Console root binding count. Default: 64.
+Maximum number of retained Console root bindings. Default: 64.
 
 ```text
 integer
@@ -239,7 +239,7 @@ integer
 
 ### shell_nodes
 
-Retained Console graph elements, not ordinary Data nodes. Default: 1024.
+Maximum retained Console graph elements. These are not ordinary Data nodes. Default: 1024.
 
 ```text
 integer
@@ -247,7 +247,7 @@ integer
 
 ### shell_pending_bytes
 
-Total queued Console command source bytes per computer. Default: 16384.
+Maximum total source bytes for queued Console commands per computer. Default: 16384.
 
 ```text
 integer
@@ -255,7 +255,7 @@ integer
 
 ### shell_pending_entries
 
-Queued Console commands per computer. Default: 8.
+Maximum queued Console commands per computer. Default: 8.
 
 ```text
 integer
@@ -263,7 +263,7 @@ integer
 
 ### shell_sessions
 
-World retained Console session records, including idle sessions. Default: 64.
+Maximum retained Console session records in the world, including idle sessions. Default: 64.
 
 ```text
 integer
@@ -271,7 +271,7 @@ integer
 
 ### shell_source_bytes
 
-Single submitted Console line source bytes; CR/LF remain forbidden. Default: 4096.
+Maximum source bytes in one submitted Console line. CR and LF are not permitted. Default: 4096.
 
 ```text
 integer
@@ -279,7 +279,7 @@ integer
 
 ### shell_value_bytes
 
-Retained Console graph accounting units, including edges/metadata. Default: 16384.
+Accounting units for retained Console graphs, including edges and metadata. Default: 16384.
 
 ```text
 integer
@@ -287,7 +287,7 @@ integer
 
 ### source_bytes
 
-Maximum saved program source bytes. Default: 16384.
+Maximum number of bytes in saved program source. Default: 16384.
 
 ```text
 integer
@@ -295,7 +295,7 @@ integer
 
 ### source_nesting
 
-Maximum source syntax nesting depth. Default: 48.
+Maximum nesting depth of source syntax. Default: 48.
 
 ```text
 integer
@@ -303,7 +303,7 @@ integer
 
 ### source_nodes
 
-Maximum parsed source nodes. Default: 4096.
+Maximum number of parsed source nodes. Default: 4096.
 
 ```text
 integer
@@ -311,7 +311,7 @@ integer
 
 ### source_tokens
 
-Maximum parsed source tokens. Default: 4096.
+Maximum number of parsed source tokens. Default: 4096.
 
 ```text
 integer
@@ -319,7 +319,7 @@ integer
 
 ### state_bytes
 
-Per-computer retained application Data accounting bytes, including metadata. Default: 65536.
+Accounting bytes for retained application Data per computer, including metadata. Default: 65536.
 
 ```text
 integer
@@ -327,7 +327,7 @@ integer
 
 ### state_entries
 
-Per-computer explicit state key ceiling. Default: 256.
+Maximum number of explicit state keys per computer. Default: 256.
 
 ```text
 integer
@@ -335,7 +335,7 @@ integer
 
 ### storage_version
 
-Saved storage representation version, not a capacity. Default: 1.
+Saved storage representation version. This is not a capacity. Default: 1.
 
 ```text
 integer
@@ -343,7 +343,7 @@ integer
 
 ### string_bytes
 
-Ordinary guest/Data string byte ceiling. Default: 16384.
+Maximum bytes in an ordinary guest or Data string. Default: 16384.
 
 ```text
 integer
@@ -351,7 +351,7 @@ integer
 
 ### subscriptions
 
-Subscription registrations per computer/run, checked on registration. Default: 64.
+Maximum subscription registrations per computer or run. This limit is checked on registration. Default: 64.
 
 ```text
 integer
@@ -359,7 +359,7 @@ integer
 
 ### sync_group_cells
 
-Aggregate terminal cells in one synchronization selection. Default: 10584.
+Total terminal cells in one synchronization selection. Default: 10584.
 
 ```text
 integer
@@ -375,7 +375,7 @@ integer
 
 ### sync_group_refs
 
-Maximum supplied physical monitor selection references. Default: 8.
+Maximum number of supplied physical monitor selection references. Default: 8.
 
 ```text
 integer
@@ -383,7 +383,7 @@ integer
 
 ### sync_groups_per_run
 
-Monitor synchronization selections per execution owner. Default: 1.
+Maximum monitor synchronization selections per execution owner. Default: 1.
 
 ```text
 integer
@@ -391,7 +391,7 @@ integer
 
 ### table_entries
 
-Ordinary guest-created table entry ceiling; native Logic non-growing edits are distinct. Default: 1024.
+Maximum entries in an ordinary guest-created table. Native Logic edits without growth have separate rules. Default: 1024.
 
 ```text
 integer
@@ -399,7 +399,7 @@ integer
 
 ### timers
 
-Pending timer ownership per run, including queued one-shot deliveries. Default: 64.
+Maximum pending timers owned by a run, including queued one-shot deliveries. Default: 64.
 
 ```text
 integer
@@ -407,7 +407,7 @@ integer
 
 ### topology_latency_ticks
 
-Published topology observation envelope in simulation ticks; not a GPU/UPS promise. Default: 60.
+Published tick bound for topology observations. This is not a GPU or UPS guarantee. Default: 60.
 
 ```text
 integer
@@ -415,7 +415,7 @@ integer
 
 ### tuple_entries
 
-Maximum argument/return tuple positions, including explicit nil/status. Default: 128.
+Maximum positions in an argument or return tuple, including explicit nil and status values. Default: 128.
 
 ```text
 integer

@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ProductType
 
-Exact native product namespace; no quality, temperature, signal or text search.
+This exact native product namespace does not select quality, temperature, signal or text searches.
 
 ```text
 'item'|'fluid'

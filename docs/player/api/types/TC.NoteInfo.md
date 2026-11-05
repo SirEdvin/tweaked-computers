@@ -9,12 +9,13 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.NoteInfo
 
-Native note record. The containing array is one-based, pitch is zero-based.
-Labels are descriptive/case-sensitive, not MIDI/frequency/portable semitone maps.
+This record describes a native note.
+The containing array is one-based; pitch is zero-based.
+Labels are descriptive and case-sensitive, not MIDI, frequency or portable semitone maps.
 
 ### name
 
-Exact native note label; discover rather than hardcode labels.
+Exact native note label. Use discovery instead of hardcoded labels.
 
 ```text
 string

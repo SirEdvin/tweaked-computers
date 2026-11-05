@@ -9,9 +9,10 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.TabDefinition
 
-Complete tab definition; no implicit partial layout merge. Explicit nil for an
-optional node field means omission/default. No text entry, images, fonts, style
-names, drawing coordinates, chart-click callbacks or guest formatters are exposed.
+This record defines a complete tab. There is no implicit partial layout merge.
+Explicit nil for an optional node field means omission/default.
+The API exposes no text entry, images, fonts, style names, drawing coordinates,
+chart-click callbacks or guest formatters.
 
 ### content
 

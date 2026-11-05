@@ -9,7 +9,7 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.HandlerName
 
-Declared exported handler name in the active saved document. Case-sensitive.
+This case-sensitive name identifies a declared exported handler in the active saved document.
 Console cannot borrow these handlers. A local/private function is not an export.
 
 ```text

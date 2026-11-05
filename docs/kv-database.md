@@ -9,7 +9,7 @@ if db then db.set("status", "ready") end
 ```
 
 All methods use dot calls. Extra arguments are rejected except documented
-varargs. Keys, fields and values are byte strings: empty strings and embedded
+varargs. Keys, fields and values are byte strings. Empty strings and embedded
 NUL are accepted. Numbers, booleans, tables and functions are never coerced.
 Missing results are one returned nil, not zero returns or empty strings.
 
@@ -17,23 +17,23 @@ Missing results are one returned nil, not zero returns or empty strings.
 
 | Call | Result | Behavior |
 | --- | --- | --- |
-| `get(key)` | string or nil | Missing/expired gives nil; a live hash throws `E_WRONGTYPE` |
+| `get(key)` | string or nil | Missing/expired gives nil. A live hash throws `E_WRONGTYPE`. |
 | `set(key, value)` | `"OK"` | Replaces either type and removes the previous deadline |
-| `del(key, ...)` | integer | At least one key; deletes each live distinct key once |
-| `exists(key, ...)` | integer | At least one key; repeated live arguments count repeatedly |
+| `del(key, ...)` | integer | Requires at least one key. Deletes each live distinct key once. |
+| `exists(key, ...)` | integer | Requires at least one key. Repeated live arguments count repeatedly. |
 | `type(key)` | `"none"`, `"string"`, `"hash"` | Expired keys are absent |
 | `hget(key, field)` | string or nil | Missing key/field gives nil |
-| `hset(key, field, value, ...)` | integer | At least one complete pair; last duplicate field wins; newly added distinct fields count once |
-| `hdel(key, field, ...)` | integer | At least one field; duplicates count once; removing the final field deletes the key |
+| `hset(key, field, value, ...)` | integer | Requires at least one complete pair. The last duplicate field wins. Newly added distinct fields count once. |
+| `hdel(key, field, ...)` | integer | Requires at least one field. Duplicates count once. Removing the final field deletes the key. |
 | `hexists(key, field)` | 0 or 1 | Integer, not boolean |
-| `hgetall(key)` | map | Missing gives `{}`; independent copy populated in bytewise field-name order |
+| `hgetall(key)` | map | Missing gives `{}`. Returns an independent copy populated in bytewise field-name order. |
 | `hlen(key)` | integer | Missing gives zero |
-| `expire(key, seconds)` | 0 or 1 | Integer simulation seconds; absent gives zero; nonpositive deletes a live key immediately |
+| `expire(key, seconds)` | 0 or 1 | Uses integer simulation seconds. Absent gives zero. A nonpositive value deletes a live key immediately. |
 | `ttl(key)` | integer | Missing -2, persistent -1, otherwise rounded seconds |
 | `persist(key)` | 0 or 1 | One only when an existing live deadline was removed |
-| `getLimits()` | copied map | Reachable static limits; no electricity required |
+| `getLimits()` | copied map | Reachable static limits. No electricity required. |
 
-Every hash command rejects an existing live string with `E_WRONGTYPE`; the
+Every hash command rejects an existing live string with `E_WRONGTYPE`. The
 message contains WRONGTYPE. HSET/HDEL retain an existing hash's deadline unless
 HDEL removes its final field. A new hash after expiry has no old fields/TTL.
 
@@ -48,14 +48,14 @@ and duration validation happen even when the key is absent. At or beyond the
 absolute deadline every command treats the key as absent, even if its physical
 entry remains in storage pending bounded cleanup.
 
-For a live deadline, TTL is `floor((deadline - tick + 30) / 60)`: nearest-second
-rounding, with half seconds rounding up. Thus a live key can report zero just
+For a live deadline, TTL is `floor((deadline - tick + 30) / 60)`.
+This rounds to the nearest second, with half seconds rounding up. Thus a live key can report zero just
 before expiry. Zero is not the missing sentinel -2. Implementation splits the
 remaining quotient/remainder to avoid unsafe addition near the integer ceiling.
 
 Simulation ticks advance expiry during an outage or while a tagged item is
 carried. Pause/server downtime do not consume time. Cold reload does not renew
-TTL. SET clears it; hash changes preserve it; EXPIRE replaces it; PERSIST removes
+TTL. SET clears it. Hash changes preserve it. EXPIRE replaces it. PERSIST removes
 it.
 
 A command validates all operands, type, required movement and complete final
@@ -67,10 +67,10 @@ Reads return immutable scalar strings or independent maps, never internal state.
 Writers establish live capacity from the complete bounded index, excluding all
 logically expired entries regardless of maintenance progress. This is not a
 claim that unreclaimed content is live, nor an unbounded expiry flush. Guest
-service work shares the existing native callback ledger; exhausted work/allocation
+service work shares the existing native callback ledger. Exhausted work/allocation
 faults the run with its private fatal control and preserves prior data. Capacity,
 wrong-type and argument errors remain catchable. Do not spin on busy/pending
-admission failures; retry in another named event.
+admission failures. Retry in another named event.
 
 ## Queryable initial ceilings
 
@@ -97,19 +97,19 @@ leaves room for full hash readback under the unchanged sandbox allocation cap.
 There is no implicit unlimited capacity or automatic truncation on load.
 
 The reserved snapshot accounting is content plus at most 80 units per key,
-48 per hash field and 128 header units; this is independent of the live content
+48 per hash field and 128 header units. This is independent of the live content
 allowance. Snapshot limits describe our bounded plain structure, not JSON file
 length or a compressed save size. At maximum accepted content, mining/save
 metadata has room without deleting data or reducing the content cap.
 
-Background reclamation starts only when a database's earliest deadline is due;
-persistent-only databases and future deadlines cause no per-tick database/key
+Background reclamation starts only when a database's earliest deadline is due.
+Persistent-only databases and future deadlines cause no per-tick database/key
 discovery visits. Each tick still reclaims at most eight indexed keys in each
-of two admitted databases, using the existing reserved maintenance ledger rather
+of two admitted databases. It uses the existing reserved maintenance ledger rather
 than guest callback credits. A refused database retains its original due tick
 and key cursor without blocking a fitting peer. Commands update the deadline
 membership atomically with their replacement contents. Mining removes the old
-identity's membership; placement restores the original absolute deadlines under
+identity's membership. Placement restores the original absolute deadlines under
 the new identity. Ordinary save/load retains deadlines, cursors and counters.
 Logical expiry remains exact even when physical cleanup is delayed.
 
@@ -120,20 +120,20 @@ Player/robot mining writes a validated versioned `tc_kv` tag onto the single
 material-item placement imports it defensively and gives the database a new
 identity, preserving absolute deadlines. Duplicate build events never replay a
 snapshot over newer writes. Untagged placement, blueprints, ghost-only tags and
-clones start empty. Only an actually consumed material item carries contents;
-destruction intentionally destroys this database.
+clones start empty. Only an actually consumed material item carries contents.
+Destruction intentionally destroys this database.
 
 Unknown/malformed snapshots are rejected before publication. Import checks
 header/schema, bounded dense arrays, unique keys/fields, exact string/type and
 integer deadline domains, content/field limits and metadata space. Failed
-placement removes staged ownership and refunds the original tagged item; no
+placement removes staged ownership and refunds the original tagged item. No
 malformed item is silently normalized into an empty database. Unsupported retained
 database headers preserve recovery data and disable mining instead of resetting
 it. Initialization/upgrades run only in synchronized init/configuration, never
 on_load.
 
-The fixed host adapter lives at `lifecycle.register_item_adapter("kv", ...)`;
-player programs cannot register services or access the snapshot/import entry
+The fixed host adapter is at `lifecycle.register_item_adapter("kv", ...)`.
+Player programs cannot register services or access the snapshot/import entry
 points.
 
 ## Example

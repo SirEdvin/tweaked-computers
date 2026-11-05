@@ -9,14 +9,21 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.FlatStatisticsSnapshot
 
-Fluid/pollution totals/rates shape. Fluid input/output means produced/consumed
-native fluid units; pollution input/output means emitted/absorbed pollutant units.
-Totals are cumulative since native reset; rates are per game minute. Never net
-the directions, round fractions, smooth, infer recipe throughput or merge names.
+This snapshot contains fluid or pollution totals or rates.
+Fluid input means produced native fluid units; output means consumed units.
+Pollution input means emitted pollutant units; output means absorbed units.
+Totals are cumulative since the native reset.
+Rates are per game minute.
+
+Do not subtract one direction from the other to give a net value.
+Do not round fractions.
+Do not smooth the values.
+Do not infer recipe throughput.
+Do not merge names.
 
 ### input
 
-Produced fluid or emitted pollution counts/rates.
+Produced fluid or emitted pollution counts or rates.
 
 ```text
 TC.StatisticsCounts
@@ -24,7 +31,7 @@ TC.StatisticsCounts
 
 ### output
 
-Consumed fluid or absorbed pollution counts/rates.
+Consumed fluid or absorbed pollution counts or rates.
 
 ```text
 TC.StatisticsCounts

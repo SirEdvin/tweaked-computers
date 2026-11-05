@@ -9,13 +9,14 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.PrototypeInfo
 
-Common locale-independent native metadata, with references projected to names.
-Required false/zero/empty values are retained. No icons, LocalisedStrings,
-tooltips, simulations, native objects or implicit player language are exposed.
+This record gives common locale-independent native metadata, with references
+projected to names. It retains required false, zero and empty values.
+It exposes no icons, LocalisedStrings, tooltips, simulations, native objects or
+implicit player language.
 
 ### factoriopedia_alternative (optional)
 
-Optional same-namespace alternative name; never followed automatically.
+Optional same-namespace alternative name. The API never follows this alternative automatically.
 
 ```text
 string
@@ -55,7 +56,7 @@ string
 
 ### order
 
-Native order string, possibly empty; not API list sorting order.
+Native order string, possibly empty. This is not API list sorting order.
 
 ```text
 string
@@ -71,7 +72,7 @@ boolean
 
 ### prototype_type
 
-Native subtype; an item need not have subtype item.
+Native subtype. An item does not require subtype item.
 
 ```text
 string

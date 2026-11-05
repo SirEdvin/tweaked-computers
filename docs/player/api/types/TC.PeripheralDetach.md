@@ -9,8 +9,9 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.PeripheralDetach
 
-Physical detachment notification. Authority is revoked and still-owned outputs
-are cleaned before delivery, even without a registered guest handler.
+This event reports physical detachment.
+Before delivery, the host revokes authority and cleans still-owned outputs,
+even without a registered guest handler.
 
 Extends: TC.BaseEvent
 
@@ -24,7 +25,7 @@ Detachment discriminator.
 
 ### peripheral
 
-Detached identity; old handles do not retarget.
+Detached identity. Old handles do not retarget.
 
 ```text
 TC.PeripheralName

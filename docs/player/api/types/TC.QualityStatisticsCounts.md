@@ -9,8 +9,8 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.QualityStatisticsCounts
 
-Item inventory nested by exact quality name, then exact item name. All recorded
-qualities remain separate, including native empty quality maps.
+The item inventory uses exact quality names, then exact item names, as nested keys.
+All recorded qualities remain separate, also when native quality maps are empty.
 
 ```text
 table<string, TC.StatisticsCounts>

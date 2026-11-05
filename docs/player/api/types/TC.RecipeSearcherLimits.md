@@ -9,15 +9,15 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.RecipeSearcherLimits
 
-Defensive effective limit map. Defaults below are not live values.
-Counts are admission envelopes, not calibrated heap, latency or FPS promises.
-Settings changes preserve spent credits; lower limits never authorize data loss.
+Independent copy of effective limits. These defaults are not current values.
+Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+Settings changes keep spent credits. Lower limits never permit data loss.
 
 Extends: TC.Limits
 
 ### recipe_search_results
 
-Complete recipe result ceiling; excess is E_LIMIT, never a truncated prefix. Default: 50.
+Maximum complete recipe results. Excess results cause E_LIMIT, never a truncated list. Default: 50.
 
 ```text
 integer

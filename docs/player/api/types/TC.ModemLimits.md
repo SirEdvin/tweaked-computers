@@ -9,9 +9,9 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.ModemLimits
 
-Defensive effective limit map. Defaults below are not live values.
-Counts are admission envelopes, not calibrated heap, latency or FPS promises.
-Settings changes preserve spent credits; lower limits never authorize data loss.
+Independent copy of effective limits. These defaults are not current values.
+Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+Settings changes keep spent credits. Lower limits never permit data loss.
 
 ### channel_max
 
@@ -23,7 +23,7 @@ integer
 
 ### channel_min
 
-Smallest numeric modem channel; zero is valid, not unlimited. Default: 0.
+Smallest numeric modem channel. Zero is valid; it does not mean unlimited. Default: 0.
 
 ```text
 integer
@@ -31,7 +31,7 @@ integer
 
 ### data_depth
 
-Generic Data nesting ceiling; native Logic transfer is exempt. Default: 16.
+Maximum nesting depth of generic Data. Native Logic transfer is exempt. Default: 16.
 
 ```text
 integer
@@ -39,7 +39,7 @@ integer
 
 ### data_nodes
 
-Generic Data graph node ceiling; native Logic transfer is exempt. Default: 4096.
+Maximum nodes in a generic Data graph. Native Logic transfer is exempt. Default: 4096.
 
 ```text
 integer
@@ -47,7 +47,7 @@ integer
 
 ### deliveries_per_transmit
 
-Handler deliveries per accepted transmission, including fan-out. Default: 8.
+Maximum handler deliveries per accepted transmission, including fan-out. Default: 8.
 
 ```text
 integer
@@ -55,7 +55,7 @@ integer
 
 ### message_bytes
 
-Accounted modem message bytes per transmit. Default: 4096.
+Maximum accounted modem message bytes per transmit. Default: 4096.
 
 ```text
 integer
@@ -63,7 +63,7 @@ integer
 
 ### message_depth
 
-Modem message Data nesting per transmit. Default: 8.
+Maximum modem message Data nesting depth per transmit. Default: 8.
 
 ```text
 integer
@@ -71,7 +71,7 @@ integer
 
 ### message_nodes
 
-Modem message Data nodes per transmit. Default: 256.
+Maximum modem message Data nodes per transmit. Default: 256.
 
 ```text
 integer
@@ -79,7 +79,7 @@ integer
 
 ### open_channels
 
-Shared open numeric channels per physical modem. Default: 128.
+Maximum shared open numeric channels per physical modem. Default: 128.
 
 ```text
 integer
@@ -87,7 +87,7 @@ integer
 
 ### routing_candidates
 
-Candidate radar receiver inventory per transmission. Default: 64.
+Maximum candidate radar receivers per transmission. Default: 64.
 
 ```text
 integer
@@ -95,7 +95,7 @@ integer
 
 ### string_bytes
 
-Ordinary guest/Data string byte ceiling. Default: 16384.
+Maximum bytes in an ordinary guest or Data string. Default: 16384.
 
 ```text
 integer
@@ -103,7 +103,7 @@ integer
 
 ### table_entries
 
-Ordinary guest-created table entry ceiling; native Logic non-growing edits are distinct. Default: 1024.
+Maximum entries in an ordinary guest-created table. Native Logic edits without growth have separate rules. Default: 1024.
 
 ```text
 integer
@@ -111,7 +111,7 @@ integer
 
 ### transmits_per_computer_tick
 
-Accepted transmissions per computer/tick. Default: 2.
+Maximum accepted transmissions per computer per tick. Default: 2.
 
 ```text
 integer
@@ -119,7 +119,7 @@ integer
 
 ### transmits_per_tick
 
-World accepted transmissions per tick. Default: 16.
+Maximum accepted transmissions in the world per tick. Default: 16.
 
 ```text
 integer
