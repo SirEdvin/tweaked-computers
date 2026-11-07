@@ -31,7 +31,7 @@ function M.new(context,services,shell)
   local bindings,host_errors={},{}
   local handle_arguments,stable_services,input_rules={},{},{}
   local service_frames={}
-  local restore_binding,output,guest_index
+  local restore_binding,output,output_flush,guest_index
   local exports,constructing
   local poison,closed,line=nil,false,1
   local sentinel={}
@@ -164,7 +164,9 @@ function M.new(context,services,shell)
     for _,value in pairs(entries) do if type(value)=='function' then labels[value]=label or 'API function' end end
     return proxy
   end
-  function E.bind_output(fn) assert(not output and type(fn)=='function'); output=fn end
+  -- A flushing sink buffers program output and admits bytes plus entry with one charge.
+  function E.bind_output(fn,flush) assert(not output and type(fn)=='function'); output,output_flush=fn,flush end
+  function E.flush_output() if output_flush then output_flush() end end
   function E.bind_value(value,descriptor) bindings[value]=descriptor end
   function E.binding(value) return bindings[value] end
   function E.binding_resolver(fn) assert(not restore_binding); restore_binding=fn end
@@ -347,7 +349,7 @@ function M.new(context,services,shell)
           if bytes>limits.console_bytes then fail('print output too large','E_LIMIT') end
         end
         if bytes>limits.console_bytes then fail('print output too large','E_LIMIT') end
-        E.spend(bytes+1)
+        if not output_flush then E.spend(bytes+1) end
         local text=table.concat(parts,'\t')
         if output then output(text)
         elseif shell then shell.output(text)

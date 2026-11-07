@@ -55,15 +55,18 @@ function M.wire(wire)
   if wire~='red' and wire~='green' then errors.raise('E_ARGUMENT','explicit red or green wire required') end
   return wire
 end
+-- Index properties avoid creating LuaForce/LuaSurface wrappers on every check.
 function M.same_scope(entity,origin)
   return entity and entity.valid and entity.type~='entity-ghost'
-    and entity.force.index==origin.force_index and entity.surface.index==origin.surface_index
+    and entity.force_index==origin.force_index and entity.surface_index==origin.surface_index
 end
 function M.discovery_vertex(connector,origin,wire)
-  if not connector or not connector.valid or connector.is_ghost or not M.same_scope(connector.owner,origin) then return nil end
-  local rec,role=registry.by_entity(connector.owner)
-  radar.pending(connector.owner)
-  if not rec then speaker.pending(connector.owner) end
+  if not connector or not connector.valid or connector.is_ghost then return nil end
+  local owner=connector.owner
+  if not M.same_scope(owner,origin) then return nil end
+  local rec,role=registry.by_entity(owner)
+  radar.pending(owner)
+  if not rec then speaker.pending(owner) end
   if not rec or (role~='network' and not (role=='body' and (rec.layout_version==2 or rec.native_carrier=='radar' or rec.native_carrier=='speaker')))
     or lifecycle.connector(rec,'network',wire)~=connector then return nil end
   return rec
@@ -98,12 +101,17 @@ local function walk(origin,wire,spend,adopting)
   M.wire(wire); spend=spend or function() end
   spend(16); local first=origin_connector(origin,wire)
   local queue={first}; local seen={[first.owner.unit_number]=true}; local parents={}; local members={}; local native={}
+  -- Native state cannot change inside this call: a vertex accepted as an edge target keeps
+  -- its record when dequeued, and an already seen target needs no second validation.
+  local recs={}
   local cursor,edges=1,0
   while cursor<=#queue do
     spend(8)
-    local connector=queue[cursor]; cursor=cursor+1
-    local rec,valid=vertex(connector,origin,wire,adopting)
-    if not valid then errors.raise('E_NETWORK_PENDING','physical topology changed during traversal') end
+    local connector=queue[cursor]; local rec=recs[cursor]; cursor=cursor+1
+    if cursor==2 then
+      local valid; rec,valid=vertex(connector,origin,wire,adopting)
+      if not valid then errors.raise('E_NETWORK_PENDING','physical topology changed during traversal') end
+    end
     if adopting then
       if not rec or rec.force_index~=origin.force_index or rec.surface_index~=origin.surface_index then
         native[#native+1]=connector.owner
@@ -112,15 +120,13 @@ local function walk(origin,wire,spend,adopting)
     local connections=M.real_edges(connector,spend,limits.network_edges-edges)
     edges=edges+#connections
     for _,connection in ipairs(connections) do
-      if connection.origin~=defines.wire_origin.radars then
-        local next_rec,accepted=vertex(connection.target,origin,wire,adopting)
+      local target=connection.target
+      if connection.origin~=defines.wire_origin.radars and not seen[target.owner.unit_number] then
+        local next_rec,accepted=vertex(target,origin,wire,adopting)
         if accepted then
-          local unit=connection.target.owner.unit_number
-          if not seen[unit] then
-            if #queue>=limits.network_nodes then errors.raise('E_LIMIT','physical node inventory exceeds network limit') end
-            seen[unit]=true; queue[#queue+1]=connection.target
-            if not adopting then parents[next_rec.id]=rec.id end
-          end
+          if #queue>=limits.network_nodes then errors.raise('E_LIMIT','physical node inventory exceeds network limit') end
+          seen[target.owner.unit_number]=true; queue[#queue+1]=target; recs[#queue]=next_rec
+          if not adopting then parents[next_rec.id]=rec.id end
         end
       end
     end

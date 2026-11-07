@@ -140,7 +140,8 @@ function M.on_tick(event)
     assert(runtime.enqueue(peer,'prepared',{name='preparation-test'},event.tick))
     f.peer_pending=peer.queue[1]
     local peer_ctx=runtime.context(peer,event.tick)
-    assert(admission.reserve(peer_ctx,'compile',limits.compile_work-peer_ctx.machine.compile-1))
+    -- The peer's run already paid compilation, so defer its preparation with host work pressure.
+    assert(admission.reserve(peer_ctx,'work',admission.host_ceiling(peer_ctx.ledger,event.tick)-peer_ctx.ledger.total-1))
     assert(not scheduler.dispatch(peer,event.tick) and peer.queue[1]==f.peer_pending and not peer.state.prepared and peer.status=='running')
     assert(admission.reserve(ctx,'work',admission.host_ceiling(ctx.ledger,event.tick)-ctx.ledger.total))
     f.tick=event.tick; f.work=ctx.machine.work; f.token=model.session(player.index).token

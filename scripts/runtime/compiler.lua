@@ -266,7 +266,7 @@ function M.same_handlers(left,right)
   return true
 end
 -- Process-local host scaffolding for one computer run. Guest-invisible and never
--- saved: every bind charges identically and re-runs the program's declarations,
+-- saved: charges depend only on saved state and every bind re-runs the program's declarations,
 -- so a peer with a cold cache (late join, reload) observes the same effects and refusals.
 local scaffolds={}
 registry.register_cleanup('runtime-scaffold',function(rec) scaffolds[rec.id]=nil end)
@@ -287,17 +287,21 @@ function M.run(plan, name, event, services, context, circuit, before, owner)
     if before and admission.finish_preparation(context) then control='defer' end
     return false,problem,control
   end
-  -- Revalidate or replay the private exact-source proof every dispatch, retaining
-  -- identical cold/warm credits. Saved/caller-generated text is never executed.
-  local executable,diagnostic = M.compile(plan.source,context)
+  -- A run pays compilation once; the saved marker, not process caches, decides, so every peer agrees.
+  local paid=owner~=nil and owner.compile_paid==owner.run_id
+  -- Revalidate the exact source every dispatch. Saved/caller-generated text is never executed.
+  local executable,diagnostic = M.compile(plan.source,not paid and context or nil)
   if not executable then return failure(diagnostic) end
   if plan.storage_version~=nil and not M.same_handlers(plan.handlers,executable.handlers) then
     return failure(errors.new('E_UNSUPPORTED','invalid retained exports; source/data retained'))
   end
   if not executable.handlers[name] then return failure(errors.new('E_NOT_FOUND','handler not declared')) end
-  -- Same admission for every fresh environment, regardless of executable cache/process history.
-  if not admission.reserve(context,'compile',#executable.generated + executable.nodes + 1) then
-    return failure(errors.new('E_BUDGET','handler reconstruction refused'))
+  -- Admission depends only on saved state, never on executable cache/process history.
+  if not paid then
+    if not admission.reserve(context,'compile',#executable.generated + executable.nodes + 1) then
+      return failure(errors.new('E_BUDGET','handler reconstruction refused'))
+    end
+    if owner then owner.compile_paid=owner.run_id end
   end
   local env,entry
   if owner and type(services)=='function' then
@@ -322,6 +326,8 @@ function M.run(plan, name, event, services, context, circuit, before, owner)
     if before then before(input,env); admission.finish_preparation(context) end
     return env.execute(handlers[name],input)
   end)
+  -- Publish admitted program output on every exit, before any fault/stop entry.
+  env.flush_output()
   env.close()
   if not ok then return failure(env.diagnostic(result),env.stop_requested() and 'stop' or nil) end
   return true
