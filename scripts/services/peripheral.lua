@@ -92,18 +92,21 @@ local function check_name(name)
   if type(name)~='string' or #name==0 or #name>limits.identifier_bytes then errors.raise('E_ARGUMENT','bounded peripheral name required') end
 end
 function M.services(computer,tick,guard,execution)
+  local frame=type(tick)=='table' and tick or {tick=tick}
   execution=execution or principal.program(computer)
-  local handles=setmetatable({},{__mode='k'})
-  local availability={} -- One non-yielding callback only, never retained across ticks.
-  local inventories={}
-  local authorized=false
+  -- One non-yielding callback only: every bind starts with empty proofs and caches.
+  local handles,availability,inventories,authorized,invalidate_owner
   local spend=guard.spend
-  local invalidate_owner=guard.invalidate_authority
   local function invalidate()
     if invalidate_owner then invalidate_owner() end
     inventories={}; availability={}; authorized=false
   end
-  guard.invalidate_authority=invalidate
+  local function bind()
+    handles=setmetatable({},{__mode='k'}); availability={}; inventories={}; authorized=false
+    invalidate_owner=guard.invalidate_authority
+    guard.invalidate_authority=invalidate
+  end
+  if guard.on_bind then guard.on_bind(bind) else bind() end
   local function current()
     guard.check()
     if guard.check_owner then guard.check_owner()
@@ -158,10 +161,10 @@ function M.services(computer,tick,guard,execution)
       errors.raise(rec.native_carrier and 'E_UNPOWERED' or 'E_UNREACHABLE','peripheral is unavailable')
     end
     if rec.kind=='logic' and (method=='readSignals' or method=='getOutput') then
-      return guard.transfer_result(fn(computer,rec,wire,tick,spend,execution,...))
+      return guard.transfer_result(fn(computer,rec,wire,frame.tick,spend,execution,...))
     end
-    if bindings[rec.kind].with_principal then return fn(computer,rec,wire,tick,spend,execution,...) end
-    return fn(computer,rec,wire,tick,spend,...)
+    if bindings[rec.kind].with_principal then return fn(computer,rec,wire,frame.tick,spend,execution,...) end
+    return fn(computer,rec,wire,frame.tick,spend,...)
   end
   local function facade(rec,wire)
     local name,generation=rec.id,rec.generation; local methods={}
@@ -193,7 +196,7 @@ function M.services(computer,tick,guard,execution)
   method('getNames',1,function(wire) return sorted(inventory(wire),spend) end)
   method('setMonitorSyncGroup',1,function(members)
     if not monitor_sync then errors.raise('E_UNSUPPORTED','monitor provider unavailable') end
-    return monitor_sync.set(computer,tick,spend,members,execution)
+    return monitor_sync.set(computer,frame.tick,spend,members,execution)
   end)
   method('getMonitorSyncGroup',0,function()
     if not monitor_sync then errors.raise('E_UNSUPPORTED','monitor provider unavailable') end
@@ -524,6 +527,8 @@ registry.register_cleanup('network-owned-output',function(computer,run_id,reason
     if type(owner)=='table' and owner.computer_id==computer.id and owner.run_id==run_id then lifecycle.clear_output(rec) end
   end
 end)
-scheduler.register_phase('lifecycle','01-network-output-authority',M.check_outputs)
-scheduler.register_phase('notifications','peripheral-topology',M.reconcile)
+scheduler.register_phase('lifecycle','01-network-output-authority',M.check_outputs,
+  function(root) return scheduler.order_pending(root.output_owners) end)
+scheduler.register_phase('notifications','peripheral-topology',M.reconcile,
+  function(root) return scheduler.order_pending(root.topology_interests) end)
 return M

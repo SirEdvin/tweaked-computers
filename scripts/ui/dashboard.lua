@@ -243,7 +243,11 @@ service.register_player_authority(function(index,rec,token,slot)
   return s and s.token==token and s.id==rec.id and s.selected==slot and current(player,s)==rec
     and f and f.valid and player.opened==f and lifecycle.available(rec) or false
 end)
-scheduler.register_phase('render','ui-dashboard',M.tick)
+scheduler.register_phase('render','ui-dashboard',M.tick,function(root)
+  local all=root.dashboard_sessions
+  if all~=nil and (type(all)~='table' or next(all)~=nil) then return true end
+  return charts.pending(root)
+end)
 registry.register_cleanup('dashboard-viewers',function(rec)
   if rec.kind~='dashboard' then return end
   for index,s in pairs(sessions()) do if s.id==rec.id then local player=game.get_player(index); if player then M.close(player) end end end

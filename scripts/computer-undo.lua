@@ -259,6 +259,7 @@ registry.register_initializer('undo-work',function(root)
   local s=root.computer_undo
   root.scheduler.undo_pending=type(s)=='table' and (type(s.pending)=='table' and #s.pending>0 or s.candidates~=nil) or false
 end)
-scheduler.register_phase('lifecycle','02-computer-undo',M.maintain)
+scheduler.register_phase('lifecycle','02-computer-undo',M.maintain,
+  function(root) return root.scheduler.undo_pending and true or false end)
 lifecycle.register_undo_adapter(M)
 return M

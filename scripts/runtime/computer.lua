@@ -267,7 +267,9 @@ function M.register_services(name,fn)
   assert(count(providers)<limits.host_hooks,'host provider capacity')
   providers[name]=fn
 end
+-- tick is a number or a reusable {tick=} frame refreshed for every invocation.
 function M.services(rec,tick,guard,execution,output_prefix)
+  local frame=type(tick)=='table' and tick or {tick=tick}
   execution=execution or principal.program(rec)
   local function spend(n) guard.spend(n) end
   local function current()
@@ -275,11 +277,15 @@ function M.services(rec,tick,guard,execution,output_prefix)
     if guard.check_owner then guard.check_owner() else principal.check(rec,execution) end
   end
   if guard.bind_output then
-    local check,invalidate=principal.proof(rec,execution)
-    guard.check_owner=check
-    guard.invalidate_authority=invalidate
+    -- Authority proofs are callback-local, even when the scaffolding is reused.
+    local function bind()
+      local check,invalidate=principal.proof(rec,execution)
+      guard.check_owner=check
+      guard.invalidate_authority=invalidate
+    end
+    if guard.on_bind then guard.on_bind(bind) else bind() end
     guard.bind_output(function(text)
-      guard.check(); check()
+      guard.check(); guard.check_owner()
       local bytes=#text+(output_prefix and #output_prefix or 0)
       if bytes>limits.console_bytes then errors.raise('E_LIMIT','log entry too large') end
       guard.spend(M.log_work(rec,bytes))
@@ -287,7 +293,7 @@ function M.services(rec,tick,guard,execution,output_prefix)
         guard.spend(bytes+1)
         text=output_prefix..text
       end
-      M.log(rec,text,tick)
+      M.log(rec,text,frame.tick)
     end)
   end
   local api={}
@@ -303,7 +309,7 @@ function M.services(rec,tick,guard,execution,output_prefix)
     if label~=nil and (type(label)~='string' or #label>limits.identifier_bytes) then errors.raise('E_ARGUMENT','bounded label or nil required') end
     spend(label and #label+1 or 1); rec.label=label
   end)
-  method('getTick',0,0,function() return tick end)
+  method('getTick',0,0,function() return frame.tick end)
   method('getLimits',0,0,function() return (data.copy(limits,spend)) end)
   method('getState',1,1,function(key)
     data.key(key); spend(#key+1)
@@ -327,7 +333,7 @@ function M.services(rec,tick,guard,execution,output_prefix)
     rec.state_nodes=rec.state_nodes-rec.state_node_sizes[key]; rec.state_node_sizes[key]=nil
     return true
   end)
-  method('log',1,1,function(text) M.log(rec,text,tick,spend) end)
+  method('log',1,1,function(text) M.log(rec,text,frame.tick,spend) end)
   method('on',2,2,function(event_name,handler_name)
     if not general[event_name] then errors.raise('E_ARGUMENT','unsupported general event name') end
     return M.subscribe(rec,event_name,handler_name,nil,spend)
@@ -337,6 +343,7 @@ function M.services(rec,tick,guard,execution,output_prefix)
   end
   method('off',1,1,function(id) return M.unsubscribe(rec,id,spend) end)
   local function timer(delay,name,payload,recurring)
+    local tick=frame.tick
     if not errors.integer(delay,1,MAX-tick) then errors.raise('E_RANGE','positive safe integer duration required') end
     handler(rec,name); spend(limits.timers+#rec.queue+1)
     local pending=count(rec.timers)
@@ -368,7 +375,7 @@ function M.services(rec,tick,guard,execution,output_prefix)
   local map={computer=api,peripheral={}}
   local names={}; for name in pairs(providers) do names[#names+1]=name end; table.sort(names)
   for _,name in ipairs(names) do
-    local extras=providers[name](rec,tick,guard,execution)
+    local extras=providers[name](rec,frame,guard,execution)
     for namespace,methods in pairs(extras or {}) do
       assert(namespace=='computer' or namespace=='peripheral','unknown service namespace')
       for key,fn in pairs(methods) do assert(not map[namespace][key] and type(fn)=='function','service collision'); map[namespace][key]=fn end

@@ -250,6 +250,11 @@ function M.on_load()
   loaded=true
   if storage.tc_budget_fixture.phase=='frozen' then frozen(); log('TC_BUDGET_ON_LOAD_UNCHANGED') end
 end
+-- Maintenance spending belongs to its tick; an idle tick opens no new ledger.
+local function spent_at(tick)
+  local s=registry.get().scheduler
+  return s.maintenance_tick==tick and s.maintenance_spent or 0
+end
 function M.on_tick(event)
   local f=storage.tc_budget_fixture
   if f.phase=='armed' then
@@ -273,7 +278,7 @@ function M.on_tick(event)
     assert(event.tick>f.tick)
     scheduler.tick(event.tick)
     assert(registry.get().scheduler.last_tick==event.tick and registry.get().marker==f.marker)
-    assert(registry.get().scheduler.maintenance_spent<=limits.maintenance_work_per_tick)
+    assert(spent_at(event.tick)<=limits.maintenance_work_per_tick)
     log('TC_MAINTENANCE_COLD_SPENT_AND_NEXT_TICK_OK')
     local rec=computer('computer.setState("started",true)')
     f.computer=rec.id; f.active=rec.active; f.state=rec.state; f.phase='live'
@@ -293,7 +298,7 @@ function M.on_tick(event)
   elseif f.phase=='live-next' then
     scheduler.tick(event.tick)
     local root=registry.get(); local rec=registry.computer(f.computer)
-    assert(root.scheduler.last_tick==event.tick and root.scheduler.maintenance_spent<=250000)
+    assert(root.scheduler.last_tick==event.tick and spent_at(event.tick)<=250000)
     assert(rec.status=='running' and rec.state.started and rec.active==f.active and rec.state==f.state)
     restored_defaults(); f.phase='done'
     log('TC_MAINTENANCE_LIVE_PRODUCTION_TICKS_OK')

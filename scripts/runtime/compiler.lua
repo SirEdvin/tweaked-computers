@@ -6,6 +6,7 @@ local admission = require('scripts.runtime.admission')
 local parsing = require('scripts.runtime.parse_admission')
 local errors = require('scripts.runtime.errors')
 local environment = require('scripts.runtime.environment')
+local registry = require('scripts.registry')
 local M = {}
 -- Host-only, bounded, exact-source validation cache. No caller-owned plan or
 -- executable closure is trusted. Replay every original charge, in order, so
@@ -264,7 +265,20 @@ function M.same_handlers(left,right)
   for name in pairs(right) do if left[name]~=true then return false end end
   return true
 end
-function M.run(plan, name, event, services, context, circuit, before)
+-- Process-local host scaffolding for one computer run. Guest-invisible and never
+-- saved: every bind charges identically and loads the program fresh, so a peer
+-- with a cold cache (late join, reload) observes the same effects and refusals.
+local scaffolds={}
+registry.register_cleanup('runtime-scaffold',function(rec) scaffolds[rec.id]=nil end)
+local function scaffold(owner,plan,services)
+  local entry=scaffolds[owner.id]
+  if entry and entry.rec==owner and entry.run_id==owner.run_id and entry.generation==owner.generation
+    and entry.source==plan.source then return entry end
+  local frame={}
+  return {rec=owner,run_id=owner.run_id,generation=owner.generation,source=plan.source,frame=frame,
+    env=environment.new(nil,function(guard) return services(guard,frame) end)}
+end
+function M.run(plan, name, event, services, context, circuit, before, owner)
   if type(plan) ~= 'table' or plan.mode~=nil or plan.compiler_version ~= limits.compiler_version or plan.api_version ~= 1 then
     return false,errors.new('E_PROGRAM','unsupported compiler/API version; source retained')
   end
@@ -285,9 +299,15 @@ function M.run(plan, name, event, services, context, circuit, before)
   if not admission.reserve(context,'compile',#executable.generated + executable.nodes + 1) then
     return failure(errors.new('E_BUDGET','handler reconstruction refused'))
   end
-  local env=environment.new(context,services)
+  local env,entry
+  if owner and type(services)=='function' then
+    entry=scaffold(owner,plan,services); entry.frame.tick=context.tick; env=entry.env
+  else env=environment.new(context,services) end
   local ok,result = pcall(function()
-    env.initialize()
+    if entry then
+      if not entry.built then env.initialize(); entry.built=true; scaffolds[owner.id]=entry end
+      env.bind(context)
+    else env.initialize() end
     local factory, diagnostic = load(executable.generated,'@computer','t',env.globals)
     if not factory then errors.raise('E_PROGRAM',diagnostic) end
     local handlers=env.construct(factory,executable.handlers)

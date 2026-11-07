@@ -171,9 +171,15 @@ Back up the complete save and matching mod archive before changing runtimes. Res
 
 ### Scheduler: scripts.scheduler
 
-`register_phase(phase,name,fn(tick,spend))` supports lifecycle, sample,
-notifications, render, each in sorted host-name order. Production order is
-lifecycle/revocation, sampling, notifications, timers, fair callbacks, rendering.
+`register_phase(phase,name,fn(tick,spend),ready(root,tick))` supports lifecycle,
+sample, notifications and render. Registration sorts hooks by name one time.
+Production order is lifecycle/revocation, sampling, notifications, timers, fair
+callbacks, rendering. The scheduler calls a hook only when its `ready` function
+returns true. `ready` reads synchronized storage only. It does not allocate,
+change state or call native APIs that it does not need. It returns true for state
+that it cannot read, so that the hook's own validation runs. A skipped hook gets
+no maintenance charge. A tick with no due timer, no ready computer and no ready
+hook does constant bookkeeping and allocates no Lua memory.
 Hooks must spend before input-dependent native work/mutation and retain their
 own bounded cursor on deferral. `try_maintenance(fn)` catches only the private
 maintenance refusal. Unexpected host failures remain visible. Emit precharges
@@ -197,6 +203,9 @@ undispatched event. These memberships initialize once on init/configuration chan
 not on ordinary load. Unknown scheduling versions remain inert with source,
 queues, deadlines and spent credits retained for recovery.
 Preparation includes validation, environment construction, event copying, and Console graph reconstruction.
+Saved-program callbacks of one run reuse host scaffolding: stdlib wrappers, API namespaces and service closures.
+The cache is process-local and is never saved. Each callback loads the program again, binds new authority proofs and caches, and pays the same construction charge as a cold build.
+A late joiner or a reloaded save without the cache gets the same charges, refusals and effects. Console commands still build a new environment for each command.
 Earlier spending can delay preparation when its refused charge prefix fits the full current source and host allowances.
 The item keeps its identity and order. Accepted preparation charges remain spent.
 Deferred commands have no echo or graph publication. Every attempt checks current authority.

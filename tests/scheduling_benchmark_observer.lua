@@ -12,7 +12,7 @@ function M.install()
   if config.lane=='timing' then return end
   local scheduler=require('scripts.scheduler')
   local register=scheduler.register_phase
-  scheduler.register_phase=function(group,name,fn)
+  scheduler.register_phase=function(group,name,fn,...)
     local key=group..'/'..name
     register(group,name,function(...)
       if not M.active then return fn(...) end
@@ -20,10 +20,10 @@ function M.install()
       local p=config.lane=='profile' and helpers.create_profiler()
       local result=table.pack(pcall(fn,...))
       if p then p.stop(); timers[key]=p end
-      M.count('hook'); phase=previous
+      M.count('hook'); M.hooked=true; phase=previous
       if not result[1] then error(result[2],0) end
       return table.unpack(result,2,result.n)
-    end)
+    end,...)
   end
   if config.lane=='profile' then
     for _,name in ipairs({'dispatch','advance_timers'}) do
@@ -67,7 +67,7 @@ function M.install()
   end
 end
 function M.begin()
-  M.active=true; timers={}; phase='scheduler'
+  M.active=true; timers={}; phase='scheduler'; M.hooked=false
   if config.lane=='profile' then
     timers['scheduler/dispatch']=helpers.create_profiler(true)
     timers['scheduler/advance_timers']=helpers.create_profiler(true)
@@ -75,6 +75,8 @@ function M.begin()
 end
 function M.finish(tick,total)
   M.active=false; M.samples=M.samples+1
+  -- Ticks on which any readiness-gated hook ran; the rest called none.
+  if M.hooked then M.values['scheduler/hook-ticks']=(M.values['scheduler/hook-ticks'] or 0)+1 end
   if config.lane=='profile' then
     log({'','TC_SB_CPU tick=',tick,' phase=scheduler ',total})
     local names={}; for name in pairs(timers) do names[#names+1]=name end; table.sort(names)

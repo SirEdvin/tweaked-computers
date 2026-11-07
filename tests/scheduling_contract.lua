@@ -298,6 +298,32 @@ function M.run()
     limits.maintenance_work_per_tick=maintenance
     assert(passed,failure)
     report('fitting-timers-progress-before-unrelated-due-inventory')
+
+    -- Readiness-gated hooks: required ready, fixed name order, idle hooks cost nothing.
+    assert(not pcall(scheduler.register_phase,'render','00-contract-missing-ready',function() end),'hook without readiness accepted')
+    local probe={active=false,ready={},order={}}
+    local function hook(name) return function() probe.order[#probe.order+1]=name end end
+    local function ready(name) return function() return probe.active and probe.ready[name]==true end end
+    scheduler.register_phase('render','00-contract-b',hook('b'),ready('b'))
+    scheduler.register_phase('render','00-contract-a',hook('a'),ready('a'))
+    assert(not pcall(scheduler.register_phase,'render','00-contract-a',hook('a'),ready('a')),'duplicate hook accepted')
+    root=fresh()
+    passed,failure=pcall(function()
+      for tick=1,5 do scheduler.tick(tick) end -- Let first-tick initialization settle.
+      probe.active=true; probe.ready={a=true,b=true}
+      scheduler.tick(10)
+      assert(#probe.order==2 and probe.order[1]=='a' and probe.order[2]=='b','hook order is not fixed by name')
+      probe.order={}; probe.ready={}
+      scheduler.tick(11)
+      assert(#probe.order==0 and root.scheduler.maintenance_tick~=11,'idle tick ran a hook or opened maintenance')
+      probe.ready={b=true}
+      scheduler.tick(12)
+      assert(#probe.order==1 and probe.order[1]=='b','ready hook skipped')
+      assert(root.scheduler.maintenance_tick==12 and root.scheduler.maintenance_spent==1,'skipped hooks were charged')
+    end)
+    probe.active=false
+    assert(passed,failure)
+    report('readiness-gated-hooks-fixed-order-and-no-idle-charge')
   end)
   scheduler.advance_timers=advance; scheduler.dispatch=dispatch
   if not ok then error(problem,0) end

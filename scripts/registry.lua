@@ -161,6 +161,15 @@ function M.maintenance_next(kind)
   if item and type(item.owner)~='table' then errors.raise('E_UNSUPPORTED','invalid service deadline owner; data retained') end
   return item
 end
+-- Scheduler readiness: no validation, no allocation; unknown shapes report due.
+function M.clock_due(root,kind,tick)
+  local s=type(root)=='table' and type(root.scheduler)=='table' and root.scheduler.due_work
+  local clock=type(s)=='table' and s[kind]
+  if type(clock)~='table' or type(clock.deadlines)~='table' then return true end
+  local item=clock.deadlines[1]
+  if item==nil then return false end
+  return type(item)~='table' or type(item.tick)~='number' or item.tick<=tick
+end
 function M.maintenance_set(kind,id,owner,tick)
   assert(type(owner)=='table','service deadline owner required')
   deadline_put(M.maintenance_clock(kind),{id=id,owner=owner,generation=owner.generation,tick=tick})

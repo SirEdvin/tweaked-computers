@@ -79,7 +79,7 @@ scheduler.register_phase('render','00-presentation-pressure',function(tick,spend
   end
   spend(n)
  end)
-end)
+end,function() return true end)
 function M.run()
  local x={phase='running',walls={},steps=0,peak_staging=0,peak_retired=0,published=0}; storage.tc_present_live=x
  local c=build('computer',-3,0); x.computer=c.id

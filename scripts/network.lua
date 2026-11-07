@@ -213,5 +213,6 @@ function M.validate_witness(origin,wire,path,spend)
   end
   return true
 end
-scheduler.register_phase('lifecycle','02-native-radar-adoption',M.adopt_tick)
+scheduler.register_phase('lifecycle','02-native-radar-adoption',M.adopt_tick,
+  function(root) return scheduler.order_pending(root.native_adoption) end)
 return M

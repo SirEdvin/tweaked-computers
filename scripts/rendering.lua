@@ -102,5 +102,17 @@ M.status=buffered.status
 M.release=buffered.release
 M.changed=buffered.changed
 M.regroup=buffered.regroup
-scheduler.register_phase('render','monitor-world',M.tick)
+scheduler.register_phase('render','monitor-world',M.tick,function(r)
+  local s=r.monitors
+  if s==nil then return false end
+  if type(s)~='table' or s.version~=1 then return true end
+  local p=s.presentation
+  if type(p)~='table' or not p.demand_version or p.layout_dirty then return true end
+  if type(p.jobs)~='table' or type(p.orphans)~='table' or type(p.retired)~='table'
+    or type(p.work)~='table' or type(p.shells)~='table' then return true end
+  if next(p.jobs)~=nil or next(p.orphans)~=nil or next(p.retired)~=nil or next(p.work)~=nil or next(p.shells)~=nil then return true end
+  -- Run once more to withdraw a previous render demand.
+  local demand=r.scheduler.render_demand_work
+  return demand~=nil and demand~=0
+end)
 return M

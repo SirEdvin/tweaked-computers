@@ -20,6 +20,10 @@ local dashboard_ui=require('scripts.ui.dashboard')
 local limits=require('scripts.runtime.limits')
 local M={}; local resumed=false
 local group,variant=config.name:match('([^/]+)/(.+)')
+local chest_period=group=='chest' and tonumber(variant:match('%d+')) or nil
+local chest_items={'iron-plate','copper-plate','steel-plate','iron-ore','copper-ore','coal','stone','uranium-ore',
+  'iron-gear-wheel','copper-cable','electronic-circuit','advanced-circuit','processing-unit','plastic-bar','sulfur',
+  'battery','engine-unit','electric-engine-unit','transport-belt','inserter'}
 local function f() return storage.tc_scheduling_benchmark end
 local function rec(id) return assert(registry.record(id),id) end
 local function nop() end
@@ -177,6 +181,20 @@ function M.run()
     end
   elseif group=='churn' then
     computer({x=0,y=0},true)
+  elseif group=='chest' then
+    local c=computer({x=0,y=0},true); local io=build('logic',{x=4,y=0}); x.ios[1]=io.id; assert(wire(c,io))
+    x.chest_expected={}; x.chests={}
+    for i=1,4 do
+      local chest=assert(x.surface.create_entity{name='steel-chest',position={i*2,-3},force='player'})
+      chest.get_or_create_control_behavior().read_contents=true
+      assert(chest.get_wire_connector(defines.wire_connector_id.circuit_red,true).connect_to(lifecycle.connector(io,'input','red')))
+      for j=(i-1)*5+1,i*5 do
+        local amount=j*7+3
+        assert(chest.insert{name=chest_items[j],count=amount,quality='normal'}==amount,'incomplete chest insertion')
+        x.chest_expected[chest_items[j]]=amount
+      end
+      x.chests[i]=chest
+    end
   elseif group~='empty' then error('unimplemented benchmark '..config.name) end
   for _,id in ipairs(x.dbs) do
     for i=1,16 do kv.methods.set(nil,rec(id),nil,game.tick,nop,'key'..i,'value'..i) end
@@ -185,7 +203,14 @@ function M.run()
   emit('SETUP',{case=config.name,devices=#x.ids,computers=#x.computers,limits=limits,signal_names=x.signal_names})
 end
 local function source(index)
-  local x=f(); local start="computer.setState('boots',(computer.getState('boots') or 0)+1); "
+  local x=f()
+  if group=='chest' then
+    -- The player-reported workload: read every chest item and print it, nothing else.
+    return string.format("function start() computer.setState('boots',(computer.getState('boots') or 0)+1); computer.every(%d,'report') end\n"
+      ..'function report()\n  local logic=peripheral.find("logic_handler","red")\n'
+      ..'  for _,entry in ipairs(logic.readSignals("red")) do\n    print(entry.signal.name,entry.count)\n  end\nend\n',chest_period)
+  end
+  local start="computer.setState('boots',(computer.getState('boots') or 0)+1); "
   local work="computer.setState('beats',(computer.getState('beats') or 0)+1); computer.setState('latency',e.tick-(e.created_tick or e.scheduled_tick or e.tick)); "
   local changed="computer.setState('changes',(computer.getState('changes') or 0)+1); computer.setState('sample',e.sample_tick); computer.setState('value',#e.current>0 and e.current[1].count or 0); "
   if group=='timer' then
@@ -348,6 +373,19 @@ local function observe(tick)
     end
   end end
   if x.revoked and not x.cleared and not rec(x.ios[1]).output_owner then x.cleared=tick-x.revoked end
+  if group=='chest' then
+    local c=rec(x.computers[1])
+    if c.last_dispatch_tick==tick then
+      local seen={}; local n=0
+      for _,entry in ipairs(c.logs) do if entry.tick==tick then
+        local name,quantity=entry.text:match('^([^\t]+)\t(%d+)$')
+        expect(name and not seen[name] and tonumber(quantity)==x.chest_expected[name],'Console quantity mismatch: '..entry.text)
+        if name then seen[name]=true end; n=n+1
+      end end
+      expect(n==20,'report did not print exactly 20 entries')
+      x.dispatches=x.dispatches+1; x.printed=(x.printed or 0)+n
+    end
+  end
 end
 local function begin(tick)
   local x=f(); x.phase='measure'; x.offered=0; x.beats={}; x.seen_changes={}; x.signal_latencies={}; x.frame_gaps={}; x.pulse_seen={}; x.pulses=0; x.max_latency={}
@@ -412,6 +450,14 @@ local function finish(tick)
   end
   if group=='churn' and variant=='register-cancel' then expect(subscriptions==0 and timers==0,'canceled membership retained') end
   if group=='reload' then expect(resumed and x.dispatches==2 and x.publications>0,'cold pending work/timer did not resume exactly once') end
+  if group=='chest' then
+    expect(x.dispatches==config.ticks/chest_period and x.printed==x.dispatches*20,'chest report count mismatch')
+    expect(timers==1 and subscriptions==0 and queued==0,'chest pending inventory changed')
+    for i,chest in ipairs(x.chests) do
+      local inventory=chest.get_inventory(defines.inventory.chest)
+      for j=(i-1)*5+1,i*5 do expect(inventory.get_item_count{name=chest_items[j],quality='normal'}==x.chest_expected[chest_items[j]],'chest inventory changed') end
+    end
+  end
   if group=='kv' then
     for _,id in ipairs(x.dbs) do
       for i=1,16 do
@@ -423,7 +469,7 @@ local function finish(tick)
   emit('DONE',{tick=tick,samples=x.samples,valid=x.valid,devices=#x.ids,states=states,offered=x.offered,
     dispatches=x.dispatches,changes=x.changes,publications=x.publications,mutations=x.mutations,
     queue=queued,timers=timers,subscriptions=subscriptions,pulses=x.pulses,native_devices=#x.native,latency_ticks=x.latencies,signal_latency_ticks=x.signal_latencies,
-    frame_gap_ticks=x.frame_gaps,output_clear_ticks=x.cleared,cold_resumed=resumed})
+    frame_gap_ticks=x.frame_gaps,output_clear_ticks=x.cleared,cold_resumed=resumed,printed_lines=x.printed})
   observer.done(); x.phase='done'
 end
 function M.on_tick(event)

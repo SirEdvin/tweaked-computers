@@ -44,6 +44,8 @@ class SchedulingBenchmarkTests(unittest.TestCase):
         self.assertEqual({c['shape'] for c in full if c['name'] == 'topology/rewire'}, {'chain', 'branch'})
         self.assertEqual({c['signals'] for c in full if c['name'] == 'signal/pulse'}, {1, 32})
         self.assertTrue(all(c['client'] for c in quick if c['name'].startswith('ui/')))
+        self.assertEqual({(c['name'], c['count'], c['client']) for c in full if c['name'].startswith('chest/')},
+                         {('chest/poll-30', 1, False), ('chest/poll-600', 1, False)})
 
     def test_unmatched_selector_is_not_silently_omitted(self):
         for patterns in (['bogus'], ['empty/*', 'bogus']):
@@ -79,8 +81,10 @@ class SchedulingBenchmarkTests(unittest.TestCase):
     def test_profile_inventory_and_sample_count(self):
         text = log('profile')
         self.assertTrue(bench.extract(text, 2, 'profile', ['sample/logic'])['passed'])
-        self.assertFalse(bench.extract(text, 2, 'profile', ['sample/logic', 'render/new-hook'])['passed'])
+        # A readiness-gated hook that never ran has no samples; that is not a failure.
+        self.assertTrue(bench.extract(text, 2, 'profile', ['sample/logic', 'render/new-hook'])['passed'])
         self.assertFalse(bench.extract(text.replace('phase=sample/logic', 'phase=wrong'), 2, 'profile', ['sample/logic'])['passed'])
+        self.assertFalse(bench.extract(text.replace('phase=scheduler/dispatch', 'phase=sample/logic'), 2, 'profile', ['sample/logic'])['passed'])
         self.assertFalse(bench.extract(text + 'TC_SB_CPU tick=102 phase=scheduler Duration: 0.1ms\n', 2, 'profile', ['sample/logic'])['passed'])
 
     def test_manifest_summary_keeps_raw_evidence_separate(self):

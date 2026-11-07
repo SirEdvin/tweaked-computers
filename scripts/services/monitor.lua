@@ -517,6 +517,16 @@ function M.refresh_resize(event)
   if g then event.width=g.model.width; event.height=g.model.height end
 end
 scheduler.register_monitor_refresh(M.refresh_resize)
-scheduler.register_phase('lifecycle','02-monitor-groups',M.reconcile)
-scheduler.register_phase('notifications','monitor-events',M.notifications)
+-- Readiness mirrors reconcile/notifications early returns; unknown shapes run the hook.
+scheduler.register_phase('lifecycle','02-monitor-groups',M.reconcile,function(r)
+  local state=r.monitors
+  return type(state)~='table' or state.version~=1 or r.monitor_topology_dirty or not state.topology_version
+    or state.job~=nil or state.availability_dirty and true or false
+end)
+scheduler.register_phase('notifications','monitor-events',M.notifications,function(r)
+  local state=r.monitors
+  if state==nil then return false end
+  return type(state)~='table' or type(state.touches)~='table' or type(state.resize_order)~='table'
+    or state.touches[1]~=nil or state.resize_order[1]~=nil
+end)
 return M

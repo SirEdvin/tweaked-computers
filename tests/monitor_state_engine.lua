@@ -178,7 +178,7 @@ function M.new(kind)
       end
       spend(n)
     end)
-  end)
+  end,function() return true end)
   function test.run()
     storage.tc_monitor_state={kind=kind,phase='baseline',steps=0,walls={}}
     local x=f(); local c=build('computer',-3,0); x.computer=c.id

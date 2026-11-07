@@ -17,7 +17,7 @@ local function migrate(root,tick)
   end
   return true
 end
-local hooks={lifecycle={},sample={},notifications={},render={}}
+local hooks={lifecycle={},sample={},notifications={},render={}} -- Arrays sorted by name at registration.
 local refusal={} -- Host-only ephemeral maintenance deferral identity.
 local render_reservation=0
 local max_render_reservation=160000
@@ -55,10 +55,25 @@ function M.request_render_work(root,tick,n,spend)
     and errors.integer(n,0,max_render_reservation),'invalid render demand')
   spend(4); s.render_demand_work=n; s.render_demand_tick=tick
 end
-function M.register_phase(phase,name,fn)
-  assert(hooks[phase] and type(name)=='string' and type(fn)=='function' and not hooks[phase][name],'invalid scheduler phase hook')
-  local n=0; for _ in pairs(hooks[phase]) do n=n+1 end; assert(n<limits.host_hooks,'phase hook capacity')
-  hooks[phase][name]=fn
+-- ready(root,tick) reads synchronized storage only and must not allocate; it
+-- returns true for state it cannot interpret so the hook's own validation runs.
+function M.register_phase(phase,name,fn,ready)
+  local list=hooks[phase]
+  assert(list and type(name)=='string' and type(fn)=='function' and type(ready)=='function','invalid scheduler phase hook')
+  for _,hook in ipairs(list) do assert(hook.name~=name,'invalid scheduler phase hook') end
+  assert(#list<limits.host_hooks,'phase hook capacity')
+  local i=#list+1
+  while i>1 and list[i-1].name>name do list[i]=list[i-1]; i=i-1 end
+  list[i]={name=name,fn=fn,ready=ready}
+end
+-- Shared readiness for ordered membership lanes: unknown shapes run the hook.
+function M.order_pending(s) return type(s)~='table' or type(s.order)~='table' or s.order[1]~=nil end
+-- Read-only diagnostic for fixtures: the registered hook's current readiness.
+function M.hook_ready(phase,name,root,tick)
+  for _,hook in ipairs(assert(hooks[phase],'unknown phase')) do
+    if hook.name==name then return hook.ready(root,tick) and true or false end
+  end
+  error('unknown scheduler phase hook '..phase..'/'..name)
 end
 function M.maintenance(root,tick,for_render)
   local s=root.scheduler
@@ -102,14 +117,27 @@ local function work(root,fn)
   end
   return ok,result
 end
-local function phase(name,tick,spend)
-  local names={}; for key in pairs(hooks[name]) do names[#names+1]=key end; table.sort(names)
-  for _,key in ipairs(names) do
-    -- Samplers own admission and must run their fail-closed refusal path even
-    -- when previous phases spent the maintenance ledger. No silent missed tick.
-    M.try_maintenance(function() if name~='sample' then spend(1) end; hooks[name][key](tick,spend) end)
-    if registry.get().scheduling_diagnostic then return end
+local function phase(name,root,tick,get_spend)
+  for _,hook in ipairs(hooks[name]) do
+    -- Readiness is checked directly: idle hooks cost no closure, pcall or charge.
+    if hook.ready(root,tick) then
+      local spend=get_spend()
+      -- Samplers own admission and must run their fail-closed refusal path even
+      -- when previous phases spent the maintenance ledger. No silent missed tick.
+      M.try_maintenance(function() if name~='sample' then spend(1) end; hook.fn(tick,spend) end)
+      if registry.get().scheduling_diagnostic then return end
+    end
   end
+end
+-- Per-tick spend callbacks are created only when work actually needs them.
+local lazy_root,lazy_tick,lazy_spend,lazy_render
+local function tick_spend()
+  if not lazy_spend then lazy_spend=M.maintenance(lazy_root,lazy_tick) end
+  return lazy_spend
+end
+local function render_spend()
+  if not lazy_render then lazy_render=M.maintenance(lazy_root,lazy_tick,true) end
+  return lazy_render
 end
 function M.advance_timers(rec,tick,spend)
   if rec.status~='running' or not principal.available(rec) then return end
@@ -180,7 +208,8 @@ local function dispatch_program(rec,tick)
       if input then input.tick=tick end
     end
   end
-  local ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,function(guard) return runtime.services(rec,tick,guard) end,ctx,item.circuit==true,consume)
+  local ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,
+    function(guard,frame) return runtime.services(rec,frame or tick,guard) end,ctx,item.circuit==true,consume,rec)
   if control=='defer' then return false end
   if rec.last_dispatch_tick~=tick then consume() end
   if not ok then
@@ -251,20 +280,21 @@ function M.tick(tick)
     end
     return
   end
-  local spend=M.maintenance(root,tick)
   if root.scheduler.last_tick==tick then return end -- No same-tick replay/credit refresh.
   root.scheduler.last_tick=tick
-  phase('lifecycle',tick,spend)
+  lazy_root,lazy_tick,lazy_spend,lazy_render=root,tick,nil,nil
+  phase('lifecycle',root,tick,tick_spend)
   if root.scheduling_diagnostic then return end
-  phase('sample',tick,spend)
+  phase('sample',root,tick,tick_spend)
   if root.scheduling_diagnostic then return end
-  phase('notifications',tick,spend)
+  phase('notifications',root,tick,tick_spend)
   if root.scheduling_diagnostic then return end
   local s=root.scheduler
-  local due={}
+  local due
   while true do
     local valid,item=work(root,registry.next_timer)
     if not valid or not item or item.tick>tick then break end
+    local spend=tick_spend()
     if not work(root,function() spend(1); registry.timer_remove(item.id) end) then break end
     local rec=root.computers[item.id]
     if rec and rec.generation==item.generation and rec.run_id==item.run_id then
@@ -276,28 +306,32 @@ function M.tick(tick)
       end)
       -- Reinsert after this pass: a refused due owner cannot block its peers.
       registry.timer_remove(rec.id)
+      due=due or {}
       due[#due+1]=rec
     end
   end
   if root.scheduling_diagnostic then return end
-  for _,rec in ipairs(due) do registry.timers_changed(rec) end
+  if due then for _,rec in ipairs(due) do registry.timers_changed(rec) end end
   -- Freeze identities before callbacks can publish new work or retire neighbors.
-  local admitted,round=work(root,function()
-    return registry.ready_round(function(n) return M.try_maintenance(function() spend(n) end) end)
-  end)
-  if admitted then
-    for _,item in ipairs(round) do
-      local rec=root.computers[item.id]
-      if s.ready[item.id]==item and rec and rec.generation==item.generation
-        and rec.run_id==item.run_id and (rec.shell and rec.shell.id)==item.shell_id then
-        M.dispatch(rec,tick)
-        registry.ready_changed(rec)
-      elseif s.ready[item.id]==item then
-        registry.retire_ready(item)
-        if rec then registry.ready_changed(rec) end
+  if s.ready_head~=nil then
+    local spend=tick_spend()
+    local admitted,round=work(root,function()
+      return registry.ready_round(function(n) return M.try_maintenance(function() spend(n) end) end)
+    end)
+    if admitted then
+      for _,item in ipairs(round) do
+        local rec=root.computers[item.id]
+        if s.ready[item.id]==item and rec and rec.generation==item.generation
+          and rec.run_id==item.run_id and (rec.shell and rec.shell.id)==item.shell_id then
+          M.dispatch(rec,tick)
+          registry.ready_changed(rec)
+        elseif s.ready[item.id]==item then
+          registry.retire_ready(item)
+          if rec then registry.ready_changed(rec) end
+        end
       end
     end
   end
-  phase('render',tick,M.maintenance(root,tick,true))
+  phase('render',root,tick,render_spend)
 end
 return M

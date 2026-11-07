@@ -9,14 +9,14 @@ local function f() return storage.tc_idle_probe end
 function M.install()
   if config.profile then
     local register=scheduler.register_phase
-    scheduler.register_phase=function(phase,name,fn)
+    scheduler.register_phase=function(phase,name,fn,...)
       register(phase,name,function(...)
         if not active then return fn(...) end
         local p=helpers.create_profiler(); local result=table.pack(pcall(fn,...)); p.stop()
         profiles[#profiles+1]={phase..'/'..name,p}
         if not result[1] then error(result[2],0) end
         return table.unpack(result,2,result.n)
-      end)
+      end,...)
     end
     local record=registry.record
     registry.record=function(id)

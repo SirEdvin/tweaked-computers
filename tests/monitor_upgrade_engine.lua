@@ -63,7 +63,7 @@ scheduler.register_phase('render','00-monitor-upgrade-pressure',function(tick,sp
   end
   spend(n)
  end)
-end)
+end,function() return true end)
 local function maintenance_tick(event)
  local x=f(); local root=registry.get(); local c=registry.computer(x.computer)
  if x.phase=='maintenance-frozen' then return end

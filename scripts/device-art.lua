@@ -16,18 +16,24 @@ local function refresh(rec,tick,spend)
   elseif rec.kind=='computer' then state=rec.status=='running' and 'blinking' or 'off' end
   local direction=directions[rec.kind=='monitor' and rec.direction or rec.body.direction]
   if direction then
-    local frame=state=='blinking' and math.floor(tick/10)%4 or 0
-    local name='tc-status-'..rec.kind..'-'..direction..'-'..state..'-'..frame
+    -- The engine animates the running light at 0.1 frame/tick: frame floor(tick/10)%4.
+    local blinking=state=='blinking'
+    local name='tc-status-'..rec.kind..'-'..direction..'-'..state..(blinking and '' or '-0')
     local old=rec.status_art
     if not old or not old.object.valid or old.name~=name then
       spend(32)
       -- Allocate before retiring the previous object; no empty stale handle.
-      local object=rendering.draw_sprite{sprite=name,surface=rec.body.surface,
-        target=rec.body,render_layer='higher-object-above'}
+      local object
+      if blinking then
+        object=rendering.draw_animation{animation=name,surface=rec.body.surface,target=rec.body,
+          render_layer='higher-object-above',animation_speed=0.1,animation_offset=0}
+      else
+        object=rendering.draw_sprite{sprite=name,surface=rec.body.surface,
+          target=rec.body,render_layer='higher-object-above'}
+      end
       clear(rec); rec.status_art={name=name,object=object}
     end
     rec.monitor_art_dirty=nil
-    if state=='blinking' then return tick-tick%10+10 end
   end
 end
 function M.tick(tick,spend)
@@ -64,5 +70,6 @@ registry.register_initializer('device-status-art',function(root)
   for _,id in ipairs(root.order) do registry.art_changed(registry.record(id)) end
 end)
 registry.register_cleanup('device-status-art',function(rec) clear(rec) end)
-scheduler.register_phase('render','device-status-art',M.tick)
+scheduler.register_phase('render','device-status-art',M.tick,
+  function(root,tick) return registry.clock_due(root,'art',tick) end)
 return M
