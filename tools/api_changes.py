@@ -104,7 +104,7 @@ def impact_inventory(proposal):
     return status, rows, value('Reviewed-source') if status == 'none' else None
 
 
-def check_change(root, name, binary, output):
+def check_change(root, name, binary, output, *, baseline_api=None):
     root = Path(root).absolute()
     if not re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', name) or name == 'archive':
         raise ValueError('unsafe change name: ' + name)
@@ -123,6 +123,8 @@ def check_change(root, name, binary, output):
         raise ValueError('API artifacts missing ' + repr(sorted(set(rows) - set(proposed)))
                          + '; unexpected ' + repr(sorted(set(proposed) - set(rows))))
     if status == 'none':
+        if baseline_api is not None:
+            raise ValueError('a preserved baseline requires changed API artifacts')
         current = review_fingerprint(root, change)
         if reviewed != current:
             raise ValueError('stale no-impact decision; review source/design before setting Reviewed-source: ' + current)
@@ -131,6 +133,17 @@ def check_change(root, name, binary, output):
     output = Path(output).absolute()
     if output.resolve().is_relative_to(root.resolve()):
         raise ValueError('change verification output must be outside project')
+    baseline_source = root / 'api'
+    baseline_files = list(canonical.values())
+    if baseline_api is not None:
+        baseline_source = confined(Path(baseline_api).absolute(), '.')
+        if baseline_source.resolve().is_relative_to(root.resolve()):
+            raise ValueError('preserved API baseline must be outside project')
+        if output.resolve().is_relative_to(baseline_source.resolve()):
+            raise ValueError('change verification output must be outside preserved baseline')
+        baseline_files = list(files(baseline_source, '.', '*.d.lua'))
+        if not baseline_files:
+            raise ValueError('preserved API baseline has no declarations')
     output.mkdir(parents=True, exist_ok=False)
     overlay = output / 'overlay'
     overlay.mkdir()
@@ -159,20 +172,24 @@ def check_change(root, name, binary, output):
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, destination)
         removals.update(row['removed'])
-    baseline = api_records(export_api(root / 'api', binary, output / 'baseline')) if canonical else {}
+    baseline = api_records(export_api(baseline_source, binary, output / 'baseline')) if baseline_files else {}
+    current = baseline
+    if baseline_api is not None:
+        current = api_records(export_api(root / 'api', binary, output / 'current')) if canonical else {}
     candidate = api_records(export_api(overlay, binary, output / 'candidate')) if list(overlay.rglob('*.d.lua')) else {}
-    before, after = identities(baseline), identities(candidate)
-    lost = set(before) - set(after)
+    before, live, after = identities(baseline), identities(current), identities(candidate)
+    lost = (set(before) | set(live)) - set(after)
     if lost - removals:
         raise ValueError('undeclared removed identities: ' + ', '.join(sorted(lost - removals)))
     for path, row in rows.items():
         for identity in row['removed']:
-            if identity in after or (identity in before and before[identity] != path):
+            if identity in after or any(identity in source and source[identity] != path for source in (before, live)):
                 raise ValueError('incorrect removed identity: ' + identity)
-            # After canonical promotion a declared removal is absent from baseline.
-            if identity not in before and path in canonical:
-                raise ValueError('unverifiable removed identity; retain pre-promotion review evidence: ' + identity)
+            if identity not in before:
+                raise ValueError('unverifiable removed identity; provide the pre-promotion --baseline-api directory: ' + identity)
     report = {'change': name, 'status': status, 'artifacts': rows,
+              'baseline_api': str(baseline_source),
+              'baseline_sources': json.loads((output / 'baseline/provenance.json').read_text())['definitions'] if baseline_files else {},
               'public_definitions': len(candidate), 'removed_identities': sorted(removals),
               'candidate_sources': {p.relative_to(overlay).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                                     for p in sorted(overlay.rglob('*.d.lua'))}}

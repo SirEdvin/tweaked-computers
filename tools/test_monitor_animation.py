@@ -38,7 +38,7 @@ class AnimationInvocationTests(unittest.TestCase):
                             folder = engine / mode
                             folder.mkdir(parents=True)
                             (folder / 'cold-second-engine.log').write_text(
-                                'TC_ANIMATION_CADENCE intervals=360 max_gap=2 peak_work=1 peak_allocations=1\n')
+                                'TC_ANIMATION_CADENCE intervals=360 max_gap=2 peak_work=1\n')
                         return SimpleNamespace(returncode=0)
 
                     argv = ['monitor_animation.py', '--factorio', str(root / 'unused-engine'),

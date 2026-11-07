@@ -8,9 +8,9 @@ local limits=require('scripts.runtime.limits')
 local budgets=require('scripts.runtime.budget-settings')
 local M={}
 local loaded=false
-local names={compile='tc-compile-work',work='tc-callback-work',allocations='tc-callback-allocations',host='tc-host-work-per-tick',maintenance='tc-maintenance-work-per-tick'}
-local defaults={compile=1250000,work=500000,allocations=81920,host=5000000,maintenance=200000}
-local keys={compile='compile_work',work='callback_work',allocations='callback_allocations',host='host_work_per_tick',maintenance='maintenance_work_per_tick'}
+local names={compile='tc-compile-work',host='tc-host-work-per-tick',maintenance='tc-maintenance-work-per-tick'}
+local defaults={compile=1250000,host=5000000,maintenance=200000}
+local keys={compile='compile_work',host='host_work_per_tick',maintenance='maintenance_work_per_tick'}
 local serial=0
 local function change(kind,value)
   settings.global[names[kind]]={value=value}
@@ -51,9 +51,9 @@ local function frozen()
   local f=storage.tc_budget_fixture; local root=registry.get()
   assert(root.ledger.tick==f.tick and root.ledger.total==f.total)
   local ctx=admission.context(root.ledger,f.id,f.tick)
-  for _,kind in ipairs({'compile','work','allocations'}) do
+  for _,kind in ipairs({'compile','work'}) do
     assert(ctx.machine[kind]==f.spent[kind],'reload refreshed '..kind)
-    assert(limits[keys[kind]]==f.values[kind],'reload lost '..kind..' setting')
+    if kind=='compile' then assert(limits.compile_work==f.values.compile,'reload lost compile setting') end
   end
   assert(limits.host_work_per_tick==f.values.host)
   assert(limits.maintenance_work_per_tick==f.values.maintenance)
@@ -82,7 +82,7 @@ local function maintenance_contracts(report)
   assert(root.scheduler.maintenance_spent==300001)
   local rec=computer('computer.setState("untouched",true)')
   change('host',200001)
-  assert(admission.guest_ceiling(root.ledger,t)==0)
+  assert(admission.host_ceiling(root.ledger,t)==0)
   local total=root.ledger.total; local queued=rec.queue[1]
   assert(not scheduler.dispatch(rec,t) and rec.queue[1]==queued and rec.status=='running')
   assert(root.ledger.total==total and rec.last_dispatch_tick==nil)
@@ -155,8 +155,9 @@ function M.run()
     assert(settings.global[names[kind]].value==value and limits[keys[kind]]==value,'incorrect fivefold default')
   end
   assert(limits.maintenance_work_per_tick==200000 and limits.source_bytes==16384 and limits.state_bytes==65536)
-  report('budget-fivefold-defaults-and-unchanged-structural-caps')
-  for _,case in ipairs({{'compile',250000},{'work',100000},{'allocations',16384}}) do
+  assert(settings.global['tc-callback-work']==nil and settings.global['tc-callback-allocations']==nil)
+  report('host-budget-defaults-retired-settings-and-unchanged-structural-caps')
+  for _,case in ipairs({{'compile',250000}}) do
     local kind,old=case[1],case[2]
     local ledger=admission.new(); local ctx=admission.context(ledger,'boundary',game.tick)
     assert(admission.reserve(ctx,kind,old+1),'old budget still enforced')
@@ -179,14 +180,13 @@ function M.run()
   assert(admission.reserve(ctx,'work',1) and ledger.total==124)
   change('host',defaults.host)
   report('live-shared-ceiling-preserves-ledger-and-maintenance')
-  local rec,machine=run('local n=0; for i=1,30000 do n=n+1 end; computer.setState("n",n)')
-  assert(rec.state.n==30000 and machine.work>100000 and machine.work<=defaults.work,serpent.line(machine))
+  local rec,machine=run('local n=0; for i=1,500001 do n=n+1 end; computer.setState("n",n)')
+  assert(rec.state.n==500001 and machine.work<1024,serpent.line(machine))
   log('TC_BUDGET_WORK '..machine.work)
-  report('compiled-callback-exceeds-old-work-budget')
+  report('finite-native-loop-does-not-spend-operation-credits')
   rec,machine=run('for i=1,2000 do local s=string.rep("x",20) end; computer.setState("done",true)')
-  assert(rec.state.done and machine.allocations>16384 and machine.allocations<=defaults.allocations,serpent.line(machine))
-  log('TC_BUDGET_ALLOCATIONS '..machine.allocations)
-  report('compiled-callback-exceeds-old-allocation-budget')
+  assert(rec.state.done and machine.allocations==nil and machine.work<1024,serpent.line(machine))
+  report('finite-native-temporaries-have-no-allocation-counter')
   -- Too-small shared ceilings must not turn the worst-case reservation into
   -- permanent starvation for a small callback that actually fits.
   fresh(); rec=computer('computer.setState("small",true)')
@@ -200,27 +200,29 @@ function M.run()
   assert(rec.state.small and rec.status=='running')
   change('host',defaults.host)
   report('small-shared-ceiling-does-not-starve-small-callback')
-  rec=select(1,run('local t=computer.getLimits(); assert(t.compile_work==1250000 and t.callback_work==500000 and t.callback_allocations==81920 and t.host_work_per_tick==5000000); t.callback_work=1; assert(computer.getLimits().callback_work==500000)'))
-  change('work',600000)
-  local plan,e=compiler.compile(source('assert(computer.getLimits().callback_work==600000)'),admission.context(admission.new(),'live-readback',game.tick))
+  rec=select(1,run('local t=computer.getLimits(); assert(t.compile_work==1250000 and t.callback_work==nil and t.callback_allocations==nil and t.callback_depth==nil and t.tuple_entries==nil and t.generated_source_bytes==nil and t.host_work_per_tick==5000000); t.compile_work=1; assert(computer.getLimits().compile_work==1250000)'))
+  change('compile',1500000)
+  local plan,e=compiler.compile(source('assert(computer.getLimits().compile_work==1500000)'),admission.context(admission.new(),'live-readback',game.tick))
   assert(plan,e and e.message)
   local context=admission.context(admission.new(),'live-readback',game.tick)
   local ok,diagnostic=compiler.run(plan,'start',{},function(guard) return runtime.services(rec,game.tick,guard) end,context)
   assert(ok,diagnostic and diagnostic.message)
   restored_defaults()
   report('guest-limits-reflect-live-settings-and-remain-defensive')
+  local refusal='computer.setState("blocked",string.rep("x",16384))'
   for _,body in ipairs({
-    'xpcall(function() while true do end end,function(e) computer.setState("unsafe",true) end)',
-    'xpcall(function() error("x") end,function(e) while true do end end)',
-    'pcall(function() xpcall(function() error("x") end,function(e) error("again") end) end)',
-    'xpcall(function() error("x") end,function(e) while true do local t={} end end)',
+    'xpcall(function() '..refusal..' end,function(e) computer.setState("unsafe",true) end)',
+    'xpcall(function() error("x") end,function(e) '..refusal..' end)',
+    'pcall(function() xpcall(function() error("x") end,function(e) '..refusal..' end) end)',
+    'xpcall(function() error("x") end,function(e) local t={}; for i=1,2048 do t[i]=i end; '..refusal..' end)',
     'xpcall(function() error("x") end,function(e) computer.stop() end)'
   }) do
-    fresh()
+    local root=fresh()
     local bad=computer(body..'; computer.setState("unsafe",true)')
     local healthy=computer('local t=rawset({},"ready",false); assert(rawget(t,"ready")==false); computer.setState("healthy",true)')
+    root.ledger.total=admission.host_ceiling(root.ledger,game.tick)-10000
     assert(scheduler.dispatch(bad,game.tick))
-    assert(bad.status~='running' and bad.state.unsafe==nil)
+    assert(bad.status~='running' and bad.state.unsafe==nil and bad.state.blocked==nil)
     assert(scheduler.dispatch(healthy,game.tick) and healthy.status=='running' and healthy.state.healthy)
     local spent=runtime.context(bad,game.tick).machine.work
     assert(not scheduler.dispatch(bad,game.tick) and runtime.context(bad,game.tick).machine.work==spent)
@@ -233,14 +235,14 @@ function M.run()
   report('guest-maintenance-limit-live-readback-is-defensive')
   -- Freeze genuinely spent credits and non-default map settings for a cold load.
   root=fresh(); local retained=admission.context(root.ledger,'retained',game.tick)
-  assert(admission.reserve(retained,'compile',321) and admission.reserve(retained,'work',123) and admission.reserve(retained,'allocations',45))
-  local values={compile=1500000,work=600000,allocations=90000,host=6000000,maintenance=300000}
+  assert(admission.reserve(retained,'compile',321) and admission.reserve(retained,'work',123))
+  local values={compile=1500000,host=6000000,maintenance=300000}
   for kind,value in pairs(values) do change(kind,value) end
   scheduler.maintenance(root,game.tick,true)(300000)
   change('maintenance',250000); values.maintenance=250000
   root.marker={retained=true}
   storage.tc_budget_fixture={phase='armed',id='retained',tick=game.tick,total=root.ledger.total,
-    spent={compile=321,work=123,allocations=45},values=values,scheduler=root.scheduler,
+    spent={compile=321,work=123},values=values,scheduler=root.scheduler,
     maintenance=300000,reserved=root.scheduler.render_reserved_work,marker=root.marker}
   log('TC_CONTRACT_TOTAL '..total)
 end
@@ -256,10 +258,11 @@ function M.on_tick(event)
     game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
   elseif f.phase=='frozen' and loaded then
     local ctx=frozen(); local total=ctx.ledger.total
-    change('work',123)
+    change('host',f.maintenance+total)
     assert(not admission.reserve(ctx,'work',1) and ctx.ledger.total==total)
-    change('work',124)
+    change('host',f.maintenance+total+1)
     assert(admission.reserve(ctx,'work',1) and ctx.machine.work==124 and ctx.ledger.total==total+1)
+    change('host',f.values.host)
     assert(not scheduler.try_maintenance(function() scheduler.maintenance(registry.get(),f.tick,true)(1) end))
     change('maintenance',300001)
     scheduler.maintenance(registry.get(),f.tick,true)(1)

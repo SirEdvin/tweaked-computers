@@ -7,23 +7,43 @@ Historical observations never become current native-client or multiplayer passes
 
 ## api — Enforced boundaries
 
-Instrumentation must account for function entry/exit, loop iterations, statement/operator work where input-dependent, indexed reads/writes, table creation/growth, argument/return movement, concatenation and helper calls. A host string metatable or captured method must not bypass the approved wrapper. Source token/node/nesting limits and compilation-work limits are enforced before native activation; generated text has its own limit.
+Saved programs and Console commands use trusted native Lua. Ordinary Lua operations have no mod execution, temporary-allocation, call-depth, or tuple quotas.
+The checked host API must prevent access through excluded string members and unauthorized captured methods.
+Source token, node, nesting, and compilation-work limits apply before native activation. Generated text has no separate size limit.
 
-Native helpers reserve conservative input/output and movement costs before mutation. Limits cover the largest accepted request, not just average examples. Temporary allocation/call-depth ceilings bound one callback's host-memory pressure. Source parsing and native `load` remain synchronous opaque costs with finite validated input envelopes; their real worst-accepted latency must be measured in Factorio rather than called a proven real-time bound from work counters alone.
+Host API calls retain authority checks, host-work admission, and persistence limits. Required host-work admission occurs before external effects.
+Ordinary native helpers do not reserve execution or allocation credits. An infinite loop can stop the game. Temporary values can use all available memory.
+Stop cannot interrupt code that does not return control to the host.
+Source parsing and native loading remain synchronous operations with limited input. Measure their actual latency in Factorio. Work counters do not prove real-time limits.
 
-Budget state belongs to the synchronized scheduler and survives same-tick save/load. Reconstructing a cold executable cache cannot renew credits or change guest-observable admission compared with a warm peer. `pcall` rethrows private quota/stop controls and every subsequent effect also checks the poisoned-run state. Strings, numeric-string coercion, formatting and table operations cannot obtain unpaid work through native Lua syntax.
+The synchronized scheduler owns host credits. These credits survive save/load within the same tick.
+Cold reconstruction cannot renew credits or change admission compared with a warm cache.
+Protected calls cannot hide fatal host-work refusal or Stop. Later host effects must check these private controls.
+Preparation can be deferred only under the [approved preparation rules](computer-runtime.md). Accepted charges remain spent. Execution that has started is never repeated.
 
 ## api — Failure and acceptance
 
-Fatal work/call-depth/allocation exhaustion faults the run; it does not suspend the Lua stack. Earlier committed API effects remain, except host-mandated fail-safe clearing of still-owned logic outputs. Ordinary validation/API errors remain catchable. No hidden interpreter fallback is permitted if the instrumented subset cannot meet its acceptance gates.
+Fatal host-work refusal after execution starts faults the program run. A failed Console command preserves its previous graph without faulting the program.
+Earlier committed API effects remain, except required fail-safe clearing of still-owned outputs. Ordinary validation, API, and native Lua errors remain catchable.
+No hidden guarded runtime or interpreter fallback is permitted.
 
-Required adversarial cases: infinite/empty loops; direct and mutual recursion; closures returning closures; attempted `_ENV`/generated-name access; dynamic string-method bypass; library mutation; `pcall` swallowing; huge format widths, repetition and numeric-string operands; cyclic state; maximum-width argument/return lists; malicious sort comparators; rejected source beside an interactive computer; and cold/warm cache equality with exhausted same-tick budgets. Test the maximum accepted useful work, not comment-padded source. Passing syntax-only tests is not evidence of these properties.
+Use finite tests for these cases:
+
+- Direct and mutual recursion, empty loops, closures, and temporary values above the removed quotas.
+- Attempted `_ENV` or reserved-name access, computed string-member access, and library mutation.
+- Nested protected calls with fatal host refusal or Stop, including error-handler suppression.
+- Native formatting, repetition, numeric-string coercion, sparse tables, nil result positions, and comparator failure.
+- Cyclic application Data refusal and unchanged Console graph limits.
+- Rejected source beside a returning neighboring program, fresh callback bindings, and equal cold/warm admission with insufficient credits.
+
+Do not run infinite loops or intentional memory exhaustion against the trusted runtime.
+Test the largest accepted useful source, not source filled with comments. Syntax-only checks do not prove these properties.
 
 ## computer-runtime — Required contract checks
 
 - Ordinary false/empty values versus missing state; copy isolation and invalid nested data refusal.
 - Save/load after a completed state write, pending one-shot and recurring timers; no duplicated `start` or registration.
-- Same-tick budget preservation, malicious loops/recursion, `pcall` quota swallowing, oversized helpers and a responsive neighboring computer.
+- Same-tick host-credit preservation, finite native work, fatal host-refusal escape, and a responsive neighbor after the first callback returns.
 - Power-free execution, legacy paused-run upgrade without startup replay, timer cancel after queue admission, stop cleanup and active/saved source separation.
 
 ## peripheral-network — Required cases

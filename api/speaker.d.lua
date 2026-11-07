@@ -71,10 +71,10 @@
 ---Native outage causes E_UNPOWERED, except for getLimits.
 ---
 ---Authority and adoption retain their E_UNREACHABLE, E_NETWORK_PENDING, E_LIMIT and E_CAPACITY rules.
----Work or allocation exhaustion causes fatal E_BUDGET, not false.
+---Host-work exhaustion causes fatal E_BUDGET, not false.
 ---Existing admission and authority precedence remains.
 ---Published limits are finite initial envelopes, not measured throughput guarantees.
----Requests below the count limits can still exhaust generic Data, work or allocation allowances.
+---Requests below the count limits can still exhaust generic Data or host-work allowances.
 ---@class TC.Speaker
 local Speaker = {}
 

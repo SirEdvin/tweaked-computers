@@ -53,6 +53,8 @@ def main():
     ap.add_argument('--baseline-sha256', required=True)
     ap.add_argument('--archive', required=True, type=Path)
     ap.add_argument('--output', required=True, type=Path)
+    ap.add_argument('--fixture', default='tests.scheduling_upgrade_engine',
+                    choices=('tests.scheduling_upgrade_engine', 'tests.native_upgrade_engine'))
     args = ap.parse_args()
     assert digest(args.baseline) == args.baseline_sha256
     assert subprocess.check_output([str(args.factorio), '--version'], text=True).startswith('Version: 2.1.23 ')
@@ -61,14 +63,14 @@ def main():
     folder.mkdir(parents=True)
     with zipfile.ZipFile(args.archive) as z:
         prefix = next(n[:-len('info.json')] for n in z.namelist() if n.endswith('/info.json') and n.count('/') == 1)
-        payload = z.read(prefix + 'tests/scheduling_upgrade_engine.lua')
+        payload = z.read(prefix + args.fixture.replace('.', '/') + '.lua')
     baseline = install_fixture(args.baseline, folder / 'baseline-test', payload)
     with zipfile.ZipFile(args.baseline) as z:
         baseline_info = json.loads(z.read(next(n for n in z.namelist() if n.endswith('/info.json') and n.count('/') == 1)))
     versioned, private_version = candidate_archive(args.archive, folder / 'candidate-version', baseline_info['version'])
     candidate = install_fixture(versioned, folder / 'candidate-test', payload)
     summary = {'baseline_sha256': digest(args.baseline), 'source_archive_sha256': digest(args.archive),
-               'fixture_sha256': hashlib.sha256(payload).hexdigest(), 'baseline_test_sha256': digest(baseline),
+               'fixture': args.fixture, 'fixture_sha256': hashlib.sha256(payload).hexdigest(), 'baseline_test_sha256': digest(baseline),
                'candidate_test_sha256': digest(candidate), 'private_test_version': private_version,
                'test_only_replacement': 'tests/monitor_upgrade_engine.lua',
                'production_changes': 'private candidate info.json/package-manifest.json version only' if private_version else 'none', 'cases': []}

@@ -138,7 +138,7 @@ No result positions. See the behavior notes for normal-return versus failure sem
 blit(text: string, foreground: nil|false, background: TC.GuestValue)
 ```
 
-text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to guarded argument admission. The method returns zero values.
+text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to protected-value rules but no temporary-allocation admission. The method returns zero values.
 
 ### Parameters
 
@@ -146,10 +146,10 @@ text: string
 Literal cell bytes, bounded by write_bytes.
 
 foreground: nil|false
-text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to guarded argument admission. The method returns zero values.
+text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to protected-value rules but no temporary-allocation admission. The method returns zero values.
 
 background: TC.GuestValue
-text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to guarded argument admission. The method returns zero values.
+text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to protected-value rules but no temporary-allocation admission. The method returns zero values.
 
 ### Returns
 

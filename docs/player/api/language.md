@@ -1,4 +1,11 @@
-# Bounded native Lua language
+<a id="bounded-native-lua-language"></a>
+
+# Trusted native Lua language
+
+**Run only trusted code.** Saved programs and Console commands use native Lua without mod execution quotas.
+An infinite loop can stop the game. Temporary values can use all available memory.
+Stop cannot interrupt code that does not return control to the host.
+The host API still enforces current authority, host-work admission, and persistence limits.
 
 A saved computer program contains named function declarations only. API version
 1 is implicit:
@@ -47,7 +54,7 @@ Public and private top-level names must be distinct `[A-Za-z_][A-Za-z_0-9]*`
 identifiers, at most 64 bytes. Approved API/library/global names, `print`, excluded
 global names (including metatable helpers), `_ENV`, `_G` and the `__tc` prefix
 are reserved. At most 64 functions are exported. Private helpers do not use export
-slots, but still consume source, compiler, generated-text and native syntax limits.
+slots, but still consume source, compiler, and native syntax limits.
 
 Exports can refer to each other regardless of declaration order. Private helpers
 follow normal lexical scope and self-recursion. Declare them before use. They are
@@ -59,10 +66,10 @@ Other global writes and unknown global reads remain forbidden.
 It shares the caller's run, authority and remaining credits, without queuing work
 or creating an event. Missing arguments are nil. Supplied tables keep their
 ordinary aliases. False values, nil holes, zero results and multiple-return
-adjustment follow bounded Lua semantics. An exported value can be passed,
+adjustment follow native Lua semantics. An exported value can be passed,
 returned, captured by a local closure, placed in a temporary table or called via
-`pcall`. Direct/mutual recursion remains bounded. `pcall` cannot suppress fatal
-budget or stop control. A direct `start(...)` call runs its written effects but
+`pcall`. Direct and mutual recursion use native stack limits, not a mod depth limit.
+`pcall` cannot suppress fatal host-work refusal or stop control. A direct `start(...)` call runs its written effects but
 does not activate a new generation or reset credits.
 
 Queued callbacks instead receive their normal copied event in a fresh environment.
@@ -80,16 +87,15 @@ Handlers support these elements:
 - `if/elseif/else`, `do`, `return` and `break`
 - Numeric/generic `for`, `while` and `repeat`
 - Local helpers and guest calls.
- Recursion/loops consume enforced work/depth/allocation
-credits, not unlimited native time. Lua 5.2 primitive arithmetic, comparisons,
-short-circuiting, concatenation and multiple-return/nil-tuple adjustment apply.
+ Recursion, loops, and temporary allocation have no mod execution quotas.
+Lua 5.2 primitive arithmetic, comparisons, short-circuiting, concatenation, and multiple-return adjustment apply.
 Nonfinite values cannot cross state/API boundaries. Use dot calls everywhere.
 
 ## Approved globals and libraries
 
-The [live Console](../console.md) is a separate bounded expression/statement mode.
+The [live Console](../console.md) is a separate expression/statement mode with bounded source and retained data.
 Its saved scratch values are not saved-program locals. Both modes use the same
-guards and tick ledger. Consult the generated [global helpers](globals.md),
+checked host API and tick ledger. Consult the generated [global helpers](globals.md),
 [math](math.md), [string](string.md), [table](table.md) and [colors](colors.md)
 for complete members, argument positions, return arity and restrictions.
 
@@ -97,21 +103,22 @@ for complete members, argument positions, return arity and restrictions.
 
 Signatures and domains now come only from the public declaration library and its
 [generated type index](types.md). Lua 5.2 names do not imply unrestricted native
-libraries, host objects, string-method syntax or permission to bypass runtime guards.
+libraries, host objects, colon syntax, or permission to bypass API checks.
 
 ## Printing, raw helpers and error transformation
 
 Use the generated [printing, raw-helper and protected-call reference](globals.md).
 Its distinctions include nil tuple positions, defensive versus identity-preserving
-errors, Console logging, bounded handler re-entry and fatal control that cannot be
+errors, Console logging, native handler re-entry, and fatal host control that cannot be
 caught. [Common types and errors](common.md) and the [Console guide](../console.md)
 cover the corresponding execution and retention boundaries.
 
 New built-ins are reserved public/private top-level declaration names, not ordinary
 locals/parameters. An older colliding active
 source faults only on synchronized reconstruction, with exact source/state retained.
-Rename it. Select Save. Then select Run. Noncolliding old sources retain API 1/compiler 2/
-storage 1, without startup replay. A colliding old Console root reports named
+Rename it. Select Save. Then select Run.
+Synchronized migration validates supported compiler-2 source before updating its compiler header to 3, without startup replay.
+Public API and storage versions remain 1. A colliding old Console root reports named
 `E_UNSUPPORTED` before command effects and retains its graph. Confirm Reset Shell
 only when you are ready to discard scratch values. Nested fields are unaffected.
 
@@ -124,23 +131,28 @@ These features are not available:
 - `require`, `load`, `loadstring`, `loadfile`, `dofile` and package/bytecode/debug
 - Coroutines, IO, sockets, OS/wall clock, random/randomseed, `math.huge`, GC control and metatable access
 - Goto/labels, Lua 5.3+ syntax and colon calls
-- String indexing to reach a host metatable.
+- Unapproved string members or access to the string metatable.
  Use `string.sub(s, ...)`, not `s:sub(...)`.
-No string match/gmatch/gsub/dump, no non-plain find. Protected namespaces and
-facades cannot be mutated or persisted. These are intentional compatibility
-boundaries, not invitations to bypass the sandbox.
+Computed string indexing can read only approved string helpers.
+No string match/gmatch/gsub/dump, no non-plain find. Protected namespaces cannot be changed or retained.
+Console can retain authentic peripheral facades and methods through its separate graph format, not through Data.
+These restrictions do not grant access to the host environment.
 
 ## Failure and persistence
 
-Source/token/node/nesting/generated-source and compile-work limits apply before
-activation. Runtime instrumentation charges loops, calls, table/index movement,
-operators and opaque helpers. Exceeding fatal work/depth/allocation limits faults
-the run even inside `pcall`. It does not yield or change to an interpreter.
+Source, token, node, nesting, and compilation-work limits apply before activation.
+Preparation waits when earlier spending prevents work that fits the full current source and host allowances.
+Pending work keeps its order, and accepted preparation charges remain spent.
+Preparation that cannot fit fresh allowances fails.
+After execution starts, host-work refusal faults the run even inside `pcall`. The runtime never repeats started code.
+Native failures are ordinary errors, not synthetic execution-quota faults.
 Successful earlier state/KV/configuration/display effects stay committed while
 still-owned logic output is cleared. A later explicit Run starts a new generation.
 
 No player source executes on load. Only explicit plain state and validated named
 registrations/events persist. Host executable reconstruction occurs during
-synchronized work with identical warm/cold admission. Work-unit limits do not
-prove real-time latency. See [common rules](common.md), [computer API](computer.md)
+synchronized work with identical warm/cold admission. Host-work limits do not prove real-time latency or limit temporary memory.
+Back up the complete save and matching mod archive before upgrading. Restore both for rollback.
+New compiler and ledger data have no automatic downgrade path.
+See [common rules](common.md), [computer API](computer.md)
 and [runnable examples](../examples.md).

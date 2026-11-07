@@ -9,7 +9,7 @@ local peripheral=require('scripts.services.peripheral')
 local runtime=require('scripts.runtime.computer')
 local compiler=require('scripts.runtime.compiler')
 local admission=require('scripts.runtime.admission')
-local sandbox=require('scripts.runtime.sandbox')
+local environment=require('scripts.runtime.environment')
 local limits=require('scripts.runtime.limits')
 local defs=require('scripts.device-definitions')
 local graph=require('scripts.network')
@@ -37,7 +37,7 @@ local function guest(c,body)
   local source='function start(event) '..body..' end'
   local ctx=admission.context(admission.new(),c.id,game.tick)
   local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
-  c.active={source=source,revision=0,api_version=1,compiler_version=limits.compiler_version,storage_version=1,handlers=plan.handlers}
+  c.active={source=source,revision=1,api_version=1,compiler_version=limits.compiler_version,storage_version=1,handlers=plan.handlers}
   c.status='running'; c.run_id=c.run_id or c.id..'/fixture'
   local ok,problem=compiler.run(plan,'start',{name='start'},function(g) return runtime.services(c,game.tick,g) end,ctx)
   assert(ok,problem and (problem.code..': '..problem.message))
@@ -70,22 +70,22 @@ end
 local function boolean_edges()
   for _,value in ipairs({true,false}) do
     for _,credits in ipairs({0,1,2,3,4,5,6,7,8}) do
-      local ctx=admission.context(admission.new(),'boolean-edge',game.tick); local g=sandbox.new(ctx,{})
+      local ctx=admission.context(admission.new(),'boolean-edge',game.tick); local g=environment.new(ctx,{})
       local count=0
-      local fn=g.service(function() g.prepare_boolean_result(); count=count+1; return value end)
-      ctx.machine.work=limits.callback_work-credits
-      local ok,result=pcall(g.call,fn)
-      -- G.call entry 1 + G.service entry 1 + snapshot 1 + immediate return 3.
-      assert(count==(credits>=6 and 1 or 0))
-      assert(ok==(credits>=6)); if ok then assert(result==value) end
+      local fn=g.service(function() count=count+1; return value end)
+      ctx.ledger.total=admission.host_ceiling(ctx.ledger,game.tick)-credits
+      local ok,result=pcall(g.execute,fn)
+      -- Scalar results need no copy or post-effect reservation.
+      assert(count==(credits>=1 and 1 or 0))
+      assert(ok==(credits>=1)); if ok then assert(result==value) end
     end
   end
-  local ctx=admission.context(admission.new(),'allocation-edge',game.tick); local g=sandbox.new(ctx,{})
-  local count=0; local fn=g.service(function() g.prepare_boolean_result(); count=count+1; return true end)
-  ctx.machine.allocations=limits.callback_allocations-2
-  assert(not pcall(g.call,fn) and count==0)
+  local ctx=admission.context(admission.new(),'host-edge',game.tick); local g=environment.new(ctx,{})
+  local count=0; local fn=g.service(function() count=count+1; return true end)
+  ctx.ledger.total=admission.host_ceiling(ctx.ledger,game.tick)
+  assert(not pcall(g.execute,fn) and count==0)
   local ordinary=g.service(function() return {} end)
-  assert(not pcall(ordinary)) -- A fatal budget cannot be caught/reused.
+  assert(not pcall(ordinary)) -- A fatal refusal cannot be caught and reused.
 end
 function M.run()
   storage.speaker_fixture={groups=0,phase='armed'}

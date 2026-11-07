@@ -73,8 +73,8 @@ function M.on_tick(event)
     log({'','TC_STAT_TIMING ',x.phase,' tick=',event.tick,' scheduler=',profile})
     if x.phase=='polling' then
       local machine=registry.get().ledger.machines[c.id]
-      assert(machine.work>0 and machine.allocations>0)
-      log('TC_STAT_CREDITS '..serpent.line{tick=event.tick,work=machine.work,allocations=machine.allocations,reads=c.state.reads})
+      assert(machine.work>0)
+      log('TC_STAT_CREDITS '..serpent.line{tick=event.tick,work=machine.work,reads=c.state.reads})
       local p=helpers.create_profiler(); local stats=game.forces.player.get_item_production_statistics(game.surfaces[1])
       local total=0
       for i=1,300 do for _,side in ipairs({'input','output'}) do total=total+stats.get_flow_count{name='iron-plate',category=side,precision_index=defines.flow_precision_index.one_minute,sample_index=i,count=false} end end

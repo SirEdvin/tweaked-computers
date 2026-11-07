@@ -1,0 +1,237 @@
+---@meta
+
+---These are the only shipped peripheral families.
+---Computers are passive graph vertices, not discoverable programmable peripheral facades.
+---Searches for unknown strings give empty results.
+---@alias TC.PeripheralType 'monitor'|'kv_database'|'logic_handler'|'configurator'|'recipe_searcher'|'factoriopedia_interface'|'production_statistics'|'dashboard'|'modem'|'speaker'
+
+---This is a dynamically discovered genuine facade.
+---Before use of a concrete member, check getType/getMethods or use a literal-family find overload.
+---A plain lookalike table grants no authority.
+---Neither a facade nor a method is ordinary Data.
+---@alias TC.Peripheral TC.Monitor|TC.KVDatabase|TC.LogicHandler|TC.Configurator|TC.RecipeSearcher|TC.FactoriopediaInterface|TC.ProductionStatistics|TC.Dashboard|TC.Modem|TC.Speaker
+
+---This is detached physical metadata, not a LuaEntity or a reusable authority proof.
+---Positions and footprints describe the logical rectangle of a monitor.
+---Terminal axes and dimensions are separate.
+---Native carriers remain discoverable without power.
+---@class TC.PeripheralInfo
+---@field name TC.PeripheralName Exact current logical/physical service identity.
+---@field type TC.PeripheralType Public facade family.
+---@field label? string Descriptive label, not necessarily unique. Absent when unset.
+---@field powered boolean Live physical availability. Valid custom devices need no electricity.
+---@field position TC.Position World coordinates of the device center or logical monitor center.
+---@field surface TC.Surface Current surface identity, not cross-surface access.
+---@field quality string Installed prototype quality name.
+---@field direction 'north'|'east'|'south'|'west' Cardinal orientation.
+---@field footprint TC.Footprint Axis-aligned world extent, not terminal dimensions.
+---@field wire TC.Wire Selected proven discovery channel.
+---@field modem_tier? 'surface'|'interplanetary' Present for radar modems only.
+
+---This explicit selection reference accepts exactly these fields.
+---There is no facade, coordinate, extra key or implicit wire fallback.
+---@class TC.MonitorRef
+---@field name TC.PeripheralName Nonempty bounded monitor name.
+---@field wire TC.Wire Required independently validated physical path.
+
+---This is a bounded retained presentation diagnostic.
+---It gives no access to native recovery objects.
+---@class TC.MonitorDiagnostic
+---@field code TC.ErrorCode Failure/release category.
+---@field message string Human-readable explanation. The wording can change.
+
+---This is a defensive snapshot of presentation selection and status.
+---none means no selection, empty members, sequence zero and an absent tick.
+---A definitive release can retain a diagnostic.
+---waiting means incomplete round participation.
+---preparing includes sealed, queued and commit-waiting work, not visible completion.
+---blocked has priority over preparing and waiting while proof or geometry capacity is unavailable.
+---@class TC.MonitorSyncStatus
+---@field members TC.MonitorRef[] Canonical logical identities, sorted by name.
+---@field status 'none'|'waiting'|'preparing'|'blocked' Current retained presentation state.
+---@field presented_sequence integer Nonnegative safe sequence of the last complete group publication.
+---@field presented_tick? TC.Tick Actual publication tick. Absent until the first publication.
+---@field diagnostic? TC.MonitorDiagnostic Latest retained reason for blockage or release.
+
+---Discovery uses physical paths of the same color.
+---Only public computer-network connectors and supported native radar/speaker sockets relay discovery.
+---Hidden radar radio links and input/output/target ports do not bridge this network.
+---Unrelated native entities, ghosts, other forces and other surfaces do not bridge it.
+---Red and green never combine into one path.
+---
+---A logical monitor reachable through one member does not internally bridge unwired members.
+---KV access on both colors uses one database, not a color bridge.
+---
+---Every target call requires current identity, generation, force, surface, selected path and device authority.
+---The host can reuse a complete physical proof within one non-yielding callback or command.
+---Reuse is permitted only while the proof's assumptions remain valid.
+---Operations that can change those assumptions invalidate the proof before their effects, including failed operations.
+---A new invocation requires a new proof. Saved bindings and background observations do not supply authority.
+---Native availability and method-specific checks still apply on each call.
+---These checks apply to direct native calls, captured methods, and peripheral.call.
+---Temporary Lua allocation is not a device-authority proof.
+---Temporary or incomplete topology causes E_NETWORK_PENDING or E_LIMIT, never a successful empty inventory.
+---Active methods on native radars and speakers require power.
+---Reachable metadata and getLimits remain usable without power.
+---
+---Wrappers and captured methods are ephemeral in saved callbacks.
+---Persist only name and wire in Data.
+---Then wrap again.
+---Only Console can retain authentic symbolic bindings.
+---Stale restored descriptors never target replacement entities.
+---
+---Attach/detach registrations observe transitions, not startup inventory.
+---Current output owners and pending work have independent fail-safe observation.
+---No background snapshot authorizes a later operation.
+---Cold load retains accepted observations, their order and paid credits without another execution of guest code.
+---
+---Background topology interest belongs to attach/detach, modem-message and Dashboard-click registrations, and unfinished computer/color reconciliation.
+---Removal of the final interest retires future observation after pending host work settles.
+---This does not recall already accepted snapshot notifications.
+---Definitive Dashboard selected-path loss retires its registrations and queued clicks, but incomplete discovery alone does not.
+---
+---Physical discovery can retain a pending native-adoption request from a stopped or faulted placed computer, independent of program lifetime.
+---Program retirement does not cancel that physical-root request.
+---@class TC.PeripheralLibrary
+peripheral = {}
+
+---Return the complete current inventory for one explicit color, sorted and without duplicates.
+---An empty array indicates complete success.
+---Incomplete traversal throws an error instead.
+---@param wire TC.Wire Required red or green path selection.
+---@return TC.PeripheralName[] names Sorted opaque service names, possibly empty.
+function peripheral.getNames(wire) end
+
+---Check physical reachability after complete discovery.
+---Native power loss alone does not make a reachable carrier absent.
+---Invalid or incomplete proof throws an error.
+---@param name TC.PeripheralName Exact bounded peripheral name.
+---@param wire TC.Wire Required discovery channel.
+---@return boolean present True for a current reachable identity; false when absent.
+function peripheral.isPresent(name, wire) end
+
+---Read one reachable family name.
+---There is no fallback to another wire or an old generation.
+---@param name TC.PeripheralName Exact bounded peripheral name.
+---@param wire TC.Wire Required discovery channel.
+---@return TC.PeripheralType|nil type Exactly one family or one nil after complete absence.
+function peripheral.getType(name, wire) end
+
+---Read sorted public method names with their aliases.
+---If the compatible library is absent, optional Dashboard chart methods are absent, not failing stubs.
+---@param name TC.PeripheralName Exact bounded peripheral name.
+---@param wire TC.Wire Required discovery channel.
+---@return string[]|nil methods Complete independent names, or one nil when absent.
+function peripheral.getMethods(name, wire) end
+
+---Read the current plain metadata.
+---Labels, positions and powered are observations, not authority tokens, global discovery shortcuts or native object handles.
+---@param name TC.PeripheralName Exact bounded peripheral name.
+---@param wire TC.Wire Required discovery channel.
+---@return TC.PeripheralInfo|nil info Independent snapshot or exactly one nil when absent.
+function peripheral.describe(name, wire) end
+
+---Create a genuine dot-call facade bound to identity, entity generation and wire.
+---A later stale call throws an error; it does not silently return an empty value or change color.
+---Opaque names do not statically identify a concrete peripheral family.
+---@param name TC.PeripheralName Exact bounded peripheral name.
+---@param wire TC.Wire Required discovery channel.
+---@return TC.Peripheral|nil facade Exactly one authentic facade or one nil when absent.
+function peripheral.wrap(name, wire) end
+
+---Call one public method with its exact trailing arguments, results and current authority.
+---An unknown method causes E_ARGUMENT.
+---Handler-only and optional-dependency rules also apply through this route.
+---There is no arbitrary native method forwarding.
+---@param name TC.PeripheralName Exact bounded peripheral name.
+---@param wire TC.Wire Required discovery channel.
+---@param method string Bounded public method name, including supported aliases.
+---@param ... TC.GuestValue Method-specific arguments; see the selected member's contract.
+---@return TC.GuestValue ... Exact method result tuple. Zero values and nil remain distinct.
+function peripheral.call(name, wire, method, ...) end
+
+---Find all matching facades in sorted-name order as MULTIPLE RETURNS, not an array.
+---Zero matches give zero results.
+---Collect the results with {peripheral.find(...)} or assign the first result.
+---No mod tuple ceiling limits the multiple returns. Native stack limits still apply.
+---Network capacities and host-work admission can refuse incomplete discovery.
+---No successful result is truncated to fit.
+---A bounded unknown string returns zero matches, not an unsupported-type error.
+---@param type_name string Family string. Literal supported names refine the result type.
+---@param wire TC.Wire Required explicit discovery channel.
+---@return TC.Peripheral ... Zero or more genuine matching facades in sorted-name order.
+---@overload fun(type_name: 'monitor', wire: TC.Wire): ...: TC.Monitor # type_name selects monitors. Results are zero or more sorted matching monitor facades.
+---@overload fun(type_name: 'kv_database', wire: TC.Wire): ...: TC.KVDatabase # type_name selects databases. Results are zero or more sorted matching database facades.
+---@overload fun(type_name: 'logic_handler', wire: TC.Wire): ...: TC.LogicHandler # type_name selects Logic handlers. Results are zero or more sorted matching Logic facades.
+---@overload fun(type_name: 'configurator', wire: TC.Wire): ...: TC.Configurator # type_name selects Configurators. Results are zero or more sorted matching Configurator facades.
+---@overload fun(type_name: 'recipe_searcher', wire: TC.Wire): ...: TC.RecipeSearcher # type_name selects Recipe Searchers. Results are zero or more sorted matching search facades.
+---@overload fun(type_name: 'factoriopedia_interface', wire: TC.Wire): ...: TC.FactoriopediaInterface # type_name selects Factoriopedia Interfaces. Results are zero or more sorted matching reference facades.
+---@overload fun(type_name: 'production_statistics', wire: TC.Wire): ...: TC.ProductionStatistics # type_name selects Production Statistics. Results are zero or more sorted matching statistics facades.
+---@overload fun(type_name: 'dashboard', wire: TC.Wire): ...: TC.Dashboard # type_name selects Dashboards. Results are zero or more sorted facades, with chart methods only when installed.
+---@overload fun(type_name: 'modem', wire: TC.Wire): ...: TC.Modem # type_name selects radar modems. Results are zero or more sorted matching radio facades.
+---@overload fun(type_name: 'speaker', wire: TC.Wire): ...: TC.Speaker # type_name selects native speakers. Results are zero or more sorted matching audio facades.
+function peripheral.find(type_name, wire) end
+
+---Inspect the bound identity of an authentic facade, even after detachment.
+---This does not authorize target access again.
+---Plain lookalike records cause E_ARGUMENT.
+---@param facade TC.Peripheral Genuine wrapped or authentically restored facade.
+---@return TC.PeripheralName name Bound service identity.
+function peripheral.getName(facade) end
+
+---Inspect the bound discovery color of an authentic facade, even after detachment.
+---This grants no target access or fallback.
+---Forged tables cause E_ARGUMENT.
+---@param facade TC.Peripheral Genuine wrapped or authentically restored facade.
+---@return TC.Wire wire Bound red/green channel.
+function peripheral.getWire(facade) end
+
+---Atomically replace the single monitor synchronization selection for this run/session.
+---{} clears the selection; nil does not.
+---The method returns zero values.
+---
+---The method validates every supplied path, also duplicates, before canonicalization by logical identity.
+---When both valid colors name the same display, red wins.
+---The method sorts members by name.
+---An equal canonical selection is idempotent and preserves pending work and sequence.
+---Ordinary refusal preserves the old group and every model and front.
+---No selection grants exclusive drawing authority.
+---
+---All members must be live monitors on one force and surface.
+---The sum of their actual cells must fit the allowance.
+---A member that another owner selected causes E_BUSY.
+---A non-monitor causes E_WRONGTYPE.
+---A missing path causes E_UNREACHABLE.
+---Incomplete proof causes E_NETWORK_PENDING.
+---
+---Malformed input causes E_ARGUMENT.
+---Excessive proof or input causes E_LIMIT.
+---Final capacity failure causes E_CAPACITY.
+---There is no coordinate or implicit color fallback.
+---
+---After registration and each seal, every member needs one successful mutating call before the next post-dispatch snapshot.
+---Valid no-ops count; getters do not.
+---The host seals current models together and prepares them against old complete fronts.
+---Then it publishes all prepared snapshots in one tick.
+---Pending snapshots can coalesce; admitted frames are immutable.
+---
+---A static unmodified member holds the round indefinitely, without partial output.
+---This aligns presentation epochs, not producer clocks or multi-callback images.
+---
+---Saved-run and Console-session owners are separate.
+---Stop, fault, replacement, owner removal or definitive selected-path/identity loss releases the whole group and unpublished work.
+---These events never release accepted model or front contents.
+---Temporary incomplete proof blocks the group instead.
+---
+---Geometry and scale changes reset participation and staging.
+---An oversized retained group stays blocked until it fits or its configuration changes.
+---Ordinary reload preserves ownership, progress, acknowledgements and credits.
+---@param members TC.MonitorRef[] Dense exact reference records. An empty array clears the selection.
+function peripheral.setMonitorSyncGroup(members) end
+
+---Read one independent status map.
+---This does not drive rendering, retry topology, change selection or wait for completion.
+---A sequence can skip coalesced pending frames.
+---It advances only on complete publication, never on preparation alone.
+---@return TC.MonitorSyncStatus status Current retained selection, progress and diagnostic.
+function peripheral.getMonitorSyncGroup() end

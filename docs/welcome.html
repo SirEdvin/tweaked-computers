@@ -102,6 +102,7 @@
         <h1 class="hero-title" id="tweaked-computers">Program your factory.</h1>
         <p class="hero-lead">Tweaked Computers adds programmable Lua controllers to Factorio. Use them to read circuit signals, control machines, share data, and make interactive displays.</p>
         <p>Each computer runs one source document with named callbacks. The API gives access to computers and peripherals. It does not give access to an operating system, a filesystem, or native Factorio objects.</p>
+        <p><strong>Run only trusted code.</strong> Saved programs and Console use native Lua without mod execution quotas. Infinite loops can stop the game. Temporary values can use all available memory. Stop cannot interrupt code that does not return control to the host.</p>
         <p class="lead">This mod supports Factorio 2.1. Space Age is optional.</p>
         <div class="guide-actions">
           <a class="guide-start" href="#setup">Set up your first computer</a>

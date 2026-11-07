@@ -260,20 +260,20 @@ function M.on_tick(event)
     log('TC_STAT power-limits-both-colors-force-surface-mixed-path-stale-captured-identity')
     x.phase='pressure'; return
   elseif x.phase=='pressure' then
-    for _,kind in ipairs({'work','allocations'}) do
-      local probe=build('computer',c.body.surface,c.body.force,-4,kind=='work' and 0 or 4); wire(probe,s,'red')
+    do
+      local probe=build('computer',c.body.surface,c.body.force,-4,0); wire(probe,s,'red')
       assert(not probe.children.power and lifecycle.available(probe))
       assert(runtime.save(probe.id,busy,0)); assert(runtime.activate(probe.id,event.tick))
       local ctx=runtime.context(probe,event.tick)
       local source="function start() local s=peripheral.find('production_statistics','red'); pcall(function() for i=1,1000 do s.getHistory('item','iron-plate','one_minute') end end); computer.setState('escaped',true) end"
       local plan,e=compiler.compile(source,ctx); assert(plan,serpent.line(e))
-      assert(admission.reserve(ctx,kind,(kind=='work' and limits.callback_work or limits.callback_allocations)-ctx.machine[kind]-2000))
+      assert(admission.reserve(ctx,'work',admission.host_ceiling(ctx.ledger,ctx.tick)-ctx.ledger.total-2000))
       local ok,problem=compiler.run(plan,'start',{},function(g) return runtime.services(probe,event.tick,g) end,ctx)
       assert(not ok and problem.code=='E_BUDGET' and not probe.state.escaped,serpent.line(problem))
       assert(lifecycle.remove(probe.id,'fixture',true))
     end
     assert(not s.statistics and not s.history and not s.query)
-    log('TC_STAT real-shared-work-allocation-fatal-refusal-no-partial-result-or-job')
+    log('TC_STAT real-shared-host-work-fatal-refusal-no-partial-result-or-job')
     x.phase='late-zero'; return
   elseif x.phase=='late-zero' then
     query(c,s,'item','getRates','five_seconds')
@@ -294,7 +294,7 @@ function M.on_tick(event)
     x.phase='freeze'; return
   elseif x.phase=='freeze' then
     local ctx=runtime.context(c,event.tick); local machine=ctx.machine
-    assert(admission.reserve(ctx,'work',limits.callback_work-machine.work))
+    assert(admission.reserve(ctx,'work',admission.host_ceiling(ctx.ledger,ctx.tick)-ctx.ledger.total))
     x.saved={c=c,s=s,state=c.state,snapshot=c.state.snapshot,unit=c.body.unit_number,stat_unit=s.body.unit_number,
       red=lifecycle.connector(c,'network','red').connection_count,green=lifecycle.connector(c,'network','green').connection_count,
       tick=registry.get().ledger.tick,total=registry.get().ledger.total}

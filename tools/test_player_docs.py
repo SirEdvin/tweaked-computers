@@ -175,6 +175,12 @@ class PublicLibraryTests(unittest.TestCase):
     def test_implementation_export_helper_event_inventory(self):
         validate_api_inventory(self.records, self.inventory)
 
+    def test_native_helper_inventory_includes_direct_bindings(self):
+        helpers = self.inventory['standard_helpers']
+        self.assertTrue({'type', 'tonumber', 'select', 'rawequal', 'unpack', '_VERSION'} <= set(helpers['globals']))
+        self.assertEqual(set(helpers['table']), {'pack', 'unpack', 'concat', 'insert', 'remove', 'sort'})
+        self.assertEqual(set(helpers['string']), {'len', 'sub', 'byte', 'char', 'lower', 'upper', 'reverse', 'rep', 'find', 'format'})
+
     def test_inherited_methods_are_referenced_not_duplicated(self):
         own = self.records['TC.ChartDashboard']['fields']
         self.assertEqual(set(own), {'appendSample', 'setBars', 'clearChart'})
@@ -377,7 +383,8 @@ class PublicLibraryTests(unittest.TestCase):
         generated = limit_declarations()
         self.assertEqual(generated, (player_docs.ROOT / 'api/generated/limits.d.lua').read_text())
         self.assertEqual(generated, limit_declarations())
-        removed = {'signal_slots', 'filter_signals', 'active_logic_handlers', 'aggregate_owned_outputs'}
+        removed = {'signal_slots', 'filter_signals', 'active_logic_handlers', 'aggregate_owned_outputs',
+                   'callback_work', 'callback_allocations', 'callback_depth', 'tuple_entries', 'generated_source_bytes'}
         for name in self.records:
             if name.endswith('Limits'):
                 fields = public_fields(self.records, name)

@@ -266,7 +266,8 @@ Clear can normalize to native defaults, not nil.
 E_READ_ONLY protects observations, protected targets and nonclearable fields.
 E_UNSUPPORTED applies to native applicability.
 
-Generic admission and fatal budgets remain unchanged.
+Data validation, shared host-work admission, and fatal host-work refusal still apply.
+Temporary Lua execution and allocation have no mod quotas.
 See Configurator lifecycle notes for native recovery limits.
 
 ```text

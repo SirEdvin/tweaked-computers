@@ -1,6 +1,6 @@
 # Adjusting shared work budgets
 
-Open **Settings → Mod settings → Map** to change the five runtime-global
+Open **Settings → Mod settings → Map** to change the three runtime-global
 budgets below during play. They apply to every player and computer in the
 save. A map restart is not necessary. The table lists defaults. computer.getLimits()
 returns the current effective values in a defensive copy.
@@ -8,25 +8,26 @@ returns the current effective values in a defensive copy.
 | Setting | Limit key | Default | Allowed range |
 | --- | --- | ---: | ---: |
 | Compilation work per computer per tick (`tc-compile-work`) | `compile_work` | 1250000 | 1–100000000 |
-| Execution work per computer per tick (`tc-callback-work`) | `callback_work` | 500000 | 1–100000000 |
-| Guest allocations per computer per tick (`tc-callback-allocations`) | `callback_allocations` | 81920 | 1–100000000 |
 | Shared host work per tick (`tc-host-work-per-tick`) | `host_work_per_tick` | 5000000 | 200001–1000000000 |
 | World maintenance work per tick (`tc-maintenance-work-per-tick`) | `maintenance_work_per_tick` | 200000 | 200000–100000000 requested |
 
-Compilation, execution and allocation defaults are five times the original
-allowances. The shared host default is also five times larger so it can admit
-them. The maintenance default remains 200000 admission units.
-Prefer a shared ceiling that includes all three per-computer budgets
-and maintenance. A smaller shared budget can defer callbacks or
-cause E_BUDGET when actual work exceeds its remaining allowance.
+These settings limit host work, not ordinary Lua execution or temporary memory.
+**Run only trusted code.** An infinite loop can stop the game.
+Temporary Lua values can use all available memory. Stop cannot interrupt code that does not return control to the host.
+The former execution-work and guest-allocation settings are removed.
+
+Source validation, reconstruction, API calls, output, and Console graph encoding share host credits.
+Source work also uses the compilation allowance. Maintenance retains its separate reservation.
+Earlier spending can delay unstarted preparation until a later tick. The pending item keeps its order, and accepted preparation charges remain spent.
+Preparation that cannot fit fresh allowances fails. After execution starts, host-work refusal causes `E_BUDGET`, without replay of earlier effects.
 
 Changes never reset spending. A budget increase adds only the difference.
 If the budget decreases below spent credits, the runtime refuses further charged operations
 until a later tick or another increase. Existing faulted programs still require
 Run to restart. Validate, Run validation and callback reconstruction share
 compilation credits. Higher budgets can reduce UPS. These are not speed or
-frame-rate controls. Source, state, depth, monitor and other structural caps
-remain unchanged.
+frame-rate controls. Source, persistent Data, Console graph, monitor, and other retained capacities remain unchanged.
+Data depth, `string_bytes`, and `table_entries` apply at their documented boundaries, not to ordinary temporary Lua values.
 
 ### Maintenance and shared headroom
 
@@ -34,7 +35,7 @@ The effective maintenance ceiling is `min(requested maintenance, host_work_per_t
 The requested setting stays unchanged. An increase in host work can make more of it
 effective. This never increases the shared host setting. At least one guest unit
 remains. But one unit cannot run a useful callback. Choose host headroom for
-your actual programs. Prefer the three per-computer budgets plus maintenance.
+your actual source preparation and API work, in addition to maintenance.
 Maintenance covers discovery, physical validation, signal sampling, timers, notifications and
 monitor preparation, publication and retirement. More maintenance can reduce guest
 headroom. It does not automatically increase callback or monitor capacities.

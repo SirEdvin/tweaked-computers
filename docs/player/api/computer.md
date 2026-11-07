@@ -37,7 +37,9 @@ Simulation events and Console commands share a persisted ready rotation.
 At most one item per computer runs in an actual tick.
 The scheduler uses FIFO queues and fair program/Console alternation.
 New work that becomes ready during a dispatch joins a later round.
-A callback completes or faults. It never suspends its Lua stack.
+A returning callback completes or faults. It never suspends its Lua stack.
+Trusted Lua can stall the game or exhaust memory before it returns.
+Stop and scheduling do not interrupt runaway code.
 
 The scheduler indexes future timers by earliest deadline instead of visiting
 them every tick while they wait. Ordinary cold load retains pending order,
@@ -47,7 +49,7 @@ discard accepted work.
 
 ### Context
 
-Console shares real application state and per-computer admission.
+Console shares real application state and source/host-work admission.
 It has its own scratch graph, output attribution and transient ownership.
 Only saved programs can call on, off, after, every, cancelTimer and stop.
 These methods raise E_UNSUPPORTED in Console.
@@ -188,7 +190,9 @@ Exactly one string or one nil when unset.
 ### getLimits
 
 Read a defensive complete map of effective limits and representation versions.
-Defaults are not live values. A settings change does not replenish spent credit.
+Defaults are not live values. A settings change does not replenish spent host credit.
+Retired execution, allocation, depth, tuple, and generated-source fields are absent.
+string_bytes and table_entries constrain boundary data, not temporary Lua values.
 
 ```text
 getLimits() -> limits: TC.Limits
@@ -247,11 +251,16 @@ Current tick for this dispatched execution.
 Append one bounded diagnostic entry. This method returns no values.
 Unlike print, this method requires a string. Formatting and retention admission
 precede publication. Existing Console retention can evict old entries.
+Logging uses the admitted execution owner. It does not repeat physical owner discovery for each entry.
+Canceled executions cannot append guest output.
+Both byte and entry bounds apply, including for empty entries.
+A refused append does not evict retained entries or change their truncation flag.
+Separate host diagnostics retain their existing output policy.
 
 Console attributes its calls to the shell. The shell attribution prefix counts
 toward console_bytes. Oversized output causes E_LIMIT, never a partial successful append.
 Saved programs require exactly one argument.
-The current Console override ignores additional guarded arguments.
+The current Console override ignores additional arguments.
 This compatibility exception applies only to Console, not to arity in general.
 
 ```text
@@ -411,7 +420,9 @@ Simulation events and Console commands share a persisted ready rotation.
 At most one item per computer runs in an actual tick.
 The scheduler uses FIFO queues and fair program/Console alternation.
 New work that becomes ready during a dispatch joins a later round.
-A callback completes or faults. It never suspends its Lua stack.
+A returning callback completes or faults. It never suspends its Lua stack.
+Trusted Lua can stall the game or exhaust memory before it returns.
+Stop and scheduling do not interrupt runaway code.
 
 The scheduler indexes future timers by earliest deadline instead of visiting
 them every tick while they wait. Ordinary cold load retains pending order,
@@ -421,7 +432,7 @@ discard accepted work.
 
 ### Context
 
-Console shares real application state and per-computer admission.
+Console shares real application state and source/host-work admission.
 It has its own scratch graph, output attribution and transient ownership.
 Only saved programs can call on, off, after, every, cancelTimer and stop.
 These methods raise E_UNSUPPORTED in Console.

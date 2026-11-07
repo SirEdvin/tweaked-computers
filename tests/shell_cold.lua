@@ -13,6 +13,10 @@ local limits=require('scripts.runtime.limits')
 local kv=require('scripts.services.kv')
 local defs=require('scripts.device-definitions')
 local M={}
+kv.methods.coldOptional=function()
+  if storage.tc_shell_fixture.optional_available==false then error({code='E_UNSUPPORTED',message='optional method unavailable'},0) end
+  return true
+end
 local loaded=false
 local player,gui
 local function clone(v)
@@ -28,7 +32,9 @@ local function equal(a,b)
 end
 local function snapshot()
   local f=storage.tc_shell_fixture; local rec=registry.record(f.id); local r=registry.get()
+  local peer=registry.record(f.peer)
   return {shell=clone(rec.shell),state=clone(rec.state),run=rec.run_id,queue=clone(rec.queue),
+    peer={active=clone(peer.active),state=clone(peer.state),queue=clone(peer.queue),timers=clone(peer.timers),run=peer.run_id,last_dispatch=peer.last_dispatch_tick},
     unknown_shell=clone(registry.record(f.unknown).shell),
     collision=f.collision and clone(registry.record(f.collision).shell),
     ledger=clone(r.ledger),last_dispatch=rec.last_dispatch_tick,next_sequence=r.next_sequence,
@@ -77,7 +83,7 @@ function M.run()
   assert(surface.create_entity{name='substation',position={3,4},force='player'})
   local supply=assert(surface.create_entity{name='electric-energy-interface',position={6,4},force='player'})
   supply.power_production=100000000; supply.power_usage=0
-  local source='function start(e) computer.every(1,"sample") end\n\nfunction sample(e) computer.setState("samples",(computer.getState("samples") or 0)+1) end'
+  local source='function start(e) computer.every(1,"sample") end\n\nfunction sample(e) computer.setState("samples",(computer.getState("samples") or 0)+1) end\nfunction prepared(e) computer.setState("prepared",(computer.getState("prepared") or 0)+1) end'
   runtime.save(rec.id,source,0); assert(runtime.activate(rec.id,game.tick))
   runtime.save(peer.id,source,0); assert(runtime.activate(peer.id,game.tick))
   runtime.save(unknown.id,source,0); assert(runtime.activate(unknown.id,game.tick))
@@ -99,6 +105,7 @@ function M.on_tick(event)
     if not loaded then return end
     unchanged(); loaded=false
     assert(rec.shell.values==f.values and rec.shell.pending==f.pending,'cold alias loss')
+    assert(registry.record(f.peer).queue[1]==f.peer_pending,'deferred program item lost its cold identity')
     local ctx=runtime.context(rec,f.tick)
     assert(ctx.machine.work==f.work and not admission.reserve(ctx,'work',1),'cold budget renewed')
     open(rec,f.token)
@@ -109,7 +116,7 @@ function M.on_tick(event)
     if not rec.powered or not rec.state.samples then return end
     assert(not rec.shell,'old-save shell initialized before action')
     open(rec)
-    submit('a={}; b=a; rawset(a,"self",a); rawset(a,"value",false); print(_VERSION,false,nil,3); p=peripheral.wrap("'..f.db..'","red"); get=p.get; p.set("once","one"); computer.setState("effects",(computer.getState("effects") or 0)+1)')
+    submit('a={}; b=a; rawset(a,"self",a); rawset(a,"value",false); print(_VERSION,false,nil,3); p=peripheral.wrap("'..f.db..'","red"); get=p.get; opt=p.coldOptional; other=peripheral.wrap("'..f.db..'","red"); fake={name="'..f.db..'",wire="red",kind="kv",generation=1}; p.set("once","one"); computer.setState("effects",(computer.getState("effects") or 0)+1)')
     f.phase='assigned'
     return
   elseif f.phase=='assigned' then
@@ -118,10 +125,24 @@ function M.on_tick(event)
     if shell.waiting(rec) then return end
     assert(not rec.shell.diagnostic,rec.shell.diagnostic and rec.shell.diagnostic.message)
     assert(rec.state.effects==1 and rec.status=='running')
-    submit('assert(rawequal(a,b) and rawequal(rawget(a,"self"),a) and rawget(a,"value")==false and get==p.get and get("once")=="one"); rawset(b,"value",9); computer.setState("pending",(computer.getState("pending") or 0)+1)')
+    submit('assert(rawequal(a,b) and rawequal(rawget(a,"self"),a) and rawget(a,"value")==false and get==p.get and opt==p.coldOptional and p~=other and get("once")=="one"); assert(not pcall(peripheral.getName,fake)); rawset(b,"value",9); computer.setState("pending",(computer.getState("pending") or 0)+1)')
     submit('assert(a.value==9); print(false,nil,3)')
+    f.phase='preparing'; return
+  elseif f.phase=='preparing' then
+    local item=rec.shell.pending[1]; local graph=rec.shell.values; local logs=#rec.logs
     local ctx=runtime.context(rec,event.tick)
-    assert(admission.reserve(ctx,'work',limits.callback_work-ctx.machine.work))
+    assert(admission.reserve(ctx,'compile',limits.compile_work-ctx.machine.compile-1))
+    local before=ctx.ledger.total
+    rec.next_work_class='shell'
+    with_player(function() assert(not scheduler.dispatch(rec,event.tick),'unstarted shell was consumed') end)
+    assert(ctx.ledger.total>before and rec.shell.pending[1]==item and rec.shell.values==graph and #rec.logs==logs and rec.state.pending==nil)
+    local peer=registry.record(f.peer)
+    assert(runtime.enqueue(peer,'prepared',{name='preparation-test'},event.tick))
+    f.peer_pending=peer.queue[1]
+    local peer_ctx=runtime.context(peer,event.tick)
+    assert(admission.reserve(peer_ctx,'compile',limits.compile_work-peer_ctx.machine.compile-1))
+    assert(not scheduler.dispatch(peer,event.tick) and peer.queue[1]==f.peer_pending and not peer.state.prepared and peer.status=='running')
+    assert(admission.reserve(ctx,'work',admission.host_ceiling(ctx.ledger,event.tick)-ctx.ledger.total))
     f.tick=event.tick; f.work=ctx.machine.work; f.token=model.session(player.index).token
     f.values=rec.shell.values; f.pending=rec.shell.pending; f.phase='frozen'
     f.expected=snapshot()
@@ -135,7 +156,7 @@ function M.on_tick(event)
     assert(not rec.shell.diagnostic,rec.shell.diagnostic and rec.shell.diagnostic.message)
     local db=registry.record(f.db)
     assert(kv.methods.get(rec,db,'red',event.tick,function() end,'once')=='one')
-    assert(registry.record(f.peer).state.samples>0)
+    assert(registry.record(f.peer).state.samples>0 and registry.record(f.peer).state.prepared==1)
     assert(registry.record(f.unknown).shell.version==99 and registry.record(f.unknown).shell.payload=='preserve future shell data')
     assert(registry.record(f.unknown).status=='running' and registry.record(f.unknown).state.samples>0)
     submit('assert(a.value==9 and b==a and a.self==a and peripheral.getName(p)=="'..f.db..'"); print(get("once"))')
@@ -143,7 +164,7 @@ function M.on_tick(event)
   elseif f.phase=='final' then
     tick(event)
     if shell.waiting(rec) then return end
-    assert(not rec.shell.diagnostic and rec.state.effects==1 and rec.state.pending==1)
+    assert(not rec.shell.diagnostic and rec.state.effects==1 and rec.state.pending==1 and registry.record(f.peer).state.prepared==1)
     local printed=0
     for _,entry in ipairs(rec.logs) do if entry.text:find('output: Lua 5.2\tfalse\tnil\t3',1,true) then printed=printed+1 end end
     assert(printed==1,'completed shell print replayed or lost')
@@ -156,6 +177,19 @@ function M.on_tick(event)
       ok,d=shell.evaluate(rec,'saved='..name,event.tick,0)
       assert(not ok and d.code=='E_UNSUPPORTED' and rec.shell.values==graph)
     end
+    local db=registry.record(f.db); local generation=db.generation
+    db.generation=generation+1
+    ok,d=shell.evaluate(rec,'local ok,e=pcall(get,"once"); assert(not ok and e.code=="E_UNREACHABLE" and a.value==9)',event.tick,0)
+    db.generation=generation; assert(ok,d and d.message)
+    local red=lifecycle.connector(rec,'network','red'); local target=lifecycle.connector(db,'network','red')
+    assert(red.disconnect_from(target))
+    assert(lifecycle.connector(rec,'network','green').connect_to(lifecycle.connector(db,'network','green')))
+    ok,d=shell.evaluate(rec,'assert(peripheral.isPresent("'..f.db..'","green")); local ok,e=pcall(get,"once"); assert(not ok and e.code=="E_UNREACHABLE" and peripheral.getWire(p)=="red")',event.tick,0)
+    assert(red.connect_to(target)); assert(ok,d and d.message)
+    f.optional_available=false
+    ok,d=shell.evaluate(rec,'local ok,e=pcall(opt); assert(not ok and e.code=="E_UNSUPPORTED" and opt==p.coldOptional and get("once")=="one")',event.tick,0)
+    assert(ok,d and d.message)
+    log('TC_COLD_BINDINGS_OK forged-distinct-selected-wire-stale-generation-optional-method')
     f.phase='done'; log('TC_COLD_OK shell-aliases-bindings-captured-methods-pending-once-only-real-ticks')
   end
 end

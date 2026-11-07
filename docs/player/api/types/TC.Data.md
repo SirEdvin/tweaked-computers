@@ -31,13 +31,32 @@ or truthy values. Calls are synchronous, non-yielding and non-reentrant.
 The dispatcher commits each successful mutation in dispatcher order.
 A callback is not a transaction.
 
+### Resource accounting
+
+Saved programs and Console commands use trusted native Lua.
+Loops, recursion, temporary allocation, and temporary tuple sizes have no mod execution limits.
+Runaway code can stall the game or exhaust memory.
+Stop cannot interrupt code that never returns control to the host.
+
+Source validation, reconstruction, API work, and maintenance retain host-work admission.
+Data, queues, logs, and device operations retain their separate validation and capacities.
+Internal host charges and failure positions can change between versions.
+Equal inputs, world state, settings, and remaining credits give equal admission with warm or cold host caches.
+Save/load, cache reuse, and settings changes do not renew spent host credits.
+Preparation waits for a later tick when earlier work leaves too few source or host credits.
+Accepted preparation charges remain spent. Pending items keep their order.
+Preparation fails if it needs more than the full source or host allowance.
+The scheduler never repeats code after execution starts.
+Fatal host-work refusal and stop remain outside guest error handling.
+Native failures are not synthetic guest-quota faults. Earlier successful effects remain committed.
+
 ### Exceptions
 
 Modem transmit accepts a required top-level nil message, but not nested nil.
 Detached native Logic signal graphs bypass generic Data transport limits.
 This exception does not apply to explicit state, KV, Console retention,
-arbitrary table growth or guest execution. Circuit queues still account for
-envelope bytes and entries, but exclude the native graphs.
+caller-authored API requests. Temporary Lua growth has no mod ceiling.
+Circuit queues still account for envelope bytes and entries, but exclude the native graphs.
 This accounting is not a total heap bound.
 
 Console scratch uses its own validated graph and authentic symbolic bindings,

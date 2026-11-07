@@ -95,7 +95,7 @@ integer
 
 ### string_bytes
 
-Maximum bytes in an ordinary guest or Data string. Default: 16384.
+Maximum bytes in an ordinary Data string, not a temporary Lua string. Default: 16384.
 
 ```text
 integer
@@ -103,7 +103,7 @@ integer
 
 ### table_entries
 
-Maximum entries in an ordinary guest-created table. Native Logic edits without growth have separate rules. Default: 1024.
+Maximum entries in an ordinary Data table, not a temporary Lua table. Native Logic transfer remains separate. Default: 1024.
 
 ```text
 integer

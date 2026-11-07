@@ -1,7 +1,7 @@
 -- Fast paths retain the exact admission prefix and immutable model snapshots.
 local admission=require('scripts.runtime.admission')
 local limits=require('scripts.runtime.limits')
-local sandbox=require('scripts.runtime.sandbox')
+local environment=require('scripts.runtime.environment')
 local model=require('scripts.monitor-model')
 local M={}
 local function nop() end
@@ -13,8 +13,8 @@ function M.run()
     for room=0,trace.total+1 do for _,shared in ipairs({false,true}) do
       local function context()
         local ctx=admission.context(admission.new(),'trace',7)
-        if shared then ctx.ledger.total=limits.host_work_per_tick-limits.maintenance_work_per_tick-room
-        else ctx.machine.work=limits.callback_work-room; ctx.ledger.total=ctx.machine.work end
+        if shared then ctx.ledger.total=admission.host_ceiling(ctx.ledger,7)-room
+        else ctx.machine.work=admission.host_ceiling(ctx.ledger,7)-room; ctx.ledger.total=ctx.machine.work end
         return ctx
       end
       local slow,fast=context(),context(); local expected=true
@@ -25,11 +25,28 @@ function M.run()
     end end
   end
   local ctx=admission.context(admission.new(),'poison',8)
-  local g=sandbox.new(ctx,{}); ctx.machine.work=limits.callback_work
+  local g=environment.new(ctx,{}); ctx.machine.work=admission.host_ceiling(ctx.ledger,8); ctx.ledger.total=ctx.machine.work
   assert(not pcall(g.replay_work,{1,total=1}))
   assert(not pcall(g.check),'cached work refusal was catchable')
-  assert(ctx.machine.work==limits.callback_work and ctx.ledger.total==0)
+  assert(ctx.machine.work==admission.host_ceiling(ctx.ledger,8) and ctx.ledger.total==ctx.machine.work)
   log('TC_WORK_REPLAY_OK comparisons='..comparisons..' exact-prefix shared-ceiling poison')
+
+  local scoped=environment.new(admission.context(admission.new(),'proofs',9),{})
+  local proof,invalidations=true,0
+  scoped.invalidate_authority=function() proof=false; invalidations=invalidations+1 end
+  local stable=function() assert(proof); return false end
+  scoped.stable_service(stable)
+  assert(scoped.execute(scoped.service(stable))==false and invalidations==0)
+  for _,throws in ipairs({false,true}) do
+    proof=true
+    local fn=scoped.service(function()
+      assert(not proof,'physical proof invalidated after provider entry')
+      if throws then error({code='E_ARGUMENT',message='provider failure'},0) end
+    end)
+    assert(pcall(scoped.execute,fn)~=throws and not proof)
+  end
+  assert(invalidations==2)
+  log('TC_LOCAL_PROOF_OK stable-success throwing-invalidation-before-entry')
 
   local m=model.new(6,6); model.scale(m,6,6,nop,2)
   local blank=model.capture(m,nop); model.acknowledge(m,blank)

@@ -66,7 +66,7 @@ local cases={
     refused('E_RANGE',s.findRecipes,'item','TC-RS-OVERLAP')
     refused('E_RANGE',s.findRecipes,'fluid','tc-rs-empty')
     refused('E_RANGE',s.findRecipes,'item','iron-plate','tc-missing-category')
-    local l=s.getLimits(); assert(l.recipe_search_results==50 and l.callback_work==500000)
+    local l=s.getLimits(); assert(l.recipe_search_results==50 and l.host_work_per_tick==5000000 and l.callback_work==nil)
     l.recipe_search_results=1; assert(s.getLimits().recipe_search_results==50)
   ]]},
   {'exact-fifty-complete-sorted',[[
@@ -116,7 +116,7 @@ function query(e)
 end]]
 local exhausted_source=[[function start(e)
   local s=peripheral.find('recipe_searcher','red')
-  local ok,e=pcall(function() for i=1,100 do local a=s.findRecipes('item','tc-rs-fifty'); assert(#a==50) end end)
+  local ok,e=pcall(function() for i=1,1000 do local a=s.findRecipes('item','tc-rs-fifty'); assert(#a==50) end end)
   computer.setState('escaped',true)
 end]]
 local function snapshot()
@@ -269,7 +269,7 @@ function M.on_tick(event)
       catalogue=#prototypes.recipe,total=registry.get().ledger.total})
     guest(c,prefix..[[computer.setState('retained',s.findRecipes('item','tc-rs-overlap'))]])
     local ctx=runtime.context(c,event.tick)
-    assert(admission.reserve(ctx,'work',limits.callback_work-ctx.machine.work))
+    assert(admission.reserve(ctx,'work',admission.host_ceiling(ctx.ledger,ctx.tick)-ctx.ledger.total))
     x.expected=snapshot(); x.phase='frozen'
     game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED'); return
   elseif x.phase=='resume' then

@@ -9,8 +9,9 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Callable
 
-An approved callable is a guest function or an exposed guarded API or helper function.
-A call consumes the same work, depth and tuple budgets.
+An approved callable is a guest function or an exposed checked API or helper function.
+Ordinary Lua calls have native stack and result limits, not mod execution quotas.
+Calls into host APIs retain their own authority, work, and data checks.
 This callable is not a persisted callback.
 
 ```text

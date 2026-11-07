@@ -8,6 +8,7 @@ local model=require('scripts.monitor-model')
 local editor=require('scripts.ui.editor-model')
 local defs=require('scripts.device-definitions')
 local limits=require('scripts.runtime.limits')
+local admission=require('scripts.runtime.admission')
 local compiler=require('scripts.runtime.compiler')
 local source=require('tests.monitor_animation_source') -- Test-only archive wrapper.
 local layout=require('tests.monitor_animation_layout')
@@ -71,7 +72,7 @@ local function oracle(m,phase,r)
   end end
 end
 function M.run()
-  local x={phase='drawing',steps=0,walls={},records={},intervals={},max_gap=0,publications=0,peak_work=0,peak_allocations=0}
+  local x={phase='drawing',steps=0,walls={},records={},intervals={},max_gap=0,publications=0,peak_work=0}
   storage.tc_animation=x
   local c=build('computer',-3,0); x.computer=c.id
   local shapes=layout=='mixed' and {{6,6},{3,6},{3,6},{1,1}} or {{6,6},{6,6},{6,6},{6,6}}
@@ -135,8 +136,8 @@ function M.on_tick(event)
   assert(c.status=='running',serpent.line(c.diagnostic))
   local machine=root.ledger.machines[c.id]
   if machine then
-    x.peak_work=math.max(x.peak_work,machine.work); x.peak_allocations=math.max(x.peak_allocations,machine.allocations)
-    assert(machine.work<=limits.callback_work and machine.allocations<=limits.callback_allocations)
+    x.peak_work=math.max(x.peak_work,machine.work)
+    assert(machine.work<=admission.host_ceiling(root.ledger,event.tick))
   end
   local s=root.monitors; local p=s.presentation
   if p then
@@ -178,7 +179,7 @@ function M.on_tick(event)
     x.saved={chart=chart,run=c.run_id,presentation=p,total=root.ledger.total,maintenance=root.scheduler.maintenance_spent}
     x.phase='frozen'; loaded=false; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
   elseif x.phase=='drawing' and x.resumed and #x.intervals>=360 then
-    log('TC_ANIMATION_CADENCE intervals='..#x.intervals..' max_gap='..x.max_gap..' peak_work='..x.peak_work..' peak_allocations='..x.peak_allocations)
+    log('TC_ANIMATION_CADENCE intervals='..#x.intervals..' max_gap='..x.max_gap..' peak_work='..x.peak_work)
     assert(x.max_gap<=2,'30 Hz publication target failed: max gap '..x.max_gap..' ticks')
     x.outage=x.walls[2][1]; x.phase='outage'; x.changed=event.tick
   elseif x.phase=='outage' and chart and #chart.views==3 and lane and lane.presented_sequence>=3 then

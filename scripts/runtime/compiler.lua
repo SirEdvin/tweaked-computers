@@ -5,7 +5,7 @@ local limits = require('scripts.runtime.limits')
 local admission = require('scripts.runtime.admission')
 local parsing = require('scripts.runtime.parse_admission')
 local errors = require('scripts.runtime.errors')
-local sandbox = require('scripts.runtime.sandbox')
+local environment = require('scripts.runtime.environment')
 local M = {}
 -- Host-only, bounded, exact-source validation cache. No caller-owned plan or
 -- executable closure is trusted. Replay every original charge, in order, so
@@ -29,8 +29,6 @@ local function position(node)
   if node.line or tok then return node.line or tok.line or 1,node.column or tok.column or 1 end
   return position((node.lhs and node.lhs[1]) or node.ex or node.name or (node.ifs and node.ifs[1]))
 end
-
-local function coordinates(node) local line,column=position(node); return line..','..column end
 local function reject(node, message, code)
   local err = errors.new(code or 'E_PROGRAM', message)
   err.line, err.column = position(node)
@@ -57,185 +55,103 @@ local function shell_name(name,node,write)
   if forbidden[name] or write and (globals[name] or name=='print') then reject(node,'unavailable shell global: '..name) end
   return name
 end
-local function emit(main,mode,expression)
-  local function coordinates(node)
-    local l,c=position(node)
-    if expression and l==1 then c=math.max(1,c-7) end
-    return l..','..c
-  end
-  local nodes, nesting, generated, temp = 0, 0, 0, 0
-  local exports
-  local expr, body, statement, func
+
+local function validate(main,mode)
+  local nodes,nesting=0,0
+  local exports={}
+  local expr,body,statement,func
   local function visit(n)
     parsing.enter(1)
-    nodes, nesting = nodes + 1, nesting + 1
-    if nodes > limits.source_nodes or nesting > limits.source_nesting then reject(n, 'source AST limit exceeded', 'E_LIMIT') end
+    nodes,nesting=nodes+1,nesting+1
+    if nodes>limits.source_nodes or nesting>limits.source_nesting then reject(n,'source AST limit exceeded','E_LIMIT') end
   end
-  local function leave(text)
-    nesting = nesting - 1
-    return text
-  end
-  local function text(s)
-    parsing.enter(#s)
-    generated = generated + #s
-    if generated > limits.generated_source_bytes then reject(nil, 'generated text limit exceeded', 'E_LIMIT') end
-    return s
-  end
-  local function list(xs)
-    if #xs > limits.tuple_entries then reject(xs[1], 'tuple width exceeded', 'E_LIMIT') end
-    local out = {}
-    for i,n in ipairs(xs) do out[i] = expr(n) end
-    return table.concat(out, ',')
-  end
-  function func(n,out,prefix)
+  local function leave() nesting=nesting-1 end
+  local function list(xs) for _,n in ipairs(xs or {}) do expr(n) end end
+  function func(n)
     visit(n)
-    if n.is_method then reject(n, 'colon declarations are not supported') end
-    local names = {}
-    for i,p in ipairs(n.params) do names[i] = identifier(p.name,p) end
-    if #names > limits.tuple_entries then reject(n, 'parameter width exceeded', 'E_LIMIT') end
-    if n.is_vararg then names[#names+1] = '...' end
-    if out then
-      -- Keep top-level bodies as paid fragments, not a second whole-function copy.
-      out[#out+1]=text(prefix..'function('..table.concat(names,',')..') __tc.enter('..coordinates(n)..','..#n.params..'); ')
-      body(n,out)
-      out[#out+1]=text('end);')
-      return leave()
-    end
-    local result = 'function('..table.concat(names, ',')..') __tc.enter('..coordinates(n)..','..#n.params..'); '..body(n)..' end'
-    return leave(result)
+    if n.is_method then reject(n,'colon declarations are not supported') end
+    for _,p in ipairs(n.params) do identifier(p.name,p) end
+    body(n)
+    leave()
   end
   function expr(n)
     visit(n)
-    local k, s = n.node_type
-    if k == 'number' then
-      if not errors.finite(n.value) then reject(n, 'nonfinite numeric literal') end
-      s = n.src_value or tostring(n.value)
-    elseif k == 'string' then s = string.format('%q', n.value)
-    elseif k == 'nil' then s = 'nil'
-    elseif k == 'boolean' then s = tostring(n.value)
-    elseif k == 'local_ref' or k == 'upval_ref' then s = identifier(n.name,n)
-    elseif k == 'vararg' then s = '__tc.values(...)'
-    elseif k == 'index' then
+    local k=n.node_type
+    if k=='number' then
+      if not errors.finite(n.value) then reject(n,'nonfinite numeric literal') end
+    elseif k=='string' or k=='nil' or k=='boolean' or k=='vararg' then
+    elseif k=='local_ref' or k=='upval_ref' then identifier(n.name,n)
+    elseif k=='index' then
       if global(n) then
-        local name = identifier(n.suffix.value,n.suffix)
+        local name=identifier(n.suffix.value,n.suffix)
         if mode=='shell' then shell_name(name,n.suffix,false)
-        elseif not globals[name] and not (exports and exports[name]) then reject(n.suffix, 'unavailable global: '..name) end
-        if exports and exports[name] then
-          s = '__tc.get(__tc_functions,'..string.format('%q',name)..')'
-        else s = '__tc.global('..string.format('%q',name)..')' end
-      else s = '__tc.get('..expr(n.ex)..','..expr(n.suffix)..')' end
-    elseif k == 'call' then
-      if n.is_selfcall then reject(n, 'colon calls are not supported') end
-      s = '__tc.call('..expr(n.ex)..(#n.args > 0 and ','..list(n.args) or '')..')'
-    elseif k == 'func_proto' then s = '__tc.closure('..func(n.func_def)..')'
-    elseif k == 'constructor' then
-      if #n.fields > limits.table_entries then reject(n, 'table width exceeded','E_LIMIT') end
-      local out = {}
-      for i,f in ipairs(n.fields) do
-        if f.type == 'list' then out[i] = expr(f.value)
-        elseif f.type == 'rec' or f.type == 'record' then out[i] = '['..expr(f.key)..']='..expr(f.value)
-        else reject(n, 'unsupported constructor field: '..tostring(f.type)) end
+        elseif not globals[name] and not exports[name] then reject(n.suffix,'unavailable global: '..name) end
+      else expr(n.ex); expr(n.suffix) end
+    elseif k=='call' then
+      if n.is_selfcall then reject(n,'colon calls are not supported') end
+      expr(n.ex); list(n.args)
+    elseif k=='func_proto' then func(n.func_def)
+    elseif k=='constructor' then
+      for _,field in ipairs(n.fields) do
+        if field.type=='list' then expr(field.value)
+        elseif field.type=='rec' or field.type=='record' then expr(field.key); expr(field.value)
+        else reject(n,'unsupported constructor field: '..tostring(field.type)) end
       end
-      s = '__tc.new('..#n.fields..',function() return {'..table.concat(out,',')..'} end)'
-    elseif k == 'unop' then
-      if n.op == 'not' then s = '(not __tc.scalar('..expr(n.ex)..'))'
-      elseif n.op == '-' then s = '(-__tc.number('..expr(n.ex)..'))'
-      elseif n.op == '#' then s = '__tc.length('..expr(n.ex)..')'
-      else reject(n,'unsupported unary operator') end
-    elseif k == 'binop' then
-      if n.op == 'and' or n.op == 'or' then
-        s = '(__tc.scalar('..expr(n.left)..') '..n.op..' '..expr(n.right)..')'
-      elseif n.op == '+' or n.op == '-' or n.op == '*' or n.op == '/' or n.op == '%' or n.op == '^' then
-        s = '(__tc.number('..expr(n.left)..') '..n.op..' __tc.number('..expr(n.right)..'))'
-      elseif n.op == '==' or n.op == '~=' or n.op == '<' or n.op == '>' or n.op == '<=' or n.op == '>=' then
-        s = '(__tc.scalar('..expr(n.left)..') '..n.op..' __tc.scalar('..expr(n.right)..'))'
-      else reject(n,'unsupported binary operator') end
-    elseif k == 'concat' then
-      -- Primitive operands only: no metatable dispatch. Bound complete output before native concat.
-      s = '__tc.concat('..list(n.exp_list)..')'
-    else reject(n, 'unsupported expression: '..tostring(k)) end
-    if n.force_single_result then s = '('..s..')' end
-    return leave(text(s))
+    elseif k=='unop' then
+      if n.op~='not' and n.op~='-' and n.op~='#' then reject(n,'unsupported unary operator') end
+      expr(n.ex)
+    elseif k=='binop' then
+      if n.op~='and' and n.op~='or' and n.op~='+' and n.op~='-' and n.op~='*' and n.op~='/'
+        and n.op~='%' and n.op~='^' and n.op~='==' and n.op~='~=' and n.op~='<' and n.op~='>'
+        and n.op~='<=' and n.op~='>=' then reject(n,'unsupported binary operator') end
+      expr(n.left); expr(n.right)
+    elseif k=='concat' then list(n.exp_list)
+    else reject(n,'unsupported expression: '..tostring(k)) end
+    leave()
   end
-  function body(scope,fragments)
-    local out, stat = fragments or {}, scope.body.first
-    while stat do out[#out+1] = statement(stat); stat = stat.next end
-    if not fragments then return table.concat(out, '\n') end
+  local function target(lhs)
+    if lhs.node_type=='local_ref' or lhs.node_type=='upval_ref' then identifier(lhs.name,lhs)
+    elseif mode=='shell' and global(lhs) then shell_name(lhs.suffix.value,lhs.suffix,true)
+    elseif lhs.node_type=='index' and not global(lhs) then expr(lhs.ex); expr(lhs.suffix)
+    else reject(lhs,'global assignment is forbidden') end
   end
   function statement(n)
     visit(n)
-    local k, s = n.node_type
-    if k == 'empty' then s = ';'
-    elseif k == 'localstat' then
-      local names = {}; for i,p in ipairs(n.lhs) do names[i] = identifier(p.name,p) end
-      if #names>limits.tuple_entries then reject(n,'local width exceeded','E_LIMIT') end
-      s = 'local '..table.concat(names,',')..' = __tc.bind('..#names..(n.rhs and #n.rhs > 0 and ','..list(n.rhs) or '')..');'
-    elseif k == 'localfunc' then
-      local name = identifier(n.name.name,n.name)
-      s = 'local '..name..'; '..name..'=__tc.closure('..func(n.func_def)..');'
-    elseif k == 'funcstat' then
-      -- Desugar through the same fully preflighted assignment path.
-      s = statement({node_type='assignment', lhs={n.name}, rhs={{node_type='func_proto',func_def=n.func_def}}})
-    elseif k == 'assignment' then
-      if #n.lhs > limits.tuple_entries then reject(n,'assignment width exceeded','E_LIMIT') end
-      temp = temp + 1
-      local prefix = '__tc_a'..temp..'_'
-      local count=#n.lhs
-      local indexed=0
-      local out,targets={'do', 'local '..prefix..'targets=__tc.assignment_targets('..count..');'},{}
-      for i,lhs in ipairs(n.lhs) do
-        if lhs.node_type == 'local_ref' or lhs.node_type == 'upval_ref' then targets[i] = identifier(lhs.name,lhs)
-        elseif mode=='shell' and global(lhs) then
-          local name=shell_name(lhs.suffix.value,lhs.suffix,true)
-          indexed=indexed+1
-          out[#out+1]=prefix..'targets['..i..']={__tc.shell_root(),'..string.format('%q',name)..'};'
-          targets[i]=prefix..'targets['..i..'][1]['..prefix..'targets['..i..'][2]]'
-        elseif lhs.node_type == 'index' and not global(lhs) then
-          indexed=indexed+1
-          out[#out+1] = prefix..'targets['..i..']={'..expr(lhs.ex)..','..expr(lhs.suffix)..'};'
-          targets[i] = prefix..'targets['..i..'][1]['..prefix..'targets['..i..'][2]]'
-        else reject(lhs, 'global assignment is forbidden') end
-      end
-      local rhs=#n.rhs>0 and ','..list(n.rhs) or ''
-      out[#out+1] = 'local '..prefix..'values=__tc.assignment_values('..count..rhs..');'
-      out[#out+1] = '__tc.assignment_check('..count..','..prefix..'targets,'..prefix..'values);'
-      -- Two bounded private vectors avoid multiplying the native local/register
-      -- count by tuple width. Publish statically emitted native writes in Lua
-      -- 5.2's right-to-left order, after all target/RHS evaluations and checks.
-      for i=count,1,-1 do out[#out+1]=targets[i]..'='..prefix..'values['..i..'];' end
-      out[#out+1]='end'
-      if indexed==0 then
-        -- Plain lexical writes need no heap staging or private native locals.
-        s=table.concat(targets,',')..'=__tc.move('..count..rhs..');'
-      else s = table.concat(out, '\n') end
-    elseif k == 'call' then s = expr(n)..';'
-    elseif k == 'retstat' then s = 'do return __tc.values('..list(n.exp_list)..') end'
-    elseif k == 'breakstat' then s = 'do break end'
-    elseif k == 'dostat' then s = 'do '..body(n)..' end'
-    elseif k == 'whilestat' then s = 'while '..expr(n.condition)..' do __tc.step('..coordinates(n.while_token)..'); '..body(n)..' end'
-    elseif k == 'repeatstat' then s = 'repeat __tc.step('..coordinates(n.repeat_token)..'); '..body(n)..' until '..expr(n.condition)
-    elseif k == 'fornum' then
-      s = 'for '..identifier(n.var.name,n.var)..' = __tc.number('..expr(n.start)..'),__tc.number('..expr(n.stop)..'),__tc.number('..(n.step and expr(n.step) or '1')..') do __tc.loop('..coordinates(n.for_token)..',1); '..body(n)..' end'
-    elseif k == 'forlist' then
-      local names = {}; for i,p in ipairs(n.name_list) do names[i] = identifier(p.name,p) end
-      if #names>limits.tuple_entries then reject(n,'iterator width exceeded','E_LIMIT') end
-      s = 'for '..table.concat(names,',')..' in __tc.iter('..list(n.exp_list)..') do __tc.loop('..coordinates(n.for_token)..','..#names..'); '..body(n)..' end'
-    elseif k == 'ifstat' then
-      local out = {}
-      for i,b in ipairs(n.ifs) do out[#out+1] = (i == 1 and 'if ' or 'elseif ')..expr(b.condition)..' then '..body(b) end
-      if n.elseblock then out[#out+1] = 'else '..body(n.elseblock) end
-      out[#out+1] = 'end'; s = table.concat(out,'\n')
+    local k=n.node_type
+    if k=='empty' or k=='breakstat' then
+    elseif k=='localstat' then
+      for _,p in ipairs(n.lhs) do identifier(p.name,p) end
+      list(n.rhs)
+    elseif k=='localfunc' then identifier(n.name.name,n.name); func(n.func_def)
+    elseif k=='funcstat' then target(n.name); func(n.func_def)
+    elseif k=='assignment' then
+      for _,lhs in ipairs(n.lhs) do target(lhs) end
+      list(n.rhs)
+    elseif k=='call' then expr(n)
+    elseif k=='retstat' then list(n.exp_list)
+    elseif k=='dostat' then body(n)
+    elseif k=='whilestat' then expr(n.condition); body(n)
+    elseif k=='repeatstat' then body(n); expr(n.condition)
+    elseif k=='fornum' then
+      identifier(n.var.name,n.var); expr(n.start); expr(n.stop)
+      if n.step then expr(n.step) end
+      body(n)
+    elseif k=='forlist' then
+      for _,p in ipairs(n.name_list) do identifier(p.name,p) end
+      list(n.exp_list); body(n)
+    elseif k=='ifstat' then
+      for _,branch in ipairs(n.ifs) do expr(branch.condition); body(branch) end
+      if n.elseblock then body(n.elseblock) end
     else reject(n,'unsupported statement: '..tostring(k)) end
-    return leave(text('__tc.step('..coordinates(n)..'); '..s))
+    leave()
   end
-  if mode=='shell' then
-    local output='return function() '..body(main)..' end'
-    parsing.enter(#output)
-    if #output>limits.generated_source_bytes then reject(nil,'generated source too large','E_LIMIT') end
-    return output,{},nodes
+  function body(scope)
+    local stat=scope.body.first
+    while stat do statement(stat); stat=stat.next end
   end
-  -- Discover all exports before emission; private helpers retain lexical order.
-  local names,seen,count,key_work={}, {},0,0
+  if mode=='shell' then body(main); return exports,nodes end
+  -- Discover exports without changing lexical order or consuming native locals.
+  local seen,count={},0
   local stat=main.body.first
   while stat do
     parsing.enter(1)
@@ -251,40 +167,26 @@ local function emit(main,mode,expression)
       if seen[name] then reject(node,'duplicate declaration name: '..name) end
       seen[name]=true
       if kind=='funcstat' then
-        count=count+1; names[name]=true
-        key_work=key_work+#name+1
+        count=count+1; exports[name]=true
         if count>limits.handler_names then reject(node,'handler count exceeded','E_LIMIT') end
       end
     end
     stat=stat.next
   end
   if count==0 then reject(main.body.first,'exported function required') end
-  exports=names
-  -- Run admission prepays bindings; new prepays the private closure inventory.
-  local out={text('__tc.spend('..key_work..'); local __tc_functions=__tc.new('..count..',function() return {} end);')}
   stat=main.body.first
   while stat do
-    parsing.enter(1)
-    if stat.node_type=='funcstat' then
-      visit(stat)
-      local name=stat.name.suffix.value
-      func(stat.func_def,out,'__tc_functions['..string.format('%q',name)..']=__tc.closure(')
-      leave()
-    elseif stat.node_type=='localfunc' then
-      visit(stat)
-      local name=identifier(stat.name.name,stat.name)
-      func(stat.func_def,out,'__tc.step('..coordinates(stat)..'); local '..name..'; '..name..'=__tc.closure(')
-      leave()
-    else out[#out+1]=statement(stat) end
+    if stat.node_type=='funcstat' then visit(stat); func(stat.func_def); leave()
+    else statement(stat) end
     stat=stat.next
   end
-  out[#out+1]=text('return __tc_functions')
-  local bytes=#out-1
-  for _,part in ipairs(out) do bytes=bytes+#part end
-  parsing.enter(bytes)
-  if bytes>limits.generated_source_bytes then reject(main.body.first,'generated source too large','E_LIMIT') end
-  local output=table.concat(out,'\n')
-  return output,names,nodes
+  return exports,nodes
+end
+
+local function native_source(source,expression)
+  if source:sub(1,3)=='\239\187\191' then source=source:sub(4) end
+  if source:sub(1,1)=='#' then source=source:gsub('^[^\n]*','') end
+  return expression and 'return '..source or source
 end
 
 function M.compile(source, context, mode)
@@ -329,13 +231,16 @@ function M.compile(source, context, mode)
       error(e,0)
     end
     expression_source=expression==true
-    local generated,names,nodes = emit(main,mode,expression)
-    -- Native load here is only syntax verification of bounded, emitted text; no candidate code runs.
+    local names,nodes=validate(main,mode)
+    parsing.enter(#source+(expression and 7 or 0))
+    local generated=native_source(source,expression)
+    -- Syntax verification does not execute the declaration document or command.
     local factory, diagnostic = load(generated,'@computer','t',{})
     if not factory then
-      -- Native syntax/resource refusal belongs to the source document, not a
-      -- generated-wrapper line. Runtime body probes retain precise positions.
-      reject(main.body.first,'generated source: '..diagnostic:gsub('computer:%d+: ',''))
+      local problem=errors.new('E_PROGRAM','native syntax: '..diagnostic:gsub('computer:%d+: ',''))
+      problem.line=tonumber(diagnostic:match('computer:(%d+):')) or 1
+      problem.column=1
+      error(problem,0)
     end
     return {compiler_version=limits.compiler_version, api_version=1, source=source,
       generated=generated, handlers=names, nodes=nodes,mode=mode}
@@ -353,32 +258,45 @@ function M.compile(source, context, mode)
   return plan
 end
 
-function M.run(plan, name, event, services, context, circuit)
+function M.same_handlers(left,right)
+  if type(left)~='table' or getmetatable(left) then return false end
+  for name,value in pairs(left) do if value~=true or right[name]~=true then return false end end
+  for name in pairs(right) do if left[name]~=true then return false end end
+  return true
+end
+function M.run(plan, name, event, services, context, circuit, before)
   if type(plan) ~= 'table' or plan.mode~=nil or plan.compiler_version ~= limits.compiler_version or plan.api_version ~= 1 then
     return false,errors.new('E_PROGRAM','unsupported compiler/API version; source retained')
+  end
+  if before then admission.begin_preparation(context) end
+  local function failure(problem,control)
+    if before and admission.finish_preparation(context) then control='defer' end
+    return false,problem,control
   end
   -- Revalidate or replay the private exact-source proof every dispatch, retaining
   -- identical cold/warm credits. Saved/caller-generated text is never executed.
   local executable,diagnostic = M.compile(plan.source,context)
-  if not executable then return false,diagnostic end
-  if not executable.handlers[name] then return false,errors.new('E_NOT_FOUND','handler not declared') end
+  if not executable then return failure(diagnostic) end
+  if plan.storage_version~=nil and not M.same_handlers(plan.handlers,executable.handlers) then
+    return failure(errors.new('E_UNSUPPORTED','invalid retained exports; source/data retained'))
+  end
+  if not executable.handlers[name] then return failure(errors.new('E_NOT_FOUND','handler not declared')) end
   -- Same admission for every fresh environment, regardless of executable cache/process history.
   if not admission.reserve(context,'compile',#executable.generated + executable.nodes + 1) then
-    return false,errors.new('E_BUDGET','handler reconstruction refused')
+    return failure(errors.new('E_BUDGET','handler reconstruction refused'))
   end
-  local guard = sandbox.new(context,services)
+  local env=environment.new(context,services)
   local ok,result = pcall(function()
-    guard.initialize()
-    local factory, diagnostic = load(executable.generated,'@computer','t',{__tc=guard})
+    env.initialize()
+    local factory, diagnostic = load(executable.generated,'@computer','t',env.globals)
     if not factory then errors.raise('E_PROGRAM',diagnostic) end
-    guard.step(1)
-    local count = 0
-    for _ in pairs(executable.handlers) do count = count + 1 end
-    guard.prepare_handlers(count)
-    local handlers = factory()
-    return guard.call(handlers[name],circuit and guard.circuit_event(event) or guard.snapshot(event))
+    local handlers=env.construct(factory,executable.handlers)
+    local input=circuit and event or env.snapshot(event)
+    if before then before(input,env); admission.finish_preparation(context) end
+    return env.execute(handlers[name],input)
   end)
-  if not ok then return false,guard.diagnostic(result),guard.stop_requested() and 'stop' or nil end
+  env.close()
+  if not ok then return failure(env.diagnostic(result),env.stop_requested() and 'stop' or nil) end
   return true
 end
 return M

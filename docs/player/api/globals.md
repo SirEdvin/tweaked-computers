@@ -92,7 +92,7 @@ Guest-owned table/snapshot.
 ### Returns
 
 iterator: TC.Iterator
-Approved bounded sequence iterator.
+Approved native sequence iterator.
 
 state: TC.GuestTable
 Identical table.
@@ -188,8 +188,8 @@ The helper makes defensive copies of unowned error records.
 
 Unlike xpcall, pcall cannot return a protected API handle as an error.
 If the function throws such a handle, pcall's own error-snapshot step refuses with E_ARGUMENT.
-Status counts toward tuple width.
-Fatal budget/stop control always escapes and never becomes a guest error value.
+Status does not create a mod tuple ceiling.
+Fatal host-work refusal and stop always escape without becoming guest error values.
 
 ```text
 pcall(fn: TC.Callable, ...: TC.GuestValue) -> ok: boolean, ...: TC.GuestValue
@@ -221,7 +221,9 @@ Complete formatting and admission occur before append or eviction.
 Oversized output causes E_LIMIT with no partial entry.
 Earlier output survives later failures.
 
-Saved output uses computer.log. Console retains shell attribution.
+Saved print and computer.log use the same bounded buffer. Console retains shell attribution.
+Output uses the admitted execution owner, not repeated physical discovery for each entry.
+Both byte and entry bounds apply. Canceled executions cannot append guest output.
 The native display shows tabs as spaces without changing raw retained/copyable bytes.
 
 ```text
@@ -303,7 +305,7 @@ rawlen(value: string|TC.GuestTable) -> length: integer
 ### Parameters
 
 value: string|TC.GuestTable
-Bounded byte string or guest-owned plain table.
+Byte string or guest-owned plain table.
 
 ### Returns
 
@@ -315,12 +317,12 @@ Nonnegative byte length or native sequence border.
 ### rawset
 
 This helper does a raw guest-table assignment.
-Before mutation, it applies ordinary indexed-write ownership, key, value, growth,
-work and allocation checks. All three positions are required.
+It rejects protected or foreign tables and applies native key rules.
+All three positions are required. Temporary growth has no mod quota.
 A nil value deletes the key. Nil and NaN keys are invalid.
 
-The helper permits replacement or deletion at full width when admission succeeds.
-Refused writes leave every alias unchanged.
+Insertion, replacement, and deletion use native table behavior.
+An invalid key does not change the table.
 
 ```text
 rawset(t: TC.GuestTable, key: TC.GuestValue, value: TC.GuestValue) -> table: TC.GuestTable
@@ -348,7 +350,8 @@ Identical input table, not a defensive copy.
 
 Return the trailing tuple width for '#', or its suffix at a nonzero integer index.
 A positive index beyond the end returns zero values.
-Negative indexes count from the end. Index and tuple bounds apply.
+Negative indexes count from the end. Native index limits apply.
+No mod tuple ceiling applies.
 Zero and too-negative indexes cause failure.
 The helper never collapses nil positions.
 
@@ -392,7 +395,8 @@ The index '#' selects count, the exact number of trailing positions, including n
 
 ### tonumber
 
-Convert a number or bounded numeric string.
+Convert a number or numeric string with native conversion.
+Supply a value; omission causes a native argument error.
 An ordinary invalid value returns exactly one nil.
 An explicit base requires a string and an integer base in 2..36.
 An invalid base or type causes a catchable argument failure.
@@ -400,12 +404,12 @@ An omitted or nil base uses ordinary numeric conversion.
 Conversion does not widen API numeric domains.
 
 ```text
-tonumber(value?: TC.GuestValue, base?: integer) -> number: number|nil
+tonumber(value: TC.GuestValue, base?: integer) -> number: number|nil
 ```
 
 ### Parameters
 
-value (optional): TC.GuestValue
+value: TC.GuestValue
 Number/string to convert. Other ordinary values return nil.
 
 base (optional): integer
@@ -438,25 +442,26 @@ Approved value to describe without exposing internals.
 ### Returns
 
 text: string
-Bounded safe description or primitive representation.
+Safe description or primitive representation. Output APIs apply their own byte limits.
 
 <a id="symbol-type"></a>
 
 ### type
 
-Return the Lua type name. Omission has the same effect as nil.
+Return the Lua type name. Supply a value, including explicit nil.
+Omission causes a native argument error.
 This helper does not grant native object access.
-Standard helpers still obey argument/result tuple and work bounds.
+Temporary arguments and results have no mod tuple or work ceiling.
 Each native helper determines how it handles extra arguments, rather than service arity.
 
 ```text
-type(value?: TC.GuestValue) -> name: 'nil'|'boolean'|'number'|'string'|'table'|'function'
+type(value: TC.GuestValue) -> name: 'nil'|'boolean'|'number'|'string'|'table'|'function'
 ```
 
 ### Parameters
 
-value (optional): TC.GuestValue
-Value to inspect. Omission or nil has type nil.
+value: TC.GuestValue
+Required value. Explicit nil has type nil.
 
 ### Returns
 
@@ -473,7 +478,7 @@ Return positions i..j exactly, including nil holes.
 Omitted or nil bounds default to 1 and #t, not t.n.
 Use explicit packed.n to retain trailing nil.
 An empty range returns zero values.
-Current guest table index and tuple ceilings apply.
+Native index and stack limits apply, without a mod tuple ceiling.
 
 ```text
 unpack(t: TC.GuestTable, i?: integer, j?: integer) -> ...: TC.GuestValue
@@ -485,10 +490,10 @@ t: TC.GuestTable
 Guest-owned plain table. This table can be sparse.
 
 i (optional): integer
-Start, default 1. The domain is 1..table_entries+1.
+Start, default 1. Native integer-index limits apply.
 
 j (optional): integer
-End, default native #t. The domain is 0..table_entries.
+End, default native #t. Native integer-index limits apply.
 
 ### Returns
 
@@ -505,11 +510,12 @@ Ordinary failure calls handler with one safe error.
 It returns false followed by only the handler's first result.
 If the handler returns no values, the second result is one nil.
 
-Native handler re-entry is bounded.
+Handler re-entry follows native Lua limits, not a mod depth ceiling.
 The wording of an error inside the handler is not stable.
 A fatal failure in fn suppresses the handler.
 A fatal failure in handler suppresses later handlers and effects.
-Neither can suppress quota controls.
+Neither can suppress private host-work or stop controls.
+Pure Lua execution inside either function has no watchdog.
 
 Guest-owned tables and authentic protected-handle errors preserve identity.
 The helper copies unowned host error records.

@@ -1,17 +1,24 @@
 # Tweaked Computers — ALPHA
 
 This mod supplies native circuit computers for Factorio 2.1, with base alone or optional Space Age.
-The integrated alpha has native guarded callbacks, a five-tab single-document editor,
+The current source has trusted native callbacks, a five-tab single-document editor,
 same-color peripheral discovery and merging world monitors.
 It also has string/hash KV storage, logic I/O, typed factory configuration and a data-bearing device lifecycle.
 Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. The mod has no interpreter,
 OS, gameplay filesystem or dynamic guest loader. There is no command history.
 
+The unreleased runtime change removes mod execution and temporary-memory quotas from saved programs and Console.
+Run only trusted code. An infinite loop can stop the game. Temporary values can use all available memory.
+Stop cannot interrupt code that does not return control to the host.
+Source validation, current API authority, host-work admission, and retained-data limits remain.
+See [runtime upgrade and rollback](docs/player/lifecycle.md#upgrading-to-trusted-native-lua).
+Historical release evidence below does not establish acceptance of this runtime change.
+
 Version **0.1.20 ALPHA** includes a separate [public Lua declaration library](api/README.md)
 as the authoritative API reference. The website and searchable in-game Reference
 are generated from the same complete types, overloads, errors and examples.
-Guest behavior, save formats and budgets are unchanged from 0.1.19. Verification used
+That documentation release did not change guest behavior, save formats, or budgets from 0.1.19. Verification used
 Factorio **2.1.23**, base and Space Age. The mod accepts other 2.1 patches, but verification does not cover each patch. See [0.1.20 release notes](docs/release-0.1.20.md).
 
 Version **0.1.19 ALPHA** introduced function-declaration-only saved programs and

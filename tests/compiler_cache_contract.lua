@@ -86,7 +86,7 @@ function M.run()
   local text='function idle() end'
   local program=assert(compiler.compile(text,admission.context(admission.new(),'mode-program',0)))
   local shell=assert(compiler.compile(text,admission.context(admission.new(),'mode-shell',0),'shell'))
-  assert(program.mode==nil and shell.mode=='shell' and program.generated~=shell.generated,'compiler modes shared an executable proof')
+  assert(program.mode==nil and shell.mode=='shell' and program.handlers.idle and next(shell.handlers)==nil,'compiler modes shared an executable proof')
   assert(not compiler.compile('x=5',admission.context(admission.new(),'program-only',0)))
   local declaration=[[
 local function increment(n) return n+1 end
@@ -101,11 +101,15 @@ function sample(a,b,n) assert(a==false and b==nil); return increment(n) end
     for _,available in ipairs({0,1,#declaration*2,#declaration*2+1,1000,cost-1,cost,cost+1,limits.compile_work}) do
       assert(compiler.compile(declaration,admission.context(admission.new(),'declaration-warm',0)))
       local warm=context(shared and limits.compile_work or available,shared and available or nil)
+      admission.begin_preparation(warm)
       local a,ae,ap,replayed=observed(declaration,warm)
+      local deferred=admission.finish_preparation(warm)
       assert(replayed,'warm declaration proof was not cached')
       evict()
       local cold=context(shared and limits.compile_work or available,shared and available or nil)
+      admission.begin_preparation(cold)
       local b,be,bp,cached=observed(declaration,cold)
+      assert(admission.finish_preparation(cold)==deferred and deferred==not not ae,'cache changed preparation deferral')
       assert(not cached,'eviction did not remove declaration proof')
       assert(not not a==not not b and (not ae or ae.code==be.code and ae.message==be.message))
       assert(ap==bp,'cache changed accepted declaration charge prefix')
@@ -118,6 +122,21 @@ function sample(a,b,n) assert(a==false and b==nil); return increment(n) end
     end
   end
   assert(successes>0 and refusals>0 and partial>0)
+  local compile_limit=limits.compile_work
+  for _,ceiling in ipairs({1,1000,cost-1}) do
+    assert(compiler.compile(declaration,admission.context(admission.new(),'fresh-warm',0)))
+    limits.compile_work=ceiling
+    local warm=context(ceiling); admission.begin_preparation(warm)
+    local a,ae,ap=observed(declaration,warm)
+    assert(not a and ae.code=='E_BUDGET' and not admission.finish_preparation(warm))
+    limits.compile_work=compile_limit; evict(); limits.compile_work=ceiling
+    local cold=context(ceiling); admission.begin_preparation(cold)
+    local b,be,bp=observed(declaration,cold)
+    limits.compile_work=compile_limit
+    assert(not b and be.code==ae.code and not admission.finish_preparation(cold))
+    assert(ap==bp and warm.machine.compile==cold.machine.compile and warm.ledger.total==cold.ledger.total)
+    count=count+1
+  end
   local mutable=assert(compiler.compile(declaration,admission.context(admission.new(),'declaration-mutation',0)))
   mutable.handlers.start=nil; mutable.handlers.injected=true
   mutable.generated='error("caller executable trusted")'; mutable.nodes=-1
@@ -133,25 +152,58 @@ function sample(a,b,n) assert(a==false and b==nil); return increment(n) end
   -- cache nor caller mutations may turn shell global writes into exports.
   local shell_declaration=assert(compiler.compile(declaration,admission.context(admission.new(),'declaration-shell',0),'shell'))
   assert(shell_declaration.mode=='shell' and safe_declaration.mode==nil
-    and shell_declaration.generated~=safe_declaration.generated)
+    and next(shell_declaration.handlers)==nil and safe_declaration.handlers.start)
   assert(not compiler.run(shell_declaration,'start',{}, {},admission.context(admission.new(),'declaration-mode-run',0)))
   local variant=assert(compiler.compile(declaration..'-- exact second source',admission.context(admission.new(),'exact-source',0)))
   assert(variant.source~=safe_declaration.source and variant.handlers.start)
-  -- Top-level fragments must fit the unchanged output ceiling before joining.
-  local fragmented='local function helper() '..string.rep(';',200)..' end\nfunction start() helper() end'
-  local ceiling=limits.generated_source_bytes
-  local full=assert(compiler.compile(fragmented,context(limits.compile_work)))
-  evict()
-  limits.generated_source_bytes=#full.generated
-  local checked,problem=pcall(function()
-    assert(compiler.compile(fragmented,context(limits.compile_work)))
-    evict()
-    limits.generated_source_bytes=#full.generated-1
-    local refused,diagnostic=compiler.compile(fragmented,context(limits.compile_work))
-    assert(not refused and diagnostic.code=='E_LIMIT' and diagnostic.message=='generated source too large')
-  end)
-  limits.generated_source_bytes=ceiling
-  assert(checked,problem)
-  log('TC_COMPILER_CACHE_OK comparisons='..count..' exact-credits caller-isolation bounded-eviction mode-separated-shell-fallback fragment-output-boundary')
+  -- Native source retains its bytes and can exceed the retired table width.
+  local wide='function start() local t={'..string.rep('1,',1600)..'}; assert(#t==1600) end'
+  local complete=assert(compiler.compile(wide,context(limits.compile_work)))
+  assert(complete.generated==wide)
+  assert(compiler.run(complete,'start',{}, {},admission.context(admission.new(),'native-wide',0)))
+  local grouped='function start() local a,b,c=false,nil,3; a,b,c=b,c,a; computer.log("first"); computer.log("second") end'
+  local retained={source=grouped,api_version=1,compiler_version=limits.compiler_version}
+  local function execute(ctx)
+    local prefix,effects={},{}
+    local bind=admission.bind
+    admission.bind=function(c)
+      local work=bind(c)
+      local function observed_reserve(fn,kind)
+        return function(n)
+          local ok=fn(n)
+          if c==ctx and ok then prefix[#prefix+1]=kind..':'..n end
+          return ok
+        end
+      end
+      return observed_reserve(work,'w')
+    end
+    local called,ok,problem=pcall(compiler.run,retained,'start',{},
+      {computer={log=function(text) effects[#effects+1]=text end}},ctx)
+    admission.bind=bind; assert(called,ok)
+    return ok,problem,table.concat(prefix,','),table.concat(effects,',')
+  end
+  local measured=admission.context(admission.new(),'grouped',0)
+  assert(execute(measured))
+  for _,kind in ipairs({'compile','shared'}) do
+    local cost=kind=='shared' and measured.ledger.total or measured.machine[kind]
+    for _,room in ipairs({0,cost-1,cost}) do
+      local function budget()
+        local c=admission.context(admission.new(),'grouped',0)
+        if kind=='shared' then c.ledger.total=admission.host_ceiling(c.ledger,0)-room
+        else c.machine.compile=limits.compile_work-room; c.ledger.total=c.machine.compile end
+        return c
+      end
+      assert(compiler.compile(grouped,admission.context(admission.new(),'warm',0)))
+      local warm=budget(); local a,ae,ap,aw=execute(warm)
+      evict(); local cold=budget(); local b,be,bp,bw=execute(cold)
+      assert(a==b and (not ae or ae.code==be.code and ae.line==be.line and ae.column==be.column))
+      assert(ap==bp and aw==bw,'combined runtime reservations changed warm/cold paid prefix or effects')
+      assert(warm.machine.work==cold.machine.work
+        and warm.machine.compile==cold.machine.compile and warm.ledger.total==cold.ledger.total)
+      assert(a==(room==cost),'grouped exact-fit boundary changed')
+      count=count+1
+    end
+  end
+  log('TC_COMPILER_CACHE_OK comparisons='..count..' exact-credits caller-isolation bounded-eviction mode-separated-shell-fallback native-source-boundary host-work-prefix')
 end
 return M

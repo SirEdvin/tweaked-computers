@@ -247,6 +247,13 @@ comment-only `.d.lua` record with `-- Removes: api/path.d.lua` and
 `-- Identities: TC.Name, TC.Name.member`; it is not an empty module to promote.
 Preserve pre-promotion verification evidence when removing identities.
 
+Before promotion, copy the complete `api/` directory to an evidence directory outside the repository.
+After promotion, use `--baseline-api PATH` for the preserved API directory.
+The checker exports that directory again with the pinned LuaLS binary.
+It checks removed identities against both the baseline and the current declarations.
+It records hashes for the baseline files.
+Keep the baseline directory and reports with the test evidence.
+
 For `Status: none`, omit the table and all proposed declarations. Review the
 source, proposal and design, then obtain the review fingerprint (replace NAME):
 

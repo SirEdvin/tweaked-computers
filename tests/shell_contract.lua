@@ -5,7 +5,7 @@ local registry=require('scripts.registry')
 local runtime=require('scripts.runtime.computer')
 local shell=require('scripts.runtime.shell')
 local compiler=require('scripts.runtime.compiler')
-local sandbox=require('scripts.runtime.sandbox')
+local environment=require('scripts.runtime.environment')
 local codec=require('scripts.runtime.shell-values')
 local admission=require('scripts.runtime.admission')
 local scheduler=require('scripts.scheduler')
@@ -101,6 +101,29 @@ function M.run()
       assert(f.content.console.output.text:find('Shell',1,true) and f.content.console.output.text:find('player '..b.index,1,true))
       for _,entry in ipairs(rec.logs) do assert(#entry.text<=limits.console_bytes and not entry.text:find(string.rep('x',256),1,true),'partial oversized print was appended') end
     end)
+    group('direct-output-arity-attribution-and-invalid-text',function()
+      local n=#rec.logs
+      local create=environment.new; local snapshots=0
+      environment.new=function(...)
+        local g=create(...); local snapshot=g.snapshot
+        g.snapshot=function(value,...)
+          if value=='captured' then snapshots=snapshots+1 end
+          return snapshot(value,...)
+        end
+        return g
+      end
+      local ok,problem=pcall(execute,'local out=print; local write=computer.log; assert(select("#",write("captured",false,nil))==0); assert(select("#",out(nil,false,nil))==0); assert(select("#",out())==0)')
+      environment.new=create
+      assert(ok,problem); assert(snapshots==0,'Console log repeated the string Data snapshot')
+      assert(#rec.logs==n+4 and rec.logs[n+2].text:match('^Shell #[%d]+ output: captured$')
+        and rec.logs[n+3].text:match(' output: nil\tfalse\tnil$') and rec.logs[n+4].text:match(' output: $'))
+      tick=tick+1
+      execute('for _,v in ipairs({false,3,{}}) do assert(not pcall(computer.log,v)) end; assert(not pcall(computer.log))')
+      local previous=rec.logs[#rec.logs]
+      tick=tick+1
+      execute('local out=print; computer.setState("refusal_payload",string.rep("x",8192)); pcall(function() for i=1,1024 do computer.getState("refusal_payload") end end); out("unsafe-after-fatal")',false)
+      assert(rec.logs[#rec.logs-2]==previous and not rec.logs[#rec.logs].text:find('unsafe-after-fatal',1,true))
+    end)
     group('follow-off-and-focused-draft-refresh-stability',function()
       local c=f.content.console; local source=f.content.editor.source; local writes=source.text_writes
       c.follow.state=false; editor.on_checked{player_index=a.index,element=c.follow,tick=tick}
@@ -159,6 +182,26 @@ function M.run()
       local graph=rec.shell.values
       execute('computer.setState("effect",11); x=99; error("after effect")',false)
       assert(rec.state.effect==11 and rec.shell.values==graph and rec.status=='stopped')
+      tick=tick+1; execute('assert(x==5)')
+    end)
+    group('native-discarded-temporaries-and-final-graph-boundary',function()
+      execute('local t={}; for i=1,2048 do t[i]=i end; local s=string.rep("x",32768); assert(#t==2048 and #s==32768)')
+      local graph=rec.shell.values
+      tick=tick+1; assert(execute('computer.setState("before_graph_refusal",true); oversized=string.rep("x",32768)',false).code=='E_LIMIT')
+      assert(rec.shell.values==graph and rec.state.before_graph_refusal)
+      tick=tick+1; execute('assert(oversized==nil and x==5)')
+    end)
+    group('final-owner-check-before-shell-graph-publication',function()
+      local graph,identity,native=rec.shell.values,rec.shell.id,runtime.services
+      runtime.services=function(...)
+        local services=native(...)
+        services.computer.revoke=function() rec.shell.id=identity..'-retired' end
+        return services
+      end
+      local accepted,problem=pcall(execute,'x=900; computer.revoke()',false)
+      runtime.services=native; rec.shell.id=identity
+      assert(accepted,problem)
+      assert(problem.code=='E_NOT_FOUND' and rec.shell.values==graph)
       tick=tick+1; execute('assert(x==5)')
     end)
     group('unsupported-retention-and-forged-binding-record',function()
@@ -245,7 +288,7 @@ function M.run()
       local graph=rec.shell.values
       submit('x=999')
       local ctx=runtime.context(rec,tick)
-      assert(admission.reserve(ctx,'work',limits.callback_work-ctx.machine.work))
+      assert(admission.reserve(ctx,'work',admission.host_ceiling(ctx.ledger,tick)-ctx.ledger.total))
       rec.powered=false
       assert(rec.shell.values==graph and #rec.shell.pending==1 and out.output_owner)
       tick=tick+1; dispatch()
@@ -289,16 +332,52 @@ function M.run()
       tick=tick+1; assert(execute('peripheral.setMonitorSyncGroup({{name="'..screen.id..'",wire="red"}})',false).code=='E_BUSY')
       assert(rec.monitor_sync==selection,'shell conflict changed program selection')
     end)
-    group('loop-failure-same-tick-credits-and-program-serviceability',function()
-      execute('while true do end',false)
+    group('preparation-deferral-keeps-command-graph-order-and-credits',function()
+      execute('prepare_payload=string.rep("x",8192)')
+      for _,phase in ipairs({'overhead','compile','graph'}) do
+        tick=tick+1
+        submit('computer.setState("prepared",(computer.getState("prepared") or 0)+1)')
+        local s=rec.shell; local item=s.pending[1]; local graph=s.values
+        local bytes,logs,last=s.pending_bytes,#rec.logs,rec.last_dispatch_tick
+        local ctx=runtime.context(rec,tick)
+        if phase=='compile' then assert(admission.reserve(ctx,'compile',limits.compile_work-ctx.machine.compile-1))
+        else assert(admission.reserve(ctx,'work',admission.host_ceiling(ctx.ledger,tick)-ctx.ledger.total-(phase=='overhead' and 1 or 10000))) end
+        local spent=ctx.ledger.total; local decode=codec.decode; local decoded=0
+        codec.decode=function(...) decoded=decoded+1; return decode(...) end
+        local dispatched=scheduler.dispatch(rec,tick)
+        codec.decode=decode
+        assert(not dispatched,'unstarted '..phase..' refusal consumed the command')
+        assert(s.pending[1]==item and s.pending_bytes==bytes and s.values==graph and #rec.logs==logs and rec.last_dispatch_tick==last)
+        assert(ctx.ledger.total>=spent,'preparation returned spent credits')
+        if phase=='graph' then assert(decoded==1,'refusal did not reach graph reconstruction') end
+        local effects=rec.state.prepared or 0
+        tick=tick+1; dispatch()
+        assert(#s.pending==0 and rec.state.prepared==effects+1)
+      end
+      tick=tick+1; execute('assert(#prepare_payload==8192)')
+    end)
+    group('unfit-preparation-fails-and-deferred-authority-is-rechecked',function()
+      submit('computer.setState("unfit",true)'); tick=tick+1
+      local old=limits.compile_work; limits.compile_work=1
+      dispatch(); limits.compile_work=old
+      assert(rec.shell.diagnostic.code=='E_BUDGET' and #rec.shell.pending==0 and not rec.state.unfit)
+      tick=tick+1; submit('computer.setState("canceled",true)')
+      local ctx=runtime.context(rec,tick)
+      assert(admission.reserve(ctx,'work',admission.host_ceiling(ctx.ledger,tick)-ctx.ledger.total-1))
+      assert(not scheduler.dispatch(rec,tick) and #rec.shell.pending==1)
+      a.opened={unrelated=true}; dispatch(); a.opened=f
+      assert(#rec.shell.pending==0 and rec.shell.status:find('Canceled',1,true) and not rec.state.canceled)
+    end)
+    group('host-refusal-same-tick-credits-and-program-serviceability',function()
+      execute('computer.setState("refusal_payload",string.rep("x",8192)); for i=1,1024 do computer.getState("refusal_payload") end',false)
       assert(rec.shell.diagnostic.code=='E_BUDGET' and rec.status=='running')
       local ctx=runtime.context(rec,tick); local spent=ctx.machine.work
       assert(runtime.context(rec,tick).machine.work==spent)
       tick=tick+1; execute('assert(x==8)')
       for _,text in ipairs({
-        'xpcall(function() while true do end end,function(e) computer.setState("unsafe_handler",true) end)',
-        'xpcall(function() error("x") end,function(e) while true do end end)',
-        'pcall(function() xpcall(function() error("x") end,function(e) error("again") end) end)'
+        'xpcall(function() for i=1,1024 do computer.getState("refusal_payload") end end,function(e) computer.setState("unsafe_handler",true) end)',
+        'xpcall(function() error("x") end,function(e) for i=1,1024 do computer.getState("refusal_payload") end end)',
+        'pcall(function() xpcall(function() error("x") end,function(e) for i=1,1024 do computer.getState("refusal_payload") end end) end)'
       }) do
         local graph=rec.shell.values
         tick=tick+1; assert(execute(text,false).code=='E_BUDGET')

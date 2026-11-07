@@ -2,10 +2,17 @@ local compiler = require('scripts.runtime.compiler')
 local admission = require('scripts.runtime.admission')
 local limits = require('scripts.runtime.limits')
 local examples = require('examples.planning-programs')
-local sandbox = require('scripts.runtime.sandbox')
+local environment = require('scripts.runtime.environment')
 local M = {}
 local function source(body)
   return 'function start(event) '..body..' end'
+end
+local function host_services(ctx,output)
+  return function(env)
+    return {computer={log=output or function() end,exhaust=function()
+      env.spend(admission.host_ceiling(ctx.ledger,ctx.tick)-ctx.ledger.total+1)
+    end}}
+  end
 end
 function M.run(report_total)
   local tests=0
@@ -19,7 +26,7 @@ function M.run(report_total)
   local function run_case(name,body,expect,code)
     local plan,ctx=compiled(body)
     local effects=0
-    local ok,e=compiler.run(plan,'start',{name='start',tick=0},{computer={log=function(text) assert(type(text)=='string'); effects=effects+1 end}},ctx)
+    local ok,e=compiler.run(plan,'start',{name='start',tick=0},host_services(ctx,function(text) assert(type(text)=='string'); effects=effects+1 end),ctx)
     assert(ok==expect,name..': '..(e and e.message or 'unexpected result'))
     if code then assert(e.code==code,name..': '..e.code) end
     report(name)
@@ -34,19 +41,19 @@ function M.run(report_total)
     while i>0 do i=i-1 end
     assert(sum==5); computer.log(string.format('%s:%d','ok',sum))
   ]],true)
-  local _,loopctx=run_case('infinite-loop','while true do end',false,'E_BUDGET')
-  assert(loopctx.machine.work==limits.callback_work)
-  run_case('recursion','local function f() return f() end; f()',false,'E_BUDGET')
-  local effects=run_case('pcall-cannot-swallow',[[pcall(function() while true do end end); computer.log('unsafe')]],false,'E_BUDGET')
+  run_case('finite-native-loop-and-recursion',[[
+    local n=0; for i=1,500001 do n=n+1 end; assert(n==500001)
+    local function recurse(n) if n==0 then return 0 end; return 1+recurse(n-1) end
+    assert(recurse(96)==96)
+  ]],true)
+  local effects=run_case('pcall-cannot-swallow-host-refusal',[[pcall(computer.exhaust); computer.log('unsafe')]],false,'E_BUDGET')
   assert(effects==0)
-  effects=run_case('mutual-recursion',[[local a,b; a=function() return b() end; b=function() return a() end; a()]],false,'E_BUDGET')
+  effects=run_case('mutual-host-refusal',[[local a,b; a=function() return b() end; b=function() computer.exhaust() end; a()]],false,'E_BUDGET')
   assert(effects==0)
-  run_case('dynamic-string-metatable',[[local s='abc'; local m=s['sub']; m(s,1)]],false,'E_ARGUMENT')
+  run_case('dynamic-string-members',[[local s='abc'; local m=s['sub']; assert(m(s,1)=='abc'); assert(s['ma'..'tch']==nil)]],true)
   run_case('library-mutation',[[string.sub=nil]],false,'E_ARGUMENT')
-  run_case('huge-format-width',[[string.format('%999999999s','a')]],false,'E_ARGUMENT')
-  run_case('huge-repetition',[[string.rep('a',100000000)]],false,'E_LIMIT')
-  run_case('allocation-growth',[[local t={}; while true do t[#t+1]={} end]],false)
-  run_case('sort-comparator-loop',[[local t={2,1}; table.sort(t,function(a,b) while true do end end)]],false,'E_BUDGET')
+  run_case('finite-format-width-and-malformed-format',[[assert(#string.format('%32s','a')==32); assert(not pcall(string.format,'%'))]],true)
+  run_case('finite-temporary-growth',[[local s=string.rep('a',32768); local t={}; for i=1,2048 do t[i]=i end; assert(#s==32768 and #t==2048)]],true)
   run_case('cyclic-service-data',[[local t={}; t.self=t; computer.log(t)]],false,'E_ARGUMENT')
   run_case('ordinary-protection',[[local ok,e=pcall(function() error({code='E_ARGUMENT',message='catchable'}) end); assert(not ok and e.code=='E_ARGUMENT')]],true)
   run_case('safe-reference-description',[[assert(tostring({})=='table'); assert(tostring(function() end)=='guest function')]],true)
@@ -63,16 +70,16 @@ function M.run(report_total)
   assert(not plan and e.code=='E_LIMIT'); report('parser-depth')
   -- Shared admission survives reentry on the same tick and admits a healthy peer.
   local ledger=admission.new()
-  plan,ctx=compiled('while true do end','malicious',ledger,10)
-  local ok=compiler.run(plan,'start',{}, {},ctx); assert(not ok)
+  plan,ctx=compiled('computer.exhaust()','refused',ledger,10)
+  local ok=compiler.run(plan,'start',{},host_services(ctx),ctx); assert(not ok)
   local spent=ctx.machine.work
-  local again=admission.context(ledger,'malicious',10)
+  local again=admission.context(ledger,'refused',10)
   assert(again.machine.work==spent)
   local healthy,neighbor=compiled('computer.log("healthy")','neighbor',ledger,10)
   local count=0
   ok,e=compiler.run(healthy,'start',{}, {computer={log=function() count=count+1 end}},neighbor)
   assert(ok,e and e.message); assert(count==1)
-  assert(not admission.reserve(again,'work',1)); report('healthy-neighbor-and-same-tick-ledger')
+  assert(again.machine.work==spent and ledger.total>=spent); report('healthy-neighbor-and-same-tick-ledger')
   local zero=admission.context(admission.new(),'zero',0)
   zero.machine.compile=limits.compile_work
   plan,e=compiler.compile(source(''),zero); assert(not plan and e.code=='E_BUDGET')
@@ -90,11 +97,6 @@ function M.run(report_total)
   local success,diagnostic=compiler.run(p,'start',{}, {computer={log=function() writes=writes+1 end}},c)
   assert(not success and diagnostic.code=='E_STOP' and writes==0)
   report('uncatchable-stop')
-  p,c=compiled('computer.log("unsafe")')
-  c.machine.allocations=limits.callback_allocations
-  success,diagnostic=compiler.run(p,'start',{}, {computer={log=function() writes=writes+1 end}},c)
-  assert(not success and diagnostic.code=='E_BUDGET' and writes==0)
-  report('construction-allocation-poison')
   p,c=compiled('local h=peripheral.wrap(); assert(h.get()==false); local ok=pcall(function() h.get=nil end); assert(not ok)')
   success,diagnostic=compiler.run(p,'start',{}, function(guard)
     local handle=guard.namespace({get=guard.service(function() return false end)},'test peripheral')
@@ -104,15 +106,15 @@ function M.run(report_total)
   report('guard-aware-protected-service-handle')
   -- Caller-owned generated text is not trusted after retention or accidental mutation.
   p,c=compiled('computer.log("validated")')
-  p.generated='while true do end'; p.nodes=-100; p.handlers={}
+  p.generated='error("caller-owned executable")'; p.nodes=-100; p.handlers={}
   local warm=admission.context(admission.new(),'cache-peer',3)
   local cold=admission.context(admission.new(),'cache-peer',3)
-  local retained={compiler_version=p.compiler_version,api_version=p.api_version,source=p.source,generated='while true do end'}
+  local retained={compiler_version=p.compiler_version,api_version=p.api_version,source=p.source,generated='error("caller-owned executable")'}
   success,diagnostic=compiler.run(p,'start',{}, {computer={log=function() end}},warm)
   assert(success,diagnostic and diagnostic.message)
   success,diagnostic=compiler.run(retained,'start',{}, {computer={log=function() end}},cold)
   assert(success,diagnostic and diagnostic.message)
-  assert(warm.machine.compile==cold.machine.compile and warm.machine.work==cold.machine.work and warm.machine.allocations==cold.machine.allocations and warm.ledger.total==cold.ledger.total)
+  assert(warm.machine.compile==cold.machine.compile and warm.machine.work==cold.machine.work and warm.ledger.total==cold.ledger.total)
   warm=admission.context(admission.new(),'cache-peer',4); cold=admission.context(admission.new(),'cache-peer',4)
   warm.machine.compile=limits.compile_work-300; cold.machine.compile=limits.compile_work-300
   local a,ae=compiler.run(p,'start',{}, {},warm)
@@ -120,26 +122,17 @@ function M.run(report_total)
   assert(not a and not b and ae.code=='E_BUDGET' and be.code=='E_BUDGET')
   assert(warm.machine.compile==cold.machine.compile and warm.ledger.total==cold.ledger.total)
   report('retained-generated-data-and-cold-warm-admission')
-  -- A comparator can change the original table while native sorting uses a
-  -- staged copy. Its effects remain, but final sorted writes must still fit.
-  local targets,values={},{}
-  for i=1,limits.tuple_entries do targets[i]='t[offset+'..(i+2)..']'; values[i]='true' end
-  local assignment=table.concat(targets,',')..'='..table.concat(values,',')
-  assert(limits.table_entries%limits.tuple_entries==0,'review sort fixture for changed limits')
-  for _,room in ipairs({false,true}) do
-    local text=source('local t={2,1}; local changed=false; local ok,e=pcall(table.sort,t,function(a,b) '..
-      'if not changed then changed=true; t[1],t[2]=nil,nil; for chunk=0,'..(limits.table_entries/limits.tuple_entries-1)..
-      ' do local offset=chunk*'..limits.tuple_entries..'; '..assignment..' end; '..
-      (room and ('t['..(limits.table_entries+1)..'],t['..(limits.table_entries+2)..']=nil,nil; ') or '')..
-      'end; return a<b end); '..
-      (room and 'assert(ok and t[1]==1 and t[2]==2); ' or 'assert(not ok and e.code=="E_LIMIT" and t[1]==nil and t[2]==nil); ')..
-      'local count=0; for k,v in pairs(t) do count=count+1 end; assert(count=='..limits.table_entries..')')
-    local candidate,err=compiler.compile(text,admission.context(admission.new(),'sort-capacity-compile',0))
-    assert(candidate,err and err.message)
-    local ok,diag=compiler.run(candidate,'start',{}, {},admission.context(admission.new(),'sort-capacity-run',0))
-    assert(ok,diag and diag.message)
-  end
-  report('sort-capacity-after-comparator-mutation')
+  -- Compare partial native sort writes and comparator effects with this engine.
+  local sort_source="local t={5,1,4,2,3}; local alias=t; local calls=0; local ok=pcall(table.sort,t,function(a,b) calls=calls+1; if calls==3 then error('stop') end; return a<b end); return ok,calls,table.concat(alias,',')"
+  local native=table.pack(assert(load(sort_source,'@native-sort','t',_ENV))())
+  local text=source('local function sort_case() '..sort_source..' end; computer.observe(sort_case())')
+  local candidate,err=compiler.compile(text,admission.context(admission.new(),'native-sort-compile',0))
+  assert(candidate,err and err.message)
+  local observed
+  local ok,diag=compiler.run(candidate,'start',{}, {computer={observe=function(...) observed=table.pack(...) end}},admission.context(admission.new(),'native-sort-run',0))
+  assert(ok,diag and diag.message)
+  assert(observed.n==native.n); for i=1,native.n do assert(observed[i]==native[i]) end
+  report('native-sort-partial-writes-comparator-effects-and-aliases')
   if game then
     p,c=compiled('local host=computer.hostFixture(); computer.log("unsafe")')
     writes=0
@@ -156,7 +149,7 @@ function M.run(report_total)
     context=context or admission.context(admission.new(),'declarations',0)
     local candidate,err=compiler.compile(text,context)
     assert(candidate,err and err.message)
-    assert(candidate.api_version==1 and candidate.compiler_version==2 and candidate.mode==nil)
+    assert(candidate.api_version==1 and candidate.compiler_version==3 and candidate.mode==nil)
     local accepted,diagnostic,control=compiler.run(candidate,name or 'start',{},services or {},context)
     return accepted,diagnostic,candidate,control,context
   end
@@ -295,7 +288,7 @@ end
   assert(success,diagnostic and diagnostic.message)
   -- Native lexical limits still apply; no new unbounded private registry.
   for i=#declarations+1,210 do declarations[i]='local function h'..i..'() end' end
-  refused(table.concat(declarations,'\n')..'\nfunction start() end','E_PROGRAM','generated source')
+  refused(table.concat(declarations,'\n')..'\nfunction start() end','E_PROGRAM','native syntax')
   report('declaration-private-helper-envelope')
   writes=0
   success,diagnostic=document([[
@@ -312,13 +305,13 @@ function sample() end
   local fault_source='local function helper()\n  error("helper failure")\nend\nfunction start() helper() end'
   success,diagnostic=document(fault_source)
   assert(not success and diagnostic.code=='E_PROGRAM' and diagnostic.message=='helper failure')
-  assert(diagnostic.line==2 and diagnostic.column==3)
+  assert(diagnostic.line==2 and diagnostic.column==1)
   report('declaration-original-helper-diagnostic')
   local shared=admission.new()
   local bad_context=admission.context(shared,'declaration-malicious',12)
   writes=0
-  success,diagnostic=document('function start() pcall(a); computer.log("unsafe") end; function a() return b() end; function b() return a() end',nil,
-    {computer={log=function() writes=writes+1 end}},bad_context)
+  success,diagnostic=document('function start() pcall(a); computer.log("unsafe") end; function a() return b() end; function b() computer.exhaust() end',nil,
+    host_services(bad_context,function() writes=writes+1 end),bad_context)
   assert(not success and diagnostic.code=='E_BUDGET' and writes==0)
   local spent=bad_context.machine.work
   local neighbor=admission.context(shared,'declaration-neighbor',12)
@@ -326,19 +319,18 @@ function sample() end
     {computer={log=function() writes=writes+1 end}},neighbor)
   assert(success,diagnostic and diagnostic.message); assert(writes==1)
   assert(admission.context(shared,'declaration-malicious',12).machine.work==spent)
-  report('declaration-fatal-protected-recursion-and-healthy-neighbor')
-  success,diagnostic=document('function start() pcall(start) end')
-  assert(not success and diagnostic.code=='E_BUDGET')
-  report('declaration-direct-recursion-is-bounded')
+  report('declaration-fatal-protected-host-refusal-and-healthy-neighbor')
+  success,diagnostic=document('function start(n) if type(n)=="number" and n>0 then return start(n-1) end; if type(n)=="table" then assert(pcall(start,96)) end end')
+  assert(success,diagnostic and diagnostic.message)
+  report('declaration-finite-direct-protected-recursion')
   local exhausted=admission.context(admission.new(),'declaration-shared-exhaustion',13)
-  candidate=assert(compiler.compile('function start() pcall(spin); computer.log("unsafe") end; function spin() while true do end end',exhausted))
-  -- Leave a controlled shared
-  -- execution envelope, smaller than the per-machine work ceiling.
+  candidate=assert(compiler.compile('function start() pcall(spin); computer.log("unsafe") end; function spin() computer.exhaust() end',exhausted))
+  -- Reconstruction fits; the checked host operation refuses without a later log.
   exhausted.ledger.total=limits.host_work_per_tick-limits.maintenance_work_per_tick-100000
   writes=0
-  success,diagnostic=compiler.run(candidate,'start',{}, {computer={log=function() writes=writes+1 end}},exhausted)
+  success,diagnostic=compiler.run(candidate,'start',{}, host_services(exhausted,function() writes=writes+1 end),exhausted)
   assert(not success and diagnostic.code=='E_BUDGET' and writes==0)
-  assert(exhausted.machine.work>0 and exhausted.machine.work<limits.callback_work)
+  assert(exhausted.ledger.total>=limits.host_work_per_tick-limits.maintenance_work_per_tick-100000)
   report('declaration-pcall-cannot-renew-shared-budget')
   writes=0
   local control
@@ -362,7 +354,7 @@ function sample() end
     local tuple=table.pack(false,nil,3,nil)
     local a,b,c,d=unpack(tuple,1,4); assert(a==false and b==nil and c==3 and d==nil)
     assert(select('#',unpack(tuple,1,4))==4 and select('#',unpack(tuple,2,1))==0)
-    assert(not pcall(unpack,tuple,0) and not pcall(unpack,tuple,1,100000))
+    assert(select('#',unpack(tuple,0,4))==5 and select('#',unpack(tuple,1,160))==160)
     for _,fn in ipairs({rawget,rawset,rawlen}) do
       for _,target in ipairs({math,computer,peripheral}) do
         local ok,e=pcall(fn,target,'x',true); assert(not ok and e.code=='E_ARGUMENT')
@@ -453,69 +445,167 @@ function sample() end
   end
   report('expanded-reservation-parameter-and-local-shadowing')
   for _,body in ipairs({
-    [[xpcall(function() while true do end end,function(e) computer.log('unsafe') end); computer.log('unsafe')]],
-    [[xpcall(function() error('x') end,function(e) while true do end end); computer.log('unsafe')]],
-    [[pcall(function() xpcall(function() error('x') end,function(e) error('again') end) end); computer.log('unsafe')]],
-    [[xpcall(function() error('x') end,function(e) local function f() return f() end; return f() end); computer.log('unsafe')]],
-    [[xpcall(function() error('x') end,function(e) while true do local t={} end end); computer.log('unsafe')]],
-    [[pcall(function() xpcall(function() xpcall(function() while true do end end,function() computer.log('unsafe') end) end,function() computer.log('unsafe') end) end)]]
-  }) do
-    assert(run_case('xpcall-fatal-'..tostring(tests),body,false,'E_BUDGET')==0)
-  end
+    [[xpcall(computer.exhaust,function(e) computer.log('unsafe') end); computer.log('unsafe')]],
+    [[xpcall(function() error('x') end,function(e) computer.exhaust() end); computer.log('unsafe')]],
+    [[pcall(function() xpcall(function() xpcall(computer.exhaust,function() computer.log('unsafe') end) end,function() computer.log('unsafe') end) end)]]
+  }) do assert(run_case('xpcall-fatal-host-'..tests,body,false,'E_BUDGET')==0) end
   for _,body in ipairs({
     [[xpcall(computer.stop,function(e) computer.log('unsafe') end); computer.log('unsafe')]],
     [[xpcall(function() error('x') end,function() computer.stop() end); computer.log('unsafe')]]
   }) do assert(run_case('xpcall-stop-'..tostring(tests),body,false,'E_STOP')==0) end
-  local wide={}; for i=1,limits.tuple_entries do wide[i]='nil' end
-  run_case('xpcall-status-inclusive-tuple-overflow','xpcall(function() return '..table.concat(wide,',')..' end,function() end)',false,'E_BUDGET')
-  wide[#wide]=nil
-  run_case('xpcall-exact-status-inclusive-tuple','local t=table.pack(xpcall(function() return '..table.concat(wide,',')..' end,function() end)); assert(t.n=='..limits.tuple_entries..')',true)
+  local wide={}; for i=1,160 do wide[i]='nil' end
+  run_case('native-xpcall-wide-status-inclusive-tuple','local t=table.pack(xpcall(function() return '..table.concat(wide,',')..' end,function() end)); assert(t.n==161)',true)
   local constants={}; for i=1,limits.table_entries do constants[i]='false' end
-  run_case('rawset-full-table-replacement-deletion-atomic-growth',[[
+  run_case('rawset-native-growth-replacement-deletion',[[
     local t={]]..table.concat(constants,',')..[[}; local alias=t
     rawset(t,1,true); assert(rawget(alias,1)==true)
-    local ok,e=pcall(rawset,t,'extra',false); assert(not ok and e.code=='E_LIMIT' and rawget(alias,'extra')==nil)
+    local ok,e=pcall(rawset,t,'extra',false); assert(ok and rawequal(e,t) and rawget(alias,'extra')==false)
     rawset(t,1,nil); rawset(t,'extra',false); assert(rawget(alias,1)==nil and rawget(alias,'extra')==false)
   ]],true)
-  -- Exact host-controlled admission witnesses observe aliases even when fatal
-  -- poison correctly prevents the compiled guest from doing its own readback.
-  for _,kind in ipairs({'work','allocations'}) do
-    local function setup()
-      local context=admission.context(admission.new(),'raw-boundary',0)
-      local guard=sandbox.new(context,{}); guard.initialize()
-      local t=guard.new(1,function() return {key=false} end)
-      return context,guard,t,guard.global('rawset')
-    end
-    local context,guard,t,fn=setup(); local before=context.machine[kind]
-    assert(guard.call(fn,t,'key',true)==t); local cost=context.machine[kind]-before
-    context,guard,t,fn=setup()
-    context.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost
-    assert(pcall(guard.call,fn,t,'key',true) and t.key==true)
-    context,guard,t,fn=setup()
-    context.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost+1
-    assert(not pcall(guard.call,fn,t,'key',true) and t.key==false)
-    assert(guard.diagnostic({}).code=='E_BUDGET')
-    assert(not pcall(fn,{},'key',true))
-  end
-  report('rawset-exact-work-allocation-and-one-unit-short-no-mutation')
   run_case('raw-maximum-string-comparison-and-length',[[
     local s=string.rep('x',16384); assert(rawequal(s,s) and rawlen(s)==16384)
-    assert(not pcall(function() return rawget({},s..'x') end))
+    assert(rawget({},s..'x')==nil)
     local t={[1]=1,[3]=3}; assert(rawlen(t)==#t)
   ]],true)
   for _,name in ipairs({'rawget','rawset','rawlen'}) do
+    local original={key=false}
     local context=admission.context(admission.new(),'foreign-raw',0)
-    local guard=sandbox.new(context,{}); guard.initialize()
-    local fn=guard.global(name)
-    local ok,e=pcall(fn,{},'key',true)
-    assert(not ok and e.code=='E_ARGUMENT')
+    local guard=environment.new(context,{computer={copy=function() return original end}}); guard.initialize()
+    local copy=guard.globals.computer.copy()
+    assert(copy~=original and copy.key==false)
+    if name=='rawset' then assert(guard.globals.rawset(copy,'key',true)==copy and original.key==false)
+    elseif name=='rawget' then assert(guard.globals.rawget(copy,'key')==false)
+    else assert(guard.globals.rawlen(copy)==#copy) end
+    assert(not pcall(guard.globals[name],guard.globals.computer,'key',true))
   end
-  report('raw-host-table-ownership-refused')
-  local print_args={}; for i=1,limits.tuple_entries do print_args[i]='""' end
-  assert(run_case('print-maximum-tuple','print('..table.concat(print_args,',')..')',true)==1)
-  print_args[#print_args+1]='""'
-  refused(source('print('..table.concat(print_args,',')..')'),'E_LIMIT')
-  report('print-overwide-tuple-refused-before-execution')
+  report('raw-host-transfer-copy-isolation-and-protected-target-refusal')
+  local print_args={}; for i=1,160 do print_args[i]='""' end
+  assert(run_case('print-native-wide-tuple','print('..table.concat(print_args,',')..')',true)==1)
+  report('print-over-former-tuple-limit-with-bounded-output')
+  do
+    assert(type(admission.bind)=='function','specialized admission binding is missing')
+    local ctx=admission.context(admission.new(),'bound',10)
+    local work=admission.bind(ctx)
+    for _,reserve in ipairs({work}) do
+      for _,bad in ipairs({-1,0.5,math.huge,0/0,'1',false,1000000001}) do
+        assert(not pcall(reserve,bad),'malformed bound reservation accepted')
+        assert(ctx.ledger.total==0 and ctx.machine.work==0 and ctx.machine.allocations==nil)
+      end
+      assert(not pcall(reserve))
+    end
+    assert(work(1) and ctx.ledger.total==1)
+    local peer=admission.context(ctx.ledger,'peer',10)
+    assert(admission.reserve(peer,'work',7) and ctx.machine.work==1 and ctx.ledger.total==8)
+    ctx.ledger.maintenance={maintenance_tick=10,maintenance_spent=limits.host_work_per_tick-ctx.ledger.total}
+    assert(not work(1) and ctx.ledger.total==8)
+    ctx.ledger.maintenance=nil
+    assert(work(1) and ctx.machine.work==2)
+    admission.context(ctx.ledger,'next',11)
+    assert(not pcall(work,1) and ctx.ledger.total==0)
+    local forged=admission.context(admission.new(),'forged',0)
+    forged.machine={work=0,compile=0}
+    assert(not pcall(admission.bind,forged),'detached machine admitted')
+    for _,room in ipairs({0,2,3,4,5}) do
+      local c=admission.context(admission.new(),'host-shortage',0); local g=environment.new(c,{})
+      c.ledger.total=admission.host_ceiling(c.ledger,0)-room
+      local before=c.ledger.total; local ok=pcall(g.spend,4)
+      assert(ok==(room>=4) and c.ledger.total==before+(room>=4 and 4 or 0))
+      if not ok then assert(not pcall(g.spend,0)) end
+    end
+  end
+  report('specialized-admission-malformed-stale-shared-maintenance-and-host-shortages')
+  do
+    local descriptions,guards={},{}
+    for i=1,3 do
+      local context=admission.context(admission.new(),'isolated-'..i,0)
+      local g=environment.new(context,{},i==3 and {root={}} or nil)
+      local namespace=g.namespace
+      g.namespace=function(entries,label)
+        if label=='colors' then descriptions[i]=entries end
+        return namespace(entries,label)
+      end
+      g.initialize(); guards[i]=g
+      assert(g.globals.unpack==g.globals.table.unpack)
+      assert(g.globals.colors==g.globals.colours)
+      if i>1 then
+        assert(descriptions[i]==descriptions[1],'immutable host color description was rebuilt')
+        assert(g.globals.colors~=guards[1].globals.colors)
+      end
+    end
+    local foreign=guards[1].namespace({value=false},'foreign invocation')
+    for i=2,3 do
+      local ok,e=pcall(guards[i].globals.rawget,foreign,'value')
+      assert(not ok and e.code=='E_ARGUMENT','shared helper accepted another invocation table')
+    end
+    assert(not pcall(guards[1].spend,limits.host_work_per_tick))
+    for i=2,3 do assert(guards[i].globals.tostring(false)=='false') end
+    assert(not pcall(guards[1].check))
+  end
+  report('shared-host-description-fresh-bindings-program-shell-and-failed-neighbor-isolation')
+  do
+    local text=[[function start()
+  computer.log("before")
+  local a,b,c=1,false,nil
+  a,b,c=b,c,a
+  local d=a
+  computer.log("after")
+end]]
+    local function location(text,needle)
+      local offset=assert(text:find(needle,1,true))
+      local prefix=text:sub(1,offset-1)
+      local _,lines=prefix:gsub('\n','')
+      return lines+1,#(prefix:match('[^\n]*$'))+1
+    end
+    local plan=assert(compiler.compile(text,admission.context(admission.new(),'region-compile',0)))
+    assert(plan.generated==text and not plan.generated:find('__tc.',1,true))
+    report('native-source-without-operation-probes')
+    run_case('native-control-flow-and-nil-assignment',[[
+      local a,b,c=1,false,nil
+      a,b,c=b,c,a
+      local d=a
+      assert(a==false and b==nil and c==1 and d==false)
+      if false then local x=0; error('wrong branch')
+      elseif true then local x,y=2,3; x,y=y,x; assert(x==3 and y==2) end
+      local skipped=false and computer.log('unsafe') or true
+      assert(skipped and (true or computer.log('unsafe')))
+      local i=0
+      while i<3 do local x,y=i,false; x,y=y,x; i=i+1 end
+      repeat local x=i; i=i-1 until i==0
+      for j=1,3 do local x,y=j,nil; x,y=y,x; assert(x==nil and y==j) end
+      for j,v in ipairs({false,2,3}) do local x,y=v,j; x,y=y,x; assert(x==j and y==v) end
+      local function tuple() local x,y,z=false,nil,3; return x,y,z,nil end
+      assert(select('#',tuple())==4)
+      computer.log('finished')
+    ]],true)
+    for _,body in ipairs({
+      'local i=0; while i<96 do local a,b=1,false; a,b=b,a; i=i+1 end',
+      'local i=0; repeat local a,b=1,false; a,b=b,a; i=i+1 until i==96',
+      'for i=1,96 do local a,b=1,false; a,b=b,a end',
+      'local n=0; local function next_value() n=n+1; if n<=96 then return n end end; for i in next_value do local a,b=1,false; a,b=b,a end',
+      'local function recurse(n) local a,b=1,false; a,b=b,a; if n>0 then return recurse(n-1) end end; recurse(96)',
+      'xpcall(function() local x=1; for i=1,96 do local y=x end end,function() computer.log("unsafe") end)'
+    }) do
+      assert(run_case('native-finite-control-'..tests,'computer.log("before"); '..body..'; computer.log("after")',true)==2)
+    end
+    local cases={
+      {body='local x=false\n  local y=x\n  local z=y+1',needle='local z=y+1',code='E_PROGRAM'},
+      {body='local x="x"\n  local y=x\n  computer.exhaust()',needle='computer.exhaust',code='E_BUDGET'},
+      {body='local x=1\n  local y=x\n  pcall(computer.stop)',needle='pcall',code='E_STOP'}
+    }
+    for _,case in ipairs(cases) do
+      local body='\n  computer.log("before")\n  '..case.body..'\n  computer.log("unsafe")\n'
+      local count,_,e=run_case('native-dynamic-fatal-location-'..tests,body,false,case.code)
+      local line,column=location(source(body),case.needle)
+      assert(count==1 and e.line==line and e.column==1,'lost original dynamic/fatal source boundary')
+    end
+    run_case('native-dynamic-copy-format-compare-and-protection',[[
+      local x='a'; local y=x
+      local s=string.rep(y,8); local t=table.pack(s..y,false,nil)
+      assert(string.format('%s',t[1])=='aaaaaaaaa' and t.n==3)
+      local ok,e=pcall(function() local x=false; local y=x; return y+1 end)
+      assert(not ok and type(e)=='string')
+    ]],true)
+  end
   if report_total~=false then
     if log then log('TC_CONTRACT_TOTAL '..tests) else print('TC_CONTRACT_TOTAL '..tests) end
   end

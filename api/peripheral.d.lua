@@ -62,7 +62,14 @@
 ---A logical monitor reachable through one member does not internally bridge unwired members.
 ---KV access on both colors uses one database, not a color bridge.
 ---
----Every target call validates exact identity, generation, force, surface, selected path and device requirements again.
+---Every target call requires current identity, generation, force, surface, selected path and device authority.
+---The host can reuse a complete physical proof within one non-yielding callback or command.
+---Reuse is permitted only while the proof's assumptions remain valid.
+---Operations that can change those assumptions invalidate the proof before their effects, including failed operations.
+---A new invocation requires a new proof. Saved bindings and background observations do not supply authority.
+---Native availability and method-specific checks still apply on each call.
+---These checks apply to direct native calls, captured methods, and peripheral.call.
+---Temporary Lua allocation is not a device-authority proof.
 ---Temporary or incomplete topology causes E_NETWORK_PENDING or E_LIMIT, never a successful empty inventory.
 ---Active methods on native radars and speakers require power.
 ---Reachable metadata and getLimits remain usable without power.
@@ -146,8 +153,9 @@ function peripheral.call(name, wire, method, ...) end
 ---Find all matching facades in sorted-name order as MULTIPLE RETURNS, not an array.
 ---Zero matches give zero results.
 ---Collect the results with {peripheral.find(...)} or assign the first result.
----Too many matches cause E_LIMIT.
----In that case, use getNames/wrap instead.
+---No mod tuple ceiling limits the multiple returns. Native stack limits still apply.
+---Network capacities and host-work admission can refuse incomplete discovery.
+---No successful result is truncated to fit.
 ---A bounded unknown string returns zero matches, not an unsupported-type error.
 ---@param type_name string Family string. Literal supported names refine the result type.
 ---@param wire TC.Wire Required explicit discovery channel.

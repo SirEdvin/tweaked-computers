@@ -19,6 +19,21 @@ end
 function M.check(c,p)
   if not M.live(c,p) or not M.available(c) then errors.raise('E_NOT_FOUND','execution owner no longer active or physically valid') end
 end
+-- Private, invocation-local proof; every unclassified host boundary invalidates it.
+function M.proof(c,p)
+  local owner={kind=p.kind,id=p.id}
+  local id,body,generation,force,surface=c.id,c.body,c.generation,c.force_index,c.surface_index
+  local valid=false
+  local function check()
+    if c.id~=id or c.body~=body or c.generation~=generation or c.force_index~=force or c.surface_index~=surface
+      or not registry.supported(registry.get()) or not M.live(c,owner) then
+      errors.raise('E_NOT_FOUND','execution owner no longer active or physically valid')
+    end
+    if not valid then M.check(c,owner); valid=true end
+  end
+  check()
+  return check,function() valid=false end
+end
 function M.owner(c,p,wire,path)
   return {computer_id=c.id,kind=p.kind,run_id=p.id,wire=wire,path=path}
 end

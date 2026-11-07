@@ -44,7 +44,7 @@ nav:
       - Nested schemas and enums: api/schemas.md
       - Effective limits: api/limits.md
   # BEGIN GENERATED API TYPES
-  - Guarded helpers:
+  - Native helpers:
       - globals: api/globals.md
       - table: api/table.md
       - string: api/string.md
@@ -282,6 +282,7 @@ nav:
       - TC.StatisticsKind: api/types/TC.StatisticsKind.md
       - TC.StatisticsSnapshot: api/types/TC.StatisticsSnapshot.md
       - TC.StatisticsWindow: api/types/TC.StatisticsWindow.md
+      - TC.StringInput: api/types/TC.StringInput.md
       - TC.SubscriptionId: api/types/TC.SubscriptionId.md
       - TC.Surface: api/types/TC.Surface.md
       - TC.SurfaceCondition: api/types/TC.SurfaceCondition.md

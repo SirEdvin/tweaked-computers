@@ -102,7 +102,7 @@ function Monitor.write(text) end
 ---Invalid strings, failed admission or unsafe cursor arithmetic cause no partial write.
 ---Both forms return zero values.
 ---This is existing behavior, not new permission for omitted arguments or general color coercion.
----@overload fun(text: string, foreground: nil|false, background: TC.GuestValue) # text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to guarded argument admission. The method returns zero values.
+---@overload fun(text: string, foreground: nil|false, background: TC.GuestValue) # text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to protected-value rules but no temporary-allocation admission. The method returns zero values.
 ---@param text string Literal cell bytes, bounded by write_bytes.
 ---@param foreground string One lowercase palette digit per text byte.
 ---@param background string One lowercase palette digit per text byte.

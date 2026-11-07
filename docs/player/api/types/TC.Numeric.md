@@ -9,9 +9,8 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.Numeric
 
-Only guarded numeric helpers accept this number or numeric string type.
-Strings must convert to numbers.
-Operands and results must be finite where stated.
+Native numeric helpers accept numbers and convertible numeric strings.
+Temporary numeric results can be nonfinite. Data and device domains remain stricter.
 This helper compatibility does not add coercion to computer or peripheral APIs.
 
 ```text

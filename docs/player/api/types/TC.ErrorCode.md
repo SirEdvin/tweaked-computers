@@ -42,7 +42,7 @@ Messages explain the failure, but their wording is not a stable API contract.
 
 'E_PROGRAM': An ordinary program failure escaped error handling. Earlier effects remain committed.
 
-'E_BUDGET': Candidate refusal or fatal active execution budget exhaustion.
+'E_BUDGET': Source-validation refusal or fatal host-work exhaustion; not a Lua execution watchdog.
 
 ```text
 'E_ARGUMENT'|'E_RANGE'|'E_NOT_FOUND'|'E_UNREACHABLE'|'E_NETWORK_PENDING'|'E_UNPOWERED'|'E_UNSUPPORTED'|'E_READ_ONLY'|'E_SHARED_SCOPE'|'E_WRONGTYPE'|'E_CAPACITY'|'E_LIMIT'|'E_BUSY'|'E_ENGINE'|'E_PROGRAM'|'E_BUDGET'

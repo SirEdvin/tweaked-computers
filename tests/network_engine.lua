@@ -146,7 +146,10 @@ function M.run()
     local ctx=admission.context(admission.new(),c.id,game.tick)
     local plan=assert(compiler.compile(direct_source,ctx)); local before=ctx.machine.work
     local ok,e=compiler.run(plan,'start',{},function(g)
-      if not classify then g.circuit_call=nil end -- Reference non-circuit dispatch, with the same authority checks.
+      if not classify then -- Reference ordinary input validation, with the same authority checks.
+        local input_rule=g.input_rule
+        g.input_rule=function(fn) input_rule(fn,function() return false end) end
+      end
       return runtime.services(c,game.tick,g)
     end,ctx)
     assert(ok,e and e.message); direct_work[i]=ctx.machine.work-before
@@ -192,22 +195,23 @@ function M.run()
   -- Exact unchanged production node cap, real wire chain; no truncated success.
   local bounded=game.create_surface('tc05-bounded',{width=2048,height=32}); local chain={}
   for i=1,limits.network_nodes+1 do
-    chain[i]=build(bounded,i>1 and i<=limits.tuple_entries+2 and 'kv' or 'computer',i*3,0)
+    chain[i]=build(bounded,i>1 and i<=130 and 'kv' or 'computer',i*3,0)
     if i>1 then connect(chain[i-1],chain[i],'red') end
   end
   error_is('E_LIMIT',function() inventory(chain[1],'red') end)
   disconnect(chain[#chain-1],chain[#chain],'red')
   local complete=inventory(chain[1],'red'); local n=0; for _ in pairs(complete) do n=n+1 end
-  assert(n==limits.tuple_entries+1)
+  assert(n==129)
   chain[1].status='running'; chain[1].run_id=chain[1].id..'/fixture'
-  guest(chain[1],[[local ok,e=pcall(peripheral.find,'kv_database','red'); assert(not ok and e.code=='E_LIMIT')
-    assert(#peripheral.getNames('red')==129)]])
+  guest(chain[1],[[local found=table.pack(peripheral.find('kv_database','red'))
+    local names=peripheral.getNames('red'); assert(found.n==129 and #names==129)
+    for i,name in ipairs(names) do assert(peripheral.getName(found[i])==name) end]])
   error_is('E_LIMIT',function() graph.real_edges(connector(c,'red'),nop,0) end)
   error_is('E_NETWORK_PENDING',function() peripheral.inventory(c,'red',function() error({code='E_NETWORK_PENDING',message='fixture work refusal'},0) end) end)
   for _,rec in ipairs(chain) do assert(lifecycle.remove(rec.id,'fixture-cleanup',true)) end
   report('real-maximum-node-complete-result-and-over-limit-refusal')
   -- Reconciliation baseline is silent; later transition detaches first, sorted.
-  c.active={source='',api_version=1,compiler_version=limits.compiler_version,storage_version=1,handlers={changed=true}}
+  c.active={source='function changed(e) end',revision=1,api_version=1,compiler_version=limits.compiler_version,storage_version=1,handlers={changed=true}}
   runtime.subscribe(c,'peripheral_attach','changed'); runtime.subscribe(c,'peripheral_detach','changed')
   peripheral.reconcile_one(c,'red',game.tick,nop); assert(#c.queue==0)
   output(io,c,'red')
@@ -308,7 +312,7 @@ function M.run()
   report('native-output-exact-writer-alternate-proof-and-zero-proof-credit-cleanup')
   local inspection_ctx=admission.context(admission.new(),c.id,0)
   local inspection_plan=assert(compiler.compile(inspection_source,inspection_ctx))
-  c.subscriptions={}; c.active={source=inspection_source,api_version=1,compiler_version=limits.compiler_version,storage_version=1,handlers=inspection_plan.handlers}
+  c.subscriptions={}; c.active={source=inspection_source,revision=1,api_version=1,compiler_version=limits.compiler_version,storage_version=1,handlers=inspection_plan.handlers}
   local inspected,diagnostic=compiler.run(inspection_plan,'start',{name='start'},function(g) return runtime.services(c,game.tick,g) end,inspection_ctx)
   assert(inspected,diagnostic and diagnostic.message)
   assert(#c.state.names_red==2 and #c.state.names_green==0)
@@ -332,13 +336,13 @@ local function snapshot()
     c_unit=c.body.unit_number,io_unit=io.body.unit_number,view=c.network_views.red.inventory,
     owner=io.output_owner,ledger_tick=root.ledger.tick,total=root.ledger.total,
     machine=root.ledger.machines[c.id],work=root.ledger.machines[c.id].work,
-    compile=root.ledger.machines[c.id].compile,allocations=root.ledger.machines[c.id].allocations,
+    compile=root.ledger.machines[c.id].compile,
     maintenance=root.scheduler.maintenance_spent,sequence=root.next_sequence,
     outputs=root.output_owners,interests=root.topology_interests,adoption=root.native_adoption}
 end
 local function unchanged()
   local s=f().snapshot; local now=snapshot()
-  for _,k in ipairs({'run_id','boots','source','db_unit','c_unit','io_unit','ledger_tick','total','work','compile','allocations','maintenance','sequence'}) do assert(now[k]==s[k],'cold load changed '..k) end
+  for _,k in ipairs({'run_id','boots','source','db_unit','c_unit','io_unit','ledger_tick','total','work','compile','maintenance','sequence'}) do assert(now[k]==s[k],'cold load changed '..k) end
   assert(now.view==s.view and now.owner==s.owner and now.machine==s.machine,'cold aliases changed')
   assert(now.outputs==s.outputs and now.interests==s.interests and now.adoption==s.adoption,'cold membership aliases changed')
   assert(now.outputs.records[f().io].record==registry.record(f().io) and #now.interests.order==2)
@@ -363,7 +367,7 @@ function M.on_tick(event)
     unchanged(); loaded=false
     local ctx=admission.context(registry.get().ledger,c.id,fixture.snapshot.ledger_tick)
     assert(ctx.machine==fixture.snapshot.machine and ctx.ledger.total==fixture.snapshot.total)
-    assert(not admission.reserve(ctx,'work',limits.callback_work+1-ctx.machine.work))
+    assert(not admission.reserve(ctx,'work',admission.host_ceiling(ctx.ledger,ctx.tick)+1-ctx.ledger.total))
     error_is('E_NETWORK_PENDING',function() inventory(c,'red') end)
     fixture.phase='adopting'; fixture.resume_tick=event.tick
   elseif fixture.phase=='armed' then loaded=false end

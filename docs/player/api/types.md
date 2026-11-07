@@ -251,6 +251,7 @@ Each linked definition has complete fields, domains and behavior notes. In game,
 - [TC.StatisticsKind](types/TC.StatisticsKind.md#symbol-TC.StatisticsKind)
 - [TC.StatisticsSnapshot](types/TC.StatisticsSnapshot.md#symbol-TC.StatisticsSnapshot)
 - [TC.StatisticsWindow](types/TC.StatisticsWindow.md#symbol-TC.StatisticsWindow)
+- [TC.StringInput](types/TC.StringInput.md#symbol-TC.StringInput)
 - [TC.StringLibrary](string.md#symbol-TC.StringLibrary)
 - [TC.SubscriptionId](types/TC.SubscriptionId.md#symbol-TC.SubscriptionId)
 - [TC.Surface](types/TC.Surface.md#symbol-TC.Surface)

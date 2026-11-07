@@ -7,7 +7,7 @@ local defs=require('scripts.device-definitions')
 local logic=require('scripts.services.logic')
 local monitor=require('scripts.services.monitor')
 local kv=require('scripts.services.kv')
-local sandbox=require('scripts.runtime.sandbox')
+local environment=require('scripts.runtime.environment')
 local admission=require('scripts.runtime.admission')
 local M={}
 local function f() return storage.tc_scheduling_peers end
@@ -100,7 +100,7 @@ function M.on_tick(event)
     logic.sample(event.tick,scheduler.maintenance(registry.get(),event.tick))
     assert(#c.queue>=1 and c.queue[1].event.name=='signal_changed')
     assert(runtime.enqueue(c,'effect',{name='fixture',tag='a'},event.tick)); assert(runtime.enqueue(c,'effect',{name='fixture',tag='b'},event.tick))
-    local guard=sandbox.new(admission.context(registry.get().ledger,c.id,event.tick),{})
+    local guard=environment.new(admission.context(registry.get().ledger,c.id,event.tick),{})
     local api=runtime.services(c,event.tick,guard).computer
     api.after(8,'once'); local canceled=api.after(9,'forbidden'); assert(api.cancelTimer(canceled))
     x.queue=c.queue; x.timers=c.timers; x.subscriptions=c.subscriptions

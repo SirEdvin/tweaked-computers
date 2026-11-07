@@ -17,6 +17,7 @@ function M.register_monitor_sync(binding)
   monitor_sync=binding
 end
 local directions={[0]='north',[4]='east',[8]='south',[12]='west'}
+local stable_metadata={getNames=true,isPresent=true,getType=true,getMethods=true,wrap=true,call=true,find=true,getName=true,getWire=true}
 -- Closed family, fixed host methods; no guest extension/plugin registration.
 -- resolve(member) may map a physical monitor tile to its logical anchor record.
 for kind in pairs(types) do
@@ -25,11 +26,10 @@ end
 function M.register_type(kind,binding)
   assert(types[kind] and type(binding)=='table' and type(binding.methods)=='table','unknown peripheral family')
   assert(not bindings[kind].installed,'duplicate peripheral family binding')
-  local n=0
   for name,fn in pairs(binding.methods) do
-    n=n+1; assert(type(name)=='string' and #name<=limits.identifier_bytes and type(fn)=='function','invalid peripheral method')
+    assert(type(name)=='string' and #name<=limits.identifier_bytes and type(fn)=='function','invalid peripheral method')
   end
-  assert(n<=limits.tuple_entries and binding.methods.getLimits,'bounded methods including getLimits required')
+  assert(binding.methods.getLimits,'getLimits required')
   binding.installed=true; bindings[kind]=binding
 end
 function M.register_revocation(name,fn)
@@ -98,10 +98,17 @@ function M.services(computer,tick,guard,execution)
   local inventories={}
   local authorized=false
   local spend=guard.spend
+  local invalidate_owner=guard.invalidate_authority
+  local function invalidate()
+    if invalidate_owner then invalidate_owner() end
+    inventories={}; availability={}; authorized=false
+  end
+  guard.invalidate_authority=invalidate
   local function current()
     guard.check()
-    if not principal.live(computer,execution)
-      or not principal.available(computer) or not authorized and not lifecycle.connector(computer,'network','red') then
+    if guard.check_owner then guard.check_owner()
+    else principal.check(computer,execution) end
+    if not authorized and not lifecycle.connector(computer,'network','red') then
       errors.raise('E_NOT_FOUND','computer run no longer authorized')
     end
     authorized=true
@@ -124,13 +131,15 @@ function M.services(computer,tick,guard,execution)
   end
   local function lookup(name,wire)
     current(); check_name(name); network.wire(wire)
-    return target(inventory(wire),name)
+    local rec,item=target(inventory(wire),name)
+    if rec and (rec.force_index~=computer.force_index or rec.surface_index~=computer.surface_index) then return nil end
+    return rec,item
   end
   local function invoke(name,wire,generation,method,...)
     if execution.kind=='shell' and (method=='subscribe' or method=='unsubscribe') then
       errors.raise('E_UNSUPPORTED','subscriptions require a saved handler program')
     end
-    -- Reprove physical authority even for captured functions/getLimits.
+    -- Captured functions still prove identity, generation, scope and live ownership.
     local rec=lookup(name,wire)
     if not rec or (generation and rec.generation~=generation) then
       spend(limits.registry_entries*4+32); M.revoke(computer,name,wire,'wire_removed',execution)
@@ -138,9 +147,9 @@ function M.services(computer,tick,guard,execution)
     end
     local fn=bindings[rec.kind].methods[method]
     if not fn then errors.raise('E_ARGUMENT','unknown peripheral method') end
-    -- Only the reviewed monitor provider promises not to alter physical state.
-    -- Unknown/test/other providers invalidate proofs even if they later throw.
-    if not bindings[rec.kind].callback_stable then inventories={}; availability={}; authorized=false end
+    -- Unknown providers invalidate all physical proofs before entry, including errors.
+    if not bindings[rec.kind].callback_stable or rec.kind=='radar' and method=='transmit'
+      or rec.kind=='speaker' and (method=='playNote' or method=='playSound') then invalidate() end
     if method=='getLimits' and select('#',...)~=0 then errors.raise('E_ARGUMENT','getLimits expects no arguments') end
     -- Availability is live physical authority; only native carriers need power.
     local available=bindings[rec.kind].available
@@ -148,16 +157,8 @@ function M.services(computer,tick,guard,execution)
       or (not available and not lifecycle.available(rec))) then
       errors.raise(rec.native_carrier and 'E_UNPOWERED' or 'E_UNREACHABLE','peripheral is unavailable')
     end
-    if rec.kind=='speaker' and (method=='playNote' or method=='playSound') then guard.prepare_boolean_result() end
-    if rec.kind=='radar' and method=='transmit' then guard.prepare_empty_result() end
-    if rec.kind=='dashboard' then
-      if method=='subscribe' then
-        guard.prepare_string_result(computer.run_id..'/sub-'..string.format('%.0f',registry.get().next_sequence))
-      elseif method=='removeTab' or method=='unsubscribe' then guard.prepare_boolean_result()
-      elseif method~='getTab' and method~='getLimits' then guard.prepare_empty_result() end
-    end
-    if rec.kind=='logic' and (method=='readSignals' or method=='getOutput') and guard.circuit_result then
-      return guard.circuit_result(fn(computer,rec,wire,tick,spend,execution,...))
+    if rec.kind=='logic' and (method=='readSignals' or method=='getOutput') then
+      return guard.transfer_result(fn(computer,rec,wire,tick,spend,execution,...))
     end
     if bindings[rec.kind].with_principal then return fn(computer,rec,wire,tick,spend,execution,...) end
     return fn(computer,rec,wire,tick,spend,...)
@@ -166,16 +167,16 @@ function M.services(computer,tick,guard,execution)
     local name,generation=rec.id,rec.generation; local methods={}
     for method in pairs(bindings[rec.kind].methods) do
       local key=method
-      methods[key]=guard.service(function(...) return invoke(name,wire,generation,key,...) end,rec.kind=='logic')
+      methods[key]=guard.service(function(...) return invoke(name,wire,generation,key,...) end,rec.kind=='logic',true)
 
     end
     local proxy=guard.namespace(methods,'peripheral method')
     if guard.shell_enabled then
       for key,fn in pairs(methods) do
-        guard.host_work(#name+#key+64,#name+#key+64)
+        guard.spend(#name+#key+64)
         guard.bind_value(fn,{name=name,wire=wire,generation=generation,kind=rec.kind,method=key,facade=proxy})
       end
-      guard.host_work(#name+64,#name+64)
+      guard.spend(#name+64)
       guard.bind_value(proxy,{name=name,wire=wire,generation=generation,kind=rec.kind})
     end
     handles[proxy]={name=name,wire=wire,generation=generation}
@@ -220,16 +221,16 @@ function M.services(computer,tick,guard,execution)
     if type(method_name)~='string' or #method_name>limits.identifier_bytes then errors.raise('E_ARGUMENT','method name required') end
     return invoke(name,wire,nil,method_name,...)
   end
-  if guard.circuit_call then guard.circuit_call(api.call,function(name,wire)
+  guard.input_rule(api.call,function(name,wire)
     check_name(name); network.wire(wire)
     -- Classification is not authority; invoke performs the single charged live lookup.
     local rec=registry.record(name); return rec and rec.kind=='logic'
-  end) end
+  end)
   method('find',2,function(type_name,wire)
     if type(type_name)~='string' or #type_name>limits.identifier_bytes then errors.raise('E_ARGUMENT','peripheral type required') end
     local values=inventory(wire); local matches={}
     for _,name in ipairs(sorted(values,spend)) do if values[name].type==type_name then matches[#matches+1]=name end end
-    if #matches>limits.tuple_entries then errors.raise('E_LIMIT','find result exceeds tuple limit; use getNames and wrap') end
+
     local result={}; for _,name in ipairs(matches) do result[#result+1]=facade(assert(target(values,name)),wire) end
     return table.unpack(result,1,#result)
   end)
@@ -253,16 +254,21 @@ function M.services(computer,tick,guard,execution)
       if parent then
         local identity=handles[parent]
         if not identity or identity.name~=d.name or identity.wire~=d.wire or identity.generation~=d.generation then errors.raise('E_ARGUMENT','captured method/facade identity mismatch') end
-        if available then return guard.get(parent,d.method) end
+        if available then return parent[d.method] end
         -- Keep an old captured method callable-to-refuse without poisoning unrelated Console values.
-        guard.host_work(#d.name+#d.method+64,#d.name+#d.method+64)
+        guard.spend(#d.name+#d.method+64)
         d={name=d.name,wire=d.wire,generation=d.generation,kind=d.kind,method=d.method,facade=parent}
       end
-      local fn=guard.service(function(...) return invoke(d.name,d.wire,d.generation,d.method,...) end,d.kind=='logic')
+      local fn=guard.service(function(...) return invoke(d.name,d.wire,d.generation,d.method,...) end,d.kind=='logic',true)
       guard.bind_value(fn,d); return fn
     end
     return facade({id=d.name,generation=d.generation,kind=d.kind},d.wire)
   end) end
+  if guard.stable_service then
+    for name,fn in pairs(api) do
+      if stable_metadata[name] then guard.stable_service(fn) end
+    end
+  end
   return {peripheral=api}
 end
 -- Each transition is committed before guest notification. A bounded durable job
