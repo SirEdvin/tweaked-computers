@@ -28,7 +28,7 @@ The system SHALL accept saved documents only when they contain one or more expor
 - **AND** no active run is created or replaced.
 
 ### Requirement: Ordinary calls to exported functions
-Exported functions SHALL be ordinary ephemeral callable values within their own program. Calls SHALL execute synchronously with supplied arguments, preserve bounded Lua return adjustment and nil arity, and share the current callback's guard, budget, authority and run. Direct calls SHALL NOT enqueue work, create another callback context or synthesize an event argument.
+Exported functions SHALL be ordinary ephemeral callable values within their own program. Calls SHALL execute synchronously with supplied arguments, preserve native Lua return adjustment and nil arity, and share the current invocation, host-work context, authority and run. Direct calls SHALL NOT enqueue work, create another callback context or synthesize an event argument.
 
 #### Scenario: Call before scheduling the same function
 - **WHEN** `start` calls `sample()` and then registers `computer.every(60, "sample")`
@@ -38,17 +38,17 @@ Exported functions SHALL be ordinary ephemeral callable values within their own 
 #### Scenario: Forward references and mutual calls
 - **WHEN** one exported function references another exported function declared later in the document
 - **THEN** it resolves that function regardless of declaration order
-- **AND** direct or mutual recursion remains subject to the existing call-depth and work ceilings.
+- **AND** direct or mutual recursion follows native Lua behavior without mod call-depth or execution ceilings.
 
 #### Scenario: Function values preserve ordinary call behavior
 - **WHEN** a callback captures an exported function in a local variable or temporary table and calls it directly or through `pcall`
 - **THEN** the value remains callable and has stable identity within that callback
-- **AND** false values, nil holes, zero-return results and multiple returns retain their ordinary bounded Lua meanings.
+- **AND** false values, nil holes, zero-return results and multiple returns retain their ordinary native Lua meanings.
 
 #### Scenario: Calling start is not a lifecycle operation
 - **WHEN** another function explicitly calls `start(...)`
 - **THEN** it executes that function body as an ordinary call with the supplied arguments
-- **AND** it does not create a run generation or reset budgets, although explicit API effects in that body still occur.
+- **AND** it does not create a run generation or reset host-work credits, although explicit API effects in that body still occur.
 
 ### Requirement: Private lexical helpers and protected exports
 Top-level `local function` declarations SHALL remain private helpers with normal lexical scope, self-recursion and declaration-order visibility. Lexical parameters and locals SHALL shadow exported names normally. Exported bindings SHALL NOT be reassignable by guest code, and ordinary global assignment SHALL remain forbidden.
@@ -82,28 +82,6 @@ Automatic export SHALL only populate the declared handler inventory. Except for 
 - **THEN** the registration succeeds under existing API validation
 - **AND** supplying the function value, an undeclared name, a local helper name or a nested function name fails with the existing argument diagnostic.
 
-### Requirement: Equivalent safety and diagnostics
-Saved programs SHALL retain existing source, compilation, reconstruction, execution, tuple, allocation and depth limits. Declaration discovery, function binding and call paths SHALL remain admitted work. Errors SHALL identify the player's original source location. Fatal quota and stop control SHALL remain unavoidable even through chains of direct or protected calls.
-
-#### Scenario: Recursion cannot renew or swallow a budget
-- **WHEN** exported functions call each other indefinitely inside `pcall`
-- **THEN** the current run faults within its existing limits
-- **AND** the protected call cannot continue to another peripheral effect or obtain fresh credits.
-
-#### Scenario: Error in a directly called function
-- **WHEN** a timer callback directly calls another function that raises an uncaught error
-- **THEN** the diagnostic points into that function's original source rather than a generated wrapper
-- **AND** run, revision and dispatched-handler attribution retain the existing lifecycle meaning.
-
-#### Scenario: Bounded declaration inventories
-- **WHEN** exported declarations exceed the handler-name limit, or private helpers exceed source/compiler/native syntax limits
-- **THEN** validation rejects the source without raising production limits or changing the active program
-- **AND** the maximum exported inventory fits when all other limits are satisfied.
-
-#### Scenario: Warm and cold proofs spend equally
-- **WHEN** the same declaration-form source is validated or reconstructed with identical remaining credits using a warm or cold compiler cache
-- **THEN** success, refusal and accepted charge prefixes agree
-- **AND** mutated caller-owned generated text or handler inventories never become trusted executable input.
 
 ### Requirement: Discoverable authoring without Console coupling
 The editor starter, in-game Reference and language documentation SHALL teach only function-declaration saved programs and demonstrate one function used both directly and as a named callback. Saved-program functions SHALL NOT be injected into the live Console or its retained value graph.
@@ -212,3 +190,65 @@ Every repository-owned saved-program example and authoring reference SHALL descr
 - **WHEN** historical checkout prose or examples are cleaned up
 - **THEN** no Git history, published release asset, external frozen receipt or player save is rewritten
 - **AND** the updated checkout does not claim that a changed example or workload was executed by an earlier verification run.
+
+### Requirement: Validated native source boundary
+Both source modes SHALL retain source-size, syntax, name, and host compilation limits. Validation SHALL reject forbidden access before execution. Accepted code SHALL use native operations without injected operation-level guards. Saved or caller-supplied executable text SHALL NOT override validated source.
+
+#### Scenario: Validate without executing
+- **WHEN** a candidate uses valid declaration syntax and side-effecting calls inside functions
+- **THEN** validation identifies exports without invoking those calls
+- **AND** a failed candidate leaves the active run unchanged.
+
+#### Scenario: Native loading follows validation
+- **WHEN** validated source reaches invocation
+- **THEN** its operations use native Lua, not an interpreter or a second guarded backend
+- **AND** source-derived mode and export checks remain authoritative over retained metadata.
+
+#### Scenario: Source limits are not runtime limits
+- **WHEN** declarations exceed source bytes, tokens, nodes, nesting, handler names, or a native syntax limit
+- **THEN** validation refuses the source without executing it or raising any source allowance
+- **AND** accepted bodies have no separate runtime tuple, table-width, recursion, or allocation ceiling.
+
+#### Scenario: Warm and cold validation agree
+- **WHEN** identical source and mode have identical settings and remaining host credits
+- **THEN** warm and cold validation give equal results and accepted host-charge prefixes
+- **AND** caller changes to returned plans cannot modify a private source proof.
+
+### Requirement: Native source diagnostics
+Validation SHALL retain original source coordinates. Uncaught native failures SHALL identify the original source line when available, with run and source-revision attribution. Diagnostics SHALL NOT expose host objects, private controls, or generated-source dumps. A missing native column SHALL be reported as column 1, not an invented exact expression position.
+
+#### Scenario: Error in a directly called function
+- **WHEN** a timer callback calls another exported function that raises an uncaught error
+- **THEN** the diagnostic identifies the failing original source line rather than a private wrapper line
+- **AND** attribution still names the active run and source revision.
+
+#### Scenario: Console expression prefix
+- **WHEN** an expression-mode Console command fails validation or native execution
+- **THEN** the reported position refers to the submitted command, not a synthetic return prefix
+- **AND** a native error without a column uses the documented column-1 fallback.
+
+#### Scenario: Non-string failure values
+- **WHEN** an invocation throws nil, a table, a function, or an authentic facade
+- **THEN** protected calls retain their documented safe value/identity behavior
+- **AND** an uncaught diagnostic uses bounded safe text without exposing addresses or traversing arbitrary values.
+
+### Requirement: Fresh invocation bindings without environment caching
+Each saved callback SHALL reconstruct fresh function bindings from its active source. Direct calls inside that callback SHALL share its lexical state. Only explicit supported storage SHALL persist between callbacks. Removing execution instrumentation SHALL NOT introduce cached mutable environments or persisted closures.
+
+#### Scenario: Mutated private helper is not durable
+- **WHEN** one callback replaces a private lexical function and another callback later runs
+- **THEN** the first callback observes its own replacement
+- **AND** the next callback reconstructs the original source binding, including after cold load or late joining.
+
+#### Scenario: No source lifecycle change
+- **WHEN** new source is saved without applying it while the active run has pending work
+- **THEN** dispatch uses the original active source and run identity
+- **AND** validation, loading, and reconstruction do not replay startup or earlier device effects.
+
+### Requirement: Trusted execution guidance
+The language guide and in-game Reference SHALL describe the trusted execution policy for both modes. They SHALL preserve runnable declaration examples and explain explicit persistence. They SHALL warn about game stalls and memory exhaustion without claiming unrestricted Lua or direct Factorio access.
+
+#### Scenario: Review the language before running code
+- **WHEN** a player reads runtime guidance or Console help
+- **THEN** the text distinguishes temporary native values from bounded API and retained data
+- **AND** it states that Stop cannot interrupt Lua that never returns control to the host.

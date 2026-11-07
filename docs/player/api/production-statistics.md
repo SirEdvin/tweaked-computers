@@ -40,7 +40,7 @@ Load retains identity and wires but does not replay source or query statistics.
 This custom device needs no electricity.
 Every method checks exact identity, scope and explicit-color reachability again.
 Console captures never bypass those checks.
-Complete native inventories, with modded names and qualities, can still exceed generic Data, work or allocation limits.
+Complete native inventories, with modded names and qualities, can still exceed generic Data or shared host-work limits.
 There is no implied circuit-only transport exception, quota increase, partial-success record or credit renewal for retries.
 
 ### Errors
@@ -52,7 +52,7 @@ Unsupported or nonfinite native data causes E_UNSUPPORTED.
 Native failure causes E_ENGINE, not invented zeros.
 
 Physical failures preserve E_UNREACHABLE, E_NETWORK_PENDING and E_LIMIT.
-Work or allocation exhaustion remains fatal E_BUDGET.
+Host-work exhaustion remains fatal E_BUDGET.
 Current authority and input admission can fail before a later provider semantic error.
 Refusal gives no successful prefix or retained job.
 Consumed credits remain consumed.

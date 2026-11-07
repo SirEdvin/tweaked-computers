@@ -111,7 +111,7 @@ function M.run()
   atomic(m,'E_BUSY',function() model.calls.clear(m,function() error({code='E_BUSY'},0) end) end)
   model.scale(m,6,6,nop,0.5); assert(m.width*m.height==model.limits.cells)
   local spent=0
-  model.calls.blit(m,function(n) spent=spent+n; assert(spent<=limits.callback_work) end,
+  model.calls.blit(m,function(n) spent=spent+n; assert(spent<=limits.host_work_per_tick-limits.maintenance_work_per_tick) end,
     string.rep('x',model.limits.write_bytes),string.rep('0',model.limits.write_bytes),string.rep('f',model.limits.write_bytes))
   report('all-scales-maximum-cells-and-admission-before-model-mutation')
   local fake={}; for y=1,3 do for x=1,3 do if x~=2 or y~=2 then fake[#fake+1]={id=x..'-'..y,position={x=x,y=y},direction=0,force_index=1,surface_index=1} end end end
@@ -137,7 +137,7 @@ function M.run()
   local c=build('computer',-2,0); local a=build('monitor',0,0); local b0=build('monitor',1,0)
   settle(); local display=group(a); assert(group(b0)==display and #display.members==2)
   connect(c,b0,'red'); connect(c,a,'green')
-  c.status='running'; c.run_id=c.id..'/fixture'; c.active={source='',api_version=1,
+  c.status='running'; c.run_id=c.id..'/fixture'; c.active={source='function start(e) end',revision=1,api_version=1,
     compiler_version=limits.compiler_version,storage_version=limits.storage_version,handlers={start=true}}
   guest(c,"local m=peripheral.find('monitor','red'); assert(m); local w,h=m.getSize(); assert(w==20 and h==6); m.write('NATIVE'); local limits=m.getLimits(); limits.cells=0; assert(m.getLimits().cells==10584); local p=m.getPaletteColour(colors.white); assert(p>0)")
   assert(display.model.cells[1][1]==78)
@@ -152,7 +152,7 @@ function M.run()
   local second=group(below); assert(second~=group(a))
   local corner=build('monitor',1,1); settle(); display=group(a)
   assert(#display.members==4 and display.id==original and display.model.x==99 and display.model.y==-2 and display.model.blink)
-  error_is('E_UNREACHABLE',function() peripheral.services(c,game.tick,{spend=nop,check=nop,service=function(fn) return fn end,namespace=function(t) return t end,accept_handle=nop}).peripheral.call(second.id,'red','getSize') end)
+  guest(c,"local ok,e=pcall(peripheral.call,"..string.format('%q',second.id)..",'red','getSize'); assert(not ok and e.code=='E_UNREACHABLE')")
   lifecycle.remove(a.id,'fixture',true); settle(); assert(group(b0).id~=original,'removed anchor identity retargeted')
   lifecycle.remove(below.id,'fixture',true); lifecycle.remove(corner.id,'fixture',true); settle()
   display=group(b0); f().c=c.id; f().tile=b0.id; f().display=display.id
@@ -199,7 +199,7 @@ function M.run()
   local previous_active,previous_subscriptions=c.active,c.subscriptions
   local ctx=admission.context(admission.new(),c.id,0)
   local plan,e=compiler.compile(example_source,ctx); assert(plan,e and e.message)
-  c.active={source=example_source,api_version=1,compiler_version=limits.compiler_version,
+  c.active={source=example_source,revision=1,api_version=1,compiler_version=limits.compiler_version,
     storage_version=limits.storage_version,handlers=plan.handlers}; c.subscriptions={}
   local ok,diagnostic=compiler.run(plan,'start',{name='start'},function(g) return runtime.services(c,game.tick,g) end,ctx)
   assert(ok,serpent.line(diagnostic)); assert(display.model.cells[1][1]==82 and display.model.fg==5)
@@ -333,7 +333,7 @@ function M.on_tick(event)
     if not loaded then return end
     unchanged(); loaded=false; fixture.phase='resuming'
     local ctx=admission.context(registry.get().ledger,c.id,fixture.snapshot.tick)
-    assert(not admission.reserve(ctx,'work',limits.callback_work+1-ctx.machine.work))
+    assert(not admission.reserve(ctx,'work',admission.host_ceiling(ctx.ledger,ctx.tick)+1-ctx.ledger.total))
     runtime.enqueue(c,'check',{name='fixture'},event.tick)
   elseif fixture.phase=='armed' then loaded=false end
   if fixture.phase=='done' then return end

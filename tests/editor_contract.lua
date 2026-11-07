@@ -314,13 +314,22 @@ function M.run()
   end)
   game=real_game
   if not ok then error(e,0) end
-  group('editor-malicious-active-source-faults-healthy-peer-continues',function()
+  group('editor-host-work-refusal-faults-healthy-peer-continues',function()
     local bad=make(40); local good=make(45)
-    runtime.save(bad.id,'function start(e) pcall(function() while true do end end) end',0)
+    runtime.save(bad.id,[[function start(e)
+      computer.setState('payload',string.rep('x',8192))
+      pcall(function() for i=1,1024 do computer.getState('payload') end end)
+      computer.setState('escaped',true)
+    end]],0)
     runtime.save(good.id,source(31),0)
     assert(runtime.activate(bad.id,tick)); assert(runtime.activate(good.id,tick))
     assert(scheduler.dispatch(bad,tick+1)); assert(bad.status=='faulted' and bad.diagnostic.code=='E_BUDGET')
-    assert(scheduler.dispatch(good,tick+1)); assert(good.state.value==31 and good.status=='running')
+    assert(not bad.state.escaped)
+    if not scheduler.dispatch(good,tick+1) then
+      assert(good.status=='running' and scheduler.dispatch(good,tick+2))
+    end
+    assert(good.state.value==31 and good.status=='running')
+    tick=tick+2 -- Later groups must not reuse the exhausted shared tick.
   end)
   group('editor-starter-validate-save-run-print-once-and-timer',function()
     local c=make(48); local p=M.player(1010,c.body)

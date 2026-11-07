@@ -8,6 +8,11 @@ are [common rules](../api/common.d.lua), [computer](../api/computer.d.lua) and
 
 ## Player contract
 
+**Run only trusted code.** Programs and Console commands use native Lua without mod execution quotas.
+An infinite loop can stop the game. Temporary Lua values can use all available memory.
+Stop cannot interrupt code that does not return control to the host.
+Host APIs still require source validation, current authority, host-work admission, and valid data.
+
 One saved source document declares exported `function name(...) ... end`
 functions (API 1 implicit). No top-level returns, effects or initializers. Optional
 top-level `local function` helpers have ordinary lexical scope and are not exports.
@@ -16,10 +21,14 @@ Public bindings are immutable. Genuine locals and parameters can shadow them.
 `start` is optional. Handlers finish or fault. Each dispatch receives a fresh
 environment and copied event. Local helper functions/variables never survive a
 callback. Declaration exports can call each other synchronously, including
-forward references, using ordinary arguments/results and the same guard, budget,
-authority and run. Direct calls neither enqueue work nor create events.
+forward references, using ordinary native arguments and results in the same environment and run.
+Host calls retain the same authority and shared host credits. Direct calls neither enqueue work nor create events.
 Calling `start(...)` directly does not activate a new run. Explicit state is the
 only application continuity. Saved-program exports never enter Console bindings.
+
+The host shares immutable helper descriptions and stateless implementations.
+Each invocation creates fresh guest functions, namespaces, authentic binding maps, authority proofs, and fatal state.
+Shared implementations receive the current environment explicitly. They do not retain a previous invocation or select a module-global execution owner.
 
 Save changes the committed source revision, not the active run. Validate does
 not run candidate source. Run/Apply validates the saved revision before retiring
@@ -61,10 +70,10 @@ Physical invalidation, stop/fault and definitive authority loss retain their
 existing safety cleanup. Cold load does not replay startup or emit restoration.
 
 An ordinary failure can be caught with pcall. Uncaught errors fault the run.
-An error table cannot suppress or forge private quota/stop controls.
+An error table cannot suppress or forge private host-work refusal or stop controls.
 Earlier successful effects stay committed. There is no callback transaction.
-Diagnostics retain original-source statement line/column, active revision and
-run ID, with bounded messages. Logs evict oldest entries to fit both limits.
+Diagnostics retain original-source lines where available, active revision, and run ID, with bounded messages.
+Native diagnostics use column 1 when no column is available. Logs evict oldest entries to fit both limits.
 
 ## Host integration (TC04/TC06 and later cards)
 
@@ -127,19 +136,38 @@ Body/child LuaEntity references are host-only. Never return these records to gue
 - `register_services(name, function(record,tick,guard) -> method_map)` adds
   trusted `computer`/`peripheral` methods without collisions. Construct opaque
   peripheral handles with guard.namespace and guard.service. Every peripheral
-  method MUST independently prove live channel/force/surface authority, physical
-  availability and native-work admission immediately before effects. Native radar/speaker
+  method requires current channel, force, surface, identity, generation, physical availability, and native-work admission before effects.
+  A callback-local proof can replace duplicate physical checks only under the rules below. Native radar/speaker
   also require their native electrical/operational checks. Never return raw host
   functions/objects. No public extension registry is added.
 
+### Callback-local authority
+
+The owner proof retains the exact computer record, body, generation, force, surface, and program-run or Console-session identity.
+Each use checks those identities and current execution ownership. An invalidated proof requires a complete physical check before reuse.
+The peripheral proof adds the selected wire, physical member, logical target, and target generation. Each target lookup checks identity, generation, and scope.
+These proofs exist only inside one guard. The next callback, command, or cold load starts without them.
+
+| Reviewed boundary | Facts retained | Checks or invalidation |
+| --- | --- | --- |
+| `getNames`, `isPresent`, `getType`, `getMethods`, `wrap`, `find`, `getName`, `getWire` | Owner, connectors, same-color path, and target scope cannot change. | Validate arguments and requested identity. Reuse only this guard's inventory. |
+| `call` and captured-method dispatch | Dispatch itself does not change physical state. | Check the selected provider before its entry. |
+| Monitor methods | Model and presentation edits do not move, replace, rotate, or rewire physical members. | Retain target generation, geometry, model, allocation, and publication checks. |
+| Radar channel methods and metadata | Channel state does not change physical identity or wiring. | Check native availability for each active call. Invalidate before `transmit`, which can retire a recipient. |
+| Speaker metadata | Catalogue queries do not change physical state. | Check native availability. Invalidate before `playNote` and `playSound` native submissions. |
+| Other methods and providers | No stability assumption. | Invalidate owner, connector, inventory, and availability proofs before entry, even when the operation throws. |
+
+Stop, fault, replacement, and session retirement prevent further use of the admitted identity. Existing output cleanup remains separate from proof reuse.
+Background discovery and retained bindings never replace current authority. Native power and method-specific requirements remain effective.
+
 The active header stores exact source, revision, API/storage/compiler versions
 and declared handler names, not executable functions/generated text. Compiler
-ABI is 2. Incompatible headers fault with source/state retained. Reconstruction
-revalidates retained source under identical warm/cold costs. No on_load handler
-runs, mutates queues, changes credits or recreates start registrations.
-Supported declarations retain API 1/compiler 2/storage 1 and reconstruct only the
-exact active source, even when newer source has been saved but not applied. Keep
-complete save/mod backups before changing runtimes.
+representation is 3. Known compiler-2 headers receive synchronized source validation before scheduler checks, timer advancement, or queue consumption.
+Migration preserves run IDs, active revisions, source, queues, deadlines, and accepted data. It does not execute startup.
+Host-work refusal leaves unvalidated upgrade work pending. Malformed or unknown metadata stays unavailable with source and data retained.
+Reconstruction retains identical warm/cold admission. No `on_load` handler runs guest code, mutates queues, changes credits, or recreates startup registrations.
+Public API and storage versions remain 1. The exact active source remains authoritative after later saved-but-unapplied edits.
+Back up the complete save and matching mod archive before changing runtimes. Restore both for rollback, not an in-place downgrade.
 
 ### Scheduler: scripts.scheduler
 
@@ -168,13 +196,18 @@ without moving their original scheduled tick. Cancellation also removes an
 undispatched event. These memberships initialize once on init/configuration change,
 not on ordinary load. Unknown scheduling versions remain inert with source,
 queues, deadlines and spent credits retained for recovery.
-Insufficient aggregate headroom defers untouched runs, not faults them. The
-ledger retains per-ID work/compile/allocation spending until a later real tick.
+Preparation includes validation, environment construction, event copying, and Console graph reconstruction.
+Earlier spending can delay preparation when its refused charge prefix fits the full current source and host allowances.
+The item keeps its identity and order. Accepted preparation charges remain spent.
+Deferred commands have no echo or graph publication. Every attempt checks current authority.
+Preparation that cannot fit fresh allowances fails rather than waiting indefinitely.
+The scheduler consumes an admitted item immediately before execution. Started code is never repeated after refusal or failure.
+The ledger retains per-ID host-work and compilation spending until a later real tick.
 Source replacement, stop, removal, repeated tick dispatch and cold load cannot
-renew it. Backwards clocks are refused. Guest admission uses at most the configured
+renew it. Backwards clocks are refused. Program and Console host admission uses at most the configured
 host-work ceiling minus effective reserved maintenance. The 5000000 host / 200000 maintenance defaults leave 4800000 guest units.
 Maintenance is not extra work.
-Compilation, execution, allocation, maintenance and shared-host budgets are
+Compilation, maintenance, and shared-host allowances are
 runtime-global [Map settings](player/api/limits.md#live-mod-settings).
 Maintenance requests are clamped to host work minus one, without raising host
 work. Actual same-tick maintenance spending remains reserved after a decrease.
@@ -182,18 +215,16 @@ Maintenance increases cannot reuse guest credits already spent. The scheduler
 retains a plain alias from the admission ledger to its authoritative maintenance
 state, attaching it only during synchronized admission for older saves.
 Changes preserve already-spent credits, and getLimits returns current values.
-If the per-computer budgets sum above the shared allowance, the scheduler reserves
-at most that allowance. Thus, small fitting callbacks can continue to run.
-Actual over-budget work still faults through admission. Ready/deadline traversal
-pays for live work, not a fictional full registry walk.
+The scheduler does not reserve an estimated full-invocation allowance.
+After execution starts, host-work refusal remains fatal. Ordinary native Lua operations do not spend host credits.
+Ready/deadline traversal pays for live work, not a full registry walk.
 Safety cleanup must stay bounded independently of the offending guest.
 
 ## Focused checks and evidence boundaries
 
 `tests/computer_contract.lua` adds grouped Data/revision/identity/timer/power/
 queue/fairness/grammar/arity/control tests to the TC01 adversarial foundation.
-The maximum accepted table-width computation and maximum nil-containing tuple
-are isolated compiler semantics/cost checks, not factory latency benchmarks.
+Finite computations above former temporary table, tuple, and depth limits check native behavior, not factory latency or memory containment.
 
 Use the existing archive harness with `--fixture tests.computer_cold --cold`.
 The fixture initializes independent declaration programs. It runs start once on a real tick and keeps saved
@@ -211,8 +242,6 @@ Headless contracts use actual numbered vanilla fixture bodies, not composite
 prototypes. Historical TC03 power-transition checks were host-hook evidence.
 The current contract retains accepted historical events while generating no new
 electrical notifications. Custom composites now require no electricity.
-Editor/client focus, rendering/touch,
-multiplayer joining and production envelope/latency are not claimed here. Their
-client verification is intentionally deferred to the user/final release gate.
-Development limits are effective safety ceilings, not frozen responsiveness or
-maximum simultaneous-work guarantees. No release/deployment is authorized.
+These contract tests do not establish native editor focus, rendering, touch, connected multiplayer, or production latency.
+Those behaviors require their separate acceptance checks against the final archive.
+Host limits do not guarantee response time or contain native execution. No release or deployment is authorized.

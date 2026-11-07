@@ -3,18 +3,24 @@
 Build a programmable factory controller. Use it to read circuit signals, control an
 inserter, keep shared telemetry and draw a touchable status screen.
 
-Tweaked Computers runs bounded native Lua callbacks, not a computer OS. Each
+Tweaked Computers runs trusted native Lua callbacks, not a computer OS. Each
 computer has one source document and explicit persistent state. The separate
-[live Console](console.md) evaluates bounded Lua lines with shared saved scratch
+[live Console](console.md) evaluates native Lua lines with shared saved scratch
 bindings. There are no OS commands, files, imports, background threads or direct
 Factorio objects, and no command history.
 
+**Run only trusted code.** An infinite loop can stop the game.
+Temporary Lua values can use all available memory. Stop cannot interrupt code that does not return control to the host.
+Source validation, current API authority, host-work admission, and persistence limits still apply.
+See [runtime upgrade and rollback](lifecycle.md#upgrading-to-trusted-native-lua) before loading an older save with this unreleased runtime.
+The historical release evidence below does not establish acceptance of this runtime change.
+
 ## Start here
 
-**0.1.20 ALPHA** accepts all **Factorio 2.1** patches, base alone or optional Space
+Published **0.1.20 ALPHA** accepts all **Factorio 2.1** patches, base alone or optional Space
 Age. Verification remains on 2.1.23, not every patch. The website and in-game
 Reference now share one public typed Lua API library, including complete nested
-types and overloads. Guest behavior, save formats and budgets are unchanged.
+types and overloads. That documentation release did not change guest behavior, save formats, or budgets.
 
 Since 0.1.19, saved programs use only named
 function declarations. Rewrite legacy table-form source manually. There is no

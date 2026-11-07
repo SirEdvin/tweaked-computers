@@ -6,7 +6,8 @@ local data = require('scripts.runtime.data')
 local compiler = require('scripts.runtime.compiler')
 local admission = require('scripts.runtime.admission')
 local limits = require('scripts.runtime.limits')
-local sandbox = require('scripts.runtime.sandbox')
+local environment = require('scripts.runtime.environment')
+local principal = require('scripts.runtime.principal')
 local M = {}
 local serial=0
 local cleanup_calls={}
@@ -153,12 +154,26 @@ function M.run()
   assert(cleanup_calls[#cleanup_calls].reason=='fault')
   report('visible-queue-overflow-with-host-cleanup')
   root=fresh()
-  local bad=computer(source('pcall(function() while true do end end); computer.setState("unsafe",true)'))
+  local bad=computer('--'..string.rep('x',8000)..'\n'..source('computer.setState("calls",(computer.getState("calls") or 0)+1)'))
   local good=computer(source('computer.setState("healthy",true)'))
-  scheduler.tick(0); assert(bad.status=='faulted' and bad.diagnostic.code=='E_BUDGET' and bad.state.unsafe==nil)
+  local pending=bad.queue[1]; local event_tick=pending.event.tick; local queued_bytes=bad.queue_bytes
+  admission.context(root.ledger,bad.id,1).ledger.total=admission.host_ceiling(root.ledger,1)-10000
+  scheduler.tick(1); assert(bad.status=='running' and not bad.diagnostic and bad.state.calls==nil)
+  assert(bad.queue[1]==pending and pending.event.tick==event_tick and bad.queue_bytes==queued_bytes and bad.last_dispatch_tick==nil)
   assert(good.state.healthy and good.status=='running')
-  local totalspent=root.ledger.total; scheduler.tick(0); assert(root.ledger.total==totalspent)
-  report('production-scheduler-malicious-neighbor-and-once-per-tick')
+  local totalspent=root.ledger.total; scheduler.tick(1); assert(root.ledger.total==totalspent)
+  scheduler.tick(2); assert(bad.state.calls==1 and #bad.queue==0 and bad.status=='running')
+  scheduler.tick(3); assert(bad.state.calls==1)
+  report('production-scheduler-source-deferral-healthy-neighbor-and-once-per-tick')
+  root=fresh(); rec=computer(source('computer.setState("unstarted",true)'))
+  local compile_limit=limits.compile_work; limits.compile_work=1
+  scheduler.tick(1); limits.compile_work=compile_limit
+  assert(rec.status=='faulted' and rec.diagnostic.code=='E_BUDGET' and not rec.state.unstarted and #rec.queue==0)
+  report('unfit-fresh-source-preparation-fails-without-retry')
+  root=fresh(); rec=computer(source('computer.setState("calls",(computer.getState("calls") or 0)+1); computer.setState("payload",string.rep("x",8192)); for i=1,1024 do computer.getState("payload") end'))
+  scheduler.tick(1); assert(rec.status=='faulted' and rec.diagnostic.code=='E_BUDGET' and rec.state.calls==1)
+  scheduler.tick(2); assert(rec.state.calls==1 and #rec.queue==0)
+  report('started-host-refusal-never-replays-completed-effects')
   root=fresh(); local peers={}
   for i=1,4 do peers[i]=computer(source('computer.setState("calls",(computer.getState("calls") or 0)+1)','function again(e) computer.setState("calls",computer.getState("calls")+1) end'),i) end
   scheduler.tick(5)
@@ -200,12 +215,12 @@ function M.run()
     local a,b,c,d=t.f(3,4); assert(a==false and b==nil and c==3 and d==4)
     do local v=0; for n='1','3','1' do v=v+n; if n==2 then break end end; assert(v==3) end
     local sum=0; for k,v in pairs({a=1,b=2}) do sum=sum+v end; assert(sum==3)
-    local empty={}; assert(select('#',table.remove(empty))==1 and table.remove(empty)==nil)
+    local empty={}; assert(select('#',table.remove(empty))==0 and table.remove(empty)==nil)
     local iterator,state,index=ipairs(empty); assert(select('#',iterator(state,index))==1)
     assert(select('#',next(empty))==1 and select('#',table.unpack(empty))==0)
     assert(tonumber('ff',16)==255 and tonumber('no',16)==nil)
     assert(string.sub('abc',-2)=='bc'); assert(string.find('a.b','.b',1,true)==2)
-    assert(string.sub('abc',1e300)=='' and string.sub('abc',1,-1e300)=='')
+    assert(string.sub('abc',1e300)==]]..string.format('%q',string.sub('abc',1e300))..[[ and string.sub('abc',1,-1e300)==]]..string.format('%q',string.sub('abc',1,-1e300))..[[)
     assert(select('#',string.find('abc','z',1,true))==1)
     assert(not pcall(string.rep,'x',2,false)); assert(not pcall(table.unpack,{1},false))
     assert(not pcall(computer.stop,1))
@@ -218,8 +233,11 @@ function M.run()
   report('supported-native-grammar-library-and-nil-return-semantics')
   -- Maximum accepted constructor width with useful native computation, not
   -- padded comments. This is a semantic/cost bound, not a CPU latency gate.
-  local constants={}; for i=1,limits.table_entries do constants[i]=tostring(i) end
-  local useful=source('local t={'..table.concat(constants,',')..'}; local ok,e=pcall(function() t[1],t[1],t['..(limits.table_entries+1)..']=true,nil,true end); assert(not ok and e.code=="E_LIMIT" and t[1]==1 and t['..(limits.table_entries+1)..']==nil); local sum=0; for i,v in ipairs(t) do sum=sum+v end; computer.log(tostring(sum))')
+  local width=limits.table_entries+1
+  local constants={}; for i=1,width do constants[i]=tostring(i) end
+  local computation='local t={'..table.concat(constants,',')..'}; local alias=t; t[1],t[1],t['..(width+1)..']=1,2,'..(width+1)..'; assert(alias==t and t['..(width+1)..']=='..(width+1)..'); local sum=0; for i,v in ipairs(t) do sum=sum+v end; '
+  local native_sum=assert(load(computation..'return sum','@native-assignment','t',_ENV))()
+  local useful=source(computation..'computer.log(tostring(sum))')
   local plan,e=compiler.compile(useful,admission.context(admission.new(),'useful-validation',0)); assert(plan,e and e.message)
   local warm=admission.context(admission.new(),'useful-peer',10)
   local cold=admission.context(admission.new(),'useful-peer',10)
@@ -227,18 +245,18 @@ function M.run()
   local ok,diag=compiler.run(plan,'start',{},services,warm); assert(ok,diag and diag.message)
   local retained={source=plan.source,api_version=1,compiler_version=plan.compiler_version}
   ok,diag=compiler.run(retained,'start',{},services,cold); assert(ok,diag and diag.message)
-  assert(values[1]==tostring(limits.table_entries*(limits.table_entries+1)/2) and values[2]==values[1])
-  assert(warm.ledger.total==cold.ledger.total and warm.machine.work==cold.machine.work and warm.machine.compile==cold.machine.compile and warm.machine.allocations==cold.machine.allocations)
-  log('TC_USEFUL_WIDTH '..limits.table_entries..' source_bytes='..#useful..' compile='..warm.machine.compile..' work='..warm.machine.work..' allocations='..warm.machine.allocations)
+  assert(values[1]==tostring(native_sum) and values[2]==values[1])
+  assert(warm.ledger.total==cold.ledger.total and warm.machine.work==cold.machine.work and warm.machine.compile==cold.machine.compile)
+  log('TC_USEFUL_WIDTH '..limits.table_entries..' source_bytes='..#useful..' compile='..warm.machine.compile..' work='..warm.machine.work)
   report('maximum-table-width-useful-cold-warm-work')
-  local args={'false','nil'}; for i=3,limits.tuple_entries do args[i]=tostring(i) end
-  local tuple=source('local function f(...) return ... end; local p=table.pack(f('..table.concat(args,',')..')); assert(p.n=='..limits.tuple_entries..' and p[1]==false and p[2]==nil and p['..limits.tuple_entries..']=='..limits.tuple_entries..')')
+  local args={'false','nil'}; for i=3,160 do args[i]=tostring(i) end
+  local tuple=source('local function f(...) return ... end; local p=table.pack(f('..table.concat(args,',')..')); assert(p.n==160 and p[1]==false and p[2]==nil and p[160]==160)')
   plan,e=compiler.compile(tuple,admission.context(admission.new(),'tuple-compile',0)); assert(plan,e and e.message)
   ok,diag=compiler.run(plan,'start',{}, {},admission.context(admission.new(),'tuple-execute',0)); assert(ok,diag and diag.message)
   report('maximum-nil-containing-native-argument-return-tuple')
   local targets,values={},{}
-  for i=1,limits.tuple_entries do targets[i]='t['..i..']'; values[i]=tostring(i) end
-  local wide=source('local t={}; '..table.concat(targets,',')..'='..table.concat(values,',')..'; assert(t[1]==1 and t['..limits.tuple_entries..']=='..limits.tuple_entries..')')
+  for i=1,160 do targets[i]='t['..i..']'; values[i]=tostring(i) end
+  local wide=source('local t={}; '..table.concat(targets,',')..'='..table.concat(values,',')..'; assert(t[1]==1 and t[160]==160)')
   plan,e=compiler.compile(wide,admission.context(admission.new(),'indexed-compile',0)); assert(plan,e and e.message)
   ok,diag=compiler.run(plan,'start',{}, {},admission.context(admission.new(),'indexed-execute',0)); assert(ok,diag and diag.message)
   report('maximum-indexed-assignment-width-and-publication-order')
@@ -315,7 +333,7 @@ end
   local keys={source=true,revision=true,api_version=true,compiler_version=true,storage_version=true,handlers=true}
   local fields=0; for k in pairs(rec.active) do assert(keys[k],'active shape expanded'); fields=fields+1 end
   assert(fields==6 and rec.active.source==plain and rec.active.revision==1
-    and rec.active.api_version==1 and rec.active.compiler_version==2 and rec.active.storage_version==1)
+    and rec.active.api_version==1 and rec.active.compiler_version==3 and rec.active.storage_version==1)
   assert(not rec.active.handlers.increment and rec.active.handlers.sample==true)
   scheduler.tick(0)
   assert(rec.status=='running',rec.diagnostic and rec.diagnostic.message)
@@ -390,30 +408,145 @@ end
   report('saved-print-exact-tabs-empty-no-partial-and-earlier-output-survives')
   -- Observe the existing retention sink at the exact remaining-credit boundary.
   -- Fatal readback is host-only: poisoned guests cannot execute witnesses.
-  for _,kind in ipairs({'work','allocations'}) do
+  do
+    local kind='work'
     local function setup()
       local target={logs={},log_bytes=0}
       for i=1,limits.console_entries do runtime.log(target,'old-'..i,0) end
       local context=admission.context(admission.new(),'print-retention',0)
-      local guard=sandbox.new(context,function(g)
+      local guard=environment.new(context,function(g)
         return {computer={log=function(text) runtime.log(target,text,0,g.spend) end}}
       end)
       guard.initialize()
-      return target,context,guard,guard.global('print')
+      return target,context,guard,guard.globals.print
     end
     local target,context,guard,fn=setup(); local before=context.machine[kind]
-    guard.call(fn,'new',false,nil); local cost=context.machine[kind]-before
+    guard.execute(fn,'new',false,nil); local cost=context.machine[kind]-before
     assert(#target.logs==limits.console_entries and target.logs[1].text=='old-2' and target.logs[#target.logs].text=='new\tfalse\tnil')
     target,context,guard,fn=setup()
-    context.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost
-    assert(pcall(guard.call,fn,'new',false,nil) and target.logs[1].text=='old-2')
+    context.ledger.total=admission.host_ceiling(context.ledger,0)-cost
+    assert(pcall(guard.execute,fn,'new',false,nil) and target.logs[1].text=='old-2')
     target,context,guard,fn=setup()
     local first,bytes=target.logs[1],target.log_bytes
-    context.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost+1
-    assert(not pcall(guard.call,fn,'new',false,nil) and #target.logs==limits.console_entries and target.logs[1]==first and target.log_bytes==bytes)
+    context.ledger.total=admission.host_ceiling(context.ledger,0)-cost+1
+    assert(not pcall(guard.execute,fn,'new',false,nil) and #target.logs==limits.console_entries and target.logs[1]==first and target.log_bytes==bytes)
     assert(guard.diagnostic({}).code=='E_BUDGET')
   end
   report('saved-print-exact-admission-before-retention-eviction')
+  local function output_guard()
+    fresh()
+    local target=computer('function start() end')
+    local context=runtime.context(target,1)
+    local guard=environment.new(context,function(g) return runtime.services(target,1,g) end)
+    guard.initialize()
+    return target,context,guard,guard.globals.computer.log,guard.globals.print
+  end
+  do
+    local target,context,guard,write,print_fn=output_guard()
+    local available,snapshot=principal.available,guard.snapshot
+    local physical,copies=0,0
+    principal.available=function(...) physical=physical+1; return available(...) end
+    guard.snapshot=function(...) copies=copies+1; return snapshot(...) end
+    local ok,problem=pcall(function()
+      assert(table.pack(guard.execute(write,'logged')).n==0)
+      assert(table.pack(guard.execute(print_fn,'value',false,nil,3,nil)).n==0)
+      assert(table.pack(guard.execute(print_fn)).n==0)
+      assert(#target.logs==3 and target.logs[1].text=='logged'
+        and target.logs[2].text=='value\tfalse\tnil\t3\tnil' and target.logs[3].text=='')
+      assert(physical==0 and copies==0,'local output repeated physical discovery or Data snapshots')
+      expected_error('E_ARGUMENT',function() guard.execute(write) end)
+      expected_error('E_ARGUMENT',function() guard.execute(write,'extra',false) end)
+      for _,value in ipairs({false,3,{}}) do expected_error('E_ARGUMENT',function() guard.execute(write,value) end) end
+      assert(#target.logs==3)
+      runtime.retire(target,'stopped')
+      expected_error('E_NOT_FOUND',function() guard.execute(write,'retired') end)
+      expected_error('E_NOT_FOUND',function() guard.execute(print_fn,'retired') end)
+      assert(#target.logs==3,'captured output survived owner retirement')
+    end)
+    principal.available=available; guard.snapshot=snapshot
+    assert(ok,problem)
+  end
+  report('direct-log-and-print-zero-results-no-rediscovery-or-snapshots-and-retirement')
+  do
+    local target,context,guard,_,print_fn=output_guard()
+    context.ledger.total=admission.host_ceiling(context.ledger,1)-1
+    local native=tostring; local conversions=0
+    tostring=function(value)
+      if type(value)=='number' then conversions=conversions+1 end
+      return native(value)
+    end
+    local ok=pcall(guard.execute,print_fn,3)
+    tostring=native
+    assert(not ok and conversions==0 and #target.logs==0,'number formatting ran before host admission')
+    assert(guard.diagnostic({}).code=='E_BUDGET')
+  end
+  report('direct-print-number-formatting-refused-before-native-conversion')
+  do
+    local kind='work'
+    local function setup()
+      local target,context,guard,fn=output_guard()
+      for i=1,limits.console_entries do runtime.log(target,'old-'..i,0) end
+      return target,context,guard,fn
+    end
+    local target,context,guard,fn=setup(); local before=context.machine[kind]
+    guard.execute(fn,'new'); local cost=context.machine[kind]-before
+    for _,short in ipairs({false,true}) do
+      target,context,guard,fn=setup()
+      local first,bytes,truncated=target.logs[1],target.log_bytes,target.log_truncated
+      context.ledger.total=admission.host_ceiling(context.ledger,1)-cost+(short and 1 or 0)
+      local ok=pcall(guard.execute,fn,'new')
+      assert(ok~=short,'unexpected direct-log boundary')
+      if short then
+        assert(target.logs[1]==first and target.log_bytes==bytes and target.log_truncated==truncated
+          and #target.logs==limits.console_entries,'refused log changed retained history')
+        assert(guard.diagnostic({}).code=='E_BUDGET')
+        assert(not pcall(guard.execute,fn,'post-fatal') and target.logs[1]==first)
+      else assert(target.logs[1].text=='old-2' and target.logs[#target.logs].text=='new') end
+    end
+  end
+  report('direct-log-host-work-before-entry-publication')
+  do
+    local old_entries,old_bytes=limits.console_entries,limits.console_bytes
+    limits.console_entries=8; limits.console_bytes=16
+    local ok,problem=pcall(function()
+      local function seeded()
+        local logs={}; for i=1,8 do logs[i]={text=tostring(i)..'.',tick=i} end
+        return {logs=logs,log_bytes=16}
+      end
+      local target=seeded(); local survivor=target.logs[6]
+      local paid=0; runtime.log(target,'1234567890',9,function(n) paid=paid+n end)
+      assert(#target.logs==4 and target.logs[1]==survivor and target.logs[1].tick==6
+        and target.logs[4].text=='1234567890' and target.log_bytes==16 and target.log_truncated)
+      assert(paid<=3*8+4,'retention reservation is not linear')
+      for _,short in ipairs({false,true}) do
+        target=seeded(); local first=target.logs[1]; local room=paid-(short and 1 or 0)
+        local accepted=pcall(runtime.log,target,'1234567890',9,function(n) assert(n<=room); room=room-n end)
+        assert(accepted~=short)
+        if short then assert(target.logs[1]==first and #target.logs==8 and target.log_bytes==16 and not target.log_truncated) end
+      end
+      target=seeded(); local actual=target.logs; local writes=0
+      target.logs=setmetatable({},{__len=function() return #actual end,__index=actual,
+        __newindex=function(_,k,v) writes=writes+1; actual[k]=v end})
+      runtime.log(target,'1234567890',9)
+      assert(writes<=9 and actual[1].tick==6 and #actual==4,'log eviction moved an entry more than once')
+      target={logs={},log_bytes=0}
+      for i=1,9 do runtime.log(target,'',i) end
+      assert(#target.logs==8 and target.logs[1].tick==2 and target.log_bytes==0 and target.log_truncated)
+      local first=target.logs[1]
+      expected_error('E_LIMIT',function() runtime.log(target,string.rep('x',17),10) end)
+      assert(target.logs[1]==first and target.log_bytes==0 and target.log_truncated)
+      limits.console_entries=2
+      runtime.log(target,'fit',11)
+      assert(#target.logs==2 and target.logs[1].tick==9 and target.logs[2].text=='fit' and target.log_bytes==3)
+    end)
+    limits.console_entries=old_entries; limits.console_bytes=old_bytes
+    assert(ok,problem)
+  end
+  report('linear-log-prefix-compaction-byte-entry-pressure-and-refusal-atomicity')
+  fresh(); rec=computer('function start() local output=print; pcall(computer.stop); output("unsafe") end')
+  scheduler.tick(0)
+  assert(rec.status=='stopped' and #rec.logs==0)
+  report('captured-output-cannot-follow-protected-stop')
   for _,name in ipairs({'xpcall','unpack','_VERSION'}) do
     root=fresh(); rec=computer('function start() computer.setState("kept",true) end')
     scheduler.tick(0)
@@ -428,7 +561,7 @@ end
     scheduler.tick(2)
     assert(rec.status=='faulted' and rec.diagnostic.code=='E_PROGRAM' and rec.diagnostic.message:find(name,1,true))
     assert(rec.active==active and active.source==collision and rec.saved_source==collision and rec.state==state and state.kept and not state.unsafe)
-    assert(active.api_version==1 and active.compiler_version==2 and active.storage_version==1)
+    assert(active.api_version==1 and active.compiler_version==3 and active.storage_version==1)
   end
   report('new-reserved-active-source-reconstruction-retains-source-state-and-ABI')
   log('TC_CONTRACT_TOTAL '..total)

@@ -11,6 +11,26 @@ Silent geometry/scope changes use staggered observations within the existing
 trusting an earlier observation. Settled clone/undo work does not keep polling,
 and ordinary load preserves pending maintenance without restarting programs.
 
+## Upgrading to trusted native Lua
+
+Back up the complete save and matching mod archive before upgrading.
+Run only trusted source in saved programs and Console.
+An infinite loop can stop the game. Temporary Lua values can use all available memory.
+Stop cannot interrupt code that does not return control to the host.
+Source validation, API authority, and retained-data limits still apply.
+
+Synchronized migration validates known compiler-2 active source before changing its compiler header to 3.
+The admission ledger changes from version 1 to version 2. Public API and storage versions remain 1.
+Migration preserves active and unapplied source separately, revisions, run IDs, deadlines, queues, shell graphs, and spent aggregate credits.
+It does not repeat startup or completed effects. Ordinary load does not execute player source or change authoritative state.
+Insufficient host admission leaves upgrade validation pending. Unknown or malformed metadata remains unavailable with source and data retained for recovery.
+Do not delete retained data to force migration.
+
+The runtime removes the execution-work and guest-allocation settings. Surviving settings retain their defaults.
+The old runtime cannot automatically downgrade the new compiler or ledger data.
+For rollback, restore the complete pre-upgrade save with its matching mod archive.
+Do not downgrade only the mod in an upgraded save.
+
 ## Upgrading from alpha 0.1.1
 
 Back up the entire save and old mod ZIP before upgrading. The redesigned devices

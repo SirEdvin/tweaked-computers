@@ -113,7 +113,7 @@ Every search SHALL use the existing same-force, same-surface, explicit-color Net
 - **THEN** the old method fails with `E_UNREACHABLE` rather than addressing the replacement.
 
 ### Requirement: Existing resource and persistence safety
-Search enumeration, filtering, ordering and snapshot construction SHALL consume the existing per-computer/shared work and Data allowances without renewing them. The 50-record ceiling SHALL NOT override byte, node, depth or allocation limits. Limit failures SHALL return no partial result and perform no recipe/world mutation. Search state MUST NOT persist native prototype tables, iterators or process-local authoritative caches.
+Search enumeration, filtering, ordering and snapshot construction SHALL consume the retained shared host-work and Data allowances without renewing them. The 50-record ceiling SHALL NOT override byte, node, depth, or other retained Data limits. Limit failures SHALL return no partial result and perform no recipe/world mutation. Search state MUST NOT persist native prototype tables, iterators or process-local authoritative caches.
 
 #### Scenario: Unrelated recipes and categories are installed
 - **WHEN** unrelated catalogue entries grow without changing a query's native candidates or returned records
@@ -125,7 +125,7 @@ Search enumeration, filtering, ordering and snapshot construction SHALL consume 
 
 #### Scenario: Repeated calls and cold budget retention
 - **WHEN** programs repeat searches within one tick or resume after a cold save with already-spent credits
-- **THEN** the same shared accounting remains in effect and neighbors retain the scheduler's normal service opportunities.
+- **THEN** the same shared accounting remains in effect and returning invocations retain the scheduler's normal neighbor-selection order.
 
 ### Requirement: Coherent lifecycle and supported engines
 The new block SHALL follow existing placement, rotation, mining, cloning, blueprint revival and destruction semantics in Factorio 2.0.77 base and Space Age. Helpers MUST NOT create extra drops or usable orphans. Cold reload SHALL preserve device identity and network paths; replacement SHALL create a new identity. The service SHALL require no persistent query sessions or on-load mutation.

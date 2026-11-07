@@ -30,7 +30,7 @@ CONTRACT = ROOT / 'openspec'
 EXAMPLES = {
     'dashboard-program': 'Research Native circuit computers. Build a Dashboard and a computer. Neither device needs electricity. Connect Network red. Select Validate. Select Save. Select Run. Close the computer. Open the Dashboard normally. Left-click Acknowledge. The saved clicked handler changes the status from Ready to Acknowledged. A chart library is not necessary. Console cannot subscribe.',
     'dashboard-charts': 'Use the same Dashboard setup with red wiring and no electricity. Optionally enable unmodified factorio-charts 1.2.0 for rolling lines and duration bars in seconds. Without it, labels and buttons still work. Twelve startup samples wrap an eight-slot line before the window opens. Scroll Overview to see both charts. Switch among six tabs. Acknowledge a button. Live label updates keep the selected tab and unchanged identity selection. X positions use sample order, not wall time. This is not the native production widget.',
-    'production-statistics-program': 'Research Recipe Searcher. Craft a Production Statistics device. Connect Network red to the computer. Neither device needs electricity. Select Validate. Select Save. Select Run. The program logs local native item, fluid, and pollution totals and rates. It then logs the newest and oldest iron history for production and consumption. Empty input differs from an E_LIMIT refusal of the complete result. Work or allocation exhaustion remains fatal. This small Console example is not an unlimited export.',
+    'production-statistics-program': 'Research Recipe Searcher. Craft a Production Statistics device. Connect Network red to the computer. Neither device needs electricity. Select Validate. Select Save. Select Run. The program logs local native item, fluid, and pollution totals and rates. It then logs the newest and oldest iron history for production and consumption. Empty input differs from an E_LIMIT refusal of the complete result. Host-work exhaustion remains fatal. This small Console example is not an unlimited export.',
     'production-statistics-monitor': 'Connect a Production Statistics device and monitor on red. Neither device needs electricity. Use a display with at least 14 columns and 7 rows. Select Validate. Select Save. Select Run. Wait 120 ticks. The display shows one-minute iron rates and both 300-sample native histories. The oldest sample is on the left. The newest sample is on the right. Both series use one peak scale. The program does not accumulate history. Query refused means E_LIMIT, not empty data. No activity means both native series are zero.',
     'factoriopedia-program': 'Research Recipe Searcher. Craft a Factoriopedia Interface. It does not need electricity. Connect its Network to a computer on red. Paste the complete document. Select Validate. Select Save. Select Run. The program logs the item reference rocket capacity, water bounds, and both complete name lists, or E_LIMIT. These results do not prove that a current silo or tank can perform an operation.',
     'reference-speaker': 'Open Reference → Examples → One speaker note in the game. The tutorial contains research, power, red-wire setup, execution procedures, and expected results. This is the same program. The in-game tutorial does not require this external copy.',
@@ -162,17 +162,21 @@ def inventory():
             if not re.search(r'\b' + name + r'\(', page):
                 raise ValueError(f'undocumented {namespace}.{name}')
     all_docs = '\n'.join(p.read_text() for p in DOCS.rglob('*.md'))
-    sandbox_source = text('scripts/runtime/sandbox.lua')
-    helpers = {'globals': sorted(set(re.findall(r'env\.([a-z]+)=function', sandbox_source)))}
-    # Explicit aliases/constants belong to the public inventory too, even though
-    # they do not introduce a second function definition.
-    assert 'env.unpack=tab.unpack' in sandbox_source and "env._VERSION='Lua 5.2'" in sandbox_source
-    helpers['globals'] = sorted(set(helpers['globals']) | {'unpack', '_VERSION'})
-    math_list = re.search(r"for _,name in ipairs\(\{('abs'.*?)\}\) do", sandbox_source)
-    assert math_list, 'Math registration shape changed'
+    source = text('scripts/runtime/environment.lua')
+    initial = re.search(r'local env=\{([^}]+)\}', source)
+    strings = re.search(r'local str=\{([^}]+)\}', source)
+    tables = re.search(r"for _,name in ipairs\(\{([^}]+)\}\) do\s+local native=table\[name\]", source)
+    assert initial and strings and tables, 'Native helper registration shape changed'
+    helpers = {'globals': sorted(set(re.findall(r'env\.([a-z]+)=', source))
+                                | set(re.findall(r'(\w+)=', initial[1])))}
+    helpers['globals'] = sorted(set(helpers['globals']) - {'math', 'string', 'table', 'colors', 'colours'})
+    assert 'env.unpack=tab.unpack' in source and "_VERSION='Lua 5.2'" in initial[1]
+    math_list = re.search(r"local math_names=\{('abs'.*?)\}", source)
+    assert math_list and 'for _,name in ipairs(math_names) do' in source, 'Math registration shape changed'
     helpers['math'] = re.findall(r"'([a-z0-9]+)'", math_list[1]) + ['pi']
-    helpers['string'] = sorted(set(re.findall(r'str\.([a-z]+)=function', sandbox_source)) | {'lower', 'upper', 'reverse'})
-    helpers['table'] = sorted(set(re.findall(r'tab\.([a-z]+)=function', sandbox_source)))
+    helpers['string'] = sorted(set(re.findall(r'str\.([a-z]+)=function', source))
+                               | set(re.findall(r'(\w+)=', strings[1])))
+    helpers['table'] = sorted(set(re.findall(r"'([a-z]+)'", tables[1])) | {'pack'})
     for family, entries in helpers.items():
         for name in entries:
             if not re.search(r'\b' + name + r'\b', all_docs):
@@ -288,12 +292,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--check', action='store_true')
     ap.add_argument('--change', help='read-only proposed API overlay check; requires --check')
+    ap.add_argument('--baseline-api', type=Path, help='preserved pre-promotion API directory for --check --change')
     ap.add_argument('--site', type=Path)
     ap.add_argument('--fixture-archive', type=Path)
     ap.add_argument('--fixture-output', type=Path)
     ap.add_argument('--report', type=Path)
     ap.add_argument('--luals', type=Path, default=os.environ.get('LUALS_BIN') or shutil.which('lua-language-server'))
     args = ap.parse_args()
+    if args.baseline_api is not None and not (args.check and args.change):
+        ap.error('--baseline-api requires --check --change')
     if args.change and (not args.check or args.site or args.fixture_archive or args.fixture_output):
         ap.error('--change requires --check and cannot build a site or fixture')
     if not args.luals:
@@ -301,7 +308,7 @@ def main():
     if args.change:
         from api_changes import check_change
         evidence = Path(tempfile.mkdtemp(prefix='tc-api-change-', dir=os.environ['TMPDIR']))
-        report = check_change(ROOT, args.change, args.luals, evidence / 'verification')
+        report = check_change(ROOT, args.change, args.luals, evidence / 'verification', baseline_api=args.baseline_api)
         report['export_evidence'] = str(evidence)
         if args.report:
             args.report.parent.mkdir(parents=True, exist_ok=True)

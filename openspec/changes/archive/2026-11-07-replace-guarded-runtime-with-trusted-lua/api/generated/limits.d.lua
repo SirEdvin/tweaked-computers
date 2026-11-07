@@ -1,0 +1,166 @@
+---@meta
+-- Proposed generated replacement. Regenerate from updated constants and limit descriptions during apply.
+
+---Independent copy of effective limits. These defaults are not current values.
+---Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+---Settings changes keep spent credits. Lower limits never permit data loss.
+---@class TC.Limits
+---@field active_computers integer Maximum number of saved programs that can be active at the same time. Default: 64.
+---@field aggregate_subscriptions integer Maximum number of subscription registrations in the world. Default: 1024.
+---@field api_version integer Guest API representation version. This is not a capacity. Default: 1.
+---@field compile_work integer Shared work units for validation and reconstruction per computer per tick. Default: 1250000. Runtime-global setting: tc-compile-work. Requested integer domain: 1..100000000.
+---@field compiler_version integer Saved compiler representation version. This is not a capacity. Default: 3.
+---@field console_bytes integer Maximum retained Console text bytes and maximum individual output size. Default: 16384.
+---@field console_entries integer Maximum retained Console entries. The oldest entries can be removed. Default: 64.
+---@field data_depth integer Maximum nesting depth of generic Data. Native Logic transfer is exempt. Default: 16.
+---@field data_nodes integer Maximum nodes in a generic Data graph. Native Logic transfer is exempt. Default: 4096.
+---@field event_queue_bytes integer Accounting bytes for pending event envelopes and payloads. Trusted native Logic graphs are excluded. Default: 65536.
+---@field event_queue_entries integer Maximum pending event entries per computer. Overflow faults the saved run. Default: 128.
+---@field fail_safe_latency_ticks integer Published tick bound for observing cleanup of still-owned Logic output. Default: 1.
+---@field handler_names integer Maximum number of exported handler names in one program. Default: 64.
+---@field host_hooks integer Maximum trusted service-provider registrations. This does not permit guest extensions. Default: 16.
+---@field host_work_per_tick integer Maximum world source/API/host work, not ordinary Lua execution. Reserved maintenance is included, not additional. Default: 5000000. Runtime-global setting: tc-host-work-per-tick. Requested integer domain: 200001..1000000000.
+---@field identifier_bytes integer Maximum bytes in an ordinary identifier or label. Individual APIs can have different limits. Default: 64.
+---@field maintenance_work_per_tick integer Effective world maintenance units: min(requested, host_work_per_tick - 1). Default: 200000. Runtime-global setting: tc-maintenance-work-per-tick. Requested integer domain: 200000..100000000.
+---@field network_edges integer Maximum edges in physical same-color discovery traversal. Default: 512.
+---@field network_nodes integer Maximum nodes in physical same-color discovery traversal. Default: 256.
+---@field owned_children integer Maximum host-owned child entities per device record. Default: 8.
+---@field peripheral_call_bytes integer Byte allowance for ordinary peripheral call transport and accounting. Default: 65536.
+---@field peripheral_call_entries integer Entry allowance for ordinary peripheral call transport. Default: 4096.
+---@field registry_entries integer Maximum registered physical device records. Default: 4096.
+---@field shell_bindings integer Maximum number of retained Console root bindings. Default: 64.
+---@field shell_nodes integer Maximum retained Console graph elements. These are not ordinary Data nodes. Default: 1024.
+---@field shell_pending_bytes integer Maximum total source bytes for queued Console commands per computer. Default: 16384.
+---@field shell_pending_entries integer Maximum queued Console commands per computer. Default: 8.
+---@field shell_sessions integer Maximum retained Console session records in the world, including idle sessions. Default: 64.
+---@field shell_source_bytes integer Maximum source bytes in one submitted Console line. CR and LF are not permitted. Default: 4096.
+---@field shell_value_bytes integer Accounting units for retained Console graphs, including edges and metadata. Default: 16384.
+---@field source_bytes integer Maximum number of bytes in saved program source. Default: 16384.
+---@field source_nesting integer Maximum nesting depth of source syntax. Default: 48.
+---@field source_nodes integer Maximum number of parsed source nodes. Default: 4096.
+---@field source_tokens integer Maximum number of parsed source tokens. Default: 4096.
+---@field state_bytes integer Accounting bytes for retained application Data per computer, including metadata. Default: 65536.
+---@field state_entries integer Maximum number of explicit state keys per computer. Default: 256.
+---@field storage_version integer Saved storage representation version. This is not a capacity. Default: 1.
+---@field string_bytes integer Maximum bytes in an ordinary Data string, not a temporary Lua string. Default: 16384.
+---@field subscriptions integer Maximum subscription registrations per computer or run. This limit is checked on registration. Default: 64.
+---@field sync_group_cells integer Total terminal cells in one synchronization selection. Default: 10584.
+---@field sync_group_members integer Maximum unique logical monitors in one synchronization selection. Default: 4.
+---@field sync_group_refs integer Maximum number of supplied physical monitor selection references. Default: 8.
+---@field sync_groups_per_run integer Maximum monitor synchronization selections per execution owner. Default: 1.
+---@field table_entries integer Maximum entries in an ordinary Data table, not a temporary Lua table. Native Logic transfer remains separate. Default: 1024.
+---@field timers integer Maximum pending timers owned by a run, including queued one-shot deliveries. Default: 64.
+---@field topology_latency_ticks integer Published tick bound for topology observations. This is not a GPU or UPS guarantee. Default: 60.
+
+---Independent copy of effective limits. These defaults are not current values.
+---Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+---Settings changes keep spent credits. Lower limits never permit data loss.
+---@class TC.MonitorLimits
+---@field aggregate_cells integer Maximum authoritative cells across logical monitors. Default: 80000.
+---@field cells integer Maximum character cells per logical monitor. Default: 10584.
+---@field height_tiles integer Maximum logical monitor height along its display-local tile axis. Default: 6.
+---@field peripheral_call_bytes integer Byte allowance for ordinary peripheral call transport and accounting. Default: 65536.
+---@field peripheral_call_entries integer Entry allowance for ordinary peripheral call transport. Default: 4096.
+---@field render_cells_per_tick integer Cell allowance for presentation preparation. Default: 1024.
+---@field render_commit_objects integer Rendering-object allowance for an admitted commit. Default: 42352.
+---@field render_commit_work integer Maximum indivisible render commit work. An increase to maintenance does not increase this limit. Default: 160000.
+---@field render_latency_ticks integer Published tick bound for presentation. This is not a measured client FPS guarantee. Default: 256.
+---@field render_object_limit integer Calculated native rendering-object allowance. Default: 203872.
+---@field render_retained_cells integer Calculated allowance for all retained presentation cells. Default: 362336.
+---@field render_retired_cells integer Maximum cells awaiting removal from host presentation. Default: 10584.
+---@field render_retired_frames integer Maximum presentation frames awaiting removal. Default: 256.
+---@field render_snapshot_cells integer Maximum cells retained by immutable presentation snapshots. Default: 80000.
+---@field render_staging_cells integer Maximum cells reserved for staged presentation. Default: 10584.
+---@field render_staging_frames integer Maximum staged presentation frames. Default: 256.
+---@field sync_group_cells integer Total terminal cells in one synchronization selection. Default: 10584.
+---@field sync_group_members integer Maximum unique logical monitors in one synchronization selection. Default: 4.
+---@field sync_group_refs integer Maximum number of supplied physical monitor selection references. Default: 8.
+---@field sync_groups_per_run integer Maximum monitor synchronization selections per execution owner. Default: 1.
+---@field tiles integer Maximum retained physical monitor tiles. Default: 256.
+---@field width_tiles integer Maximum logical monitor width along its display-local tile axis. Default: 6.
+---@field write_bytes integer Maximum text bytes for one monitor write or blit operation. Default: 16384.
+
+---Independent copy of effective limits. These defaults are not current values.
+---Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+---Settings changes keep spent credits. Lower limits never permit data loss.
+---@class TC.KVLimits
+---@field bytes integer Maximum accounting bytes for live content per physical KV database. Default: 16384.
+---@field command_arguments integer Maximum total positional arguments in one KV command. Default: 128.
+---@field hash_bytes integer Maximum content accounting bytes in one live KV hash. Default: 8192.
+---@field hash_fields integer Maximum distinct fields in one live KV hash. Default: 128.
+---@field key_bytes integer Maximum bytes in a KV key or hash field. Empty strings and NUL are permitted. Default: 256.
+---@field keys integer Maximum live keys per physical KV database. Default: 128.
+---@field peripheral_call_bytes integer Byte allowance for ordinary peripheral call transport and accounting. Default: 65536.
+---@field peripheral_call_entries integer Entry allowance for ordinary peripheral call transport. Default: 4096.
+---@field reclaim_devices_per_tick integer Maximum due-database maintenance visits per tick. Default: 2.
+---@field reclaim_keys_per_device integer Maximum expired-key maintenance visits per due database. Default: 8.
+---@field snapshot_bytes integer KV transfer and save snapshot allowance. This is separate from live content. Default: 65536.
+---@field total_hash_fields integer Maximum distinct live hash fields in one physical KV database. Default: 256.
+---@field value_bytes integer Maximum bytes in a KV string value. Values are never coerced. Default: 8192.
+
+---Independent copy of effective limits. These defaults are not current values.
+---Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+---Settings changes keep spent credits. Lower limits never permit data loss.
+---@class TC.ConfiguratorLimits: TC.Limits
+---@field configuration_bytes integer Maximum accounting bytes in a normalized configuration. Default: 16384.
+---@field configuration_nodes integer Maximum nodes in a normalized configuration. Default: 4096.
+---@field patch_fields integer Maximum fields in one Configurator patch. Default: 32.
+---@field section_filters integer Maximum supported filters in one Configurator section. Default: 128.
+---@field sections integer Maximum supported target sections. Default: 32.
+---@field target_edges integer Maximum edges in Configurator target-network traversal. Default: 512.
+---@field target_nodes integer Maximum nodes in Configurator target-network traversal. Default: 256.
+
+---Independent copy of effective limits. These defaults are not current values.
+---Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+---Settings changes keep spent credits. Lower limits never permit data loss.
+---@class TC.ModemLimits
+---@field channel_max integer Largest numeric modem channel, inclusive. Default: 65535.
+---@field channel_min integer Smallest numeric modem channel. Zero is valid; it does not mean unlimited. Default: 0.
+---@field data_depth integer Maximum nesting depth of generic Data. Native Logic transfer is exempt. Default: 16.
+---@field data_nodes integer Maximum nodes in a generic Data graph. Native Logic transfer is exempt. Default: 4096.
+---@field deliveries_per_transmit integer Maximum handler deliveries per accepted transmission, including fan-out. Default: 8.
+---@field message_bytes integer Maximum accounted modem message bytes per transmit. Default: 4096.
+---@field message_depth integer Maximum modem message Data nesting depth per transmit. Default: 8.
+---@field message_nodes integer Maximum modem message Data nodes per transmit. Default: 256.
+---@field open_channels integer Maximum shared open numeric channels per physical modem. Default: 128.
+---@field routing_candidates integer Maximum candidate radar receivers per transmission. Default: 64.
+---@field string_bytes integer Maximum bytes in an ordinary Data string, not a temporary Lua string. Default: 16384.
+---@field table_entries integer Maximum entries in an ordinary Data table, not a temporary Lua table. Native Logic transfer remains separate. Default: 1024.
+---@field transmits_per_computer_tick integer Maximum accepted transmissions per computer per tick. Default: 2.
+---@field transmits_per_tick integer Maximum accepted transmissions in the world per tick. Default: 16.
+
+---Independent copy of effective limits. These defaults are not current values.
+---Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+---Settings changes keep spent credits. Lower limits never permit data loss.
+---@class TC.SpeakerLimits: TC.Limits
+---@field speaker_computer_submissions_per_tick integer Maximum combined audio submissions per computer per tick. Default: 16.
+---@field speaker_instruments integer Maximum supported instrument catalogue entries. Default: 64.
+---@field speaker_notes_per_instrument integer Maximum supported note entries per instrument. Default: 128.
+---@field speaker_notes_per_tick integer Maximum note submissions per physical speaker per tick. Default: 8.
+---@field speaker_path_bytes integer Maximum bytes in a sound path or instrument string. Default: 256.
+---@field speaker_sound_catalog_entries integer Supported sound-path catalogue size. Default: 32768.
+---@field speaker_sound_page_size integer Maximum sound paths in one catalogue page. Default: 50.
+---@field speaker_sounds_per_tick integer Maximum sound-effect submissions per physical speaker per tick. Default: 1.
+---@field speaker_world_submissions_per_tick integer Maximum combined audio submissions in the world per tick. Default: 64.
+
+---Independent copy of effective limits. These defaults are not current values.
+---Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+---Settings changes keep spent credits. Lower limits never permit data loss.
+---@class TC.RecipeSearcherLimits: TC.Limits
+---@field recipe_search_results integer Maximum complete recipe results. Excess results cause E_LIMIT, never a truncated list. Default: 50.
+
+---Independent copy of effective limits. These defaults are not current values.
+---Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+---Settings changes keep spent credits. Lower limits never permit data loss.
+---@class TC.LogicLimits: TC.Limits
+---@field notification_latency_ticks integer Published tick bound for Logic notifications. event.tick can be later than sample_tick. Default: 60.
+---@field sample_interval_ticks integer Sampling interval for a watched physical Logic input, in simulation ticks. Default: 1.
+
+---Independent copy of effective limits. These defaults are not current values.
+---Counts limit admission. They do not give calibrated heap, latency, or FPS guarantees.
+---Settings changes keep spent credits. Lower limits never permit data loss.
+---@class TC.DashboardLimits: TC.Limits
+---@field chart_bar_entries? integer Optional positive-width bar domain supported by the renderer. This field is absent without factorio-charts.
+---@field chart_line_series? integer Optional maximum line-series count supported by the renderer. This field is absent without factorio-charts.
+---@field dashboard_state_bytes integer Accounting bytes for the retained Dashboard model, shared by all writers and tabs. Default: 65536.
+---@field dashboard_tabs integer Number of Dashboard tab slots. Empty slots do not require configuration. Default: 6.

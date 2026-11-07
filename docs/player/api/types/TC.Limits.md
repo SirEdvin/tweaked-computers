@@ -37,30 +37,6 @@ Guest API representation version. This is not a capacity. Default: 1.
 integer
 ```
 
-### callback_allocations
-
-Guest allocation admission units per computer per tick. These are not measured heap bytes. Default: 81920. Runtime-global setting: tc-callback-allocations. Requested integer domain: 1..100000000.
-
-```text
-integer
-```
-
-### callback_depth
-
-Maximum guarded guest call depth. Default: 32.
-
-```text
-integer
-```
-
-### callback_work
-
-Execution work units per computer per tick. These are not milliseconds. Default: 500000. Runtime-global setting: tc-callback-work. Requested integer domain: 1..100000000.
-
-```text
-integer
-```
-
 ### compile_work
 
 Shared work units for validation and reconstruction per computer per tick. Default: 1250000. Runtime-global setting: tc-compile-work. Requested integer domain: 1..100000000.
@@ -71,7 +47,7 @@ integer
 
 ### compiler_version
 
-Saved compiler representation version. This is not a capacity. Default: 2.
+Saved compiler representation version. This is not a capacity. Default: 3.
 
 ```text
 integer
@@ -133,14 +109,6 @@ Published tick bound for observing cleanup of still-owned Logic output. Default:
 integer
 ```
 
-### generated_source_bytes
-
-Maximum number of bytes in instrumented native source. Default: 131072.
-
-```text
-integer
-```
-
 ### handler_names
 
 Maximum number of exported handler names in one program. Default: 64.
@@ -159,7 +127,7 @@ integer
 
 ### host_work_per_tick
 
-Maximum world host work. This includes reserved maintenance work; maintenance is not additional. Default: 5000000. Runtime-global setting: tc-host-work-per-tick. Requested integer domain: 200001..1000000000.
+Maximum world source/API/host work, not ordinary Lua execution. Reserved maintenance is included, not additional. Default: 5000000. Runtime-global setting: tc-host-work-per-tick. Requested integer domain: 200001..1000000000.
 
 ```text
 integer
@@ -343,7 +311,7 @@ integer
 
 ### string_bytes
 
-Maximum bytes in an ordinary guest or Data string. Default: 16384.
+Maximum bytes in an ordinary Data string, not a temporary Lua string. Default: 16384.
 
 ```text
 integer
@@ -391,7 +359,7 @@ integer
 
 ### table_entries
 
-Maximum entries in an ordinary guest-created table. Native Logic edits without growth have separate rules. Default: 1024.
+Maximum entries in an ordinary Data table, not a temporary Lua table. Native Logic transfer remains separate. Default: 1024.
 
 ```text
 integer
@@ -408,14 +376,6 @@ integer
 ### topology_latency_ticks
 
 Published tick bound for topology observations. This is not a GPU or UPS guarantee. Default: 60.
-
-```text
-integer
-```
-
-### tuple_entries
-
-Maximum positions in an argument or return tuple, including explicit nil and status values. Default: 128.
 
 ```text
 integer

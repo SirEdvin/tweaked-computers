@@ -9,284 +9,275 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.MathLibrary
 
-These guarded numeric helpers require finite values.
-The helper explicitly converts numeric strings.
-It checks all supplied operands, including extra operands that it otherwise ignores.
-Nonfinite operands cause failure. A nonfinite native result causes E_RANGE.
-The library exposes no random, randomseed, huge or fallback to other host math functions.
+These approved math helpers use native conversion, domains, results, and errors.
+Temporary results can be nonfinite. Persistent Data and device arguments still require their documented domains.
+There is no mod work, allocation, tuple, or call-depth quota.
+The library exposes no random, randomseed, huge, or fallback to other host functions.
 
 ### abs
 
-This helper returns the absolute value and validates finite input and result.
+Return the native absolute value.
 
 ```text
-abs(x: TC.Numeric, ...: TC.Numeric) -> result: number
+abs(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 result: number
-Absolute value of x.
+Absolute value, including native nonfinite behavior.
 
 ### acos
 
-This helper returns the principal inverse cosine.
-It refuses operands outside the native domain.
+Return the native principal inverse cosine.
 
 ```text
-acos(x: TC.Numeric, ...: TC.Numeric) -> angle: number
+acos(x: TC.Numeric, ...: TC.GuestValue) -> angle: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite value in -1..1.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 angle: number
-Principal angle in radians.
+Native principal angle in radians.
 
 ### asin
 
-This helper returns the principal inverse sine.
-An operand outside the native domain produces a nonfinite result, which the helper refuses.
+Return the native principal inverse sine.
 
 ```text
-asin(x: TC.Numeric, ...: TC.Numeric) -> angle: number
+asin(x: TC.Numeric, ...: TC.GuestValue) -> angle: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite value in -1..1.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 angle: number
-Principal angle in radians.
+Native principal angle in radians.
 
 ### atan
 
-This helper returns the principal inverse tangent of one finite value.
+Return the native inverse tangent of one value.
 
 ```text
-atan(x: TC.Numeric, ...: TC.Numeric) -> angle: number
+atan(x: TC.Numeric, ...: TC.GuestValue) -> angle: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 angle: number
-Principal angle in radians.
+Native principal angle in radians.
 
 ### atan2
 
-This helper returns the two-argument native inverse tangent and preserves y,x argument order.
+Return the two-argument inverse tangent, preserving y,x argument order.
 
 ```text
-atan2(y: TC.Numeric, x: TC.Numeric, ...: TC.Numeric) -> angle: number
+atan2(y: TC.Numeric, x: TC.Numeric, ...: TC.GuestValue) -> angle: number
 ```
 
 ### Parameters
 
 y: TC.Numeric
-Finite vertical component.
+Native numeric operand; device finite-value rules do not apply here.
 
 x: TC.Numeric
-Finite horizontal component.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 angle: number
-Quadrant-aware angle in radians.
+Native quadrant-aware angle in radians.
 
 ### ceil
 
 Round toward positive infinity.
 
 ```text
-ceil(x: TC.Numeric, ...: TC.Numeric) -> result: number
+ceil(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 result: number
-Smallest integral value not below x.
+Smallest integral value not below x, under native rules.
 
 ### cos
 
-This helper returns the native cosine of a finite angle in radians.
+Return the native cosine of an angle in radians.
 
 ```text
-cos(x: TC.Numeric, ...: TC.Numeric) -> result: number
+cos(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite angle in radians.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 result: number
-Cosine value.
+Native cosine result.
 
 ### deg
 
-Convert radians to degrees. The helper refuses nonfinite output.
+Convert radians to degrees under native rules.
 
 ```text
-deg(x: TC.Numeric, ...: TC.Numeric) -> angle: number
+deg(x: TC.Numeric, ...: TC.GuestValue) -> angle: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite angle in radians.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 angle: number
-Finite angle in degrees.
+Native angle in degrees.
 
 ### exp
 
-This helper returns the natural exponential.
-Overflow to a nonfinite value causes E_RANGE.
+Return the native natural exponential. Overflow is not a synthetic E_RANGE error.
 
 ```text
-exp(x: TC.Numeric, ...: TC.Numeric) -> result: number
+exp(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite exponent.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 result: number
-Finite natural exponential value.
+Native exponential result, which can be nonfinite.
 
 ### floor
 
 Round toward negative infinity.
 
 ```text
-floor(x: TC.Numeric, ...: TC.Numeric) -> result: number
+floor(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 result: number
-Largest integral value not above x.
+Largest integral value not above x, under native rules.
 
 ### fmod
 
-This helper returns the native remainder with a quotient rounded toward zero,
-not floor modulo.
+Return the native remainder with a quotient rounded toward zero, not floor modulo.
 
 ```text
-fmod(x: TC.Numeric, y: TC.Numeric, ...: TC.Numeric) -> result: number
+fmod(x: TC.Numeric, y: TC.Numeric, ...: TC.GuestValue) -> result: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite dividend.
+Native numeric operand; device finite-value rules do not apply here.
 
 y: TC.Numeric
-Finite nonzero divisor. The helper refuses a nonfinite result.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 result: number
-Remainder with the dividend's sign.
+Native remainder, including native nonfinite behavior.
 
 ### log
 
-This helper returns the natural logarithm when base is omitted.
-An explicit base selects that logarithm.
-Unlike omission, explicitly supplied nil is not a numeric operand and causes failure.
-Inputs must give a finite native result. The helper refuses invalid domains.
+Return the native logarithm. Omitted or nil base selects the natural logarithm.
 
 ```text
-log(x: TC.Numeric, base?: TC.Numeric, ...: TC.Numeric) -> result: number
+log(x: TC.Numeric, base?: TC.Numeric, ...: TC.GuestValue) -> result: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Positive finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
 base (optional): TC.Numeric
-Optional positive finite base other than one. The helper refuses explicit nil.
+Optional base. Omission or nil selects the natural logarithm.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 result: number
-Finite logarithm value.
+Native logarithm result, which can be nonfinite.
 
 ### max
 
-This helper returns the largest supplied finite value.
-It requires at least one operand.
+Return the largest supplied value. At least one operand is required.
 
 ```text
 max(x: TC.Numeric, ...: TC.Numeric) -> result: number
@@ -295,20 +286,19 @@ max(x: TC.Numeric, ...: TC.Numeric) -> result: number
 ### Parameters
 
 x: TC.Numeric
-First finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
 ... (zero or more positions): TC.Numeric
-Remaining finite operands within tuple width.
+Remaining operands used by the native comparison.
 
 ### Returns
 
 result: number
-Maximum converted numeric value.
+Native maximum of the converted operands.
 
 ### min
 
-This helper returns the smallest supplied finite value.
-It requires at least one operand.
+Return the smallest supplied value. At least one operand is required.
 
 ```text
 min(x: TC.Numeric, ...: TC.Numeric) -> result: number
@@ -317,31 +307,31 @@ min(x: TC.Numeric, ...: TC.Numeric) -> result: number
 ### Parameters
 
 x: TC.Numeric
-First finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
 ... (zero or more positions): TC.Numeric
-Remaining finite operands within tuple width.
+Remaining operands used by the native comparison.
 
 ### Returns
 
 result: number
-Minimum converted numeric value.
+Native minimum of the converted operands.
 
 ### modf
 
-Split a finite value into integral and fractional parts, preserving two results.
+Split a value into native integral and fractional parts.
 
 ```text
-modf(x: TC.Numeric, ...: TC.Numeric) -> integral: number, fractional: number
+modf(x: TC.Numeric, ...: TC.GuestValue) -> integral: number, fractional: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
@@ -349,11 +339,11 @@ integral: number
 Integral part rounded toward zero.
 
 fractional: number
-Signed remaining fractional part.
+Native signed fractional part. This is an explicit second result.
 
 ### pi
 
-The read-only host pi constant, not a random or configurable value.
+Read-only native pi constant.
 
 ```text
 number
@@ -361,98 +351,96 @@ number
 
 ### rad
 
-Convert degrees to radians. The helper refuses nonfinite output.
+Convert degrees to radians under native rules.
 
 ```text
-rad(x: TC.Numeric, ...: TC.Numeric) -> angle: number
+rad(x: TC.Numeric, ...: TC.GuestValue) -> angle: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite angle in degrees.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 angle: number
-Finite angle in radians.
+Native angle in radians.
 
 ### sin
 
-This helper returns the native sine of a finite angle in radians.
+Return the native sine of an angle in radians.
 
 ```text
-sin(x: TC.Numeric, ...: TC.Numeric) -> result: number
+sin(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite angle in radians.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 result: number
-Sine value.
+Native sine result.
 
 ### sqrt
 
-This helper returns the square root.
-A negative operand produces nonfinite native output, which the helper refuses.
+Return the native square root. Native nonfinite results remain temporary values.
 
 ```text
-sqrt(x: TC.Numeric, ...: TC.Numeric) -> result: number
+sqrt(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite nonnegative operand.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 result: number
-Nonnegative square root.
+Native square-root result.
 
 ### tan
 
-This helper returns the native tangent. It refuses nonfinite results.
+Return the native tangent of an angle in radians.
 
 ```text
-tan(x: TC.Numeric, ...: TC.Numeric) -> result: number
+tan(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 ```
 
 ### Parameters
 
 x: TC.Numeric
-Finite angle in radians.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 ### Returns
 
 result: number
-Finite tangent value.
+Native tangent result.
 
 <a id="symbol-math"></a>
 
 ### math
 
-These guarded numeric helpers require finite values.
-The helper explicitly converts numeric strings.
-It checks all supplied operands, including extra operands that it otherwise ignores.
-Nonfinite operands cause failure. A nonfinite native result causes E_RANGE.
-The library exposes no random, randomseed, huge or fallback to other host math functions.
+These approved math helpers use native conversion, domains, results, and errors.
+Temporary results can be nonfinite. Persistent Data and device arguments still require their documented domains.
+There is no mod work, allocation, tuple, or call-depth quota.
+The library exposes no random, randomseed, huge, or fallback to other host functions.
 
 ```text
 TC.MathLibrary
@@ -460,5 +448,6 @@ TC.MathLibrary
 
 ## Referenced types
 
+- [TC.GuestValue](types/TC.GuestValue.md#symbol-TC.GuestValue)
 - [TC.MathLibrary](math.md#symbol-TC.MathLibrary)
 - [TC.Numeric](types/TC.Numeric.md#symbol-TC.Numeric)

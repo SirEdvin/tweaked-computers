@@ -26,7 +26,7 @@ Queries never unlock recipes, configure machines, or reserve, consume or produce
 Only separate state limits can admit returned Data for saving.
 Snapshot success is not permission to persist a facade or a guarantee of storage capacity.
 
-All complete results obey Data string, table, node, depth and byte rules, shared work/allocation limits, and recipe_search_results.
+All complete results obey Data string, table, node, depth and byte rules, shared host-work limits, and recipe_search_results.
 The method returns no prefix, count, cursor or pagination.
 Unexpected native fields or fields that cannot be represented cause E_UNSUPPORTED; they do not silently disappear.
 Native failures or a missing force recipe cause E_ENGINE, never invented enabled values.

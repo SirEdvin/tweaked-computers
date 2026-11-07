@@ -218,7 +218,11 @@ function M.run()
   f.power_sensor=assert(p.create_entity{name='constant-combinator',position={7,2},force='player'})
   wire(logic.children.output,f.power_sensor,'red'); wire(logic.children.output,f.power_sensor,'green')
   runtime.save(good.id,source,0); assert(runtime.activate(good.id,game.tick))
-  runtime.save(bad.id,'function start(e) pcall(function() while true do end end) end',0)
+  runtime.save(bad.id,[[function start(e)
+    computer.setState('payload',string.rep('x',8192))
+    pcall(function() for i=1,1024 do computer.getState('payload') end end)
+    computer.setState('escaped',true)
+  end]],0)
   assert(runtime.activate(bad.id,game.tick))
   for _,kind in ipairs({'computer','kv'}) do
     local old=body(p,kind,{x=kind=='computer' and -8 or 8,y=-8},0)
@@ -293,6 +297,7 @@ function M.on_tick(event)
       log('TC_WARM_WAIT good='..good.status..' bad='..bad.status..' powered='..tostring(bad.powered)..' queue='..#bad.queue)
       return
     end
+    assert(bad.diagnostic.code=='E_BUDGET' and not bad.state.escaped)
     assert(good.status=='running' and good.state.boots==1,good.diagnostic and good.diagnostic.message)
     for _,craft in ipairs(f.crafts) do
       if craft.entity.get_inventory(defines.inventory.crafter_output).get_item_count(craft.name)==0 then return end

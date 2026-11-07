@@ -1,10 +1,14 @@
 # Live Console
 
-The Console can run one bounded Lua line without a change to your
+The Console can run one native Lua line without a change to your
 saved controller. With an empty cursor, use Ctrl + left
 click to open a computer. Select **Console**. Type or paste into the bottom input.
 Press **Enter** or **Execute**. The native field supports its normal caret and clipboard
 controls. There is **no command history**, multiline continuation, OS or filesystem.
+
+**Run only trusted code.** Console has no mod execution or temporary-memory quota.
+An infinite loop can stop the game. Temporary values can use all available memory.
+Stop cannot interrupt code that does not return control to the host.
 
 **This is live, not a dry run.** Commands use the existing
 [peripheral authority](api/peripheral.md) and affect your real factory.
@@ -57,7 +61,7 @@ wrap returns nil if the peripheral is absent. Loading does not replay earlier su
 - Local functions can calculate values within a line. User functions/closures,
   library namespaces, reference-valued table keys and host objects cannot be
   retained. `fn=function() end` fails rather than saving executable code.
-- Host globals, dynamic loading, metatables, coroutines and unguarded execution
+- Host globals, dynamic loading, metatable access, and coroutines
   remain unavailable. Reserved library/API names and `print` cannot be replaced.
   [Saved programs](api/language.md) accept only plain function declarations
   and remain separate from Console. An active program's exported
@@ -90,7 +94,7 @@ with saved programs: rawget/rawset/rawlen/rawequal/xpcall, identical unpack and
 table.unpack, and `_VERSION == "Lua 5.2"`. Raw helpers never inspect or change API
 handles. They preserve transient identity but do not make built-ins or closures
 persistable. `a={}; b=a; rawset(a,"self",a)` retains its supported aliases/cycle.
-Fatal protected execution still cannot resume effects or fault the saved program.
+Fatal host-work refusal cannot resume effects through protected calls or fault the saved program.
 
 All added names are immutable globals. Lexical locals and parameters can shadow them.
 If an older scratch root used a newly reserved name (such as `rawset` or `_VERSION`),
@@ -133,7 +137,8 @@ not a later program-owned output. Model and database contents are not erased.
 The two-step **Reset Shell → Confirm Reset Shell** is separate from Maintenance's
 **Reset State**. Reset Shell does not erase older Console logs. Unknown future
 shell schemas are refused with data intact while compatible saved programs remain
-usable. Downgrades of such saves are not verified. Keep backups.
+usable. Back up the complete save and matching mod archive before upgrading.
+Rollback requires both backups. The old runtime cannot automatically downgrade new compiler or ledger data.
 
 [Effective limits](api/limits.md) include:
 
@@ -146,13 +151,20 @@ usable. Downgrades of such saves are not verified. Keep backups.
  An admitted session occupies a slot until Reset Shell,
 Run/Apply or Stop, even if its current values are empty. Encoding charges 16 units
 per scalar/reference/metadata item plus string bytes. This is not measured host
-memory. Existing source/AST, tuple, table, callback, output and shared tick limits
-also apply. Oversized or CR/LF input is rejected, retaining the previous draft.
+memory. Source/AST, retained table/string, output, and shared host-work limits also apply.
+Ordinary temporary values have no mod tuple, table-growth, allocation, or recursion-depth quota.
+A command can use a large temporary value if its final retained graph satisfies every graph limit.
+Final graph refusal retains the previous graph. Earlier external effects remain committed.
+Oversized or CR/LF input is rejected, retaining the previous draft.
 
 The shell and program use one computer ledger and one rotating scheduler, not
 separate budgets. When both have work, they alternate, with at most one executable
-item per computer per actual tick. Exhausted shared headroom can defer unstarted
-work. Once execution begins, an error never retries its earlier effects.
+item per computer per actual tick.
+Preparation includes validation, environment construction, and retained graph reconstruction.
+Earlier spending can delay preparation when its refused charge prefix fits the full current source and host allowances.
+Pending commands retain their identity and order, without echo or graph publication. Accepted preparation charges remain spent.
+Preparation that cannot fit fresh allowances fails. Every attempt checks current Console authority.
+Once execution begins, an error never repeats the command or its earlier effects.
 
 ## Verification boundary
 
@@ -160,7 +172,7 @@ Packaged contract tests use real native compilation/services and explicit table
 GUI mocks. Separate-process cold checks exercise values, binding identity,
 pending order, spent credits and once-only effects beside a running controller.
 Those headless tests alone do not establish connected multiplayer or native keys.
-Independent native-client acceptance exercised Console input/workflows in base and
+Historical native-client acceptance exercised Console input/workflows in base and
 Space Age, including representative 800×480/1280×720 cases and base 75%/100% UI
 scales. Two real base clients verified late joining after effects, independent
 drafts/carets, conflicting submissions and a separate-process server restart
@@ -168,3 +180,4 @@ without observed replay or desync. Space Age connected joining is not claimed.
 The clients used llvmpipe software rendering, not representative GPU performance.
 The feature PR records the reviewed evidence. See the repository's
 `docs/console-shell-validation.md` for the isolated client and late-join procedure.
+Those historical results do not establish acceptance of the trusted-runtime replacement.

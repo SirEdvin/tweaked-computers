@@ -9,31 +9,33 @@ Source: public `api/` declarations. [All public types and globals](types.md).
 
 ### TC.StringLibrary
 
-These bounded helpers operate on byte strings, not Unicode or Lua patterns.
-Strings are immutable. Input, output and work checks precede opaque native operations.
+These approved helpers operate on immutable byte strings, not Unicode.
+Temporary inputs and outputs have no mod byte, allocation, or work ceiling.
+Native errors and coercions apply except for documented safe-format and literal-find rules.
+String indexing exposes only this approved surface, never hidden host string members.
 Use dot calls: string.sub(s,...) instead of the forbidden string-method syntax.
 
 ### byte
 
 Return each byte in the normalized range.
 Omitted or nil i defaults to 1. The default for j is i (or 1), not string length.
-An empty range returns zero values. The result width cannot exceed tuple_entries.
+An empty range returns zero values. Native result-stack limits apply.
 Embedded NUL returns numeric zero.
 
 ```text
-byte(s: string, i?: TC.Numeric, j?: TC.Numeric) -> ...: integer
+byte(s: TC.StringInput, i?: TC.Numeric, j?: TC.Numeric) -> ...: integer
 ```
 
 ### Parameters
 
-s: string
-Bounded source bytes.
+s: TC.StringInput
+Source bytes or native-coercible number.
 
 i (optional): TC.Numeric
-First finite byte index, default 1.
+First native byte index, default 1.
 
 j (optional): TC.Numeric
-Last finite byte index, default i or 1.
+Last native byte index, default i or 1.
 
 ### Returns
 
@@ -42,16 +44,16 @@ Byte codes 0..255 in order, possibly zero results.
 
 ### char
 
-Construct bytes from exact integer codes. Zero inputs return an empty string.
+Construct bytes with native integer conversion. Zero inputs return an empty string.
 
 ```text
-char(...: integer) -> text: string
+char(...: TC.Numeric) -> text: string
 ```
 
 ### Parameters
 
-... (zero or more positions): integer
-Byte codes 0..255, bounded by tuple_entries.
+... (zero or more positions): TC.Numeric
+Byte codes 0..255 after native conversion, subject to native argument limits.
 
 ### Returns
 
@@ -64,20 +66,20 @@ This helper searches only for literal text. The plain argument must be explicitl
 The helper supports no Lua patterns or captures.
 A match returns first,last (inclusive). No match returns exactly one nil.
 
-The helper normalizes finite init. Omitted or nil init means 1.
+The helper uses native index conversion. Omitted or nil init means 1.
 A negative init counts from the end.
 
 ```text
-find(s: string, needle: string, init: TC.Numeric|nil, plain: true) -> first: integer, last: integer
+find(s: TC.StringInput, needle: TC.StringInput, init: TC.Numeric|nil, plain: true) -> first: integer, last: integer
 ```
 
 ### Parameters
 
-s: string
-Bounded haystack bytes.
+s: TC.StringInput
+Haystack bytes or a native-coercible number.
 
-needle: string
-Literal bounded search bytes, including an empty string.
+needle: TC.StringInput
+Literal search bytes or a native-coercible number. Empty strings are permitted.
 
 init: TC.Numeric|nil
 Third position. Explicit nil selects the default 1.
@@ -94,18 +96,18 @@ last: integer
 Inclusive final matching byte. An empty match can precede first.
 
 ```text
-find(s: string, needle: string, init: TC.Numeric|nil, plain: true) -> absent: nil
+find(s: TC.StringInput, needle: TC.StringInput, init: TC.Numeric|nil, plain: true) -> absent: nil
 ```
 
 No match returns exactly one nil (absent), not two nil values.
 
 ### Parameters
 
-s: string
-Bounded haystack bytes.
+s: TC.StringInput
+Haystack bytes or a native-coercible number.
 
-needle: string
-Literal bounded search bytes, including an empty string.
+needle: TC.StringInput
+Literal search bytes or a native-coercible number. Empty strings are permitted.
 
 init: TC.Numeric|nil
 Third position. Explicit nil selects the default 1.
@@ -120,12 +122,12 @@ No match returns exactly one nil (absent), not two nil values.
 
 ### format
 
-This helper does bounded native formatting.
+This helper does native formatting with safe descriptions for %s.
 It supports cdiouxXeEfgGqs and literal percent.
-Before formatting, it checks width, precision, operand count and conservative output size.
+Native format, width, precision, and operand rules apply without mod output-size admission.
 
 The %s conversion uses safe tostring. The %q conversion requires a string.
-Numeric operands must be finite.
+Native numeric domains apply. Temporary nonfinite values are not persistent Data.
 The helper provides no recursive table formatting or arbitrary format extension.
 
 ```text
@@ -135,7 +137,7 @@ format(format: string, ...: TC.GuestValue) -> text: string
 ### Parameters
 
 format: string
-Bounded format string with supported conversions only.
+Format string with supported conversions only.
 
 ... (zero or more positions): TC.GuestValue
 Conversion operands. Each conversion validates its domain.
@@ -150,13 +152,13 @@ Complete formatted bytes, never a successful truncated prefix.
 Read byte length, not Unicode character count.
 
 ```text
-len(s: string) -> length: integer
+len(s: TC.StringInput) -> length: integer
 ```
 
 ### Parameters
 
-s: string
-Bounded byte string.
+s: TC.StringInput
+Source byte string or native-coercible number.
 
 ### Returns
 
@@ -168,13 +170,13 @@ Byte count including embedded NUL.
 Return byte-oriented native lowercase conversion, not Unicode case folding.
 
 ```text
-lower(s: string) -> text: string
+lower(s: TC.StringInput) -> text: string
 ```
 
 ### Parameters
 
-s: string
-Bounded source bytes.
+s: TC.StringInput
+Source bytes or native-coercible number.
 
 ### Returns
 
@@ -184,23 +186,23 @@ Independent lowercase string value.
 ### rep
 
 Repeat a string with separators between copies.
-Nonpositive n returns an empty string. The value n must be an exact safe integer.
-Oversized output causes failure before allocation.
+Nonpositive n returns an empty string. Native count conversion and limits apply.
+There is no mod output-size preflight or temporary-allocation quota.
 
 ```text
-rep(s: string, n: integer, sep?: string) -> text: string
+rep(s: TC.StringInput, n: integer, sep?: TC.StringInput) -> text: string
 ```
 
 ### Parameters
 
-s: string
-Bounded source bytes.
+s: TC.StringInput
+Source bytes or native-coercible number.
 
 n: integer
-Safe integer repetition count. A nonpositive value means empty.
+Native repetition count. A nonpositive value means empty.
 
-sep (optional): string
-Omitted/nil means empty separator.
+sep (optional): TC.StringInput
+Omitted/nil means empty separator. Native number conversion is permitted.
 
 ### Returns
 
@@ -212,13 +214,13 @@ Complete repetition, or empty when n is nonpositive.
 Reverse byte order, not Unicode grapheme order.
 
 ```text
-reverse(s: string) -> text: string
+reverse(s: TC.StringInput) -> text: string
 ```
 
 ### Parameters
 
-s: string
-Bounded source bytes.
+s: TC.StringInput
+Source bytes or native-coercible number.
 
 ### Returns
 
@@ -227,21 +229,20 @@ Bytes in reverse order.
 
 ### sub
 
-Slice bytes with normalized Lua-style indexes.
-Negative indexes count from the end. Finite numeric strings are permitted.
-Omission or nil defaults to i=1,j=#s.
+Slice bytes with native indexes. Negative indexes count from the end.
+The start position is required. Omitted or nil j defaults to string length.
 
 ```text
-sub(s: string, i?: TC.Numeric, j?: TC.Numeric) -> text: string
+sub(s: TC.StringInput, i: TC.Numeric, j?: TC.Numeric) -> text: string
 ```
 
 ### Parameters
 
-s: string
-Bounded source string.
+s: TC.StringInput
+Source bytes or native-coercible number.
 
-i (optional): TC.Numeric
-First byte index, default 1.
+i: TC.Numeric
+Required first byte index under native conversion rules.
 
 j (optional): TC.Numeric
 Last byte index, default length.
@@ -249,20 +250,20 @@ Last byte index, default length.
 ### Returns
 
 text: string
-Native slice result after bounded admission.
+Native slice result without a mod temporary-byte ceiling.
 
 ### upper
 
 Return byte-oriented native uppercase conversion, not Unicode case folding.
 
 ```text
-upper(s: string) -> text: string
+upper(s: TC.StringInput) -> text: string
 ```
 
 ### Parameters
 
-s: string
-Bounded source bytes.
+s: TC.StringInput
+Source bytes or native-coercible number.
 
 ### Returns
 
@@ -273,8 +274,10 @@ Independent uppercase string value.
 
 ### string
 
-These bounded helpers operate on byte strings, not Unicode or Lua patterns.
-Strings are immutable. Input, output and work checks precede opaque native operations.
+These approved helpers operate on immutable byte strings, not Unicode.
+Temporary inputs and outputs have no mod byte, allocation, or work ceiling.
+Native errors and coercions apply except for documented safe-format and literal-find rules.
+String indexing exposes only this approved surface, never hidden host string members.
 Use dot calls: string.sub(s,...) instead of the forbidden string-method syntax.
 
 ```text
@@ -285,4 +288,5 @@ TC.StringLibrary
 
 - [TC.GuestValue](types/TC.GuestValue.md#symbol-TC.GuestValue)
 - [TC.Numeric](types/TC.Numeric.md#symbol-TC.Numeric)
+- [TC.StringInput](types/TC.StringInput.md#symbol-TC.StringInput)
 - [TC.StringLibrary](string.md#symbol-TC.StringLibrary)

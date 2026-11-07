@@ -11,7 +11,7 @@ local defs=require('scripts.device-definitions')
 local limits=require('scripts.runtime.limits')
 local shell=require('scripts.runtime.shell')
 local graph=require('scripts.network')
-local sandbox=require('scripts.runtime.sandbox')
+local environment=require('scripts.runtime.environment')
 local M={}; local loaded=false
 local function nop() end
 local function f() return storage.modem_fixture end
@@ -37,7 +37,7 @@ end
 local function guest(c,source,handler,event)
   local ctx=admission.context(admission.new(),c.id,game.tick)
   local plan,e=compiler.compile(source,ctx); assert(plan,e and e.message)
-  c.active={source=source,revision=0,api_version=1,compiler_version=limits.compiler_version,storage_version=1,handlers=plan.handlers}
+  c.active={source=source,revision=1,api_version=1,compiler_version=limits.compiler_version,storage_version=1,handlers=plan.handlers}
   c.status='running'; c.run_id=c.run_id or c.id..'/fixture'
   local ok,problem=compiler.run(plan,handler or 'start',event or {name='start'},function(g) return runtime.services(c,game.tick,g) end,ctx)
   assert(ok,problem and (problem.code..': '..problem.message))
@@ -113,32 +113,33 @@ function M.run()
   r.body.energy=1000000; r.powered=true
   report('compiled-unpowered-metadata-limits-and-live-method-refusal')
   subscribe(d); call(d,s,'open',42); call(c,r,'open',42)
-  -- Include the real facade/service/G.call return boundary, not just the
+  -- Include the real facade/service return boundary, not just the
   -- provider body. A refused current invocation cannot enqueue or spend a send.
   local root=registry.get(); local previous=root.modem_transport
-  for _,kind in ipairs({'work','allocations'}) do
+  do
+    local kind='work'
     local function setup()
       root.modem_transport=previous; clear(d)
       local ctx=admission.context(admission.new(),c.id,game.tick)
-      local g=sandbox.new(ctx,{})
+      local g=environment.new(ctx,{})
       local api=peripheral.services(c,game.tick,g).peripheral
-      local fn=g.get(api.wrap(r.id,'red'),'transmit')
+      local fn=api.wrap(r.id,'red').transmit
       return ctx,g,fn
     end
     local ctx,g,fn=setup(); local before=ctx.machine[kind]
-    assert(pcall(g.call,fn,42,17,'boundary') and #d.queue==1)
+    assert(pcall(g.execute,fn,42,17,'boundary') and #d.queue==1)
     local cost=ctx.machine[kind]-before
     ctx,g,fn=setup()
-    ctx.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost
-    assert(pcall(g.call,fn,42,17,'boundary') and #d.queue==1)
+    ctx.ledger.total=admission.host_ceiling(ctx.ledger,game.tick)-cost
+    assert(pcall(g.execute,fn,42,17,'boundary') and #d.queue==1)
     ctx,g,fn=setup(); local sequence=root.next_sequence
-    ctx.machine[kind]=limits[kind=='work' and 'callback_work' or 'callback_allocations']-cost+1
-    local ok,e=pcall(g.call,fn,42,17,'boundary')
+    ctx.ledger.total=admission.host_ceiling(ctx.ledger,game.tick)-cost+1
+    local ok,e=pcall(g.execute,fn,42,17,'boundary')
     assert(not ok and g.diagnostic(e).code=='E_BUDGET' and #d.queue==0 and root.next_sequence==sequence)
     assert(not root.modem_transport or root.modem_transport.total==0)
   end
   root.modem_transport=previous; clear(d)
-  report('guarded-transmit-exact-work-allocation-and-one-short-no-publication')
+  report('native-transmit-exact-host-work-and-one-short-no-publication')
   f().next=1
   log('TC_CONTRACT_TOTAL '..f().groups)
 end
@@ -264,7 +265,7 @@ local function envelope(c,r,d,s)
     peripheral.find('modem','red').transmit(42,17,string.rep('x',4088))
   end]])
   assert(#d.queue==8 and #d.queue[1].event.message==4088 and d.queue_bytes<limits.event_queue_bytes)
-  f().maximum={work=ctx.machine.work,allocations=ctx.machine.allocations,queue_bytes=d.queue_bytes,
+  f().maximum={work=ctx.machine.work,queue_bytes=d.queue_bytes,
     deliveries=#d.queue,message_bytes=4096}
   log('TC_MODEM_ENVELOPE '..serpent.line(f().maximum))
   clear(d); unsubscribe_all(d); runtime.subscribe(d,'modem_message','received',nil,nop)

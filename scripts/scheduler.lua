@@ -9,6 +9,14 @@ local budgets = require('scripts.runtime.budget-settings')
 local shell = require('scripts.runtime.shell')
 local principal = require('scripts.runtime.principal')
 local M = {}
+local migrated_root
+local function migrate(root,tick)
+  if migrated_root~=root or root.runtime_upgrade_pending then
+    if not runtime.migrate(root,tick) then return false end
+    migrated_root=root
+  end
+  return true
+end
 local hooks={lifecycle={},sample={},notifications={},render={}}
 local refusal={} -- Host-only ephemeral maintenance deferral identity.
 local render_reservation=0
@@ -134,24 +142,17 @@ local function dispatch_program(rec,tick)
   if rec.status~='running' or #rec.queue==0 or rec.last_dispatch_tick==tick then return false end
   if not principal.available(rec) then return false end
   if not runtime.check_active(rec) then
-    runtime.fault(rec,errors.new('E_UNSUPPORTED','unsupported retained computer/source header; source/state retained'),tick)
+    runtime.fault(rec,errors.new('E_UNSUPPORTED','unsupported retained computer/source header; source/state retained'),tick,true)
     return false
   end
   local root=registry.get()
   if not rec.body.valid then runtime.fault(rec,errors.new('E_NOT_FOUND','computer body no longer exists'),tick); return false end
-  -- Preserve enough aggregate headroom for one complete bounded callback. If a
-  -- neighbor spent it, wait rather than faulting an untouched waiting run.
-  -- Independently configurable ceilings can sum above the shared allowance.
-  -- Reserve no more than that allowance so small fitting callbacks still run;
-  -- admission remains authoritative and faults callbacks that actually exceed it.
-  local maximum=math.min(limits.compile_work+limits.callback_work+limits.callback_allocations,
-    admission.guest_ceiling(root.ledger,tick))
-  if maximum==0 then return false end
-  if root.ledger.tick==tick and root.ledger.total+maximum>admission.guest_ceiling(root.ledger,tick) then return false end
+  -- Admit actual source/API work, not a fictional whole-invocation allowance.
+  if (root.ledger.tick==tick and root.ledger.total or 0)>=admission.host_ceiling(root.ledger,tick) then return false end
   local context_ok,ctx=pcall(runtime.context,rec,tick)
   if not context_ok then
     if type(ctx)=='table' and ctx.code=='E_BUSY' then return false end
-    runtime.fault(rec,errors.new('E_UNSUPPORTED','malformed admission record; source/state/credits retained'),tick)
+    runtime.fault(rec,errors.new('E_UNSUPPORTED','malformed admission record; source/state/credits retained'),tick,true)
     return false
   end
   local item=rec.queue[1]
@@ -166,18 +167,25 @@ local function dispatch_program(rec,tick)
       rec.last_dispatch_tick=tick; return true
     end
   end
-  if monitor_refresh and item.event.name=='monitor_resize' then
-    if not admission.reserve(ctx,'work',8) then return false end
-    monitor_refresh(item.event)
+  local function consume(input,guard)
+    if input and monitor_refresh and item.event.name=='monitor_resize' then
+      guard.spend(8)
+      monitor_refresh(input)
+    end
+    rec.last_dispatch_tick=tick
+    table.remove(rec.queue,1); rec.queue_bytes=rec.queue_bytes-item.bytes
+    registry.ready_changed(rec)
+    if item.event.name~='dashboard_click' then
+      item.event.tick=tick
+      if input then input.tick=tick end
+    end
   end
-  rec.last_dispatch_tick=tick
-  table.remove(rec.queue,1); rec.queue_bytes=rec.queue_bytes-item.bytes
-  registry.ready_changed(rec)
-  if item.event.name~='dashboard_click' then item.event.tick=tick end
-  local ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,function(guard) return runtime.services(rec,tick,guard) end,ctx,item.circuit==true)
+  local ok,diagnostic,control=compiler.run(rec.active,item.handler,item.event,function(guard) return runtime.services(rec,tick,guard) end,ctx,item.circuit==true,consume)
+  if control=='defer' then return false end
+  if rec.last_dispatch_tick~=tick then consume() end
   if not ok then
     if control=='stop' then runtime.retire(rec,'stopped','stop')
-    else runtime.fault(rec,diagnostic,tick) end
+    else runtime.fault(rec,diagnostic,tick,diagnostic.code=='E_UNSUPPORTED') end
   end
   return true
 end
@@ -186,10 +194,8 @@ function M.dispatch(rec,tick)
   if not rec.body.valid then return dispatch_program(rec,tick) end
   if not principal.available(rec) then return false end
   local root=registry.get()
-  local maximum=math.min(limits.compile_work+limits.callback_work+limits.callback_allocations,
-    admission.guest_ceiling(root.ledger,tick))
-  if maximum==0 then return false end
-  if root.ledger.tick==tick and root.ledger.total+maximum>admission.guest_ceiling(root.ledger,tick) then return false end
+  if not migrate(root,tick) then return false end
+  if (root.ledger.tick==tick and root.ledger.total or 0)>=admission.host_ceiling(root.ledger,tick) then return false end
   local pending=shell.waiting(rec)
   local program=rec.status=='running' and #rec.queue>0
   if pending and (not program or rec.next_work_class~='program') then
@@ -232,15 +238,16 @@ function M.tick(tick)
     return
   end
   if root.scheduling_diagnostic then return end
+  if not migrate(root,tick) then return end
   local ledger=root.ledger
-  if type(ledger)~='table' or ledger.version~=1 or not errors.integer(ledger.total,0,1000000000)
+  if type(ledger)~='table' or ledger.version~=2 or not errors.integer(ledger.total,0,1000000000)
     or not errors.integer(ledger.tick,-1,9007199254740991) or tick<ledger.tick
     or not render_state_valid(root.scheduler,tick)
     or ledger.maintenance~=nil and ledger.maintenance~=root.scheduler then
     -- Validate the shared retained clock/header before timers or callbacks can
     -- mutate anything. Do not repair/reset an unknown ledger on reload.
     for _,rec in pairs(root.computers) do
-      if rec.status=='running' then runtime.fault(rec,errors.new('E_UNSUPPORTED','unsupported admission header/clock; source/state/credits retained'),tick) end
+      if rec.status=='running' then runtime.fault(rec,errors.new('E_UNSUPPORTED','unsupported admission header/clock; source/state/credits retained'),tick,true) end
     end
     return
   end
@@ -263,7 +270,7 @@ function M.tick(tick)
     if rec and rec.generation==item.generation and rec.run_id==item.run_id then
       M.try_maintenance(function()
         if rec.status=='running' then
-          if not runtime.check_active(rec) then runtime.fault(rec,errors.new('E_UNSUPPORTED','unsupported retained computer/source header; source/state retained'),tick)
+          if not runtime.check_active(rec) then runtime.fault(rec,errors.new('E_UNSUPPORTED','unsupported retained computer/source header; source/state retained'),tick,true)
           else M.advance_timers(rec,tick,spend) end
         end
       end)

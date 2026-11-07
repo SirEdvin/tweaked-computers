@@ -20,15 +20,24 @@ local function root() local r=registry.get(); if not registry.supported(r) then 
 local function arity(n,min,max) if n<min or n>(max or min) then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end end
 local function count(t) local n=0; for _ in pairs(t) do n=n+1 end; return n end
 function M.context(rec,tick) return admission.context(root().ledger,rec.id,tick) end
+function M.log_work(rec,bytes)
+  local n=#rec.logs
+  return 4+((n>=limits.console_entries or rec.log_bytes+bytes>limits.console_bytes) and 3*n or 0)
+end
 function M.log(rec,text,tick,spend)
   if type(text)~='string' then errors.raise('E_ARGUMENT','log requires a string') end
   if #text>limits.console_bytes then errors.raise('E_LIMIT','log entry too large') end
-  if spend then spend(#text+(#rec.logs)^2+1) end
-  while #rec.logs>=limits.console_entries or rec.log_bytes+#text>limits.console_bytes do
-    local old=table.remove(rec.logs,1); rec.log_bytes=rec.log_bytes-#old.text
+  if spend then spend(M.log_work(rec,#text)) end
+  local logs,n,first,bytes=rec.logs,#rec.logs,1,rec.log_bytes
+  while n-first+1>=limits.console_entries or bytes+#text>limits.console_bytes do
+    bytes=bytes-#logs[first].text; first=first+1
+  end
+  if first>1 then
+    for i=first,n do logs[i-first+1]=logs[i] end
+    for i=n-first+2,n do logs[i]=nil end
     rec.log_truncated=true
   end
-  rec.logs[#rec.logs+1]={text=text,tick=tick}; rec.log_bytes=rec.log_bytes+#text
+  logs[n-first+2]={text=text,tick=tick}; rec.log_bytes=bytes+#text
 end
 function M.retire(rec,status,reason)
   local cleaned=registry.cleanup(rec,rec.run_id,reason or status)
@@ -39,13 +48,19 @@ function M.retire(rec,status,reason)
   if not cleaned then rec.diagnostic=errors.new('E_ENGINE','host teardown failed; cleanup recovery retained') end
   return cleaned
 end
-function M.fault(rec,diagnostic,tick)
-  M.retire(rec,'faulted','fault')
+function M.fault(rec,diagnostic,tick,preserve)
+  if preserve then
+    rec.status='faulted'
+    if not principal.cleanup(rec,principal.program(rec),'unsupported') then
+      diagnostic=errors.new('E_ENGINE','host teardown failed; source/data retained')
+    end
+    registry.art_changed(rec); registry.ready_changed(rec); registry.timers_changed(rec)
+  else M.retire(rec,'faulted','fault') end
   -- Host diagnostics have scalar fields and may be shared by sampler deliveries.
   -- Own the retained table before attaching this computer's authoritative identity.
   local owned={}; for key,value in pairs(diagnostic) do owned[key]=value end
   diagnostic=owned
-  diagnostic.source_revision=rec.active and rec.active.revision or nil
+  diagnostic.source_revision=type(rec.active)=='table' and rec.active.revision or nil
   diagnostic.run_id=rec.run_id
   rec.diagnostic=diagnostic
   M.log(rec,(diagnostic.code or 'E_PROGRAM')..': '..(diagnostic.message or 'program failed'):sub(1,512),tick)
@@ -97,10 +112,57 @@ function M.activate(id,tick,expected_revision)
   if plan.handlers.start then M.enqueue(rec,'start',{name='start'},tick) end
   return rec.run_id
 end
-function M.check_active(rec)
+local active_fields={source=true,revision=true,api_version=true,compiler_version=true,storage_version=true,handlers=true}
+function M.check_active(rec,legacy)
   local a=rec.active
-  return rec.schema_version==1 and type(a)=='table' and a.api_version==1 and a.compiler_version==limits.compiler_version and a.storage_version==limits.storage_version and type(a.source)=='string' and type(a.handlers)=='table' and type(rec.run_id)=='string'
+  if rec.schema_version~=1 or type(a)~='table' or getmetatable(a) or a.api_version~=1
+    or not (a.compiler_version==limits.compiler_version or legacy and a.compiler_version==2)
+    or a.storage_version~=limits.storage_version or type(a.source)~='string' or #a.source>limits.source_bytes
+    or not errors.integer(a.revision,1,MAX) or type(a.handlers)~='table' or getmetatable(a.handlers)
+    or type(rec.run_id)~='string' or #rec.run_id==0 or #rec.run_id>128 then return false end
+  for key in pairs(a) do if not active_fields[key] then return false end end
+  local n=0
+  for name,value in pairs(a.handlers) do
+    n=n+1
+    if n>limits.handler_names or type(name)~='string' or #name>limits.identifier_bytes
+      or not name:match('^[a-zA-Z_][a-zA-Z_0-9]*$') or value~=true then return false end
+  end
+  return true
 end
+function M.migrate(r,tick)
+  tick=tick or game.tick
+  local ledger=r.ledger
+  if type(ledger)~='table' or not errors.integer(ledger.tick,-1,tick)
+    or ledger.maintenance~=nil and ledger.maintenance~=r.scheduler or not admission.upgrade(ledger) then
+    local diagnostic=errors.new('E_UNSUPPORTED','unsupported admission data; restore a supported save; source/queues/credits retained')
+    r.scheduling_diagnostic=diagnostic
+    for _,id in ipairs(r.order) do
+      local rec=r.computers[id]
+      if rec and rec.status=='running' then M.fault(rec,diagnostic,tick,true) end
+    end
+    return false
+  end
+  for _,id in ipairs(r.order) do
+    local rec=r.computers[id]
+    if rec and rec.status=='running' then
+      if not M.check_active(rec,true) then
+        M.fault(rec,errors.new('E_UNSUPPORTED','unsupported active source metadata; review and activate saved source; accepted data retained'),tick,true)
+      elseif rec.active.compiler_version~=limits.compiler_version then
+        local ok,ctx=pcall(M.context,rec,tick)
+        if not ok and type(ctx)=='table' and ctx.code=='E_BUSY' then r.runtime_upgrade_pending=true; return false end
+        local plan,problem
+        if ok then plan,problem=compiler.compile(rec.active.source,ctx) end
+        if not plan and problem and problem.code=='E_BUDGET' then r.runtime_upgrade_pending=true; return false end
+        if not plan or not compiler.same_handlers(rec.active.handlers,plan.handlers) then
+          M.fault(rec,errors.new('E_UNSUPPORTED','invalid retained source or exports; review and activate saved source; accepted data retained'),tick,true)
+        else rec.active.compiler_version=limits.compiler_version end
+      end
+    end
+  end
+  r.runtime_upgrade_pending=nil
+  return true
+end
+registry.register_initializer('zz-native-runtime',M.migrate)
 local function handler(rec,name)
   if type(name)~='string' or not M.check_active(rec) or rec.active.handlers[name]~=true then errors.raise('E_ARGUMENT','declared handler name required') end
   return name
@@ -205,12 +267,28 @@ function M.register_services(name,fn)
   assert(count(providers)<limits.host_hooks,'host provider capacity')
   providers[name]=fn
 end
-function M.services(rec,tick,guard,execution)
+function M.services(rec,tick,guard,execution,output_prefix)
   execution=execution or principal.program(rec)
   local function spend(n) guard.spend(n) end
   local function current()
     guard.check()
-    principal.check(rec,execution)
+    if guard.check_owner then guard.check_owner() else principal.check(rec,execution) end
+  end
+  if guard.bind_output then
+    local check,invalidate=principal.proof(rec,execution)
+    guard.check_owner=check
+    guard.invalidate_authority=invalidate
+    guard.bind_output(function(text)
+      guard.check(); check()
+      local bytes=#text+(output_prefix and #output_prefix or 0)
+      if bytes>limits.console_bytes then errors.raise('E_LIMIT','log entry too large') end
+      guard.spend(M.log_work(rec,bytes))
+      if output_prefix then
+        guard.spend(bytes+1)
+        text=output_prefix..text
+      end
+      M.log(rec,text,tick)
+    end)
   end
   local api={}
   local function method(name,min,max,fn)

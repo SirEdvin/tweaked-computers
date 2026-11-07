@@ -3,8 +3,7 @@
 local registry=require('scripts.registry')
 local speaker=require('scripts.services.speaker')
 local admission=require('scripts.runtime.admission')
-local sandbox=require('scripts.runtime.sandbox')
-local limits=require('scripts.runtime.limits')
+local environment=require('scripts.runtime.environment')
 local catalogue_contract=require('tests.speaker_catalogue_contract')
 local M={}
 local function nop() end
@@ -66,18 +65,15 @@ function M.run()
   assert(registry.get().speaker_audio.version==999)
   registry.get().speaker_audio=original
   report('unknown-admission-state-is-inert-and-not-reset')
-  for _,which in ipairs({'work','allocations'}) do
-    local ctx=admission.context(admission.new(),'prepared-boolean-'..which,3)
-    local g=sandbox.new(ctx,{}); local entered=0
-    local fn=g.service(function()
-      g.prepare_boolean_result(); entered=entered+1
-      return call('prepared',record('prepared'),3,'playSound','utility/wire_connect_pole',0)
-    end)
-    if which=='work' then ctx.machine.work=limits.callback_work-5
-    else ctx.machine.allocations=limits.callback_allocations-2 end
-    count=#requests; assert(not pcall(g.call,fn)); assert(entered==0 and #requests==count)
-  end
-  report('insufficient-immediate-return-work-or-allocation-produces-zero-dispatches')
+  local ctx=admission.context(admission.new(),'admitted-effect',3)
+  local env=environment.new(ctx,{}); local entered=0
+  local fn=env.service(function()
+    entered=entered+1
+    return speaker.methods.playSound({id='admitted'},record('admitted'),'red',3,env.spend,'utility/wire_connect_pole',0)
+  end)
+  ctx.ledger.total=admission.host_ceiling(ctx.ledger,3)
+  count=#requests; assert(not pcall(env.execute,fn)); assert(entered==0 and #requests==count)
+  report('insufficient-host-work-produces-zero-dispatches')
   catalogue_contract.run()
   report('bounded-catalogue-invalid-candidates-exact-full-pagination-and-failures')
   log('TC_CONTRACT_TOTAL '..groups)

@@ -12,7 +12,7 @@ local rank={boolean=1,number=2,string=3}
 local function sorted(t,guard)
   local keys={}
   for k in pairs(t) do
-    guard.host_work(1,1)
+    guard.spend(1)
     if not scalar(k) then fail('shell table keys must be finite scalars','E_UNSUPPORTED') end
     keys[#keys+1]=k
     if #keys>limits.table_entries then fail('shell table width exceeded','E_LIMIT') end
@@ -31,7 +31,7 @@ local function meter(guard)
     local n=type(v)=='string' and #v+16 or 16
     bytes=bytes+n; items=items+1
     if bytes>limits.shell_value_bytes or items>limits.shell_nodes then fail('retained shell graph capacity exceeded','E_LIMIT') end
-    guard.host_work(n+1,n+1)
+    guard.spend(n+1)
   end
 end
 function M.encode(root,guard)
@@ -86,7 +86,7 @@ local function array(t,max,guard)
   return n
 end
 function M.decode(graph,guard)
-  if graph==nil then return guard.new(0,function() return {} end) end
+  if graph==nil then guard.spend(1); return {} end
   fields(graph,{version=true,root=true,nodes=true},guard)
   if graph.version~=1 or graph.root~=1 then fail('unsupported retained shell graph','E_UNSUPPORTED') end
   local charge=meter(guard)
@@ -100,7 +100,7 @@ function M.decode(graph,guard)
     if node.kind=='table' and node.binding==nil then
       local count=array(node.entries,limits.table_entries,guard)
       if i==1 and count>limits.shell_bindings then fail('shell binding capacity exceeded','E_LIMIT') end
-      values[i]=guard.new(count,function() return {} end)
+      guard.spend(count+1); values[i]={}
     elseif node.kind=='binding' and node.entries==nil and i~=1 then
       fields(node.binding,{name=true,wire=true,generation=true,kind=true,method=true,facade=true},guard)
       for k,v in pairs(node.binding) do if k~='facade' then if not scalar(v) then fail('malformed binding scalar') end; charge(v) end end

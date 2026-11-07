@@ -18,8 +18,7 @@ result or permission to delete accepted content.
 For E_ENGINE, the adapter rolls back the current operation where supported.
 A failed rollback faults that adapter and retains an explicit recovery record.
 
-Fatal work, allocation, depth or tuple exhaustion and saved-program stop bypass
-guest pcall/xpcall. The API does not expose their private controls as ApiError values.
+Fatal host-work exhaustion and saved-program stop bypass guest pcall/xpcall. The API does not expose their private controls as ApiError values.
 Faults retain source, state, logs and earlier successful effects, except
 still-owned Logic output. Host cleanup clears that output.
 Candidate validation failure preserves the previous active run.

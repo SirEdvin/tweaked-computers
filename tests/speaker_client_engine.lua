@@ -5,7 +5,7 @@ local runtime=require('scripts.runtime.computer')
 local scheduler=require('scripts.scheduler')
 local defs=require('scripts.device-definitions')
 local admission=require('scripts.runtime.admission')
-local sandbox=require('scripts.runtime.sandbox')
+local environment=require('scripts.runtime.environment')
 local M={}; local loaded=false
 local function f() return storage.speaker_client end
 local function native_configuration(body)
@@ -44,7 +44,7 @@ function play(event)
 end]]
 local function state(key,value)
   local c=registry.record(f().computer)
-  local guard=sandbox.new(admission.context(admission.new(),'speaker-scene-controller',game.tick),{})
+  local guard=environment.new(admission.context(admission.new(),'speaker-scene-controller',game.tick),{})
   runtime.services(c,game.tick,guard).computer.setState(key,value)
 end
 function M.run()

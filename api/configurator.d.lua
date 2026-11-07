@@ -232,7 +232,8 @@ function Configurator.getConfiguration(device_id, target_wire) end
 ---E_READ_ONLY protects observations, protected targets and nonclearable fields.
 ---E_UNSUPPORTED applies to native applicability.
 ---
----Generic admission and fatal budgets remain unchanged.
+---Data validation, shared host-work admission, and fatal host-work refusal still apply.
+---Temporary Lua execution and allocation have no mod quotas.
 ---See Configurator lifecycle notes for native recovery limits.
 ---@param device_id TC.DeviceId Exact current target ID.
 ---@param patch TC.ConfigurationPatch Entire candidate patch. An empty patch is a checked no-op/readback.

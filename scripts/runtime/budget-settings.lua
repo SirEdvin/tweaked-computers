@@ -4,8 +4,6 @@ local limits=require('scripts.runtime.limits')
 local maintenance_max=100000000
 local M={maintenance_max=maintenance_max,definitions={
   {key='compile_work',name='tc-compile-work',minimum_value=1,maximum_value=100000000},
-  {key='callback_work',name='tc-callback-work',minimum_value=1,maximum_value=100000000},
-  {key='callback_allocations',name='tc-callback-allocations',minimum_value=1,maximum_value=100000000},
   {key='host_work_per_tick',name='tc-host-work-per-tick',minimum_value=limits.maintenance_work_per_tick+1,maximum_value=1000000000},
   {key='maintenance_work_per_tick',name='tc-maintenance-work-per-tick',minimum_value=limits.maintenance_work_per_tick,maximum_value=maintenance_max},
 }}

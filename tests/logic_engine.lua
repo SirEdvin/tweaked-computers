@@ -97,10 +97,10 @@ function M.run()
   local inventory=assert(inspect(c,'red',game.tick)); assert(#inventory==2)
   assert(#assert(inspect(c,'green',game.tick))==0)
   inventory[1].name='mutated'; assert(assert(inspect(c,'red',game.tick))[1].name~='mutated')
-  local ctx=runtime.context(c,game.tick); assert(admission.reserve(ctx,'work',limits.callback_work-ctx.machine.work))
+  local ctx=runtime.context(c,game.tick); assert(admission.reserve(ctx,'work',admission.host_ceiling(ctx.ledger,ctx.tick)-ctx.ledger.total))
   local absent,diagnostic=inspect(c,'red',game.tick); assert(not absent and diagnostic.code=='E_BUSY')
   -- This is an isolated host adapter admission contract, not new tick credits.
-  assert(ctx.machine.work==limits.callback_work)
+  assert(ctx.ledger.total==admission.host_ceiling(ctx.ledger,ctx.tick))
   report('production-editor-inspector-complete-copy-colour-and-work-refusal')
   guest(c,[[local io=peripheral.find('logic_handler','red'); assert(#peripheral.getMethods(peripheral.getName(io),'red')==9)
     assert(select('#',io.setOutput({{signal={type='virtual',name='signal-A'},count=-2147483648}}))==0)
@@ -142,12 +142,12 @@ local function snapshot()
   local c=registry.computer(f().c); local io=registry.record(f().io); local root=registry.get()
   return {state=c.state,run=c.run_id,source=c.active.source,subscriptions=c.subscriptions,queue=c.queue,bank=io.output_bank,owner=io.output_owner,
     ledger=root.ledger.total,tick=root.ledger.tick,maintenance=root.scheduler.maintenance_spent,starts=c.state.starts,unit=io.body.unit_number,
-    machine=root.ledger.machines[c.id],work=root.ledger.machines[c.id].work,compile=root.ledger.machines[c.id].compile,allocations=root.ledger.machines[c.id].allocations}
+    machine=root.ledger.machines[c.id],work=root.ledger.machines[c.id].work,compile=root.ledger.machines[c.id].compile}
 end
 local function unchanged()
   verify_faults()
   local a,b=f().snapshot,snapshot()
-  for _,k in ipairs({'state','run','source','subscriptions','queue','bank','owner','ledger','tick','maintenance','starts','unit','machine','work','compile','allocations'}) do assert(a[k]==b[k],'cold changed '..k) end
+  for _,k in ipairs({'state','run','source','subscriptions','queue','bank','owner','ledger','tick','maintenance','starts','unit','machine','work','compile'}) do assert(a[k]==b[k],'cold changed '..k) end
 end
 function M.on_load() loaded=true; if f().phase=='frozen' then unchanged(); log('TC_COLD_ON_LOAD_UNCHANGED') end end
 function M.on_tick(event)

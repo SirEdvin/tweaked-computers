@@ -113,14 +113,14 @@ local function snapshot(rec)
   return {run_id=rec.run_id,source=rec.active.source,revision=rec.active.revision,
     saved_source=rec.saved_source,saved_revision=rec.saved_revision,boots=rec.state.boots,
     sequence=root.next_sequence,ledger_tick=root.ledger.tick,total=root.ledger.total,
-    work=machine.work,compile=machine.compile,allocations=machine.allocations,
+    work=machine.work,compile=machine.compile,
     scheduler_tick=root.scheduler.last_tick,maintenance_spent=root.scheduler.maintenance_spent,
     queue_sequence=rec.queue[1].event.sequence,timers=timers,body_unit=rec.body.unit_number}
 end
 local function verify_frozen()
   local fixture=storage.tc03_fixture; local root=registry.get(); local rec=registry.computer(fixture.id)
   local saved=fixture.snapshot; local now=snapshot(rec)
-  for _,key in ipairs({'run_id','source','revision','saved_source','saved_revision','boots','sequence','ledger_tick','total','work','compile','allocations','scheduler_tick','maintenance_spent','queue_sequence','body_unit'}) do
+  for _,key in ipairs({'run_id','source','revision','saved_source','saved_revision','boots','sequence','ledger_tick','total','work','compile','scheduler_tick','maintenance_spent','queue_sequence','body_unit'}) do
     assert(now[key]==saved[key],'cold load changed '..key)
   end
   assert(rec.active.source==origin_source and rec.saved_source~=rec.active.source)
@@ -173,17 +173,17 @@ function M.on_tick(event)
     if not loaded then return end -- First process remains frozen until actual save.
     local rec=verify_frozen(); local saved=fixture.snapshot
     local ctx=admission.context(registry.get().ledger,rec.id,saved.ledger_tick)
-    assert(ctx.machine.work==saved.work and ctx.machine.compile==saved.compile and ctx.machine.allocations==saved.allocations)
+    assert(ctx.machine.work==saved.work and ctx.machine.compile==saved.compile)
     -- A one-unit refusal on a real retained ledger, without granting a new tick.
-    assert(not admission.reserve(ctx,'work',limits.callback_work+1-saved.work))
+    assert(not admission.reserve(ctx,'work',admission.host_ceiling(ctx.ledger,ctx.tick)+1-ctx.ledger.total))
     assert(ctx.machine.work==saved.work and ctx.ledger.total==saved.total)
     if fixture.declaration then
       local plain=registry.computer(fixture.declaration)
       local c=admission.context(registry.get().ledger,plain.id,saved.ledger_tick)
       local machine=clone(c.machine); local total=c.ledger.total
-      assert(machine.work>0 and machine.compile>0 and machine.allocations>0)
-      for kind,ceiling in pairs({work=limits.callback_work,compile=limits.compile_work,allocations=limits.callback_allocations}) do
-        assert(not admission.reserve(c,kind,ceiling+1-machine[kind]))
+      assert(machine.work>0 and machine.compile>0)
+      for kind,remaining in pairs({work=admission.host_ceiling(c.ledger,c.tick)-total,compile=limits.compile_work-machine.compile}) do
+        assert(not admission.reserve(c,kind,remaining+1))
         assert(equal(c.machine,machine) and c.ledger.total==total,'cold refusal renewed credits')
       end
       scheduler.tick(saved.scheduler_tick)

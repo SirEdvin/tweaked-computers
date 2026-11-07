@@ -2217,6 +2217,15 @@ topic]=] ]=[=[
 type.TC.StatisticsWindow]=]
 },
 [ [=[
+TC.StringInput]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.StringInput.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.StringInput]=]
+},
+[ [=[
 TC.StringLibrary]=] ]={
 [ [=[
 page]=] ]=[=[
@@ -2624,7 +2633,9 @@ Simulation events and Console commands share a persisted ready rotation.
 At most one item per computer runs in an actual tick.
 The scheduler uses FIFO queues and fair program/Console alternation.
 New work that becomes ready during a dispatch joins a later round.
-A callback completes or faults. It never suspends its Lua stack.]=]
+A returning callback completes or faults. It never suspends its Lua stack.
+Trusted Lua can stall the game or exhaust memory before it returns.
+Stop and scheduling do not interrupt runaway code.]=]
 },
 {
 [ [=[
@@ -2652,7 +2663,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Console shares real application state and per-computer admission.
+Console shares real application state and source/host-work admission.
 It has its own scratch graph, output attribution and transient ownership.
 Only saved programs can call on, off, after, every, cancelTimer and stop.
 These methods raise E_UNSUPPORTED in Console.
@@ -3075,7 +3086,9 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 Read a defensive complete map of effective limits and representation versions.
-Defaults are not live values. A settings change does not replenish spent credit.]=]
+Defaults are not live values. A settings change does not replenish spent host credit.
+Retired execution, allocation, depth, tuple, and generated-source fields are absent.
+string_bytes and table_entries constrain boundary data, not temporary Lua values.]=]
 },
 {
 [ [=[
@@ -3253,7 +3266,12 @@ prose]=],
 text]=] ]=[=[
 Append one bounded diagnostic entry. This method returns no values.
 Unlike print, this method requires a string. Formatting and retention admission
-precede publication. Existing Console retention can evict old entries.]=]
+precede publication. Existing Console retention can evict old entries.
+Logging uses the admitted execution owner. It does not repeat physical owner discovery for each entry.
+Canceled executions cannot append guest output.
+Both byte and entry bounds apply, including for empty entries.
+A refused append does not evict retained entries or change their truncation flag.
+Separate host diagnostics retain their existing output policy.]=]
 },
 {
 [ [=[
@@ -3264,7 +3282,7 @@ text]=] ]=[=[
 Console attributes its calls to the shell. The shell attribution prefix counts
 toward console_bytes. Oversized output causes E_LIMIT, never a partial successful append.
 Saved programs require exactly one argument.
-The current Console override ignores additional guarded arguments.
+The current Console override ignores additional arguments.
 This compatibility exception applies only to Console, not to arity in general.]=]
 },
 {
@@ -3710,7 +3728,9 @@ Simulation events and Console commands share a persisted ready rotation.
 At most one item per computer runs in an actual tick.
 The scheduler uses FIFO queues and fair program/Console alternation.
 New work that becomes ready during a dispatch joins a later round.
-A callback completes or faults. It never suspends its Lua stack.]=]
+A returning callback completes or faults. It never suspends its Lua stack.
+Trusted Lua can stall the game or exhaust memory before it returns.
+Stop and scheduling do not interrupt runaway code.]=]
 },
 {
 [ [=[
@@ -3738,7 +3758,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Console shares real application state and per-computer admission.
+Console shares real application state and source/host-work admission.
 It has its own scratch graph, output attribution and transient ownership.
 Only saved programs can call on, off, after, every, cancelTimer and stop.
 These methods raise E_UNSUPPORTED in Console.
@@ -3789,7 +3809,9 @@ Simulation events and Console commands share a persisted ready rotation.
 At most one item per computer runs in an actual tick.
 The scheduler uses FIFO queues and fair program/Console alternation.
 New work that becomes ready during a dispatch joins a later round.
-A callback completes or faults. It never suspends its Lua stack.
+A returning callback completes or faults. It never suspends its Lua stack.
+Trusted Lua can stall the game or exhaust memory before it returns.
+Stop and scheduling do not interrupt runaway code.
 
 The scheduler indexes future timers by earliest deadline instead of visiting
 them every tick while they wait. Ordinary cold load retains pending order,
@@ -3799,7 +3821,7 @@ discard accepted work.
 
 Context
 
-Console shares real application state and per-computer admission.
+Console shares real application state and source/host-work admission.
 It has its own scratch graph, output attribution and transient ownership.
 Only saved programs can call on, off, after, every, cancelTimer and stop.
 These methods raise E_UNSUPPORTED in Console.
@@ -3928,7 +3950,9 @@ Exactly one string or one nil when unset.
 getLimits
 
 Read a defensive complete map of effective limits and representation versions.
-Defaults are not live values. A settings change does not replenish spent credit.
+Defaults are not live values. A settings change does not replenish spent host credit.
+Retired execution, allocation, depth, tuple, and generated-source fields are absent.
+string_bytes and table_entries constrain boundary data, not temporary Lua values.
 
 getLimits() -> limits: TC.Limits
 
@@ -3981,11 +4005,16 @@ log
 Append one bounded diagnostic entry. This method returns no values.
 Unlike print, this method requires a string. Formatting and retention admission
 precede publication. Existing Console retention can evict old entries.
+Logging uses the admitted execution owner. It does not repeat physical owner discovery for each entry.
+Canceled executions cannot append guest output.
+Both byte and entry bounds apply, including for empty entries.
+A refused append does not evict retained entries or change their truncation flag.
+Separate host diagnostics retain their existing output policy.
 
 Console attributes its calls to the shell. The shell attribution prefix counts
 toward console_bytes. Oversized output causes E_LIMIT, never a partial successful append.
 Saved programs require exactly one argument.
-The current Console override ignores additional guarded arguments.
+The current Console override ignores additional arguments.
 This compatibility exception applies only to Console, not to arity in general.
 
 log(text: string)
@@ -4131,7 +4160,9 @@ Simulation events and Console commands share a persisted ready rotation.
 At most one item per computer runs in an actual tick.
 The scheduler uses FIFO queues and fair program/Console alternation.
 New work that becomes ready during a dispatch joins a later round.
-A callback completes or faults. It never suspends its Lua stack.
+A returning callback completes or faults. It never suspends its Lua stack.
+Trusted Lua can stall the game or exhaust memory before it returns.
+Stop and scheduling do not interrupt runaway code.
 
 The scheduler indexes future timers by earliest deadline instead of visiting
 them every tick while they wait. Ordinary cold load retains pending order,
@@ -4141,7 +4172,7 @@ discard accepted work.
 
 Context
 
-Console shares real application state and per-computer admission.
+Console shares real application state and source/host-work admission.
 It has its own scratch graph, output attribution and transient ownership.
 Only saved programs can call on, off, after, every, cancelTimer and stop.
 These methods raise E_UNSUPPORTED in Console.
@@ -4199,7 +4230,14 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Every target call validates exact identity, generation, force, surface, selected path and device requirements again.
+Every target call requires current identity, generation, force, surface, selected path and device authority.
+The host can reuse a complete physical proof within one non-yielding callback or command.
+Reuse is permitted only while the proof's assumptions remain valid.
+Operations that can change those assumptions invalidate the proof before their effects, including failed operations.
+A new invocation requires a new proof. Saved bindings and background observations do not supply authority.
+Native availability and method-specific checks still apply on each call.
+These checks apply to direct native calls, captured methods, and peripheral.call.
+Temporary Lua allocation is not a device-authority proof.
 Temporary or incomplete topology causes E_NETWORK_PENDING or E_LIMIT, never a successful empty inventory.
 Active methods on native radars and speakers require power.
 Reachable metadata and getLimits remain usable without power.]=]
@@ -4420,8 +4458,9 @@ text]=] ]=[=[
 Find all matching facades in sorted-name order as MULTIPLE RETURNS, not an array.
 Zero matches give zero results.
 Collect the results with {peripheral.find(...)} or assign the first result.
-Too many matches cause E_LIMIT.
-In that case, use getNames/wrap instead.
+No mod tuple ceiling limits the multiple returns. Native stack limits still apply.
+Network capacities and host-work admission can refuse incomplete discovery.
+No successful result is truncated to fit.
 A bounded unknown string returns zero matches, not an unsupported-type error.]=]
 },
 {
@@ -5752,7 +5791,14 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Every target call validates exact identity, generation, force, surface, selected path and device requirements again.
+Every target call requires current identity, generation, force, surface, selected path and device authority.
+The host can reuse a complete physical proof within one non-yielding callback or command.
+Reuse is permitted only while the proof's assumptions remain valid.
+Operations that can change those assumptions invalidate the proof before their effects, including failed operations.
+A new invocation requires a new proof. Saved bindings and background observations do not supply authority.
+Native availability and method-specific checks still apply on each call.
+These checks apply to direct native calls, captured methods, and peripheral.call.
+Temporary Lua allocation is not a device-authority proof.
 Temporary or incomplete topology causes E_NETWORK_PENDING or E_LIMIT, never a successful empty inventory.
 Active methods on native radars and speakers require power.
 Reachable metadata and getLimits remain usable without power.]=]
@@ -5830,7 +5876,14 @@ Red and green never combine into one path.
 A logical monitor reachable through one member does not internally bridge unwired members.
 KV access on both colors uses one database, not a color bridge.
 
-Every target call validates exact identity, generation, force, surface, selected path and device requirements again.
+Every target call requires current identity, generation, force, surface, selected path and device authority.
+The host can reuse a complete physical proof within one non-yielding callback or command.
+Reuse is permitted only while the proof's assumptions remain valid.
+Operations that can change those assumptions invalidate the proof before their effects, including failed operations.
+A new invocation requires a new proof. Saved bindings and background observations do not supply authority.
+Native availability and method-specific checks still apply on each call.
+These checks apply to direct native calls, captured methods, and peripheral.call.
+Temporary Lua allocation is not a device-authority proof.
 Temporary or incomplete topology causes E_NETWORK_PENDING or E_LIMIT, never a successful empty inventory.
 Active methods on native radars and speakers require power.
 Reachable metadata and getLimits remain usable without power.
@@ -5907,8 +5960,9 @@ find
 Find all matching facades in sorted-name order as MULTIPLE RETURNS, not an array.
 Zero matches give zero results.
 Collect the results with {peripheral.find(...)} or assign the first result.
-Too many matches cause E_LIMIT.
-In that case, use getNames/wrap instead.
+No mod tuple ceiling limits the multiple returns. Native stack limits still apply.
+Network capacities and host-work admission can refuse incomplete discovery.
+No successful result is truncated to fit.
 A bounded unknown string returns zero matches, not an unsupported-type error.
 
 find(type_name: string, wire: TC.Wire) -> ...: TC.Peripheral
@@ -6315,7 +6369,14 @@ Red and green never combine into one path.
 A logical monitor reachable through one member does not internally bridge unwired members.
 KV access on both colors uses one database, not a color bridge.
 
-Every target call validates exact identity, generation, force, surface, selected path and device requirements again.
+Every target call requires current identity, generation, force, surface, selected path and device authority.
+The host can reuse a complete physical proof within one non-yielding callback or command.
+Reuse is permitted only while the proof's assumptions remain valid.
+Operations that can change those assumptions invalidate the proof before their effects, including failed operations.
+A new invocation requires a new proof. Saved bindings and background observations do not supply authority.
+Native availability and method-specific checks still apply on each call.
+These checks apply to direct native calls, captured methods, and peripheral.call.
+Temporary Lua allocation is not a device-authority proof.
 Temporary or incomplete topology causes E_NETWORK_PENDING or E_LIMIT, never a successful empty inventory.
 Active methods on native radars and speakers require power.
 Reachable metadata and getLimits remain usable without power.
@@ -6654,7 +6715,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to guarded argument admission. The method returns zero values.]=]
+text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to protected-value rules but no temporary-allocation admission. The method returns zero values.]=]
 },
 {
 [ [=[
@@ -6680,7 +6741,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 foreground: nil|false
-text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to guarded argument admission. The method returns zero values.]=]
+text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to protected-value rules but no temporary-allocation admission. The method returns zero values.]=]
 },
 {
 [ [=[
@@ -6689,7 +6750,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 background: TC.GuestValue
-text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to guarded argument admission. The method returns zero values.]=]
+text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to protected-value rules but no temporary-allocation admission. The method returns zero values.]=]
 },
 {
 [ [=[
@@ -8657,7 +8718,7 @@ No result positions. See the behavior notes for normal-return versus failure sem
 
 blit(text: string, foreground: nil|false, background: TC.GuestValue)
 
-text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to guarded argument admission. The method returns zero values.
+text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to protected-value rules but no temporary-allocation admission. The method returns zero values.
 
 Parameters
 
@@ -8665,10 +8726,10 @@ text: string
 Literal cell bytes, bounded by write_bytes.
 
 foreground: nil|false
-text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to guarded argument admission. The method returns zero values.
+text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to protected-value rules but no temporary-allocation admission. The method returns zero values.
 
 background: TC.GuestValue
-text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to guarded argument admission. The method returns zero values.
+text is literal bounded bytes. A nil or false foreground uses current colors. background is required but ignored, subject to protected-value rules but no temporary-allocation admission. The method returns zero values.
 
 Returns
 
@@ -9318,7 +9379,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Fatal guest budget exhaustion remains E_BUDGET.
+Fatal host-work exhaustion remains E_BUDGET. Pure Lua execution has no mod quota.
 Error wording and precedence after admission are not API contracts.]=]
 },
 {
@@ -10230,7 +10291,7 @@ A missing addressed widget or tab causes E_NOT_FOUND, except for getTab/removeTa
 Unsupported charts or schema cause E_UNSUPPORTED.
 Retained capacity refusal causes E_CAPACITY. Transport envelope refusal causes E_LIMIT.
 
-Fatal guest budget exhaustion remains E_BUDGET.
+Fatal host-work exhaustion remains E_BUDGET. Pure Lua execution has no mod quota.
 Error wording and precedence after admission are not API contracts.
 
 Lifetime and optional dependency
@@ -13694,7 +13755,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Generic admission and fatal budgets remain unchanged.
+Data validation, shared host-work admission, and fatal host-work refusal still apply.
+Temporary Lua execution and allocation have no mod quotas.
 See Configurator lifecycle notes for native recovery limits.]=]
 },
 {
@@ -14110,7 +14172,8 @@ Clear can normalize to native defaults, not nil.
 E_READ_ONLY protects observations, protected targets and nonclearable fields.
 E_UNSUPPORTED applies to native applicability.
 
-Generic admission and fatal budgets remain unchanged.
+Data validation, shared host-work admission, and fatal host-work refusal still apply.
+Temporary Lua execution and allocation have no mod quotas.
 See Configurator lifecycle notes for native recovery limits.
 
 setConfiguration(device_id: TC.DeviceId, patch: TC.ConfigurationPatch, target_wire: TC.Wire) -> snapshot: TC.ConfigurationSnapshot
@@ -14215,7 +14278,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-All complete results obey Data string, table, node, depth and byte rules, shared work/allocation limits, and recipe_search_results.
+All complete results obey Data string, table, node, depth and byte rules, shared host-work limits, and recipe_search_results.
 The method returns no prefix, count, cursor or pagination.
 Unexpected native fields or fields that cannot be represented cause E_UNSUPPORTED; they do not silently disappear.
 Native failures or a missing force recipe cause E_ENGINE, never invented enabled values.
@@ -14410,7 +14473,7 @@ Queries never unlock recipes, configure machines, or reserve, consume or produce
 Only separate state limits can admit returned Data for saving.
 Snapshot success is not permission to persist a facade or a guarantee of storage capacity.
 
-All complete results obey Data string, table, node, depth and byte rules, shared work/allocation limits, and recipe_search_results.
+All complete results obey Data string, table, node, depth and byte rules, shared host-work limits, and recipe_search_results.
 The method returns no prefix, count, cursor or pagination.
 Unexpected native fields or fields that cannot be represented cause E_UNSUPPORTED; they do not silently disappear.
 Native failures or a missing force recipe cause E_ENGINE, never invented enabled values.
@@ -14556,7 +14619,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 Full sorted lists can fail existing table/node/depth/string/result-byte and
-work/allocation budgets even when exact-name lookup fits.
+shared host-work limits even when exact-name lookup fits.
 The API adds no catalog quota, pagination, successful prefix, truncation or asynchronous index.
 The native circuit transfer exception does not apply.
 Native materialization costs do not establish CPU or heap bounds.
@@ -14912,7 +14975,7 @@ Persisted copies still need their separate state allowance.
 Completeness and failure
 
 Full sorted lists can fail existing table/node/depth/string/result-byte and
-work/allocation budgets even when exact-name lookup fits.
+shared host-work limits even when exact-name lookup fits.
 The API adds no catalog quota, pagination, successful prefix, truncation or asynchronous index.
 The native circuit transfer exception does not apply.
 Native materialization costs do not establish CPU or heap bounds.
@@ -15083,7 +15146,7 @@ text]=] ]=[=[
 This custom device needs no electricity.
 Every method checks exact identity, scope and explicit-color reachability again.
 Console captures never bypass those checks.
-Complete native inventories, with modded names and qualities, can still exceed generic Data, work or allocation limits.
+Complete native inventories, with modded names and qualities, can still exceed generic Data or shared host-work limits.
 There is no implied circuit-only transport exception, quota increase, partial-success record or credit renewal for retries.]=]
 },
 {
@@ -15113,7 +15176,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 Physical failures preserve E_UNREACHABLE, E_NETWORK_PENDING and E_LIMIT.
-Work or allocation exhaustion remains fatal E_BUDGET.
+Host-work exhaustion remains fatal E_BUDGET.
 Current authority and input admission can fail before a later provider semantic error.
 Refusal gives no successful prefix or retained job.
 Consumed credits remain consumed.]=]
@@ -15433,7 +15496,7 @@ Load retains identity and wires but does not replay source or query statistics.
 This custom device needs no electricity.
 Every method checks exact identity, scope and explicit-color reachability again.
 Console captures never bypass those checks.
-Complete native inventories, with modded names and qualities, can still exceed generic Data, work or allocation limits.
+Complete native inventories, with modded names and qualities, can still exceed generic Data or shared host-work limits.
 There is no implied circuit-only transport exception, quota increase, partial-success record or credit renewal for retries.
 
 Errors
@@ -15445,7 +15508,7 @@ Unsupported or nonfinite native data causes E_UNSUPPORTED.
 Native failure causes E_ENGINE, not invented zeros.
 
 Physical failures preserve E_UNREACHABLE, E_NETWORK_PENDING and E_LIMIT.
-Work or allocation exhaustion remains fatal E_BUDGET.
+Host-work exhaustion remains fatal E_BUDGET.
 Current authority and input admission can fail before a later provider semantic error.
 Refusal gives no successful prefix or retained job.
 Consumed credits remain consumed.
@@ -16574,10 +16637,10 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 Authority and adoption retain their E_UNREACHABLE, E_NETWORK_PENDING, E_LIMIT and E_CAPACITY rules.
-Work or allocation exhaustion causes fatal E_BUDGET, not false.
+Host-work exhaustion causes fatal E_BUDGET, not false.
 Existing admission and authority precedence remains.
 Published limits are finite initial envelopes, not measured throughput guarantees.
-Requests below the count limits can still exhaust generic Data, work or allocation allowances.]=]
+Requests below the count limits can still exhaust generic Data or host-work allowances.]=]
 },
 {
 [ [=[
@@ -17074,10 +17137,10 @@ Native validation or dispatch failure causes E_ENGINE.
 Native outage causes E_UNPOWERED, except for getLimits.
 
 Authority and adoption retain their E_UNREACHABLE, E_NETWORK_PENDING, E_LIMIT and E_CAPACITY rules.
-Work or allocation exhaustion causes fatal E_BUDGET, not false.
+Host-work exhaustion causes fatal E_BUDGET, not false.
 Existing admission and authority precedence remains.
 Published limits are finite initial envelopes, not measured throughput guarantees.
-Requests below the count limits can still exhaust generic Data, work or allocation allowances.
+Requests below the count limits can still exhaust generic Data or host-work allowances.
 
 getInstruments
 
@@ -17241,9 +17304,9 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-These guarded table helpers never mutate protected facades, protected namespaces or host tables.
-Sequence helpers require a dense one-based sequence unless stated otherwise.
-All movement, copying, growth and callback comparisons consume existing budgets.]=]
+These helpers reject protected facades, protected namespaces, and foreign tables.
+Native sequence borders determine ranges, including for sparse tables.
+Temporary movement, growth, and comparisons have no mod work or allocation quota.]=]
 },
 {
 [ [=[
@@ -17259,8 +17322,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Join a dense sequence slice. Only string and number elements are permitted.
-Numbers use native conversion. Complete size and work admission precede the output copy.]=]
+Join a native sequence slice. Its selected elements must be strings or numbers.
+Numbers use native conversion. Temporary output has no mod byte or work ceiling.]=]
 },
 {
 [ [=[
@@ -17285,7 +17348,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 t: TC.GuestTable
-Dense sequence containing strings/numbers in the slice.]=]
+Plain table with strings/numbers at each selected index.]=]
 },
 {
 [ [=[
@@ -17303,7 +17366,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 i (optional): integer
-First position, default 1. The domain is 1..n+1.]=]
+First position, default 1. Native integer-index limits apply.]=]
 },
 {
 [ [=[
@@ -17312,7 +17375,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 j (optional): integer
-Last position, default n. The domain is 0..n.]=]
+Last position, default native #t. Native integer-index limits apply.]=]
 },
 {
 [ [=[
@@ -17345,7 +17408,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Insert into a dense guest sequence. The helper moves later slots.
+Insert into a native guest sequence. The helper moves later slots.
 It returns no values. The two-argument form appends.
 The three-argument form inserts at pos.]=]
 },
@@ -17355,8 +17418,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Capacity and work admission precede mutation.
-Refusal does not produce a partially shifted result.]=]
+Native index and argument rules apply. There is no mod temporary-growth quota.]=]
 },
 {
 [ [=[
@@ -17381,7 +17443,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 t: TC.GuestTable
-Dense mutable sequence.]=]
+Mutable plain table using native sequence borders.]=]
 },
 {
 [ [=[
@@ -17440,7 +17502,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 t: TC.GuestTable
-Dense mutable sequence.]=]
+Mutable plain table using native sequence borders.]=]
 },
 {
 [ [=[
@@ -17541,11 +17603,10 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Remove a value from a dense guest sequence. The helper shifts later slots.
-It always returns exactly one value, including nil for empty/past-end removal.
-Position 0 is permitted only when the sequence is empty.
-The helper accepts n+1. This is the documented guest arity, not an inference
-from the host helper.]=]
+Remove a value with native table.remove behavior. The helper shifts later slots.
+A present sequence position returns exactly one removed value.
+The pinned engine returns zero values for empty or out-of-range removal.
+It does not add a nil result to preserve the former wrapper behavior.]=]
 },
 {
 [ [=[
@@ -17553,7 +17614,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-remove(t: TC.GuestTable, pos?: integer) -> removed: TC.GuestValue]=]
+remove(t: TC.GuestTable, pos?: integer) -> ...: TC.GuestValue]=]
 },
 {
 [ [=[
@@ -17570,7 +17631,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 t: TC.GuestTable
-Dense mutable sequence.]=]
+Mutable plain table using native sequence borders.]=]
 },
 {
 [ [=[
@@ -17579,7 +17640,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 pos (optional): integer
-Default n. The permitted range is 0..n+1, with the empty-only zero rule.]=]
+Default native #t. Native position and conversion rules apply.]=]
 },
 {
 [ [=[
@@ -17595,8 +17656,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-removed: TC.GuestValue
-Removed identical value or exactly one nil.]=]
+... (zero or more positions): TC.GuestValue
+Exactly one removed value, or zero results for empty/out-of-range removal.]=]
 },
 {
 [ [=[
@@ -17612,19 +17673,10 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper sorts a staged copy.
-It publishes the copy only after comparisons and final capacity revalidation succeed.
-It returns no values.]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-prose]=],
-[ [=[
-text]=] ]=[=[
-A comparator uses the same guest work and depth budget.
-The comparator can have side effects. Failure does not roll back those effects.
-The helper never partially publishes the table's own staged sorted slots.]=]
+Sort the table in place with native table.sort. The helper returns no values.
+Comparator calls have no mod execution or depth quota.
+A comparator can have effects. Failure does not roll back effects or table reordering.
+This rule does not change atomic publication through state or device APIs.]=]
 },
 {
 [ [=[
@@ -17649,7 +17701,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 t: TC.GuestTable
-Dense mutable sequence.]=]
+Mutable plain table using native sequence borders.]=]
 },
 {
 [ [=[
@@ -17658,7 +17710,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 less (optional): fun(a: TC.GuestValue, b: TC.GuestValue): boolean
-Optional approved comparator. The default is guarded native less-than.]=]
+Optional approved comparator. The default is native less-than.]=]
 },
 {
 [ [=[
@@ -17694,7 +17746,7 @@ Return positions i..j exactly, including nil holes.
 Omitted or nil bounds default to 1 and #t, not t.n.
 Use explicit packed.n to retain trailing nil.
 An empty range returns zero values.
-Current guest table index and tuple ceilings apply.]=]
+Native index and stack limits apply, without a mod tuple ceiling.]=]
 },
 {
 [ [=[
@@ -17728,7 +17780,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 i (optional): integer
-Start, default 1. The domain is 1..table_entries+1.]=]
+Start, default 1. Native integer-index limits apply.]=]
 },
 {
 [ [=[
@@ -17737,7 +17789,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 j (optional): integer
-End, default native #t. The domain is 0..table_entries.]=]
+End, default native #t. Native integer-index limits apply.]=]
 },
 {
 [ [=[
@@ -17770,9 +17822,9 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-These guarded table helpers never mutate protected facades, protected namespaces or host tables.
-Sequence helpers require a dense one-based sequence unless stated otherwise.
-All movement, copying, growth and callback comparisons consume existing budgets.]=]
+These helpers reject protected facades, protected namespaces, and foreign tables.
+Native sequence borders determine ranges, including for sparse tables.
+Temporary movement, growth, and comparisons have no mod work or allocation quota.]=]
 },
 {
 [ [=[
@@ -17795,30 +17847,30 @@ table — TC.TableLibrary
 
 TC.TableLibrary
 
-These guarded table helpers never mutate protected facades, protected namespaces or host tables.
-Sequence helpers require a dense one-based sequence unless stated otherwise.
-All movement, copying, growth and callback comparisons consume existing budgets.
+These helpers reject protected facades, protected namespaces, and foreign tables.
+Native sequence borders determine ranges, including for sparse tables.
+Temporary movement, growth, and comparisons have no mod work or allocation quota.
 
 concat
 
-Join a dense sequence slice. Only string and number elements are permitted.
-Numbers use native conversion. Complete size and work admission precede the output copy.
+Join a native sequence slice. Its selected elements must be strings or numbers.
+Numbers use native conversion. Temporary output has no mod byte or work ceiling.
 
 concat(t: TC.GuestTable, sep?: string, i?: integer, j?: integer) -> text: string
 
 Parameters
 
 t: TC.GuestTable
-Dense sequence containing strings/numbers in the slice.
+Plain table with strings/numbers at each selected index.
 
 sep (optional): string
 Separator. Omission or nil means an empty string.
 
 i (optional): integer
-First position, default 1. The domain is 1..n+1.
+First position, default 1. Native integer-index limits apply.
 
 j (optional): integer
-Last position, default n. The domain is 0..n.
+Last position, default native #t. Native integer-index limits apply.
 
 Returns
 
@@ -17827,19 +17879,18 @@ Joined bytes. An empty range gives an empty string.
 
 insert
 
-Insert into a dense guest sequence. The helper moves later slots.
+Insert into a native guest sequence. The helper moves later slots.
 It returns no values. The two-argument form appends.
 The three-argument form inserts at pos.
 
-Capacity and work admission precede mutation.
-Refusal does not produce a partially shifted result.
+Native index and argument rules apply. There is no mod temporary-growth quota.
 
 insert(t: TC.GuestTable, pos: integer, value: TC.GuestValue)
 
 Parameters
 
 t: TC.GuestTable
-Dense mutable sequence.
+Mutable plain table using native sequence borders.
 
 pos: integer
 Position 1..n+1 for the three-argument form.
@@ -17856,7 +17907,7 @@ insert(t: TC.GuestTable, value: TC.GuestValue)
 Parameters
 
 t: TC.GuestTable
-Dense mutable sequence.
+Mutable plain table using native sequence borders.
 
 value: TC.GuestValue
 New value. Nil uses native table insertion behavior.
@@ -17885,46 +17936,42 @@ New tuple table with exact n.
 
 remove
 
-Remove a value from a dense guest sequence. The helper shifts later slots.
-It always returns exactly one value, including nil for empty/past-end removal.
-Position 0 is permitted only when the sequence is empty.
-The helper accepts n+1. This is the documented guest arity, not an inference
-from the host helper.
+Remove a value with native table.remove behavior. The helper shifts later slots.
+A present sequence position returns exactly one removed value.
+The pinned engine returns zero values for empty or out-of-range removal.
+It does not add a nil result to preserve the former wrapper behavior.
 
-remove(t: TC.GuestTable, pos?: integer) -> removed: TC.GuestValue
+remove(t: TC.GuestTable, pos?: integer) -> ...: TC.GuestValue
 
 Parameters
 
 t: TC.GuestTable
-Dense mutable sequence.
+Mutable plain table using native sequence borders.
 
 pos (optional): integer
-Default n. The permitted range is 0..n+1, with the empty-only zero rule.
+Default native #t. Native position and conversion rules apply.
 
 Returns
 
-removed: TC.GuestValue
-Removed identical value or exactly one nil.
+... (zero or more positions): TC.GuestValue
+Exactly one removed value, or zero results for empty/out-of-range removal.
 
 sort
 
-This helper sorts a staged copy.
-It publishes the copy only after comparisons and final capacity revalidation succeed.
-It returns no values.
-
-A comparator uses the same guest work and depth budget.
-The comparator can have side effects. Failure does not roll back those effects.
-The helper never partially publishes the table's own staged sorted slots.
+Sort the table in place with native table.sort. The helper returns no values.
+Comparator calls have no mod execution or depth quota.
+A comparator can have effects. Failure does not roll back effects or table reordering.
+This rule does not change atomic publication through state or device APIs.
 
 sort(t: TC.GuestTable, less?: fun(a: TC.GuestValue, b: TC.GuestValue): boolean)
 
 Parameters
 
 t: TC.GuestTable
-Dense mutable sequence.
+Mutable plain table using native sequence borders.
 
 less (optional): fun(a: TC.GuestValue, b: TC.GuestValue): boolean
-Optional approved comparator. The default is guarded native less-than.
+Optional approved comparator. The default is native less-than.
 
 Returns
 
@@ -17936,7 +17983,7 @@ Return positions i..j exactly, including nil holes.
 Omitted or nil bounds default to 1 and #t, not t.n.
 Use explicit packed.n to retain trailing nil.
 An empty range returns zero values.
-Current guest table index and tuple ceilings apply.
+Native index and stack limits apply, without a mod tuple ceiling.
 
 unpack(t: TC.GuestTable, i?: integer, j?: integer) -> ...: TC.GuestValue
 
@@ -17946,10 +17993,10 @@ t: TC.GuestTable
 Guest-owned plain table. This table can be sparse.
 
 i (optional): integer
-Start, default 1. The domain is 1..table_entries+1.
+Start, default 1. Native integer-index limits apply.
 
 j (optional): integer
-End, default native #t. The domain is 0..table_entries.
+End, default native #t. Native integer-index limits apply.
 
 Returns
 
@@ -17958,9 +18005,9 @@ Exact requested range, possibly empty and nil-bearing.
 
 table
 
-These guarded table helpers never mutate protected facades, protected namespaces or host tables.
-Sequence helpers require a dense one-based sequence unless stated otherwise.
-All movement, copying, growth and callback comparisons consume existing budgets.
+These helpers reject protected facades, protected namespaces, and foreign tables.
+Native sequence borders determine ranges, including for sparse tables.
+Temporary movement, growth, and comparisons have no mod work or allocation quota.
 
 TC.TableLibrary]=],
 [ [=[
@@ -17992,8 +18039,10 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-These bounded helpers operate on byte strings, not Unicode or Lua patterns.
-Strings are immutable. Input, output and work checks precede opaque native operations.
+These approved helpers operate on immutable byte strings, not Unicode.
+Temporary inputs and outputs have no mod byte, allocation, or work ceiling.
+Native errors and coercions apply except for documented safe-format and literal-find rules.
+String indexing exposes only this approved surface, never hidden host string members.
 Use dot calls: string.sub(s,...) instead of the forbidden string-method syntax.]=]
 },
 {
@@ -18012,7 +18061,7 @@ prose]=],
 text]=] ]=[=[
 Return each byte in the normalized range.
 Omitted or nil i defaults to 1. The default for j is i (or 1), not string length.
-An empty range returns zero values. The result width cannot exceed tuple_entries.
+An empty range returns zero values. Native result-stack limits apply.
 Embedded NUL returns numeric zero.]=]
 },
 {
@@ -18021,7 +18070,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-byte(s: string, i?: TC.Numeric, j?: TC.Numeric) -> ...: integer]=]
+byte(s: TC.StringInput, i?: TC.Numeric, j?: TC.Numeric) -> ...: integer]=]
 },
 {
 [ [=[
@@ -18037,8 +18086,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-s: string
-Bounded source bytes.]=]
+s: TC.StringInput
+Source bytes or native-coercible number.]=]
 },
 {
 [ [=[
@@ -18047,7 +18096,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 i (optional): TC.Numeric
-First finite byte index, default 1.]=]
+First native byte index, default 1.]=]
 },
 {
 [ [=[
@@ -18056,7 +18105,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 j (optional): TC.Numeric
-Last finite byte index, default i or 1.]=]
+Last native byte index, default i or 1.]=]
 },
 {
 [ [=[
@@ -18089,7 +18138,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Construct bytes from exact integer codes. Zero inputs return an empty string.]=]
+Construct bytes with native integer conversion. Zero inputs return an empty string.]=]
 },
 {
 [ [=[
@@ -18097,7 +18146,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-char(...: integer) -> text: string]=]
+char(...: TC.Numeric) -> text: string]=]
 },
 {
 [ [=[
@@ -18113,8 +18162,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): integer
-Byte codes 0..255, bounded by tuple_entries.]=]
+... (zero or more positions): TC.Numeric
+Byte codes 0..255 after native conversion, subject to native argument limits.]=]
 },
 {
 [ [=[
@@ -18157,7 +18206,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-The helper normalizes finite init. Omitted or nil init means 1.
+The helper uses native index conversion. Omitted or nil init means 1.
 A negative init counts from the end.]=]
 },
 {
@@ -18166,7 +18215,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-find(s: string, needle: string, init: TC.Numeric|nil, plain: true) -> first: integer, last: integer]=]
+find(s: TC.StringInput, needle: TC.StringInput, init: TC.Numeric|nil, plain: true) -> first: integer, last: integer]=]
 },
 {
 [ [=[
@@ -18182,8 +18231,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-s: string
-Bounded haystack bytes.]=]
+s: TC.StringInput
+Haystack bytes or a native-coercible number.]=]
 },
 {
 [ [=[
@@ -18191,8 +18240,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-needle: string
-Literal bounded search bytes, including an empty string.]=]
+needle: TC.StringInput
+Literal search bytes or a native-coercible number. Empty strings are permitted.]=]
 },
 {
 [ [=[
@@ -18244,7 +18293,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-find(s: string, needle: string, init: TC.Numeric|nil, plain: true) -> absent: nil]=]
+find(s: TC.StringInput, needle: TC.StringInput, init: TC.Numeric|nil, plain: true) -> absent: nil]=]
 },
 {
 [ [=[
@@ -18268,8 +18317,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-s: string
-Bounded haystack bytes.]=]
+s: TC.StringInput
+Haystack bytes or a native-coercible number.]=]
 },
 {
 [ [=[
@@ -18277,8 +18326,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-needle: string
-Literal bounded search bytes, including an empty string.]=]
+needle: TC.StringInput
+Literal search bytes or a native-coercible number. Empty strings are permitted.]=]
 },
 {
 [ [=[
@@ -18329,9 +18378,9 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper does bounded native formatting.
+This helper does native formatting with safe descriptions for %s.
 It supports cdiouxXeEfgGqs and literal percent.
-Before formatting, it checks width, precision, operand count and conservative output size.]=]
+Native format, width, precision, and operand rules apply without mod output-size admission.]=]
 },
 {
 [ [=[
@@ -18340,7 +18389,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 The %s conversion uses safe tostring. The %q conversion requires a string.
-Numeric operands must be finite.
+Native numeric domains apply. Temporary nonfinite values are not persistent Data.
 The helper provides no recursive table formatting or arbitrary format extension.]=]
 },
 {
@@ -18366,7 +18415,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 format: string
-Bounded format string with supported conversions only.]=]
+Format string with supported conversions only.]=]
 },
 {
 [ [=[
@@ -18416,7 +18465,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-len(s: string) -> length: integer]=]
+len(s: TC.StringInput) -> length: integer]=]
 },
 {
 [ [=[
@@ -18432,8 +18481,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-s: string
-Bounded byte string.]=]
+s: TC.StringInput
+Source byte string or native-coercible number.]=]
 },
 {
 [ [=[
@@ -18474,7 +18523,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-lower(s: string) -> text: string]=]
+lower(s: TC.StringInput) -> text: string]=]
 },
 {
 [ [=[
@@ -18490,8 +18539,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-s: string
-Bounded source bytes.]=]
+s: TC.StringInput
+Source bytes or native-coercible number.]=]
 },
 {
 [ [=[
@@ -18525,8 +18574,8 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 Repeat a string with separators between copies.
-Nonpositive n returns an empty string. The value n must be an exact safe integer.
-Oversized output causes failure before allocation.]=]
+Nonpositive n returns an empty string. Native count conversion and limits apply.
+There is no mod output-size preflight or temporary-allocation quota.]=]
 },
 {
 [ [=[
@@ -18534,7 +18583,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-rep(s: string, n: integer, sep?: string) -> text: string]=]
+rep(s: TC.StringInput, n: integer, sep?: TC.StringInput) -> text: string]=]
 },
 {
 [ [=[
@@ -18550,8 +18599,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-s: string
-Bounded source bytes.]=]
+s: TC.StringInput
+Source bytes or native-coercible number.]=]
 },
 {
 [ [=[
@@ -18560,7 +18609,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 n: integer
-Safe integer repetition count. A nonpositive value means empty.]=]
+Native repetition count. A nonpositive value means empty.]=]
 },
 {
 [ [=[
@@ -18568,8 +18617,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-sep (optional): string
-Omitted/nil means empty separator.]=]
+sep (optional): TC.StringInput
+Omitted/nil means empty separator. Native number conversion is permitted.]=]
 },
 {
 [ [=[
@@ -18610,7 +18659,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-reverse(s: string) -> text: string]=]
+reverse(s: TC.StringInput) -> text: string]=]
 },
 {
 [ [=[
@@ -18626,8 +18675,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-s: string
-Bounded source bytes.]=]
+s: TC.StringInput
+Source bytes or native-coercible number.]=]
 },
 {
 [ [=[
@@ -18660,9 +18709,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Slice bytes with normalized Lua-style indexes.
-Negative indexes count from the end. Finite numeric strings are permitted.
-Omission or nil defaults to i=1,j=#s.]=]
+Slice bytes with native indexes. Negative indexes count from the end.
+The start position is required. Omitted or nil j defaults to string length.]=]
 },
 {
 [ [=[
@@ -18670,7 +18718,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-sub(s: string, i?: TC.Numeric, j?: TC.Numeric) -> text: string]=]
+sub(s: TC.StringInput, i: TC.Numeric, j?: TC.Numeric) -> text: string]=]
 },
 {
 [ [=[
@@ -18686,8 +18734,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-s: string
-Bounded source string.]=]
+s: TC.StringInput
+Source bytes or native-coercible number.]=]
 },
 {
 [ [=[
@@ -18695,8 +18743,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-i (optional): TC.Numeric
-First byte index, default 1.]=]
+i: TC.Numeric
+Required first byte index under native conversion rules.]=]
 },
 {
 [ [=[
@@ -18722,7 +18770,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 text: string
-Native slice result after bounded admission.]=]
+Native slice result without a mod temporary-byte ceiling.]=]
 },
 {
 [ [=[
@@ -18746,7 +18794,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-upper(s: string) -> text: string]=]
+upper(s: TC.StringInput) -> text: string]=]
 },
 {
 [ [=[
@@ -18762,8 +18810,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-s: string
-Bounded source bytes.]=]
+s: TC.StringInput
+Source bytes or native-coercible number.]=]
 },
 {
 [ [=[
@@ -18796,8 +18844,10 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-These bounded helpers operate on byte strings, not Unicode or Lua patterns.
-Strings are immutable. Input, output and work checks precede opaque native operations.
+These approved helpers operate on immutable byte strings, not Unicode.
+Temporary inputs and outputs have no mod byte, allocation, or work ceiling.
+Native errors and coercions apply except for documented safe-format and literal-find rules.
+String indexing exposes only this approved surface, never hidden host string members.
 Use dot calls: string.sub(s,...) instead of the forbidden string-method syntax.]=]
 },
 {
@@ -18821,29 +18871,31 @@ string — TC.StringLibrary
 
 TC.StringLibrary
 
-These bounded helpers operate on byte strings, not Unicode or Lua patterns.
-Strings are immutable. Input, output and work checks precede opaque native operations.
+These approved helpers operate on immutable byte strings, not Unicode.
+Temporary inputs and outputs have no mod byte, allocation, or work ceiling.
+Native errors and coercions apply except for documented safe-format and literal-find rules.
+String indexing exposes only this approved surface, never hidden host string members.
 Use dot calls: string.sub(s,...) instead of the forbidden string-method syntax.
 
 byte
 
 Return each byte in the normalized range.
 Omitted or nil i defaults to 1. The default for j is i (or 1), not string length.
-An empty range returns zero values. The result width cannot exceed tuple_entries.
+An empty range returns zero values. Native result-stack limits apply.
 Embedded NUL returns numeric zero.
 
-byte(s: string, i?: TC.Numeric, j?: TC.Numeric) -> ...: integer
+byte(s: TC.StringInput, i?: TC.Numeric, j?: TC.Numeric) -> ...: integer
 
 Parameters
 
-s: string
-Bounded source bytes.
+s: TC.StringInput
+Source bytes or native-coercible number.
 
 i (optional): TC.Numeric
-First finite byte index, default 1.
+First native byte index, default 1.
 
 j (optional): TC.Numeric
-Last finite byte index, default i or 1.
+Last native byte index, default i or 1.
 
 Returns
 
@@ -18852,14 +18904,14 @@ Byte codes 0..255 in order, possibly zero results.
 
 char
 
-Construct bytes from exact integer codes. Zero inputs return an empty string.
+Construct bytes with native integer conversion. Zero inputs return an empty string.
 
-char(...: integer) -> text: string
+char(...: TC.Numeric) -> text: string
 
 Parameters
 
-... (zero or more positions): integer
-Byte codes 0..255, bounded by tuple_entries.
+... (zero or more positions): TC.Numeric
+Byte codes 0..255 after native conversion, subject to native argument limits.
 
 Returns
 
@@ -18872,18 +18924,18 @@ This helper searches only for literal text. The plain argument must be explicitl
 The helper supports no Lua patterns or captures.
 A match returns first,last (inclusive). No match returns exactly one nil.
 
-The helper normalizes finite init. Omitted or nil init means 1.
+The helper uses native index conversion. Omitted or nil init means 1.
 A negative init counts from the end.
 
-find(s: string, needle: string, init: TC.Numeric|nil, plain: true) -> first: integer, last: integer
+find(s: TC.StringInput, needle: TC.StringInput, init: TC.Numeric|nil, plain: true) -> first: integer, last: integer
 
 Parameters
 
-s: string
-Bounded haystack bytes.
+s: TC.StringInput
+Haystack bytes or a native-coercible number.
 
-needle: string
-Literal bounded search bytes, including an empty string.
+needle: TC.StringInput
+Literal search bytes or a native-coercible number. Empty strings are permitted.
 
 init: TC.Numeric|nil
 Third position. Explicit nil selects the default 1.
@@ -18899,17 +18951,17 @@ One-based first matching byte when found.
 last: integer
 Inclusive final matching byte. An empty match can precede first.
 
-find(s: string, needle: string, init: TC.Numeric|nil, plain: true) -> absent: nil
+find(s: TC.StringInput, needle: TC.StringInput, init: TC.Numeric|nil, plain: true) -> absent: nil
 
 No match returns exactly one nil (absent), not two nil values.
 
 Parameters
 
-s: string
-Bounded haystack bytes.
+s: TC.StringInput
+Haystack bytes or a native-coercible number.
 
-needle: string
-Literal bounded search bytes, including an empty string.
+needle: TC.StringInput
+Literal search bytes or a native-coercible number. Empty strings are permitted.
 
 init: TC.Numeric|nil
 Third position. Explicit nil selects the default 1.
@@ -18924,12 +18976,12 @@ No match returns exactly one nil (absent), not two nil values.
 
 format
 
-This helper does bounded native formatting.
+This helper does native formatting with safe descriptions for %s.
 It supports cdiouxXeEfgGqs and literal percent.
-Before formatting, it checks width, precision, operand count and conservative output size.
+Native format, width, precision, and operand rules apply without mod output-size admission.
 
 The %s conversion uses safe tostring. The %q conversion requires a string.
-Numeric operands must be finite.
+Native numeric domains apply. Temporary nonfinite values are not persistent Data.
 The helper provides no recursive table formatting or arbitrary format extension.
 
 format(format: string, ...: TC.GuestValue) -> text: string
@@ -18937,7 +18989,7 @@ format(format: string, ...: TC.GuestValue) -> text: string
 Parameters
 
 format: string
-Bounded format string with supported conversions only.
+Format string with supported conversions only.
 
 ... (zero or more positions): TC.GuestValue
 Conversion operands. Each conversion validates its domain.
@@ -18951,12 +19003,12 @@ len
 
 Read byte length, not Unicode character count.
 
-len(s: string) -> length: integer
+len(s: TC.StringInput) -> length: integer
 
 Parameters
 
-s: string
-Bounded byte string.
+s: TC.StringInput
+Source byte string or native-coercible number.
 
 Returns
 
@@ -18967,12 +19019,12 @@ lower
 
 Return byte-oriented native lowercase conversion, not Unicode case folding.
 
-lower(s: string) -> text: string
+lower(s: TC.StringInput) -> text: string
 
 Parameters
 
-s: string
-Bounded source bytes.
+s: TC.StringInput
+Source bytes or native-coercible number.
 
 Returns
 
@@ -18982,21 +19034,21 @@ Independent lowercase string value.
 rep
 
 Repeat a string with separators between copies.
-Nonpositive n returns an empty string. The value n must be an exact safe integer.
-Oversized output causes failure before allocation.
+Nonpositive n returns an empty string. Native count conversion and limits apply.
+There is no mod output-size preflight or temporary-allocation quota.
 
-rep(s: string, n: integer, sep?: string) -> text: string
+rep(s: TC.StringInput, n: integer, sep?: TC.StringInput) -> text: string
 
 Parameters
 
-s: string
-Bounded source bytes.
+s: TC.StringInput
+Source bytes or native-coercible number.
 
 n: integer
-Safe integer repetition count. A nonpositive value means empty.
+Native repetition count. A nonpositive value means empty.
 
-sep (optional): string
-Omitted/nil means empty separator.
+sep (optional): TC.StringInput
+Omitted/nil means empty separator. Native number conversion is permitted.
 
 Returns
 
@@ -19007,12 +19059,12 @@ reverse
 
 Reverse byte order, not Unicode grapheme order.
 
-reverse(s: string) -> text: string
+reverse(s: TC.StringInput) -> text: string
 
 Parameters
 
-s: string
-Bounded source bytes.
+s: TC.StringInput
+Source bytes or native-coercible number.
 
 Returns
 
@@ -19021,19 +19073,18 @@ Bytes in reverse order.
 
 sub
 
-Slice bytes with normalized Lua-style indexes.
-Negative indexes count from the end. Finite numeric strings are permitted.
-Omission or nil defaults to i=1,j=#s.
+Slice bytes with native indexes. Negative indexes count from the end.
+The start position is required. Omitted or nil j defaults to string length.
 
-sub(s: string, i?: TC.Numeric, j?: TC.Numeric) -> text: string
+sub(s: TC.StringInput, i: TC.Numeric, j?: TC.Numeric) -> text: string
 
 Parameters
 
-s: string
-Bounded source string.
+s: TC.StringInput
+Source bytes or native-coercible number.
 
-i (optional): TC.Numeric
-First byte index, default 1.
+i: TC.Numeric
+Required first byte index under native conversion rules.
 
 j (optional): TC.Numeric
 Last byte index, default length.
@@ -19041,18 +19092,18 @@ Last byte index, default length.
 Returns
 
 text: string
-Native slice result after bounded admission.
+Native slice result without a mod temporary-byte ceiling.
 
 upper
 
 Return byte-oriented native uppercase conversion, not Unicode case folding.
 
-upper(s: string) -> text: string
+upper(s: TC.StringInput) -> text: string
 
 Parameters
 
-s: string
-Bounded source bytes.
+s: TC.StringInput
+Source bytes or native-coercible number.
 
 Returns
 
@@ -19061,8 +19112,10 @@ Independent uppercase string value.
 
 string
 
-These bounded helpers operate on byte strings, not Unicode or Lua patterns.
-Strings are immutable. Input, output and work checks precede opaque native operations.
+These approved helpers operate on immutable byte strings, not Unicode.
+Temporary inputs and outputs have no mod byte, allocation, or work ceiling.
+Native errors and coercions apply except for documented safe-format and literal-find rules.
+String indexing exposes only this approved surface, never hidden host string members.
 Use dot calls: string.sub(s,...) instead of the forbidden string-method syntax.
 
 TC.StringLibrary]=],
@@ -19095,11 +19148,10 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-These guarded numeric helpers require finite values.
-The helper explicitly converts numeric strings.
-It checks all supplied operands, including extra operands that it otherwise ignores.
-Nonfinite operands cause failure. A nonfinite native result causes E_RANGE.
-The library exposes no random, randomseed, huge or fallback to other host math functions.]=]
+These approved math helpers use native conversion, domains, results, and errors.
+Temporary results can be nonfinite. Persistent Data and device arguments still require their documented domains.
+There is no mod work, allocation, tuple, or call-depth quota.
+The library exposes no random, randomseed, huge, or fallback to other host functions.]=]
 },
 {
 [ [=[
@@ -19115,7 +19167,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper returns the absolute value and validates finite input and result.]=]
+Return the native absolute value.]=]
 },
 {
 [ [=[
@@ -19123,7 +19175,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-abs(x: TC.Numeric, ...: TC.Numeric) -> result: number]=]
+abs(x: TC.Numeric, ...: TC.GuestValue) -> result: number]=]
 },
 {
 [ [=[
@@ -19140,7 +19192,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite numeric operand.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19148,8 +19200,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -19166,7 +19218,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 result: number
-Absolute value of x.]=]
+Absolute value, including native nonfinite behavior.]=]
 },
 {
 [ [=[
@@ -19182,8 +19234,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper returns the principal inverse cosine.
-It refuses operands outside the native domain.]=]
+Return the native principal inverse cosine.]=]
 },
 {
 [ [=[
@@ -19191,7 +19242,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-acos(x: TC.Numeric, ...: TC.Numeric) -> angle: number]=]
+acos(x: TC.Numeric, ...: TC.GuestValue) -> angle: number]=]
 },
 {
 [ [=[
@@ -19208,7 +19259,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite value in -1..1.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19216,8 +19267,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -19234,7 +19285,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 angle: number
-Principal angle in radians.]=]
+Native principal angle in radians.]=]
 },
 {
 [ [=[
@@ -19250,8 +19301,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper returns the principal inverse sine.
-An operand outside the native domain produces a nonfinite result, which the helper refuses.]=]
+Return the native principal inverse sine.]=]
 },
 {
 [ [=[
@@ -19259,7 +19309,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-asin(x: TC.Numeric, ...: TC.Numeric) -> angle: number]=]
+asin(x: TC.Numeric, ...: TC.GuestValue) -> angle: number]=]
 },
 {
 [ [=[
@@ -19276,7 +19326,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite value in -1..1.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19284,8 +19334,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -19302,7 +19352,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 angle: number
-Principal angle in radians.]=]
+Native principal angle in radians.]=]
 },
 {
 [ [=[
@@ -19318,7 +19368,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper returns the principal inverse tangent of one finite value.]=]
+Return the native inverse tangent of one value.]=]
 },
 {
 [ [=[
@@ -19326,7 +19376,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-atan(x: TC.Numeric, ...: TC.Numeric) -> angle: number]=]
+atan(x: TC.Numeric, ...: TC.GuestValue) -> angle: number]=]
 },
 {
 [ [=[
@@ -19343,7 +19393,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite numeric operand.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19351,8 +19401,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -19369,7 +19419,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 angle: number
-Principal angle in radians.]=]
+Native principal angle in radians.]=]
 },
 {
 [ [=[
@@ -19385,7 +19435,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper returns the two-argument native inverse tangent and preserves y,x argument order.]=]
+Return the two-argument inverse tangent, preserving y,x argument order.]=]
 },
 {
 [ [=[
@@ -19393,7 +19443,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-atan2(y: TC.Numeric, x: TC.Numeric, ...: TC.Numeric) -> angle: number]=]
+atan2(y: TC.Numeric, x: TC.Numeric, ...: TC.GuestValue) -> angle: number]=]
 },
 {
 [ [=[
@@ -19410,7 +19460,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 y: TC.Numeric
-Finite vertical component.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19419,7 +19469,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite horizontal component.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19427,8 +19477,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -19445,7 +19495,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 angle: number
-Quadrant-aware angle in radians.]=]
+Native quadrant-aware angle in radians.]=]
 },
 {
 [ [=[
@@ -19469,7 +19519,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-ceil(x: TC.Numeric, ...: TC.Numeric) -> result: number]=]
+ceil(x: TC.Numeric, ...: TC.GuestValue) -> result: number]=]
 },
 {
 [ [=[
@@ -19486,7 +19536,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite numeric operand.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19494,8 +19544,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -19512,7 +19562,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 result: number
-Smallest integral value not below x.]=]
+Smallest integral value not below x, under native rules.]=]
 },
 {
 [ [=[
@@ -19528,7 +19578,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper returns the native cosine of a finite angle in radians.]=]
+Return the native cosine of an angle in radians.]=]
 },
 {
 [ [=[
@@ -19536,7 +19586,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-cos(x: TC.Numeric, ...: TC.Numeric) -> result: number]=]
+cos(x: TC.Numeric, ...: TC.GuestValue) -> result: number]=]
 },
 {
 [ [=[
@@ -19553,7 +19603,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite angle in radians.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19561,8 +19611,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -19579,7 +19629,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 result: number
-Cosine value.]=]
+Native cosine result.]=]
 },
 {
 [ [=[
@@ -19595,7 +19645,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Convert radians to degrees. The helper refuses nonfinite output.]=]
+Convert radians to degrees under native rules.]=]
 },
 {
 [ [=[
@@ -19603,7 +19653,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-deg(x: TC.Numeric, ...: TC.Numeric) -> angle: number]=]
+deg(x: TC.Numeric, ...: TC.GuestValue) -> angle: number]=]
 },
 {
 [ [=[
@@ -19620,7 +19670,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite angle in radians.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19628,8 +19678,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -19646,7 +19696,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 angle: number
-Finite angle in degrees.]=]
+Native angle in degrees.]=]
 },
 {
 [ [=[
@@ -19662,8 +19712,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper returns the natural exponential.
-Overflow to a nonfinite value causes E_RANGE.]=]
+Return the native natural exponential. Overflow is not a synthetic E_RANGE error.]=]
 },
 {
 [ [=[
@@ -19671,7 +19720,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-exp(x: TC.Numeric, ...: TC.Numeric) -> result: number]=]
+exp(x: TC.Numeric, ...: TC.GuestValue) -> result: number]=]
 },
 {
 [ [=[
@@ -19688,7 +19737,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite exponent.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19696,8 +19745,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -19714,7 +19763,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 result: number
-Finite natural exponential value.]=]
+Native exponential result, which can be nonfinite.]=]
 },
 {
 [ [=[
@@ -19738,7 +19787,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-floor(x: TC.Numeric, ...: TC.Numeric) -> result: number]=]
+floor(x: TC.Numeric, ...: TC.GuestValue) -> result: number]=]
 },
 {
 [ [=[
@@ -19755,7 +19804,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite numeric operand.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19763,8 +19812,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -19781,7 +19830,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 result: number
-Largest integral value not above x.]=]
+Largest integral value not above x, under native rules.]=]
 },
 {
 [ [=[
@@ -19797,8 +19846,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper returns the native remainder with a quotient rounded toward zero,
-not floor modulo.]=]
+Return the native remainder with a quotient rounded toward zero, not floor modulo.]=]
 },
 {
 [ [=[
@@ -19806,7 +19854,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-fmod(x: TC.Numeric, y: TC.Numeric, ...: TC.Numeric) -> result: number]=]
+fmod(x: TC.Numeric, y: TC.Numeric, ...: TC.GuestValue) -> result: number]=]
 },
 {
 [ [=[
@@ -19823,7 +19871,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite dividend.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19832,7 +19880,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 y: TC.Numeric
-Finite nonzero divisor. The helper refuses a nonfinite result.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19840,8 +19888,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -19858,7 +19906,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 result: number
-Remainder with the dividend's sign.]=]
+Native remainder, including native nonfinite behavior.]=]
 },
 {
 [ [=[
@@ -19874,10 +19922,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper returns the natural logarithm when base is omitted.
-An explicit base selects that logarithm.
-Unlike omission, explicitly supplied nil is not a numeric operand and causes failure.
-Inputs must give a finite native result. The helper refuses invalid domains.]=]
+Return the native logarithm. Omitted or nil base selects the natural logarithm.]=]
 },
 {
 [ [=[
@@ -19885,7 +19930,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-log(x: TC.Numeric, base?: TC.Numeric, ...: TC.Numeric) -> result: number]=]
+log(x: TC.Numeric, base?: TC.Numeric, ...: TC.GuestValue) -> result: number]=]
 },
 {
 [ [=[
@@ -19902,7 +19947,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Positive finite numeric operand.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19911,7 +19956,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 base (optional): TC.Numeric
-Optional positive finite base other than one. The helper refuses explicit nil.]=]
+Optional base. Omission or nil selects the natural logarithm.]=]
 },
 {
 [ [=[
@@ -19919,8 +19964,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -19937,7 +19982,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 result: number
-Finite logarithm value.]=]
+Native logarithm result, which can be nonfinite.]=]
 },
 {
 [ [=[
@@ -19953,8 +19998,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper returns the largest supplied finite value.
-It requires at least one operand.]=]
+Return the largest supplied value. At least one operand is required.]=]
 },
 {
 [ [=[
@@ -19979,7 +20023,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-First finite numeric operand.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -19988,7 +20032,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 ... (zero or more positions): TC.Numeric
-Remaining finite operands within tuple width.]=]
+Remaining operands used by the native comparison.]=]
 },
 {
 [ [=[
@@ -20005,7 +20049,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 result: number
-Maximum converted numeric value.]=]
+Native maximum of the converted operands.]=]
 },
 {
 [ [=[
@@ -20021,8 +20065,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper returns the smallest supplied finite value.
-It requires at least one operand.]=]
+Return the smallest supplied value. At least one operand is required.]=]
 },
 {
 [ [=[
@@ -20047,7 +20090,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-First finite numeric operand.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -20056,7 +20099,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 ... (zero or more positions): TC.Numeric
-Remaining finite operands within tuple width.]=]
+Remaining operands used by the native comparison.]=]
 },
 {
 [ [=[
@@ -20073,7 +20116,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 result: number
-Minimum converted numeric value.]=]
+Native minimum of the converted operands.]=]
 },
 {
 [ [=[
@@ -20089,7 +20132,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Split a finite value into integral and fractional parts, preserving two results.]=]
+Split a value into native integral and fractional parts.]=]
 },
 {
 [ [=[
@@ -20097,7 +20140,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-modf(x: TC.Numeric, ...: TC.Numeric) -> integral: number, fractional: number]=]
+modf(x: TC.Numeric, ...: TC.GuestValue) -> integral: number, fractional: number]=]
 },
 {
 [ [=[
@@ -20114,7 +20157,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite numeric operand.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -20122,8 +20165,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -20149,7 +20192,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 fractional: number
-Signed remaining fractional part.]=]
+Native signed fractional part. This is an explicit second result.]=]
 },
 {
 [ [=[
@@ -20165,7 +20208,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-The read-only host pi constant, not a random or configurable value.]=]
+Read-only native pi constant.]=]
 },
 {
 [ [=[
@@ -20189,7 +20232,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Convert degrees to radians. The helper refuses nonfinite output.]=]
+Convert degrees to radians under native rules.]=]
 },
 {
 [ [=[
@@ -20197,7 +20240,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-rad(x: TC.Numeric, ...: TC.Numeric) -> angle: number]=]
+rad(x: TC.Numeric, ...: TC.GuestValue) -> angle: number]=]
 },
 {
 [ [=[
@@ -20214,7 +20257,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite angle in degrees.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -20222,8 +20265,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -20240,7 +20283,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 angle: number
-Finite angle in radians.]=]
+Native angle in radians.]=]
 },
 {
 [ [=[
@@ -20256,7 +20299,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper returns the native sine of a finite angle in radians.]=]
+Return the native sine of an angle in radians.]=]
 },
 {
 [ [=[
@@ -20264,7 +20307,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-sin(x: TC.Numeric, ...: TC.Numeric) -> result: number]=]
+sin(x: TC.Numeric, ...: TC.GuestValue) -> result: number]=]
 },
 {
 [ [=[
@@ -20281,7 +20324,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite angle in radians.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -20289,8 +20332,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -20307,7 +20350,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 result: number
-Sine value.]=]
+Native sine result.]=]
 },
 {
 [ [=[
@@ -20323,8 +20366,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper returns the square root.
-A negative operand produces nonfinite native output, which the helper refuses.]=]
+Return the native square root. Native nonfinite results remain temporary values.]=]
 },
 {
 [ [=[
@@ -20332,7 +20374,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-sqrt(x: TC.Numeric, ...: TC.Numeric) -> result: number]=]
+sqrt(x: TC.Numeric, ...: TC.GuestValue) -> result: number]=]
 },
 {
 [ [=[
@@ -20349,7 +20391,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite nonnegative operand.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -20357,8 +20399,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -20375,7 +20417,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 result: number
-Nonnegative square root.]=]
+Native square-root result.]=]
 },
 {
 [ [=[
@@ -20391,7 +20433,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-This helper returns the native tangent. It refuses nonfinite results.]=]
+Return the native tangent of an angle in radians.]=]
 },
 {
 [ [=[
@@ -20399,7 +20441,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-tan(x: TC.Numeric, ...: TC.Numeric) -> result: number]=]
+tan(x: TC.Numeric, ...: TC.GuestValue) -> result: number]=]
 },
 {
 [ [=[
@@ -20416,7 +20458,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 x: TC.Numeric
-Finite angle in radians.]=]
+Native numeric operand; device finite-value rules do not apply here.]=]
 },
 {
 [ [=[
@@ -20424,8 +20466,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.]=]
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.]=]
 },
 {
 [ [=[
@@ -20442,7 +20484,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 result: number
-Finite tangent value.]=]
+Native tangent result.]=]
 },
 {
 [ [=[
@@ -20458,11 +20500,10 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-These guarded numeric helpers require finite values.
-The helper explicitly converts numeric strings.
-It checks all supplied operands, including extra operands that it otherwise ignores.
-Nonfinite operands cause failure. A nonfinite native result causes E_RANGE.
-The library exposes no random, randomseed, huge or fallback to other host math functions.]=]
+These approved math helpers use native conversion, domains, results, and errors.
+Temporary results can be nonfinite. Persistent Data and device arguments still require their documented domains.
+There is no mod work, allocation, tuple, or call-depth quota.
+The library exposes no random, randomseed, huge, or fallback to other host functions.]=]
 },
 {
 [ [=[
@@ -20485,309 +20526,299 @@ math — TC.MathLibrary
 
 TC.MathLibrary
 
-These guarded numeric helpers require finite values.
-The helper explicitly converts numeric strings.
-It checks all supplied operands, including extra operands that it otherwise ignores.
-Nonfinite operands cause failure. A nonfinite native result causes E_RANGE.
-The library exposes no random, randomseed, huge or fallback to other host math functions.
+These approved math helpers use native conversion, domains, results, and errors.
+Temporary results can be nonfinite. Persistent Data and device arguments still require their documented domains.
+There is no mod work, allocation, tuple, or call-depth quota.
+The library exposes no random, randomseed, huge, or fallback to other host functions.
 
 abs
 
-This helper returns the absolute value and validates finite input and result.
+Return the native absolute value.
 
-abs(x: TC.Numeric, ...: TC.Numeric) -> result: number
+abs(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 
 Parameters
 
 x: TC.Numeric
-Finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 result: number
-Absolute value of x.
+Absolute value, including native nonfinite behavior.
 
 acos
 
-This helper returns the principal inverse cosine.
-It refuses operands outside the native domain.
+Return the native principal inverse cosine.
 
-acos(x: TC.Numeric, ...: TC.Numeric) -> angle: number
+acos(x: TC.Numeric, ...: TC.GuestValue) -> angle: number
 
 Parameters
 
 x: TC.Numeric
-Finite value in -1..1.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 angle: number
-Principal angle in radians.
+Native principal angle in radians.
 
 asin
 
-This helper returns the principal inverse sine.
-An operand outside the native domain produces a nonfinite result, which the helper refuses.
+Return the native principal inverse sine.
 
-asin(x: TC.Numeric, ...: TC.Numeric) -> angle: number
+asin(x: TC.Numeric, ...: TC.GuestValue) -> angle: number
 
 Parameters
 
 x: TC.Numeric
-Finite value in -1..1.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 angle: number
-Principal angle in radians.
+Native principal angle in radians.
 
 atan
 
-This helper returns the principal inverse tangent of one finite value.
+Return the native inverse tangent of one value.
 
-atan(x: TC.Numeric, ...: TC.Numeric) -> angle: number
+atan(x: TC.Numeric, ...: TC.GuestValue) -> angle: number
 
 Parameters
 
 x: TC.Numeric
-Finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 angle: number
-Principal angle in radians.
+Native principal angle in radians.
 
 atan2
 
-This helper returns the two-argument native inverse tangent and preserves y,x argument order.
+Return the two-argument inverse tangent, preserving y,x argument order.
 
-atan2(y: TC.Numeric, x: TC.Numeric, ...: TC.Numeric) -> angle: number
+atan2(y: TC.Numeric, x: TC.Numeric, ...: TC.GuestValue) -> angle: number
 
 Parameters
 
 y: TC.Numeric
-Finite vertical component.
+Native numeric operand; device finite-value rules do not apply here.
 
 x: TC.Numeric
-Finite horizontal component.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 angle: number
-Quadrant-aware angle in radians.
+Native quadrant-aware angle in radians.
 
 ceil
 
 Round toward positive infinity.
 
-ceil(x: TC.Numeric, ...: TC.Numeric) -> result: number
+ceil(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 
 Parameters
 
 x: TC.Numeric
-Finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 result: number
-Smallest integral value not below x.
+Smallest integral value not below x, under native rules.
 
 cos
 
-This helper returns the native cosine of a finite angle in radians.
+Return the native cosine of an angle in radians.
 
-cos(x: TC.Numeric, ...: TC.Numeric) -> result: number
+cos(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 
 Parameters
 
 x: TC.Numeric
-Finite angle in radians.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 result: number
-Cosine value.
+Native cosine result.
 
 deg
 
-Convert radians to degrees. The helper refuses nonfinite output.
+Convert radians to degrees under native rules.
 
-deg(x: TC.Numeric, ...: TC.Numeric) -> angle: number
+deg(x: TC.Numeric, ...: TC.GuestValue) -> angle: number
 
 Parameters
 
 x: TC.Numeric
-Finite angle in radians.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 angle: number
-Finite angle in degrees.
+Native angle in degrees.
 
 exp
 
-This helper returns the natural exponential.
-Overflow to a nonfinite value causes E_RANGE.
+Return the native natural exponential. Overflow is not a synthetic E_RANGE error.
 
-exp(x: TC.Numeric, ...: TC.Numeric) -> result: number
+exp(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 
 Parameters
 
 x: TC.Numeric
-Finite exponent.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 result: number
-Finite natural exponential value.
+Native exponential result, which can be nonfinite.
 
 floor
 
 Round toward negative infinity.
 
-floor(x: TC.Numeric, ...: TC.Numeric) -> result: number
+floor(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 
 Parameters
 
 x: TC.Numeric
-Finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 result: number
-Largest integral value not above x.
+Largest integral value not above x, under native rules.
 
 fmod
 
-This helper returns the native remainder with a quotient rounded toward zero,
-not floor modulo.
+Return the native remainder with a quotient rounded toward zero, not floor modulo.
 
-fmod(x: TC.Numeric, y: TC.Numeric, ...: TC.Numeric) -> result: number
+fmod(x: TC.Numeric, y: TC.Numeric, ...: TC.GuestValue) -> result: number
 
 Parameters
 
 x: TC.Numeric
-Finite dividend.
+Native numeric operand; device finite-value rules do not apply here.
 
 y: TC.Numeric
-Finite nonzero divisor. The helper refuses a nonfinite result.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 result: number
-Remainder with the dividend's sign.
+Native remainder, including native nonfinite behavior.
 
 log
 
-This helper returns the natural logarithm when base is omitted.
-An explicit base selects that logarithm.
-Unlike omission, explicitly supplied nil is not a numeric operand and causes failure.
-Inputs must give a finite native result. The helper refuses invalid domains.
+Return the native logarithm. Omitted or nil base selects the natural logarithm.
 
-log(x: TC.Numeric, base?: TC.Numeric, ...: TC.Numeric) -> result: number
+log(x: TC.Numeric, base?: TC.Numeric, ...: TC.GuestValue) -> result: number
 
 Parameters
 
 x: TC.Numeric
-Positive finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
 base (optional): TC.Numeric
-Optional positive finite base other than one. The helper refuses explicit nil.
+Optional base. Omission or nil selects the natural logarithm.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 result: number
-Finite logarithm value.
+Native logarithm result, which can be nonfinite.
 
 max
 
-This helper returns the largest supplied finite value.
-It requires at least one operand.
+Return the largest supplied value. At least one operand is required.
 
 max(x: TC.Numeric, ...: TC.Numeric) -> result: number
 
 Parameters
 
 x: TC.Numeric
-First finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
 ... (zero or more positions): TC.Numeric
-Remaining finite operands within tuple width.
+Remaining operands used by the native comparison.
 
 Returns
 
 result: number
-Maximum converted numeric value.
+Native maximum of the converted operands.
 
 min
 
-This helper returns the smallest supplied finite value.
-It requires at least one operand.
+Return the smallest supplied value. At least one operand is required.
 
 min(x: TC.Numeric, ...: TC.Numeric) -> result: number
 
 Parameters
 
 x: TC.Numeric
-First finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
 ... (zero or more positions): TC.Numeric
-Remaining finite operands within tuple width.
+Remaining operands used by the native comparison.
 
 Returns
 
 result: number
-Minimum converted numeric value.
+Native minimum of the converted operands.
 
 modf
 
-Split a finite value into integral and fractional parts, preserving two results.
+Split a value into native integral and fractional parts.
 
-modf(x: TC.Numeric, ...: TC.Numeric) -> integral: number, fractional: number
+modf(x: TC.Numeric, ...: TC.GuestValue) -> integral: number, fractional: number
 
 Parameters
 
 x: TC.Numeric
-Finite numeric operand.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
@@ -20795,98 +20826,96 @@ integral: number
 Integral part rounded toward zero.
 
 fractional: number
-Signed remaining fractional part.
+Native signed fractional part. This is an explicit second result.
 
 pi
 
-The read-only host pi constant, not a random or configurable value.
+Read-only native pi constant.
 
 number
 
 rad
 
-Convert degrees to radians. The helper refuses nonfinite output.
+Convert degrees to radians under native rules.
 
-rad(x: TC.Numeric, ...: TC.Numeric) -> angle: number
+rad(x: TC.Numeric, ...: TC.GuestValue) -> angle: number
 
 Parameters
 
 x: TC.Numeric
-Finite angle in degrees.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 angle: number
-Finite angle in radians.
+Native angle in radians.
 
 sin
 
-This helper returns the native sine of a finite angle in radians.
+Return the native sine of an angle in radians.
 
-sin(x: TC.Numeric, ...: TC.Numeric) -> result: number
+sin(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 
 Parameters
 
 x: TC.Numeric
-Finite angle in radians.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 result: number
-Sine value.
+Native sine result.
 
 sqrt
 
-This helper returns the square root.
-A negative operand produces nonfinite native output, which the helper refuses.
+Return the native square root. Native nonfinite results remain temporary values.
 
-sqrt(x: TC.Numeric, ...: TC.Numeric) -> result: number
+sqrt(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 
 Parameters
 
 x: TC.Numeric
-Finite nonnegative operand.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 result: number
-Nonnegative square root.
+Native square-root result.
 
 tan
 
-This helper returns the native tangent. It refuses nonfinite results.
+Return the native tangent of an angle in radians.
 
-tan(x: TC.Numeric, ...: TC.Numeric) -> result: number
+tan(x: TC.Numeric, ...: TC.GuestValue) -> result: number
 
 Parameters
 
 x: TC.Numeric
-Finite angle in radians.
+Native numeric operand; device finite-value rules do not apply here.
 
-... (zero or more positions): TC.Numeric
-The helper validates and charges extra operands. The native function then ignores them.
+... (zero or more positions): TC.GuestValue
+Extra arguments ignored by the native helper.
 
 Returns
 
 result: number
-Finite tangent value.
+Native tangent result.
 
 math
 
-These guarded numeric helpers require finite values.
-The helper explicitly converts numeric strings.
-It checks all supplied operands, including extra operands that it otherwise ignores.
-Nonfinite operands cause failure. A nonfinite native result causes E_RANGE.
-The library exposes no random, randomseed, huge or fallback to other host math functions.
+These approved math helpers use native conversion, domains, results, and errors.
+Temporary results can be nonfinite. Persistent Data and device arguments still require their documented domains.
+There is no mod work, allocation, tuple, or call-depth quota.
+The library exposes no random, randomseed, huge, or fallback to other host functions.
 
 TC.MathLibrary]=],
 [ [=[
@@ -21792,7 +21821,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 iterator: TC.Iterator
-Approved bounded sequence iterator.]=]
+Approved native sequence iterator.]=]
 },
 {
 [ [=[
@@ -22056,8 +22085,8 @@ prose]=],
 text]=] ]=[=[
 Unlike xpcall, pcall cannot return a protected API handle as an error.
 If the function throws such a handle, pcall's own error-snapshot step refuses with E_ARGUMENT.
-Status counts toward tuple width.
-Fatal budget/stop control always escapes and never becomes a guest error value.]=]
+Status does not create a mod tuple ceiling.
+Fatal host-work refusal and stop always escape without becoming guest error values.]=]
 },
 {
 [ [=[
@@ -22145,7 +22174,9 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Saved output uses computer.log. Console retains shell attribution.
+Saved print and computer.log use the same bounded buffer. Console retains shell attribution.
+Output uses the admitted execution owner, not repeated physical discovery for each entry.
+Both byte and entry bounds apply. Canceled executions cannot append guest output.
 The native display shows tabs as spaces without changing raw retained/copyable bytes.]=]
 },
 {
@@ -22369,7 +22400,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 value: string|TC.GuestTable
-Bounded byte string or guest-owned plain table.]=]
+Byte string or guest-owned plain table.]=]
 },
 {
 [ [=[
@@ -22403,8 +22434,8 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 This helper does a raw guest-table assignment.
-Before mutation, it applies ordinary indexed-write ownership, key, value, growth,
-work and allocation checks. All three positions are required.
+It rejects protected or foreign tables and applies native key rules.
+All three positions are required. Temporary growth has no mod quota.
 A nil value deletes the key. Nil and NaN keys are invalid.]=]
 },
 {
@@ -22413,8 +22444,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-The helper permits replacement or deletion at full width when admission succeeds.
-Refused writes leave every alias unchanged.]=]
+Insertion, replacement, and deletion use native table behavior.
+An invalid key does not change the table.]=]
 },
 {
 [ [=[
@@ -22492,7 +22523,8 @@ prose]=],
 text]=] ]=[=[
 Return the trailing tuple width for '#', or its suffix at a nonzero integer index.
 A positive index beyond the end returns zero values.
-Negative indexes count from the end. Index and tuple bounds apply.
+Negative indexes count from the end. Native index limits apply.
+No mod tuple ceiling applies.
 Zero and too-negative indexes cause failure.
 The helper never collapses nil positions.]=]
 },
@@ -22620,7 +22652,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Convert a number or bounded numeric string.
+Convert a number or numeric string with native conversion.
+Supply a value; omission causes a native argument error.
 An ordinary invalid value returns exactly one nil.
 An explicit base requires a string and an integer base in 2..36.
 An invalid base or type causes a catchable argument failure.
@@ -22633,7 +22666,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-tonumber(value?: TC.GuestValue, base?: integer) -> number: number|nil]=]
+tonumber(value: TC.GuestValue, base?: integer) -> number: number|nil]=]
 },
 {
 [ [=[
@@ -22649,7 +22682,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-value (optional): TC.GuestValue
+value: TC.GuestValue
 Number/string to convert. Other ordinary values return nil.]=]
 },
 {
@@ -22738,7 +22771,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 text: string
-Bounded safe description or primitive representation.]=]
+Safe description or primitive representation. Output APIs apply their own byte limits.]=]
 },
 {
 [ [=[
@@ -22754,9 +22787,10 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Return the Lua type name. Omission has the same effect as nil.
+Return the Lua type name. Supply a value, including explicit nil.
+Omission causes a native argument error.
 This helper does not grant native object access.
-Standard helpers still obey argument/result tuple and work bounds.
+Temporary arguments and results have no mod tuple or work ceiling.
 Each native helper determines how it handles extra arguments, rather than service arity.]=]
 },
 {
@@ -22765,7 +22799,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-type(value?: TC.GuestValue) -> name: 'nil'|'boolean'|'number'|'string'|'table'|'function']=]
+type(value: TC.GuestValue) -> name: 'nil'|'boolean'|'number'|'string'|'table'|'function']=]
 },
 {
 [ [=[
@@ -22781,8 +22815,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-value (optional): TC.GuestValue
-Value to inspect. Omission or nil has type nil.]=]
+value: TC.GuestValue
+Required value. Explicit nil has type nil.]=]
 },
 {
 [ [=[
@@ -22827,7 +22861,7 @@ Return positions i..j exactly, including nil holes.
 Omitted or nil bounds default to 1 and #t, not t.n.
 Use explicit packed.n to retain trailing nil.
 An empty range returns zero values.
-Current guest table index and tuple ceilings apply.]=]
+Native index and stack limits apply, without a mod tuple ceiling.]=]
 },
 {
 [ [=[
@@ -22861,7 +22895,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 i (optional): integer
-Start, default 1. The domain is 1..table_entries+1.]=]
+Start, default 1. Native integer-index limits apply.]=]
 },
 {
 [ [=[
@@ -22870,7 +22904,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 j (optional): integer
-End, default native #t. The domain is 0..table_entries.]=]
+End, default native #t. Native integer-index limits apply.]=]
 },
 {
 [ [=[
@@ -22915,11 +22949,12 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Native handler re-entry is bounded.
+Handler re-entry follows native Lua limits, not a mod depth ceiling.
 The wording of an error inside the handler is not stable.
 A fatal failure in fn suppresses the handler.
 A fatal failure in handler suppresses later handlers and effects.
-Neither can suppress quota controls.]=]
+Neither can suppress private host-work or stop controls.
+Pure Lua execution inside either function has no watchdog.]=]
 },
 {
 [ [=[
@@ -23080,7 +23115,7 @@ Guest-owned table/snapshot.
 Returns
 
 iterator: TC.Iterator
-Approved bounded sequence iterator.
+Approved native sequence iterator.
 
 state: TC.GuestTable
 Identical table.
@@ -23164,8 +23199,8 @@ The helper makes defensive copies of unowned error records.
 
 Unlike xpcall, pcall cannot return a protected API handle as an error.
 If the function throws such a handle, pcall's own error-snapshot step refuses with E_ARGUMENT.
-Status counts toward tuple width.
-Fatal budget/stop control always escapes and never becomes a guest error value.
+Status does not create a mod tuple ceiling.
+Fatal host-work refusal and stop always escape without becoming guest error values.
 
 pcall(fn: TC.Callable, ...: TC.GuestValue) -> ok: boolean, ...: TC.GuestValue
 
@@ -23193,7 +23228,9 @@ Complete formatting and admission occur before append or eviction.
 Oversized output causes E_LIMIT with no partial entry.
 Earlier output survives later failures.
 
-Saved output uses computer.log. Console retains shell attribution.
+Saved print and computer.log use the same bounded buffer. Console retains shell attribution.
+Output uses the admitted execution owner, not repeated physical discovery for each entry.
+Both byte and entry bounds apply. Canceled executions cannot append guest output.
 The native display shows tabs as spaces without changing raw retained/copyable bytes.
 
 print(...: TC.GuestValue)
@@ -23261,7 +23298,7 @@ rawlen(value: string|TC.GuestTable) -> length: integer
 Parameters
 
 value: string|TC.GuestTable
-Bounded byte string or guest-owned plain table.
+Byte string or guest-owned plain table.
 
 Returns
 
@@ -23271,12 +23308,12 @@ Nonnegative byte length or native sequence border.
 rawset
 
 This helper does a raw guest-table assignment.
-Before mutation, it applies ordinary indexed-write ownership, key, value, growth,
-work and allocation checks. All three positions are required.
+It rejects protected or foreign tables and applies native key rules.
+All three positions are required. Temporary growth has no mod quota.
 A nil value deletes the key. Nil and NaN keys are invalid.
 
-The helper permits replacement or deletion at full width when admission succeeds.
-Refused writes leave every alias unchanged.
+Insertion, replacement, and deletion use native table behavior.
+An invalid key does not change the table.
 
 rawset(t: TC.GuestTable, key: TC.GuestValue, value: TC.GuestValue) -> table: TC.GuestTable
 
@@ -23300,7 +23337,8 @@ select
 
 Return the trailing tuple width for '#', or its suffix at a nonzero integer index.
 A positive index beyond the end returns zero values.
-Negative indexes count from the end. Index and tuple bounds apply.
+Negative indexes count from the end. Native index limits apply.
+No mod tuple ceiling applies.
 Zero and too-negative indexes cause failure.
 The helper never collapses nil positions.
 
@@ -23338,18 +23376,19 @@ The index '#' selects count, the exact number of trailing positions, including n
 
 tonumber
 
-Convert a number or bounded numeric string.
+Convert a number or numeric string with native conversion.
+Supply a value; omission causes a native argument error.
 An ordinary invalid value returns exactly one nil.
 An explicit base requires a string and an integer base in 2..36.
 An invalid base or type causes a catchable argument failure.
 An omitted or nil base uses ordinary numeric conversion.
 Conversion does not widen API numeric domains.
 
-tonumber(value?: TC.GuestValue, base?: integer) -> number: number|nil
+tonumber(value: TC.GuestValue, base?: integer) -> number: number|nil
 
 Parameters
 
-value (optional): TC.GuestValue
+value: TC.GuestValue
 Number/string to convert. Other ordinary values return nil.
 
 base (optional): integer
@@ -23378,21 +23417,22 @@ Approved value to describe without exposing internals.
 Returns
 
 text: string
-Bounded safe description or primitive representation.
+Safe description or primitive representation. Output APIs apply their own byte limits.
 
 type
 
-Return the Lua type name. Omission has the same effect as nil.
+Return the Lua type name. Supply a value, including explicit nil.
+Omission causes a native argument error.
 This helper does not grant native object access.
-Standard helpers still obey argument/result tuple and work bounds.
+Temporary arguments and results have no mod tuple or work ceiling.
 Each native helper determines how it handles extra arguments, rather than service arity.
 
-type(value?: TC.GuestValue) -> name: 'nil'|'boolean'|'number'|'string'|'table'|'function'
+type(value: TC.GuestValue) -> name: 'nil'|'boolean'|'number'|'string'|'table'|'function'
 
 Parameters
 
-value (optional): TC.GuestValue
-Value to inspect. Omission or nil has type nil.
+value: TC.GuestValue
+Required value. Explicit nil has type nil.
 
 Returns
 
@@ -23407,7 +23447,7 @@ Return positions i..j exactly, including nil holes.
 Omitted or nil bounds default to 1 and #t, not t.n.
 Use explicit packed.n to retain trailing nil.
 An empty range returns zero values.
-Current guest table index and tuple ceilings apply.
+Native index and stack limits apply, without a mod tuple ceiling.
 
 unpack(t: TC.GuestTable, i?: integer, j?: integer) -> ...: TC.GuestValue
 
@@ -23417,10 +23457,10 @@ t: TC.GuestTable
 Guest-owned plain table. This table can be sparse.
 
 i (optional): integer
-Start, default 1. The domain is 1..table_entries+1.
+Start, default 1. Native integer-index limits apply.
 
 j (optional): integer
-End, default native #t. The domain is 0..table_entries.
+End, default native #t. Native integer-index limits apply.
 
 Returns
 
@@ -23435,11 +23475,12 @@ Ordinary failure calls handler with one safe error.
 It returns false followed by only the handler's first result.
 If the handler returns no values, the second result is one nil.
 
-Native handler re-entry is bounded.
+Handler re-entry follows native Lua limits, not a mod depth ceiling.
 The wording of an error inside the handler is not stable.
 A fatal failure in fn suppresses the handler.
 A fatal failure in handler suppresses later handlers and effects.
-Neither can suppress quota controls.
+Neither can suppress private host-work or stop controls.
+Pure Lua execution inside either function has no watchdog.
 
 Guest-owned tables and authentic protected-handle errors preserve identity.
 The helper copies unowned host error records.
@@ -23507,8 +23548,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Fatal work, allocation, depth or tuple exhaustion and saved-program stop bypass
-guest pcall/xpcall. The API does not expose their private controls as ApiError values.
+Fatal host-work exhaustion and saved-program stop bypass guest pcall/xpcall. The API does not expose their private controls as ApiError values.
 Faults retain source, state, logs and earlier successful effects, except
 still-owned Logic output. Host cleanup clears that output.
 Candidate validation failure preserves the previous active run.
@@ -23654,8 +23694,7 @@ result or permission to delete accepted content.
 For E_ENGINE, the adapter rolls back the current operation where supported.
 A failed rollback faults that adapter and retains an explicit recovery record.
 
-Fatal work, allocation, depth or tuple exhaustion and saved-program stop bypass
-guest pcall/xpcall. The API does not expose their private controls as ApiError values.
+Fatal host-work exhaustion and saved-program stop bypass guest pcall/xpcall. The API does not expose their private controls as ApiError values.
 Faults retain source, state, logs and earlier successful effects, except
 still-owned Logic output. Host cleanup clears that output.
 Candidate validation failure preserves the previous active run.
@@ -23904,8 +23943,9 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-An approved callable is a guest function or an exposed guarded API or helper function.
-A call consumes the same work, depth and tuple budgets.
+An approved callable is a guest function or an exposed checked API or helper function.
+Ordinary Lua calls have native stack and result limits, not mod execution quotas.
+Calls into host APIs retain their own authority, work, and data checks.
 This callable is not a persisted callback.]=]
 },
 {
@@ -23927,8 +23967,9 @@ type.TC.Callable]=],
 text]=] ]=[=[
 TC.Callable
 
-An approved callable is a guest function or an exposed guarded API or helper function.
-A call consumes the same work, depth and tuple budgets.
+An approved callable is a guest function or an exposed checked API or helper function.
+Ordinary Lua calls have native stack and result limits, not mod execution quotas.
+Calls into host APIs retain their own authority, work, and data checks.
 This callable is not a persisted callback.
 
 fun(...: TC.GuestValue): ...: TC.GuestValue]=],
@@ -46262,6 +46303,43 @@ kind]=] ]=[=[
 heading]=],
 [ [=[
 text]=] ]=[=[
+Resource accounting]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Saved programs and Console commands use trusted native Lua.
+Loops, recursion, temporary allocation, and temporary tuple sizes have no mod execution limits.
+Runaway code can stall the game or exhaust memory.
+Stop cannot interrupt code that never returns control to the host.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Source validation, reconstruction, API work, and maintenance retain host-work admission.
+Data, queues, logs, and device operations retain their separate validation and capacities.
+Internal host charges and failure positions can change between versions.
+Equal inputs, world state, settings, and remaining credits give equal admission with warm or cold host caches.
+Save/load, cache reuse, and settings changes do not renew spent host credits.
+Preparation waits for a later tick when earlier work leaves too few source or host credits.
+Accepted preparation charges remain spent. Pending items keep their order.
+Preparation fails if it needs more than the full source or host allowance.
+The scheduler never repeats code after execution starts.
+Fatal host-work refusal and stop remain outside guest error handling.
+Native failures are not synthetic guest-quota faults. Earlier successful effects remain committed.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
 Exceptions]=]
 },
 {
@@ -46273,8 +46351,8 @@ text]=] ]=[=[
 Modem transmit accepts a required top-level nil message, but not nested nil.
 Detached native Logic signal graphs bypass generic Data transport limits.
 This exception does not apply to explicit state, KV, Console retention,
-arbitrary table growth or guest execution. Circuit queues still account for
-envelope bytes and entries, but exclude the native graphs.
+caller-authored API requests. Temporary Lua growth has no mod ceiling.
+Circuit queues still account for envelope bytes and entries, but exclude the native graphs.
 This accounting is not a total heap bound.]=]
 },
 {
@@ -46360,13 +46438,32 @@ or truthy values. Calls are synchronous, non-yielding and non-reentrant.
 The dispatcher commits each successful mutation in dispatcher order.
 A callback is not a transaction.
 
+Resource accounting
+
+Saved programs and Console commands use trusted native Lua.
+Loops, recursion, temporary allocation, and temporary tuple sizes have no mod execution limits.
+Runaway code can stall the game or exhaust memory.
+Stop cannot interrupt code that never returns control to the host.
+
+Source validation, reconstruction, API work, and maintenance retain host-work admission.
+Data, queues, logs, and device operations retain their separate validation and capacities.
+Internal host charges and failure positions can change between versions.
+Equal inputs, world state, settings, and remaining credits give equal admission with warm or cold host caches.
+Save/load, cache reuse, and settings changes do not renew spent host credits.
+Preparation waits for a later tick when earlier work leaves too few source or host credits.
+Accepted preparation charges remain spent. Pending items keep their order.
+Preparation fails if it needs more than the full source or host allowance.
+The scheduler never repeats code after execution starts.
+Fatal host-work refusal and stop remain outside guest error handling.
+Native failures are not synthetic guest-quota faults. Earlier successful effects remain committed.
+
 Exceptions
 
 Modem transmit accepts a required top-level nil message, but not nested nil.
 Detached native Logic signal graphs bypass generic Data transport limits.
 This exception does not apply to explicit state, KV, Console retention,
-arbitrary table growth or guest execution. Circuit queues still account for
-envelope bytes and entries, but exclude the native graphs.
+caller-authored API requests. Temporary Lua growth has no mod ceiling.
+Circuit queues still account for envelope bytes and entries, but exclude the native graphs.
 This accounting is not a total heap bound.
 
 Console scratch uses its own validated graph and authentic symbolic bindings,
@@ -46954,7 +47051,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-'E_BUDGET': Candidate refusal or fatal active execution budget exhaustion.]=]
+'E_BUDGET': Source-validation refusal or fatal host-work exhaustion; not a Lua execution watchdog.]=]
 },
 {
 [ [=[
@@ -47008,7 +47105,7 @@ Messages explain the failure, but their wording is not a stable API contract.
 
 'E_PROGRAM': An ordinary program failure escaped error handling. Earlier effects remain committed.
 
-'E_BUDGET': Candidate refusal or fatal active execution budget exhaustion.
+'E_BUDGET': Source-validation refusal or fatal host-work exhaustion; not a Lua execution watchdog.
 
 'E_ARGUMENT'|'E_RANGE'|'E_NOT_FOUND'|'E_UNREACHABLE'|'E_NETWORK_PENDING'|'E_UNPOWERED'|'E_UNSUPPORTED'|'E_READ_ONLY'|'E_SHARED_SCOPE'|'E_WRONGTYPE'|'E_CAPACITY'|'E_LIMIT'|'E_BUSY'|'E_ENGINE'|'E_PROGRAM'|'E_BUDGET']=],
 [ [=[
@@ -50020,78 +50117,6 @@ kind]=] ]=[=[
 heading]=],
 [ [=[
 text]=] ]=[=[
-callback_allocations]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-prose]=],
-[ [=[
-text]=] ]=[=[
-Guest allocation admission units per computer per tick. These are not measured heap bytes. Default: 81920. Runtime-global setting: tc-callback-allocations. Requested integer domain: 1..100000000.]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-signature]=],
-[ [=[
-text]=] ]=[=[
-integer]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-heading]=],
-[ [=[
-text]=] ]=[=[
-callback_depth]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-prose]=],
-[ [=[
-text]=] ]=[=[
-Maximum guarded guest call depth. Default: 32.]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-signature]=],
-[ [=[
-text]=] ]=[=[
-integer]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-heading]=],
-[ [=[
-text]=] ]=[=[
-callback_work]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-prose]=],
-[ [=[
-text]=] ]=[=[
-Execution work units per computer per tick. These are not milliseconds. Default: 500000. Runtime-global setting: tc-callback-work. Requested integer domain: 1..100000000.]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-signature]=],
-[ [=[
-text]=] ]=[=[
-integer]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-heading]=],
-[ [=[
-text]=] ]=[=[
 compile_work]=]
 },
 {
@@ -50124,7 +50149,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Saved compiler representation version. This is not a capacity. Default: 2.]=]
+Saved compiler representation version. This is not a capacity. Default: 3.]=]
 },
 {
 [ [=[
@@ -50308,30 +50333,6 @@ kind]=] ]=[=[
 heading]=],
 [ [=[
 text]=] ]=[=[
-generated_source_bytes]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-prose]=],
-[ [=[
-text]=] ]=[=[
-Maximum number of bytes in instrumented native source. Default: 131072.]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-signature]=],
-[ [=[
-text]=] ]=[=[
-integer]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-heading]=],
-[ [=[
-text]=] ]=[=[
 handler_names]=]
 },
 {
@@ -50388,7 +50389,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Maximum world host work. This includes reserved maintenance work; maintenance is not additional. Default: 5000000. Runtime-global setting: tc-host-work-per-tick. Requested integer domain: 200001..1000000000.]=]
+Maximum world source/API/host work, not ordinary Lua execution. Reserved maintenance is included, not additional. Default: 5000000. Runtime-global setting: tc-host-work-per-tick. Requested integer domain: 200001..1000000000.]=]
 },
 {
 [ [=[
@@ -50940,7 +50941,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Maximum bytes in an ordinary guest or Data string. Default: 16384.]=]
+Maximum bytes in an ordinary Data string, not a temporary Lua string. Default: 16384.]=]
 },
 {
 [ [=[
@@ -51084,7 +51085,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Maximum entries in an ordinary guest-created table. Native Logic edits without growth have separate rules. Default: 1024.]=]
+Maximum entries in an ordinary Data table, not a temporary Lua table. Native Logic transfer remains separate. Default: 1024.]=]
 },
 {
 [ [=[
@@ -51141,30 +51142,6 @@ signature]=],
 [ [=[
 text]=] ]=[=[
 integer]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-heading]=],
-[ [=[
-text]=] ]=[=[
-tuple_entries]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-prose]=],
-[ [=[
-text]=] ]=[=[
-Maximum positions in an argument or return tuple, including explicit nil and status values. Default: 128.]=]
-},
-{
-[ [=[
-kind]=] ]=[=[
-signature]=],
-[ [=[
-text]=] ]=[=[
-integer]=]
 }
 },
 [ [=[
@@ -51199,24 +51176,6 @@ Guest API representation version. This is not a capacity. Default: 1.
 
 integer
 
-callback_allocations
-
-Guest allocation admission units per computer per tick. These are not measured heap bytes. Default: 81920. Runtime-global setting: tc-callback-allocations. Requested integer domain: 1..100000000.
-
-integer
-
-callback_depth
-
-Maximum guarded guest call depth. Default: 32.
-
-integer
-
-callback_work
-
-Execution work units per computer per tick. These are not milliseconds. Default: 500000. Runtime-global setting: tc-callback-work. Requested integer domain: 1..100000000.
-
-integer
-
 compile_work
 
 Shared work units for validation and reconstruction per computer per tick. Default: 1250000. Runtime-global setting: tc-compile-work. Requested integer domain: 1..100000000.
@@ -51225,7 +51184,7 @@ integer
 
 compiler_version
 
-Saved compiler representation version. This is not a capacity. Default: 2.
+Saved compiler representation version. This is not a capacity. Default: 3.
 
 integer
 
@@ -51271,12 +51230,6 @@ Published tick bound for observing cleanup of still-owned Logic output. Default:
 
 integer
 
-generated_source_bytes
-
-Maximum number of bytes in instrumented native source. Default: 131072.
-
-integer
-
 handler_names
 
 Maximum number of exported handler names in one program. Default: 64.
@@ -51291,7 +51244,7 @@ integer
 
 host_work_per_tick
 
-Maximum world host work. This includes reserved maintenance work; maintenance is not additional. Default: 5000000. Runtime-global setting: tc-host-work-per-tick. Requested integer domain: 200001..1000000000.
+Maximum world source/API/host work, not ordinary Lua execution. Reserved maintenance is included, not additional. Default: 5000000. Runtime-global setting: tc-host-work-per-tick. Requested integer domain: 200001..1000000000.
 
 integer
 
@@ -51429,7 +51382,7 @@ integer
 
 string_bytes
 
-Maximum bytes in an ordinary guest or Data string. Default: 16384.
+Maximum bytes in an ordinary Data string, not a temporary Lua string. Default: 16384.
 
 integer
 
@@ -51465,7 +51418,7 @@ integer
 
 table_entries
 
-Maximum entries in an ordinary guest-created table. Native Logic edits without growth have separate rules. Default: 1024.
+Maximum entries in an ordinary Data table, not a temporary Lua table. Native Logic transfer remains separate. Default: 1024.
 
 integer
 
@@ -51478,12 +51431,6 @@ integer
 topology_latency_ticks
 
 Published tick bound for topology observations. This is not a GPU or UPS guarantee. Default: 60.
-
-integer
-
-tuple_entries
-
-Maximum positions in an argument or return tuple, including explicit nil and status values. Default: 128.
 
 integer]=],
 [ [=[
@@ -51919,7 +51866,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Maximum bytes in an ordinary guest or Data string. Default: 16384.]=]
+Maximum bytes in an ordinary Data string, not a temporary Lua string. Default: 16384.]=]
 },
 {
 [ [=[
@@ -51943,7 +51890,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Maximum entries in an ordinary guest-created table. Native Logic edits without growth have separate rules. Default: 1024.]=]
+Maximum entries in an ordinary Data table, not a temporary Lua table. Native Logic transfer remains separate. Default: 1024.]=]
 },
 {
 [ [=[
@@ -52078,13 +52025,13 @@ integer
 
 string_bytes
 
-Maximum bytes in an ordinary guest or Data string. Default: 16384.
+Maximum bytes in an ordinary Data string, not a temporary Lua string. Default: 16384.
 
 integer
 
 table_entries
 
-Maximum entries in an ordinary guest-created table. Native Logic edits without growth have separate rules. Default: 1024.
+Maximum entries in an ordinary Data table, not a temporary Lua table. Native Logic transfer remains separate. Default: 1024.
 
 integer
 
@@ -54237,9 +54184,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Only guarded numeric helpers accept this number or numeric string type.
-Strings must convert to numbers.
-Operands and results must be finite where stated.
+Native numeric helpers accept numbers and convertible numeric strings.
+Temporary numeric results can be nonfinite. Data and device domains remain stricter.
 This helper compatibility does not add coercion to computer or peripheral APIs.]=]
 },
 {
@@ -54261,9 +54207,8 @@ type.TC.Numeric]=],
 text]=] ]=[=[
 TC.Numeric
 
-Only guarded numeric helpers accept this number or numeric string type.
-Strings must convert to numbers.
-Operands and results must be finite where stated.
+Native numeric helpers accept numbers and convertible numeric strings.
+Temporary numeric results can be nonfinite. Data and device domains remain stricter.
 This helper compatibility does not add coercion to computer or peripheral APIs.
 
 number|string]=],
@@ -60038,6 +59983,53 @@ The API does not invent absolute bucket timestamps from the query tick.
 [ [=[
 title]=] ]=[=[
 TC.StatisticsWindow]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+TC.StringInput]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Native string helpers accept strings and numbers where native coercion applies.
+This type does not widen string-only device or persistence arguments.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+string|number]=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.StringInput]=],
+[ [=[
+text]=] ]=[=[
+TC.StringInput
+
+Native string helpers accept strings and numbers where native coercion applies.
+This type does not widen string-only device or persistence arguments.
+
+string|number]=],
+[ [=[
+title]=] ]=[=[
+TC.StringInput]=]
 },
 {
 [ [=[

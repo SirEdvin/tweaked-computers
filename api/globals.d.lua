@@ -6,11 +6,14 @@
 ---Ordinary Data and Console retention have stricter rules.
 ---@alias TC.GuestTable table<TC.GuestValue, TC.GuestValue>
 
----Only guarded numeric helpers accept this number or numeric string type.
----Strings must convert to numbers.
----Operands and results must be finite where stated.
+---Native numeric helpers accept numbers and convertible numeric strings.
+---Temporary numeric results can be nonfinite. Data and device domains remain stricter.
 ---This helper compatibility does not add coercion to computer or peripheral APIs.
 ---@alias TC.Numeric number|string
+
+---Native string helpers accept strings and numbers where native coercion applies.
+---This type does not widen string-only device or persistence arguments.
+---@alias TC.StringInput string|number
 
 ---This packed transient argument tuple is not a dense Data array when it contains nil.
 ---@class TC.Tuple
@@ -26,11 +29,12 @@
 ---This fixed label identifies the guest language family, not unrestricted Lua 5.2 compatibility.
 _VERSION = 'Lua 5.2'
 
----Return the Lua type name. Omission has the same effect as nil.
+---Return the Lua type name. Supply a value, including explicit nil.
+---Omission causes a native argument error.
 ---This helper does not grant native object access.
----Standard helpers still obey argument/result tuple and work bounds.
+---Temporary arguments and results have no mod tuple or work ceiling.
 ---Each native helper determines how it handles extra arguments, rather than service arity.
----@param value? TC.GuestValue Value to inspect. Omission or nil has type nil.
+---@param value TC.GuestValue Required value. Explicit nil has type nil.
 ---@return 'nil'|'boolean'|'number'|'string'|'table'|'function' name Guest-visible primitive kind.
 function type(value) end
 
@@ -40,16 +44,17 @@ function type(value) end
 ---The helper never uses addresses, recursive inspection or metatable calls.
 ---Omission formats nil.
 ---@param value? TC.GuestValue Approved value to describe without exposing internals.
----@return string text Bounded safe description or primitive representation.
+---@return string text Safe description or primitive representation. Output APIs apply their own byte limits.
 function tostring(value) end
 
----Convert a number or bounded numeric string.
+---Convert a number or numeric string with native conversion.
+---Supply a value; omission causes a native argument error.
 ---An ordinary invalid value returns exactly one nil.
 ---An explicit base requires a string and an integer base in 2..36.
 ---An invalid base or type causes a catchable argument failure.
 ---An omitted or nil base uses ordinary numeric conversion.
 ---Conversion does not widen API numeric domains.
----@param value? TC.GuestValue Number/string to convert. Other ordinary values return nil.
+---@param value TC.GuestValue Number/string to convert. Other ordinary values return nil.
 ---@param base? integer Optional integer radix 2..36. Nil uses normal conversion.
 ---@return number|nil number Converted number, or exactly one nil on invalid text/value.
 function tonumber(value, base) end
@@ -79,8 +84,8 @@ function error(value) end
 ---
 ---Unlike xpcall, pcall cannot return a protected API handle as an error.
 ---If the function throws such a handle, pcall's own error-snapshot step refuses with E_ARGUMENT.
----Status counts toward tuple width.
----Fatal budget/stop control always escapes and never becomes a guest error value.
+---Status does not create a mod tuple ceiling.
+---Fatal host-work refusal and stop always escape without becoming guest error values.
 ---@param fn TC.Callable Approved function, not an arbitrary native callable.
 ---@param ... TC.GuestValue Exact forwarded arguments, preserving nil and aliases.
 ---@return boolean ok True on normal completion. False on ordinary failure.
@@ -93,11 +98,12 @@ function pcall(fn, ...) end
 ---It returns false followed by only the handler's first result.
 ---If the handler returns no values, the second result is one nil.
 ---
----Native handler re-entry is bounded.
+---Handler re-entry follows native Lua limits, not a mod depth ceiling.
 ---The wording of an error inside the handler is not stable.
 ---A fatal failure in fn suppresses the handler.
 ---A fatal failure in handler suppresses later handlers and effects.
----Neither can suppress quota controls.
+---Neither can suppress private host-work or stop controls.
+---Pure Lua execution inside either function has no watchdog.
 ---
 ---Guest-owned tables and authentic protected-handle errors preserve identity.
 ---The helper copies unowned host error records.
@@ -115,7 +121,9 @@ function xpcall(fn, handler, ...) end
 ---Oversized output causes E_LIMIT with no partial entry.
 ---Earlier output survives later failures.
 ---
----Saved output uses computer.log. Console retains shell attribution.
+---Saved print and computer.log use the same bounded buffer. Console retains shell attribution.
+---Output uses the admitted execution owner, not repeated physical discovery for each entry.
+---Both byte and entry bounds apply. Canceled executions cannot append guest output.
 ---The native display shows tabs as spaces without changing raw retained/copyable bytes.
 ---@param ... TC.GuestValue Ordered values to format. Nil and false remain in the output.
 function print(...) end
@@ -130,12 +138,12 @@ function print(...) end
 function rawget(t, key) end
 
 ---This helper does a raw guest-table assignment.
----Before mutation, it applies ordinary indexed-write ownership, key, value, growth,
----work and allocation checks. All three positions are required.
+---It rejects protected or foreign tables and applies native key rules.
+---All three positions are required. Temporary growth has no mod quota.
 ---A nil value deletes the key. Nil and NaN keys are invalid.
 ---
----The helper permits replacement or deletion at full width when admission succeeds.
----Refused writes leave every alias unchanged.
+---Insertion, replacement, and deletion use native table behavior.
+---An invalid key does not change the table.
 ---@param t TC.GuestTable Mutable guest-owned plain table.
 ---@param key TC.GuestValue Valid nonnil, non-NaN guest key, including transient references.
 ---@param value TC.GuestValue Required value position. Nil deletes the key.
@@ -145,7 +153,7 @@ function rawset(t, key, value) end
 ---This helper requires one argument.
 ---It returns byte length for strings or the native border for guest tables,
 ---not map cardinality. It refuses protected API tables and foreign values.
----@param value string|TC.GuestTable Bounded byte string or guest-owned plain table.
+---@param value string|TC.GuestTable Byte string or guest-owned plain table.
 ---@return integer length Nonnegative byte length or native sequence border.
 function rawlen(value) end
 
@@ -159,7 +167,8 @@ function rawequal(a, b) end
 
 ---Return the trailing tuple width for '#', or its suffix at a nonzero integer index.
 ---A positive index beyond the end returns zero values.
----Negative indexes count from the end. Index and tuple bounds apply.
+---Negative indexes count from the end. Native index limits apply.
+---No mod tuple ceiling applies.
 ---Zero and too-negative indexes cause failure.
 ---The helper never collapses nil positions.
 ---@param index integer|'#' Required selector. An integer must be within the tuple domain.
@@ -194,14 +203,14 @@ function pairs(t) end
 ---At termination, it returns exactly one nil.
 ---Native Logic arrays retain their domain.
 ---@param t TC.GuestTable Guest-owned table/snapshot.
----@return TC.Iterator iterator Approved bounded sequence iterator.
+---@return TC.Iterator iterator Approved native sequence iterator.
 ---@return TC.GuestTable state Identical table.
 ---@return integer initial Always zero. This is an explicit third result.
 function ipairs(t) end
 
----These guarded table helpers never mutate protected facades, protected namespaces or host tables.
----Sequence helpers require a dense one-based sequence unless stated otherwise.
----All movement, copying, growth and callback comparisons consume existing budgets.
+---These helpers reject protected facades, protected namespaces, and foreign tables.
+---Native sequence borders determine ranges, including for sparse tables.
+---Temporary movement, growth, and comparisons have no mod work or allocation quota.
 ---@class TC.TableLibrary
 table = {}
 
@@ -216,114 +225,110 @@ function table.pack(...) end
 ---Omitted or nil bounds default to 1 and #t, not t.n.
 ---Use explicit packed.n to retain trailing nil.
 ---An empty range returns zero values.
----Current guest table index and tuple ceilings apply.
+---Native index and stack limits apply, without a mod tuple ceiling.
 ---@param t TC.GuestTable Guest-owned plain table. This table can be sparse.
----@param i? integer Start, default 1. The domain is 1..table_entries+1.
----@param j? integer End, default native #t. The domain is 0..table_entries.
+---@param i? integer Start, default 1. Native integer-index limits apply.
+---@param j? integer End, default native #t. Native integer-index limits apply.
 ---@return TC.GuestValue ... Exact requested range, possibly empty and nil-bearing.
 function table.unpack(t, i, j) end
 
 ---This is the identical function to table.unpack, with the same stable table function label.
 unpack = table.unpack
 
----Join a dense sequence slice. Only string and number elements are permitted.
----Numbers use native conversion. Complete size and work admission precede the output copy.
----@param t TC.GuestTable Dense sequence containing strings/numbers in the slice.
+---Join a native sequence slice. Its selected elements must be strings or numbers.
+---Numbers use native conversion. Temporary output has no mod byte or work ceiling.
+---@param t TC.GuestTable Plain table with strings/numbers at each selected index.
 ---@param sep? string Separator. Omission or nil means an empty string.
----@param i? integer First position, default 1. The domain is 1..n+1.
----@param j? integer Last position, default n. The domain is 0..n.
+---@param i? integer First position, default 1. Native integer-index limits apply.
+---@param j? integer Last position, default native #t. Native integer-index limits apply.
 ---@return string text Joined bytes. An empty range gives an empty string.
 function table.concat(t, sep, i, j) end
 
----Insert into a dense guest sequence. The helper moves later slots.
+---Insert into a native guest sequence. The helper moves later slots.
 ---It returns no values. The two-argument form appends.
 ---The three-argument form inserts at pos.
 ---
----Capacity and work admission precede mutation.
----Refusal does not produce a partially shifted result.
----@param t TC.GuestTable Dense mutable sequence.
+---Native index and argument rules apply. There is no mod temporary-growth quota.
+---@param t TC.GuestTable Mutable plain table using native sequence borders.
 ---@param pos integer Position 1..n+1 for the three-argument form.
 ---@param value TC.GuestValue New value. Nil uses native table insertion behavior.
 ---@overload fun(t: TC.GuestTable, value: TC.GuestValue)
 function table.insert(t, pos, value) end
 
----Remove a value from a dense guest sequence. The helper shifts later slots.
----It always returns exactly one value, including nil for empty/past-end removal.
----Position 0 is permitted only when the sequence is empty.
----The helper accepts n+1. This is the documented guest arity, not an inference
----from the host helper.
----@param t TC.GuestTable Dense mutable sequence.
----@param pos? integer Default n. The permitted range is 0..n+1, with the empty-only zero rule.
----@return TC.GuestValue removed Removed identical value or exactly one nil.
+---Remove a value with native table.remove behavior. The helper shifts later slots.
+---A present sequence position returns exactly one removed value.
+---The pinned engine returns zero values for empty or out-of-range removal.
+---It does not add a nil result to preserve the former wrapper behavior.
+---@param t TC.GuestTable Mutable plain table using native sequence borders.
+---@param pos? integer Default native #t. Native position and conversion rules apply.
+---@return TC.GuestValue ... Exactly one removed value, or zero results for empty/out-of-range removal.
 function table.remove(t, pos) end
 
----This helper sorts a staged copy.
----It publishes the copy only after comparisons and final capacity revalidation succeed.
----It returns no values.
----
----A comparator uses the same guest work and depth budget.
----The comparator can have side effects. Failure does not roll back those effects.
----The helper never partially publishes the table's own staged sorted slots.
----@param t TC.GuestTable Dense mutable sequence.
----@param less? fun(a: TC.GuestValue, b: TC.GuestValue): boolean Optional approved comparator. The default is guarded native less-than.
+---Sort the table in place with native table.sort. The helper returns no values.
+---Comparator calls have no mod execution or depth quota.
+---A comparator can have effects. Failure does not roll back effects or table reordering.
+---This rule does not change atomic publication through state or device APIs.
+---@param t TC.GuestTable Mutable plain table using native sequence borders.
+---@param less? fun(a: TC.GuestValue, b: TC.GuestValue): boolean Optional approved comparator. The default is native less-than.
 function table.sort(t, less) end
 
----These bounded helpers operate on byte strings, not Unicode or Lua patterns.
----Strings are immutable. Input, output and work checks precede opaque native operations.
+---These approved helpers operate on immutable byte strings, not Unicode.
+---Temporary inputs and outputs have no mod byte, allocation, or work ceiling.
+---Native errors and coercions apply except for documented safe-format and literal-find rules.
+---String indexing exposes only this approved surface, never hidden host string members.
 ---Use dot calls: string.sub(s,...) instead of the forbidden string-method syntax.
 ---@class TC.StringLibrary
 string = {}
 
 ---Read byte length, not Unicode character count.
----@param s string Bounded byte string.
+---@param s TC.StringInput Source byte string or native-coercible number.
 ---@return integer length Byte count including embedded NUL.
 function string.len(s) end
 
----Slice bytes with normalized Lua-style indexes.
----Negative indexes count from the end. Finite numeric strings are permitted.
----Omission or nil defaults to i=1,j=#s.
----@param s string Bounded source string.
----@param i? TC.Numeric First byte index, default 1.
+---Slice bytes with native indexes. Negative indexes count from the end.
+---The start position is required. Omitted or nil j defaults to string length.
+---@param s TC.StringInput Source bytes or native-coercible number.
+---@param i TC.Numeric Required first byte index under native conversion rules.
 ---@param j? TC.Numeric Last byte index, default length.
----@return string text Native slice result after bounded admission.
+---@return string text Native slice result without a mod temporary-byte ceiling.
 function string.sub(s, i, j) end
 
 ---Return each byte in the normalized range.
 ---Omitted or nil i defaults to 1. The default for j is i (or 1), not string length.
----An empty range returns zero values. The result width cannot exceed tuple_entries.
+---An empty range returns zero values. Native result-stack limits apply.
 ---Embedded NUL returns numeric zero.
----@param s string Bounded source bytes.
----@param i? TC.Numeric First finite byte index, default 1.
----@param j? TC.Numeric Last finite byte index, default i or 1.
+---@param s TC.StringInput Source bytes or native-coercible number.
+---@param i? TC.Numeric First native byte index, default 1.
+---@param j? TC.Numeric Last native byte index, default i or 1.
 ---@return integer ... Byte codes 0..255 in order, possibly zero results.
 function string.byte(s, i, j) end
 
----Construct bytes from exact integer codes. Zero inputs return an empty string.
----@param ... integer Byte codes 0..255, bounded by tuple_entries.
+---Construct bytes with native integer conversion. Zero inputs return an empty string.
+---@param ... TC.Numeric Byte codes 0..255 after native conversion, subject to native argument limits.
 ---@return string text Constructed byte string including any NUL values.
 function string.char(...) end
 
 ---Return byte-oriented native lowercase conversion, not Unicode case folding.
----@param s string Bounded source bytes.
+---@param s TC.StringInput Source bytes or native-coercible number.
 ---@return string text Independent lowercase string value.
 function string.lower(s) end
 
 ---Return byte-oriented native uppercase conversion, not Unicode case folding.
----@param s string Bounded source bytes.
+---@param s TC.StringInput Source bytes or native-coercible number.
 ---@return string text Independent uppercase string value.
 function string.upper(s) end
 
 ---Reverse byte order, not Unicode grapheme order.
----@param s string Bounded source bytes.
+---@param s TC.StringInput Source bytes or native-coercible number.
 ---@return string text Bytes in reverse order.
 function string.reverse(s) end
 
 ---Repeat a string with separators between copies.
----Nonpositive n returns an empty string. The value n must be an exact safe integer.
----Oversized output causes failure before allocation.
----@param s string Bounded source bytes.
----@param n integer Safe integer repetition count. A nonpositive value means empty.
----@param sep? string Omitted/nil means empty separator.
+---Nonpositive n returns an empty string. Native count conversion and limits apply.
+---There is no mod output-size preflight or temporary-allocation quota.
+---@param s TC.StringInput Source bytes or native-coercible number.
+---@param n integer Native repetition count. A nonpositive value means empty.
+---@param sep? TC.StringInput Omitted/nil means empty separator. Native number conversion is permitted.
 ---@return string text Complete repetition, or empty when n is nonpositive.
 function string.rep(s, n, sep) end
 
@@ -331,162 +336,151 @@ function string.rep(s, n, sep) end
 ---The helper supports no Lua patterns or captures.
 ---A match returns first,last (inclusive). No match returns exactly one nil.
 ---
----The helper normalizes finite init. Omitted or nil init means 1.
+---The helper uses native index conversion. Omitted or nil init means 1.
 ---A negative init counts from the end.
----@param s string Bounded haystack bytes.
----@param needle string Literal bounded search bytes, including an empty string.
+---@param s TC.StringInput Haystack bytes or a native-coercible number.
+---@param needle TC.StringInput Literal search bytes or a native-coercible number. Empty strings are permitted.
 ---@param init TC.Numeric|nil Third position. Explicit nil selects the default 1.
 ---@param plain true Required fourth position. The helper refuses any other value.
 ---@return integer first One-based first matching byte when found.
 ---@return integer last Inclusive final matching byte. An empty match can precede first.
----@overload fun(s: string, needle: string, init: TC.Numeric|nil, plain: true): absent: nil # No match returns exactly one nil (absent), not two nil values.
+---@overload fun(s: TC.StringInput, needle: TC.StringInput, init: TC.Numeric|nil, plain: true): absent: nil # No match returns exactly one nil (absent), not two nil values.
 function string.find(s, needle, init, plain) end
 
----This helper does bounded native formatting.
+---This helper does native formatting with safe descriptions for %s.
 ---It supports cdiouxXeEfgGqs and literal percent.
----Before formatting, it checks width, precision, operand count and conservative output size.
+---Native format, width, precision, and operand rules apply without mod output-size admission.
 ---
 ---The %s conversion uses safe tostring. The %q conversion requires a string.
----Numeric operands must be finite.
+---Native numeric domains apply. Temporary nonfinite values are not persistent Data.
 ---The helper provides no recursive table formatting or arbitrary format extension.
----@param format string Bounded format string with supported conversions only.
+---@param format string Format string with supported conversions only.
 ---@param ... TC.GuestValue Conversion operands. Each conversion validates its domain.
 ---@return string text Complete formatted bytes, never a successful truncated prefix.
 function string.format(format, ...) end
 
----These guarded numeric helpers require finite values.
----The helper explicitly converts numeric strings.
----It checks all supplied operands, including extra operands that it otherwise ignores.
----Nonfinite operands cause failure. A nonfinite native result causes E_RANGE.
----The library exposes no random, randomseed, huge or fallback to other host math functions.
+---These approved math helpers use native conversion, domains, results, and errors.
+---Temporary results can be nonfinite. Persistent Data and device arguments still require their documented domains.
+---There is no mod work, allocation, tuple, or call-depth quota.
+---The library exposes no random, randomseed, huge, or fallback to other host functions.
 ---@class TC.MathLibrary
----@field pi number The read-only host pi constant, not a random or configurable value.
+---@field pi number Read-only native pi constant.
 math = {}
 
----This helper returns the absolute value and validates finite input and result.
----@param x TC.Numeric Finite numeric operand.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number result Absolute value of x.
+---Return the native absolute value.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number result Absolute value, including native nonfinite behavior.
 function math.abs(x, ...) end
 
 ---Round toward positive infinity.
----@param x TC.Numeric Finite numeric operand.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number result Smallest integral value not below x.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number result Smallest integral value not below x, under native rules.
 function math.ceil(x, ...) end
 
 ---Round toward negative infinity.
----@param x TC.Numeric Finite numeric operand.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number result Largest integral value not above x.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number result Largest integral value not above x, under native rules.
 function math.floor(x, ...) end
 
----This helper returns the smallest supplied finite value.
----It requires at least one operand.
----@param x TC.Numeric First finite numeric operand.
----@param ... TC.Numeric Remaining finite operands within tuple width.
----@return number result Minimum converted numeric value.
+---Return the smallest supplied value. At least one operand is required.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.Numeric Remaining operands used by the native comparison.
+---@return number result Native minimum of the converted operands.
 function math.min(x, ...) end
 
----This helper returns the largest supplied finite value.
----It requires at least one operand.
----@param x TC.Numeric First finite numeric operand.
----@param ... TC.Numeric Remaining finite operands within tuple width.
----@return number result Maximum converted numeric value.
+---Return the largest supplied value. At least one operand is required.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.Numeric Remaining operands used by the native comparison.
+---@return number result Native maximum of the converted operands.
 function math.max(x, ...) end
 
----This helper returns the square root.
----A negative operand produces nonfinite native output, which the helper refuses.
----@param x TC.Numeric Finite nonnegative operand.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number result Nonnegative square root.
+---Return the native square root. Native nonfinite results remain temporary values.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number result Native square-root result.
 function math.sqrt(x, ...) end
 
----This helper returns the native remainder with a quotient rounded toward zero,
----not floor modulo.
----@param x TC.Numeric Finite dividend.
----@param y TC.Numeric Finite nonzero divisor. The helper refuses a nonfinite result.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number result Remainder with the dividend's sign.
+---Return the native remainder with a quotient rounded toward zero, not floor modulo.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param y TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number result Native remainder, including native nonfinite behavior.
 function math.fmod(x, y, ...) end
 
----Split a finite value into integral and fractional parts, preserving two results.
----@param x TC.Numeric Finite numeric operand.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
+---Split a value into native integral and fractional parts.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
 ---@return number integral Integral part rounded toward zero.
----@return number fractional Signed remaining fractional part.
+---@return number fractional Native signed fractional part. This is an explicit second result.
 function math.modf(x, ...) end
 
----This helper returns the native sine of a finite angle in radians.
----@param x TC.Numeric Finite angle in radians.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number result Sine value.
+---Return the native sine of an angle in radians.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number result Native sine result.
 function math.sin(x, ...) end
 
----This helper returns the native cosine of a finite angle in radians.
----@param x TC.Numeric Finite angle in radians.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number result Cosine value.
+---Return the native cosine of an angle in radians.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number result Native cosine result.
 function math.cos(x, ...) end
 
----This helper returns the native tangent. It refuses nonfinite results.
----@param x TC.Numeric Finite angle in radians.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number result Finite tangent value.
+---Return the native tangent of an angle in radians.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number result Native tangent result.
 function math.tan(x, ...) end
 
----This helper returns the principal inverse sine.
----An operand outside the native domain produces a nonfinite result, which the helper refuses.
----@param x TC.Numeric Finite value in -1..1.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number angle Principal angle in radians.
+---Return the native principal inverse sine.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number angle Native principal angle in radians.
 function math.asin(x, ...) end
 
----This helper returns the principal inverse cosine.
----It refuses operands outside the native domain.
----@param x TC.Numeric Finite value in -1..1.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number angle Principal angle in radians.
+---Return the native principal inverse cosine.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number angle Native principal angle in radians.
 function math.acos(x, ...) end
 
----This helper returns the principal inverse tangent of one finite value.
----@param x TC.Numeric Finite numeric operand.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number angle Principal angle in radians.
+---Return the native inverse tangent of one value.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number angle Native principal angle in radians.
 function math.atan(x, ...) end
 
----This helper returns the two-argument native inverse tangent and preserves y,x argument order.
----@param y TC.Numeric Finite vertical component.
----@param x TC.Numeric Finite horizontal component.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number angle Quadrant-aware angle in radians.
+---Return the two-argument inverse tangent, preserving y,x argument order.
+---@param y TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number angle Native quadrant-aware angle in radians.
 function math.atan2(y, x, ...) end
 
----Convert radians to degrees. The helper refuses nonfinite output.
----@param x TC.Numeric Finite angle in radians.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number angle Finite angle in degrees.
+---Convert radians to degrees under native rules.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number angle Native angle in degrees.
 function math.deg(x, ...) end
 
----Convert degrees to radians. The helper refuses nonfinite output.
----@param x TC.Numeric Finite angle in degrees.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number angle Finite angle in radians.
+---Convert degrees to radians under native rules.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number angle Native angle in radians.
 function math.rad(x, ...) end
 
----This helper returns the natural exponential.
----Overflow to a nonfinite value causes E_RANGE.
----@param x TC.Numeric Finite exponent.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number result Finite natural exponential value.
+---Return the native natural exponential. Overflow is not a synthetic E_RANGE error.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number result Native exponential result, which can be nonfinite.
 function math.exp(x, ...) end
 
----This helper returns the natural logarithm when base is omitted.
----An explicit base selects that logarithm.
----Unlike omission, explicitly supplied nil is not a numeric operand and causes failure.
----Inputs must give a finite native result. The helper refuses invalid domains.
----@param x TC.Numeric Positive finite numeric operand.
----@param base? TC.Numeric Optional positive finite base other than one. The helper refuses explicit nil.
----@param ... TC.Numeric The helper validates and charges extra operands. The native function then ignores them.
----@return number result Finite logarithm value.
+---Return the native logarithm. Omitted or nil base selects the natural logarithm.
+---@param x TC.Numeric Native numeric operand; device finite-value rules do not apply here.
+---@param base? TC.Numeric Optional base. Omission or nil selects the natural logarithm.
+---@param ... TC.GuestValue Extra arguments ignored by the native helper.
+---@return number result Native logarithm result, which can be nonfinite.
 function math.log(x, base, ...) end

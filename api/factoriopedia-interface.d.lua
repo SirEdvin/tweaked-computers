@@ -85,7 +85,7 @@
 ---
 ---### Completeness and failure
 ---Full sorted lists can fail existing table/node/depth/string/result-byte and
----work/allocation budgets even when exact-name lookup fits.
+---shared host-work limits even when exact-name lookup fits.
 ---The API adds no catalog quota, pagination, successful prefix, truncation or asynchronous index.
 ---The native circuit transfer exception does not apply.
 ---Native materialization costs do not establish CPU or heap bounds.

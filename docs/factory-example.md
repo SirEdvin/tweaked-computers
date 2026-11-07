@@ -59,10 +59,9 @@ The installed ZIP also contains the source. It does not execute through
 
 The initial handler inspects/configures connected inserters to `signal-A > 0`.
 A named one-tick timer admits the subscription/display setup in a second callback.
-This keeps full Space Age capability inspection and subscription work inside the
-unchanged per-callback ceiling. It is ordinary native event scheduling, not a
-suspended stack or interpreter. The program intentionally configures one small
-factory, not an unlimited target graph in one callback.
+This separates Space Age capability inspection and subscription work across ticks under shared host-work admission.
+It uses native event scheduling, not a suspended stack or interpreter.
+The program configures one small factory, not an unlimited target graph in one callback.
 
 A filtered stock subscription and a 60-tick timer request refresh. Refresh reads
 the current native input, not a stale queued sample. Below 100 plates, while

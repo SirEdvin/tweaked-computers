@@ -4,7 +4,7 @@
   "title": "Tweaked Computers (ALPHA)",
   "author": "Tweaked Computers contributors",
   "factorio_version": "2.1",
-  "description": "ALPHA: bounded native Lua, Console, dashboards, native Factoriopedia and production statistics, monitors, KV, circuits, configurators, recipes, radars and speakers. Computer items are plain hardware: back up saves before upgrading. Factorio 2.1; not stable.",
+  "description": "ALPHA: trusted native Lua, Console, dashboards, native Factoriopedia and production statistics, monitors, KV, circuits, configurators, recipes, radars and speakers. Run only trusted code. Infinite loops can stop the game. Temporary values can use all memory. Computer items are plain hardware. Back up saves before upgrading. Factorio 2.1; not stable.",
   "homepage": "https://siredvin.github.io/tweaked-computers/",
   "dependencies": ["base >= 2.1.0", "? space-age >= 2.1.0", "? factorio-charts >= 1.2.0"]
 }

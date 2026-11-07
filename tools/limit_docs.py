@@ -9,26 +9,21 @@ DESCRIPTIONS = {
     'compiler_version': 'Saved compiler representation version. This is not a capacity.',
     'storage_version': 'Saved storage representation version. This is not a capacity.',
     'source_bytes': 'Maximum number of bytes in saved program source.',
-    'generated_source_bytes': 'Maximum number of bytes in instrumented native source.',
     'source_nodes': 'Maximum number of parsed source nodes.',
     'source_tokens': 'Maximum number of parsed source tokens.',
     'source_nesting': 'Maximum nesting depth of source syntax.',
     'handler_names': 'Maximum number of exported handler names in one program.',
     'identifier_bytes': 'Maximum bytes in an ordinary identifier or label. Individual APIs can have different limits.',
-    'tuple_entries': 'Maximum positions in an argument or return tuple, including explicit nil and status values.',
-    'callback_work': 'Execution work units per computer per tick. These are not milliseconds.',
-    'callback_depth': 'Maximum guarded guest call depth.',
-    'callback_allocations': 'Guest allocation admission units per computer per tick. These are not measured heap bytes.',
     'compile_work': 'Shared work units for validation and reconstruction per computer per tick.',
-    'host_work_per_tick': 'Maximum world host work. This includes reserved maintenance work; maintenance is not additional.',
+    'host_work_per_tick': 'Maximum world source/API/host work, not ordinary Lua execution. Reserved maintenance is included, not additional.',
     'active_computers': 'Maximum number of saved programs that can be active at the same time.',
     'aggregate_subscriptions': 'Maximum number of subscription registrations in the world.',
     'state_bytes': 'Accounting bytes for retained application Data per computer, including metadata.',
     'state_entries': 'Maximum number of explicit state keys per computer.',
     'data_nodes': 'Maximum nodes in a generic Data graph. Native Logic transfer is exempt.',
     'data_depth': 'Maximum nesting depth of generic Data. Native Logic transfer is exempt.',
-    'string_bytes': 'Maximum bytes in an ordinary guest or Data string.',
-    'table_entries': 'Maximum entries in an ordinary guest-created table. Native Logic edits without growth have separate rules.',
+    'string_bytes': 'Maximum bytes in an ordinary Data string, not a temporary Lua string.',
+    'table_entries': 'Maximum entries in an ordinary Data table, not a temporary Lua table. Native Logic transfer remains separate.',
     'event_queue_entries': 'Maximum pending event entries per computer. Overflow faults the saved run.',
     'event_queue_bytes': 'Accounting bytes for pending event envelopes and payloads. Trusted native Logic graphs are excluded.',
     'timers': 'Maximum pending timers owned by a run, including queued one-shot deliveries.',
@@ -194,7 +189,7 @@ def declarations(root=ROOT):
         r"\{key='(\w+)',name='([^']+)',minimum_value=([^,]+),maximum_value=([^}]+)\}", settings_source
     ):
         settings[key] = (name, bound(minimum), bound(maximum))
-    if set(settings) != {'compile_work', 'callback_work', 'callback_allocations', 'host_work_per_tick', 'maintenance_work_per_tick'}:
+    if set(settings) != {'compile_work', 'host_work_per_tick', 'maintenance_work_per_tick'}:
         raise ValueError('runtime setting inventory changed; review public limit domains')
     all_keys = set().union(*(values.keys() for _, values in groups.values()))
     if all_keys != set(DESCRIPTIONS):

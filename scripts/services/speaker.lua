@@ -77,8 +77,7 @@ local function submit(c,r,t,spend,kind,path,vol)
   if s.total>=L.speaker_world_submissions_per_tick
     or (s.computers[c.id] or 0)>=L.speaker_computer_submissions_per_tick
     or local_count and local_count[kind]>=limit then return false end
-  -- No fallible work/return admission may follow this point. The service boundary
-  -- reserved its boolean snapshot and immediate guarded-call return beforehand.
+  -- Reserve host work before submission; scalar returns need no further admission.
   spend(32)
   local request={path=path,position=r.body.position,volume_modifier=vol,override_sound_type='game-effect'}
   if not local_count then local_count={notes=0,sounds=0}; s.speakers[r.id]=local_count end

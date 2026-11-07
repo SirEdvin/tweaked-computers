@@ -1,5 +1,6 @@
 """Real LuaLS overlay checks; synthetic planning fixtures never touch live changes."""
 import json
+import hashlib
 import contextlib
 import io
 import os
@@ -42,9 +43,9 @@ class ChangeOverlayTests(unittest.TestCase):
             text += ''.join(f'| {p} | {d} | {r} |\n' for p,d,r in rows)
         self.put(self.change / 'proposal.md', text)
 
-    def check(self):
+    def check(self, **kwargs):
         self.counter += 1
-        return api_changes.check_change(self.root, 'example', self.binary, self.work / f'check-{self.counter}')
+        return api_changes.check_change(self.root, 'example', self.binary, self.work / f'check-{self.counter}', **kwargs)
 
     def test_full_replacement_uses_unchanged_type_and_is_read_only(self):
         self.proposal([('api/b.d.lua', 'modified', '-')])
@@ -99,6 +100,86 @@ class ChangeOverlayTests(unittest.TestCase):
             self.check()
         self.proposal([('api/b.d.lua', 'modified', 'TC.B.value')])
         self.assertEqual(self.check()['removed_identities'], ['TC.B.value'])
+
+    def promoted_removal(self, whole_file=False):
+        baseline = self.work / 'preserved-api'
+        shutil.copytree(self.root / 'api', baseline)
+        if whole_file:
+            self.proposal([('api/b.d.lua', 'removed', 'TC.B, TC.B.value')])
+            self.put(self.change / 'api/b.d.lua', '-- Removes: api/b.d.lua\n-- Identities: TC.B, TC.B.value\n')
+            (self.root / 'api/b.d.lua').unlink()
+        else:
+            self.proposal([('api/b.d.lua', 'modified', 'TC.B.value')])
+            replacement = '---@meta\n--- A record.\n---@class TC.B\n'
+            self.put(self.change / 'api/b.d.lua', replacement)
+            self.put(self.root / 'api/b.d.lua', replacement)
+        return baseline
+
+    def test_promoted_removal_uses_explicit_baseline_without_changing_inputs(self):
+        baseline = self.promoted_removal()
+        before = {str(p): p.read_bytes() for d in (self.root, baseline) for p in d.rglob('*') if p.is_file()}
+        with self.assertRaisesRegex(ValueError, 'unverifiable removed identity'):
+            self.check()
+        result = self.check(baseline_api=baseline)
+        self.assertEqual(result['removed_identities'], ['TC.B.value'])
+        self.assertEqual(result['baseline_api'], str(baseline))
+        self.assertEqual(result['baseline_sources'], {'a.d.lua': hashlib.sha256(A.encode()).hexdigest(),
+                                                     'b.d.lua': hashlib.sha256(B.encode()).hexdigest()})
+        self.assertEqual(before, {str(p): p.read_bytes() for d in (self.root, baseline) for p in d.rglob('*') if p.is_file()})
+
+    def test_promoted_whole_file_removal_still_requires_original_identities(self):
+        baseline = self.promoted_removal(whole_file=True)
+        with self.assertRaisesRegex(ValueError, 'unverifiable removed identity'):
+            self.check()
+        self.assertEqual(self.check(baseline_api=baseline)['removed_identities'], ['TC.B', 'TC.B.value'])
+
+    def test_preserved_baseline_cannot_hide_a_current_undeclared_removal(self):
+        baseline = self.promoted_removal()
+        self.put(self.root / 'api/b.d.lua', B + '---@field extra boolean An additional value.\n')
+        with self.assertRaisesRegex(ValueError, 'undeclared removed identities.*TC.B.extra'):
+            self.check(baseline_api=baseline)
+
+    def test_preserved_baseline_rejects_missing_or_wrong_identity_origin(self):
+        baseline = self.promoted_removal()
+        self.put(baseline / 'b.d.lua', (self.root / 'api/b.d.lua').read_text())
+        with self.assertRaisesRegex(ValueError, 'unverifiable removed identity'):
+            self.check(baseline_api=baseline)
+        (baseline / 'b.d.lua').unlink()
+        self.put(baseline / 'other.d.lua', B)
+        with self.assertRaisesRegex(ValueError, 'incorrect removed identity'):
+            self.check(baseline_api=baseline)
+
+    def test_preserved_baseline_rejects_symlinks_and_checkout_paths(self):
+        baseline = self.promoted_removal()
+        with self.assertRaisesRegex(ValueError, 'outside project'):
+            self.check(baseline_api=self.root / 'api')
+        (baseline / 'b.d.lua').unlink()
+        (baseline / 'b.d.lua').symlink_to(self.root / 'api/b.d.lua')
+        with self.assertRaisesRegex(ValueError, 'symlink|escapes source'):
+            self.check(baseline_api=baseline)
+
+    def test_preserved_baseline_cannot_be_empty_or_contain_verification_output(self):
+        baseline = self.promoted_removal()
+        with self.assertRaisesRegex(ValueError, 'outside preserved baseline'):
+            api_changes.check_change(self.root, 'example', self.binary, baseline / 'output', baseline_api=baseline)
+        self.assertFalse((baseline / 'output').exists())
+        empty = self.work / 'empty-api'
+        empty.mkdir()
+        with self.assertRaisesRegex(ValueError, 'no declarations'):
+            self.check(baseline_api=empty)
+
+    def test_cli_accepts_explicit_baseline_only_for_change_checks(self):
+        import player_docs
+        baseline = self.promoted_removal()
+        out = io.StringIO()
+        arguments = ['player_docs.py', '--check', '--change', 'example', '--baseline-api', str(baseline)]
+        with patch.object(player_docs, 'ROOT', self.root), patch('sys.argv', arguments), contextlib.redirect_stdout(out):
+            player_docs.main()
+        self.assertEqual(json.loads(out.getvalue())['removed_identities'], ['TC.B.value'])
+        with patch('sys.argv', ['player_docs.py', '--check', '--baseline-api', str(baseline)]), contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as error:
+                player_docs.main()
+        self.assertEqual(error.exception.code, 2)
 
     def test_removal_cannot_leave_unresolved_reference(self):
         self.proposal([('api/a.d.lua', 'removed', 'TC.A')])

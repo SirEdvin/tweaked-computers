@@ -148,7 +148,8 @@ function M.run()
  guest(c,"local ok,e=pcall(peripheral.setMonitorSyncGroup,{{name="..string.format('%q',database.id)..",wire='red'}}); assert(not ok and e.code=='E_WRONGTYPE')")
  lifecycle.remove(database.id,'fixture',true)
  local other=build('computer',-3,4); wire(other,registry.record(x.walls[1][1]),'red')
- other.status='running'; other.run_id=other.id..'/fixture'; other.active={handlers={start=true}}
+ other.status='running'; other.run_id=other.id..'/fixture'
+ other.active={source='function start(e) end',revision=1,api_version=1,compiler_version=limits.compiler_version,storage_version=limits.storage_version,handlers={start=true}}
  guest(other,"local name=peripheral.getNames('red')[1]; local ok,e=pcall(peripheral.setMonitorSyncGroup,{{name=name,wire='red'}}); assert(not ok and e.code=='E_BUSY'); peripheral.call(name,'red','setCursorBlink',false); assert(peripheral.getMonitorSyncGroup().status=='none')")
  assert(c.monitor_sync==previous and next(registry.get().monitors.presentation.lanes[previous.key].participation))
  runtime.stop(other.id)
@@ -340,12 +341,11 @@ function M.on_tick(event)
  elseif x.phase=='released' and settled(s,c) then
   log('TC_PRESENT_RELEASE_AVAILABILITY_CLEANUP_OK')
   runtime.stop(c.id); assert(runtime.save(c.id,plot_source,c.saved_revision)); assert(runtime.activate(c.id,event.tick))
-  x.phase='plot'; x.plot_peak_work=0; x.plot_peak_allocations=0; x.plot_sample=0
+  x.phase='plot'; x.plot_peak_work=0; x.plot_sample=0
  elseif x.phase=='plot' then
   local machine=root.ledger.machines[c.id]
   if machine then
    x.plot_peak_work=math.max(x.plot_peak_work,machine.work)
-   x.plot_peak_allocations=math.max(x.plot_peak_allocations,machine.allocations)
   end
   local sample=c.state.plot_sample or 0
   if sample>x.plot_sample then
@@ -357,13 +357,13 @@ function M.on_tick(event)
    end
   end
   if sample>=3 and lane and lane.presented_sequence>=2 then
-   assert(#c.state.plot_views==4 and x.plot_peak_work<=100000 and x.plot_peak_allocations<=16384)
+   assert(#c.state.plot_views==4 and x.plot_peak_work<=100000)
    for _,view in ipairs(c.state.plot_views) do
     local image=s.groups[view.name].render.snapshot
     local row=1+math.floor((1-math.sin(image.sealed_tick/120))*(image.height-1)/2+0.5)
     assert(image.y==row and view.wire=='red')
    end
-   log('TC_PRESENT_PLOT_OK samples='..sample..' peak_work='..x.plot_peak_work..' peak_allocations='..x.plot_peak_allocations)
+   log('TC_PRESENT_PLOT_OK samples='..sample..' peak_work='..x.plot_peak_work)
    for _,color in ipairs({'red','green'}) do
     assert(lifecycle.connector(registry.record(x.walls[3][6]),'network',color).disconnect_from(
       lifecycle.connector(registry.record(x.walls[4][1]),'network',color)))

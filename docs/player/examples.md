@@ -79,7 +79,7 @@ end
 
 ## production-statistics-program
 
-Research Recipe Searcher. Craft a Production Statistics device. Connect Network red to the computer. Neither device needs electricity. Select Validate. Select Save. Select Run. The program logs local native item, fluid, and pollution totals and rates. It then logs the newest and oldest iron history for production and consumption. Empty input differs from an E_LIMIT refusal of the complete result. Work or allocation exhaustion remains fatal. This small Console example is not an unlimited export.
+Research Recipe Searcher. Craft a Production Statistics device. Connect Network red to the computer. Neither device needs electricity. Select Validate. Select Save. Select Run. The program logs local native item, fluid, and pollution totals and rates. It then logs the newest and oldest iron history for production and consumption. Empty input differs from an E_LIMIT refusal of the complete result. Host-work exhaustion remains fatal. This small Console example is not an unlimited export.
 
 ```lua
 function start()

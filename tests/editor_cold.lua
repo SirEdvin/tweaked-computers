@@ -32,7 +32,7 @@ local function snapshot()
     active_source=rec.active.source,active_revision=rec.active.revision,saved_source=rec.saved_source,
     saved_revision=rec.saved_revision,draft=d.source,base_source=d.base_source,base_revision=d.base_revision,
     token=s.token,boots=rec.state.boots,ledger_tick=r.ledger.tick,total=r.ledger.total,compile=m.compile,
-    work=m.work,allocations=m.allocations,scheduler_tick=r.scheduler.last_tick,sequence=r.next_sequence,
+    work=m.work,scheduler_tick=r.scheduler.last_tick,sequence=r.next_sequence,
     tab=s.tab,focus=s.focus,before_focus=s.before_focus,follow=s.follow,search=s.search,category=s.category,topic=s.topic,
     review_source=s.review and s.review.source,review_revision=s.review and s.review.revision,
     logs=serpent.line(rec.logs),log_bytes=rec.log_bytes}

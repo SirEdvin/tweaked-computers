@@ -66,9 +66,9 @@ def main():
     samples = []
     profiles = []
     for path in sorted((folder / 'engine').glob('*/cold-second-engine.log')):
-        for match in re.finditer(r'TC_ANIMATION_CADENCE intervals=(\d+) max_gap=(\d+) peak_work=(\d+) peak_allocations=(\d+)', path.read_text()):
+        for match in re.finditer(r'TC_ANIMATION_CADENCE intervals=(\d+) max_gap=(\d+) peak_work=(\d+)', path.read_text()):
             samples.append({'mode': path.parent.name, 'intervals': int(match[1]), 'max_gap_ticks': int(match[2]),
-                            'peak_work': int(match[3]), 'peak_allocations': int(match[4])})
+                            'peak_work': int(match[3])})
     for mode in ('base', 'space-age'):
         durations = []
         for path in sorted((folder / 'engine' / mode).glob('cold-*-engine.log')):

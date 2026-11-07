@@ -102,7 +102,7 @@
 ---Unsupported charts or schema cause E_UNSUPPORTED.
 ---Retained capacity refusal causes E_CAPACITY. Transport envelope refusal causes E_LIMIT.
 ---
----Fatal guest budget exhaustion remains E_BUDGET.
+---Fatal host-work exhaustion remains E_BUDGET. Pure Lua execution has no mod quota.
 ---Error wording and precedence after admission are not API contracts.
 ---
 ---### Lifetime and optional dependency

@@ -6,8 +6,8 @@ local runtime=require('scripts.runtime.computer')
 local scheduler=require('scripts.scheduler')
 local compiler=require('scripts.runtime.compiler')
 local admission=require('scripts.runtime.admission')
+local environment=require('scripts.runtime.environment')
 local logic=require('scripts.services.logic')
-local peripheral=require('scripts.services.peripheral')
 local editor=require('scripts.ui.editor')
 local players=require('tests.editor_contract')
 local defs=require('scripts.device-definitions')
@@ -272,10 +272,16 @@ function M.on_tick(event)
     -- Refuse before the native call; ownership and the old bank stay intact.
     local expected=32
     local first; local refusal={code='E_BUDGET'}; local old_bank=serpent.line(logic.inspect_output(io,function() end)); local old_owner=io.output_owner
-    local api=peripheral.services(c,event.tick,{check=function() end,accept_handle=function() end,spend=function(n)
-      if n==expected then first=n; error(refusal,0) end
-    end}).peripheral
-    local ok,problem=pcall(api.call,io.id,'red','readSignals','red')
+    local guard=environment.new(admission.context(admission.new(),c.id,event.tick),function(g)
+      local spend=g.spend
+      g.spend=function(n)
+        if n==expected then first=n; error(refusal,0) end
+        return spend(n)
+      end
+      return runtime.services(c,event.tick,g)
+    end)
+    guard.initialize()
+    local ok,problem=pcall(guard.execute,guard.globals.peripheral.call,io.id,'red','readSignals','red')
     assert(not ok and problem==refusal and first==expected,'native call entered without work admission')
     assert(serpent.line(logic.inspect_output(io,function() end))==old_bank and io.output_owner==old_owner)
     -- The reported Console path, through real submission/authority/dispatch;

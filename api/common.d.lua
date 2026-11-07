@@ -21,12 +21,30 @@
 ---The dispatcher commits each successful mutation in dispatcher order.
 ---A callback is not a transaction.
 ---
+---### Resource accounting
+---Saved programs and Console commands use trusted native Lua.
+---Loops, recursion, temporary allocation, and temporary tuple sizes have no mod execution limits.
+---Runaway code can stall the game or exhaust memory.
+---Stop cannot interrupt code that never returns control to the host.
+---
+---Source validation, reconstruction, API work, and maintenance retain host-work admission.
+---Data, queues, logs, and device operations retain their separate validation and capacities.
+---Internal host charges and failure positions can change between versions.
+---Equal inputs, world state, settings, and remaining credits give equal admission with warm or cold host caches.
+---Save/load, cache reuse, and settings changes do not renew spent host credits.
+---Preparation waits for a later tick when earlier work leaves too few source or host credits.
+---Accepted preparation charges remain spent. Pending items keep their order.
+---Preparation fails if it needs more than the full source or host allowance.
+---The scheduler never repeats code after execution starts.
+---Fatal host-work refusal and stop remain outside guest error handling.
+---Native failures are not synthetic guest-quota faults. Earlier successful effects remain committed.
+---
 ---### Exceptions
 ---Modem transmit accepts a required top-level nil message, but not nested nil.
 ---Detached native Logic signal graphs bypass generic Data transport limits.
 ---This exception does not apply to explicit state, KV, Console retention,
----arbitrary table growth or guest execution. Circuit queues still account for
----envelope bytes and entries, but exclude the native graphs.
+---caller-authored API requests. Temporary Lua growth has no mod ceiling.
+---Circuit queues still account for envelope bytes and entries, but exclude the native graphs.
 ---This accounting is not a total heap bound.
 ---
 ---Console scratch uses its own validated graph and authentic symbolic bindings,
@@ -54,8 +72,9 @@
 ---or arbitrary metatables. It does not authorize passing such values to Data-only services.
 ---@alias TC.GuestValue any
 
----An approved callable is a guest function or an exposed guarded API or helper function.
----A call consumes the same work, depth and tuple budgets.
+---An approved callable is a guest function or an exposed checked API or helper function.
+---Ordinary Lua calls have native stack and result limits, not mod execution quotas.
+---Calls into host APIs retain their own authority, work, and data checks.
 ---This callable is not a persisted callback.
 ---@alias TC.Callable fun(...: TC.GuestValue): ...: TC.GuestValue
 
@@ -150,7 +169,7 @@
 ---| 'E_BUSY' # The host cannot admit this work now. Do not busy-wait.
 ---| 'E_ENGINE' # The native adapter failed. A failed rollback retains recovery state.
 ---| 'E_PROGRAM' # An ordinary program failure escaped error handling. Earlier effects remain committed.
----| 'E_BUDGET' # Candidate refusal or fatal active execution budget exhaustion.
+---| 'E_BUDGET' # Source-validation refusal or fatal host-work exhaustion; not a Lua execution watchdog.
 
 ---This table is a fresh defensive copy of an ordinary API error.
 ---For ordinary failures, pcall returns false,error. First check type(error)==table
@@ -161,8 +180,7 @@
 ---For E_ENGINE, the adapter rolls back the current operation where supported.
 ---A failed rollback faults that adapter and retains an explicit recovery record.
 ---
----Fatal work, allocation, depth or tuple exhaustion and saved-program stop bypass
----guest pcall/xpcall. The API does not expose their private controls as ApiError values.
+---Fatal host-work exhaustion and saved-program stop bypass guest pcall/xpcall. The API does not expose their private controls as ApiError values.
 ---Faults retain source, state, logs and earlier successful effects, except
 ---still-owned Logic output. Host cleanup clears that output.
 ---Candidate validation failure preserves the previous active run.

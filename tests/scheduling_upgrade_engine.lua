@@ -4,7 +4,7 @@ local lifecycle=require('scripts.lifecycle')
 local runtime=require('scripts.runtime.computer')
 local scheduler=require('scripts.scheduler')
 local shell=require('scripts.runtime.shell')
-local sandbox=require('scripts.runtime.sandbox')
+local compiler=require('scripts.runtime.compiler')
 local limits=require('scripts.runtime.limits')
 local defs=require('scripts.device-definitions')
 local logic=require('scripts.services.logic')
@@ -162,11 +162,26 @@ function M.on_configuration_changed(event)
   assert(change.old_version=='0.1.17' and change.old_version==f.from_version and change.new_version~=change.old_version)
   assert(script.active_mods['tweaked-computers']==change.new_version)
   log('TC_SCHEDULING_UPGRADE_VERSIONS old='..change.old_version..' new='..change.new_version)
-  -- Migration adds membership and changes only the old electrical compatibility metadata.
-  local ledger=registry.get().ledger; local retained=copy(ledger); retained.maintenance=nil
-  local expected=copy(f.saved.ledger); expected.maintenance=nil
-  assert(equal(retained,expected) and registry.get().next_sequence==f.saved.sequence)
-  for _,id in ipairs(f.computers) do assert(equal(saved_record(registry.record(id)),f.saved.records[id])) end
+  -- Native migration validates retained source and converts the host ledger.
+  local ledger=registry.get().ledger; local expected=f.saved.ledger
+  assert(expected.version==1 and ledger.version==2 and registry.get().next_sequence==f.saved.sequence)
+  if ledger.tick==expected.tick then
+    assert(ledger.total>=expected.total,'same-tick migration refunded accepted work')
+    for id,old in pairs(expected.machines) do
+      local current=assert(ledger.machines[id])
+      assert(current.allocations==nil and current.work==0 and current.compile>=old.compile)
+    end
+  else
+    assert(ledger.tick==game.tick and game.tick>expected.tick,'credits changed without a new synchronized tick')
+  end
+  for _,id in ipairs(f.computers) do
+    local rec=registry.record(id); local saved=copy(f.saved.records[id])
+    if id==f.unknown then
+      saved.status='faulted'
+      assert(rec.diagnostic.code=='E_UNSUPPORTED')
+    elseif rec.status=='running' then assert(rec.active.compiler_version==limits.compiler_version) end
+    assert(equal(saved_record(rec),saved),'accepted legacy record changed: '..id)
+  end
   for _,r in ipairs(f.physical) do
     local rec=assert(registry.record(r.id)); assert(rec.body==r.body and not r.power.valid and not rec.children.power and lifecycle.available(rec))
     for role,b in pairs(r.roles) do assert(lifecycle.endpoint(rec,role)==b) end
@@ -226,8 +241,11 @@ function M.on_tick(event)
     sub.details.initial=true; w.subscriptions[w.state.canceled_sub].details.initial=true
     logic.sample(event.tick,spend)
     assert(#w.queue==2 and #w.queue[1].event.current==1100)
-    local services=runtime.services(w,event.tick,sandbox.new(runtime.context(w,event.tick),{}))
-    assert(services.peripheral.call(f.ids.logic,'red','unsubscribe',w.state.canceled_sub))
+    local context=runtime.context(w,event.tick)
+    local cancel=string.format('function cancel(e) assert(peripheral.call(%q,"red","unsubscribe",%q)) end',f.ids.logic,w.state.canceled_sub)
+    local plan,problem=compiler.compile(cancel,context); assert(plan,serpent.line(problem))
+    local ok,diagnostic=compiler.run(plan,'cancel',{},function(g) return runtime.services(w,event.tick,g) end,context)
+    assert(ok,serpent.line(diagnostic))
     assert(#w.queue==1 and not w.subscriptions[w.state.canceled_sub])
     assert(runtime.enqueue(w,'message',{name='fixture',tag='a'},event.tick)); assert(runtime.enqueue(w,'message',{name='fixture',tag='b'},event.tick))
     local console=registry.record(f.console)

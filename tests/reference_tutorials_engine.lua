@@ -3,13 +3,14 @@
 local registry=require('scripts.registry')
 local lifecycle=require('scripts.lifecycle')
 local runtime=require('scripts.runtime.computer')
+local environment=require('scripts.runtime.environment')
 local scheduler=require('scripts.scheduler')
 local monitor=require('scripts.services.monitor')
 local kv=require('scripts.services.kv')
 local logic=require('scripts.services.logic')
 local help=require('scripts.ui.help')
 local defs=require('scripts.device-definitions')
-local peripheral=require('scripts.services.peripheral')
+
 local dashboard=require('scripts.dashboard-model')
 local M={}; local loaded=false
 local function build(kind,x,y)
@@ -110,20 +111,25 @@ local function inventory(x,tick)
     end
     table.sort(names);ledger[topic.title]=names
   end
-  -- Host-only read inventory, not a latency/budget benchmark. Real traversal,
-  -- identity and method providers are used; no guest effects are invoked.
-  local guard={spend=function() end,check=function() end,accept_handle=function() end}
+  -- Read the real checked service inventory. This is not a latency benchmark.
+  local function services(rec)
+    local namespaces
+    local guard=environment.new(runtime.context(rec,tick),function(g)
+      namespaces=runtime.services(rec,tick,g); return namespaces
+    end)
+    guard.initialize()
+    namespaces.computer.stop=guard.globals.computer.stop
+    return guard,namespaces
+  end
   local c=registry.record(x.factory.computer)
-  local namespaces=runtime.services(c,tick,guard)
-  -- sandbox.lua installs the fatal stop intrinsic after service composition;
-  -- tests.api_inventory additionally exercises it as a compiled guest member.
-  namespaces.computer.stop=true
+  local guard,namespaces=services(c)
   check(assert(topics.computer),namespaces.computer)
   check(assert(topics['peripheral.discovery']),namespaces.peripheral)
+  guard.close()
   local seen={}
   for _,entry in ipairs(x.programs) do
     local rec=registry.record(entry.computer)
-    local api=peripheral.services(rec,tick,guard).peripheral
+    local current,installed=services(rec); local api=installed.peripheral
     for _,name in ipairs(api.getNames('red')) do
       local kind=api.getType(name,'red')
       if not seen[kind] then
@@ -131,6 +137,7 @@ local function inventory(x,tick)
         check(assert(topics['peripheral.'..kind]),methods);seen[kind]=true
       end
     end
+    current.close()
   end
   for _,kind in ipairs({'speaker','modem','monitor','logic_handler','configurator','recipe_searcher','factoriopedia_interface','production_statistics','kv_database','dashboard'}) do assert(seen[kind],kind) end
   helpers.write_file('reference-coverage.json',helpers.table_to_json{topics=help.topics,inventory=ledger},false)

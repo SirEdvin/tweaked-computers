@@ -123,8 +123,9 @@ payloads are ignored, with no item-data recovery. See [lifecycle](lifecycle.md).
 
 `computer.log(text)` writes plain text into a ring of **64 entries / 16,384 bytes**.
 Older output is discarded even when Follow is off. Re-enabling Follow cannot retrieve
-those discarded entries. The [live Console](console.md) evaluates bounded Lua
-lines. Reset Shell clears scratch values, not historical logs. There is no Clear command.
+those discarded entries. The [live Console](console.md) evaluates trusted native Lua lines.
+Its source and retained graph are bounded, but native execution and temporary memory have no mod quota.
+Reset Shell clears scratch values, not historical logs. There is no Clear command.
 
 Validation identifies the candidate/base revision. Runtime diagnostics identify the
 active revision, handler and original line/column when available. **Go to source

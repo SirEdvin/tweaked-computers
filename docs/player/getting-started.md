@@ -25,8 +25,10 @@ calls, not a catalogue GUI. No item/fluid input is needed.
    names require their corresponding installed prototypes. This guide does not
    claim other Factorio 2.1 patches or arbitrary mod combinations are verified.
 
-0.1.20 generates the website and in-game Reference from one public typed Lua
-library. It does not change guest behavior, save formats or budgets from 0.1.19.
+Published 0.1.20 generates the website and in-game Reference from one public typed Lua library.
+That documentation release did not change guest behavior, save formats, or budgets from 0.1.19.
+The unreleased trusted runtime has different execution and migration rules. Read [the upgrade warning](lifecycle.md#upgrading-to-trusted-native-lua).
+Historical verification below does not establish acceptance of this runtime change.
 
 Since 0.1.19, saved programs require function declarations only. Before you run legacy
 table-form source, rewrite it manually. There is no automatic conversion.

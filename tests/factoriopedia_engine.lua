@@ -69,7 +69,7 @@ function query(e)
 end]]
 local exhausted_source=[[function start(e)
   local s=peripheral.find('factoriopedia_interface','red')
-  pcall(function() for i=1,1000 do s.getItem('iron-plate') end end)
+  pcall(function() for i=1,100000 do s.getItem('iron-plate') end end)
   computer.setState('escaped',true)
 end]]
 local cases={
@@ -312,23 +312,26 @@ function M.on_tick(event)
     if event.tick-x.since<25 then return end
     local exhausted=registry.record(x.exhausted)
     assert(exhausted.status=='faulted' and exhausted.diagnostic.code=='E_BUDGET' and not exhausted.state.escaped,'pcall caught fatal work exhaustion')
-    assert(c.state.queries>=20 and registry.record(x.neighbor).state.samples>x.neighbor_before)
+    local neighbor=registry.record(x.neighbor)
+    assert(c.state.queries>=20 and neighbor.state.samples>x.neighbor_before,
+      serpent.line{queries=c.state.queries,neighbor_status=neighbor.status,neighbor=neighbor.state.samples,
+        before=x.neighbor_before,diagnostic=neighbor.diagnostic})
     log('TC_FACT contention '..serpent.line{queries=c.state.queries,neighbor=registry.record(x.neighbor).state.samples,neighbor_before=x.neighbor_before,total=registry.get().ledger.total})
     local work=build('computer',-4,4); connect(work,s,'red')
     assert(not work.children.power and lifecycle.available(work))
     assert(runtime.save(work.id,busy,0)); assert(runtime.activate(work.id,event.tick))
     local ctx=runtime.context(work,event.tick)
     local plan,problem=compiler.compile(exhausted_source,ctx); assert(plan,serpent.line(problem))
-    assert(admission.reserve(ctx,'work',limits.callback_work-ctx.machine.work-2000))
+    assert(admission.reserve(ctx,'work',admission.host_ceiling(ctx.ledger,ctx.tick)-ctx.ledger.total-2000))
     local ok,diagnostic=compiler.run(plan,'start',{},function(g) return runtime.services(work,event.tick,g) end,ctx)
-    assert(not ok and diagnostic.code=='E_BUDGET' and not work.state.escaped,'prepaid work exhaustion escaped real guest boundary')
-    assert(ctx.machine.work>=limits.callback_work-2000)
+    assert(not ok and diagnostic.code=='E_BUDGET' and not work.state.escaped,'host work exhaustion escaped real guest boundary')
+    assert(ctx.ledger.total>=admission.host_ceiling(ctx.ledger,ctx.tick)-2000)
     assert(lifecycle.remove(work.id,'fixture',true))
-    log('TC_FACT real-guest-prepaid-work-refusal-no-renewal')
+    log('TC_FACT real-guest-host-work-refusal-no-renewal')
     x.phase='freeze'; return
   elseif x.phase=='freeze' then
     local ctx=runtime.context(c,event.tick); local machine=registry.get().ledger.machines[c.id]
-    assert(admission.reserve(ctx,'work',limits.callback_work-machine.work))
+    assert(admission.reserve(ctx,'work',admission.host_ceiling(ctx.ledger,ctx.tick)-ctx.ledger.total))
     x.saved={computer=c,interface=s,state=c.state,item=c.state.item,tick=registry.get().ledger.tick,work=machine.work,
       source=c.active.source,starts=c.state.query_starts,queries=c.state.queries,unit=c.body.unit_number,interface_unit=s.body.unit_number,
       red=lifecycle.connector(c,'network','red').connection_count,green=lifecycle.connector(c,'network','green').connection_count,total=registry.get().ledger.total}

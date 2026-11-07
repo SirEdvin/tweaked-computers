@@ -15,9 +15,10 @@ save before manual repair. Remove secrets or private source literals from report
 - Conflict/E_BUSY: open Maintenance → Review current saved source. Then explicitly select Rebase (keep draft) or Reload
   (discard draft). A second intervening save requires another review.
 - Fault: inspect original line/column and active revision. Invalid syntax/subset
-  needs repair. `E_BUDGET` needs less per-callback work, not pcall/busy loops or
-  increased caps. Divide useful work across named timers. A healthy neighbor's
-  scheduling does not imply your callback can do unlimited work.
+  needs repair. `E_BUDGET` requires less source or host API work, not protected calls or busy loops.
+  Divide useful work across named timers. Host-work admission does not limit ordinary Lua execution.
+  An infinite loop can stop the game, and temporary values can use all available memory.
+  Stop cannot interrupt code that does not return control to the host.
 - Lost draft: Ctrl+left-click another accessible computer. Open Maintenance.
   Review the retained old identity's draft. Copy it. Select Save. Then select Run. Empty
   ground does not open recovery. There are eight bounded slots. Forgetting is explicit.

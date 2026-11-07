@@ -17,7 +17,7 @@ end
 local function wire(a,b) assert(lifecycle.connector(a,'network','red').connect_to(lifecycle.connector(b,'network','red'))) end
 function M.run()
  assert(#source==2829)
- local x={phase='running',steps=0,peak_work=0,peak_allocations=0,batches=0}; storage.tc_plot_baseline=x
+ local x={phase='running',steps=0,peak_work=0,batches=0}; storage.tc_plot_baseline=x
  local c=build('computer',-3,0); x.computer=c.id
  local wall={}; for y=0,3 do for col=0,3 do wall[#wall+1]=build('monitor',col,y) end end
  local bridge=build('computer',6,0); local small=build('monitor',10,0)
@@ -41,7 +41,7 @@ function M.on_tick(event)
  local profiler=helpers.create_profiler(); scheduler.tick(event.tick); profiler.stop()
  assert(c.status=='running' or x.phase=='draining' and c.status=='stopped',serpent.line(c.diagnostic)); x.steps=x.steps+1; assert(x.steps<250)
  local machine=root.ledger.machines[c.id]
- if machine then x.peak_work=math.max(x.peak_work,machine.work); x.peak_allocations=math.max(x.peak_allocations,machine.allocations) end
+ if machine then x.peak_work=math.max(x.peak_work,machine.work) end
  local g=root.monitors.groups[x.large]; local job=c.state.plot_job
  if g.model.revision~=(x.revision or 1) then
   x.batches=x.batches+1; x.first_model=x.first_model or event.tick; x.revision=g.model.revision
@@ -61,9 +61,9 @@ function M.on_tick(event)
    if not display.render or display.render.presented_revision~=display.model.revision then ready=false end
   end
   if ready then
-   assert(x.batches>=14 and x.first_present>=x.first_model and x.peak_work<=100000 and x.peak_allocations<=16384)
+   assert(x.batches>=14 and x.first_present>=x.first_model and x.peak_work<=100000)
    log('TC_BASELINE_PLOT_OK batches='..x.batches..' first_model='..x.first_model..' first_present='..x.first_present..
-    ' peak_work='..x.peak_work..' peak_allocations='..x.peak_allocations)
+    ' peak_work='..x.peak_work)
    x.phase='done'; log('TC_COLD_OK')
   end
  end

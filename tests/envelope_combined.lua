@@ -163,7 +163,7 @@ local function observe(tick)
   x.peaks.maintenance=math.max(x.peaks.maintenance or 0,root.scheduler.maintenance_spent)
   x.peaks.guest=math.max(x.peaks.guest or 0,root.ledger.total)
   for _,machine in pairs(root.ledger.machines) do
-    for kind,limit in pairs({work=500000,allocations=81920,compile=1250000}) do
+    for kind,limit in pairs({work=4800000,compile=1250000}) do
       assert(machine[kind]<=limit,kind..' ceiling')
       local key='machine_'..kind; x.peaks[key]=math.max(x.peaks[key] or 0,machine[kind])
     end

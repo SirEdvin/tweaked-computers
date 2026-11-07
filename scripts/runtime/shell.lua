@@ -2,7 +2,7 @@
 local registry=require('scripts.registry')
 local runtime=require('scripts.runtime.computer')
 local compiler=require('scripts.runtime.compiler')
-local sandbox=require('scripts.runtime.sandbox')
+local environment=require('scripts.runtime.environment')
 local values=require('scripts.runtime.shell-values')
 local principal=require('scripts.runtime.principal')
 local admission=require('scripts.runtime.admission')
@@ -75,16 +75,24 @@ end
 function M.waiting(rec)
   return supported(rec.shell) and #rec.shell.pending>0
 end
-function M.evaluate(rec,source,tick,command)
+function M.evaluate(rec,source,tick,command,before,overhead)
   local s=M.session(rec); local ctx=runtime.context(rec,tick)
+  if before then admission.begin_preparation(ctx) end
+  local function failure(problem)
+    local deferred=before and admission.finish_preparation(ctx)
+    return false,problem,deferred and 'defer' or nil
+  end
+  if overhead and not admission.reserve(ctx,'work',overhead) then
+    return failure(errors.new('E_BUDGET','shell command overhead refused; no source executed'))
+  end
   local plan,diagnostic=compiler.compile(source,ctx,'shell')
-  if not plan then return false,diagnostic end
-  if not admission.reserve(ctx,'compile',#plan.generated+plan.nodes+1) then return false,errors.new('E_BUDGET','shell reconstruction refused') end
+  if not plan then return failure(diagnostic) end
+  if not admission.reserve(ctx,'compile',#plan.generated+plan.nodes+1) then return failure(errors.new('E_BUDGET','shell reconstruction refused')) end
   local execution=principal.shell(rec)
   local guard
   local shell={output=function(text) log(rec,command,'output',text,tick,guard.spend) end}
-  guard=sandbox.new(ctx,function(g)
-    local services=runtime.services(rec,tick,g,execution)
+  guard=environment.new(ctx,function(g)
+    local services=runtime.services(rec,tick,g,execution,'Shell #'..tostring(command)..' output: ')
     services.computer.log=function(text) log(rec,command,'output',text,tick,g.spend) end
     return services
   end,shell)
@@ -92,20 +100,22 @@ function M.evaluate(rec,source,tick,command)
   local ok,result=pcall(function()
     guard.initialize()
     shell.root=values.decode(s.values,guard)
-    local factory,problem=load(plan.generated,'@computer','t',{__tc=guard})
+    local factory,problem=load(plan.generated,'@computer','t',guard.globals)
     if not factory then errors.raise('E_PROGRAM',problem) end
-    guard.step(1)
+    if before then before(); admission.finish_preparation(ctx) end
     started=true
-    local tuple=table.pack(guard.call(factory()))
+    local tuple=table.pack(guard.execute(factory))
     guard.format_results(tuple)
     local graph=values.encode(shell.root,guard)
     guard.check()
+    guard.check_owner()
     s.values=graph -- Single publication; earlier real API effects are not rolled back.
   end)
+  guard.close()
   if not ok then
     diagnostic=guard.diagnostic(result)
     if started and not principal.cleanup(rec,execution,'shell_failure') then diagnostic=errors.new('E_ENGINE','shell resource cleanup failed; committed values retained') end
-    return false,diagnostic
+    return failure(diagnostic)
   end
   return true
 end
@@ -122,21 +132,26 @@ function M.dispatch(rec,tick)
   -- Prepay echo, one bounded recovery diagnostic and exact-principal teardown
   -- before any command effect. Traversal/serialization also charge before each
   -- bounded operation; a refusal can never publish a partial value graph.
-  local overhead=#item.source+(#rec.logs)^2*2+#registry.get().order*4+4096
-  local reserved=admission.reserve(ctx,'work',overhead)
-  -- Unstarted records are consumed exactly once, even on loss of UI authority.
-  rec.last_dispatch_tick=tick
-  table.remove(s.pending,1); s.pending_bytes=s.pending_bytes-#item.source
-  registry.ready_changed(rec)
+  local overhead=#item.source+(#rec.logs+2)*6+8+#registry.get().order*4+4096
+  local function consume()
+    rec.last_dispatch_tick=tick
+    table.remove(s.pending,1); s.pending_bytes=s.pending_bytes-#item.source
+    registry.ready_changed(rec)
+  end
   local valid=principal.available(rec) and item.session==s.id and authorize and authorize(rec,item.player,item.token)
   if not valid then
+    admission.reserve(ctx,'work',overhead)
+    consume()
     s.status='Canceled #'..item.id..': Console authority changed'
     log(rec,item.id,'canceled','Console authority changed',tick); return true
   end
-  log(rec,item.id,'player '..item.player,item.source,tick)
-  local ok,problem
-  if reserved then ok,problem=M.evaluate(rec,item.source,tick,item.id)
-  else ok,problem=false,errors.new('E_BUDGET','shell command overhead refused; no source executed') end
+  local function begin()
+    consume()
+    log(rec,item.id,'player '..item.player,item.source,tick)
+  end
+  local ok,problem,control=M.evaluate(rec,item.source,tick,item.id,begin,overhead)
+  if control=='defer' then return false end
+  if rec.last_dispatch_tick~=tick then begin() end
   s.status=(ok and 'Completed #' or 'Failed #')..item.id
   s.diagnostic=problem
   if not ok then
