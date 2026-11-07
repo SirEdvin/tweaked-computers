@@ -266,8 +266,8 @@ function M.same_handlers(left,right)
   return true
 end
 -- Process-local host scaffolding for one computer run. Guest-invisible and never
--- saved: every bind charges identically and loads the program fresh, so a peer
--- with a cold cache (late join, reload) observes the same effects and refusals.
+-- saved: every bind charges identically and re-runs the program's declarations,
+-- so a peer with a cold cache (late join, reload) observes the same effects and refusals.
 local scaffolds={}
 registry.register_cleanup('runtime-scaffold',function(rec) scaffolds[rec.id]=nil end)
 local function scaffold(owner,plan,services)
@@ -308,8 +308,15 @@ function M.run(plan, name, event, services, context, circuit, before, owner)
       if not entry.built then env.initialize(); entry.built=true; scaffolds[owner.id]=entry end
       env.bind(context)
     else env.initialize() end
-    local factory, diagnostic = load(executable.generated,'@computer','t',env.globals)
-    if not factory then errors.raise('E_PROGRAM',diagnostic) end
+    -- A scaffold keeps one env.globals and one source, so its loaded chunk is reusable:
+    -- running it again still creates fresh guest closures and locals (_ENV is unassignable).
+    local factory=entry and entry.factory
+    if not factory then
+      local diagnostic
+      factory,diagnostic=load(executable.generated,'@computer','t',env.globals)
+      if not factory then errors.raise('E_PROGRAM',diagnostic) end
+      if entry then entry.factory=factory end
+    end
     local handlers=env.construct(factory,executable.handlers)
     local input=circuit and event or env.snapshot(event)
     if before then before(input,env); admission.finish_preparation(context) end

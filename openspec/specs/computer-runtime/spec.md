@@ -503,7 +503,7 @@ On a tick where no timer is due, no computer is ready and no subsystem has due o
 - **AND** the readiness check does not repair or discard the state.
 
 ### Requirement: Run-scoped host scaffolding reuse
-Saved-program callbacks within one computer run MAY reuse host-side scaffolding built for an earlier callback of that run. Reuse SHALL be invisible to the guest and to synchronized state. Each callback SHALL load the program fresh, start with fresh guest globals, locals and upvalues, and rebind current authority, admission and per-callback proofs.
+Saved-program callbacks within one computer run MAY reuse host-side scaffolding built for an earlier callback of that run, including the program chunk that the scaffold loaded for that run's source. Reuse SHALL be invisible to the guest and to synchronized state. Each callback SHALL execute the program's declarations again, start with fresh guest globals, locals and upvalues, and rebind current authority, admission and per-callback proofs.
 
 #### Scenario: Guest state stays fresh
 - **WHEN** a callback assigns a global, writes a top-level local or mutates a table reachable only from guest code
@@ -514,6 +514,11 @@ Saved-program callbacks within one computer run MAY reuse host-side scaffolding 
 - **WHEN** the same callback runs with reused scaffolding on one peer and newly built scaffolding on another peer or after reload
 - **THEN** both runs charge the same host work, refuse at the same point and produce the same effects and output
 - **AND** neither peer desynchronizes.
+
+#### Scenario: Loaded program is reused only within its run
+- **WHEN** several callbacks of one run execute with reused scaffolding
+- **THEN** the program text is loaded once for that run and each later callback executes the same loaded chunk with fresh declarations
+- **AND** a new run, changed source, callback without reusable scaffolding or Console command loads its program again.
 
 #### Scenario: Authority is checked per callback
 - **WHEN** a device is removed, rewired or loses its owner between two callbacks of the same run

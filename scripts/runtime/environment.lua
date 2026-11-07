@@ -342,7 +342,8 @@ function M.new(context,services,shell)
         E.spend(n+1)
         local parts={}
         for i=1,n do
-          parts[i]=env.tostring(select(i,...)); bytes=bytes+#parts[i]
+          local value=select(i,...)
+          parts[i]=type(value)=='string' and value or env.tostring(value); bytes=bytes+#parts[i]
           if bytes>limits.console_bytes then fail('print output too large','E_LIMIT') end
         end
         if bytes>limits.console_bytes then fail('print output too large','E_LIMIT') end

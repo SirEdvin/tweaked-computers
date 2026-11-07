@@ -203,8 +203,8 @@ undispatched event. These memberships initialize once on init/configuration chan
 not on ordinary load. Unknown scheduling versions remain inert with source,
 queues, deadlines and spent credits retained for recovery.
 Preparation includes validation, environment construction, event copying, and Console graph reconstruction.
-Saved-program callbacks of one run reuse host scaffolding: stdlib wrappers, API namespaces and service closures.
-The cache is process-local and is never saved. Each callback loads the program again, binds new authority proofs and caches, and pays the same construction charge as a cold build.
+Saved-program callbacks of one run reuse host scaffolding: stdlib wrappers, API namespaces, service closures and the loaded program chunk.
+The cache is process-local and is never saved. Each callback runs the program declarations again, binds new authority proofs and caches, and pays the same construction charge as a cold build.
 A late joiner or a reloaded save without the cache gets the same charges, refusals and effects. Console commands still build a new environment for each command.
 Earlier spending can delay preparation when its refused charge prefix fits the full current source and host allowances.
 The item keeps its identity and order. Accepted preparation charges remain spent.
