@@ -29,6 +29,9 @@ function M.run()
   assert(red.connect_to(target))
   local builds=0; local new=environment.new
   environment.new=function(context,...) if context==nil then builds=builds+1 end; return new(context,...) end
+  -- Guest-program loads target the protected globals proxy; syntax checks use a plain {}.
+  local loads=0; local native_load=load
+  load=function(text,name,mode,env) if getmetatable(env)==false then loads=loads+1 end; return native_load(text,name,mode,env) end
   local ok,problem=pcall(function()
     runtime.save(c.id,source,0); local activated,why=runtime.activate(c.id,1); assert(activated,serpent.line(why))
     local root=registry.get(); local charges={}
@@ -38,6 +41,7 @@ function M.run()
     end
     assert(c.status=='running',c.diagnostic and c.diagnostic.message)
     assert(c.state.beats>=4 and builds==1,'scaffolding was rebuilt: '..builds)
+    assert(loads==1,'warm callbacks reloaded the program: '..loads)
     -- Declaration documents allow no guest globals or top-level locals; each successful
     -- warm callback proves its exports and execution state were constructed fresh.
     assert(c.state.found==true and not c.diagnostic,'reused scaffolding broke a callback')
@@ -63,8 +67,10 @@ function M.run()
       limits.host_work_per_tick=host
       return passed,diagnostic and diagnostic.code,ledger.total
     end
+    local before=loads
     local warm_ok,_,full=run(c); local cold_ok,_,cold=run(nil)
     assert(warm_ok and cold_ok and full==cold,'warm/cold full charge differs: '..full..'/'..cold)
+    assert(loads==before+1,'warm run reloaded or cold run reused a loaded program')
     for _,allowance in ipairs({1,6,7,full-1,full}) do
       local a,ac,at=run(c,allowance); local b,bc,bt=run(nil,allowance)
       assert(a==b and ac==bc and at==bt,'warm/cold refusal differs at allowance '..allowance)
@@ -73,12 +79,14 @@ function M.run()
     log('TC_CONTRACT reused-scaffolding-warm-cold-equal-admission-and-refusal')
 
     -- A new run never reuses the previous run's scaffolding.
+    local mark=loads
     runtime.stop(c.id); activated,why=runtime.activate(c.id,9); assert(activated,serpent.line(why))
     for t=9,11 do scheduler.tick(t) end
     assert(builds==2 and c.status=='running','new run reused old scaffolding')
+    assert(loads==mark+1,'new run did not load its program exactly once: '..(loads-mark))
     log('TC_CONTRACT reused-scaffolding-ends-with-its-run')
   end)
-  environment.new=new
+  environment.new=new; load=native_load
   assert(ok,problem)
   log('TC_CONTRACT_TOTAL 4')
 end

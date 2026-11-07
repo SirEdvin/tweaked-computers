@@ -32,7 +32,9 @@ function M.log(rec,text,tick,spend)
   while n-first+1>=limits.console_entries or bytes+#text>limits.console_bytes do
     bytes=bytes-#logs[first].text; first=first+1
   end
-  if first>1 then
+  -- The common full-Console case drops one entry; shift it natively. Larger drops stay linear.
+  if first==2 then table.remove(logs,1); rec.log_truncated=true
+  elseif first>2 then
     for i=first,n do logs[i-first+1]=logs[i] end
     for i=n-first+2,n do logs[i]=nil end
     rec.log_truncated=true
