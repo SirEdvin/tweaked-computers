@@ -326,6 +326,8 @@ function M.run(plan, name, event, services, context, circuit, before, owner)
     if before then before(input,env); admission.finish_preparation(context) end
     return env.execute(handlers[name],input)
   end)
+  -- Publish admitted program output on every exit, before any fault/stop entry.
+  env.flush_output()
   env.close()
   if not ok then return failure(env.diagnostic(result),env.stop_requested() and 'stop' or nil) end
   return true

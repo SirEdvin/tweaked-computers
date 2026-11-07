@@ -452,6 +452,8 @@ end
       assert(table.pack(guard.execute(write,'logged')).n==0)
       assert(table.pack(guard.execute(print_fn,'value',false,nil,3,nil)).n==0)
       assert(table.pack(guard.execute(print_fn)).n==0)
+      -- Program output is published when the callback ends.
+      assert(#target.logs==0); guard.flush_output()
       assert(#target.logs==3 and target.logs[1].text=='logged'
         and target.logs[2].text=='value\tfalse\tnil\t3\tnil' and target.logs[3].text=='')
       assert(physical==0 and copies==0,'local output repeated physical discovery or Data snapshots')
@@ -502,10 +504,37 @@ end
           and #target.logs==limits.console_entries,'refused log changed retained history')
         assert(guard.diagnostic({}).code=='E_BUDGET')
         assert(not pcall(guard.execute,fn,'post-fatal') and target.logs[1]==first)
-      else assert(target.logs[1].text=='old-2' and target.logs[#target.logs].text=='new') end
+      else guard.flush_output(); assert(target.logs[1].text=='old-2' and target.logs[#target.logs].text=='new') end
     end
   end
   report('direct-log-host-work-before-entry-publication')
+  do
+    -- Program print: n+1 before conversion, then one bytes+entry charge (eviction once).
+    local function setup()
+      local target,context,guard,_,fn=output_guard()
+      for i=1,limits.console_entries do runtime.log(target,'old-'..i,0) end
+      return target,context,guard,fn
+    end
+    local target,context,guard,fn=setup(); local before=context.machine.work
+    guard.execute(fn,'new',7); local cost=context.machine.work-before
+    -- 3 (n+1) + #'new\t7'+1 + 4 + 3*entries.
+    assert(cost==3+6+4+3*limits.console_entries,'unexpected print charge '..cost)
+    local second=context.machine.work; guard.execute(fn,'again'); local repeat_cost=context.machine.work-second
+    assert(repeat_cost==2+6+4,'eviction charged twice in one callback: '..repeat_cost)
+    for allowance=0,cost do
+      target,context,guard,fn=setup()
+      local first,bytes=target.logs[1],target.log_bytes
+      context.ledger.total=admission.host_ceiling(context.ledger,1)-allowance
+      local ok=pcall(guard.execute,fn,'new',7); guard.flush_output()
+      assert(ok==(allowance==cost),'unexpected print boundary at '..allowance)
+      if ok then assert(target.logs[#target.logs].text=='new\t7' and target.logs[1].text=='old-2')
+      else
+        assert(target.logs[1]==first and target.log_bytes==bytes and #target.logs==limits.console_entries,'refused print published')
+        assert(guard.diagnostic({}).code=='E_BUDGET')
+      end
+    end
+  end
+  report('buffered-print-two-charges-eviction-once-and-refusal-publishes-nothing')
   do
     local old_entries,old_bytes=limits.console_entries,limits.console_bytes
     limits.console_entries=8; limits.console_bytes=16
@@ -548,6 +577,69 @@ end
   scheduler.tick(0)
   assert(rec.status=='stopped' and #rec.logs==0)
   report('captured-output-cannot-follow-protected-stop')
+  -- Buffered program output: call order, publication before stop/fault entries,
+  -- and the same retained Console as immediate appends under entry and byte pressure.
+  fresh(); rec=computer('function start() print("a"); computer.log("b"); print("c",1); computer.stop() end')
+  scheduler.tick(0)
+  assert(rec.status=='stopped' and #rec.logs==3 and rec.logs[1].text=='a' and rec.logs[2].text=='b'
+    and rec.logs[3].text=='c\t1' and rec.logs[3].tick==0)
+  fresh(); rec=computer('function start() print("x"); computer.log("y"); error("boom") end')
+  scheduler.tick(0)
+  assert(rec.status=='faulted' and #rec.logs==3 and rec.logs[1].text=='x' and rec.logs[2].text=='y'
+    and rec.logs[3].text:find('boom',1,true),'buffered output did not precede the fault entry')
+  do
+    local old_entries,old_bytes=limits.console_entries,limits.console_bytes
+    local ok,problem=pcall(function()
+      for _,case in ipairs({
+        {entries=4,bytes=16,retained={'1234'},writes={'1234567890','1234567890'}},
+        {entries=4,bytes=64,retained={'r1','r2','r3','r4'},writes={'a','b'}},
+        {entries=4,bytes=64,retained={'r1'},writes={'a','b','c','d','e','f'}},
+        {entries=8,bytes=16,retained={'12345678'},writes={'','abc','defgh'}},
+        {entries=8,bytes=64,retained={},writes={}},
+      }) do
+        limits.console_entries,limits.console_bytes=case.entries,case.bytes
+        local target,_,guard,write,print_fn=output_guard()
+        local reference={logs={},log_bytes=0}
+        for i,text in ipairs(case.retained) do runtime.log(target,text,0); runtime.log(reference,text,0) end
+        for i,text in ipairs(case.writes) do
+          guard.execute(i%2==0 and write or print_fn,text); runtime.log(reference,text,1)
+        end
+        guard.flush_output()
+        assert(#target.logs==#reference.logs and target.log_bytes==reference.log_bytes
+          and (target.log_truncated or false)==(reference.log_truncated or false),'batched Console differs from immediate appends')
+        for i,entry in ipairs(reference.logs) do
+          assert(target.logs[i].text==entry.text and target.logs[i].tick==entry.tick,'batched Console entry differs')
+        end
+      end
+      -- Deterministic sweep: random retained history, writes and limits.
+      local target,_,guard,write,print_fn=output_guard(); local seed=7
+      local function rand(k) seed=(seed*1103515245+12345)%2147483648; return seed%k end
+      for _=1,300 do
+        limits.console_entries,limits.console_bytes=1+rand(6),8+rand(17)
+        target.logs,target.log_bytes,target.log_truncated={},0,nil
+        local reference={logs={},log_bytes=0}
+        for _=1,rand(7) do local text=string.rep('r',rand(9)); runtime.log(target,text,0); runtime.log(reference,text,0) end
+        for i=1,rand(9) do
+          local text=string.rep('w',rand(9))
+          guard.execute(i%2==0 and write or print_fn,text); runtime.log(reference,text,1)
+        end
+        guard.flush_output()
+        assert(#target.logs==#reference.logs and target.log_bytes==reference.log_bytes
+          and (target.log_truncated or false)==(reference.log_truncated or false),'swept batch differs from immediate appends')
+        for i,entry in ipairs(reference.logs) do
+          assert(target.logs[i].text==entry.text and target.logs[i].tick==entry.tick,'swept batch entry differs')
+        end
+      end
+      -- A direct host entry during a callback keeps the buffered entries ahead of it.
+      limits.console_entries,limits.console_bytes=old_entries,old_bytes
+      local target,_,guard,_,print_fn=output_guard()
+      guard.execute(print_fn,'first'); runtime.log(target,'host',1); guard.flush_output()
+      assert(#target.logs==2 and target.logs[1].text=='first' and target.logs[2].text=='host')
+    end)
+    limits.console_entries,limits.console_bytes=old_entries,old_bytes
+    assert(ok,problem)
+  end
+  report('buffered-program-output-order-stop-fault-and-immediate-append-equivalence')
   for _,name in ipairs({'xpcall','unpack','_VERSION'}) do
     root=fresh(); rec=computer('function start() computer.setState("kept",true) end')
     scheduler.tick(0)
