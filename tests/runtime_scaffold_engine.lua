@@ -34,14 +34,18 @@ function M.run()
   load=function(text,name,mode,env) if getmetatable(env)==false then loads=loads+1 end; return native_load(text,name,mode,env) end
   local ok,problem=pcall(function()
     runtime.save(c.id,source,0); local activated,why=runtime.activate(c.id,1); assert(activated,serpent.line(why))
-    local root=registry.get(); local charges={}
+    local root=registry.get(); local charges={}; local compiles={}
     for t=1,6 do
       scheduler.tick(t)
+      if c.last_dispatch_tick==t then compiles[#compiles+1]=root.ledger.machines[c.id].compile end
       if c.last_dispatch_tick==t and (c.state.beats or 0)>0 then charges[#charges+1]=root.ledger.total end
     end
     assert(c.status=='running',c.diagnostic and c.diagnostic.message)
     assert(c.state.beats>=4 and builds==1,'scaffolding was rebuilt: '..builds)
     assert(loads==1,'warm callbacks reloaded the program: '..loads)
+    -- The run pays compilation once, on its first callback, and records that in saved state.
+    assert(compiles[1]>0 and c.compile_paid==c.run_id,'first callback did not pay compilation')
+    for i=2,#compiles do assert(compiles[i]==0,'later callback paid compilation again: '..serpent.line(compiles)) end
     -- Declaration documents allow no guest globals or top-level locals; each successful
     -- warm callback proves its exports and execution state were constructed fresh.
     assert(c.state.found==true and not c.diagnostic,'reused scaffolding broke a callback')
@@ -67,22 +71,27 @@ function M.run()
       limits.host_work_per_tick=host
       return passed,diagnostic and diagnostic.code,ledger.total
     end
+    -- A peer without the process caches (late join, reload) sees the same saved record.
+    -- A copy with equal saved fields misses the scaffold, so it builds and loads cold.
+    local function peer() local copy={}; for k,v in pairs(c) do copy[k]=v end; return copy end
     local before=loads
-    local warm_ok,_,full=run(c); local cold_ok,_,cold=run(nil)
+    local warm_ok,_,full=run(c); local cold_ok,_,cold=run(peer())
     assert(warm_ok and cold_ok and full==cold,'warm/cold full charge differs: '..full..'/'..cold)
     assert(loads==before+1,'warm run reloaded or cold run reused a loaded program')
+    local unpaid_ok,_,unpaid=run(nil)
+    assert(unpaid_ok and unpaid>full,'a callback without a paid run skipped compilation')
     for _,allowance in ipairs({1,6,7,full-1,full}) do
-      local a,ac,at=run(c,allowance); local b,bc,bt=run(nil,allowance)
+      local a,ac,at=run(c,allowance); local b,bc,bt=run(peer(),allowance)
       assert(a==b and ac==bc and at==bt,'warm/cold refusal differs at allowance '..allowance)
     end
-    assert(builds==1)
     log('TC_CONTRACT reused-scaffolding-warm-cold-equal-admission-and-refusal')
 
-    -- A new run never reuses the previous run's scaffolding.
-    local mark=loads
+    -- A new run never reuses the previous run's scaffolding or compilation payment.
+    local mark,built=loads,builds
     runtime.stop(c.id); activated,why=runtime.activate(c.id,9); assert(activated,serpent.line(why))
-    for t=9,11 do scheduler.tick(t) end
-    assert(builds==2 and c.status=='running','new run reused old scaffolding')
+    scheduler.tick(9); assert(root.ledger.machines[c.id].compile>0,'new run skipped compilation')
+    for t=10,11 do scheduler.tick(t) end
+    assert(builds==built+1 and c.status=='running','new run reused old scaffolding')
     assert(loads==mark+1,'new run did not load its program exactly once: '..(loads-mark))
     log('TC_CONTRACT reused-scaffolding-ends-with-its-run')
   end)

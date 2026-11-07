@@ -355,7 +355,8 @@ end
   assert(rec.state.direct==1 and rec.state.boots==1 and rec.run_id==run and rec.run_generation==1
     and rec.active==active and rec.timers==timers and rec.subscriptions==subscriptions)
   assert(rec.state.supplied.payload.value==3 and rec.state.supplied.run_id==run)
-  assert(root.ledger.machines[rec.id].work>0 and root.ledger.machines[rec.id].compile>0)
+  -- The run paid compilation on its start callback; later callbacks pay none.
+  assert(root.ledger.machines[rec.id].work>0 and root.ledger.machines[rec.id].compile==0)
   report('plain-direct-start-keeps-run-authority-and-copied-event-envelope')
   scheduler.tick(2)
   assert(rec.status=='running',rec.diagnostic and rec.diagnostic.message)

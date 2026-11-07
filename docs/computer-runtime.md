@@ -204,7 +204,8 @@ not on ordinary load. Unknown scheduling versions remain inert with source,
 queues, deadlines and spent credits retained for recovery.
 Preparation includes validation, environment construction, event copying, and Console graph reconstruction.
 Saved-program callbacks of one run reuse host scaffolding: stdlib wrappers, API namespaces, service closures and the loaded program chunk.
-The cache is process-local and is never saved. Each callback runs the program declarations again, binds new authority proofs and caches, and pays the same construction charge as a cold build.
+The cache is process-local and is never saved. Each callback runs the program declarations again and binds new authority proofs and caches.
+The first callback of a run pays compilation work. The saved `compile_paid` field of the computer records this payment. Later callbacks of the run validate the source again without a compilation charge.
 A late joiner or a reloaded save without the cache gets the same charges, refusals and effects. Console commands still build a new environment for each command.
 Earlier spending can delay preparation when its refused charge prefix fits the full current source and host allowances.
 The item keeps its identity and order. Accepted preparation charges remain spent.
