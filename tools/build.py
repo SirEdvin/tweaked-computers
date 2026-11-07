@@ -19,6 +19,8 @@ CONTRACT_FILES = (
     'openspec/specs/device-visual-identity/spec.md',
     'openspec/specs/kv-database/spec.md',
     'openspec/specs/logic-handler/spec.md',
+    'openspec/specs/lua-api-documentation/spec.md',
+    'openspec/specs/lua-api-workflow/spec.md',
     'openspec/specs/monitor-display/spec.md',
     'openspec/specs/peripheral-network/spec.md',
     'openspec/specs/program-editor/spec.md',

@@ -90,7 +90,7 @@ Results SHALL be detached finite plain Data with a `tick` identifying when they 
 - **THEN** totals and rates preserve those exact keys, and history accepts those recorded identities instead of dropping them because an ordinary entity-prototype lookup does not recognize them.
 
 ### Requirement: Existing resource safety without silent truncation
-Successful results SHALL contain the entire requested snapshot. Existing shared work, allocation and Data limits SHALL remain enforced without renewal, new statistics-specific entry caps, new settings or global limit increases. A snapshot that cannot fit SHALL fail explicitly with no partial result or retained query state. The native 300-sample history length SHALL not be treated as a configurable resource policy.
+Successful results SHALL contain the entire requested snapshot. Retained shared host-work and Data limits SHALL remain enforced without renewal, new statistics-specific entry caps, new settings or global limit increases. A snapshot that cannot fit SHALL fail explicitly with no partial result or retained query state. The native 300-sample history length SHALL not be treated as a configurable resource policy.
 
 #### Scenario: Complete bulk result or refusal
 - **WHEN** the complete native inventory fits the existing call envelope
@@ -100,7 +100,7 @@ Successful results SHALL contain the entire requested snapshot. Existing shared 
 
 #### Scenario: Repeated expensive queries
 - **WHEN** a program repeats rate/history queries during one callback or shared tick
-- **THEN** actual native calls and result-processing work consume the existing budgets and cannot reset them or bypass neighboring computer scheduling.
+- **THEN** actual native calls and result-processing work consume retained host budgets without resetting credits; returning invocations retain normal neighbor selection.
 
 ### Requirement: Live identity and power checks
 Each method SHALL retain existing exact-identity, force/surface and explicit-wire authority checks. All methods SHALL require no electricity; missing electrical supply MUST NOT cause `E_UNPOWERED`. Removal, replacement or scope changes SHALL invalidate captured calls rather than retargeting them.

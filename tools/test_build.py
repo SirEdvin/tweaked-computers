@@ -353,7 +353,7 @@ getLimits()''',
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
                 self.assertEqual(set(planning), set(build.CONTRACT_FILES))
-                self.assertEqual(len(build.CONTRACT_FILES), 18)
+                self.assertEqual(len(build.CONTRACT_FILES), 20)
                 self.assertFalse(any(name.startswith('openspec/changes/') for name in planning))
                 for relative in ('openspec/specs/program-source/spec.md',
                                  'docs/player/api/language.md'):
@@ -413,6 +413,57 @@ getLimits()''',
 
 
 class CanonicalContractTests(unittest.TestCase):
+    promoted_changes = ('2026-11-07-function-only-programs',
+                        '2026-11-07-typed-lua-api-documentation',
+                        '2026-11-07-reduce-runtime-overhead',
+                        '2026-11-07-replace-guarded-runtime-with-trusted-lua')
+
+    def archived_replacement(self, capability, name, canonical):
+        import re
+        blocks = {}
+        for change in self.promoted_changes:
+            delta = build.ROOT / 'openspec/changes/archive' / change / 'specs' / capability / 'spec.md'
+            if not delta.is_file():
+                continue
+            for section in re.split(r'^## ', delta.read_text(), flags=re.M):
+                if section.startswith(('ADDED Requirements', 'MODIFIED Requirements', 'REMOVED Requirements')):
+                    for title, body in re.findall(
+                            r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|\Z)', section, re.M | re.S):
+                        blocks[title] = None if section.startswith('REMOVED') else body.strip()
+        if name not in blocks:
+            return False
+        if blocks[name] is None:
+            self.assertNotIn(name, canonical)
+        else:
+            self.assertIn(name, canonical)
+            self.assertEqual(canonical[name].strip(), blocks[name])
+        return True
+
+    def test_promoted_contracts_follow_latest_delta_and_reject_drift(self):
+        import re
+        pattern = r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|^## |\Z)'
+        for change in self.promoted_changes:
+            folder = build.ROOT / 'openspec/changes/archive' / change
+            self.assertTrue((folder / '.openspec.yaml').is_file(), change)
+            deltas = sorted((folder / 'specs').glob('*/spec.md'))
+            self.assertTrue(deltas, change)
+            for delta in deltas:
+                capability = delta.parent.name
+                canonical = dict(re.findall(pattern,
+                    (build.ROOT / 'openspec/specs' / capability / 'spec.md').read_text(), re.M | re.S))
+                for name, _ in re.findall(pattern, delta.read_text(), re.M | re.S):
+                    with self.subTest(change=change, capability=capability, requirement=name):
+                        self.assertTrue(self.archived_replacement(capability, name, canonical))
+                        damaged = dict(canonical, **{name: canonical.get(name, '') + 'lost safety clause'})
+                        with self.assertRaises(AssertionError):
+                            self.archived_replacement(capability, name, damaged)
+                        if name in canonical:
+                            missing = dict(canonical)
+                            del missing[name]
+                            with self.assertRaises(AssertionError):
+                                self.archived_replacement(capability, name, missing)
+                self.assertFalse(self.archived_replacement(capability, 'unrelated requirement', canonical))
+
     def relocated_api_references(self, capability, text):
         # Only path relocation is allowed; archived behavior/scenario text stays exact.
         targets = {
@@ -436,6 +487,8 @@ class CanonicalContractTests(unittest.TestCase):
     def scheduling_replacement(self, capability, name, canonical):
         import hashlib
         import re
+        if self.archived_replacement(capability, name, canonical):
+            return True
         delta = build.ROOT / 'openspec/changes/demand-driven-device-scheduling/specs' / capability / 'spec.md'
         if not delta.is_file():
             return False
@@ -458,6 +511,8 @@ class CanonicalContractTests(unittest.TestCase):
             return False
         for target in targets:
             self.assertIn(target, blocks)
+            if self.archived_replacement(capability, target, canonical):
+                continue
             self.assertIn(target, canonical)
             expected = blocks[target].strip()
             actual = canonical[target].strip()

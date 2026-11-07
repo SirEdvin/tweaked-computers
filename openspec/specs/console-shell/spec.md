@@ -34,35 +34,9 @@ Each computer SHALL have one shell environment shared by its authorized players 
 - **WHEN** a shell command assigns `counter = 7` while the saved program is running
 - **THEN** the shell retains that value without replacing the program or its callbacks, timers, subscriptions, locals, or explicit application state.
 
-### Requirement: Guarded native command language
-The shell SHALL accept Lua statements, expressions and shell-global assignments using the existing bounded native language and approved globals/libraries shared with saved programs, including `print`. Locals SHALL be scoped to one submission. Host globals, dynamic loading, coroutines, unguarded execution and overwriting reserved API names SHALL remain forbidden. Console syntax SHALL be independent of the declaration-only saved-program grammar and SHALL NOT relax it.
-
-#### Scenario: Globals survive and locals do not
-- **WHEN** `x = 5; local y = 6` succeeds and the next line is `print(x, y)`
-- **THEN** output represents `5` and `nil`.
-
-#### Scenario: Preserve the saved-program trust boundary
-- **WHEN** a shell command accesses `_G`, `_ENV`, `game`, or attempts to replace `peripheral`
-- **THEN** it fails with a shell diagnostic and no host access is granted
-- **AND** existing saved-program validation still rejects shell-only syntax.
-
-#### Scenario: Use expanded base globals interactively
-- **WHEN** a Console command uses `xpcall`, `rawequal`, `rawget`, `rawset`, `rawlen`, `unpack` or `_VERSION`
-- **THEN** it follows the same base-global contract as saved programs
-- **AND** successful print calls and displayed expression results keep their existing command attribution, ordering and no-duplicate-output rules.
-
-#### Scenario: Expanded built-ins cannot be replaced
-- **WHEN** a command assigns to any added built-in global, including `_VERSION`, rather than a genuine lexical local
-- **THEN** compilation rejects the write before execution
-- **AND** ordinary local/parameter shadowing remains allowed without modifying the built-in.
-
-#### Scenario: Console values remain ordinary Lua values
-- **WHEN** a Console command evaluates a table expression, assigns a scratch table, or calls an ephemeral local function within the same submission
-- **THEN** the existing expression/statement, guest-table and guarded-call behavior remains available
-- **AND** the unchanged retention validator still rejects executable values in the committed shell graph.
 
 ### Requirement: Visible ordered results and diagnostics
-Submitted commands, printed output, expression return values, and shell errors SHALL appear in the bounded selectable Console in execution order and be distinguishable from program diagnostics.
+Submitted commands, printed output, expression return values, and shell errors SHALL appear in the bounded selectable Console in execution order and be distinguishable from program diagnostics. Print and log output SHALL use the admitted command owner and preserve the same bounded retention contract as program output.
 
 #### Scenario: Console values and live Follow behavior
 - **WHEN** commands and output are displayed or Follow changes
@@ -77,6 +51,21 @@ Submitted commands, printed output, expression return values, and shell errors S
 - **WHEN** a player submits `false`, `nil`, an invalid line, and then `2 + 3`
 - **THEN** the Console distinguishes false, one nil result, a source-located shell error, and the numeric result of the final expression
 - **AND** syntax failure does not prevent later commands.
+
+#### Scenario: Local output retains command attribution
+- **WHEN** a command calls print and computer.log through the private local-output route
+- **THEN** each successful call appends exactly one entry with its existing shell attribution and no return values
+- **AND** all attribution bytes count toward the existing output bound before publication or eviction.
+
+#### Scenario: Refused output cannot evict earlier entries
+- **WHEN** a command's next entry exceeds a byte bound or lacks work or allocation credit
+- **THEN** that entry causes no partial append, history eviction, or truncation-flag change
+- **AND** earlier successful output remains committed, subject to ordinary retention by later output or host diagnostics.
+
+#### Scenario: Log argument compatibility is unchanged
+- **WHEN** computer.log receives extra arguments in a command or saved callback
+- **THEN** the Console override retains its documented ignored-extra-argument exception
+- **AND** the saved callback retains exact one-argument validation; both routes still require string text.
 
 ### Requirement: Native input without command recall
 The shell SHALL use native text entry and SHALL NOT retain a navigable command history or intercept Up/Down for command recall. Each viewer's unfinished draft SHALL remain independent. Bounded Console command echoes are output, not replay or history state. This scope was approved after the Factorio 2.0.77 focused-arrow feasibility failure on 2026-10-18.
@@ -157,25 +146,13 @@ The shell SHALL support synchronous computer metadata/state/logging and peripher
 - **AND** no timer, subscription, or program lifecycle mutation occurs.
 
 ### Requirement: Command failure isolation
-Syntax, runtime, unsupported-value, and budget failures SHALL leave the saved program serviceable and report a shell diagnostic. An unsuccessful command SHALL not publish its staged shell environment; earlier completed external API effects and printed output SHALL not be rolled back. Uncaught execution failure SHALL release shell-owned transient outputs without erasing committed shell values.
+Reported syntax, native runtime, unsupported-value, and host-admission failures SHALL leave the saved program serviceable and report a shell diagnostic. An unsuccessful command SHALL not publish its staged shell environment; earlier completed external API effects and printed output SHALL not be rolled back. Uncaught execution failure SHALL release shell-owned transient outputs without erasing committed shell values.
 
 #### Scenario: Error after a real effect
 - **WHEN** a line changes a database value, assigns a scratch variable, and then raises an uncaught error
 - **THEN** the database change remains real, the scratch environment remains its previous committed version, and the error is visible
 - **AND** the saved controller is neither faulted nor restarted.
 
-### Requirement: Shared bounded admission and deterministic ordering
-Shell input, retained values, pending submissions, compilation, execution, serialization, and output SHALL have explicit limits. Shell work SHALL share existing per-computer and aggregate tick credits with the saved program. Commands SHALL execute non-reentrantly in synchronized order, with bounded fair service and no automatic retry after execution starts.
-
-#### Scenario: Flood the prompt while a controller runs
-- **WHEN** players submit multiple commands and a command contains an infinite loop
-- **THEN** pending admission is bounded, the loop is terminated by guarded work limits, and an unrelated computer remains serviceable
-- **AND** GUI close/reopen, reset, or repeated submission cannot renew same-tick credits.
-
-#### Scenario: Preserve accepted order across a save
-- **WHEN** two admitted submissions are pending at a save boundary
-- **THEN** each is considered at most once in its admitted order after reload, with execution-time authority rechecked
-- **AND** commands invalidated by reset, closed authorization, or removal are canceled visibly rather than executed later with stale authority.
 
 ### Requirement: Authoritative GUI input routing
 Every submission and reset SHALL require the exact opened computer UI, active Console context, current session identity, and current player access. Shell controls SHALL not act on source editing, other tabs, unrelated windows, or gameplay. Delayed execution SHALL recheck access and session generation.
@@ -211,7 +188,7 @@ Successful commands using the expanded globals SHALL retain only values already 
 - **AND** the previous committed shell graph remains unchanged; local use within a submission remains valid.
 
 #### Scenario: Fatal protected execution isolates the saved program
-- **WHEN** a Console `xpcall` function or error handler exceeds a fatal bound
+- **WHEN** a Console `xpcall` function or error handler encounters fatal host-work refusal
 - **THEN** the command cannot publish its staged environment or continue effects through another handler
 - **AND** the saved program remains serviceable, prior committed shell values survive, and normal shell-owned resource cleanup applies.
 
@@ -246,3 +223,85 @@ Admitting a Console command SHALL wake that computer through existing shared sch
 #### Scenario: UI closes or authorization changes
 - **WHEN** a viewer closes or loses access to its session
 - **THEN** its UI refresh membership is removed and pending commands follow existing authorization/cancellation rules without affecting another valid viewer.
+
+### Requirement: Trusted native command language
+The shell SHALL accept Lua statements, expressions and shell-global assignments using the trusted native language and approved globals/libraries shared with saved programs, including `print`. Locals SHALL be scoped to one submission. Host globals, dynamic loading, coroutines and overwriting reserved API names SHALL remain forbidden. Console syntax SHALL be independent of the declaration-only saved-program grammar and SHALL NOT relax it.
+
+#### Scenario: Globals survive and locals do not
+- **WHEN** `x = 5; local y = 6` succeeds and the next line is `print(x, y)`
+- **THEN** output represents `5` and `nil`.
+
+#### Scenario: Preserve the saved-program trust boundary
+- **WHEN** a shell command accesses `_G`, `_ENV`, `game`, or attempts to replace `peripheral`
+- **THEN** it fails with a shell diagnostic and no host access is granted
+- **AND** existing saved-program validation still rejects shell-only syntax.
+
+#### Scenario: Use expanded base globals interactively
+- **WHEN** a Console command uses `xpcall`, `rawequal`, `rawget`, `rawset`, `rawlen`, `unpack` or `_VERSION`
+- **THEN** it follows the same base-global contract as saved programs
+- **AND** successful print calls and displayed expression results keep their existing command attribution, ordering and no-duplicate-output rules.
+
+#### Scenario: Expanded built-ins cannot be replaced
+- **WHEN** a command assigns to any added built-in global, including `_VERSION`, rather than a genuine lexical local
+- **THEN** compilation rejects the write before execution
+- **AND** ordinary local/parameter shadowing remains allowed without modifying the built-in.
+
+#### Scenario: Console values remain ordinary Lua values
+- **WHEN** a Console command evaluates a table expression, assigns a scratch table, or calls an ephemeral local function within the same submission
+- **THEN** the existing expression/statement, temporary-table and native-call behavior remains available
+- **AND** the unchanged retention validator still rejects executable values in the committed shell graph.
+
+### Requirement: Bounded command boundaries and deterministic ordering
+Console input, pending commands, source validation, host API work, retained graphs, and output SHALL retain their existing bounds. Pure Lua execution SHALL be unmetered. Commands SHALL execute once in synchronized non-reentrant order. Fair selection SHALL apply between returning invocations, without retrying commands after execution starts.
+
+#### Scenario: Flood the prompt with finite commands
+- **WHEN** players submit more finite commands than the pending queue accepts
+- **THEN** existing queue limits refuse additional work without discarding accepted entries or drafts
+- **AND** returning commands retain program/Console alternation and neighbor selection.
+
+#### Scenario: Preserve accepted order across a save
+- **WHEN** two admitted submissions are pending at a save boundary
+- **THEN** each executes at most once in its admitted order after reload, with authority rechecked on every preparation attempt
+- **AND** commands invalidated by reset, closed authorization, or removal are canceled visibly rather than executed later with stale authority.
+
+#### Scenario: Native temporary work is distinct from retention
+- **WHEN** a finite command creates an oversized temporary value and removes it before successful publication
+- **THEN** the former temporary-value ceiling does not reject that computation
+- **AND** the complete final scratch graph still must fit its existing byte, node, binding, and value rules.
+
+#### Scenario: Oversized final graph
+- **WHEN** a command leaves a value that cannot fit the retained graph
+- **THEN** publication fails without changing the previously committed graph
+- **AND** earlier completed output and external effects remain, with normal shell-owned cleanup.
+
+#### Scenario: Credits are not renewed by shell lifecycle
+- **WHEN** a player closes, reopens, or resets Console after host work has been spent in the same tick
+- **THEN** the retained host allowance remains spent, including across cold load
+- **AND** scratch reset neither faults the saved program nor permits stale pending commands.
+
+### Requirement: Deferred command preparation
+Preparation SHALL defer under the shared pre-execution admission rule without consuming or echoing the command. A preparation prefix that cannot fit full current allowances SHALL fail normally.
+
+#### Scenario: Deferred command preserves committed state and order
+- **WHEN** earlier work prevents admission before a Console chunk begins
+- **THEN** the command retains its pending identity and FIFO position without echo, effects, or graph publication
+- **AND** admitted preparation charges remain spent, including after cold load
+- **AND** later execution consumes the command once; any failure after execution starts does not replay it.
+
+### Requirement: Symbolic binding continuity without execution guards
+Console SHALL retain authentic facades and captured methods as validated descriptors, never native functions or replayed source. Aliases, cycles, method identity, generation, and selected wire SHALL survive reconstruction. A plain descriptor lookalike SHALL remain ordinary data, not executable authority.
+
+#### Scenario: Captured method identity before first use
+- **WHEN** a committed graph contains a facade and repeated aliases of one captured method, then cold-loads
+- **THEN** those aliases equal the corresponding facade method before the first method call
+- **AND** a separate wrapped facade retains its separate identity.
+
+#### Scenario: Missing or changed target
+- **WHEN** a restored binding names a removed device, changed generation, disconnected path, or absent optional method
+- **THEN** use fails under the existing typed contract without retargeting or granting authority
+- **AND** unrelated committed shell values remain available.
+
+#### Scenario: No executable retention loophole
+- **WHEN** a temporary value contains a user closure, built-in function, library namespace, reference-valued key, or forged descriptor
+- **THEN** only values accepted by the existing graph contract can commit
+- **AND** no removed ownership tracker becomes permission to save executable or foreign objects.

@@ -107,14 +107,14 @@ Every successful result SHALL be detached plain Data without native objects, fun
 - **THEN** lookup raises `E_UNSUPPORTED` without returning a misleading successful record.
 
 ### Requirement: Existing resource bounds without a new catalogue quota
-Catalogue operations SHALL consume the existing work, allocation and Data allowances without renewing credits or adding a feature-specific name-count cap. A list or record that cannot fit SHALL refuse explicitly without a prefix, cursor or silent truncation. `getLimits()` SHALL report current common limits and remain available regardless of electrical coverage. Successful lists SHALL not imply arbitrary modpack-size support.
+Catalogue operations SHALL consume the retained shared host-work and Data allowances without renewing credits or adding a feature-specific name-count cap. A list or record that cannot fit SHALL refuse explicitly without a prefix, cursor or silent truncation. `getLimits()` SHALL report current common limits and remain available regardless of electrical coverage. Successful lists SHALL not imply arbitrary modpack-size support.
 
 #### Scenario: Catalogue exceeds shared result capacity
 - **WHEN** the complete name array exceeds an existing Data allowance and sufficient work remains to detect that refusal
 - **THEN** the list call raises `E_LIMIT`, publishes no partial array and leaves subsequent individually affordable exact-name queries possible with fresh work credits.
 
 #### Scenario: Work is exhausted
-- **WHEN** repeated calls exhaust existing work or allocation credits
+- **WHEN** repeated calls exhaust retained shared host-work credits
 - **THEN** the current fatal budget behavior remains in effect without renewed credits, retry loops or reclassification as an empty catalogue.
 
 #### Scenario: Unrelated catalogue growth
