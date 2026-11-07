@@ -20,6 +20,7 @@ function start() computer.every(1,'beat') end
 function beat()
   computer.setState('found',peripheral.find('kv_database','red')~=nil)
   computer.setState('beats',(computer.getState('beats') or 0)+1)
+  print('beat',computer.getState('beats'))
 end
 ]]
 function M.run()

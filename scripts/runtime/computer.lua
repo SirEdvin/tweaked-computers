@@ -24,22 +24,35 @@ function M.log_work(rec,bytes)
   local n=#rec.logs
   return 4+((n>=limits.console_entries or rec.log_bytes+bytes>limits.console_bytes) and 3*n or 0)
 end
+-- Admit entries, then drop the oldest until both limits hold. Sequential appends keep
+-- the longest fitting suffix too, so a batch yields the same Console. Every surviving
+-- entry is written once.
+local function append(rec,entries)
+  local logs,n,m,bytes=rec.logs,#rec.logs,#entries,rec.log_bytes
+  for i=1,m do bytes=bytes+#entries[i].text end
+  local first=1
+  while n+m-first+1>limits.console_entries or bytes>limits.console_bytes do
+    bytes=bytes-#(first<=n and logs[first] or entries[first-n]).text; first=first+1
+  end
+  local kept=first<=n and n-first+1 or 0
+  local start=first>n and first-n or 1 -- First surviving new entry.
+  -- The common full-Console case drops one entry; shift it natively. Larger drops stay linear.
+  if first==2 and n>0 then table.remove(logs,1); n=n-1
+  elseif first>1 then for i=0,kept-1 do logs[1+i]=logs[first+i] end end
+  local pos=kept
+  for i=start,m do pos=pos+1; logs[pos]=entries[i] end
+  for i=pos+1,n do logs[i]=nil end
+  if first>1 then rec.log_truncated=true end
+  rec.log_bytes=bytes
+end
+-- Process-local, non-empty only inside one non-yielding program callback.
+local pending=setmetatable({},{__mode='k'})
 function M.log(rec,text,tick,spend)
   if type(text)~='string' then errors.raise('E_ARGUMENT','log requires a string') end
   if #text>limits.console_bytes then errors.raise('E_LIMIT','log entry too large') end
   if spend then spend(M.log_work(rec,#text)) end
-  local logs,n,first,bytes=rec.logs,#rec.logs,1,rec.log_bytes
-  while n-first+1>=limits.console_entries or bytes+#text>limits.console_bytes do
-    bytes=bytes-#logs[first].text; first=first+1
-  end
-  -- The common full-Console case drops one entry; shift it natively. Larger drops stay linear.
-  if first==2 then table.remove(logs,1); rec.log_truncated=true
-  elseif first>2 then
-    for i=first,n do logs[i-first+1]=logs[i] end
-    for i=n-first+2,n do logs[i]=nil end
-    rec.log_truncated=true
-  end
-  logs[n-first+2]={text=text,tick=tick}; rec.log_bytes=bytes+#text
+  if pending[rec] then pending[rec]() end -- Keep buffered program output ahead of this entry.
+  append(rec,{{text=text,tick=tick}})
 end
 function M.retire(rec,status,reason)
   local cleaned=registry.cleanup(rec,rec.run_id,reason or status)
@@ -278,25 +291,57 @@ function M.services(rec,tick,guard,execution,output_prefix)
     guard.check()
     if guard.check_owner then guard.check_owner() else principal.check(rec,execution) end
   end
+  local buffered_entry
   if guard.bind_output then
+    -- Program output is buffered per callback and flushed once by the runtime;
+    -- Console command output (output_prefix) keeps its immediate stepwise path.
+    local buffer,buffered_bytes,evicting,dropped
+    local function flush()
+      local entries,lost=buffer,dropped; buffer,buffered_bytes,dropped={},0,false; pending[rec]=nil
+      -- A dropped buffered entry did not fit with later ones, so no older entry survives either.
+      if lost then
+        for i=#rec.logs,1,-1 do rec.logs[i]=nil end
+        rec.log_bytes=0; rec.log_truncated=true
+      end
+      if entries and #entries>0 then append(rec,entries) end
+    end
     -- Authority proofs are callback-local, even when the scaffolding is reused.
     local function bind()
       local check,invalidate=principal.proof(rec,execution)
       guard.check_owner=check
       guard.invalidate_authority=invalidate
+      buffer,buffered_bytes,evicting,dropped={},0,false,false
     end
     if guard.on_bind then guard.on_bind(bind) else bind() end
-    guard.bind_output(function(text)
-      guard.check(); guard.check_owner()
-      local bytes=#text+(output_prefix and #output_prefix or 0)
-      if bytes>limits.console_bytes then errors.raise('E_LIMIT','log entry too large') end
-      guard.spend(M.log_work(rec,bytes))
-      if output_prefix then
+    if output_prefix then
+      guard.bind_output(function(text)
+        guard.check(); guard.check_owner()
+        local bytes=#text+#output_prefix
+        if bytes>limits.console_bytes then errors.raise('E_LIMIT','log entry too large') end
+        guard.spend(M.log_work(rec,bytes))
         guard.spend(bytes+1)
-        text=output_prefix..text
+        M.log(rec,output_prefix..text,frame.tick)
+      end)
+    else
+      -- One admission per entry (cost covers the caller's byte work); the first
+      -- entry that overflows the retained plus buffered Console also pays eviction once.
+      buffered_entry=function(text,cost)
+        guard.check(); guard.check_owner()
+        if type(text)~='string' then errors.raise('E_ARGUMENT','log requires a string') end
+        if #text>limits.console_bytes then errors.raise('E_LIMIT','log entry too large') end
+        local overflow=not evicting and (#rec.logs+#buffer>=limits.console_entries
+          or rec.log_bytes+buffered_bytes+#text>limits.console_bytes)
+        guard.spend(cost+4+(overflow and 3*#rec.logs or 0))
+        if overflow then evicting=true end
+        buffer[#buffer+1]={text=text,tick=frame.tick}; buffered_bytes=buffered_bytes+#text
+        -- Older buffered entries that cannot survive the flush need not be retained.
+        while #buffer>limits.console_entries or buffered_bytes>limits.console_bytes do
+          buffered_bytes=buffered_bytes-#buffer[1].text; table.remove(buffer,1); dropped=true
+        end
+        pending[rec]=flush
       end
-      M.log(rec,text,frame.tick)
-    end)
+      guard.bind_output(function(text) buffered_entry(text,#text+1) end,flush)
+    end
   end
   local api={}
   local function method(name,min,max,fn)
@@ -335,7 +380,9 @@ function M.services(rec,tick,guard,execution,output_prefix)
     rec.state_nodes=rec.state_nodes-rec.state_node_sizes[key]; rec.state_node_sizes[key]=nil
     return true
   end)
-  method('log',1,1,function(text) M.log(rec,text,frame.tick,spend) end)
+  method('log',1,1,function(text)
+    if buffered_entry then buffered_entry(text,0) else M.log(rec,text,frame.tick,spend) end
+  end)
   method('on',2,2,function(event_name,handler_name)
     if not general[event_name] then errors.raise('E_ARGUMENT','unsupported general event name') end
     return M.subscribe(rec,event_name,handler_name,nil,spend)

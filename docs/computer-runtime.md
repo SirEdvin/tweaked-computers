@@ -207,6 +207,10 @@ Saved-program callbacks of one run reuse host scaffolding: stdlib wrappers, API 
 The cache is process-local and is never saved. Each callback runs the program declarations again and binds new authority proofs and caches.
 The first callback of a run pays compilation work. The saved `compile_paid` field of the computer records this payment. Later callbacks of the run validate the source again without a compilation charge.
 A late joiner or a reloaded save without the cache gets the same charges, refusals and effects. Console commands still build a new environment for each command.
+A saved-program callback buffers its `print` and `computer.log` entries and writes them to the Console once, when the callback ends.
+This also occurs when the callback fails or stops, before any fault entry. The retained entries are the same as with immediate appends.
+A program `print` makes two charges: the argument count before conversion, then the bytes and the entry. The first entry that overflows the Console pays the eviction work once for each callback.
+Console commands keep immediate output and their earlier charges.
 Earlier spending can delay preparation when its refused charge prefix fits the full current source and host allowances.
 The item keeps its identity and order. Accepted preparation charges remain spent.
 Deferred commands have no echo or graph publication. Every attempt checks current authority.
