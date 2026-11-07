@@ -13,7 +13,7 @@ function M.install()
   end
   if not config.profile then return end
   local register=scheduler.register_phase
-  scheduler.register_phase=function(phase,name,fn)
+  scheduler.register_phase=function(phase,name,fn,...)
     register(phase,name,function(...)
       if not active then return fn(...) end
       local spent=registry.get().scheduler.maintenance_spent
@@ -22,7 +22,7 @@ function M.install()
       p.stop(); profiles[#profiles+1]={name=phase..'/'..name,profiler=p,work=registry.get().scheduler.maintenance_spent-spent}
       if not result[1] then error(result[2],0) end
       return table.unpack(result,2,result.n)
-    end)
+    end,...)
   end
   for _,name in ipairs({'dispatch','advance_timers'}) do
     local fn=scheduler[name]

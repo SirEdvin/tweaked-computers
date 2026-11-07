@@ -190,6 +190,9 @@ function M.reconcile_clones(tick,spend)
     pending[#pending]=nil; done=done+1
   end
 end
-scheduler.register_phase('lifecycle','01-clone-components',M.reconcile_clones)
+scheduler.register_phase('lifecycle','01-clone-components',M.reconcile_clones,function(root)
+  local pending=root.pending_clone_ports
+  return pending~=nil and (type(pending)~='table' or pending[1]~=nil)
+end)
 lifecycle.register_blueprint_adapter{after_build=M.after_build,on_ghost=M.on_ghost,clone=M.clone,clone_port=M.clone_port}
 return M

@@ -38,11 +38,11 @@ local function render(tick,spend)
     for _,row in ipairs(x.frames) do row.front,row.back=row.back,row.front end
   end
 end
-scheduler.register_phase('render','00-budget-probe',render)
+scheduler.register_phase('render','00-budget-probe',render,function() return true end)
 scheduler.register_phase('render','zz-budget-demand',function(tick,spend)
   local x=f()
   if x and x.phase=='running' then scheduler.request_render_work(registry.get(),tick,160000,spend) end
-end)
+end,function() return true end)
 function M.run()
   local x={case=2,nodes={},paths={},boosts=0,baseline=0,steps=0,max_maintenance=0,max_host=0,phase='setup'}
   storage.tc_budget_live=x

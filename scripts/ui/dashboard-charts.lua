@@ -33,6 +33,14 @@ local function reset(p)
   p.surface=nil
 end
 function M.begin() wanted={} end
+-- Scheduler readiness with no viewers: retained chart state or surface cleanup remains.
+function M.pending(r)
+  local p=r.dashboard_presentation
+  if p==nil then return false end
+  if type(p)~='table' or type(p.states)~='table' or next(p.states)~=nil or p.deleting~=nil then return true end
+  local surface=p.surface
+  return surface~=nil and (type(surface)~='table' or not charts or not surface.surface.valid)
+end
 function M.show(rec,slot,node,tab,camera,status)
   local key=rec.id..'/'..slot..'/'..node.id
   wanted[key]=wanted[key] or {rec=rec,slot=slot,node=node,tab=tab,cameras={},statuses={},scales={}}

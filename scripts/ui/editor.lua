@@ -616,7 +616,8 @@ end
 function M.tick(tick,spend)
   scheduler.viewer_tick('editor',tick,spend,refresh_viewer)
 end
-scheduler.register_phase('render','program-editor',M.tick)
+scheduler.register_phase('render','program-editor',M.tick,
+  function(root,tick) return tick%15==0 and registry.clock_due(root,'editor',tick) end)
 console_shell.register_authority(function(rec,index,token)
   local player=game.get_player(index)
   local s=player and model.session(index); local f=player and frame(player)

@@ -55,11 +55,13 @@ def catalog():
         'churn': ('register-cancel', 'activate-stop'),
         'reload': ('pending',),
         'mixed': ('sparse', 'busy'),
+        # One computer prints 20 chest items through a logic handler every N ticks.
+        'chest': ('poll-30', 'poll-600'),
     }
     for group, names in groups.items():
         for name in names:
             axis = 'active' if group in ('computer', 'dispatch', 'timer', 'signal', 'art', 'mixed') else 'devices'
-            if group in ('ui', 'churn', 'reload') or name in ('one', 'console', 'arbitration'):
+            if group in ('ui', 'churn', 'reload', 'chest') or name in ('one', 'console', 'arbitration'):
                 axis = 'fixed'
             if (group, name) in (('computer', 'stopped'), ('art', 'static'), ('dispatch', 'one-plus-idle')):
                 axis = 'idle'
@@ -133,6 +135,8 @@ def instrument(path, source):
     demand = {
         'scripts/scheduler.lua': {
             '    for _,item in ipairs(round) do': 'scheduler:ready-member',
+            # Readiness-gated scheduler: the ready round is inside a non-empty-ring guard.
+            '      for _,item in ipairs(round) do': 'scheduler:ready-member',
             '    local rec=root.computers[item.id]': 'scheduler:due-timer-member',
         },
         'scripts/lifecycle.lua': {'local function observe(rec,tick,spend)': 'physical:due-observation'},
@@ -248,7 +252,10 @@ def extract(text, ticks, lane, hooks):
                 result['error'] = 'duplicate timing sample'; return result
             values[tick] = value
     if lane == 'profile':
-        if set(profiles) != set(hooks) | {'scheduler', 'scheduler/dispatch', 'scheduler/advance_timers'} or any(len(v) != ticks for v in profiles.values()):
+        # Readiness-gated hooks are sampled only on ticks where they run.
+        scheduler = {'scheduler', 'scheduler/dispatch', 'scheduler/advance_timers'}
+        if set(profiles) - set(hooks) - scheduler or not scheduler <= set(profiles) \
+                or len(profiles['scheduler']) != ticks or any(len(v) > ticks for v in profiles.values()):
             result['error'] = 'phase inventory/sample count mismatch'; return result
     result['cpu_ms'] = {k: distribution(list(v.values())) for k, v in profiles.items()}
     result['phase_samples_ms'] = {k: list(v.values()) for k, v in profiles.items()}

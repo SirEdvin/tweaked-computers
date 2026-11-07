@@ -24,7 +24,7 @@ local function count(t) local n=0; for _ in pairs(t) do n=n+1 end; return n end
 -- Observe the unchanged sampler's headroom; these hooks do not spend or renew it.
 scheduler.register_phase('sample','00-envelope-observe',function()
   if f() then f().before_sample=registry.get().scheduler.maintenance_spent end
-end)
+end,function() return true end)
 local function gate(name,passed,detail)
   log('TC_ENVELOPE_GATE '..helpers.table_to_json{name=name,passed=passed,detail=detail})
 end

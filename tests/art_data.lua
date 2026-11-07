@@ -9,7 +9,7 @@ local function equal(a,b)
   for k in pairs(b) do if a[k]==nil then return false end end
   return true
 end
-local contacts,statuses=0,0
+local contacts,statuses,animations=0,0,0
 for _,kind in ipairs(defs.order) do
   local def=defs.devices[kind]; local device=art.devices[kind]
   local shell=data.raw['constant-combinator'][def.entity_name]
@@ -45,9 +45,13 @@ for _,kind in ipairs(defs.order) do
         statuses=statuses+1
       end
     end
+    local animation=assert(data.raw.animation['tc-status-'..kind..'-'..direction..'-blinking'])
+    assert(animation.filename==image.states.blinking.filename and animation.frame_count==4 and animation.line_length==4)
+    assert(animation.width==image.body.width and animation.scale==0.5)
+    animations=animations+1
   end
 end
-assert(contacts==96 and statuses==288)
+assert(contacts==96 and statuses==288 and animations==36)
 for _,name in ipairs({'tc-circuit-computers','tc-recipe-searcher'}) do
   local technology=data.raw.technology[name]
   assert(technology.icon==art.technologies[name].icon and technology.icon_size==256)

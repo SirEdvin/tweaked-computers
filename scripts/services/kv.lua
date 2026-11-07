@@ -405,5 +405,6 @@ function M.maintenance(tick,spend)
 end
 peripheral.register_type('kv',{methods=methods})
 lifecycle.register_item_adapter('kv',{initialize=M.initialize,snapshot=M.snapshot,restore=M.restore,tag='tc_kv'})
-scheduler.register_phase('render','kv-reclamation',M.maintenance)
+scheduler.register_phase('render','kv-reclamation',M.maintenance,
+  function(root,tick) return registry.clock_due(root,'kv',tick) end)
 return M

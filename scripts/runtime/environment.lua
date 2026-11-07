@@ -21,16 +21,21 @@ local function scoped(index,handler,fn,...)
 end
 
 
+-- new(nil,services) builds reusable host scaffolding; bind(context) starts one
+-- invocation with fresh per-callback state. new(context,...) binds immediately.
 function M.new(context,services,shell)
-  local reserve_work=admission.bind(context)
+  local reserve_work
   local E={shell_enabled=shell~=nil}
-  local protected,labels,bindings,host_errors={},{},{},{}
+  -- Weak: per-callback facades must not accumulate in reused scaffolding.
+  local protected,labels=setmetatable({},{__mode='k'}),setmetatable({},{__mode='k'})
+  local bindings,host_errors={},{}
   local handle_arguments,stable_services,input_rules={},{},{}
   local service_frames={}
   local restore_binding,output,guest_index
   local exports,constructing
   local poison,closed,line=nil,false,1
   local sentinel={}
+  local binders,building,construction={},false,0
   local function capture(problem)
     local level=2
     while true do
@@ -152,7 +157,8 @@ function M.new(context,services,shell)
     return result
   end
   function E.namespace(entries,label)
-    E.spend(1)
+    -- Scaffolding namespaces are charged by every bind, warm or cold alike.
+    if building then construction=construction+1 else E.spend(1) end
     local proxy=setmetatable({},{__index=entries,__newindex=function() fail('protected API table') end,__metatable=false})
     protected[proxy]=true
     for _,value in pairs(entries) do if type(value)=='function' then labels[value]=label or 'API function' end end
@@ -212,7 +218,21 @@ function M.new(context,services,shell)
     elseif type(problem)=='userdata' or type(problem)=='thread' then fail('foreign error value') end
     return problem
   end
+  -- Providers register per-callback rebinding (authority proofs, local caches).
+  function E.on_bind(fn)
+    binders[#binders+1]=fn
+    if context then fn() end
+  end
+  function E.bind(ctx)
+    context=ctx; reserve_work=admission.bind(ctx)
+    bindings,host_errors,service_frames={},{},{}
+    exports,constructing=nil,nil
+    poison,closed,line=nil,false,1
+    for _,fn in ipairs(binders) do fn() end
+    if construction>0 then E.spend(construction) end
+  end
   function E.initialize()
+    building=true
     local service_map=type(services)=='function' and services(E) or services or {}
     assert(type(service_map)=='table','trusted services must be a method map')
     local env={type=type,tonumber=tonumber,select=select,_VERSION='Lua 5.2'}
@@ -350,7 +370,10 @@ function M.new(context,services,shell)
       if env[name]~=nil or not shell then fail('protected global') end
       shell.root[name]=value
     end,__metatable=false})
+    building=false
+    if context and construction>0 then E.spend(construction) end
   end
+  if context then E.bind(context) end
   return E
 end
 return M

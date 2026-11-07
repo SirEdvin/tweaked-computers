@@ -19,6 +19,12 @@ for _,kind in ipairs(defs.order) do
         sprite.frame_count=nil; sprite.line_length=nil; sprite.animation_speed=nil
         data:extend{sprite}
       end
+      -- The engine animates a running light; frame sprites stay for retained render objects.
+      if source.frame_count then
+        local animation=table.deepcopy(source)
+        animation.type='animation'; animation.name='tc-status-'..kind..'-'..direction..'-'..state
+        data:extend{animation}
+      end
     end
   end
   local shell=table.deepcopy(data.raw['constant-combinator']['constant-combinator'])

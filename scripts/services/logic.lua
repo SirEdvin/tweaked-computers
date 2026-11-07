@@ -392,5 +392,6 @@ peripheral.register_type('logic',{methods=methods,with_principal=true})
 peripheral.register_revocation('logic-subscriptions',function(c,name,wire,reason,execution)
   if not execution or execution.kind=='program' then M.revoke(c,name,wire) end
 end)
-scheduler.register_phase('sample','logic-input',M.sample)
+scheduler.register_phase('sample','logic-input',M.sample,
+  function(root) return scheduler.order_pending(root.logic_observers) end)
 return M

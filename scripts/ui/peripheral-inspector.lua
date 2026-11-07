@@ -419,5 +419,6 @@ function M.tick(tick)
   local root=registry.get(); if not registry.supported(root) then return end
   scheduler.viewer_tick('inspector',tick,scheduler.maintenance(root,tick),refresh_viewer)
 end
-scheduler.register_phase('render','ui-peripheral-inspectors',M.tick)
+scheduler.register_phase('render','ui-peripheral-inspectors',M.tick,
+  function(root,tick) return tick%15==0 and registry.clock_due(root,'inspector',tick) end)
 return M

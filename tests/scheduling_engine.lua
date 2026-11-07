@@ -378,10 +378,10 @@ function M.on_tick(event)
     end
     tick(event.tick)
     assert(database.database==x.kv_data and database.database.entries.future.value=='replacement')
-    local position=registry.maintenance_clock('art').deadline_positions[c.id]
-    assert(position and registry.maintenance_clock('art').deadlines[position].tick==event.tick-event.tick%10+10)
-    assert(c.status_art.name=='tc-status-computer-north-blinking-'..math.floor(event.tick/10)%4,
-      'running status frame missed its actual-tick animation boundary')
+    -- The running light is a native animation: no script deadline or frame redraw.
+    assert(not registry.maintenance_clock('art').deadline_positions[c.id],'running computer retained script animation work')
+    assert(c.status_art.name=='tc-status-computer-north-blinking' and c.status_art.object.type=='animation',
+      'running status light is not the native animation')
     assert(not registry.maintenance_clock('art').deadline_positions[x.stopped]
       and not registry.maintenance_clock('art').deadline_positions[x.faulted],
       'stopped or faulted computer retained animation work')

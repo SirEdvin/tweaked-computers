@@ -643,5 +643,6 @@ registry.register_initializer('physical-observations',function(root)
     end
   end
 end)
-scheduler.register_phase('lifecycle','00-physical-observation',M.reconcile)
+scheduler.register_phase('lifecycle','00-physical-observation',M.reconcile,
+  function(root,tick) return registry.clock_due(root,'physical',tick) end)
 return M

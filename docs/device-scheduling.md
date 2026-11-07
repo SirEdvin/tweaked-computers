@@ -12,7 +12,10 @@ handler and does not rebuild authoritative membership there.
 
 The existing scheduler validates the retained clock/admission headers. It attaches
 same-tick maintenance accounting without renewing spent credits. It rejects a
-repeat call at the same tick. Within each phase, hook names are sorted. After
+repeat call at the same tick. Within each phase, hooks keep the name order that
+registration sets. Each hook has a readiness function that reads synchronized
+storage only. The scheduler calls a hook, with its `pcall` wrapper and maintenance
+charge, only on ticks where its readiness reports due or pending work. After
 lifecycle, sampling and notifications, only due timer owners and the frozen ready
 round are visited. Render hooks run last, using the existing render reservation.
 A new event cannot re-enter dispatch. Newly ready computers join a later round.
@@ -28,7 +31,7 @@ A new event cannot re-enter dispatch. Newly ready computers join a later round.
 | `sample/logic-input` | Ordered reverse subscriptions and watched physical input/color membership | Last unsubscribe or exact run/endpoint retirement removes demand. Direct watched reads remain every tick. No change-hint skip or slower sampling. |
 | `notifications/monitor-events` | Indexed registered recipients and pending touches/resizes | Delivers or cancels the pending job. Settled displays are not searched for recipients. |
 | `notifications/peripheral-topology` | Attach/detach, modem-receive and Dashboard-click interests plus unfinished transition jobs | Definitive selected-wire detachment retires Dashboard registrations even before the initial baseline. Last interest/finished explicit observation retires the binding. Existing three-channel envelope and live call proofs remain. |
-| `render/device-status-art` | Dirty exact identity or next running-computer 10-tick animation transition | Static art has no recurring visit. Stop/fault/retirement removes animation demand. |
+| `render/device-status-art` | Dirty exact identity whose operational state changed | A running computer uses a native engine animation (four frames, 10 ticks each), so its light needs no recurring script work. Static art has no recurring visit. |
 | `render/kv-reclamation` | Earliest retained expiry or unfinished due cleanup | Cancel/replace/mine updates the exact deadline. Future or persistent-only databases do not run. Lazy logical expiry remains exact. |
 | `render/monitor-world` | Existing pending presentation capture/prepare/whole-group commit/retirement | Keeps the previous complete image until paid publication. Native cursor blink needs no polling. |
 | `render/program-editor` | Open exact editor/recovery session on its existing 15-tick deadline | Close/leave/replacement retires the session's deadline, not its drafts. No connected-player discovery. |
@@ -37,8 +40,10 @@ A new event cannot re-enter dispatch. Newly ready computers join a later round.
 
 Timers reuse the existing indexed next-deadline heap and ready computers reuse
 the existing generation-aware ready ring. Service/UI deadlines use the same heap
-operations in fixed host lanes, not a second runtime. Empty lane/header checks
-are constant bookkeeping. They do not inspect entities or players.
+operations in fixed host lanes, not a second runtime. Readiness checks the head
+of a deadline heap or the first entry of a membership list. It does not inspect
+entities or players, and it does not allocate. Unreadable state reports ready, so
+the hook's own validation path still runs.
 
 ## Deliberately retained non-ordinary walks
 
@@ -59,6 +64,10 @@ are constant bookkeeping. They do not inspect entities or players.
 
 `tests.scheduling_contract` and `tests.scheduling_engine` enforce no idle
 runtime/signal/UI discovery, deadline fairness, cancellation and cold ownership.
+`tests.scheduling_idle_engine` (production context, cold) proves that each hook's
+own work makes only that hook ready. It also proves that every quiet tick calls
+no hook and allocates no Lua memory, before and after a cold reload. The structure
+lane counts `scheduler/hook-ticks`, the ticks on which any hook ran.
 The benchmark structure lane labels actual ready/due/watched/owner/UI visits
 separately from the old broad-loop counters and native signal reads. Necessary
 physical due observations are a separate counter, not hidden as idle discovery.
