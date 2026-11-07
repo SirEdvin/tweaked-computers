@@ -416,7 +416,11 @@ class CanonicalContractTests(unittest.TestCase):
     promoted_changes = ('2026-11-07-function-only-programs',
                         '2026-11-07-typed-lua-api-documentation',
                         '2026-11-07-reduce-runtime-overhead',
-                        '2026-11-07-replace-guarded-runtime-with-trusted-lua')
+                        '2026-11-07-replace-guarded-runtime-with-trusted-lua',
+                        '2026-11-07-reduce-idle-scheduler-overhead',
+                        '2026-11-07-reduce-report-callback-overhead',
+                        '2026-11-07-charge-compile-once-per-run',
+                        '2026-11-07-reduce-report-host-overhead')
 
     def archived_replacement(self, capability, name, canonical):
         import re

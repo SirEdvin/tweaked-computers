@@ -8,12 +8,12 @@ Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. The mod has no interpreter,
 OS, gameplay filesystem or dynamic guest loader. There is no command history.
 
-The unreleased runtime change removes mod execution and temporary-memory quotas from saved programs and Console.
+Version **0.1.21 ALPHA** runs saved programs and Console as trusted native Lua.
+It removes mod execution and temporary-memory quotas, and it reduces idle and per-callback host overhead.
 Run only trusted code. An infinite loop can stop the game. Temporary values can use all available memory.
 Stop cannot interrupt code that does not return control to the host.
 Source validation, current API authority, host-work admission, and retained-data limits remain.
-See [runtime upgrade and rollback](docs/player/lifecycle.md#upgrading-to-trusted-native-lua).
-Historical release evidence below does not establish acceptance of this runtime change.
+See [runtime upgrade and rollback](docs/player/lifecycle.md#upgrading-to-trusted-native-lua) and [0.1.21 release notes](docs/release-0.1.21.md).
 
 Version **0.1.20 ALPHA** includes a separate [public Lua declaration library](api/README.md)
 as the authoritative API reference. The website and searchable in-game Reference

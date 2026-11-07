@@ -12,15 +12,14 @@ Factorio objects, and no command history.
 **Run only trusted code.** An infinite loop can stop the game.
 Temporary Lua values can use all available memory. Stop cannot interrupt code that does not return control to the host.
 Source validation, current API authority, host-work admission, and persistence limits still apply.
-See [runtime upgrade and rollback](lifecycle.md#upgrading-to-trusted-native-lua) before loading an older save with this unreleased runtime.
-The historical release evidence below does not establish acceptance of this runtime change.
+See [runtime upgrade and rollback](lifecycle.md#upgrading-to-trusted-native-lua) before you load an older save with 0.1.21.
 
 ## Start here
 
-Published **0.1.20 ALPHA** accepts all **Factorio 2.1** patches, base alone or optional Space
-Age. Verification remains on 2.1.23, not every patch. The website and in-game
-Reference now share one public typed Lua API library, including complete nested
-types and overloads. That documentation release did not change guest behavior, save formats, or budgets.
+Published **0.1.21 ALPHA** accepts all **Factorio 2.1** patches, base alone or optional Space
+Age. Verification remains on 2.1.23, not every patch. It runs trusted native Lua and
+removes the execution and temporary-memory settings. Since 0.1.20, the website and in-game
+Reference share one public typed Lua API library, including complete nested types and overloads.
 
 Since 0.1.19, saved programs use only named
 function declarations. Rewrite legacy table-form source manually. There is no

@@ -1,4 +1,20 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.21
+Date: 2026-11-07
+  Changes:
+    - BREAKING: Saved programs and Console commands run as trusted native Lua. The mod no longer meters execution steps, temporary allocations, call depth or tuples.
+    - BREAKING: Remove the settings tc-callback-work and tc-callback-allocations. Remove callback_work, callback_allocations, callback_depth, tuple_entries and generated_source_bytes from common limits.
+    - Source validation, API authority, host-work admission, protected namespaces and retained-data limits stay.
+    - Synchronized migration upgrades 0.1.20 saves. It keeps source, state, Console graphs, run IDs, queues, deadlines and spent host credits. It does not repeat startup or completed effects.
+  Optimizations:
+    - The scheduler skips hooks that have no due work. Idle ticks allocate no Lua memory. The running status light is a native animation.
+    - Callbacks of one run reuse host scaffolding and the loaded program chunk. Each run pays compilation one time.
+    - Callbacks buffer print and computer.log output and write it to the Console one time. The network walk creates fewer native objects.
+  Info:
+    - Run only trusted code. An infinite loop can stop the game. Temporary values can use all available memory. Stop cannot interrupt code that does not return control.
+    - ALPHA for Factorio 2.1; verified on 2.1.23 with base and Space Age, not every patch or modpack.
+    - Back up the complete save and matching mod set before upgrading. Restore both for rollback; never downgrade an upgraded save in place.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.20
 Date: 2026-11-04
   Features:
