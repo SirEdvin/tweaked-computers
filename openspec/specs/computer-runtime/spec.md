@@ -121,7 +121,7 @@ The runtime SHALL identify its API/source ABI and storage schema. Unsupported re
 - **AND** other compatible computers continue operating.
 
 ### Requirement: Program print uses the computer Console
-`print(...)` SHALL synchronously append one entry to the current computer's bounded Console, converting arguments with the existing safe `tostring`, joining them with tabs, and returning no values. Zero arguments SHALL append an empty entry. `computer.log(text)` SHALL retain its string-only input, exact program argument count, and zero-result contract. Both routes SHALL use bounded local-output and host-work admission. Program printing SHALL NOT emit Factorio chat, host stdout or host log output.
+`print(...)` SHALL append one entry to the current computer's bounded Console, converting arguments with the existing safe `tostring`, joining them with tabs, and returning no values. Zero arguments SHALL append an empty entry. `computer.log(text)` SHALL retain its string-only input, exact program argument count, and zero-result contract. Both routes SHALL use bounded local-output and host-work admission. Program printing SHALL NOT emit Factorio chat, host stdout or host log output. In a saved-program callback, admitted entries SHALL be published in call order when the callback ends; Console commands SHALL publish immediately.
 
 #### Scenario: Print false and nil in position
 - **WHEN** a saved callback evaluates `print("value", false, nil, 3, nil)`
@@ -162,6 +162,25 @@ The runtime SHALL identify its API/source ABI and storage schema. Unsupported re
 - **WHEN** formatting, complete entry size, or host-work admission refuses an entry while the log is full
 - **THEN** that append changes no retained entry, byte count, or truncation flag
 - **AND** a separate host fault diagnostic can still follow the existing diagnostic-retention policy.
+
+#### Scenario: Callback output is published once
+- **WHEN** a saved-program callback calls `print` and `computer.log` several times and then returns
+- **THEN** the Console receives all admitted entries after the callback, in call order, with the callback tick
+- **AND** the retained entries, byte count and truncation flag equal the result of appending each entry immediately.
+
+#### Scenario: Buffered output precedes a fault
+- **WHEN** a saved-program callback prints and then fails, stops or is refused by host admission
+- **THEN** its admitted entries are published before any fault or diagnostic entry
+- **AND** the refused entry is not published.
+
+#### Scenario: Two charges per print
+- **WHEN** a saved-program callback calls `print`
+- **THEN** argument work is admitted before any native conversion, and one further charge admits the bytes and the entry
+- **AND** a refused print publishes nothing, and Console eviction work is charged once per callback.
+
+#### Scenario: Console commands are unchanged
+- **WHEN** a player runs a Console command that prints
+- **THEN** its entries, charges and publication time follow the existing immediate rules.
 
 ### Requirement: Protected calls can transform ordinary errors
 `xpcall(fn, handler, ...)` SHALL invoke approved functions synchronously in the current trusted invocation. Success SHALL return `true` followed by the function's exact native result tuple. Ordinary failure SHALL call the handler with one safe error value and return `false` followed by its first result, including nil. Host-origin error records SHALL be copied before exposure. Existing ordinary side effects SHALL NOT be rolled back.
