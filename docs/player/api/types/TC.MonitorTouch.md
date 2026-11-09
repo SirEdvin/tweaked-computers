@@ -9,10 +9,20 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.MonitorTouch
 
-A player activated a selected monitor character cell through the supported interaction.
-Coordinates are terminal cells, not world tiles or mosaic pixels.
+A player activated a selected monitor point through the supported interaction.
+In terminal mode the coordinates are 1-based character cells.
+In graphics mode they are 0-based integer content pixels at 64 per tile, along the display's own axes.
+Coordinates are never world tiles or mosaic subpixels.
 
 Extends: TC.MonitorEvent
+
+### mode
+
+Mode that gives the coordinate units.
+
+```text
+TC.MonitorMode
+```
 
 ### name
 
@@ -40,7 +50,7 @@ TC.Tick
 
 ### x
 
-One-based character column.
+One-based character column, or 0-based content pixel column in graphics mode.
 
 ```text
 integer
@@ -48,7 +58,7 @@ integer
 
 ### y
 
-One-based character row.
+One-based character row, or 0-based content pixel row in graphics mode.
 
 ```text
 integer
@@ -57,4 +67,5 @@ integer
 ## Referenced types
 
 - [TC.MonitorEvent](TC.MonitorEvent.md#symbol-TC.MonitorEvent)
+- [TC.MonitorMode](TC.MonitorMode.md#symbol-TC.MonitorMode)
 - [TC.Tick](TC.Tick.md#symbol-TC.Tick)

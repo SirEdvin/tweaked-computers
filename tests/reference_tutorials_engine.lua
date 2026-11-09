@@ -56,7 +56,7 @@ function M.run()
   for _,e in ipairs(s.find_entities_filtered{area={{-12,-10},{270,12}},type={'tree','simple-entity','cliff'}}) do e.destroy() end
   local x={phase='boot',since=game.tick,origin=game.tick,programs={},results={}}
   storage.tc_reference_tutorials=x
-  for i,id in ipairs({'starter','speaker','logic','recipe','factory','shared','statistics','dashboard','dashboard_charts'}) do
+  for i,id in ipairs({'starter','speaker','logic','recipe','factory','shared','statistics','dashboard','dashboard_charts','graphics'}) do
     local px=(i-1)*30;local c=build('computer',px,0)
     x.programs[#x.programs+1]={id=id,computer=c.id,code=help.tutorials[id].prelude or help.tutorials[id].code}
     assert(s.create_entity{name='substation',position={px+4,4},force='player'})
@@ -76,6 +76,9 @@ function M.run()
     elseif id=='dashboard' or id=='dashboard_charts' then
       local panel=build('dashboard',px+3,0); connect(c,panel,'red'); x[id]=panel.id
     elseif id=='logic' or id=='factory' then x[id]=stock_scene(c,px,id=='factory')
+    elseif id=='graphics' then
+      local wall={build('monitor',px+3,0),build('monitor',px+4,0),build('monitor',px+3,1),build('monitor',px+4,1)}
+      connect(c,wall[1],'red'); x.graphics=wall[1].id; x.graphics_computer=c.id
     elseif id=='shared' then
       local db=build('kv',px+3,0);local independent=build('kv',px+3,-3);local observer=build('computer',px,-3)
       connect(c,db,'red');connect(observer,db,'red');connect(observer,independent,'green')
@@ -194,6 +197,12 @@ function M.on_tick(event)
       assert(#ring.data==8 and ring.index==4 and ring.sum.input==68)
     end
     report('dashboard-exact-embedded-programs-and-optional-chart-wrap')
+    local display=assert(monitor.resolve(registry.record(x.graphics)))
+    local views=registry.record(x.graphics_computer).state.graphics_chart
+    assert(display.model.mode=='graphics' and #views==1 and display.graphics and #display.graphics.under+#display.graphics.over==5)
+    local curve=display.graphics.objects[views[1].curve]
+    assert(curve.type=='polygon' and curve.native.valid and #curve.props.vertices>=18)
+    report('graphics-chart-mode-objects-and-animated-curve')
     inventory(x,event.tick)
     x.phase='high';x.since=event.tick
   elseif x.phase=='high' and event.tick-x.since>=120 then

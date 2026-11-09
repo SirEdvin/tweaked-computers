@@ -1596,6 +1596,123 @@ topic]=] ]=[=[
 type.TC.GeneralEventName]=]
 },
 [ [=[
+TC.GraphicsArc]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.GraphicsArc.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.GraphicsArc]=]
+},
+[ [=[
+TC.GraphicsCircle]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.GraphicsCircle.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.GraphicsCircle]=]
+},
+[ [=[
+TC.GraphicsColor]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.GraphicsColor.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.GraphicsColor]=]
+},
+[ [=[
+TC.GraphicsCommon]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.GraphicsCommon.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.GraphicsCommon]=]
+},
+[ [=[
+TC.GraphicsLight]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.GraphicsLight.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.GraphicsLight]=]
+},
+[ [=[
+TC.GraphicsLine]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.GraphicsLine.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.GraphicsLine]=]
+},
+[ [=[
+TC.GraphicsObject]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.GraphicsObject.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.GraphicsObject]=]
+},
+[ [=[
+TC.GraphicsObjectId]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.GraphicsObjectId.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.GraphicsObjectId]=]
+},
+[ [=[
+TC.GraphicsPoint]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.GraphicsPoint.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.GraphicsPoint]=]
+},
+[ [=[
+TC.GraphicsPolygon]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.GraphicsPolygon.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.GraphicsPolygon]=]
+},
+[ [=[
+TC.GraphicsRectangle]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.GraphicsRectangle.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.GraphicsRectangle]=]
+},
+[ [=[
+TC.GraphicsSprite]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.GraphicsSprite.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.GraphicsSprite]=]
+},
+[ [=[
+TC.GraphicsText]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.GraphicsText.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.GraphicsText]=]
+},
+[ [=[
 TC.GuestTable]=] ]={
 [ [=[
 page]=] ]=[=[
@@ -1819,6 +1936,15 @@ docs/player/api/types/TC.MonitorLimits.md]=],
 [ [=[
 topic]=] ]=[=[
 type.TC.MonitorLimits]=]
+},
+[ [=[
+TC.MonitorMode]=] ]={
+[ [=[
+page]=] ]=[=[
+docs/player/api/types/TC.MonitorMode.md]=],
+[ [=[
+topic]=] ]=[=[
+type.TC.MonitorMode]=]
 },
 [ [=[
 TC.MonitorRef]=] ]={
@@ -5586,10 +5712,11 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-All members must be live monitors on one force and surface.
+All members must be live terminal-mode monitors on one force and surface.
 The sum of their actual cells must fit the allowance.
 A member that another owner selected causes E_BUSY.
 A non-monitor causes E_WRONGTYPE.
+A graphics-mode monitor causes E_UNSUPPORTED. Graphics changes publish at call time and need no group.
 A missing path causes E_UNREACHABLE.
 Incomplete proof causes E_NETWORK_PENDING.]=]
 },
@@ -5643,6 +5770,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 Geometry and scale changes reset participation and staging.
+Switching a member to graphics mode removes only that member from the selection; the other members continue.
 An oversized retained group stays blocked until it fits or its configuration changes.
 Ordinary reload preserves ownership, progress, acknowledgements and credits.]=]
 },
@@ -6296,10 +6424,11 @@ An equal canonical selection is idempotent and preserves pending work and sequen
 Ordinary refusal preserves the old group and every model and front.
 No selection grants exclusive drawing authority.
 
-All members must be live monitors on one force and surface.
+All members must be live terminal-mode monitors on one force and surface.
 The sum of their actual cells must fit the allowance.
 A member that another owner selected causes E_BUSY.
 A non-monitor causes E_WRONGTYPE.
+A graphics-mode monitor causes E_UNSUPPORTED. Graphics changes publish at call time and need no group.
 A missing path causes E_UNREACHABLE.
 Incomplete proof causes E_NETWORK_PENDING.
 
@@ -6323,6 +6452,7 @@ These events never release accepted model or front contents.
 Temporary incomplete proof blocks the group instead.
 
 Geometry and scale changes reset participation and staging.
+Switching a member to graphics mode removes only that member from the selection; the other members continue.
 An oversized retained group stays blocked until it fits or its configuration changes.
 Ordinary reload preserves ownership, progress, acknowledgements and credits.
 
@@ -6447,6 +6577,32 @@ Earlier accepted calls survive later failures.
 All paths retain exact physical, identity, scope and geometry checks.
 No electricity or electrical helper is necessary.
 Unavailability can hide state but never erase it.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Modes]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+A logical monitor is in terminal mode (the default) or graphics mode. See getMode and setMode.
+Terminal mode is the byte-cell terminal described below.
+Graphics mode holds retained native objects in monitor pixels; see drawLine and the methods after it.
+In graphics mode, write, blit, clearLine, scroll, the cursor, colour, palette and text-scale methods, and their aliases, raise E_UNSUPPORTED.
+In terminal mode, the draw methods, set, get, getObjects, destroy, bringToFront and moveToBack raise E_UNSUPPORTED.
+getMode, setMode, getSize, clear, isColor and getLimits work in both modes.
+Monitor synchronization groups accept only terminal-mode monitors.
+Graphics objects use two draw layers. Sprites and lights always draw below lines, polygons, rectangles, circles, arcs and text.
+In the upper layer, draw order follows creation, bringToFront and moveToBack.
+In the lower layer, the engine draws overlapping sprites by position: a sprite lower on the display draws on top. bringToFront and moveToBack raise E_UNSUPPORTED for sprites and lights.
+While a tile of the display is marked for deconstruction, the monitor content is hidden. Ids, order, properties and the terminal model stay unchanged.]=]
 },
 {
 [ [=[
@@ -6774,6 +6930,65 @@ kind]=] ]=[=[
 heading]=],
 [ [=[
 text]=] ]=[=[
+bringToFront]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Move one line, polygon, rectangle, circle, arc or text object to the front of its draw layer.
+An unknown id causes E_NOT_FOUND. A sprite or light causes E_UNSUPPORTED.
+The method returns zero values.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+bringToFront(id: TC.GraphicsObjectId)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+id: TC.GraphicsObjectId
+Existing object id.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+No result positions. See the behavior notes for normal-return versus failure semantics.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
 clear]=]
 },
 {
@@ -6782,8 +6997,9 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Fill all cells with spaces and current colors.
+In terminal mode, fill all cells with spaces and current colors.
 The cursor stays unchanged.
+In graphics mode, destroy every graphics object. Ids are not reused afterwards.
 The method returns zero values.]=]
 },
 {
@@ -6885,6 +7101,595 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 No result positions. See the behavior notes for normal-return versus failure semantics.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+destroy]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Remove one object. An unknown id causes E_NOT_FOUND.
+The id is not reused.
+The method returns zero values.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+destroy(id: TC.GraphicsObjectId)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+id: TC.GraphicsObjectId
+Existing object id.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+No result positions. See the behavior notes for normal-return versus failure semantics.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+drawArc]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Draw an arc (annulus sector). Shared draw rules apply.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+drawArc(props: TC.GraphicsArc) -> id: TC.GraphicsObjectId]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+props: TC.GraphicsArc
+Arc properties.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+id: TC.GraphicsObjectId
+New object id.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+drawCircle]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Draw a filled or outlined circle. Shared draw rules apply.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+drawCircle(props: TC.GraphicsCircle) -> id: TC.GraphicsObjectId]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+props: TC.GraphicsCircle
+Circle properties.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+id: TC.GraphicsObjectId
+New object id.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+drawLight]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Draw a light with the default texture. Shared draw rules apply.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+drawLight(props: TC.GraphicsLight) -> id: TC.GraphicsObjectId]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+props: TC.GraphicsLight
+Light properties.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+id: TC.GraphicsObjectId
+New object id.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+drawLine]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Graphics draw methods share these rules:
+each creates one native object in front of all others of its draw layer and returns its new id;
+properties are validated completely before any change (E_ARGUMENT for shape/type, E_RANGE for domain or bounds);
+a payload above the per-call byte or entry allowance causes E_LIMIT;
+an object that would raise all monitor presentation objects above render_object_limit causes E_CAPACITY;
+the change is applied during the call and becomes visible with all other changes of the same tick;
+a later failure in the same callback does not undo it. No synchronization group or flush is involved.
+In terminal mode every draw method causes E_UNSUPPORTED.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+drawLine(props: TC.GraphicsLine) -> id: TC.GraphicsObjectId]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+props: TC.GraphicsLine
+Line properties.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+id: TC.GraphicsObjectId
+New object id.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+drawPolygon]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Draw a filled triangle-strip polygon. Shared draw rules apply.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+drawPolygon(props: TC.GraphicsPolygon) -> id: TC.GraphicsObjectId]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+props: TC.GraphicsPolygon
+Polygon properties.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+id: TC.GraphicsObjectId
+New object id.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+drawRectangle]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Draw a filled or outlined rectangle. Shared draw rules apply.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+drawRectangle(props: TC.GraphicsRectangle) -> id: TC.GraphicsObjectId]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+props: TC.GraphicsRectangle
+Rectangle properties.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+id: TC.GraphicsObjectId
+New object id.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+drawSprite]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Draw a game icon. Shared draw rules apply.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+drawSprite(props: TC.GraphicsSprite) -> id: TC.GraphicsObjectId]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+props: TC.GraphicsSprite
+Sprite properties.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+id: TC.GraphicsObjectId
+New object id.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+drawText]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Draw terminal-font text. Shared draw rules apply.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+drawText(props: TC.GraphicsText) -> id: TC.GraphicsObjectId]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+props: TC.GraphicsText
+Text properties.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+id: TC.GraphicsObjectId
+New object id.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+get]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Read one object.
+In graphics mode, an unknown id returns nil; it is not an error.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+get(id: TC.GraphicsObjectId) -> object: TC.GraphicsObject|nil]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+id: TC.GraphicsObjectId
+Object id.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+object: TC.GraphicsObject|nil
+Fresh copy of the type and properties, or nil.]=]
 },
 {
 [ [=[
@@ -7198,6 +8003,128 @@ kind]=] ]=[=[
 heading]=],
 [ [=[
 text]=] ]=[=[
+getMode]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Graphics mode]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Read the current mode.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+getMode() -> mode: TC.MonitorMode]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+No parameters.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+mode: TC.MonitorMode
+Current mode of the logical display.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+getObjects]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+List every object id: first the sprites and lights in creation order, then the other objects from back to front.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+getObjects() -> ids: (TC.GraphicsObjectId)[]]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+No parameters.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+ids: (TC.GraphicsObjectId)[]
+Fresh dense array in draw order. Empty when there are no objects.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
 getPaletteColor]=]
 },
 {
@@ -7368,7 +8295,8 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Read the current model geometry, not physical tiles or an older visible snapshot.]=]
+Read the current model geometry, not physical tiles or an older visible snapshot.
+In graphics mode the results are content pixels: 64*W-4 by 64*H-4 for a W×H tile display.]=]
 },
 {
 [ [=[
@@ -7409,7 +8337,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 width: integer
-Positive character column count.]=]
+Positive character column count, or content pixel width in graphics mode.]=]
 },
 {
 [ [=[
@@ -7418,7 +8346,7 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 height: integer
-Positive character row count.]=]
+Positive character row count, or content pixel height in graphics mode.]=]
 },
 {
 [ [=[
@@ -7729,6 +8657,65 @@ kind]=] ]=[=[
 heading]=],
 [ [=[
 text]=] ]=[=[
+moveToBack]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Move one line, polygon, rectangle, circle, arc or text object to the back of its draw layer.
+An unknown id causes E_NOT_FOUND. A sprite or light causes E_UNSUPPORTED.
+The method returns zero values.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+moveToBack(id: TC.GraphicsObjectId)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+id: TC.GraphicsObjectId
+Existing object id.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+No result positions. See the behavior notes for normal-return versus failure semantics.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
 scroll]=]
 },
 {
@@ -7768,6 +8755,76 @@ prose]=],
 text]=] ]=[=[
 lines: integer
 Signed safe-integer row offset. There is no float or string coercion.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+No result positions. See the behavior notes for normal-return versus failure semantics.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+set]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Change some properties of one object.
+Only keys valid for its type are accepted; the type cannot change.
+The method validates the complete resulting object, including bounds, before any change.
+An unknown id causes E_NOT_FOUND. Draw order and id stay unchanged.
+The method returns zero values.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+set(id: TC.GraphicsObjectId, props: table)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+id: TC.GraphicsObjectId
+Existing object id.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+props: table
+Partial properties for that object type, as in the draw method of that type.]=]
 },
 {
 [ [=[
@@ -8020,6 +9077,70 @@ prose]=],
 text]=] ]=[=[
 y: integer
 Safe integer -9007199254740991..9007199254740991.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Returns]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+No result positions. See the behavior notes for normal-return versus failure semantics.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+setMode]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Change the mode.
+A change to the other mode clears all terminal cells (to spaces with current colors) and destroys all graphics objects.
+It then queues monitor_resize with reason 'mode'; old dimensions use the old units.
+It removes this monitor from a monitor synchronization group when it enters graphics mode.
+Cursor, colors, palette and text scale are retained for a later return to terminal mode.
+Setting the current mode changes nothing and is a successful mutating call for synchronization rounds.
+The mode persists through save/load and follows merge, split, settings paste and blueprints like text scale.
+The method returns zero values.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+setMode(mode: TC.MonitorMode)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+Parameters]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+mode: TC.MonitorMode
+Exact 'terminal' or 'graphics'. Any other string causes E_RANGE; a non-string causes E_ARGUMENT.]=]
 },
 {
 [ [=[
@@ -8613,6 +9734,20 @@ All paths retain exact physical, identity, scope and geometry checks.
 No electricity or electrical helper is necessary.
 Unavailability can hide state but never erase it.
 
+Modes
+
+A logical monitor is in terminal mode (the default) or graphics mode. See getMode and setMode.
+Terminal mode is the byte-cell terminal described below.
+Graphics mode holds retained native objects in monitor pixels; see drawLine and the methods after it.
+In graphics mode, write, blit, clearLine, scroll, the cursor, colour, palette and text-scale methods, and their aliases, raise E_UNSUPPORTED.
+In terminal mode, the draw methods, set, get, getObjects, destroy, bringToFront and moveToBack raise E_UNSUPPORTED.
+getMode, setMode, getSize, clear, isColor and getLimits work in both modes.
+Monitor synchronization groups accept only terminal-mode monitors.
+Graphics objects use two draw layers. Sprites and lights always draw below lines, polygons, rectangles, circles, arcs and text.
+In the upper layer, draw order follows creation, bringToFront and moveToBack.
+In the lower layer, the engine draws overlapping sprites by position: a sprite lower on the display draws on top. bringToFront and moveToBack raise E_UNSUPPORTED for sprites and lights.
+While a tile of the display is marked for deconstruction, the monitor content is hidden. Ids, order, properties and the terminal model stay unchanged.
+
 Cells, palette and geometry
 
 Text uses byte/cell indexes, not Unicode.
@@ -8735,10 +9870,28 @@ Returns
 
 No result positions. See the behavior notes for normal-return versus failure semantics.
 
+bringToFront
+
+Move one line, polygon, rectangle, circle, arc or text object to the front of its draw layer.
+An unknown id causes E_NOT_FOUND. A sprite or light causes E_UNSUPPORTED.
+The method returns zero values.
+
+bringToFront(id: TC.GraphicsObjectId)
+
+Parameters
+
+id: TC.GraphicsObjectId
+Existing object id.
+
+Returns
+
+No result positions. See the behavior notes for normal-return versus failure semantics.
+
 clear
 
-Fill all cells with spaces and current colors.
+In terminal mode, fill all cells with spaces and current colors.
 The cursor stays unchanged.
+In graphics mode, destroy every graphics object. Ids are not reused afterwards.
 The method returns zero values.
 
 clear()
@@ -8768,6 +9921,175 @@ No parameters.
 Returns
 
 No result positions. See the behavior notes for normal-return versus failure semantics.
+
+destroy
+
+Remove one object. An unknown id causes E_NOT_FOUND.
+The id is not reused.
+The method returns zero values.
+
+destroy(id: TC.GraphicsObjectId)
+
+Parameters
+
+id: TC.GraphicsObjectId
+Existing object id.
+
+Returns
+
+No result positions. See the behavior notes for normal-return versus failure semantics.
+
+drawArc
+
+Draw an arc (annulus sector). Shared draw rules apply.
+
+drawArc(props: TC.GraphicsArc) -> id: TC.GraphicsObjectId
+
+Parameters
+
+props: TC.GraphicsArc
+Arc properties.
+
+Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+drawCircle
+
+Draw a filled or outlined circle. Shared draw rules apply.
+
+drawCircle(props: TC.GraphicsCircle) -> id: TC.GraphicsObjectId
+
+Parameters
+
+props: TC.GraphicsCircle
+Circle properties.
+
+Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+drawLight
+
+Draw a light with the default texture. Shared draw rules apply.
+
+drawLight(props: TC.GraphicsLight) -> id: TC.GraphicsObjectId
+
+Parameters
+
+props: TC.GraphicsLight
+Light properties.
+
+Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+drawLine
+
+Graphics draw methods share these rules:
+each creates one native object in front of all others of its draw layer and returns its new id;
+properties are validated completely before any change (E_ARGUMENT for shape/type, E_RANGE for domain or bounds);
+a payload above the per-call byte or entry allowance causes E_LIMIT;
+an object that would raise all monitor presentation objects above render_object_limit causes E_CAPACITY;
+the change is applied during the call and becomes visible with all other changes of the same tick;
+a later failure in the same callback does not undo it. No synchronization group or flush is involved.
+In terminal mode every draw method causes E_UNSUPPORTED.
+
+drawLine(props: TC.GraphicsLine) -> id: TC.GraphicsObjectId
+
+Parameters
+
+props: TC.GraphicsLine
+Line properties.
+
+Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+drawPolygon
+
+Draw a filled triangle-strip polygon. Shared draw rules apply.
+
+drawPolygon(props: TC.GraphicsPolygon) -> id: TC.GraphicsObjectId
+
+Parameters
+
+props: TC.GraphicsPolygon
+Polygon properties.
+
+Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+drawRectangle
+
+Draw a filled or outlined rectangle. Shared draw rules apply.
+
+drawRectangle(props: TC.GraphicsRectangle) -> id: TC.GraphicsObjectId
+
+Parameters
+
+props: TC.GraphicsRectangle
+Rectangle properties.
+
+Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+drawSprite
+
+Draw a game icon. Shared draw rules apply.
+
+drawSprite(props: TC.GraphicsSprite) -> id: TC.GraphicsObjectId
+
+Parameters
+
+props: TC.GraphicsSprite
+Sprite properties.
+
+Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+drawText
+
+Draw terminal-font text. Shared draw rules apply.
+
+drawText(props: TC.GraphicsText) -> id: TC.GraphicsObjectId
+
+Parameters
+
+props: TC.GraphicsText
+Text properties.
+
+Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+get
+
+Read one object.
+In graphics mode, an unknown id returns nil; it is not an error.
+
+get(id: TC.GraphicsObjectId) -> object: TC.GraphicsObject|nil
+
+Parameters
+
+id: TC.GraphicsObjectId
+Object id.
+
+Returns
+
+object: TC.GraphicsObject|nil
+Fresh copy of the type and properties, or nil.
 
 getBackgroundColor
 
@@ -8853,6 +10175,38 @@ Returns
 limits: TC.MonitorLimits
 Current monitor/model/presentation envelopes.
 
+getMode
+
+Graphics mode
+
+Read the current mode.
+
+getMode() -> mode: TC.MonitorMode
+
+Parameters
+
+No parameters.
+
+Returns
+
+mode: TC.MonitorMode
+Current mode of the logical display.
+
+getObjects
+
+List every object id: first the sprites and lights in creation order, then the other objects from back to front.
+
+getObjects() -> ids: (TC.GraphicsObjectId)[]
+
+Parameters
+
+No parameters.
+
+Returns
+
+ids: (TC.GraphicsObjectId)[]
+Fresh dense array in draw order. Empty when there are no objects.
+
 getPaletteColor
 
 Read the current palette channels.
@@ -8904,6 +10258,7 @@ Blue finite channel in 0..1.
 getSize
 
 Read the current model geometry, not physical tiles or an older visible snapshot.
+In graphics mode the results are content pixels: 64*W-4 by 64*H-4 for a W×H tile display.
 
 getSize() -> width: integer, height: integer
 
@@ -8914,10 +10269,10 @@ No parameters.
 Returns
 
 width: integer
-Positive character column count.
+Positive character column count, or content pixel width in graphics mode.
 
 height: integer
-Positive character row count.
+Positive character row count, or content pixel height in graphics mode.
 
 getTextColor
 
@@ -9000,6 +10355,23 @@ Returns
 supported: true
 Exactly one true result.
 
+moveToBack
+
+Move one line, polygon, rectangle, circle, arc or text object to the back of its draw layer.
+An unknown id causes E_NOT_FOUND. A sprite or light causes E_UNSUPPORTED.
+The method returns zero values.
+
+moveToBack(id: TC.GraphicsObjectId)
+
+Parameters
+
+id: TC.GraphicsObjectId
+Existing object id.
+
+Returns
+
+No result positions. See the behavior notes for normal-return versus failure semantics.
+
 scroll
 
 Move contents vertically.
@@ -9015,6 +10387,28 @@ Parameters
 
 lines: integer
 Signed safe-integer row offset. There is no float or string coercion.
+
+Returns
+
+No result positions. See the behavior notes for normal-return versus failure semantics.
+
+set
+
+Change some properties of one object.
+Only keys valid for its type are accepted; the type cannot change.
+The method validates the complete resulting object, including bounds, before any change.
+An unknown id causes E_NOT_FOUND. Draw order and id stay unchanged.
+The method returns zero values.
+
+set(id: TC.GraphicsObjectId, props: table)
+
+Parameters
+
+id: TC.GraphicsObjectId
+Existing object id.
+
+props: table
+Partial properties for that object type, as in the draw method of that type.
 
 Returns
 
@@ -9087,6 +10481,28 @@ Safe integer -9007199254740991..9007199254740991.
 
 y: integer
 Safe integer -9007199254740991..9007199254740991.
+
+Returns
+
+No result positions. See the behavior notes for normal-return versus failure semantics.
+
+setMode
+
+Change the mode.
+A change to the other mode clears all terminal cells (to spaces with current colors) and destroys all graphics objects.
+It then queues monitor_resize with reason 'mode'; old dimensions use the old units.
+It removes this monitor from a monitor synchronization group when it enters graphics mode.
+Cursor, colors, palette and text scale are retained for a later return to terminal mode.
+Setting the current mode changes nothing and is a successful mutating call for synchronization rounds.
+The mode persists through save/load and follows merge, split, settings paste and blueprints like text scale.
+The method returns zero values.
+
+setMode(mode: TC.MonitorMode)
+
+Parameters
+
+mode: TC.MonitorMode
+Exact 'terminal' or 'graphics'. Any other string causes E_RANGE; a non-string causes E_ARGUMENT.
 
 Returns
 
@@ -48335,6 +49751,2169 @@ kind]=] ]=[=[
 heading]=],
 [ [=[
 text]=] ]=[=[
+TC.GraphicsArc]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Bounds use the exact annulus sector, not the full circle.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Extends: TC.GraphicsCommon]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+angle]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Sweep in radians, greater than 0 and at most 2*pi.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+color]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Arc colour.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsColor]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+max_radius]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Outer radius in content pixels, greater than min_radius.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+min_radius]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Inner radius in content pixels, 0 or more.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+start_angle]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Start angle in radians, clockwise from the display's +x axis.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+target]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Centre.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsPoint]=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.GraphicsArc]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsArc
+
+Bounds use the exact annulus sector, not the full circle.
+
+Extends: TC.GraphicsCommon
+
+angle
+
+Sweep in radians, greater than 0 and at most 2*pi.
+
+number
+
+color
+
+Arc colour.
+
+TC.GraphicsColor
+
+max_radius
+
+Outer radius in content pixels, greater than min_radius.
+
+number
+
+min_radius
+
+Inner radius in content pixels, 0 or more.
+
+number
+
+start_angle
+
+Start angle in radians, clockwise from the display's +x axis.
+
+number
+
+target
+
+Centre.
+
+TC.GraphicsPoint]=],
+[ [=[
+title]=] ]=[=[
+TC.GraphicsArc]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsCircle]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+These are the properties of a circle.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Extends: TC.GraphicsCommon]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+color]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Fill or outline colour.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsColor]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+filled (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Default: false.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+boolean]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+radius]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Radius in content pixels, greater than 0.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+target]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Centre.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsPoint]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+width (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Outline width in content pixels when not filled, greater than 0. Default: 2. Bounds extend by width/2.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.GraphicsCircle]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsCircle
+
+These are the properties of a circle.
+
+Extends: TC.GraphicsCommon
+
+color
+
+Fill or outline colour.
+
+TC.GraphicsColor
+
+filled (optional)
+
+Default: false.
+
+boolean
+
+radius
+
+Radius in content pixels, greater than 0.
+
+number
+
+target
+
+Centre.
+
+TC.GraphicsPoint
+
+width (optional)
+
+Outline width in content pixels when not filled, greater than 0. Default: 2. Bounds extend by width/2.
+
+number]=],
+[ [=[
+title]=] ]=[=[
+TC.GraphicsCircle]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsColor]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+This is a Factorio colour table with channels 0..1.
+Either array form {r, g, b, a} or map form {r=..., g=..., b=..., a=...} is accepted. get returns the map form.
+A channel outside 0..1, or a non-finite channel, causes E_RANGE. Colour constants from colors are not accepted (E_ARGUMENT).]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+a (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Alpha 0..1. Default: 1.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+b]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Blue 0..1.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+g]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Green 0..1.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+r]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Red 0..1.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.GraphicsColor]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsColor
+
+This is a Factorio colour table with channels 0..1.
+Either array form {r, g, b, a} or map form {r=..., g=..., b=..., a=...} is accepted. get returns the map form.
+A channel outside 0..1, or a non-finite channel, causes E_RANGE. Colour constants from colors are not accepted (E_ARGUMENT).
+
+a (optional)
+
+Alpha 0..1. Default: 1.
+
+number
+
+b
+
+Blue 0..1.
+
+number
+
+g
+
+Green 0..1.
+
+number
+
+r
+
+Red 0..1.
+
+number]=],
+[ [=[
+title]=] ]=[=[
+TC.GraphicsColor]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsCommon]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+These properties are accepted by every draw method and by set.
+Any key not listed for the object type causes E_ARGUMENT, also native keys such as surface, target entities, players, forces, time_to_live, render_mode and draw_on_ground.
+Every object must fit the content area completely, or the call causes E_RANGE with no change. The host never clips or clamps.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+blink_interval (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Native blink period in ticks, 0..65535. Default: 0 (no blinking).]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+integer]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+only_in_alt_mode (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Default: false.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+boolean]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+visible (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Default: true. A hidden object keeps its id, order and bounds check.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+boolean]=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.GraphicsCommon]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsCommon
+
+These properties are accepted by every draw method and by set.
+Any key not listed for the object type causes E_ARGUMENT, also native keys such as surface, target entities, players, forces, time_to_live, render_mode and draw_on_ground.
+Every object must fit the content area completely, or the call causes E_RANGE with no change. The host never clips or clamps.
+
+blink_interval (optional)
+
+Native blink period in ticks, 0..65535. Default: 0 (no blinking).
+
+integer
+
+only_in_alt_mode (optional)
+
+Default: false.
+
+boolean
+
+visible (optional)
+
+Default: true. A hidden object keeps its id, order and bounds check.
+
+boolean]=],
+[ [=[
+title]=] ]=[=[
+TC.GraphicsCommon]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsLight]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+A light uses the engine's default light texture. Its visible glow stays within radius of target.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Extends: TC.GraphicsCommon]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+color (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Default: white.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsColor]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+intensity (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+0..1. Default: 1.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+minimum_darkness (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Darkness 0..1 below which the light is not drawn. Default: 0.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+radius]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Visible radius in content pixels, greater than 0.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+target]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Centre.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsPoint]=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.GraphicsLight]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsLight
+
+A light uses the engine's default light texture. Its visible glow stays within radius of target.
+
+Extends: TC.GraphicsCommon
+
+color (optional)
+
+Default: white.
+
+TC.GraphicsColor
+
+intensity (optional)
+
+0..1. Default: 1.
+
+number
+
+minimum_darkness (optional)
+
+Darkness 0..1 below which the light is not drawn. Default: 0.
+
+number
+
+radius
+
+Visible radius in content pixels, greater than 0.
+
+number
+
+target
+
+Centre.
+
+TC.GraphicsPoint]=],
+[ [=[
+title]=] ]=[=[
+TC.GraphicsLight]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsLine]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+These are the properties of a straight line.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Extends: TC.GraphicsCommon]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+color]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Line colour.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsColor]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+dash_length (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Dash length in content pixels, 0 or more. Default: 0 (solid).]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+dash_offset (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Dash offset in content pixels. Default: 0.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+from]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Start point.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsPoint]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+gap_length (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Gap length in content pixels, 0 or more. Default: 0.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+to]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+End point.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsPoint]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+width (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Line width in content pixels, greater than 0. Default: 2. The bounds check extends both end points by width/2 on each axis.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.GraphicsLine]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsLine
+
+These are the properties of a straight line.
+
+Extends: TC.GraphicsCommon
+
+color
+
+Line colour.
+
+TC.GraphicsColor
+
+dash_length (optional)
+
+Dash length in content pixels, 0 or more. Default: 0 (solid).
+
+number
+
+dash_offset (optional)
+
+Dash offset in content pixels. Default: 0.
+
+number
+
+from
+
+Start point.
+
+TC.GraphicsPoint
+
+gap_length (optional)
+
+Gap length in content pixels, 0 or more. Default: 0.
+
+number
+
+to
+
+End point.
+
+TC.GraphicsPoint
+
+width (optional)
+
+Line width in content pixels, greater than 0. Default: 2. The bounds check extends both end points by width/2 on each axis.
+
+number]=],
+[ [=[
+title]=] ]=[=[
+TC.GraphicsLine]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsObject]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+This is a copy of one object returned by get.
+It holds the type and every stored property, with defaults filled and points/colours in map form.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+type]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Object type. It cannot be changed.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+'line'|'polygon'|'rectangle'|'circle'|'arc'|'text'|'sprite'|'light']=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.GraphicsObject]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsObject
+
+This is a copy of one object returned by get.
+It holds the type and every stored property, with defaults filled and points/colours in map form.
+
+type
+
+Object type. It cannot be changed.
+
+'line'|'polygon'|'rectangle'|'circle'|'arc'|'text'|'sprite'|'light']=],
+[ [=[
+title]=] ]=[=[
+TC.GraphicsObject]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsObjectId]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+This is a positive integer that identifies one graphics object of one logical display.
+Ids are never reused for that display, also after clear.
+A geometry change, mode change or new logical identity removes all objects; their ids then return nil from get.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+integer]=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.GraphicsObjectId]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsObjectId
+
+This is a positive integer that identifies one graphics object of one logical display.
+Ids are never reused for that display, also after clear.
+A geometry change, mode change or new logical identity removes all objects; their ids then return nil from get.
+
+integer]=],
+[ [=[
+title]=] ]=[=[
+TC.GraphicsObjectId]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsPoint]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+This is a point in content pixels: 64 per tile, origin at the content top-left (two pixels inside the bezel), x right, y down along the display's own axes.
+Either array form {x, y} or map form {x=..., y=...} is accepted. get returns the map form.
+Both coordinates are finite numbers; fractions are allowed.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+x]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Horizontal content pixel.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+y]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Vertical content pixel.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.GraphicsPoint]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsPoint
+
+This is a point in content pixels: 64 per tile, origin at the content top-left (two pixels inside the bezel), x right, y down along the display's own axes.
+Either array form {x, y} or map form {x=..., y=...} is accepted. get returns the map form.
+Both coordinates are finite numbers; fractions are allowed.
+
+x
+
+Horizontal content pixel.
+
+number
+
+y
+
+Vertical content pixel.
+
+number]=],
+[ [=[
+title]=] ]=[=[
+TC.GraphicsPoint]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsPolygon]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+These are the properties of a filled polygon.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Extends: TC.GraphicsCommon]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+color]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Fill colour.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsColor]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+vertices]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Triangle strip, at least three points, as in LuaRendering.draw_polygon. Bounds use every vertex.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+(TC.GraphicsPoint)[]]=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.GraphicsPolygon]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsPolygon
+
+These are the properties of a filled polygon.
+
+Extends: TC.GraphicsCommon
+
+color
+
+Fill colour.
+
+TC.GraphicsColor
+
+vertices
+
+Triangle strip, at least three points, as in LuaRendering.draw_polygon. Bounds use every vertex.
+
+(TC.GraphicsPoint)[]]=],
+[ [=[
+title]=] ]=[=[
+TC.GraphicsPolygon]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsRectangle]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+These are the properties of an axis-aligned rectangle in display axes.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Extends: TC.GraphicsCommon]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+color]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Fill or outline colour.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsColor]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+filled (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Default: false.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+boolean]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+left_top]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Top-left corner.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsPoint]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+right_bottom]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Bottom-right corner. Each coordinate must be greater than or equal to left_top.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsPoint]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+width (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Outline width in content pixels when not filled, greater than 0. Default: 2. Bounds extend by width/2.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.GraphicsRectangle]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsRectangle
+
+These are the properties of an axis-aligned rectangle in display axes.
+
+Extends: TC.GraphicsCommon
+
+color
+
+Fill or outline colour.
+
+TC.GraphicsColor
+
+filled (optional)
+
+Default: false.
+
+boolean
+
+left_top
+
+Top-left corner.
+
+TC.GraphicsPoint
+
+right_bottom
+
+Bottom-right corner. Each coordinate must be greater than or equal to left_top.
+
+TC.GraphicsPoint
+
+width (optional)
+
+Outline width in content pixels when not filled, greater than 0. Default: 2. Bounds extend by width/2.
+
+number]=],
+[ [=[
+title]=] ]=[=[
+TC.GraphicsRectangle]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsSprite]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+The sprite must be an icon path type/name of the type item, fluid, entity, recipe, technology, virtual-signal, tile, item-group, quality, space-location, asteroid-chunk or equipment.
+The path must be valid in the current game. Other paths, including file/ and utility/, cause E_RANGE.
+At x_scale = y_scale = 1 an icon covers 64x64 content pixels (one tile), centred on target, then rotated by orientation.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Extends: TC.GraphicsCommon]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+orientation (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Clockwise turn 0..1. Default: 0.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+sprite]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Icon path such as 'item/iron-plate' or 'virtual-signal/signal-A'.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+string]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+target]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Centre.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsPoint]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+tint (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Default: white.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsColor]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+x_scale (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Horizontal scale, greater than 0. Default: 1.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+y_scale (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Vertical scale, greater than 0. Default: 1.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.GraphicsSprite]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsSprite
+
+The sprite must be an icon path type/name of the type item, fluid, entity, recipe, technology, virtual-signal, tile, item-group, quality, space-location, asteroid-chunk or equipment.
+The path must be valid in the current game. Other paths, including file/ and utility/, cause E_RANGE.
+At x_scale = y_scale = 1 an icon covers 64x64 content pixels (one tile), centred on target, then rotated by orientation.
+
+Extends: TC.GraphicsCommon
+
+orientation (optional)
+
+Clockwise turn 0..1. Default: 0.
+
+number
+
+sprite
+
+Icon path such as 'item/iron-plate' or 'virtual-signal/signal-A'.
+
+string
+
+target
+
+Centre.
+
+TC.GraphicsPoint
+
+tint (optional)
+
+Default: white.
+
+TC.GraphicsColor
+
+x_scale (optional)
+
+Horizontal scale, greater than 0. Default: 1.
+
+number
+
+y_scale (optional)
+
+Vertical scale, greater than 0. Default: 1.
+
+number]=],
+[ [=[
+title]=] ]=[=[
+TC.GraphicsSprite]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsText]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Text uses only the monitor terminal font. Each byte is one 6x9 glyph times scale, with the terminal glyph repertoire and replacement rule.
+Rich text is never parsed; bytes such as [ and ] are literal glyphs. There is no font option.
+The covered rectangle is (#text*6*scale) by (9*scale) pixels, placed by alignment and vertical_alignment, then rotated around target.
+The bounds check uses this rectangle. The engine draws text about 6 screen pixels lower than this rectangle, at every zoom.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Extends: TC.GraphicsCommon]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+alignment (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Horizontal anchor. Default: 'left'.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+'left'|'center'|'right']=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+color]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Glyph colour.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsColor]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+orientation (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Clockwise turn 0..1 around target. Default: 0.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+scale (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Half-step 0.5..5, as text scale. Default: 1.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+number]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+target]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Anchor point.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsPoint]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+text]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Literal bytes, bounded by write_bytes. An empty string is accepted.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+string]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+vertical_alignment (optional)]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Vertical anchor. Default: 'top'.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+'top'|'middle'|'bottom']=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.GraphicsText]=],
+[ [=[
+text]=] ]=[=[
+TC.GraphicsText
+
+Text uses only the monitor terminal font. Each byte is one 6x9 glyph times scale, with the terminal glyph repertoire and replacement rule.
+Rich text is never parsed; bytes such as [ and ] are literal glyphs. There is no font option.
+The covered rectangle is (#text*6*scale) by (9*scale) pixels, placed by alignment and vertical_alignment, then rotated around target.
+The bounds check uses this rectangle. The engine draws text about 6 screen pixels lower than this rectangle, at every zoom.
+
+Extends: TC.GraphicsCommon
+
+alignment (optional)
+
+Horizontal anchor. Default: 'left'.
+
+'left'|'center'|'right'
+
+color
+
+Glyph colour.
+
+TC.GraphicsColor
+
+orientation (optional)
+
+Clockwise turn 0..1 around target. Default: 0.
+
+number
+
+scale (optional)
+
+Half-step 0.5..5, as text scale. Default: 1.
+
+number
+
+target
+
+Anchor point.
+
+TC.GraphicsPoint
+
+text
+
+Literal bytes, bounded by write_bytes. An empty string is accepted.
+
+string
+
+vertical_alignment (optional)
+
+Vertical anchor. Default: 'top'.
+
+'top'|'middle'|'bottom']=],
+[ [=[
+title]=] ]=[=[
+TC.GraphicsText]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
 TC.GuestTable]=]
 },
 {
@@ -53357,6 +56936,51 @@ kind]=] ]=[=[
 heading]=],
 [ [=[
 text]=] ]=[=[
+TC.MonitorMode]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+This is one of the two monitor modes.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+'terminal'|'graphics']=]
+}
+},
+[ [=[
+category]=] ]=[=[
+Types]=],
+[ [=[
+id]=] ]=[=[
+type.TC.MonitorMode]=],
+[ [=[
+text]=] ]=[=[
+TC.MonitorMode
+
+This is one of the two monitor modes.
+
+'terminal'|'graphics']=],
+[ [=[
+title]=] ]=[=[
+TC.MonitorMode]=]
+},
+{
+[ [=[
+blocks]=] ]={
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
 TC.MonitorRef]=]
 },
 {
@@ -53462,10 +57086,12 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-The logical terminal geometry changed.
-Old wrappers or coordinates can be invalid. Rediscover the monitor.
+The logical display geometry or mode changed.
+Old wrappers, coordinates or graphics object ids can be invalid. Rediscover the monitor.
 Inspect its dimensions. Notifications can coalesce to the latest geometry
-while they retain the original prior dimensions.]=]
+while they retain the original prior dimensions.
+Terminal dimensions are character cells. Graphics dimensions are content pixels at 64 per tile.
+For reason 'mode', the old dimensions use the units of the previous mode.]=]
 },
 {
 [ [=[
@@ -53489,7 +57115,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Current terminal height in character rows.]=]
+Current height: character rows in terminal mode, content pixels in graphics mode.]=]
 },
 {
 [ [=[
@@ -53498,6 +57124,30 @@ signature]=],
 [ [=[
 text]=] ]=[=[
 integer]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+mode]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Current mode, which gives the units of width and height.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.MonitorMode]=]
 },
 {
 [ [=[
@@ -53537,7 +57187,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Previous terminal height in character rows.]=]
+Previous height in the units of the previous mode.]=]
 },
 {
 [ [=[
@@ -53561,7 +57211,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Previous terminal width in character columns.]=]
+Previous width in the units of the previous mode.]=]
 },
 {
 [ [=[
@@ -53585,7 +57235,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Cause of geometry/scale notification.]=]
+Cause of the notification. 'scale' occurs only in terminal mode.]=]
 },
 {
 [ [=[
@@ -53593,7 +57243,7 @@ kind]=] ]=[=[
 signature]=],
 [ [=[
 text]=] ]=[=[
-'tiles'|'scale']=]
+'tiles'|'scale'|'mode']=]
 },
 {
 [ [=[
@@ -53609,7 +57259,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Current terminal width in character columns.]=]
+Current width: character columns in terminal mode, content pixels in graphics mode.]=]
 },
 {
 [ [=[
@@ -53630,18 +57280,26 @@ type.TC.MonitorResize]=],
 text]=] ]=[=[
 TC.MonitorResize
 
-The logical terminal geometry changed.
-Old wrappers or coordinates can be invalid. Rediscover the monitor.
+The logical display geometry or mode changed.
+Old wrappers, coordinates or graphics object ids can be invalid. Rediscover the monitor.
 Inspect its dimensions. Notifications can coalesce to the latest geometry
 while they retain the original prior dimensions.
+Terminal dimensions are character cells. Graphics dimensions are content pixels at 64 per tile.
+For reason 'mode', the old dimensions use the units of the previous mode.
 
 Extends: TC.MonitorEvent
 
 height
 
-Current terminal height in character rows.
+Current height: character rows in terminal mode, content pixels in graphics mode.
 
 integer
+
+mode
+
+Current mode, which gives the units of width and height.
+
+TC.MonitorMode
 
 name
 
@@ -53651,25 +57309,25 @@ Resize event discriminator.
 
 old_height
 
-Previous terminal height in character rows.
+Previous height in the units of the previous mode.
 
 integer
 
 old_width
 
-Previous terminal width in character columns.
+Previous width in the units of the previous mode.
 
 integer
 
 reason
 
-Cause of geometry/scale notification.
+Cause of the notification. 'scale' occurs only in terminal mode.
 
-'tiles'|'scale'
+'tiles'|'scale'|'mode'
 
 width
 
-Current terminal width in character columns.
+Current width: character columns in terminal mode, content pixels in graphics mode.
 
 integer]=],
 [ [=[
@@ -53888,8 +57546,10 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-A player activated a selected monitor character cell through the supported interaction.
-Coordinates are terminal cells, not world tiles or mosaic pixels.]=]
+A player activated a selected monitor point through the supported interaction.
+In terminal mode the coordinates are 1-based character cells.
+In graphics mode they are 0-based integer content pixels at 64 per tile, along the display's own axes.
+Coordinates are never world tiles or mosaic subpixels.]=]
 },
 {
 [ [=[
@@ -53898,6 +57558,30 @@ prose]=],
 [ [=[
 text]=] ]=[=[
 Extends: TC.MonitorEvent]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+heading]=],
+[ [=[
+text]=] ]=[=[
+mode]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+prose]=],
+[ [=[
+text]=] ]=[=[
+Mode that gives the coordinate units.]=]
+},
+{
+[ [=[
+kind]=] ]=[=[
+signature]=],
+[ [=[
+text]=] ]=[=[
+TC.MonitorMode]=]
 },
 {
 [ [=[
@@ -53985,7 +57669,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-One-based character column.]=]
+One-based character column, or 0-based content pixel column in graphics mode.]=]
 },
 {
 [ [=[
@@ -54009,7 +57693,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-One-based character row.]=]
+One-based character row, or 0-based content pixel row in graphics mode.]=]
 },
 {
 [ [=[
@@ -54030,10 +57714,18 @@ type.TC.MonitorTouch]=],
 text]=] ]=[=[
 TC.MonitorTouch
 
-A player activated a selected monitor character cell through the supported interaction.
-Coordinates are terminal cells, not world tiles or mosaic pixels.
+A player activated a selected monitor point through the supported interaction.
+In terminal mode the coordinates are 1-based character cells.
+In graphics mode they are 0-based integer content pixels at 64 per tile, along the display's own axes.
+Coordinates are never world tiles or mosaic subpixels.
 
 Extends: TC.MonitorEvent
+
+mode
+
+Mode that gives the coordinate units.
+
+TC.MonitorMode
 
 name
 
@@ -54055,13 +57747,13 @@ TC.Tick
 
 x
 
-One-based character column.
+One-based character column, or 0-based content pixel column in graphics mode.
 
 integer
 
 y
 
-One-based character row.
+One-based character row, or 0-based content pixel row in graphics mode.
 
 integer]=],
 [ [=[

@@ -190,7 +190,7 @@ for _,entry in ipairs(api.topics) do M.topics[#M.topics+1]=entry end
 M.type_topics=api.locations
 local complete={}; for _,entry in ipairs(M.topics) do complete[#complete+1]=entry.text end
 M.text=table.concat(complete,'\n\n')
-for _,id in ipairs({'starter','speaker','logic','recipe','factory','shared','statistics','dashboard','dashboard_charts'}) do
+for _,id in ipairs({'starter','speaker','logic','recipe','factory','shared','statistics','dashboard','dashboard_charts','graphics'}) do
   local tutorial=tutorials[id]
   local entry={id='tutorial.'..id,title=tutorial.title,category='Examples',blocks={},text=''}
   block(entry,'heading',tutorial.title)

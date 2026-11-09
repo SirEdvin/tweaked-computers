@@ -484,10 +484,11 @@ An equal canonical selection is idempotent and preserves pending work and sequen
 Ordinary refusal preserves the old group and every model and front.
 No selection grants exclusive drawing authority.
 
-All members must be live monitors on one force and surface.
+All members must be live terminal-mode monitors on one force and surface.
 The sum of their actual cells must fit the allowance.
 A member that another owner selected causes E_BUSY.
 A non-monitor causes E_WRONGTYPE.
+A graphics-mode monitor causes E_UNSUPPORTED. Graphics changes publish at call time and need no group.
 A missing path causes E_UNREACHABLE.
 Incomplete proof causes E_NETWORK_PENDING.
 
@@ -511,6 +512,7 @@ These events never release accepted model or front contents.
 Temporary incomplete proof blocks the group instead.
 
 Geometry and scale changes reset participation and staging.
+Switching a member to graphics mode removes only that member from the selection; the other members continue.
 An oversized retained group stays blocked until it fits or its configuration changes.
 Ordinary reload preserves ownership, progress, acknowledgements and credits.
 
