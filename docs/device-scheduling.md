@@ -2,8 +2,8 @@
 
 This is the source disposition map for `demand-driven-device-scheduling`, not a
 CPU/FPS result or a replacement for its native acceptance ledger. The editable
-[tick-cycle drawing](../openspec/changes/demand-driven-device-scheduling/tick-cycle.excalidraw)
-and [preview](../openspec/changes/demand-driven-device-scheduling/tick-cycle.png)
+[tick-cycle drawing](../openspec/changes/archive/2026-11-09-demand-driven-device-scheduling/tick-cycle.excalidraw)
+and [preview](../openspec/changes/archive/2026-11-09-demand-driven-device-scheduling/tick-cycle.png)
 show the same ordering. `control.lua` has one ordinary `on_tick` entry point.
 Trusted hooks are registered at control parsing. Production has no `on_load`
 handler and does not rebuild authoritative membership there.
