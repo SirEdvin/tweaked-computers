@@ -75,35 +75,35 @@ The amounts change once per second, and the item names stay the same. The termin
 program writes six rows with `blit` at text scale 2. The graphics program draws the
 names once as static text and updates six amount objects with `set`. Both use the
 same glyph size and colours. Runs used `--program FILE --scene one --ticks 7200`,
-serial and in the order terminal, graphics, terminal, graphics, on a quiet host
-(4 cores, load average 0.2–1.3). Values are ms:
+serial and in the order terminal, graphics, terminal, graphics, with 3600 ticks
+each on a quiet host. Each mod has its own Lua state, so the harness collects all
+garbage before each measured tick. The harness's own logging therefore causes no
+collector work in the measured ticks. `alloc_kb` reports the Lua heap growth inside the
+tick, which is the garbage that the mod gives to the collector later. Values are ms:
 
-| Option | Mean per tick | Update tick mean | Update tick median | Update tick p95 | Update tick max | Native objects |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Terminal, run 1 | 0.385 | 13.0 | 15.0 | 26.7 | 29.5 | 304 |
-| Graphics, run 1 | 0.366 | 11.9 | 15.1 | 23.5 | 27.2 | 289 |
-| Terminal, run 2 | 0.392 | 13.4 | 16.4 | 27.2 | 31.4 | 304 |
-| Graphics, run 2 | 0.373 | 12.1 | 15.8 | 24.5 | 28.1 | 289 |
+| Option | Update tick median | p95 | Max | Allocation per update |
+| --- | ---: | ---: | ---: | ---: |
+| Terminal, run 1 | 1.99 | 2.27 | 3.37 | 132 KB |
+| Graphics, run 1 | 1.74 | 2.06 | 2.80 | 125 KB |
+| Terminal, run 2 | 2.04 | 2.36 | 2.86 | 132 KB |
+| Graphics, run 2 | 1.68 | 1.91 | 2.22 | 125 KB |
 
-The idle median was 0.16 ms in all runs. The update-tick values above include
-Lua garbage collection, and most of the collector's work comes from the benchmark
-harness itself. Each mod has its own Lua state. The harness logs one profiler sample
-on every tick, so the heap grows about 72 KB per tick, against about 4 KB per idle
-tick from the mod. The collector bills its work to the code that allocates at that
-time. Thus updates alternate between about 1.4 ms and 16–25 ms, in step with the
-heap cycle. A diagnostic run that finished a full collection after each tick,
-outside the measured region, gave these update ticks (median, range without the
-first callback after load):
+The graphics update is about 15% faster. Stage timing and a native micro-benchmark
+divide the 1.7 ms graphics update as follows:
 
-| Option | Update tick median | Range |
-| --- | ---: | --- |
-| Graphics | 1.60 ms | 1.50–2.33 ms |
-| Terminal | 1.92 ms | 1.83–2.55 ms |
+| Part | Time |
+| --- | ---: |
+| Wire-network discovery for `peripheral.wrap` (once for each callback) | 0.72 ms |
+| Six `set` calls through the guest API | about 0.35 ms |
+| Program state copy, guest code and environment binding | about 0.45 ms |
+| Scheduler and timers outside the callback | 0.15 ms |
 
-Peripheral discovery for `peripheral.wrap` uses about 0.65 ms of each update. The
-first callback after a load costs about 18.6 ms because it builds the program's
-runtime structures again. Do not read the update-tick column above as a fixed
-callback cost.
+Factorio itself is not the cost. One native `text` write takes 0.25 µs, and the
+full nine-property update of one text object takes 1.7 µs. The mod's `set`
+validation and conversion take 19 µs for each call. The guest-to-host call path adds
+about 43 µs. The terminal update also publishes six rows after the callback, which
+costs 0.62 ms. The sine-chart tables above were measured before the harness
+collected garbage outside the measured ticks.
 Evidence: `/home/siredvin/artifacts/tweaked-computers/monitor-stock-benchmark-2026-11-09/`.
 
 ## Bottlenecks and changes
