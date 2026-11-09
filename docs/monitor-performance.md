@@ -85,13 +85,25 @@ serial and in the order terminal, graphics, terminal, graphics, on a quiet host
 | Terminal, run 2 | 0.392 | 13.4 | 16.4 | 27.2 | 31.4 | 304 |
 | Graphics, run 2 | 0.373 | 12.1 | 15.8 | 24.5 | 28.1 | 289 |
 
-The idle median was 0.16 ms in all runs. The graphics option costs about 5% less
-per tick and about 9% less per update tick, but most of the update cost is the
-same for both. One changed line instead of six gives a mean update tick of 11.6 ms.
-The same terminal program costs a median of 1.9 ms per callback when it runs every
-2 ticks. Thus a callback after a 60-tick wait has a fixed cost of about 11 ms that
-does not come from the monitor. An earlier run on a loaded host gave the same order
-with higher values; it is kept in the evidence.
+The idle median was 0.16 ms in all runs. The update-tick values above include
+Lua garbage collection, and most of the collector's work comes from the benchmark
+harness itself. Each mod has its own Lua state. The harness logs one profiler sample
+on every tick, so the heap grows about 72 KB per tick, against about 4 KB per idle
+tick from the mod. The collector bills its work to the code that allocates at that
+time. Thus updates alternate between about 1.4 ms and 16–25 ms, in step with the
+heap cycle. A diagnostic run that finished a full collection after each tick,
+outside the measured region, gave these update ticks (median, range without the
+first callback after load):
+
+| Option | Update tick median | Range |
+| --- | ---: | --- |
+| Graphics | 1.60 ms | 1.50–2.33 ms |
+| Terminal | 1.92 ms | 1.83–2.55 ms |
+
+Peripheral discovery for `peripheral.wrap` uses about 0.65 ms of each update. The
+first callback after a load costs about 18.6 ms because it builds the program's
+runtime structures again. Do not read the update-tick column above as a fixed
+callback cost.
 Evidence: `/home/siredvin/artifacts/tweaked-computers/monitor-stock-benchmark-2026-11-09/`.
 
 ## Bottlenecks and changes
