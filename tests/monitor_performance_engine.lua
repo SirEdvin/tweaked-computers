@@ -78,15 +78,21 @@ function M.on_tick(event)
     end
   end
   assert(tiles==x.tiles,'timing scene tile count changed')
+  -- Each mod has its own Lua state, so harness garbage (logs, profilers, audits) would be
+  -- collected inside the measured tick. Finish every cycle before measuring instead; the
+  -- mod's own garbage is reported as alloc_kb, the input that drives its real GC cost.
+  collectgarbage('collect')
   local profiler=helpers.create_profiler()
+  local kb=collectgarbage('count')
   scheduler.tick(event.tick)
+  kb=collectgarbage('count')-kb
   profiler.stop()
   x.steps=x.steps+1
   local stopped=scene=='zero' or scene=='idle' and x.phase~='warmup'
   assert(c.status==(stopped and 'stopped' or 'running'),serpent.line(c.diagnostic))
   if x.phase=='measuring' then
     x.measured=x.measured+1
-    log({'','TC_PERF_CPU tick=',event.tick,' ',profiler})
+    log({'','TC_PERF_CPU tick=',event.tick,' ',profiler,string.format(' alloc_kb=%.1f',kb)})
     local selection=c.monitor_sync; local p=root.monitors.presentation
     local lane=selection and p.lanes[selection.key]
     if not lane then

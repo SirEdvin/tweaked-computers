@@ -115,12 +115,16 @@ def main():
     for path in sorted((folder / 'engine').glob('*/cold-second-engine.log')):
         text = path.read_text()
         durations = [float(m[1]) for m in re.finditer(r'TC_PERF_CPU tick=\d+ Duration: ([0-9.]+)ms', text)]
+        allocated = [float(m[1]) for m in re.finditer(r'TC_PERF_CPU tick=\d+ Duration: [0-9.]+ms alloc_kb=(-?[0-9.]+)', text)]
         done = list(re.finditer(r'TC_PERF_DONE ticks=(\d+) publications=(\d+) visible_changes=(\d+) max_gap=(\d+) peak_objects=(\d+)', text))
         entry = {'mode': path.parent.name, 'samples': len(durations), 'completed': len(done) == 1}
         if durations:
             ordered = sorted(durations)
             entry.update(mean_ms=statistics.fmean(durations), median_ms=statistics.median(durations),
                          p95_ms=ordered[int((len(ordered) - 1) * .95)], max_ms=max(durations))
+        if allocated:
+            # Lua heap growth inside the measured tick; GC runs outside the measured region.
+            entry.update(alloc_kb_mean=statistics.fmean(allocated), alloc_kb_max=max(allocated))
         if len(done) == 1:
             entry.update(zip(('ticks', 'publications', 'visible_changes', 'max_gap_ticks', 'peak_objects'), map(int, done[0].groups())))
         samples.append(entry)

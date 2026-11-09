@@ -28,7 +28,7 @@ class PerformanceInvocationTests(unittest.TestCase):
                     folder = engine / mode
                     folder.mkdir(parents=True)
                     (folder / 'cold-second-engine.log').write_text(
-                        ''.join(f'TC_PERF_CPU tick={i} Duration: 1.0ms\n' for i in range(samples))
+                        ''.join(f'TC_PERF_CPU tick={i} Duration: 1.0ms alloc_kb=2.5\n' for i in range(samples))
                         + 'TC_PERF_DONE ticks=600 publications=10 visible_changes=10 max_gap=2 peak_objects=10\n' * markers)
                 return SimpleNamespace(returncode=0)
 
@@ -42,6 +42,8 @@ class PerformanceInvocationTests(unittest.TestCase):
                 self.fail('scene selection is not implemented')
             record = json.loads((output / 'summary.json').read_text())
             self.assertEqual(record['scene'], scene)
+            for profile in record['scheduler_profiles']:
+                self.assertEqual((profile['alloc_kb_mean'], profile['alloc_kb_max']), (2.5, 2.5))
             with zipfile.ZipFile(archive) as original, zipfile.ZipFile(output / archive.name) as tested:
                 prefix = next(n[:-len('info.json')] for n in original.namelist() if n.endswith('/info.json'))
                 replacements = record['test_only_replacements']
