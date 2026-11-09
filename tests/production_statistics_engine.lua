@@ -215,7 +215,7 @@ function M.on_tick(event)
     if not c.state.statistics_monitor then return end
     local group=assert(monitor.resolve(registry.record(x.screen)))
     local function row(y)
-      local text=''; for col=1,group.model.width do text=text..string.char(group.model.cells[(y-1)*group.model.width+col][1]) end
+      local text=group.model.rows[y][1]
       return text
     end
     assert(row(1):find('Iron /min 1m',1,true) and row(4):find('older -> newer',1,true))

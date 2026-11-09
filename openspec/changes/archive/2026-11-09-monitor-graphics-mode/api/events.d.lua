@@ -1,0 +1,181 @@
+---@meta
+
+---The computer.on method accepts these general registration names.
+---The start, timer, signal_changed and dashboard_click events use their dedicated registration paths.
+---@alias TC.GeneralEventName 'peripheral_attach'|'peripheral_detach'|'monitor_resize'|'monitor_touch'|'power_restored'|'modem_message'
+
+---The host copies this host-owned event envelope for each delivery.
+---Handlers run through the scheduler, never recursively from service or GUI calls.
+---Ordinary load does not replay earlier effects.
+---Queue overflow faults the affected saved run and clears its still-owned Logic outputs.
+---Overflow is not a successful empty event.
+---@class TC.BaseEvent
+---@field name string Event discriminator. Each concrete event lists its name.
+---@field tick TC.Tick Dispatch tick unless the event documents an activation tick.
+---@field sequence integer Synchronized creation/admission order, not a native pointer.
+---@field computer_id TC.ComputerId Recipient placed computer identity.
+---@field run_id string Recipient active run generation.
+
+---The host queues this event once on explicit successful Run/Apply when start is exported.
+---Validation, Save, ordinary cold load and electrical cycling do not generate this event.
+---@class TC.StartEvent: TC.BaseEvent
+---@field name 'start' Startup event discriminator.
+
+---This event delivers a named timer.
+---The scheduled_tick field gives the first due deadline.
+---The tick field gives actual callback dispatch, which can be later.
+---Recurring timers coalesce overdue intervals into one event.
+---They advance to the first aligned deadline after admission.
+---
+---Equal deadlines retain timer creation order through reload.
+---Cancellation removes pending deadlines and queued, undispatched timer events without replay.
+---@class TC.TimerEvent: TC.BaseEvent
+---@field name 'timer' Timer event discriminator.
+---@field timer_id TC.TimerId Timer that owns this pending delivery.
+---@field scheduled_tick TC.Tick Original first due deadline for this delivery.
+---@field interval_ticks? integer Positive recurring interval. This field is absent for a one-shot timer.
+---@field missed integer Nonnegative skipped recurring intervals beyond this event.
+---@field payload? TC.Data Independent registration-time copy, absent if omitted/nil.
+
+---This event reports a physical attachment transition, not an initial inventory at registration.
+---If you need a current inventory, discover explicitly after registration.
+---Transitions are channel-qualified. Detach precedes replacement attach for the same binding.
+---Electricity loss alone does not detach a native carrier.
+---@class TC.PeripheralAttach: TC.BaseEvent
+---@field name 'peripheral_attach' Attachment discriminator.
+---@field peripheral TC.PeripheralName Currently attached identity.
+---@field peripheral_type string Public peripheral family name.
+---@field wire TC.Wire Independently reachable channel.
+
+---This event reports physical detachment.
+---Before delivery, the host revokes authority and cleans still-owned outputs,
+---even without a registered guest handler.
+---@class TC.PeripheralDetach: TC.BaseEvent
+---@field name 'peripheral_detach' Detachment discriminator.
+---@field peripheral TC.PeripheralName Detached identity. Old handles do not retarget.
+---@field peripheral_type string Prior public peripheral family name.
+---@field wire TC.Wire Channel that lost authority.
+---@field reason 'wire_removed'|'removed'|'regrouped'|'force_changed'|'surface_changed'|'limit'|'unavailable' Physical transition reason.
+
+---This event is accepted only for legacy compatibility.
+---The power_restored name remains a permitted general registration name.
+---The host produces no new power_restored events. Custom computers need no electricity.
+---Historical admitted records retain normal ordering and cancellation.
+---@class TC.PowerRestored: TC.BaseEvent
+---@field name 'power_restored' Inert legacy event discriminator.
+---@field outage_start_tick TC.Tick Historical outage start, not a current power policy.
+---@field restored_tick TC.Tick Historical restoration observation.
+
+---The host delivers a monitor event once per logical display per registration,
+---even when both colors reach it. The wires array orders red before green,
+---not alphabetically. The wire field is its first entry, not a bridge.
+---@class TC.MonitorEvent: TC.BaseEvent
+---@field peripheral TC.PeripheralName Logical monitor identity.
+---@field wire TC.Wire First currently authorized discovery color.
+---@field wires TC.Wire[] Authorized colors in red-before-green order. The caller can choose another entry.
+
+---The logical display geometry or mode changed.
+---Old wrappers, coordinates or graphics object ids can be invalid. Rediscover the monitor.
+---Inspect its dimensions. Notifications can coalesce to the latest geometry
+---while they retain the original prior dimensions.
+---Terminal dimensions are character cells. Graphics dimensions are content pixels at 64 per tile.
+---For reason 'mode', the old dimensions use the units of the previous mode.
+---@class TC.MonitorResize: TC.MonitorEvent
+---@field name 'monitor_resize' Resize event discriminator.
+---@field old_width integer Previous width in the units of the previous mode.
+---@field old_height integer Previous height in the units of the previous mode.
+---@field width integer Current width: character columns in terminal mode, content pixels in graphics mode.
+---@field height integer Current height: character rows in terminal mode, content pixels in graphics mode.
+---@field mode TC.MonitorMode Current mode, which gives the units of width and height.
+---@field reason 'tiles'|'scale'|'mode' Cause of the notification. 'scale' occurs only in terminal mode.
+
+---A player activated a selected monitor point through the supported interaction.
+---In terminal mode the coordinates are 1-based character cells.
+---In graphics mode they are 0-based integer content pixels at 64 per tile, along the display's own axes.
+---Coordinates are never world tiles or mosaic subpixels.
+---@class TC.MonitorTouch: TC.MonitorEvent
+---@field name 'monitor_touch' Touch event discriminator.
+---@field mode TC.MonitorMode Mode that gives the coordinate units.
+---@field x integer One-based character column, or 0-based content pixel column in graphics mode.
+---@field y integer One-based character row, or 0-based content pixel row in graphics mode.
+---@field player_index integer Activating player index, not a player object.
+---@field sample_tick TC.Tick Original synchronized monitor activation tick.
+
+---This record gives the input connection state for the selected color.
+---Only the selected red or green field is present. The other field is absent.
+---Initial previous connectivity is false.
+---@class TC.InputConnectivity
+---@field red? boolean Present only for red selection; physical connection status.
+---@field green? boolean Present only for green selection; physical connection status.
+
+---This record gives one effective identity/count difference.
+---Signals that disappear use current=0.
+---@class TC.SignalChange
+---@field signal TC.SignalId Native identity with optional fields preserved.
+---@field previous TC.Int32 Prior admitted count, zero when previously absent.
+---@field current TC.Int32 Current observed count, zero when now absent.
+
+---This event delivers a named Logic subscription.
+---The previous field gives the last successfully admitted sample or registration
+---baseline, not the last callback that ran.
+---Changes compare effective identities, counts and connectivity, not ordering or
+---explicit defaults. Connectivity-only changes can have an empty changes array.
+---
+---The host reads each watched physical input/color once per simulation tick.
+---Isolated subscriptions share this observation. Direct reads remain fresh.
+---Native circuit observations show the engine's update state.
+---They do not guarantee same-tick feedback.
+---
+---The sample_tick field gives observation time. The tick field gives dispatch time.
+---@class TC.SignalChanged: TC.BaseEvent
+---@field name 'signal_changed' Logic event discriminator. You cannot register this event through computer.on.
+---@field subscription_id TC.SubscriptionId Run and exact binding registration.
+---@field peripheral TC.PeripheralName Logic handler identity.
+---@field wire TC.Wire Computer-to-handler discovery path, not the input selection.
+---@field input TC.InputSelection Selected physical input color.
+---@field sample_tick TC.Tick Tick of the native snapshot read.
+---@field initial boolean True only for the requested initial notification.
+---@field resync boolean Current-input resynchronization after physical unavailability or supported legacy upgrade. This is never replay or an electrical-cycle notification.
+---@field previous TC.Signal[] Isolated prior sample. This array is empty for the initial notification.
+---@field current TC.Signal[] Isolated current native sample. The API does not guarantee sorting.
+---@field changes TC.SignalChange[] Complete effective differences. The API does not guarantee sorting.
+---@field previous_connected TC.InputConnectivity Prior selected-color connectivity.
+---@field connected TC.InputConnectivity Current selected-color connectivity.
+
+---This event reports left-button activation of an enabled native Dashboard button.
+---The tick field gives the activation tick, not necessarily the dispatch tick.
+---Each explicit subscription gets its own event.
+---Panel configuration or viewing alone does not create a subscription.
+---Before delivery, the host checks layout identity, enabled state, player access,
+---subscription/run and selected path again.
+---No guest callback runs within the GUI event handler.
+---@class TC.DashboardClick: TC.BaseEvent
+---@field name 'dashboard_click' Dashboard subscription event discriminator.
+---@field peripheral TC.PeripheralName Exact Dashboard identity.
+---@field wire TC.Wire This subscription's discovery color.
+---@field subscription_id TC.SubscriptionId Recipient run-bound registration.
+---@field tab integer Numbered occupied tab slot, 1..6.
+---@field button string Stable button widget ID, not a native GUI element.
+---@field player_index integer Activating player index.
+
+---This event delivers an accepted radar datagram through a modem_message registration.
+---Numeric channels are distinct from wire colors.
+---A dual-color receiver gets one event per registration/receiver.
+---Authorized wires are in red-before-green order. Each delivery has isolated data.
+---
+---Radio does not expose remote peripherals or sender authority.
+---There is no ACK, automatic reply, retry, retained mailbox or guaranteed reception.
+---@class TC.ModemMessage: TC.BaseEvent
+---@field name 'modem_message' Radio event discriminator.
+---@field peripheral TC.PeripheralName Local receiving modem, not the sender.
+---@field wire TC.Wire First authorized receiver discovery color.
+---@field wires TC.Wire[] Receiver discovery colors in red-before-green order at acceptance.
+---@field channel integer Received numeric channel, 0..65535.
+---@field replyChannel integer Sender-specified numeric reply channel, 0..65535.
+---@field message? TC.Data Copied message. This field is absent for explicit top-level nil.
+---@field distance? number Euclidean distance in tiles on one surface. This field is absent across surfaces.
+---@field sent_tick TC.Tick Simulation tick of transmission acceptance.
+
+---This union includes all supported scheduled guest event shapes and the inert legacy power event.
+---Register by handler name, not by persisting a function value.
+---@alias TC.Event TC.StartEvent|TC.TimerEvent|TC.PeripheralAttach|TC.PeripheralDetach|TC.PowerRestored|TC.MonitorResize|TC.MonitorTouch|TC.SignalChanged|TC.DashboardClick|TC.ModemMessage

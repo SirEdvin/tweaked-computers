@@ -81,7 +81,7 @@ class PackageInventoryTests(unittest.TestCase):
         tutorials = (build.ROOT / 'scripts/ui/tutorials.lua').read_text()
         bindings = re.findall(r"source='([^']+)',code=require\('examples\.([^']+)'\)", tutorials)
         self.assertEqual({name for name, _ in bindings}, {
-            'reference-speaker', 'logic-controller', 'reference-recipe', 'reference-factory', 'shared-telemetry', 'production-statistics-program', 'dashboard-program', 'dashboard-charts'})
+            'reference-speaker', 'logic-controller', 'reference-recipe', 'reference-factory', 'shared-telemetry', 'production-statistics-program', 'dashboard-program', 'dashboard-charts', 'graphics-sine-chart'})
         for name, module in bindings:
             self.assertEqual(name, module)
         self.assertIn("prelude=require('examples.reference-writer')", tutorials)
@@ -274,6 +274,7 @@ getLimits()''',
         # allowlist cannot detect an accidental removal from that allowlist.
         contracts = {
             'openspec/specs/monitor-display/spec.md',
+            'openspec/specs/monitor-graphics/spec.md',
             'api/monitor.d.lua',
             'openspec/specs/peripheral-network/spec.md',
         }
@@ -284,7 +285,8 @@ getLimits()''',
             self.assertEqual(first.read_bytes(), second.read_bytes())
             with zipfile.ZipFile(first) as package:
                 prefix = next(n[:-len('info.json')] for n in package.namelist() if n.endswith('/info.json'))
-                for relative in (*contracts, 'examples/monitor-plot-program.lua',
+                for relative in (*contracts, 'examples/monitor-plot-program.lua', 'examples/graphics-sine-chart.lua',
+                                 'scripts/monitor-graphics.lua', 'assets/fonts/tc-term.ttf', 'locale/en/info.json',
                                  'tests/monitor_state_engine.lua',
                                  *(f'tests/monitor_state_{phase}.lua' for phase in
                                    ('waiting', 'preparing', 'ready', 'retiring'))):
@@ -353,7 +355,7 @@ getLimits()''',
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
                 self.assertEqual(set(planning), set(build.CONTRACT_FILES))
-                self.assertEqual(len(build.CONTRACT_FILES), 20)
+                self.assertEqual(len(build.CONTRACT_FILES), 21)
                 self.assertFalse(any(name.startswith('openspec/changes/') for name in planning))
                 for relative in ('openspec/specs/program-source/spec.md',
                                  'docs/player/api/language.md'):
@@ -389,6 +391,8 @@ getLimits()''',
                 pngs={n[len(prefix):] for n in package.namelist() if n.startswith(prefix+'assets/') and n.endswith('.png') and '/upstream/' not in n}
                 self.assertEqual(pngs,{r['path'] for r in art['outputs']})
                 self.assertEqual(json.loads(package.read(prefix+'assets/manifest.json')),art)
+                for record in art['fonts']:
+                    self.assertEqual(package.read(prefix+record['path']),(build.ROOT/record['path']).read_bytes())
                 self.assertEqual(package.read(prefix+'assets/socket-layout.json'),(build.ROOT/'assets/socket-layout.json').read_bytes())
                 self.assertEqual(art['selection']['candidate'],'B-service-rack')
                 for name in ('tc-circuit-computers','tc-recipe-searcher'):
@@ -396,6 +400,23 @@ getLimits()''',
                     self.assertEqual(technology['icon_size'],256)
                     self.assertEqual(package.read(prefix+'assets/'+technology['icon']),
                                      (build.ROOT/'assets'/technology['icon']).read_bytes())
+
+    def test_changed_glyph_atlas_makes_terminal_font_stale(self):
+        # A regenerated atlas with an updated art record but an unchanged font must fail the build.
+        import hashlib
+        import json
+        atlas, manifest = build.ROOT / 'assets/glyphs/atlas.png', build.ROOT / 'assets/manifest.json'
+        read_bytes, read_text = Path.read_bytes, Path.read_text
+        changed = read_bytes(atlas) + b'\0'
+        art = json.loads(read_text(manifest))
+        for record in art['outputs']:
+            if record['path'] == 'assets/glyphs/atlas.png':
+                record['sha256'] = hashlib.sha256(changed).hexdigest()
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output, \
+             patch.object(Path, 'read_bytes', lambda p: changed if p == atlas else read_bytes(p)), \
+             patch.object(Path, 'read_text', lambda p, *a, **k: json.dumps(art) if p == manifest else read_text(p, *a, **k)):
+            with self.assertRaisesRegex(ValueError, 'stale terminal font input: assets/glyphs/atlas.png'):
+                build.build(output)
 
     def test_explicit_inventory_rejects_prohibited_suffixes(self):
         # Synthetic inventory entries test rejection before payload access; no
@@ -421,7 +442,9 @@ class CanonicalContractTests(unittest.TestCase):
                         '2026-11-07-reduce-report-callback-overhead',
                         '2026-11-07-charge-compile-once-per-run',
                         '2026-11-07-reduce-report-host-overhead',
-                        '2026-11-09-reduce-monitor-redraw-overhead')
+                        '2026-11-09-reduce-monitor-redraw-overhead',
+                        '2026-11-09-monitor-row-text-presentation',
+                        '2026-11-09-monitor-graphics-mode')
 
     def archived_replacement(self, capability, name, canonical):
         import re

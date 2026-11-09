@@ -5,6 +5,7 @@ local lifecycle=require('scripts.lifecycle')
 local scheduler=require('scripts.scheduler')
 local monitor=require('scripts.services.monitor')
 local model=require('scripts.monitor-model')
+local rows=require('tests.monitor_rows')
 local editor=require('scripts.ui.editor-model')
 local defs=require('scripts.device-definitions')
 local limits=require('scripts.runtime.limits')
@@ -48,7 +49,7 @@ local function oracle(m,phase,r)
   end
   local title=(' SINE / LIVE'..string.rep(' ',w)):sub(1,w)
   for y=1,h do for x=1,w do
-    local i=(y-1)*w+x; local c=m.cells[i]
+    local c=model.cell(m,x,y)
     if y==1 then
       assert(c[1]==title:byte(x) and c[2]==0 and c[3]==15,'mixed/incomplete chart title')
     else
@@ -63,13 +64,8 @@ local function oracle(m,phase,r)
         assert(actual==expected,'mixed/incomplete subpixel chart')
       end end
     end
-    if r then
-      local cell=r.cells[i]
-      assert(cell.value[1]==c[1] and cell.value[2]==c[2] and cell.value[3]==c[3])
-      assert(cell.background.valid and cell.background.visible)
-      if c[1]~=32 then assert(cell.glyph and cell.glyph.valid and cell.glyph.visible and cell.glyph.sprite=='tc-glyph-'..c[1]) end
-    end
   end end
+  if r then rows.verify(r,true) end
 end
 function M.run()
   local x={phase='drawing',steps=0,walls={},records={},intervals={},max_gap=0,publications=0,peak_work=0}

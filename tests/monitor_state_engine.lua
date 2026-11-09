@@ -26,7 +26,7 @@ local function graph(roots,monitor_only)
   for _,root in ipairs(roots) do visit(root) end
   local native={}
   for _,o in pairs(rendering.get_all_objects()) do
-    if not monitor_only or o.type=='sprite' and (o.sprite=='tc-monitor-fill' or o.sprite:sub(1,9)=='tc-glyph-') then
+    if not monitor_only or o.type=='text' and o.font=='tc-term' or o.type=='sprite' and (o.sprite=='tc-monitor-fill' or o.sprite:sub(1,9)=='tc-glyph-') then
       native[#native+1]={object=o,visible=o.visible}
     end
   end
@@ -165,12 +165,16 @@ function M.new(kind)
   -- The scheduler's private refusal path, not a swallowed arbitrary exception,
   -- exhausts the unchanged ledger. This is resource-pressure evidence, not CPU.
   scheduler.register_phase('render','00-monitor-state-pressure',function(tick,spend)
-    local x=f(); if not x or not (x.hold or x.retire_hold) then return end
+    local x=f(); if not x or not (x.hold or x.retire_hold or x.hold_prepare or x.hold_retire) then return end
     local c=registry.record(x.computer)
     renderer.tick(tick,function(n)
       local l=c and lane(c)
       local p=registry.get().monitors.presentation
-      if x.hold and l and l.job and l.job.ready or x.retire_hold and p and p.retired_cells==10584 then
+      -- Row preparation finishes in one tick; hold_prepare keeps a partially prepared frame across ticks.
+      if x.hold and l and l.job and l.job.ready or x.retire_hold and p and p.retired_cells==10584
+        or x.hold_prepare and l and l.job and not l.job.ready and l.job.cell>1
+          and l.job.frames[l.job.member] and n==48+l.job.frames[l.job.member].width -- only the row charge
+        or x.hold_retire and p and p.retired[1] and (p.retired[1].cleanup_cursor or 1)>1 and n==8 then -- only the retirement step
         local root=registry.get(); local remaining=200000-root.scheduler.maintenance_spent
         if remaining>0 then spend(remaining) end
         x.refused=true
@@ -210,7 +214,7 @@ function M.new(kind)
       local future=graph({root})
       renderer.tick(x.tick+1,nop); monitor.reconcile(x.tick+1,nop); unchanged(future)
       p.version=1
-      x.saved=nil; x.hold=nil; x.phase='resuming'; x.changed=e.tick; loaded=false
+      x.saved=nil; x.hold=nil; x.hold_prepare=nil; x.hold_retire=nil; x.phase='resuming'; x.changed=e.tick; loaded=false
       log('TC_MONITOR_STATE_COLD_RETAINED '..kind)
     end
     fuel(); scheduler.tick(e.tick); x.steps=x.steps+1
@@ -222,11 +226,14 @@ function M.new(kind)
       select_group(c); paint(c,'A'); x.phase='first'
     elseif x.phase=='first' and idle() and l.presented_sequence>0 then
       selection_contract(c)
-      x.hold=kind=='ready'; x.phase='capture'; x.sequence=lane(c).presented_sequence
+      x.hold=kind=='ready'; x.hold_prepare=kind=='preparing' or kind=='pending' or nil; x.hold_retire=kind=='retiring' or nil; x.phase='capture'; x.sequence=lane(c).presented_sequence
       if kind=='idle' then paint(c,'A')
       elseif kind=='waiting' then
         local ref=c.monitor_sync.members[1]
         guest(c,"peripheral.call("..string.format('%q',ref.name)..",'red','setCursorPos',2,1)")
+      elseif kind=='retiring' then
+        -- Row fronts update in place; a geometry change retires a complete front.
+        guest(c,"peripheral.call("..string.format('%q',c.monitor_sync.members[1].name)..",'red','setTextScale',2)"); paint(c,'B')
       else paint(c,'B') end
     elseif x.phase=='capture' then
       if kind=='pending' and l.job and not l.job.ready and not x.pending_write then
@@ -259,7 +266,7 @@ function M.new(kind)
       if idle() then
         assert(c.state.boots==1 and l.presented_sequence>x.sequence)
         if kind=='pending' then
-          for _,r in ipairs(c.monitor_sync.members) do assert(s.groups[r.name].render.snapshot.cells[1][1]==67) end
+          for _,r in ipairs(c.monitor_sync.members) do assert(s.groups[r.name].render.snapshot.rows[1][1]:byte(1)==67) end
           log('TC_MONITOR_STATE_PENDING_RETAINED')
         end
         if kind~='ready' then x.phase='done'; log('TC_COLD_OK'); return end
@@ -278,7 +285,7 @@ function M.new(kind)
       local action=x.actions[x.action]; local job=l.job; local selection=c.monitor_sync
       x.cancelled=job; x.old_sequence=l.presented_sequence; x.old_fronts={}; x.accepted={}
       for _,r in ipairs(selection.members) do local g=s.groups[r.name]
-        x.old_fronts[g.id]=g.render; x.accepted[g.id]=g.model.cells
+        x.old_fronts[g.id]=g.render; x.accepted[g.id]=g.model.rows
       end
       local target=registry.record(x.walls[1][1]); x.target=target.id
       local target_group=monitor.resolve(target); x.target_group=target_group.id; x.target_anchor=target_group.anchor
@@ -304,7 +311,7 @@ function M.new(kind)
       -- the old job in the interval; unchanged fronts/models survive release.
       if action=='stop' or action=='fault' or action=='apply' or action=='remove-owner' then
         assert(job.cancelled and not job.complete and not c.monitor_sync)
-        for id,front in pairs(x.old_fronts) do assert(s.groups[id].render==front and s.groups[id].model.cells==x.accepted[id]) end
+        for id,front in pairs(x.old_fronts) do assert(s.groups[id].render==front and s.groups[id].model.rows==x.accepted[id]) end
       end
     elseif x.phase=='check' then
       local action=x.actions[x.action]
@@ -342,9 +349,9 @@ function M.new(kind)
       if idle() then
         assert(e.tick-x.changed<=256,'cleanup deadline '..action)
         if action~='remove-member' and action~='rotate' then
-          for id,cells in pairs(x.accepted) do
+          for id,rows in pairs(x.accepted) do
             local g=s.groups[id]
-            assert(g and g.model.cells==cells and cells[1][1]==69 and g.render.cells[1].value[1]==69,
+            assert(g and g.model.rows==rows and rows[1][1]:byte(1)==69 and g.render.snapshot.rows[1][1]:byte(1)==69,
               'release lost accepted shared model/front: '..action)
           end
         end
@@ -359,13 +366,14 @@ function M.new(kind)
       end
     elseif x.phase=='maximum' and idle() then
       local g=s.groups[x.maximum]; assert(g.render.slots==10584)
-      guest(c,"local m=peripheral.wrap("..string.format('%q',g.id)..",'red'); m.setPaletteColor(1,0x010203); m.setPaletteColor(1,0xFFFFFF)")
+      -- Row fronts update in place; a geometry change retires the complete maximum front.
+      guest(c,"peripheral.call("..string.format('%q',g.id)..",'red','setTextScale',1)")
       x.retire_hold=true; x.phase='retirement-full'
     elseif x.phase=='retirement-full' and x.retire_full then
       local p=s.presentation; assert(p.retired_cells==10584)
       x.handles={}
       for _,o in pairs(rendering.get_all_objects()) do
-        if o.type=='sprite' and (o.sprite=='tc-monitor-fill' or o.sprite:sub(1,9)=='tc-glyph-') then x.handles[#x.handles+1]=o end
+        if o.type=='text' and o.font=='tc-term' or o.type=='sprite' and (o.sprite=='tc-monitor-fill' or o.sprite:sub(1,9)=='tc-glyph-') then x.handles[#x.handles+1]=o end
       end
       local ids={}; for _,id in ipairs(root.order) do if registry.record(id).kind=='monitor' then ids[#ids+1]=id end end
       for _,id in ipairs(ids) do lifecycle.remove(id,'fixture-world-invalidation',true) end

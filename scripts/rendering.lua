@@ -1,108 +1,122 @@
--- Persistent host render-object handles; model bytes never become rich text.
-local registry=require('scripts.registry')
+-- Row-text presenter backend. Guest bytes map to private-use glyphs, so only
+-- host-built [color] tags reach the rich-text parser.
 local scheduler=require('scripts.scheduler')
 local model=require('scripts.monitor-model')
 local buffered=require('scripts.monitor-presentation')
+local graphics=require('scripts.monitor-graphics')
 local M={}
--- 2.0.77: body=object (124), wires=131, entity-info-icon=153,
--- selection-box=187. Separate content strata prevent later dirty backgrounds
--- covering unchanged glyphs; every stratum stays below native world feedback.
-local layers={panel='higher-object-under',background='higher-object-above',
-  glyph='train-stop-top',cursor='item-in-inserter-hand'}
+local char,sub,find,gsub,rep,concat=string.char,string.sub,string.find,string.gsub,string.rep,table.concat
+-- Sprites draw below every text object, so only the panel stays a sprite.
+local PANEL='higher-object-under'
+local MAP={} -- Byte to the UTF-8 encoding of U+E000+byte.
+for b=0,255 do MAP[char(b)]=char(0xEE,0x80+math.floor(b/64),0x80+b%64) end
+local BLOCK,CURSOR=char(0xEE,0x84,0x80),char(0xEE,0x84,0x81) -- Font-only U+E100 and U+E101.
+local NOT={} -- Digit to the pattern of any other digit.
+for i=0,15 do local d=model.DIGIT[i]; NOT[d]='[^'..d..']' end
 scheduler.reserve_render_work(60000)
-local function color(p) return {r=p[1],g=p[2],b=p[3],a=1} end
-local function destroy(o) if o and o.valid then o.destroy() end end
-local function box(g,u,v,w,h)
-  local ax,ay=model.world(g,u,v); local bx,by=model.world(g,u+w,v+h)
-  return {math.min(ax,bx),math.min(ay,by)},{math.max(ax,bx),math.max(ay,by)}
-end
-local function fill(g,u,v,w,h,tint,layer)
-  local a,b=box(g,u,v,w,h)
-  return rendering.draw_sprite{surface=g.surface_index,sprite='tc-monitor-fill',
-    target={(a[1]+b[1])/2,(a[2]+b[2])/2},x_scale=(b[1]-a[1])*32,y_scale=(b[2]-a[2])*32,
-    tint=tint,render_layer=layer,visible=false}
-end
-local function clear_cell(c,staged)
+-- Every monitor-owned native object is counted against render_object_limit (D6).
+local function destroy(o) if o and o.valid then o.destroy(); graphics.count(-1) end end
+local function clear_cell(c,staged) -- Legacy per-cell fronts and staging only.
   if c then
     if not staged or not c.shared_background then destroy(c.background) end
     if not staged or not c.shared_glyph then destroy(c.glyph) end
   end
 end
 M.retire=buffered.retire
-
-local function render_cell(g,r,i)
-  local m=g.model; local value=m.cells[i]; local c=r.front and r.front.cells[i]
-  local pfg,pbg=m.palette[value[2]+1],m.palette[value[3]+1]
-  local old=c and c.value
-  -- Read each native validity flag once per cell.
-  local bvalid=c and c.background.valid
-  local gvalid=c and c.glyph and c.glyph.valid
-  local same_bg=bvalid and c.bg[1]==pbg[1] and c.bg[2]==pbg[2] and c.bg[3]==pbg[3]
-  local same_fg=c and c.fg[1]==pfg[1] and c.fg[2]==pfg[2] and c.fg[3]==pfg[3]
-  local matches=old and old[1]==value[1] and old[2]==value[2] and old[3]==value[3]
-    and same_fg and same_bg and (value[1]==32 or gvalid)
-  if matches then r.cells[i]=c; r.reused[i]=true; return end
-  r.reused[i]=false
-  local cw,ch,ox,oy=model.geometry(g); local x=(i-1)%m.width; local y=math.floor((i-1)/m.width)
-  -- Borrow unchanged components, not just complete cells. A moving plot glyph
-  -- must not destroy/recreate its static background. Ownership transfers only
-  -- at the admitted barrier; cancelled staging destroys only its own objects.
-  local shared_background=same_bg
-  local shared_glyph=gvalid and old[1]==value[1] and same_fg
-  -- A changed color or glyph reuses the visible front object; commit applies the
-  -- change in the same tick as the swap, so no partial image is ever drawn.
-  -- Jobs staged by an older version have no mutation list and keep the old path.
-  local mutations=r.mutations
-  if mutations and bvalid and not shared_background then
-    mutations[#mutations+1]={c.background,nil,color(pbg)}; shared_background=true
-  end
-  if mutations and gvalid and value[1]~=32 and not shared_glyph then
-    mutations[#mutations+1]={c.glyph,old[1]~=value[1] and 'tc-glyph-'..value[1] or nil,color(pfg)}; shared_glyph=true
-  end
-  local background=shared_background and c.background or fill(g,ox+x*cw,oy+y*ch,cw,ch,color(pbg),layers.background)
-  local glyph=shared_glyph and c.glyph or nil
-  if value[1]~=32 and not glyph then
-    local wx,wy=model.world(g,ox+(x+0.5)*cw,oy+(y+0.5)*ch)
-    glyph=rendering.draw_sprite{surface=g.surface_index,sprite='tc-glyph-'..value[1],target={wx,wy},
-      x_scale=m.scale/2,y_scale=m.scale/2,orientation=g.direction/16,tint=color(pfg),render_layer=layers.glyph,visible=false}
-  end
-  r.cells[i]={background=background,glyph=glyph,value=value,fg=pfg,bg=pbg,
-    shared_background=not not shared_background,shared_glyph=not not shared_glyph}
+local function tags(s)
+  local t={}
+  for i=0,15 do local p=s.palette[i+1]; t[model.DIGIT[i]]=string.format('[color=%.5f,%.5f,%.5f]',p[1],p[2],p[3]) end
+  return t
 end
-local function cursor(g,r)
-  local m=g.model
-  local previous=r.front and r.front.snapshot
-  if previous and previous.x==m.x and previous.y==m.y and previous.blink==m.blink and previous.fg==m.fg then
-    local a,b=previous.palette[previous.fg+1],m.palette[m.fg+1]
-    if a[1]==b[1] and a[2]==b[2] and a[3]==b[3] and (not r.front.cursor or r.front.cursor.valid) then
-      r.cursor=r.front.cursor; r.shared_cursor=true; r.cursor_revision=m.revision; return
+-- One string per row: the colour runs of `f` wrap `fill(x,e)` in host tags.
+local function runs(f,tag,fill)
+  local parts,n,x,w={},0,1,#f
+  while x<=w do
+    local d=sub(f,x,x); local e=(find(f,NOT[d],x) or w+1)-1
+    parts[n+1]=tag[d]; parts[n+2]=fill(x,e); parts[n+3]='[/color]'; n=n+3; x=e+1
+  end
+  return concat(parts,'',1,n)
+end
+-- Glyph and background text of one snapshot row; '' means no glyph object.
+function M.row_strings(s,y,tag)
+  tag=tag or tags(s)
+  local t,f,b=table.unpack(s.rows[y])
+  local glyph=find(t,'[^ ]') and runs(f,tag,function(x,e) return (gsub(sub(t,x,e),'.',MAP)) end) or ''
+  return glyph,runs(b,tag,function(x,e) return rep(BLOCK,e-x+1) end)
+end
+local function row(c,r,y)
+  local glyph,background=M.row_strings(r.snapshot,y,r.tags)
+  r.data[#r.data+1]={y,glyph,background}
+end
+local function cursor(c,r)
+  local s=r.snapshot
+  r.cursor_key=not r.graphics and s.blink and s.x>=1 and s.x<=s.width and s.y>=1 and s.y<=s.height
+    and string.format('%d,%d,%s',s.x,s.y,r.tags[model.DIGIT[s.fg]]) or false
+end
+local function text(c,y,x,s,visible,rich)
+  local cw,ch,ox,oy=model.geometry(c); local wx,wy=model.world(c,ox+(x-1)*cw,oy+(y-1)*ch)
+  graphics.count(1)
+  return rendering.draw_text{surface=c.surface_index,text=s,font='tc-term',color={1,1,1,1},target={wx,wy},
+    scale=0.125*c.model.scale,alignment='left',vertical_alignment='top',orientation=c.direction/16,
+    use_rich_text=rich,visible=visible}
+end
+local function new_front(c,visible)
+  local m=c.model
+  local a,b={model.world(c,2/64,2/64)},{model.world(c,c.width_tiles-2/64,c.height_tiles-2/64)}
+  local l,t,rr,bb=math.min(a[1],b[1]),math.min(a[2],b[2]),math.max(a[1],b[1]),math.max(a[2],b[2])
+  graphics.count(1)
+  local panel=rendering.draw_sprite{surface=c.surface_index,sprite='tc-monitor-fill',target={(l+rr)/2,(t+bb)/2},
+    x_scale=(rr-l)*32,y_scale=(bb-t)*32,tint={0,0,0,1},render_layer=PANEL,visible=visible}
+  return {version=1,row_version=1,context=c,snapshot=m,slots=m.width*m.height,width=m.width,height=m.height,
+    scale=m.scale,panel=panel,rows={},cursor_key=false}
+end
+-- Native writes of one prepared frame; the caller prepaid them and proved validity.
+local function apply(F,r,visible)
+  local c=r.context; local created=false
+  if r.graphics then -- A graphics display keeps only its panel; graphics objects live outside the front.
+    for y,o in pairs(F.rows) do destroy(o.bg); destroy(o.glyph); F.rows[y]=nil end
+  end
+  for _,d in ipairs(r.data) do
+    local y,glyph,background=d[1],d[2],d[3]
+    local o=F.rows[y]; if not o then o={}; F.rows[y]=o end
+    if o.b~=background then
+      if o.bg then o.bg.text=background else o.bg=text(c,y,1,background,visible,true); created=true end
+      o.b=background
+    end
+    if o.g~=glyph then
+      if glyph=='' then destroy(o.glyph); o.glyph=nil
+      elseif o.glyph then o.glyph.text=glyph
+      else o.glyph=text(c,y,1,glyph,visible,true); created=true end
+      o.g=glyph
     end
   end
-  destroy(r.cursor); r.cursor=nil
-  if m.blink and m.x>=1 and m.x<=m.width and m.y>=1 and m.y<=m.height then
-    local cw,ch,ox,oy=model.geometry(g)
-    r.cursor=fill(g,ox+(m.x-1)*cw,oy+m.y*ch-m.scale/64,cw,m.scale/64,color(m.palette[m.fg+1]),layers.cursor)
-    r.cursor.blink_interval=30
+  if F.cursor_key~=r.cursor_key then
+    destroy(F.cursor); F.cursor=nil
+    if r.cursor_key then
+      local s=r.snapshot; local p=s.palette[s.fg+1]
+      F.cursor=text(c,s.y,s.x,CURSOR,visible,false); F.cursor.color={p[1],p[2],p[3],1}; F.cursor.blink_interval=30
+    end
+    F.cursor_key=r.cursor_key
+  elseif created and F.cursor then F.cursor.bring_to_front() end
+end
+-- Native objects a prepared frame may touch in its target front.
+local function valid(F,r)
+  if not F.panel.valid or F.cursor and not F.cursor.valid then return false end
+  for _,d in ipairs(r.data) do
+    local o=F.rows[d[1]]
+    if o and (o.bg and not o.bg.valid or o.glyph and not o.glyph.valid) then return false end
   end
-  r.cursor_revision=m.revision
+  return true
 end
-local function delta(c,front)
-  return front and front.delta_version==1 and not front.hidden and not c.model.damage_full and c.model.damage
-end
-buffered.install{clear_cell=clear_cell,destroy=destroy,cell=render_cell,cursor=cursor,
-  frame_cost=function(c,front) return delta(c,front) and c.model.width*c.model.height*2 or 0 end,
+buffered.install{clear_cell=clear_cell,destroy=destroy,row=row,cursor=cursor,new_front=new_front,apply=apply,valid=valid,
+  frame_cost=function() return 32 end,
   frame=function(c,front)
     local m=c.model
-    local r={version=1,layer_version=3,delta_version=1,context=c,snapshot=m,slots=m.width*m.height,
-      cells={},reused={},mutations={},width=m.width,height=m.height,scale=m.scale,front=front,
-      shared_panel=front~=nil,panel=front and front.panel or fill(c,2/64,2/64,
-        c.width_tiles-4/64,c.height_tiles-4/64,{0,0,0,1},layers.panel)}
-    if delta(c,front) then
-      -- Prepaid reference-root copy, not cell comparison/native reconstruction.
-      -- One presized copy; every cell starts reused (render_cell marks changed ones false).
-      r.cells={table.unpack(front.cells,1,#front.cells)}; r.reused_all=true
-      r.indices=m.damage; r.cleanup_indices=r.indices
-    end
+    local r={version=1,row_version=1,context=c,snapshot=m,slots=m.width*m.height,width=m.width,height=m.height,
+      scale=m.scale,front=front,data={},tags=tags(m)}
+    -- A matching row front takes only the damaged rows; anything else rebuilds all rows.
+    if m.mode=='graphics' then r.graphics=true
+    elseif front and front.row_version==1 and not m.damage_full and m.damage then r.indices=m.damage end
     return r
   end}
 M.tick=buffered.tick
@@ -115,6 +129,8 @@ M.status=buffered.status
 M.release=buffered.release
 M.changed=buffered.changed
 M.regroup=buffered.regroup
+M.marked=buffered.marked
+M.leave_group=buffered.leave_group
 scheduler.register_phase('render','monitor-world',M.tick,function(r)
   local s=r.monitors
   if s==nil then return false end

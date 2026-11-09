@@ -35,6 +35,77 @@ the provided full 2.0.77 base/Space Age clients, pixel comparisons and a sustain
 graphical run. Functional checks passed, but software rendering and unrelated
 host CPU contention prevent a clean graphical performance claim.
 
+## Row text and graphics mode (2026-11-09)
+
+Row text draws each terminal row as two native text objects in the mod font,
+instead of one background and one glyph sprite for each cell. Changed rows are
+updated in place in the publication tick. Graphics mode gives programs retained
+native objects in monitor pixels. These runs compare the unchanged `main` build
+(7d79ce1) with the candidate. Each run is serial, 3,600 measured ticks, Factorio
+2.1.23 headless, base mode, whole-scheduler `LuaProfiler` time per tick (ms):
+
+| Workload | Build | Mean | Median | p95 | Max | Peak objects |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| One 6×6 wall, scale 2 (31×21) | baseline 1 | 2.70 | 2.64 | 9.47 | 60.6 | 2,862 |
+| | candidate | 2.43 | 2.29 | 10.01 | 45.7 | 256 |
+| | baseline 2 | 2.58 | 2.55 | 8.02 | 42.8 | 2,862 |
+| Four 6×6 walls, scale 2 | baseline 1 | 7.20 | 7.57 | 21.98 | 77.8 | 3,183 |
+| | candidate | 6.51 | 6.31 | 21.10 | 50.3 | 319 |
+| | baseline 2 | 7.45 | 7.59 | 23.03 | 67.5 | 3,183 |
+| One 6×6 wall, scale 0.5 (126×84, `--workload dense`) | baseline 1 | 15.73 | 12.18 | 42.20 | 183.7 | 42,910 |
+| | candidate | 8.00 | 8.12 | 25.84 | 131.1 | 571 |
+| | baseline 2 | 18.20 | 13.06 | 58.77 | 234.9 | 42,910 |
+| One 6×6 wall, `--example graphics` | candidate | 2.98 | 3.43 | 9.74 | 93.3 | 282 |
+
+All runs published every two ticks (1,800 publications, maximum gap 2).
+Peak objects count the whole scene, including the idle walls of the four-wall layout.
+The graphics example sends one polygon of 184 vertices every two ticks. Graphics mode
+ignores the text scale, so the same run compares with both the single and the dense terminal wall. The host
+had unrelated IntelliJ and Gradle processes (load average 3–7), so the
+baseline–candidate–baseline order is necessary to read the drift. These are not
+thresholds or real-time UPS claims. Evidence:
+`/home/siredvin/artifacts/tweaked-computers/monitor-row-graphics-perf-2026-11-09/`.
+
+Reproduce one case with `--scene one --workload dense` or `--scene one --example graphics`.
+
+### Six-line stock display
+
+A second workload shows six lines such as `Iron plate  600/1800` on one 6×6 wall.
+The amounts change once per second, and the item names stay the same. The terminal
+program writes six rows with `blit` at text scale 2. The graphics program draws the
+names once as static text and updates six amount objects with `set`. Both use the
+same glyph size and colours. Runs used `--program FILE --scene one --ticks 7200`,
+serial and in the order terminal, graphics, terminal, graphics, with 3600 ticks
+each on a quiet host. Each mod has its own Lua state, so the harness collects all
+garbage before each measured tick. The harness's own logging therefore causes no
+collector work in the measured ticks. `alloc_kb` reports the Lua heap growth inside the
+tick, which is the garbage that the mod gives to the collector later. Values are ms:
+
+| Option | Update tick median | p95 | Max | Allocation per update |
+| --- | ---: | ---: | ---: | ---: |
+| Terminal, run 1 | 1.99 | 2.27 | 3.37 | 132 KB |
+| Graphics, run 1 | 1.74 | 2.06 | 2.80 | 125 KB |
+| Terminal, run 2 | 2.04 | 2.36 | 2.86 | 132 KB |
+| Graphics, run 2 | 1.68 | 1.91 | 2.22 | 125 KB |
+
+The graphics update is about 15% faster. Stage timing and a native micro-benchmark
+divide the 1.7 ms graphics update as follows:
+
+| Part | Time |
+| --- | ---: |
+| Wire-network discovery for `peripheral.wrap` (once for each callback) | 0.72 ms |
+| Six `set` calls through the guest API | about 0.35 ms |
+| Program state copy, guest code and environment binding | about 0.45 ms |
+| Scheduler and timers outside the callback | 0.15 ms |
+
+Factorio itself is not the cost. One native `text` write takes 0.25 µs, and the
+full nine-property update of one text object takes 1.7 µs. The mod's `set`
+validation and conversion take 19 µs for each call. The guest-to-host call path adds
+about 43 µs. The terminal update also publishes six rows after the callback, which
+costs 0.62 ms. The sine-chart tables above were measured before the harness
+collected garbage outside the measured ticks.
+Evidence: `/home/siredvin/artifacts/tweaked-computers/monitor-stock-benchmark-2026-11-09/`.
+
 ## Bottlenecks and changes
 
 1. **Repeated native physical proofs.** The same monitor members were inspected

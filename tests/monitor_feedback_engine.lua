@@ -6,6 +6,7 @@ local scheduler=require('scripts.scheduler')
 local monitor=require('scripts.services.monitor')
 local model=require('scripts.monitor-model')
 local renderer=require('scripts.rendering')
+local rows=require('tests.monitor_rows')
 local M={}; local loaded=false
 local function nop() end
 local function f() return storage.rd4 end
@@ -19,7 +20,7 @@ end
 local function report(s) f().contracts=f().contracts+1; log('TC_CONTRACT '..s) end
 local function terminal(m)
   local result={}
-  for _,key in ipairs({'x','y','blink','fg','bg','scale','revision','width','height','cells','palette'}) do result[key]=copy(m[key]) end
+  for _,key in ipairs({'x','y','blink','fg','bg','scale','revision','width','height','rows','palette'}) do result[key]=copy(m[key]) end
   return result
 end
 local function resolve(row) return assert(monitor.resolve(registry.record(row.ids[1]))) end
@@ -34,22 +35,22 @@ local function settle()
   end
   error('monitor feedback fixture did not settle')
 end
-local function properties(g)
-  local r=g.render; assert(r.layer_version==3)
-  assert(r.panel.type=='sprite' and r.panel.sprite=='tc-monitor-fill' and r.panel.render_layer=='higher-object-under')
+local function near(p,x,y) return math.abs(p.x-x)<1e-8 and math.abs(p.y-y)<1e-8 end
+local function text_at(o,g,x,y)
   local cw,ch,ox,oy=model.geometry(g)
-  for i,c in ipairs(r.cells) do
-    assert(c.background.type=='sprite' and c.background.render_layer=='higher-object-above')
-    local x,y=(i-1)%g.model.width,math.floor((i-1)/g.model.width)
-    local ax,ay=model.world(g,ox+x*cw,oy+y*ch)
-    local bx,by=model.world(g,ox+(x+1)*cw,oy+(y+1)*ch)
-    assert(math.abs(c.background.x_scale-math.abs(bx-ax)*32)<1e-8)
-    assert(math.abs(c.background.y_scale-math.abs(by-ay)*32)<1e-8)
-    local p=c.background.target.position
-    assert(math.abs(p.x-(ax+bx)/2)<1e-8 and math.abs(p.y-(ay+by)/2)<1e-8)
-    if c.glyph then assert(c.glyph.type=='sprite' and c.glyph.render_layer=='train-stop-top' and c.glyph.orientation==g.direction/16) end
+  assert(o.type=='text' and o.font=='tc-term' and o.orientation==g.direction/16 and math.abs(o.scale-0.125*g.model.scale)<1e-12)
+  assert(near(o.target.position,model.world(g,ox+(x-1)*cw,oy+(y-1)*ch)),'row text is not anchored at its row')
+end
+local function properties(g)
+  local r=g.render; assert(r.row_version==1)
+  assert(r.panel.type=='sprite' and r.panel.sprite=='tc-monitor-fill' and r.panel.render_layer=='higher-object-under')
+  for y=1,g.model.height do
+    local o=r.rows[y]; text_at(o.bg,g,1,y); assert(o.bg.use_rich_text)
+    if o.glyph then text_at(o.glyph,g,1,y); assert(o.glyph.use_rich_text) end
   end
-  assert(r.cursor and r.cursor.type=='sprite' and r.cursor.render_layer=='item-in-inserter-hand' and r.cursor.blink_interval==30)
+  rows.verify(r)
+  assert(r.cursor and r.cursor.blink_interval==30 and not r.cursor.use_rich_text)
+  text_at(r.cursor,g,r.snapshot.x,r.snapshot.y)
 end
 local function unchanged(row)
   local g=resolve(row); local a=row.snapshot
@@ -63,10 +64,11 @@ local function capture(row)
   row.group=g; row.id=g.id; row.anchor=g.anchor; row.model=g.model; row.render=g.render
   row.members=copy(g.members); row.snapshot=copy(g.model)
 end
-local function handles(r)
-  local list={r.panel,r.cursor}
-  for _,c in ipairs(r.cells) do list[#list+1]=c.background; if c.glyph then list[#list+1]=c.glyph end end
-  return list
+local function handles(r) local list={}; rows.objects(r,function(o) list[#list+1]=o end); return list end
+-- Hide-while-marked (D8): the panel stays, every row and the cursor follow the mark.
+local function content_visible(g,value)
+  local r=g.render; assert(r.panel.visible)
+  rows.verify(r,value); assert(r.cursor.visible==value)
 end
 -- Preserve production ownership and count authentic robot lifecycle delivery.
 local removed=script.get_event_handler(defines.events.on_robot_mined_entity)
@@ -105,10 +107,12 @@ function M.run()
   settle()
   for _,row in ipairs(f().rows) do
     local g=resolve(row); properties(g); capture(row)
-    local objects=#rendering.get_all_objects(); local first=g.render.cells[1].glyph
+    local objects=#rendering.get_all_objects(); local first=g.render.rows[1].glyph; content_visible(g,true)
     local marked=registry.record(row.ids[4]); assert(marked.id~=g.anchor)
     assert(marked.body.order_deconstruction('player') and marked.body.to_be_deconstructed('player'))
+    renderer.marked{entity=marked.body} -- on_init does not dispatch events; the cold on_tick phase uses the real event.
     assert(not registry.record(row.ids[1]).body.to_be_deconstructed('player'))
+    content_visible(g,false); assert(g.model.revision==row.snapshot.revision,'mark changed the model')
     -- Touch on the non-anchor tile through the unchanged cardinal transform.
     local cw,ch,ox,oy=model.geometry(g); local found=false
     for y=1,g.model.height do for x=1,g.model.width do
@@ -129,10 +133,11 @@ function M.run()
     end end
     assert(found); settle(); unchanged(row)
     marked.body.cancel_deconstruction('player'); assert(not marked.body.to_be_deconstructed('player'))
-    settle(); unchanged(row)
-    assert(#rendering.get_all_objects()==objects and g.render.cells[1].glyph==first,'mark/cancel rebuilt presentation')
+    renderer.marked{entity=marked.body}
+    settle(); unchanged(row); content_visible(g,true)
+    assert(#rendering.get_all_objects()==objects and g.render.rows[1].glyph==first,'mark/cancel rebuilt presentation')
     -- Redraw changes only what the writer requested, not mark state/grouping.
-    assert(marked.body.order_deconstruction('player'))
+    assert(marked.body.order_deconstruction('player')); renderer.marked{entity=marked.body}
     model.calls.setCursorPos(g.model,nop,1,2); model.calls.write(g.model,nop,'LIVE')
     model.calls.setPaletteColor(g.model,nop,2,0xAB3412)
     renderer.participate(g)
@@ -140,6 +145,8 @@ function M.run()
     local expected=terminal(g.model)
     settle(); assert(equal(terminal(g.model),expected)); capture(row); unchanged(row); properties(g)
     assert(marked.body.to_be_deconstructed('player'))
+    -- A frame published while marked stays hidden.
+    assert(g.render.presented_revision==g.model.revision); content_visible(g,false)
     -- Unsupported availability hides/restores without changing committed content.
     marked.availability_version=99
     lifecycle.observe_monitor(marked,game.tick) -- Explicit fixture corruption needs targeted observation, not an idle sweep.
@@ -148,7 +155,7 @@ function M.run()
     assert(g.render.hidden and not g.render.panel.visible); unchanged(row)
     marked.availability_version=1
     lifecycle.observe_monitor(marked,game.tick)
-    settle(); unchanged(row); assert(not g.render.hidden and g.render.panel.visible)
+    settle(); unchanged(row); assert(not g.render.hidden and g.render.panel.visible); content_visible(g,false)
     -- A real scale change makes the old front's grid obsolete immediately.
     -- Headless table-backed Ctrl-click must not map that still-visible image
     -- into the new character grid while its replacement is pending.
@@ -170,12 +177,11 @@ function M.run()
   end
   report('four-cardinal-scale-invalidation-rejects-stale-grid-touch-until-native-publication')
   report('four-cardinal-native-marked-subsets-cancel-live-updates-power-and-non-anchor-touch')
-  report('native-sprite-strata-centers-extents-cursor-below-wires-selection-info')
+  report('native-row-text-anchors-cursor-text-panel-sprite-and-hide-while-marked')
   -- Genuine legacy draw objects, with missing new presentation metadata. Model
   -- remains current; migration is presentation-only and must be paid, not on_load.
   local legacy=resolve(f().rows[4]); local r=legacy.render
   r.panel.destroy(); r.panel=rendering.draw_rectangle{surface=s,left_top={47.5,-0.5},right_bottom={49.5,1.5},color={0,0,0},filled=true}
-  for _,c in ipairs(r.cells) do if c.glyph then c.glyph.render_layer='light-effect' end end
   r.layer_version=nil; r.version=nil
   renderer.changed(legacy)
   local count=#rendering.get_all_objects(); local before=copy(legacy.model)
@@ -218,13 +224,15 @@ function M.on_tick(e)
     local legacy=resolve(x.rows[4]); assert(legacy.model==x.rows[4].model and equal(legacy.model,x.rows[4].snapshot))
     assert(not x.legacy.panel.valid and not x.legacy.cursor.valid)
     for _,object in ipairs(x.legacy_handles) do assert(not object.valid) end
-    for _,c in ipairs(x.legacy.cells) do assert(c==false) end
+    assert(next(x.legacy.rows)==nil,'retired row front kept row objects')
     for _,row in ipairs(x.rows) do
       local g=resolve(row); properties(g)
       assert(g==row.group and equal(g.model,row.snapshot) and equal(g.members,row.members))
       assert(registry.record(row.ids[4]).body.to_be_deconstructed('player'))
+      content_visible(g,false)
       registry.record(row.ids[4]).body.cancel_deconstruction('player')
       assert(not registry.record(row.ids[4]).body.to_be_deconstructed('player'))
+      content_visible(g,true)
     end
     x.rows[4].render=legacy.render -- Admitted presentation upgrade, never a model replacement.
     log('TC_RD4_COLD_MARK_CANCEL_AND_LEGACY_REDRAW_OK')

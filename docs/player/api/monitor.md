@@ -29,6 +29,20 @@ All paths retain exact physical, identity, scope and geometry checks.
 No electricity or electrical helper is necessary.
 Unavailability can hide state but never erase it.
 
+### Modes
+
+A logical monitor is in terminal mode (the default) or graphics mode. See getMode and setMode.
+Terminal mode is the byte-cell terminal described below.
+Graphics mode holds retained native objects in monitor pixels; see drawLine and the methods after it.
+In graphics mode, write, blit, clearLine, scroll, the cursor, colour, palette and text-scale methods, and their aliases, raise E_UNSUPPORTED.
+In terminal mode, the draw methods, set, get, getObjects, destroy, bringToFront and moveToBack raise E_UNSUPPORTED.
+getMode, setMode, getSize, clear, isColor and getLimits work in both modes.
+Monitor synchronization groups accept only terminal-mode monitors.
+Graphics objects use two draw layers. Sprites and lights always draw below lines, polygons, rectangles, circles, arcs and text.
+In the upper layer, draw order follows creation, bringToFront and moveToBack.
+In the lower layer, the engine draws overlapping sprites by position: a sprite lower on the display draws on top. bringToFront and moveToBack raise E_UNSUPPORTED for sprites and lights.
+While a tile of the display is marked for deconstruction, the monitor content is hidden. Ids, order, properties and the terminal model stay unchanged.
+
 ### Cells, palette and geometry
 
 Text uses byte/cell indexes, not Unicode.
@@ -155,10 +169,30 @@ text is literal bounded bytes. A nil or false foreground uses current colors. ba
 
 No result positions. See the behavior notes for normal-return versus failure semantics.
 
+### bringToFront
+
+Move one line, polygon, rectangle, circle, arc or text object to the front of its draw layer.
+An unknown id causes E_NOT_FOUND. A sprite or light causes E_UNSUPPORTED.
+The method returns zero values.
+
+```text
+bringToFront(id: TC.GraphicsObjectId)
+```
+
+### Parameters
+
+id: TC.GraphicsObjectId
+Existing object id.
+
+### Returns
+
+No result positions. See the behavior notes for normal-return versus failure semantics.
+
 ### clear
 
-Fill all cells with spaces and current colors.
+In terminal mode, fill all cells with spaces and current colors.
 The cursor stays unchanged.
+In graphics mode, destroy every graphics object. Ids are not reused afterwards.
 The method returns zero values.
 
 ```text
@@ -192,6 +226,195 @@ No parameters.
 ### Returns
 
 No result positions. See the behavior notes for normal-return versus failure semantics.
+
+### destroy
+
+Remove one object. An unknown id causes E_NOT_FOUND.
+The id is not reused.
+The method returns zero values.
+
+```text
+destroy(id: TC.GraphicsObjectId)
+```
+
+### Parameters
+
+id: TC.GraphicsObjectId
+Existing object id.
+
+### Returns
+
+No result positions. See the behavior notes for normal-return versus failure semantics.
+
+### drawArc
+
+Draw an arc (annulus sector). Shared draw rules apply.
+
+```text
+drawArc(props: TC.GraphicsArc) -> id: TC.GraphicsObjectId
+```
+
+### Parameters
+
+props: TC.GraphicsArc
+Arc properties.
+
+### Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+### drawCircle
+
+Draw a filled or outlined circle. Shared draw rules apply.
+
+```text
+drawCircle(props: TC.GraphicsCircle) -> id: TC.GraphicsObjectId
+```
+
+### Parameters
+
+props: TC.GraphicsCircle
+Circle properties.
+
+### Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+### drawLight
+
+Draw a light with the default texture. Shared draw rules apply.
+
+```text
+drawLight(props: TC.GraphicsLight) -> id: TC.GraphicsObjectId
+```
+
+### Parameters
+
+props: TC.GraphicsLight
+Light properties.
+
+### Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+### drawLine
+
+Graphics draw methods share these rules:
+each creates one native object in front of all others of its draw layer and returns its new id;
+properties are validated completely before any change (E_ARGUMENT for shape/type, E_RANGE for domain or bounds);
+a payload above the per-call byte or entry allowance causes E_LIMIT;
+an object that would raise all monitor presentation objects above render_object_limit causes E_CAPACITY;
+the change is applied during the call and becomes visible with all other changes of the same tick;
+a later failure in the same callback does not undo it. No synchronization group or flush is involved.
+In terminal mode every draw method causes E_UNSUPPORTED.
+
+```text
+drawLine(props: TC.GraphicsLine) -> id: TC.GraphicsObjectId
+```
+
+### Parameters
+
+props: TC.GraphicsLine
+Line properties.
+
+### Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+### drawPolygon
+
+Draw a filled triangle-strip polygon. Shared draw rules apply.
+
+```text
+drawPolygon(props: TC.GraphicsPolygon) -> id: TC.GraphicsObjectId
+```
+
+### Parameters
+
+props: TC.GraphicsPolygon
+Polygon properties.
+
+### Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+### drawRectangle
+
+Draw a filled or outlined rectangle. Shared draw rules apply.
+
+```text
+drawRectangle(props: TC.GraphicsRectangle) -> id: TC.GraphicsObjectId
+```
+
+### Parameters
+
+props: TC.GraphicsRectangle
+Rectangle properties.
+
+### Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+### drawSprite
+
+Draw a game icon. Shared draw rules apply.
+
+```text
+drawSprite(props: TC.GraphicsSprite) -> id: TC.GraphicsObjectId
+```
+
+### Parameters
+
+props: TC.GraphicsSprite
+Sprite properties.
+
+### Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+### drawText
+
+Draw terminal-font text. Shared draw rules apply.
+
+```text
+drawText(props: TC.GraphicsText) -> id: TC.GraphicsObjectId
+```
+
+### Parameters
+
+props: TC.GraphicsText
+Text properties.
+
+### Returns
+
+id: TC.GraphicsObjectId
+New object id.
+
+### get
+
+Read one object.
+In graphics mode, an unknown id returns nil; it is not an error.
+
+```text
+get(id: TC.GraphicsObjectId) -> object: TC.GraphicsObject|nil
+```
+
+### Parameters
+
+id: TC.GraphicsObjectId
+Object id.
+
+### Returns
+
+object: TC.GraphicsObject|nil
+Fresh copy of the type and properties, or nil.
 
 ### getBackgroundColor
 
@@ -287,6 +510,42 @@ No parameters.
 limits: TC.MonitorLimits
 Current monitor/model/presentation envelopes.
 
+### getMode
+
+### Graphics mode
+
+Read the current mode.
+
+```text
+getMode() -> mode: TC.MonitorMode
+```
+
+### Parameters
+
+No parameters.
+
+### Returns
+
+mode: TC.MonitorMode
+Current mode of the logical display.
+
+### getObjects
+
+List every object id: first the sprites and lights in creation order, then the other objects from back to front.
+
+```text
+getObjects() -> ids: (TC.GraphicsObjectId)[]
+```
+
+### Parameters
+
+No parameters.
+
+### Returns
+
+ids: (TC.GraphicsObjectId)[]
+Fresh dense array in draw order. Empty when there are no objects.
+
 ### getPaletteColor
 
 Read the current palette channels.
@@ -342,6 +601,7 @@ Blue finite channel in 0..1.
 ### getSize
 
 Read the current model geometry, not physical tiles or an older visible snapshot.
+In graphics mode the results are content pixels: 64*W-4 by 64*H-4 for a W×H tile display.
 
 ```text
 getSize() -> width: integer, height: integer
@@ -354,10 +614,10 @@ No parameters.
 ### Returns
 
 width: integer
-Positive character column count.
+Positive character column count, or content pixel width in graphics mode.
 
 height: integer
-Positive character row count.
+Positive character row count, or content pixel height in graphics mode.
 
 ### getTextColor
 
@@ -450,6 +710,25 @@ No parameters.
 supported: true
 Exactly one true result.
 
+### moveToBack
+
+Move one line, polygon, rectangle, circle, arc or text object to the back of its draw layer.
+An unknown id causes E_NOT_FOUND. A sprite or light causes E_UNSUPPORTED.
+The method returns zero values.
+
+```text
+moveToBack(id: TC.GraphicsObjectId)
+```
+
+### Parameters
+
+id: TC.GraphicsObjectId
+Existing object id.
+
+### Returns
+
+No result positions. See the behavior notes for normal-return versus failure semantics.
+
 ### scroll
 
 Move contents vertically.
@@ -467,6 +746,30 @@ scroll(lines: integer)
 
 lines: integer
 Signed safe-integer row offset. There is no float or string coercion.
+
+### Returns
+
+No result positions. See the behavior notes for normal-return versus failure semantics.
+
+### set
+
+Change some properties of one object.
+Only keys valid for its type are accepted; the type cannot change.
+The method validates the complete resulting object, including bounds, before any change.
+An unknown id causes E_NOT_FOUND. Draw order and id stay unchanged.
+The method returns zero values.
+
+```text
+set(id: TC.GraphicsObjectId, props: table)
+```
+
+### Parameters
+
+id: TC.GraphicsObjectId
+Existing object id.
+
+props: table
+Partial properties for that object type, as in the draw method of that type.
 
 ### Returns
 
@@ -547,6 +850,30 @@ Safe integer -9007199254740991..9007199254740991.
 
 y: integer
 Safe integer -9007199254740991..9007199254740991.
+
+### Returns
+
+No result positions. See the behavior notes for normal-return versus failure semantics.
+
+### setMode
+
+Change the mode.
+A change to the other mode clears all terminal cells (to spaces with current colors) and destroys all graphics objects.
+It then queues monitor_resize with reason 'mode'; old dimensions use the old units.
+It removes this monitor from a monitor synchronization group when it enters graphics mode.
+Cursor, colors, palette and text scale are retained for a later return to terminal mode.
+Setting the current mode changes nothing and is a successful mutating call for synchronization rounds.
+The mode persists through save/load and follows merge, split, settings paste and blueprints like text scale.
+The method returns zero values.
+
+```text
+setMode(mode: TC.MonitorMode)
+```
+
+### Parameters
+
+mode: TC.MonitorMode
+Exact 'terminal' or 'graphics'. Any other string causes E_RANGE; a non-string causes E_ARGUMENT.
 
 ### Returns
 
@@ -738,5 +1065,16 @@ No result positions. See the behavior notes for normal-return versus failure sem
 ## Referenced types
 
 - [TC.Color](colors.md#symbol-TC.Color)
+- [TC.GraphicsArc](types/TC.GraphicsArc.md#symbol-TC.GraphicsArc)
+- [TC.GraphicsCircle](types/TC.GraphicsCircle.md#symbol-TC.GraphicsCircle)
+- [TC.GraphicsLight](types/TC.GraphicsLight.md#symbol-TC.GraphicsLight)
+- [TC.GraphicsLine](types/TC.GraphicsLine.md#symbol-TC.GraphicsLine)
+- [TC.GraphicsObject](types/TC.GraphicsObject.md#symbol-TC.GraphicsObject)
+- [TC.GraphicsObjectId](types/TC.GraphicsObjectId.md#symbol-TC.GraphicsObjectId)
+- [TC.GraphicsPolygon](types/TC.GraphicsPolygon.md#symbol-TC.GraphicsPolygon)
+- [TC.GraphicsRectangle](types/TC.GraphicsRectangle.md#symbol-TC.GraphicsRectangle)
+- [TC.GraphicsSprite](types/TC.GraphicsSprite.md#symbol-TC.GraphicsSprite)
+- [TC.GraphicsText](types/TC.GraphicsText.md#symbol-TC.GraphicsText)
 - [TC.GuestValue](types/TC.GuestValue.md#symbol-TC.GuestValue)
 - [TC.MonitorLimits](types/TC.MonitorLimits.md#symbol-TC.MonitorLimits)
+- [TC.MonitorMode](types/TC.MonitorMode.md#symbol-TC.MonitorMode)

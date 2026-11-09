@@ -13,7 +13,7 @@ class VisibilityInstrumentationTests(unittest.TestCase):
         self.assertEqual(instrumented.split('\n', 1)[1].replace('demand_observer.visibility(); ', ''), source)
 
     def test_missing_or_duplicated_boundary_is_not_silently_unobserved(self):
-        for source in ('o.visible=value ', 'o.visible=value o.visible=values[i] o.visible=values[i] '):
+        for source in ('o.visible=text ', 'o.visible=text r.panel.visible=shown r.panel.visible=shown '):
             with self.assertRaises(ValueError):
                 visibility_source(source)
 

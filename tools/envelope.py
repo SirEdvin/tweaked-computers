@@ -37,9 +37,9 @@ def combined_replacements(package, prefix, native=False):
         replacements['tests/' + name + '.lua'] = (ROOT / 'tests' / (name + '.lua')).read_bytes()
     source = "local envelope_observer=require('tests.envelope_observer')\n" + package.read(prefix + 'scripts/monitor-presentation.lua').decode()
     probes = {
-        'spend(48); backend.cell(c,r,index);': 'spend(48); backend.cell(c,r,index); envelope_observer.prepare();',
-        'r.cells[index]=false; i=i+1;': 'envelope_observer.cleanup(); r.cells[index]=false; i=i+1;',
-        'for i,o in ipairs(operations) do o.visible=values[i] end': 'envelope_observer.commit(#operations,work); for i,o in ipairs(operations) do o.visible=values[i] end',
+        'spend(48+r.width); backend.row(c,r,y);': 'spend(48+r.width); backend.row(c,r,y); envelope_observer.prepare();',
+        '      spend(8)\n      if r.row_version then': '      spend(8); envelope_observer.cleanup()\n      if r.row_version then',
+        '  spend(work)\n  for i,r in ipairs(job.frames) do': '  envelope_observer.commit(operations,work); spend(work)\n  for i,r in ipairs(job.frames) do',
     }
     for old, new in probes.items():
         assert source.count(old) == 1, old

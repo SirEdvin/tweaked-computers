@@ -288,7 +288,8 @@ function M.on_tick(event)
   local g=assert(monitor.resolve(registry.record(f.monitor)))
   if w.state.order~='ab' or console.state.shell_once~=1 or not g.render or g.render==f.front or c.state.periods==f.periods then return end
   assert(f.overdue_verified and w.state.boots==1 and w.state.changes==f.saved.records[w.id].state.changes+1)
-  assert(g.model==f.model and g.model.cells==f.cells and g.render.snapshot.cells[1][1]==78 and f.job.complete)
+  -- The row upgrade cancels the legacy partial cell frame; the converted model publishes as rows.
+  assert(g.model==f.model and g.model.rows and not g.model.cells and g.render.row_version==1 and g.render.snapshot.rows[1][1]:byte(1)==78 and f.job.cancelled)
   assert(registry.record(f.kv).database==f.database and f.database.entries.keep.value=='retained')
   assert(registry.record(f.dashboard).dashboard==f.dashboard_model)
   f.ready=root.scheduler.ready; f.due_work=root.scheduler.due_work; f.observers=root.logic_observers; f.phase='done'

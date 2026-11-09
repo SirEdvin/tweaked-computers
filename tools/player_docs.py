@@ -50,6 +50,7 @@ EXAMPLES = {
     'monitor-program': 'Connect a monitor NETWORK on red. The monitor does not need electricity. Select Run. Activate a character cell. Use matching adjacent tiles to test resize.',
     'monitor-plot-program': 'Connect at most four logical monitors on red or green. They do not need electricity. The program uses one shared sine sample and replaces one complete row per screen. It keeps older rows as a rolling trace. Startup discovery, geometry checks, selection, and clearing use separate callbacks. It checks at most eight names per color. Red has priority for duplicate names. Resize or detach events restart discovery. It periodically retries unavailable screens. This is not a complete-grid repaint or an unlimited factory or network benchmark.',
     'smooth-sine-chart': 'Connect at most four logical monitors on red or green. They do not need electricity. The program draws a connected green line with 2×3 mosaic subpixels and a gray axis. It does not use text markers. It samples one phase and updates all selected screens every two ticks. It submits only rows with changed glyphs or colors. It uses scale 2 when a footprint axis exceeds three tiles. Otherwise, it uses scale 1. Grids have at most 32 columns and 22 rows. This example ships with version 0.1.7 and its runtime and presenter optimizations. Older published archives keep their original example. Paste the complete source. Select Validate. Select Save. Select Run. Do not run other content writers on these screens. This example caches rows. See the [subpixel design and verification boundaries](monitor-animation.md).',
+    'graphics-sine-chart': 'Connect at most four monitors on red or green. They do not need electricity. Use a 2×2 display or a larger one. The program changes each display to graphics mode. It draws gray axes, the title SINE / LIVE, an iron plate icon and one green polygon curve. Every two ticks, one set call moves the curve vertices. Narrow displays omit the title or the icon. Without a reachable monitor, setup fails. Paste the complete source. Select Validate. Select Save. Select Run. See the [monitor API](api/monitor.md).',
     'configurator-program': 'Connect discovery NETWORK red. Connect separate TARGETS green to one inserter. The program sets A > 4, not A > 0. Supply an external A signal of at least 5 to move the inserter.',
     'configurator-sections': 'Connect discovery NETWORK red. Connect TARGETS green to one constant combinator. The program adds a section, activates it, and saves its actual index in computer state. It deliberately writes no signal filters.',
     'factory-controller': 'Follow the complete [factory wiring tutorial](factory.md). Keep one device per type reachable. Paste this whole document.',
@@ -141,6 +142,11 @@ def inventory():
     monitor = methods(monitor_source) | {'setPaletteColor', 'setTextScale', 'getLimits'}
     alias_section = monitor_source.split("for _,name in ipairs({", 1)[1].split('}) do', 1)[0]
     monitor |= {n.replace('Color', 'Colour') for n in re.findall(r"'([A-Za-z]+)'", alias_section)}
+    graphics_source = text('scripts/monitor-graphics.lua')
+    schema = graphics_source.split('local SCHEMA={', 1)[1].split('\n}\n', 1)[0]
+    monitor |= {'draw' + k.capitalize() for k in re.findall(r'^  ([a-z]+)=\{', schema, re.M)}
+    monitor |= set(re.findall(r'function calls\.([A-Za-z]+)\(', graphics_source)) | set(re.findall(r'^calls\.([A-Za-z]+)=', graphics_source, re.M))
+    monitor |= set(re.findall(r'^methods\.([A-Za-z]+)=function', text('scripts/services/monitor.lua'), re.M))
     actual = {'computer': computer, 'peripheral': peripheral, 'kv_database': kv,
               'logic_handler': methods(text('scripts/services/logic.lua')),
               'configurator': methods(text('scripts/services/configurator.lua')), 'monitor': monitor,

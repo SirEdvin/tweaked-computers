@@ -222,6 +222,19 @@ nav:
       - TC.FluidInfo: api/types/TC.FluidInfo.md
       - TC.Footprint: api/types/TC.Footprint.md
       - TC.GeneralEventName: api/types/TC.GeneralEventName.md
+      - TC.GraphicsArc: api/types/TC.GraphicsArc.md
+      - TC.GraphicsCircle: api/types/TC.GraphicsCircle.md
+      - TC.GraphicsColor: api/types/TC.GraphicsColor.md
+      - TC.GraphicsCommon: api/types/TC.GraphicsCommon.md
+      - TC.GraphicsLight: api/types/TC.GraphicsLight.md
+      - TC.GraphicsLine: api/types/TC.GraphicsLine.md
+      - TC.GraphicsObject: api/types/TC.GraphicsObject.md
+      - TC.GraphicsObjectId: api/types/TC.GraphicsObjectId.md
+      - TC.GraphicsPoint: api/types/TC.GraphicsPoint.md
+      - TC.GraphicsPolygon: api/types/TC.GraphicsPolygon.md
+      - TC.GraphicsRectangle: api/types/TC.GraphicsRectangle.md
+      - TC.GraphicsSprite: api/types/TC.GraphicsSprite.md
+      - TC.GraphicsText: api/types/TC.GraphicsText.md
       - TC.GuestTable: api/types/TC.GuestTable.md
       - TC.GuestValue: api/types/TC.GuestValue.md
       - TC.HandlerName: api/types/TC.HandlerName.md
@@ -242,6 +255,7 @@ nav:
       - TC.MonitorDiagnostic: api/types/TC.MonitorDiagnostic.md
       - TC.MonitorEvent: api/types/TC.MonitorEvent.md
       - TC.MonitorLimits: api/types/TC.MonitorLimits.md
+      - TC.MonitorMode: api/types/TC.MonitorMode.md
       - TC.MonitorRef: api/types/TC.MonitorRef.md
       - TC.MonitorResize: api/types/TC.MonitorResize.md
       - TC.MonitorSyncStatus: api/types/TC.MonitorSyncStatus.md

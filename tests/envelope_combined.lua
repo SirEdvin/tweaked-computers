@@ -6,6 +6,7 @@ local lifecycle=require('scripts.lifecycle')
 local scheduler=require('scripts.scheduler')
 local runtime=require('scripts.runtime.computer')
 local model=require('scripts.monitor-model')
+local rows=require('tests.monitor_rows')
 local monitor=require('scripts.services.monitor')
 local defs=require('scripts.device-definitions')
 local observer=require('tests.envelope_observer')
@@ -192,11 +193,7 @@ local function observe(tick)
   x.peaks.native_objects=math.max(x.peaks.native_objects or 0,#objects)
   local owned={}
   local function object(o) if o and o.valid then owned[o.id]=true end end
-  local function frame(r)
-    if not r then return end
-    object(r.panel); object(r.cursor)
-    for _,cell in ipairs(r.cells) do if cell then object(cell.background); object(cell.glyph) end end
-  end
+  local function frame(r) rows.objects(r,object) end
   for _,g in pairs(root.monitors.groups) do frame(g.render) end
   for _,job in ipairs(p.jobs) do for _,r in ipairs(job.frames) do frame(r) end end
   for _,r in ipairs(p.retired) do frame(r) end
@@ -209,17 +206,17 @@ local function observe(tick)
     local char
     for _,ref in ipairs(lane.members) do local r=root.monitors.groups[ref.name].render
       assert(r.presented_tick==lane.presented_tick and r.presented_sequence==lane.presented_sequence)
-      local value=r.snapshot.cells[1][1]
+      local value=r.snapshot.rows[1][1]:byte(1)
       if char then assert(value==char,'incoherent selected publication') end; char=value
-      assert(r.cells[1].background.visible)
-      if value~=32 then assert(r.cells[1].glyph.valid and r.cells[1].glyph.visible) end
+      assert(r.rows[1].bg.visible)
+      if r.snapshot.rows[1][1]:find('[^ ]') then assert(r.rows[1].glyph.valid and r.rows[1].glyph.visible) end
       x.peaks.seal_to_publication=math.max(x.peaks.seal_to_publication or 0,tick-r.snapshot.sealed_tick)
     end
     x.last_publication=lane.presented_tick; x.publications=x.publications+1
     if x.expected then
       local complete=true
       for _,ref in ipairs(lane.members) do local r=root.monitors.groups[ref.name].render
-        if r.snapshot.cells[r.width*2+1][1]~=64+x.expected then complete=false end
+        if r.snapshot.rows[3][1]:byte(1)~=64+x.expected then complete=false end
       end
       if complete and x.signal_visible~=x.expected then
         x.signal_visible=x.expected
@@ -315,7 +312,7 @@ function M.on_tick(event)
       local matches=r and x.last_touch and r.presented_tick>=c.state.touch_tick
       if matches then
         local text='TOUCH '..x.last_touch
-        for i=1,#text do if r.snapshot.cells[g.model.width+i][1]~=text:byte(i) then matches=false end end
+        if r.snapshot.rows[2][1]:sub(1,#text)~=text then matches=false end
       end
       if matches and x.visible_touch~=x.last_touch then
         x.visible_touch=x.last_touch; report('NATIVE_PUBLICATION',{input_tick=c.state.touch_tick,published_tick=r.presented_tick,count=x.last_touch})

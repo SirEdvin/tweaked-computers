@@ -6,6 +6,7 @@ local model=require('scripts.monitor-model')
 local renderer=require('scripts.rendering')
 local defs=require('scripts.device-definitions')
 local snapshots=require('scripts.lifecycle-data')
+local rows=require('tests.monitor_rows')
 local M={}; local loaded=false
 local function nop() end
 local function f() return storage.tc_components end
@@ -27,7 +28,7 @@ local function defer(g)
   local ok,problem=pcall(renderer.tick,game.tick,function()
     if p.jobs[1] and p.jobs[1].ready then error(refused,0) end
   end)
-  assert(not ok and problem==refused and g.render==front and front.cells[1].background.visible)
+  assert(not ok and problem==refused and g.render==front and front.rows[1].bg.visible)
   assert(#p.jobs==1 and p.jobs[1].ready)
   return p.jobs[1]
 end
@@ -74,45 +75,51 @@ function M.run()
     end
   end
   log('TC_COMPONENT_DEMAND_UNSUPPORTED_OK recoverable-format-and-index-refusal')
+  local function glyphs(text) return (string.gsub(text,'.',function(c) local b=c:byte(); return string.char(0xEE,0x80+math.floor(b/64),0x80+b%64) end)) end
+  local function tag(v) return string.format('[color=%.5f',v) end
   write(g,'A'); settle()
-  local a=g.render.cells[1]; local background=a.background; local glyph=a.glyph
+  local background=g.render.rows[1].bg; local glyph=g.render.rows[1].glyph
   write(g,'B'); settle()
-  assert(g.render.cells[1].background==background and background.valid,'glyph change rebuilt an unchanged background')
-  -- A changed glyph or color updates the visible object in place at commit.
-  assert(g.render.cells[1].glyph==glyph and glyph.valid and glyph.sprite=='tc-glyph-66','glyph change rebuilt its object')
-  local function same(a,b) return math.abs(a.r-b[1])<1e-6 and math.abs(a.g-b[2])<1e-6 and math.abs(a.b-b[3])<1e-6 end
+  -- A changed row updates its visible objects in place at commit.
+  assert(g.render.rows[1].bg==background and background.valid,'glyph change rebuilt the row background')
+  assert(g.render.rows[1].glyph==glyph and glyph.valid and glyph.text:find(glyphs('B'),1,true),'glyph change rebuilt its object')
   write(g,'B','0','1'); settle()
-  assert(g.render.cells[1].glyph==glyph and glyph.valid,'background change rebuilt an unchanged glyph')
-  assert(g.render.cells[1].background==background and same(background.color,g.model.palette[2]),'background color not updated in place')
+  assert(g.render.rows[1].glyph==glyph and glyph.valid,'background change rebuilt the row glyphs')
+  assert(g.render.rows[1].bg==background and background.text:find(tag(g.model.palette[2][1]),1,true),'background colour not updated in place')
+  rows.verify(g.render,true)
+  local objects=#rendering.get_all_objects()
   write(g,'C','0','1'); local job=defer(g)
-  local staged=job.frames[1].cells[1]
-  assert(staged.background==background and background.visible and staged.shared_background)
-  -- Prepared but uncommitted: the front still shows B.
-  assert(staged.glyph==glyph and staged.shared_glyph and glyph.visible and glyph.sprite=='tc-glyph-66')
+  -- Prepared but uncommitted: the front still shows B and the frame holds only row data.
+  local staged=job.frames[1]
+  assert(staged.data[1] and not staged.rows and not staged.panel and not staged.cursor)
+  assert(#rendering.get_all_objects()==objects,'preparation created native objects')
+  assert(background.visible and glyph.visible and glyph.text:find(glyphs('B'),1,true))
   tile.physical_error='injected temporary physical unavailability'; renderer.tick(game.tick,nop)
-  assert(not background.visible and not glyph.visible and not staged.glyph.visible)
+  assert(not background.visible and not glyph.visible)
   renderer.changed(g)
-  -- Cancelled staging must never destroy borrowed objects. Cancelled guest
-  -- content remains authoritative; restore the old image before a new seal.
+  -- A cancelled frame owns nothing to retire; guest content stays authoritative.
+  assert(#rendering.get_all_objects()==objects,'cancelled frame owned native objects')
   write(g,'B','0','1'); settle()
-  -- The cancelled C was never applied to the borrowed object.
-  assert(background.valid and glyph.valid and glyph.sprite=='tc-glyph-66' and not background.visible)
+  -- The cancelled C was never applied to the front.
+  assert(background.valid and glyph.valid and glyph.text:find(glyphs('B'),1,true) and not background.visible)
   tile.physical_error=nil; settle()
-  assert(background.valid and glyph.valid and g.render.cells[1].background==background and g.render.cells[1].glyph==glyph)
-  assert(glyph.visible and glyph.sprite=='tc-glyph-66')
+  assert(background.valid and glyph.valid and g.render.rows[1].bg==background and g.render.rows[1].glyph==glyph)
+  assert(glyph.visible and glyph.text:find(glyphs('B'),1,true))
   write(g,' ' ,'4','1'); settle()
-  assert(g.render.cells[1].background==background and not g.render.cells[1].glyph and not glyph.valid)
+  assert(g.render.rows[1].bg==background and not g.render.rows[1].glyph and not glyph.valid)
   write(g,' ' ,'5','1'); settle()
-  assert(g.render.cells[1].background==background and not g.render.cells[1].glyph)
+  assert(g.render.rows[1].bg==background and not g.render.rows[1].glyph)
   write(g,'D','0','1'); settle()
-  glyph=g.render.cells[1].glyph
+  glyph=g.render.rows[1].glyph
+  -- A palette change rewrites the rows in place.
   model.calls.setPaletteColor(g.model,nop,1,0x123456); renderer.participate(g); settle()
-  assert(g.render.cells[1].background==background and g.render.cells[1].glyph==glyph and same(glyph.color,g.model.palette[1]))
+  assert(g.render.rows[1].bg==background and g.render.rows[1].glyph==glyph and glyph.text:find(tag(0x12/255),1,true))
   model.calls.setPaletteColor(g.model,nop,2,0x223344); renderer.participate(g); settle()
-  assert(g.render.cells[1].glyph==glyph and g.render.cells[1].background==background and same(background.color,g.model.palette[2]))
+  assert(g.render.rows[1].glyph==glyph and g.render.rows[1].bg==background and background.text:find(tag(0x22/255),1,true))
+  rows.verify(g.render,true)
   write(g,'E','0','1'); job=defer(g)
-  storage.tc_components={phase='armed',group=g,tile=tile.id,job=job,front=g.render,background=background,glyph=glyph}
-  log('TC_COMPONENTS_OK independent-glyph-background-reuse cancellation palette blank-foreground')
+  storage.tc_components={phase='armed',group=g,tile=tile.id,job=job,front=g.render,background=background,glyph=glyph,panel=g.render.panel}
+  log('TC_COMPONENTS_OK row-identity cancellation-owns-nothing palette-in-place blank-row')
 end
 function M.on_load() loaded=true end
 function M.on_tick(event)
@@ -124,16 +131,16 @@ function M.on_tick(event)
   local g=x.group; local p=registry.get().monitors.presentation
   assert(g.render==x.front and p.jobs[1]==x.job and x.job.ready)
   assert(x.background.valid and x.background.visible and x.glyph.valid and x.glyph.visible)
-  local staged=x.job.frames[1].cells[1]
-  -- The saved, ready job still holds its in-place change until commit.
-  assert(staged.background==x.background and staged.glyph==x.glyph and x.glyph.sprite=='tc-glyph-68')
+  local function glyphs(text) return (string.gsub(text,'.',function(c) local b=c:byte(); return string.char(0xEE,0x80+math.floor(b/64),0x80+b%64) end)) end
+  -- The saved, ready frame holds row data only; the front still shows D until commit.
+  assert(x.job.frames[1].data[1] and x.glyph.text:find(glyphs('D'),1,true))
   assert(lifecycle.available(registry.record(x.tile)))
   settle()
-  assert(g.render.cells[1].background==x.background and x.background.valid and x.background.visible)
-  assert(g.render.cells[1].glyph==x.glyph and x.glyph.valid and x.glyph.visible and x.glyph.sprite=='tc-glyph-69')
-  local final_glyph=g.render.cells[1].glyph
+  assert(g.render==x.front and g.render.rows[1].bg==x.background and x.background.valid and x.background.visible)
+  assert(g.render.rows[1].glyph==x.glyph and x.glyph.valid and x.glyph.visible and x.glyph.text:find(glyphs('E'),1,true))
+  rows.verify(g.render,true)
   lifecycle.remove(x.tile,'component-fixture-cleanup',true); settle()
-  assert(not x.background.valid and not final_glyph.valid)
-  x.phase='done'; log('TC_COLD_OK component-sharing retained-ready-job exactly-once-transfer teardown')
+  assert(not x.background.valid and not x.glyph.valid and not x.panel.valid)
+  x.phase='done'; log('TC_COLD_OK row-identity retained-ready-frame exactly-once teardown')
 end
 return M

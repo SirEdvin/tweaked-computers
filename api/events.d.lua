@@ -74,24 +74,30 @@
 ---@field wire TC.Wire First currently authorized discovery color.
 ---@field wires TC.Wire[] Authorized colors in red-before-green order. The caller can choose another entry.
 
----The logical terminal geometry changed.
----Old wrappers or coordinates can be invalid. Rediscover the monitor.
+---The logical display geometry or mode changed.
+---Old wrappers, coordinates or graphics object ids can be invalid. Rediscover the monitor.
 ---Inspect its dimensions. Notifications can coalesce to the latest geometry
 ---while they retain the original prior dimensions.
+---Terminal dimensions are character cells. Graphics dimensions are content pixels at 64 per tile.
+---For reason 'mode', the old dimensions use the units of the previous mode.
 ---@class TC.MonitorResize: TC.MonitorEvent
 ---@field name 'monitor_resize' Resize event discriminator.
----@field old_width integer Previous terminal width in character columns.
----@field old_height integer Previous terminal height in character rows.
----@field width integer Current terminal width in character columns.
----@field height integer Current terminal height in character rows.
----@field reason 'tiles'|'scale' Cause of geometry/scale notification.
+---@field old_width integer Previous width in the units of the previous mode.
+---@field old_height integer Previous height in the units of the previous mode.
+---@field width integer Current width: character columns in terminal mode, content pixels in graphics mode.
+---@field height integer Current height: character rows in terminal mode, content pixels in graphics mode.
+---@field mode TC.MonitorMode Current mode, which gives the units of width and height.
+---@field reason 'tiles'|'scale'|'mode' Cause of the notification. 'scale' occurs only in terminal mode.
 
----A player activated a selected monitor character cell through the supported interaction.
----Coordinates are terminal cells, not world tiles or mosaic pixels.
+---A player activated a selected monitor point through the supported interaction.
+---In terminal mode the coordinates are 1-based character cells.
+---In graphics mode they are 0-based integer content pixels at 64 per tile, along the display's own axes.
+---Coordinates are never world tiles or mosaic subpixels.
 ---@class TC.MonitorTouch: TC.MonitorEvent
 ---@field name 'monitor_touch' Touch event discriminator.
----@field x integer One-based character column.
----@field y integer One-based character row.
+---@field mode TC.MonitorMode Mode that gives the coordinate units.
+---@field x integer One-based character column, or 0-based content pixel column in graphics mode.
+---@field y integer One-based character row, or 0-based content pixel row in graphics mode.
 ---@field player_index integer Activating player index, not a player object.
 ---@field sample_tick TC.Tick Original synchronized monitor activation tick.
 

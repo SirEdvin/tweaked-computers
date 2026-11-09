@@ -13,9 +13,24 @@ local admission=require('scripts.runtime.admission')
 local limits=require('scripts.runtime.limits')
 local defs=require('scripts.device-definitions')
 local plot_source=require('examples.monitor-plot-program')
+local rows=require('tests.monitor_rows')
 local M={}; local loaded=false
 local function f() return storage.tc_present_live end
 local function nop() end
+-- Rows prepare a full frame in one tick. To capture an admitted, partly prepared job
+-- with a newer pending snapshot, refuse only the row charge after the first row.
+scheduler.register_phase('render','00-monitor-presentation-hold',function(tick,spend)
+ local x=f(); if not x or not x.cold_armed or x.saved then return end
+ local c=registry.computer(x.computer); local s=registry.get().monitors
+ local lane=c and c.monitor_sync and s.presentation and s.presentation.lanes[c.monitor_sync.key]
+ renderer.tick(tick,function(n)
+  local job=lane and lane.job; local r=job and not job.ready and job.cell>1 and job.frames[job.member]
+  if r and n==48+r.width then
+   local remaining=200000-registry.get().scheduler.maintenance_spent; if remaining>0 then spend(remaining) end
+  end
+  spend(n)
+ end)
+end,function() return true end)
 local source=[[function start(e)
  computer.setState('boots',(computer.getState('boots') or 0)+1)
  computer.setState('n',0)
@@ -69,9 +84,12 @@ local function fuel()
 end
 scheduler.register_phase('render','00-presentation-pressure',function(tick,spend)
  local x=f(); if not x or x.phase~='dense' or x.pressured then return end
+ local c=registry.computer(x.computer); local lanes=registry.get().monitors.presentation.lanes
  renderer.tick(tick,function(n)
   local root=registry.get(); local remaining=200000-root.scheduler.maintenance_spent
-  if n>=120000 and remaining>=n then
+  local lane=c.monitor_sync and lanes[c.monitor_sync.key]
+  -- The prepaid publication charge of the ready dense frame (rows: hundreds, not 10^5).
+  if lane and lane.job and lane.job.ready and n>=200 and remaining>=n then
    x.pressure_fronts={}
    for _,id in ipairs(x.ids) do x.pressure_fronts[id]=root.monitors.groups[id].render end
    x.pressured=true; x.pressure_tick=tick; x.pressure_work=n
@@ -186,11 +204,8 @@ local function audit(s)
  for _,lane in pairs(p.lanes) do if lane.pending then pending=pending+lane.pending.slots end end
  assert(staged==p.staging_cells and retired==p.retired_cells and pending==p.pending_cells and #p.jobs<=256)
  for _,job in ipairs(p.jobs) do if not job.cancelled and not job.complete then for _,r in ipairs(job.frames) do if r then
-  for i,cell in ipairs(r.cells) do local reused=r.reused[i]; if reused==nil then reused=r.reused_all end; if cell and not reused then
-   assert(cell.background.valid and cell.background.visible==not not cell.shared_background)
-   if cell.glyph then assert(cell.glyph.valid and cell.glyph.visible==not not cell.shared_glyph) end
-  end end
-  if r.cursor and not r.shared_cursor then assert(not r.cursor.visible) end
+  -- A prepared row frame holds plain data only.
+  assert(r.row_version==1 and not r.rows and not r.panel and not r.cursor,'staged frame owns native objects')
  end end end end
  if not registry.computer(f().computer).monitor_sync then return end
  local selection=registry.computer(f().computer).monitor_sync
@@ -228,7 +243,7 @@ function M.on_tick(event)
   local spent=root.scheduler.maintenance_spent
   assert(not scheduler.try_maintenance(function() scheduler.maintenance(root,event.tick,true)(x.pressure_work) end))
   assert(root.scheduler.maintenance_spent==spent)
-  for id,front in pairs(x.pressure_fronts) do assert(s.groups[id].render==front and front.cells[1].background.visible) end
+  for id,front in pairs(x.pressure_fronts) do assert(s.groups[id].render==front and front.rows[1].bg.visible) end
   log('TC_PRESENT_COMMIT_ONE_SHORT_OK')
  end
  local p=s.presentation; local lane=c.monitor_sync and p and p.lanes[c.monitor_sync.key]
@@ -254,9 +269,9 @@ function M.on_tick(event)
   x.phase='frozen'; loaded=false; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
  elseif x.phase=='running' and x.resumed and c.state.n>70 and settled(s,c) then
   assert(x.published>=3 and c.state.boots==1)
-  for _,id in ipairs(x.ids) do assert(s.groups[id].render.cells[1].value[1]==90) end
+  for _,id in ipairs(x.ids) do assert(s.groups[id].render.snapshot.rows[1][1]:byte(1)==90) end
   log('TC_PRESENT_FULL_WORLD_OK steps='..x.steps..' selected_sequence='..x.published..' groups='..#s.order)
-  x.phase='dense'; x.changed_at=event.tick; x.before_dense=s.groups[x.ids[1]].render.cells[2].glyph
+  x.phase='dense'; x.changed_at=event.tick; x.before_dense=s.groups[x.ids[1]].render.rows[2].glyph
   for _,id in ipairs(x.ids) do local g=s.groups[id]
    for y=1,g.model.height do model.calls.setCursorPos(g.model,nop,1,y); model.calls.write(g.model,nop,string.rep('X',g.model.width)) end
    renderer.participate(g)
@@ -264,9 +279,12 @@ function M.on_tick(event)
  elseif x.phase=='dense' and settled(s,c) then
   assert(event.tick-x.changed_at<=256 and x.pressured)
   -- A changed glyph is updated in place when its cell already had one.
-  local dense=s.groups[x.ids[1]].render.cells[2].glyph
-  assert(dense.valid and dense.sprite=='tc-glyph-88' and (dense==x.before_dense or not x.before_dense.valid))
-  for _,id in ipairs(x.ids) do for _,cell in ipairs(s.groups[id].render.cells) do assert(cell.value[1]==88) end end
+  local dense=s.groups[x.ids[1]].render.rows[2].glyph
+  assert(dense.valid and (dense==x.before_dense or not x.before_dense or not x.before_dense.valid))
+  for _,id in ipairs(x.ids) do local r=s.groups[id].render
+   for _,row in ipairs(r.snapshot.rows) do assert(row[1]==string.rep('X',r.snapshot.width)) end
+   rows.verify(r,true)
+  end
   log('TC_PRESENT_DENSE_GROUP_OK')
   for _,ref in ipairs(c.monitor_sync.members) do guest(c,"peripheral.call("..string.format('%q',ref.name)..",'red','setTextScale',0.5)") end
   x.phase='overcapacity'; x.changed_at=event.tick
@@ -307,7 +325,7 @@ function M.on_tick(event)
  elseif x.phase=='strips' and settled(s,c) then
   for i,id in ipairs(x.strips) do local g=monitor.resolve(registry.record(id))
    assert(g.width_tiles==(i==1 and 1 or 6) and g.height_tiles==(i==1 and 6 or 1))
-   assert(g.render.width==g.model.width and g.render.height==g.model.height and #g.render.cells==g.model.width*g.model.height)
+   assert(g.render.width==g.model.width and g.render.height==g.model.height and g.render.slots==g.model.width*g.model.height and rows.verify(g.render))
   end
   log('TC_PRESENT_NATIVE_STRIPS_OK')
   x.outage=x.walls[1][1]; x.phase='outage'; x.changed_at=event.tick
@@ -356,7 +374,7 @@ function M.on_tick(event)
    local value=math.sin(event.tick/120)
    for _,view in ipairs(c.state.plot_views) do local g=s.groups[view.name]
     local col=1+(sample-1)%view.width; local row=1+math.floor((1-value)*(view.height-1)/2+0.5)
-    for i=1,view.width do assert(g.model.cells[(row-1)*view.width+i][1]==(i==col and 42 or 32)) end
+    for i=1,view.width do assert(model.cell(g.model,i,row)[1]==(i==col and 42 or 32)) end
    end
   end
   if sample>=3 and lane and lane.presented_sequence>=2 then
@@ -398,8 +416,8 @@ function M.on_tick(event)
   assert(event.tick-x.changed_at<400 and c.status=='running')
   log('TC_PRESENT_PLOT_REDISCOVERY_TINY_OK')
   -- Stop cancels a selected in-flight epoch, while retaining successful model writes.
-  local g=s.groups[x.tiny]; local accepted=g.model.cells
-  runtime.stop(c.id); assert(not c.monitor_sync and g.model.cells==accepted)
+  local g=s.groups[x.tiny]; local accepted=g.model.rows
+  runtime.stop(c.id); assert(not c.monitor_sync and g.model.rows==accepted)
   x.phase='stopped'
  elseif x.phase=='stopped' then
   local p=s.presentation
@@ -414,10 +432,10 @@ function M.on_tick(event)
   x.phase='faulting'; x.changed_at=event.tick
  elseif x.phase=='faulting' and c.status=='faulted' then
   local g=s.groups[x.tiny]
-  assert(not c.monitor_sync and g.model.cells[1][1]==70)
+  assert(not c.monitor_sync and model.cell(g.model,1,1)[1]==70)
   local p=s.presentation
   if #p.jobs>0 or #p.retired>0 or #p.orphans>0 or p.pending_cells>0 then return end
-  assert(g.render.cells[1].value[1]==70 and event.tick-x.changed_at<=256)
+  assert(g.render.snapshot.rows[1][1]:byte(1)==70 and event.tick-x.changed_at<=256)
   log('TC_PRESENT_FAULT_ACCEPTED_WRITES_OK'); x.phase='done'; log('TC_COLD_OK')
  end
 end

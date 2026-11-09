@@ -197,7 +197,7 @@ function M.on_tick(event)
   assert((counts.observation or 0)==expected_observations,'due observation missed or duplicated physical tiles')
   if passive then
     if observer.instrumented then assert((counts.full_proofs or 0)==0,'idle tick repeated full display proof') end
-    for _,key in ipairs({'capture','frame','cell','cursor','native_create','native_retire','visibility','clear_cell'}) do assert((counts[key] or 0)==0,'idle presentation work: '..key) end
+    for _,key in ipairs({'capture','frame','row','cursor','native_create','native_retire','visibility','clear_cell'}) do assert((counts[key] or 0)==0,'idle presentation work: '..key) end
     local p=root.monitors.presentation
     assert(#p.jobs==0 and #p.retired==0 and #p.orphans==0,'idle work did not settle')
     for id,g in pairs(root.monitors.groups) do

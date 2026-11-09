@@ -7,6 +7,7 @@ local lifecycle=require('scripts.lifecycle')
 local errors=require('scripts.runtime.errors')
 local data=require('scripts.runtime.data')
 local principal=require('scripts.runtime.principal')
+local graphics=require('scripts.monitor-graphics')
 local M={}; local backend; local authority
 local L=model.limits
 function M.install(b) assert(not backend); backend=b end
@@ -122,6 +123,7 @@ function M.select(c,tick,spend,input,execution)
     local g,path=authority.lookup(c,ref.name,ref.wire,spend)
     if not g then errors.raise('E_UNREACHABLE','monitor reference unreachable') end
     if g.kind~='monitor' then errors.raise('E_WRONGTYPE','monitor required') end
+    if g.model.mode=='graphics' then errors.raise('E_UNSUPPORTED','graphics-mode monitors publish at call time and cannot join a synchronization group') end
     if not authority.available(g,spend) then errors.raise('E_UNREACHABLE','selected monitor is physically unavailable') end
     if not refs[g.id] then count=count+1; total=total+g.model.width*g.model.height end
     if not refs[g.id] or ref.wire=='red' then refs[g.id]={name=g.id,wire=ref.wire,generation=g.generation,path=path} end
@@ -188,23 +190,52 @@ function M.changed(g)
   local lane=owner_of(p,g.id) or p.lanes[g.id]
   if lane then cancel(p,lane); lane.participation={}; lane.last=nil; lane.last_epoch=nil; wake(p,lane) end
 end
+-- A member that enters graphics mode leaves its synchronization group; the others continue.
+function M.leave_group(g)
+  local s=registry.get().monitors; local p=s and s.presentation
+  if not p or not M.supported(p) then return end
+  local lane=owner_of(p,g.id); if not lane or not lane.owner then return end
+  for i,ref in ipairs(lane.members) do if ref.name==g.id then table.remove(lane.members,i); break end end
+  local c=registry.record(lane.owner); local execution={kind=lane.owner_kind or 'program',id=lane.run_id}
+  local owner=c and principal.selection(c,execution); local selection=owner and owner.monitor_sync
+  if selection and selection.key==lane.key and selection.members~=lane.members then
+    for i,ref in ipairs(selection.members) do if ref.name==g.id then table.remove(selection.members,i); break end end
+  end
+  if p.demand_version==1 then p.members[g.id]=nil end
+  cancel(p,lane); lane.participation={}; lane.last=nil; lane.last_epoch=nil
+  if #lane.members==0 and c then release(c,nil,execution) end
+  p.layout_dirty=true; wake(p,lane)
+end
 function M.regroup(s,groups)
   local p=s.presentation; if not p or not M.supported(p) then return end
   p.layout_dirty=true
   for id,g in pairs(s.groups) do if groups[id]~=g then M.changed(g) end end
 end
-local function objects(r,fn)
-  if r.panel then fn(r.panel) end
+-- Row fronts hold text rows; legacy cell fronts and staging come from older saves.
+local function count(r) return r.row_version and 2*r.height+2 or 2*#r.cells+2 end
+local function content(r,fn)
   if r.cursor then fn(r.cursor) end
-  for _,c in ipairs(r.cells) do if c then
-    if c.background then fn(c.background) end; if c.glyph then fn(c.glyph) end
-  end end
+  if r.row_version then
+    for y=1,r.height do local o=r.rows[y]; if o then
+      if o.bg then fn(o.bg) end; if o.glyph then fn(o.glyph) end
+    end end
+  else
+    for _,c in ipairs(r.cells) do if c then
+      if c.background then fn(c.background) end; if c.glyph then fn(c.glyph) end
+    end end
+  end
+end
+local function set_visible(r)
+  -- Text draws above native feedback: a marked display shows only its panel.
+  local shown=not r.hidden; local text=shown and not r.marked
+  if r.panel and r.panel.valid then r.panel.visible=shown end
+  content(r,function(o) if o.valid then o.visible=text end end)
+  local g=r.is_front and r.context and r.context.group
+  if g and g.render==r then graphics.show(g,text) end
 end
 local function visible(r,value,spend)
-  local count=2*#r.cells+2
-  spend(count*3+8)
-  objects(r,function(o) if o.valid then o.visible=value end end)
-  r.hidden=not value
+  spend(count(r)*3+8)
+  r.hidden=not value; set_visible(r)
 end
 local function enqueue(p,r,kind)
   local n=slots(r)
@@ -217,14 +248,19 @@ end
 local function cleanup(p,spend,remaining)
   while remaining>0 and #p.retired>0 do
     local r=p.retired[1]; local i=r.cleanup_cursor or 1
-    local count=r.cleanup_indices and #r.cleanup_indices or #r.cells
+    local count=r.row_version and r.height or r.cleanup_indices and #r.cleanup_indices or #r.cells
     while i<=count and remaining>0 do
-      local index=r.cleanup_indices and r.cleanup_indices[i] or i
       spend(8)
-      local reused=r.reused and r.reused[index]
-      if reused==nil then reused=r.reused_all end
-      if r.is_front or not reused then backend.clear_cell(r.cells[index],not r.is_front) end
-      r.cells[index]=false; i=i+1; r.cleanup_cursor=i; remaining=remaining-1
+      if r.row_version then
+        local o=r.rows[i]; if o then backend.destroy(o.bg); backend.destroy(o.glyph); r.rows[i]=nil end
+      else
+        local index=r.cleanup_indices and r.cleanup_indices[i] or i
+        local reused=r.reused and r.reused[index]
+        if reused==nil then reused=r.reused_all end
+        if r.is_front or not reused then backend.clear_cell(r.cells[index],not r.is_front) end
+        r.cells[index]=false
+      end
+      i=i+1; r.cleanup_cursor=i; remaining=remaining-1
     end
     if i>count then
       spend(#p.retired+12)
@@ -246,7 +282,10 @@ local function invalidate(p,spend)
   end
   for index=#p.jobs,1,-1 do local job=p.jobs[index]; if job.cancelled then
     for i,r in ipairs(job.frames) do if r then
-      if enqueue(p,r,'staging') then job.frames[i]=false; job.captures[i]=false; job.slots=job.slots-slots(r) end
+      if r.row_version then -- Prepared row data owns no native object.
+        p.staging_cells=p.staging_cells-slots(r); p.staging_frames=p.staging_frames-1
+        job.frames[i]=false; job.captures[i]=false; job.slots=job.slots-slots(r)
+      elseif enqueue(p,r,'staging') then job.frames[i]=false; job.captures[i]=false; job.slots=job.slots-slots(r) end
     end end
     if job.slots==0 then spend(#p.jobs+8); table.remove(p.jobs,index) end
   end end
@@ -273,6 +312,7 @@ local function qualify(s,lane,spend,proofs)
   local total=0
   for _,ref in ipairs(lane.members) do
     local g=s.groups[ref.name]
+    if g and model.shape(g.model)~='rows' then blocked(lane,'E_UNSUPPORTED','unsupported retained monitor model; data preserved'); return false end
     if not g or ref.generation~=g.generation then
       if owner then release(owner,errors.new('E_UNREACHABLE','monitor identity removed'),execution) end
       return false
@@ -350,10 +390,10 @@ end
 local function prepare(job,spend,remaining)
   while job.member<=#job.frames and remaining>0 do
     local r=job.frames[job.member]; local c=job.captures[job.member]
-    local count=r.indices and #r.indices or r.slots
+    local count=r.graphics and 0 or r.indices and #r.indices or r.height
     while job.cell<=count and remaining>0 do
-      local index=r.indices and r.indices[job.cell] or job.cell
-      spend(48); backend.cell(c,r,index); job.cell=job.cell+1; remaining=remaining-1
+      local y=r.indices and r.indices[job.cell] or job.cell
+      spend(48+r.width); backend.row(c,r,y); job.cell=job.cell+1; remaining=remaining-1
     end
     if job.cell>count then
       spend(16); backend.cursor(c,r); job.member=job.member+1; job.cell=1
@@ -384,92 +424,54 @@ local function commit(s,p,job,tick,spend,proofs)
       if s.membership[ref.path[#ref.path]]~=ref.name then release(c,errors.new('E_UNREACHABLE','selected endpoint regrouped'),execution); return false end
     end
   end
-  local oldcells,oldframes=0,0
+  -- Row fronts are updated in place. A legacy cell front is hidden and retired
+  -- in the publication tick; a missing front is created then.
+  local oldcells,oldframes,newcells,newframes=0,0,0,0
   for _,c in ipairs(job.captures) do local old=c.group.render
-    if old then oldcells=oldcells+slots(old); oldframes=oldframes+1 end
+    if old and not old.row_version then oldcells=oldcells+slots(old); oldframes=oldframes+1 end
+    if not old or not old.row_version then newcells=newcells+c.model.width*c.model.height; newframes=newframes+1 end
   end
   if p.retired_cells+oldcells>L.render_retired_cells or p.retired_frames+oldframes>L.render_retired_frames then return false end
-  if p.front_cells-oldcells+job.slots>L.aggregate_cells or p.front_frames-oldframes+#job.frames>L.tiles then return false end
+  if p.front_cells-oldcells+newcells>L.aggregate_cells or p.front_frames-oldframes+newframes>L.tiles then return false end
   -- Prepay the complete bounded native inventory, validity reads and writes before
-  -- any visibility or ownership change. No fallible admission inside the swap.
-  local cells,damage=0,0
+  -- any visibility or ownership change. No fallible admission inside the publication.
+  local operations,damage=0,0
   for _,r in ipairs(job.frames) do
-    cells=cells+(r.indices and #r.indices or r.slots)
+    local old=r.context.group.render
+    if r.indices and r.front~=old then job.invalid=true; return false end
+    operations=operations+(r.graphics and 2*r.height or 2*#r.data)+3+(old and not old.row_version and count(old) or 0)
     damage=damage+model.acknowledge_cost(r.context.group.model,r.snapshot)
-    if r.indices and (r.front~=r.context.group.render or r.front.hidden) then job.invalid=true; return false end
   end
-  local maximum=4*cells+4*#job.frames
-  local work=maximum*3+damage+#job.frames*16+#p.jobs+8
+  local work=operations*3+damage+#job.frames*16+#p.jobs+8
   if work>L.render_commit_work then blocked(lane,'E_CAPACITY','publication work limit'); return false end
+  if operations>L.render_commit_objects then return false end
+  -- Shared aggregate object limit (D6): defer instead of exceeding it.
+  if (s.native_objects or 0)+operations>graphics.limit() then return false end
+  for _,r in ipairs(job.frames) do
+    local old=r.context.group.render
+    if old and old.row_version and not backend.valid(old,r) then job.invalid=true; return false end
+    if old and not old.row_version then
+      local ok=true; content(old,function(o) if not o.valid then ok=false end end)
+      if not ok or old.panel and not old.panel.valid then job.invalid=true; return false end
+    end
+  end
   spend(work)
-  local operations={}; local values={}
-  local function add(o,value)
-    if o then if not o.valid then job.invalid=true; return false end; operations[#operations+1]=o; values[#values+1]=value end
-    return true
-  end
-  for j,r in ipairs(job.frames) do
-    local old=job.captures[j].group.render
-    if old then
-      for index=1,(r.indices and #r.indices or old.slots) do
-        local i=r.indices and r.indices[index] or index; local cell=old.cells[i]
-        if cell and cell~=r.cells[i] then
-        local next_cell=r.cells[i]
-        if (not next_cell or cell.background~=next_cell.background) and not add(cell.background,false) then return false end
-        if (not next_cell or cell.glyph~=next_cell.glyph) and not add(cell.glyph,false) then return false end
-      end end
-      if old.panel~=r.panel and not add(old.panel,false) then return false end
-      if old.cursor~=r.cursor and not add(old.cursor,false) then return false end
-    end
-    for index=1,(r.indices and #r.indices or r.slots) do
-      local i=r.indices and r.indices[index] or index; local cell=r.cells[i]
-      if not cell.background.valid or cell.glyph and not cell.glyph.valid then job.invalid=true; return false end
-      local previous=old and old.cells[i]
-      if (not previous or previous.background~=cell.background or old.hidden) and not add(cell.background,true) then return false end
-      if (not previous or previous.glyph~=cell.glyph or old.hidden) and not add(cell.glyph,true) then return false end
-    end
-    if r.panel and not r.panel.valid or r.cursor and not r.cursor.valid then job.invalid=true; return false end
-    if not old or old.panel~=r.panel or old.hidden then if not add(r.panel,true) then return false end end
-    if not old or old.cursor~=r.cursor or old.hidden then if not add(r.cursor,true) then return false end end
-  end
-  local mutated=0
-  for _,r in ipairs(job.frames) do
-    if r.mutations and #r.mutations>0 then
-      -- Mutations target the objects of the front this frame was prepared from.
-      if r.front~=r.context.group.render then job.invalid=true; return false end
-      for _,m in ipairs(r.mutations) do if not m[1].valid then job.invalid=true; return false end end
-      mutated=mutated+#r.mutations
-    end
-  end
-  if #operations+mutated>L.render_commit_objects then return false end
-  for i,o in ipairs(operations) do o.visible=values[i] end
-  for _,r in ipairs(job.frames) do
-    if r.mutations then
-      for _,m in ipairs(r.mutations) do if m[2] then m[1].sprite=m[2] end; m[1].color=m[3] end
-      r.mutations=nil
-    end
-  end
   for i,r in ipairs(job.frames) do
-    local g=job.captures[i].group; local old=g.render
-    if old then
-      for index=1,(r.indices and #r.indices or r.slots) do
-        local i=r.indices and r.indices[index] or index
-        local previous,next_cell=old.cells[i],r.cells[i]
-        if previous==next_cell then old.cells[i]=false
-        elseif previous and next_cell then
-          if previous.background==next_cell.background then previous.background=nil end
-          if previous.glyph==next_cell.glyph then previous.glyph=nil end
-        end
+    local g=job.captures[i].group; local old=g.render; local F=old
+    if not old or not old.row_version then
+      F=backend.new_front(r.context,true); F.marked=M.marked_now(g) or nil
+      if old then
+        old.hidden=true; set_visible(old)
+        old.cleanup_indices=nil; old.reused=nil; old.reused_all=nil -- A front destroys everything it holds.
+        enqueue(p,old,'front')
       end
-      old.cleanup_indices=r.indices -- Unchanged native cells transfer ownership without a retirement scan.
-      if old.panel==r.panel then old.panel=nil end
-      if old.cursor==r.cursor then old.cursor=nil end
-      enqueue(p,old,'front')
+      p.front_cells=p.front_cells+r.slots; p.front_frames=p.front_frames+1; F.accounted='front'
     end
-    r.is_front=true; r.front=nil; r.reused=nil; r.reused_all=nil; r.hidden=nil; r.cleanup_indices=nil
-    r.presented_revision=r.snapshot.revision; r.presented_tick=tick; r.presented_sequence=job.sequence
+    backend.apply(F,r,not F.hidden and not F.marked)
+    F.context=r.context; F.snapshot=r.snapshot; F.is_front=true
+    F.presented_revision=r.snapshot.revision; F.presented_tick=tick; F.presented_sequence=job.sequence
     model.acknowledge(g.model,r.snapshot)
-    r.accounted='front'; g.render=r
-    p.front_cells=p.front_cells+r.slots; p.front_frames=p.front_frames+1
+    g.render=F
   end
   p.staging_cells=p.staging_cells-job.slots; p.staging_frames=p.staging_frames-#job.frames
   lane.presented_sequence=job.sequence; lane.presented_tick=tick; lane.job=nil; job.complete=true
@@ -582,6 +584,57 @@ function M.tick(tick,spend)
   cleanup(p,spend,remaining)
   scheduler.request_render_work(registry.get(),tick,demand,spend)
 end
+-- Hide-while-marked (D8): presentation state only; the model and publication are unchanged.
+function M.marked_now(g)
+  for _,id in ipairs(g.members) do
+    local rec=registry.record(id)
+    if rec and rec.body and rec.body.valid and rec.body.to_be_deconstructed() then return true end
+  end
+  return false
+end
+function M.marked(event)
+  local entity=event.entity
+  local rec,role=registry.by_entity(entity)
+  if not rec or rec.kind~='monitor' or role~='body' then return end
+  local s=registry.get().monitors
+  if type(s)~='table' or s.version~=1 or type(s.groups)~='table' or not M.supported(s.presentation) then return end
+  local g=s.groups[s.membership[rec.id]]
+  local front=g and g.render
+  if front and front.row_version then
+    local marked=M.marked_now(g) or nil
+    if front.marked~=marked then front.marked=marked; set_visible(front) end
+  end
+end
+-- Row model upgrade (D7): one synchronized pass after configuration change. Legacy
+-- jobs are cancelled (their staging retires); legacy fronts stay until the first row commit.
+registry.register_initializer('monitor-rows',function(r)
+  local s=r.monitors
+  if type(s)~='table' or s.version~=1 or type(s.groups)~='table' then return end
+  for _,g in pairs(s.groups) do
+    if model.shape(g.model)=='cells' then model.convert(g.model) end
+  end
+  local p=s.presentation
+  if type(p)=='table' and M.supported(p) and p.row_version~=1 then
+    for _,lane in pairs(p.lanes) do cancel(p,lane); lane.participation={}; lane.last=nil; lane.last_epoch=nil end
+    p.layout_dirty=true; p.row_version=1
+  end
+  -- Shared object count (D6), computed once from every retained monitor object.
+  if s.native_objects==nil then
+    local seen,n={},0
+    local function add(o) if o and o.valid and not seen[o.id] then seen[o.id]=true; n=n+1 end end
+    local function frame(r) if r then add(r.panel); content(r,add) end end
+    for _,g in pairs(s.groups) do
+      frame(g.render)
+      if g.graphics then for _,o in pairs(g.graphics.objects) do add(o.native) end end
+    end
+    if type(p)=='table' and M.supported(p) then
+      for _,r in ipairs(p.orphans) do frame(r) end
+      for _,r in ipairs(p.retired) do frame(r) end
+      for _,job in ipairs(p.jobs) do for _,r in ipairs(job.frames) do if r then frame(r) end end end
+    end
+    s.native_objects=n
+  end
+end)
 registry.register_initializer('monitor-selected-owners',function(r)
   local s=r.monitors; local p=s and s.version==1 and s.presentation
   if p and M.supported(p) and p.demand_version==1 then

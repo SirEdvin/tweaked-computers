@@ -94,19 +94,70 @@ render progress, actual draw handles and shared spent credits. No user source or
 render mutation runs on load. Unknown monitor state versions remain inert with
 recovery data preserved.
 
+## Row text presentation
+
+Each terminal row is drawn as two native text objects in the mod font `tc-term`.
+One object holds the background colours, the other holds the glyphs. Each byte
+uses its own private-use character, so the game never reads guest text as rich text.
+A changed row keeps its objects. The publication tick writes the new text and colours.
+Unchanged rows make no native call. A full 126×84 grid uses at most 170 objects.
+
+The font has the same 6×9 pixels as the glyph atlas. Known appearance differences:
+
+- The engine draws text about 6 screen pixels below its target, at every zoom.
+  Glyphs and backgrounds keep the same offset, so the content sits lower in the bezel.
+- Cloud shadows do not dim the monitor content.
+- At scale 0.5 and low zoom, a glyph pixel is smaller than a screen pixel.
+  The text looks less smooth than the earlier sprites.
+
 ## Native world feedback and marking
 
-Monitor content now uses explicit sprite layers above the body but below native
-wires, selection and information icons. Mark the visible monitor body.
-Mark/cancel does not clear cells, change cursor/palette or
-regroup an array. Only actual removal follows normal split/resize behavior.
-Electrical changes affect neither content nor the engine's deconstruction order.
-No custom X is drawn. Old saved render objects are rebuilt through admitted rendering/cleanup,
-not on_load, while the committed display model remains intact.
+Text and shapes draw above all sprite layers, including native feedback. While a tile of
+a display is marked for deconstruction, the display hides its text, cursor and graphics
+objects. The black panel stays visible, so the red X shows clearly. Cancel the mark to
+show the content again. The model, the graphics ids and the publication do not change.
+Selection boxes and wires can draw below the content.
 
-The genuine red X's visible contrast and layering still require native graphical
-review. Exact-engine headless checks establish object properties and preserved
-state only. See [RD4 evidence and the short client check](rd4-verification.md).
+Mark/cancel does not clear cells, change cursor/palette or regroup an array.
+Only actual removal follows normal split/resize behavior.
+Electrical changes affect neither content nor the engine's deconstruction order.
+Saves from earlier releases convert their cell models to rows in one synchronized
+step after the configuration change. The old cell sprites stay visible until the first
+row frame publishes. Bounded retirement then destroys them.
+See [RD4 evidence and the short client check](rd4-verification.md).
+
+## Graphics mode
+
+`m.setMode('graphics')` changes a display to graphics mode. `m.getMode()` reads the mode.
+A real change clears the display and queues `monitor_resize` with reason `mode`.
+In graphics mode, `getSize()` returns content pixels: 64 for each tile, minus the
+4-pixel bezel. The origin is the top-left of the content area. X goes right and Y
+goes down along the display's own axes.
+
+Use `drawLine`, `drawPolygon`, `drawRectangle`, `drawCircle`, `drawArc`,
+`drawText`, `drawSprite` and `drawLight`. Each call returns an id. Use `set(id, props)`
+to move or change an object without a new object. Use `get`, `getObjects`,
+`destroy`, `bringToFront`, `moveToBack` and `clear` to manage objects.
+Changes show at the end of the same tick. A later error does not undo them.
+
+Obey these rules:
+
+- Every object must fit in the content area. The host does not clip. A call that
+  leaves the area fails with `E_RANGE` and changes nothing.
+- Sprites and lights always draw below lines, polygons, rectangles, circles, arcs and text.
+  Overlapping sprites draw by position. `bringToFront` and `moveToBack` work only on the upper layer.
+- Text uses only the terminal font. Each byte is `6*scale` by `9*scale` pixels.
+  The text draws about 6 screen pixels below its box.
+- Sprites accept only valid game icon paths, such as `item/iron-plate`.
+- All monitor objects share `render_object_limit`. A draw call above it fails with `E_CAPACITY`.
+- Terminal methods fail with `E_UNSUPPORTED` in graphics mode. Graphics methods fail in terminal mode.
+- A graphics display cannot join a monitor synchronization group.
+- Touch events report 0-based content pixels and `mode='graphics'`.
+
+The mode follows merge, split, settings paste and blueprints like text scale.
+Saves from earlier releases load in terminal mode. See
+`examples/graphics-sine-chart.lua`, the in-game Reference tutorial Graphics sine
+chart and the [exact API](player/api/monitor.md).
 
 ## Touch and resize callbacks
 
@@ -155,7 +206,7 @@ Automatic buffering seals immutable actual-size snapshots
 after callbacks, prepares replacements hidden and prepays complete native
 publication. Existing programs need no flush. Newest pending snapshots coalesce.
 Already admitted snapshots finish even under continuous writers. Preparation
-and retirement share 1024 cell checks/tick.
+and retirement share 1024 row steps/tick (`render_cells_per_tick`; the name is historical).
 
 An optional selected group has at most four logical displays and 10584 combined
 cells. Every member must participate before a round seals. All then publish in
@@ -171,16 +222,16 @@ See [live mod settings](player/api/limits.md#live-mod-settings). Staging and que
 256-tick stable-world target is checked headlessly, not a graphical/60-UPS promise.
 
 `tests.monitor_engine` exercises model contracts, real wires/groups/rotations,
-world draw objects, all 256 atlas sprite slots and maximum 6×6 geometry. It also checks shared
+world row-text objects, all 256 glyph code points and maximum 6×6 geometry. It also checks shared
 admission, queued-resize coalescence and cold presentation persistence. Its player
 activation checks are explicitly table-backed mocks. Headless runs do not create
 a native player or prove zoom/contrast/font/GUI input/multiplayer behavior.
 Those native-client checks remain deferred to the user for this alpha.
 
 For complete moving curves, use `examples/smooth-sine-chart.lua` and the
-[bounded 30 Hz animation guide](player/monitor-animation.md). Dirty-cell snapshots and
-sparse retirement avoid whole-grid sprite checks for ordinary small changes.
-Initial images, palette/clear/scroll changes and legacy state retain full rebuilds.
+[bounded 30 Hz animation guide](player/monitor-animation.md). Dirty-row snapshots
+update only the changed rows in place. Palette, clear and scroll changes rewrite every row
+of the same objects. Initial images and geometry changes create new rows.
 
 `examples/monitor-program.lua` is a native named-callback program, not an OS,
 REPL, filesystem or terminal-redirection compatibility layer. Its source is

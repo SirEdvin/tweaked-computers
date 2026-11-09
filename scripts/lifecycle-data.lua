@@ -95,11 +95,15 @@ function M.monitor_snapshot(rec)
   local g=state and state.groups[state.membership[rec.id]]
   local m=g and g.model or rec.monitor_settings or model.new(1,1)
   local palette={}; for i=1,16 do local p=m.palette[i]; palette[i]={p[1],p[2],p[3]} end
-  return M.import_monitor{version=1,scale=m.scale,fg=m.fg,bg=m.bg,blink=m.blink,palette=palette}
+  return M.import_monitor{version=2,scale=m.scale,fg=m.fg,bg=m.bg,blink=m.blink,palette=palette,mode=m.mode or 'terminal'}
 end
+-- Version 2 adds the display mode; version 1 records import as terminal mode.
 function M.import_monitor(s)
-  shape(s,{version=true,scale=true,fg=true,bg=true,blink=true,palette=true},6)
-  if s.version~=1 then errors.raise('E_UNSUPPORTED','unsupported monitor item settings') end
+  if type(s)=='table' and s.version==1 then shape(s,{version=true,scale=true,fg=true,bg=true,blink=true,palette=true},6)
+  else shape(s,{version=true,scale=true,fg=true,bg=true,blink=true,palette=true,mode=true},7) end
+  if s.version~=1 and s.version~=2 then errors.raise('E_UNSUPPORTED','unsupported monitor item settings') end
+  local mode=s.version==1 and 'terminal' or s.mode
+  if mode~='terminal' and mode~='graphics' then fail('invalid monitor mode') end
   if type(s.scale)~='number' or not errors.integer(s.scale*2,1,10) or not errors.integer(s.fg,0,15)
     or not errors.integer(s.bg,0,15) or type(s.blink)~='boolean' then fail('invalid monitor settings') end
   if type(s.palette)~='table' or getmetatable(s.palette)~=nil then fail('plain palette required') end
@@ -110,11 +114,12 @@ function M.import_monitor(s)
     local p=s.palette[i]; shape(p,{[1]=true,[2]=true,[3]=true},3); palette[i]={}
     for j=1,3 do if not errors.finite(p[j]) or p[j]<0 or p[j]>1 then fail('invalid palette channel') end; palette[i][j]=p[j] end
   end
-  return {version=1,scale=s.scale,fg=s.fg,bg=s.bg,blink=s.blink,palette=palette}
+  return {version=2,scale=s.scale,fg=s.fg,bg=s.bg,blink=s.blink,palette=palette,mode=mode}
 end
 function M.restore_monitor(rec,s)
   local settings=M.import_monitor(s)
   local m=model.new(1,1); m.scale=settings.scale; m.fg=settings.fg; m.bg=settings.bg; m.blink=settings.blink; m.palette=settings.palette
+  m.mode=settings.mode=='graphics' and 'graphics' or nil
   -- No obsolete group buffer or cursor travels with a tile.
   rec.monitor_settings=m
 end
@@ -138,7 +143,10 @@ function M.apply_settings(rec,s)
     local root=registry.get(); local state=root.monitors; local g=state and state.groups[state.membership[rec.id]]
     if g then
       local m=g.model; local scale=m.scale
+      -- A transferred mode clears the target and queues resize with reason 'mode' in the old units.
+      local switched=monitor.switch_mode(g,settings.mode,function() end)
       local resized,w,h=model.scale(m,g.width_tiles,g.height_tiles,function() end,settings.scale)
+      if switched or m.mode=='graphics' then resized=false end
       m.fg=settings.fg; m.bg=settings.bg; m.blink=settings.blink; m.palette=settings.palette; m.revision=m.revision+1
       model.invalidate(m)
       monitor.settings_changed(rec,g,resized,w,h,scale~=m.scale)

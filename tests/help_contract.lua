@@ -12,7 +12,7 @@ function M.run()
       assert(block.kind=='heading' or block.kind=='prose' or block.kind=='signature' or block.kind=='code')
     end
   end
-  for _,id in ipairs({'starter','speaker','logic','recipe','factory','shared','statistics','dashboard','dashboard_charts'}) do
+  for _,id in ipairs({'starter','speaker','logic','recipe','factory','shared','statistics','dashboard','dashboard_charts','graphics'}) do
     local tutorial=assert(help.tutorials[id],'missing self-contained tutorial '..id)
     for _,key in ipairs({'purpose','setup','steps','expected','failures','code'}) do
       assert(type(tutorial[key])=='string' and #tutorial[key]>0,id..' missing '..key)

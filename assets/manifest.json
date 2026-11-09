@@ -1891,6 +1891,34 @@
       "icon": "icons/recipe_searcher.png"
     }
   },
+  "fonts": [
+    {
+      "codepoints": {
+        "bytes": [
+          57344,
+          57599
+        ],
+        "cursor": 57601,
+        "full_block": 57600
+      },
+      "inputs": [
+        {
+          "path": "assets/glyphs/atlas.png",
+          "sha256": "9730201dae888432ef8f8b956505b5238d524d6fd40562c073a048b82ed405e9"
+        },
+        {
+          "path": "tools/terminal_font.py",
+          "sha256": "42d1ad377c1eba699dbe83a8b56eb6b08fb4378707dec04259e098cd7958d1b2"
+        }
+      ],
+      "license": "MIT",
+      "notices": [
+        "assets/notices/Tweaked-Computers-MIT.txt"
+      ],
+      "path": "assets/fonts/tc-term.ttf",
+      "sha256": "3adf0bcfd43d5057929e5ff00542677ab248b9efed95ff56381a87720ad290c3"
+    }
+  ],
   "format_version": 2,
   "generated_metadata": [
     {

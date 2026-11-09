@@ -93,7 +93,7 @@ local function retained(loading)
   assert(x.database.entries.hash.fields.field=='retained hash' and x.database.entries.secret.deadline==x.deadline)
   local monitors=registry.get().monitors
   local group=loading and monitors.groups[monitors.membership[x.records.monitor.id]] or monitor.resolve(x.records.monitor)
-  assert(group==x.group and x.group.model==x.screen and x.screen.cells[1][1]==75)
+  assert(group==x.group and x.group.model==x.screen and x.screen.rows[1][1]:byte(1)==75)
   local io=x.records.logic
   assert(io.output_owner==x.owner)
   if not x.upgraded then assert(io.output_bank==x.bank) end

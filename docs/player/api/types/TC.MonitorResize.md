@@ -9,19 +9,29 @@ Source: public `api/` declarations. [All public types and globals](../types.md).
 
 ### TC.MonitorResize
 
-The logical terminal geometry changed.
-Old wrappers or coordinates can be invalid. Rediscover the monitor.
+The logical display geometry or mode changed.
+Old wrappers, coordinates or graphics object ids can be invalid. Rediscover the monitor.
 Inspect its dimensions. Notifications can coalesce to the latest geometry
 while they retain the original prior dimensions.
+Terminal dimensions are character cells. Graphics dimensions are content pixels at 64 per tile.
+For reason 'mode', the old dimensions use the units of the previous mode.
 
 Extends: TC.MonitorEvent
 
 ### height
 
-Current terminal height in character rows.
+Current height: character rows in terminal mode, content pixels in graphics mode.
 
 ```text
 integer
+```
+
+### mode
+
+Current mode, which gives the units of width and height.
+
+```text
+TC.MonitorMode
 ```
 
 ### name
@@ -34,7 +44,7 @@ Resize event discriminator.
 
 ### old_height
 
-Previous terminal height in character rows.
+Previous height in the units of the previous mode.
 
 ```text
 integer
@@ -42,7 +52,7 @@ integer
 
 ### old_width
 
-Previous terminal width in character columns.
+Previous width in the units of the previous mode.
 
 ```text
 integer
@@ -50,15 +60,15 @@ integer
 
 ### reason
 
-Cause of geometry/scale notification.
+Cause of the notification. 'scale' occurs only in terminal mode.
 
 ```text
-'tiles'|'scale'
+'tiles'|'scale'|'mode'
 ```
 
 ### width
 
-Current terminal width in character columns.
+Current width: character columns in terminal mode, content pixels in graphics mode.
 
 ```text
 integer
@@ -67,3 +77,4 @@ integer
 ## Referenced types
 
 - [TC.MonitorEvent](TC.MonitorEvent.md#symbol-TC.MonitorEvent)
+- [TC.MonitorMode](TC.MonitorMode.md#symbol-TC.MonitorMode)

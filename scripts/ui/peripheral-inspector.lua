@@ -138,7 +138,8 @@ local function prepare(s,spend)
     end
     view.signature=table.concat(parts,'\0')
   elseif snapshot.kind=='monitor' then
-    view.geometry=d; view.signature=d.name..'/'..d.width_tiles..'/'..d.height_tiles..'/'..d.tiles..'/'..d.columns..'/'..d.rows..'/'..d.scale
+    view.geometry=d; view.signature=d.name..'/'..d.width_tiles..'/'..d.height_tiles..'/'..d.tiles..'/'..d.mode..'/'
+      ..(d.mode=='graphics' and d.pixel_width..'/'..d.pixel_height..'/'..d.objects or d.columns..'/'..d.rows..'/'..d.scale)
   elseif snapshot.kind=='logic' then
     view.signals=d; local parts={}
     for _,wire in ipairs({'red','green','output'}) do
@@ -309,7 +310,9 @@ local function draw(f,s,view)
   elseif view.kind=='monitor' then
     local g=view.geometry
     label(p,tr('tiles',g.width_tiles,g.height_tiles,g.tiles))
-    label(p,tr('terminal',g.columns,g.rows)); label(p,tr('scale',g.scale))
+    label(p,tr('mode-'..g.mode))
+    if g.mode=='graphics' then label(p,tr('pixels',g.pixel_width,g.pixel_height)); label(p,tr('objects',g.objects))
+    else label(p,tr('terminal',g.columns,g.rows)); label(p,tr('scale',g.scale)) end
     p.tooltip=tr('monitor-help')
 
   end

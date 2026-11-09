@@ -6,7 +6,8 @@ local native=rendering
 rendering=setmetatable({draw_sprite=function(options)
   count(type(options.sprite)=='string' and options.sprite:match('^tc%-status%-') and 'art_create' or 'native_create')
   return native.draw_sprite(options)
-end},{__index=function(_,key) return native[key] end})
+end,draw_text=function(options) count('native_create'); return native.draw_text(options) end},
+  {__index=function(_,key) return native[key] end})
 
 local lifecycle=require('scripts.lifecycle')
 if lifecycle.observe_monitor then
@@ -31,7 +32,7 @@ presentation.bind=function(authority)
 end
 local install=presentation.install
 presentation.install=function(backend)
-  for _,name in ipairs({'frame','cell','cursor'}) do
+  for _,name in ipairs({'frame','row','cursor'}) do
     local original=backend[name]
     backend[name]=function(...) count(name); return original(...) end
   end

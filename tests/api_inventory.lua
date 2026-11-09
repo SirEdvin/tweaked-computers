@@ -23,7 +23,9 @@ return [[function start(event)
     monitor={'write','blit','clear','clearLine','scroll','getSize','getCursorPos','setCursorPos','getCursorBlink','setCursorBlink',
       'getTextColor','getTextColour','setTextColor','setTextColour','getBackgroundColor','getBackgroundColour',
       'setBackgroundColor','setBackgroundColour','isColor','isColour','setPaletteColor','setPaletteColour',
-      'getPaletteColor','getPaletteColour','getTextScale','setTextScale','getLimits'}
+      'getPaletteColor','getPaletteColour','getTextScale','setTextScale','getLimits',
+      'getMode','setMode','drawLine','drawPolygon','drawRectangle','drawCircle','drawArc','drawText','drawSprite','drawLight',
+      'set','get','getObjects','destroy','bringToFront','moveToBack'}
   }
   for kind,list in pairs(expected) do
     local device=peripheral.find(kind,'red')

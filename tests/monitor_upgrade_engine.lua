@@ -51,8 +51,107 @@ local function maintenance_run()
  local p=monitor.resolve(registry.record(x.partial)); model.calls.write(p.model,nop,'OLD'); renderer.participate(p)
  assert(runtime.save(c.id,source,c.saved_revision)); assert(runtime.activate(c.id,game.tick))
 end
+-- Row presentation upgrade from released 0.1.21 (monitor-row-text-presentation D7):
+-- a populated 6x6 cell model, its sprite front and a ready pending frame.
+local function rows_run()
+ local x={kind='rows',phase='rows-settling',steps=0,from_version=script.active_mods['tweaked-computers']}
+ storage.tc_monitor_upgrade=x
+ local wall={}; for y=0,5 do for col=0,5 do wall[#wall+1]=build('monitor',col,y).id end end
+ x.wall=wall
+ for _=1,200 do monitor.reconcile(game.tick,nop); if not registry.get().monitors.job then break end end
+ local g=monitor.resolve(registry.record(wall[1])); assert(#g.members==36)
+ model.scale(g.model,6,6,nop,2); model.calls.setPaletteColor(g.model,nop,4,0x2468AC)
+ model.calls.setCursorBlink(g.model,nop,true)
+ for y=1,g.model.height do
+  local t={}; for i=1,g.model.width do t[i]=string.char(32+(i*7+y*3)%95) end
+  model.calls.setCursorPos(g.model,nop,1,y)
+  model.calls.blit(g.model,nop,table.concat(t),string.rep(string.format('%x',y%16),g.model.width),string.rep(y%2==0 and '2' or 'f',g.model.width))
+ end
+ model.calls.setCursorPos(g.model,nop,3,4); renderer.participate(g)
+end
+-- Plain {text,fg,bg} rows from a legacy cell model (released runtime) or a row model.
+local function image(m)
+ if m.rows then local out={}; for y,r in ipairs(m.rows) do out[y]={r[1],r[2],r[3]} end; return out end
+ local out={}
+ for y=1,m.height do local t,fg,bg={},{},{}
+  for x=1,m.width do local c=m.cells[(y-1)*m.width+x]; t[x]=string.char(c[1]); fg[x]=string.format('%x',c[2]); bg[x]=string.format('%x',c[3]) end
+  out[y]={table.concat(t),table.concat(fg),table.concat(bg)}
+ end
+ return out
+end
+local function same_image(a,b)
+ if #a~=#b then return false end
+ for y=1,#a do for i=1,3 do if a[y][i]~=b[y][i] then return false end end end
+ return true
+end
+local function cell_sprites()
+ local n=0
+ for _,o in pairs(rendering.get_all_objects()) do if o.type=='sprite' and o.sprite:sub(1,9)=='tc-glyph-' then n=n+1 end end
+ return n
+end
+local function rows_tick(event)
+ local x=f(); local root=registry.get()
+ if x.phase=='rows-frozen' then return end
+ local s=root.monitors; local p=s.presentation
+ if x.phase=='done' then
+  if loaded then
+   fuel(); scheduler.tick(event.tick)
+   local g=monitor.resolve(registry.record(x.wall[1]))
+   assert(g.render==x.final_front and g.render.presented_tick==x.final_tick,'ordinary load rebuilt the row front')
+   assert(cell_sprites()==0); loaded=false; log('TC_UPGRADE_ORDINARY_OK')
+  end
+  return
+ end
+ fuel(); scheduler.tick(event.tick); x.steps=x.steps+1; assert(x.steps<400,'row upgrade deadline '..x.phase)
+ local g=monitor.resolve(registry.record(x.wall[1]))
+ local ready=not s.job and p and #p.jobs==0 and #p.retired==0 and #p.orphans==0 and p.pending_cells==0
+  and g.render and g.render.presented_revision==g.model.revision
+ if x.phase=='rows-settling' and ready then
+  assert(g.render.cells and cell_sprites()>0,'released runtime must present per-cell sprites')
+  -- A pending change: prepared and ready, refused before publication, then saved.
+  model.calls.setCursorPos(g.model,nop,1,1); model.calls.write(g.model,nop,'PENDING ROW')
+  renderer.participate(g); x.legacy_front=g.render; x.phase='rows-preparing'
+ elseif x.phase=='rows-preparing' and x.refused then
+  local job=assert(p.lanes[g.id].job); assert(job.ready and g.render==x.legacy_front)
+  x.job=job; x.expected=image(g.model); x.cursor={g.model.x,g.model.y,g.model.blink,g.model.scale}
+  x.legacy_handles={}
+  for _,o in pairs(rendering.get_all_objects()) do if o.type=='sprite' and (o.sprite:sub(1,9)=='tc-glyph-' or o.sprite=='tc-monitor-fill') then x.legacy_handles[#x.legacy_handles+1]=o end end
+  x.phase='rows-frozen'; loaded=false; game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
+ elseif x.phase=='rows-upgrading' and ready and cell_sprites()==0 then
+  assert(g.render.row_version==1 and g.render~=x.legacy_front)
+  for _,o in ipairs(x.legacy_handles) do assert(not o.valid,'legacy cell object survived the upgrade') end
+  assert(same_image(image(g.model),x.expected) and same_image(image(g.render.snapshot),x.expected),'upgrade changed the display content')
+  for y=1,g.model.height do
+   local glyph,background=renderer.row_strings(g.render.snapshot,y); local o=g.render.rows[y]
+   assert(o.bg.valid and o.bg.visible and o.bg.text==background and (glyph=='' and not o.glyph or o.glyph.valid and o.glyph.visible and o.glyph.text==glyph))
+  end
+  assert(g.render.cursor and g.render.cursor.valid and g.model.x==x.cursor[1] and g.model.y==x.cursor[2] and g.model.blink==x.cursor[3] and g.model.scale==x.cursor[4])
+  x.settled_tick=event.tick; x.final_front=g.render; x.final_tick=g.render.presented_tick; x.phase='rows-quiet'
+ elseif x.phase=='rows-quiet' then
+  -- Settled ticks after the upgrade do no presentation work.
+  assert(ready and g.render==x.final_front and g.render.presented_tick==x.final_tick and next(p.work)==nil,'settled upgrade kept presenting')
+  if event.tick-x.settled_tick>=30 then
+   assert((root.scheduler.render_demand_work or 0)==0)
+   x.phase='done'; log('TC_MONITOR_ROW_UPGRADE_OK from='..x.from_version..' to='..script.active_mods['tweaked-computers']); log('TC_UPGRADE_OK')
+  end
+ end
+end
 scheduler.register_phase('render','00-monitor-upgrade-pressure',function(tick,spend)
- local x=f(); if not x or x.kind~='maintenance' or x.phase~='maintenance-preparing' then return end
+ local x=f()
+ if x and x.kind=='rows' and x.phase=='rows-preparing' then
+  renderer.tick(tick,function(n)
+   local s=registry.get().monitors; local g=monitor.resolve(registry.record(x.wall[1]))
+   local lane=s.presentation and s.presentation.lanes[g.id]
+   if lane and lane.job and lane.job.ready then
+    local remaining=200000-registry.get().scheduler.maintenance_spent
+    if remaining>0 then spend(remaining) end
+    x.refused=true
+   end
+   spend(n)
+  end)
+  return
+ end
+ if not x or x.kind~='maintenance' or x.phase~='maintenance-preparing' then return end
  renderer.tick(tick,function(n)
   local s=registry.get().monitors; local g=monitor.resolve(registry.record(x.partial))
   local lane=s.presentation and s.presentation.lanes[g.id]
@@ -107,6 +206,7 @@ local function maintenance_tick(event)
 end
 function M.run()
  if script.active_mods['tweaked-computers']=='0.1.16' then return maintenance_run() end
+ if script.active_mods['tweaked-computers']=='0.1.21' then return rows_run() end
  assert(model.limits.width_tiles==4,'legacy fixture must originate in the released four-tile runtime')
  local x={phase='legacy',walls={},steps=0,stopped_setup=true,boots=1}; storage.tc_monitor_upgrade=x
  local c=build('computer',-3,0); x.computer=c.id
@@ -165,6 +265,19 @@ function M.on_load()
 end
 function M.on_configuration_changed(event)
  local x=f()
+ if x.kind=='rows' then
+  local change=assert(event.mod_changes['tweaked-computers'])
+  assert(change.old_version=='0.1.21' and change.old_version==x.from_version and change.new_version~=change.old_version)
+  assert(x.phase=='rows-frozen')
+  -- The synchronized initializer already converted the model and cancelled the legacy job.
+  local g=monitor.resolve(registry.record(x.wall[1]))
+  assert(model.shape(g.model)=='rows' and not g.model.cells and same_image(image(g.model),x.expected))
+  assert(g.model.mode==nil and not g.graphics,'an upgraded monitor must start in terminal mode')
+  assert(x.job.cancelled and g.render==x.legacy_front and g.model.damage_full)
+  x.phase='rows-upgrading'; loaded=false
+  log('TC_MONITOR_ROW_CONFIGURATION old='..change.old_version..' new='..change.new_version)
+  return
+ end
  if x.kind=='maintenance' then
   local change=assert(event.mod_changes['tweaked-computers'])
   assert(change.old_version=='0.1.16' and change.old_version==x.from_version
@@ -194,6 +307,7 @@ end
 function M.on_tick(event)
  local x=f(); if not x then return end
  if x.kind=='maintenance' then return maintenance_tick(event) end
+ if x.kind=='rows' then return rows_tick(event) end
  if x.phase=='legacy-frozen' then return end
  if x.phase=='done' then
   if loaded then

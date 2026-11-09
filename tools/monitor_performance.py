@@ -26,7 +26,12 @@ def main():
     ap.add_argument('--output', type=Path, required=True)
     ap.add_argument('--mode', choices=('base', 'space-age', 'both'), default='base')
     ap.add_argument('--layout', choices=('four-walls', 'mixed'), default='four-walls')
-    ap.add_argument('--workload', choices=('sparse', 'full-blit'), default='sparse')
+    ap.add_argument('--workload', choices=('sparse', 'full-blit', 'dense'), default='sparse',
+                    help='dense: 6x6 walls at scale 0.5 without the 32x22 chart cap (use --scene one for one wall)')
+    ap.add_argument('--example', choices=('terminal', 'graphics'), default='terminal',
+                    help='terminal: smooth-sine-chart; graphics: graphics-sine-chart (one polygon set per frame)')
+    ap.add_argument('--program', type=Path,
+                    help='Guest program source to run unchanged instead of an example (no workload or scene transforms)')
     ap.add_argument('--scene', choices=('zero', 'idle', 'one', 'all'), default='all',
                     help='No monitors, stopped 144 tiles, one independent producer, or all screens')
     ap.add_argument('--ticks', type=int, default=3600)
@@ -38,6 +43,8 @@ def main():
         ap.error('use a fresh output directory outside git')
     if not 600 <= args.ticks <= 216000 or not 1 <= args.deadline <= 1800:
         ap.error('ticks must be 600..216000 and deadline 1..1800 seconds per cold phase')
+    if args.program and (args.workload != 'sparse' or args.example != 'terminal'):
+        ap.error('--program runs its source unchanged; do not combine it with --workload or --example')
     if args.max_gap is not None and args.max_gap < 1:
         ap.error('max-gap must be positive')
     folder.mkdir(parents=True)
@@ -46,13 +53,32 @@ def main():
     config = f'return {{ticks={args.ticks},max_gap={args.max_gap or "nil"},scene="{args.scene}"}}\n'
     with zipfile.ZipFile(args.archive) as src, zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED) as dst:
         prefix = next(n[:-len('info.json')] for n in src.namelist() if n.endswith('/info.json'))
-        source = src.read(prefix + 'examples/smooth-sine-chart.lua').decode()
-        if args.scene == 'one':
+        if args.program:
+            source = args.program.read_text()
+        elif args.example == 'graphics':
+            wrapped = src.read(prefix + 'examples/graphics-sine-chart.lua').decode()
+            source = re.search(r'return \[(=*)\[\n?(.*)\]\1\]\s*$', wrapped, re.S)[2]
+            if args.workload == 'full-blit':
+                raise ValueError('full-blit applies to the terminal example only')
+            if args.scene == 'one':
+                source, count = re.subn(r'#views < 4', '#views < 1', source)
+                if count != 1:
+                    raise ValueError('review one-screen graphics transform against changed example')
+        else:
+            source = src.read(prefix + 'examples/smooth-sine-chart.lua').decode()
+        if not args.program and args.example == 'terminal' and args.workload == 'dense':
+            # Large-grid stand-in: every selected wall at scale 0.5, without the example's grid cap.
+            source, scales = re.subn(r'local scale = M\.max\(info\.footprint\.width, info\.footprint\.height\) > 3 and 2 or 1',
+                                     'local scale = 0.5', source)
+            source, caps = re.subn(r'w > 32 or h > 22', 'false', source)
+            if scales != 1 or caps != 1:
+                raise ValueError('review dense workload transform against changed example')
+        if not args.program and args.example == 'terminal' and args.scene == 'one':
             marker = 'P.setMonitorSyncGroup(refs)'
             if source.count(marker) != 1:
                 raise ValueError('review one-screen workload transform against changed example')
             source = source.replace(marker, 'refs = {refs[1]}\n                    ' + marker)
-        if args.workload == 'full-blit':
+        if not args.program and args.example == 'terminal' and args.workload == 'full-blit':
             # Same image and cadence, but submit every terminal row like a
             # buffered pixelbox renderer. This is NOT executing Telem itself.
             pattern = r'if not old or rows\[y\] ~= old\[y\] then|if not old or rows\[y\]~=old\[y\] then'
@@ -78,7 +104,7 @@ def main():
     record = {'candidate_sha256': hashlib.sha256(args.archive.read_bytes()).hexdigest(),
               'test_archive_sha256': hashlib.sha256(target.read_bytes()).hexdigest(),
               'guest_sha256': hashlib.sha256(source.encode()).hexdigest(),
-              'layout': args.layout, 'workload': args.workload, 'scene': args.scene, 'ticks': args.ticks,
+              'layout': args.layout, 'workload': args.workload, 'example': args.example, 'program': args.program and str(args.program), 'scene': args.scene, 'ticks': args.ticks,
               'test_only_replacements': {k: hashlib.sha256(v).hexdigest() for k, v in replacements.items()}}
     (folder / 'provenance.json').write_text(json.dumps(record, indent=2) + '\n')
     result = subprocess.run([sys.executable, str(ROOT / 'tools/smoke.py'), '--factorio', str(args.factorio),
@@ -89,12 +115,16 @@ def main():
     for path in sorted((folder / 'engine').glob('*/cold-second-engine.log')):
         text = path.read_text()
         durations = [float(m[1]) for m in re.finditer(r'TC_PERF_CPU tick=\d+ Duration: ([0-9.]+)ms', text)]
+        allocated = [float(m[1]) for m in re.finditer(r'TC_PERF_CPU tick=\d+ Duration: [0-9.]+ms alloc_kb=(-?[0-9.]+)', text)]
         done = list(re.finditer(r'TC_PERF_DONE ticks=(\d+) publications=(\d+) visible_changes=(\d+) max_gap=(\d+) peak_objects=(\d+)', text))
         entry = {'mode': path.parent.name, 'samples': len(durations), 'completed': len(done) == 1}
         if durations:
             ordered = sorted(durations)
             entry.update(mean_ms=statistics.fmean(durations), median_ms=statistics.median(durations),
                          p95_ms=ordered[int((len(ordered) - 1) * .95)], max_ms=max(durations))
+        if allocated:
+            # Lua heap growth inside the measured tick; GC runs outside the measured region.
+            entry.update(alloc_kb_mean=statistics.fmean(allocated), alloc_kb_max=max(allocated))
         if len(done) == 1:
             entry.update(zip(('ticks', 'publications', 'visible_changes', 'max_gap_ticks', 'peak_objects'), map(int, done[0].groups())))
         samples.append(entry)

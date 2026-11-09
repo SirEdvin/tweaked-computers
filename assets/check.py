@@ -149,6 +149,9 @@ def check(output):
                  'regenerated_zlib_version':regenerated_manifest['transform']['zlib_version']}
     (output/'regeneration-environment.json').write_text(json.dumps(environment,indent=2)+'\n')
     regenerated_manifest['transform']['zlib_version']=manifest['transform']['zlib_version']
+    # tools/terminal_font.py owns the font records; --check regenerates and compares them.
+    subprocess.run([sys.executable, str(ROOT.parent/'tools/terminal_font.py'), '--check'], check=True)
+    regenerated_manifest['fonts']=manifest.get('fonts')
     assert manifest==regenerated_manifest, 'regenerated manifest differs beyond observed host zlib version'
     expected = {Path(r['path']).relative_to('assets') for r in records}
     actual = {p.relative_to(ROOT) for folder in ('sprites','icons','glyphs') for p in (ROOT/folder).glob('*.png')}
