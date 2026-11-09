@@ -126,16 +126,25 @@ function M.services(computer,tick,guard,execution)
     end
     -- Physical connectivity cannot change during this non-yielding guest
     -- callback: no guest service rewires/moves/removes entities. Preserve all
-    -- original charges, and still resolve identity/generation on every use.
+    -- original charges; lookup() resolves identity/generation once per proof.
     local charges={total=0}
     local values=M.inventory(computer,wire,function(n) spend(n); charges[#charges+1]=n; charges.total=charges.total+n end)
     inventories[wire]={inventory=values,charges=charges}
     return values
   end
+  -- Keyed by inventory proof, so invalidate() and every bind drop it too.
+  local targets=setmetatable({},{__mode='k'})
   local function lookup(name,wire)
     current(); check_name(name); network.wire(wire)
-    local rec,item=target(inventory(wire),name)
+    local values=inventory(wire)
+    local found=targets[values]; local hit=found and found[name]
+    if hit then return hit[1],hit[2] end
+    local rec,item=target(values,name)
     if rec and (rec.force_index~=computer.force_index or rec.surface_index~=computer.surface_index) then return nil end
+    if rec then
+      if not found then found={}; targets[values]=found end
+      found[name]={rec,item}
+    end
     return rec,item
   end
   local function invoke(name,wire,generation,method,...)
@@ -168,10 +177,12 @@ function M.services(computer,tick,guard,execution)
   end
   local function facade(rec,wire)
     local name,generation=rec.id,rec.generation; local methods={}
-    local kind_methods,native=bindings[rec.kind].methods,rec.kind=='logic'
+    local kind_methods,native,borrowing=bindings[rec.kind].methods,rec.kind=='logic',bindings[rec.kind].borrow_input
     local function make(key)
       if type(key)~='string' or not kind_methods[key] then return nil end
-      return guard.service(function(...) return invoke(name,wire,generation,key,...) end,native,true)
+      local fn=function(...) return invoke(name,wire,generation,key,...) end
+      if borrowing and borrowing[key] and guard.borrow_input then guard.borrow_input(fn) end
+      return guard.service(fn,native,true)
     end
     local proxy
     -- Programs use few of a peripheral's methods per callback; build each on first use.

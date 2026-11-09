@@ -121,6 +121,23 @@ function M.run()
   assert(effects==1)
   assert(not pcall(scalar.execute,scalar.globals.computer.effect) and effects==1)
   log('TC_CONTRACT environment-scalar-return-without-post-effect-accounting')
-  log('TC_CONTRACT_TOTAL 7')
+  local received={}
+  local copy_fn=function(t) received.copied=t end
+  local borrow_fn=function(t) received.borrowed=t end
+  local copying,copy_ctx=create({computer={take=copy_fn}})
+  local borrowing,borrow_ctx=create({computer={take=borrow_fn}})
+  borrowing.borrow_input(borrow_fn)
+  local source='local t={text="abc",target={1,2.5}}; computer.take(t); return t'
+  local copied_arg,borrowed_arg=execute(copying,source),execute(borrowing,source)
+  assert(received.copied~=copied_arg and received.borrowed==borrowed_arg,'borrowed input must arrive uncopied')
+  assert(copy_ctx.machine.work==borrow_ctx.machine.work,'borrowed input must be charged like a snapshot')
+  for _,bad in ipairs({'computer.take({target=computer})','computer.take({0/0})','local t={}; t.self=t; computer.take(t)'}) do
+    local a,b=table.pack(pcall(execute,copying,bad)),table.pack(pcall(execute,borrowing,bad))
+    local function code(e) return type(e)=='table' and e.code or tostring(e) end
+    assert(not a[1] and not b[1] and code(a[2])==code(b[2]),'borrowed input must be refused like a snapshot: '..code(a[2])..' / '..code(b[2]))
+  end
+  assert(received.borrowed==borrowed_arg,'refused borrowed input reached the host')
+  log('TC_CONTRACT environment-borrowed-input-charged-and-validated-without-copy')
+  log('TC_CONTRACT_TOTAL 8')
 end
 return M

@@ -33,6 +33,8 @@ function M.new(context,services,shell)
   local protected,labels=setmetatable({},{__mode='k'}),setmetatable({},{__mode='k'})
   local bindings,host_errors={},{}
   local handle_arguments,stable_services,input_rules={},{},{}
+  -- Weak: borrowing facade services are per-callback closures.
+  local borrowed=setmetatable({},{__mode='k'})
   local service_frames,frame_pool={},{}
   local restore_binding,output,output_flush,guest_index
   local exports,constructing
@@ -120,7 +122,8 @@ function M.new(context,services,shell)
     if #value>limits.string_bytes then fail('Data string size exceeded','E_LIMIT') end
     return value
   end
-  local function copy(value,seen,depth,stats)
+  -- measuring: identical checks and charges, no output graph.
+  local function copy(value,seen,depth,stats,measuring)
     E.spend(1)
     stats.nodes=stats.nodes+1
     if depth>limits.data_depth or stats.nodes>limits.data_nodes then fail('Data structure limit exceeded','E_LIMIT') end
@@ -135,7 +138,7 @@ function M.new(context,services,shell)
     plain(value)
     if seen[value] then fail('cyclic Data is not persistable') end
     seen[value]=true
-    local result,key_kind,count,maximum={},nil,0,0
+    local result,key_kind,count,maximum=not measuring and {} or nil,nil,0,0
     for key,item in pairs(value) do
       E.spend(1); count=count+1
       if count>limits.table_entries then fail('Data table entries exceeded','E_LIMIT') end
@@ -146,7 +149,8 @@ function M.new(context,services,shell)
       elseif kt=='string' then string_value(key); E.spend(#key); stats.bytes=stats.bytes+#key
       else fail('Data keys must be strings or dense array indexes') end
       if key_kind and key_kind~=kt then fail('Data arrays/maps cannot mix') end
-      key_kind=kt; result[key]=copy(item,seen,depth+1,stats)
+      key_kind=kt; local item_copy=copy(item,seen,depth+1,stats,measuring)
+      if result then result[key]=item_copy end
     end
     if key_kind=='number' and maximum~=count then fail('Data array must be dense') end
     seen[value]=nil
@@ -165,13 +169,14 @@ function M.new(context,services,shell)
     else string_value(value); E.spend(#value); bytes=#value end
     if bytes>limits.peripheral_call_bytes then fail('Data snapshot byte limit exceeded','E_LIMIT') end
   end
-  function E.snapshot(value)
+  local function snapshot(value,measuring)
     if value==nil then return nil end
     local stats={nodes=0,bytes=0}
-    local result=copy(value,{},0,stats)
+    local result=copy(value,{},0,stats,measuring)
     if stats.bytes>limits.peripheral_call_bytes then fail('Data snapshot byte limit exceeded','E_LIMIT') end
     return result
   end
+  function E.snapshot(value) return snapshot(value) end
   function E.namespace(entries,label)
     -- Scaffolding namespaces are charged by every bind, warm or cold alike.
     if building then construction=construction+1 else E.spend(1) end
@@ -200,6 +205,10 @@ function M.new(context,services,shell)
   function E.accept_handle(fn,index) assert(type(fn)=='function' and index==1); handle_arguments[fn]=index end
   function E.stable_service(fn) stable_services[fn]=true end
   function E.input_rule(fn,classify) input_rules[fn]=classify end
+  -- Only for host functions that read their arguments and never retain or mutate them:
+  -- arguments are checked and charged like a snapshot, then passed without copying.
+  -- Ignored for services with native input or an input rule.
+  function E.borrow_input(fn) borrowed[fn]=true end
   -- A closed provider transfers its detached native result, never a guest marker.
   function E.transfer_result(value)
     local frame=assert(service_frames[#service_frames],'transfer outside service')
@@ -242,8 +251,16 @@ function M.new(context,services,shell)
           local kind=type((select(i,...)))
           if kind~='nil' and kind~='boolean' and kind~='number' and kind~='string' then simple=false; break end
         end
-        if simple then
-          if not (native_input or input_rules[fn] and input_rules[fn](...)) then
+        local borrowing=not simple and borrowed[fn] and not native_input and not input_rules[fn]
+        if simple or borrowing then
+          if borrowing then
+            -- Same checks and charges, in the same order, as snapshotting each argument.
+            for i=1,n do
+              local value=select(i,...); local kind=type(value)
+              if kind=='nil' or kind=='boolean' or kind=='number' or kind=='string' then snapshot_scalar(value)
+              else snapshot(value,true) end
+            end
+          elseif not (native_input or input_rules[fn] and input_rules[fn](...)) then
             for i=1,n do snapshot_scalar((select(i,...))) end
           end
           local depth=#service_frames+1
