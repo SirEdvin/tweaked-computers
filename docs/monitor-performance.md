@@ -68,6 +68,30 @@ thresholds or real-time UPS claims. Evidence:
 
 Reproduce one case with `--scene one --workload dense` or `--scene one --example graphics`.
 
+### Six-line stock display
+
+A second workload shows six lines such as `Iron plate  600/1800` on one 6×6 wall.
+The amounts change once per second, and the item names stay the same. The terminal
+program writes six rows with `blit` at text scale 2. The graphics program draws the
+names once as static text and updates six amount objects with `set`. Both use the
+same glyph size and colours. Runs used `--program FILE --scene one --ticks 7200`,
+serial and in the order terminal, graphics, terminal, graphics (ms):
+
+| Option | Mean per tick | Update-tick median | Update-tick p95 | Extra per second (median) | Native objects |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Terminal, run 1 | 0.60 | 17.8 | 57.9 | 20.7 | 304 |
+| Graphics, run 1 | 0.57 | 17.5 | 52.1 | 19.6 | 289 |
+| Terminal, run 2 | 0.66 | 21.2 | 60.5 | 24.5 | 304 |
+| Graphics, run 2 | 0.53 | 12.2 | 43.9 | 17.2 | 289 |
+
+The idle median was 0.18–0.19 ms in all runs. The graphics option costs slightly
+less than the terminal option, but most of the update cost is the same for both.
+The same terminal program costs about 2 ms per callback when it runs every
+2 ticks, and one changed line instead of six costs a median of 11.9 ms. Thus a
+callback after a 60-tick wait has a large fixed cost that does not come from the
+monitor. The host had 4 cores at load average 7–9, so absolute values are high.
+Evidence: `/home/siredvin/artifacts/tweaked-computers/monitor-stock-benchmark-2026-11-09/`.
+
 ## Bottlenecks and changes
 
 1. **Repeated native physical proofs.** The same monitor members were inspected

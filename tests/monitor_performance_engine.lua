@@ -89,17 +89,17 @@ function M.on_tick(event)
     log({'','TC_PERF_CPU tick=',event.tick,' ',profiler})
     local selection=c.monitor_sync; local p=root.monitors.presentation
     local lane=selection and p.lanes[selection.key]
-    if config.example=='graphics' then
-      -- Graphics publish at call time: count ticks in which a curve polygon received new vertices.
+    if not lane then
+      -- No sync lane: count ticks with a new terminal front snapshot or new graphics object props.
       local changed=false
-      for _,g in pairs(root.monitors.groups) do if g.graphics then
-        for id,o in pairs(g.graphics.objects) do
-          if o.type=='polygon' then
+      for _,g in pairs(root.monitors.groups) do
+        if g.graphics then
+          for id,o in pairs(g.graphics.objects) do
             local key=g.id..'/'..id
             if x.previous[key]~=o.props then changed=true end; x.previous[key]=o.props
           end
-        end
-      end end
+        elseif g.render and x.previous[g.id]~=g.render.snapshot then changed=true; x.previous[g.id]=g.render.snapshot end
+      end
       if changed then
         x.publications=x.publications+1; x.visible_changes=x.visible_changes+1
         if x.last_publication then x.max_gap=math.max(x.max_gap,event.tick-x.last_publication) end

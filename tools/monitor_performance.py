@@ -30,6 +30,8 @@ def main():
                     help='dense: 6x6 walls at scale 0.5 without the 32x22 chart cap (use --scene one for one wall)')
     ap.add_argument('--example', choices=('terminal', 'graphics'), default='terminal',
                     help='terminal: smooth-sine-chart; graphics: graphics-sine-chart (one polygon set per frame)')
+    ap.add_argument('--program', type=Path,
+                    help='Guest program source to run unchanged instead of an example (no workload or scene transforms)')
     ap.add_argument('--scene', choices=('zero', 'idle', 'one', 'all'), default='all',
                     help='No monitors, stopped 144 tiles, one independent producer, or all screens')
     ap.add_argument('--ticks', type=int, default=3600)
@@ -41,15 +43,19 @@ def main():
         ap.error('use a fresh output directory outside git')
     if not 600 <= args.ticks <= 216000 or not 1 <= args.deadline <= 1800:
         ap.error('ticks must be 600..216000 and deadline 1..1800 seconds per cold phase')
+    if args.program and (args.workload != 'sparse' or args.example != 'terminal'):
+        ap.error('--program runs its source unchanged; do not combine it with --workload or --example')
     if args.max_gap is not None and args.max_gap < 1:
         ap.error('max-gap must be positive')
     folder.mkdir(parents=True)
     driver = (ROOT / 'tests/monitor_performance_engine.lua').read_bytes()
     target = folder / args.archive.name
-    config = f'return {{ticks={args.ticks},max_gap={args.max_gap or "nil"},scene="{args.scene}",example="{args.example}"}}\n'
+    config = f'return {{ticks={args.ticks},max_gap={args.max_gap or "nil"},scene="{args.scene}"}}\n'
     with zipfile.ZipFile(args.archive) as src, zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED) as dst:
         prefix = next(n[:-len('info.json')] for n in src.namelist() if n.endswith('/info.json'))
-        if args.example == 'graphics':
+        if args.program:
+            source = args.program.read_text()
+        elif args.example == 'graphics':
             wrapped = src.read(prefix + 'examples/graphics-sine-chart.lua').decode()
             source = re.search(r'return \[(=*)\[\n?(.*)\]\1\]\s*$', wrapped, re.S)[2]
             if args.workload == 'full-blit':
@@ -60,19 +66,19 @@ def main():
                     raise ValueError('review one-screen graphics transform against changed example')
         else:
             source = src.read(prefix + 'examples/smooth-sine-chart.lua').decode()
-        if args.example == 'terminal' and args.workload == 'dense':
+        if not args.program and args.example == 'terminal' and args.workload == 'dense':
             # Large-grid stand-in: every selected wall at scale 0.5, without the example's grid cap.
             source, scales = re.subn(r'local scale = M\.max\(info\.footprint\.width, info\.footprint\.height\) > 3 and 2 or 1',
                                      'local scale = 0.5', source)
             source, caps = re.subn(r'w > 32 or h > 22', 'false', source)
             if scales != 1 or caps != 1:
                 raise ValueError('review dense workload transform against changed example')
-        if args.example == 'terminal' and args.scene == 'one':
+        if not args.program and args.example == 'terminal' and args.scene == 'one':
             marker = 'P.setMonitorSyncGroup(refs)'
             if source.count(marker) != 1:
                 raise ValueError('review one-screen workload transform against changed example')
             source = source.replace(marker, 'refs = {refs[1]}\n                    ' + marker)
-        if args.example == 'terminal' and args.workload == 'full-blit':
+        if not args.program and args.example == 'terminal' and args.workload == 'full-blit':
             # Same image and cadence, but submit every terminal row like a
             # buffered pixelbox renderer. This is NOT executing Telem itself.
             pattern = r'if not old or rows\[y\] ~= old\[y\] then|if not old or rows\[y\]~=old\[y\] then'
@@ -98,7 +104,7 @@ def main():
     record = {'candidate_sha256': hashlib.sha256(args.archive.read_bytes()).hexdigest(),
               'test_archive_sha256': hashlib.sha256(target.read_bytes()).hexdigest(),
               'guest_sha256': hashlib.sha256(source.encode()).hexdigest(),
-              'layout': args.layout, 'workload': args.workload, 'example': args.example, 'scene': args.scene, 'ticks': args.ticks,
+              'layout': args.layout, 'workload': args.workload, 'example': args.example, 'program': args.program and str(args.program), 'scene': args.scene, 'ticks': args.ticks,
               'test_only_replacements': {k: hashlib.sha256(v).hexdigest() for k, v in replacements.items()}}
     (folder / 'provenance.json').write_text(json.dumps(record, indent=2) + '\n')
     result = subprocess.run([sys.executable, str(ROOT / 'tools/smoke.py'), '--factorio', str(args.factorio),

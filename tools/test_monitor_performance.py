@@ -52,7 +52,7 @@ class PerformanceInvocationTests(unittest.TestCase):
                     self.assertEqual(hashlib.sha256(tested.read(prefix + name)).hexdigest(), digest)
                 guest = tested.read(prefix + 'tests/monitor_animation_source.lua').decode()
                 self.assertIn(scene, tested.read(prefix + 'tests/monitor_performance_config.lua').decode())
-                if scene == 'one' and '--example' not in extra:
+                if scene == 'one' and not extra:
                     self.assertIn('refs = {refs[1]}', guest)
                 if check:
                     check(guest, tested.read(prefix + 'tests/monitor_performance_config.lua').decode())
@@ -73,8 +73,15 @@ class PerformanceInvocationTests(unittest.TestCase):
         def graphics(guest, config):
             self.assertIn('m.setMode("graphics")', guest)
             self.assertIn('#views < 1', guest)
-            self.assertIn('example="graphics"', config)
         self.assertEqual(self.invoke('one', extra=('--example', 'graphics'), check=graphics), 0)
+
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as folder:
+            program = Path(folder) / 'guest.lua'
+            program.write_text('function start() end\n')
+
+            def unchanged(guest, config):
+                self.assertIn(program.read_text(), guest)
+            self.assertEqual(self.invoke('one', extra=('--program', str(program)), check=unchanged), 0)
 
     def test_exact_receipt_inventory(self):
         for modes, samples, markers in ((('base',), 600, 1), (('base', 'unexpected'), 600, 1),
