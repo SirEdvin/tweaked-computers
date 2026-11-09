@@ -48,4 +48,4 @@ None.
 Status: none
 Reason: Programs see no change to functions, arguments, results, errors, limits or events. Terminal dimensions, glyphs, colours and touch cells stay the same. Only the internal storage and the native draw primitive change.
 Compatibility: Existing programs keep working. Existing saves upgrade without guest code.
-Reviewed-source: b151a54b8df9d6d435783815a99cf9725f56cf21cb6b4caec8a389350c0cf186
+Reviewed-source: a6bae113e76c9f8aa1ec8cd85f0f6f9594ac033bc592fa2215debec8cfe76b93

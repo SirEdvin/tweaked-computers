@@ -26,13 +26,13 @@ Each task names its verification. This change builds on `monitor-row-text-presen
 
 ## 5. Inspector, docs and examples
 
-- [ ] 5.1 Show the mode, the pixel size and the object count in the monitor inspector. Verify with the peripheral-inspector fixture and a full-client capture.
-- [ ] 5.2 Add `examples/graphics-sine-chart.lua` (polygon curve, axis lines, a title text and an icon). Add a player guide section in `docs/monitor.md` and an in-game Reference tutorial, following the documentation language rules. Verify that the example runs in the showcase scene and that the captures show the chart.
+- [x] 5.1 Show the mode, the pixel size and the object count in the monitor inspector. Verify with the peripheral-inspector fixture and a full-client capture.
+- [x] 5.2 Add `examples/graphics-sine-chart.lua` (polygon curve, axis lines, a title text and an icon). Add a player guide section in `docs/monitor.md` and an in-game Reference tutorial, following the documentation language rules. Verify that the example runs in the showcase scene and that the captures show the chart.
 
 ## 6. Acceptance
 
-- [ ] 6.1 Capture the example and a test scene of every type in the base and Space Age clients (four directions, a marked display, cloud shadows). Store the captures and a pixel check of the bounds in the artifacts bundle.
-- [ ] 6.2 Run `tools/monitor_performance.py` with the graphics example against the terminal sine example on the same single wall and the dense wall. Report mean, median, p95 and maximum without thresholds. Then run the smoke inventory with `--mode both` and `tools/test_build.py`, and verify that every fixture passes.
+- [x] 6.1 Capture the example and a test scene of every type in the base and Space Age clients (four directions, a marked display, cloud shadows). Store the captures and a pixel check of the bounds in the artifacts bundle.
+- [x] 6.2 Run `tools/monitor_performance.py` with the graphics example against the terminal sine example on the same single wall and the dense wall. Report mean, median, p95 and maximum without thresholds. Then run the smoke inventory with `--mode both` and `tools/test_build.py`, and verify that every fixture passes.
 
 ## Workflow follow-up
 

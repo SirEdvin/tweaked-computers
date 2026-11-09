@@ -26,7 +26,7 @@ Grouping and identity changes SHALL be deterministic for the same ordered world 
 - **AND** affected computers receive the required detach/attach/resize notifications.
 
 ### Requirement: CC-shaped terminal methods
-The monitor SHALL implement the complete terminal-method subset documented in `api/monitor.d.lua`, including cursor/blink, write, clear, scrolling, blit, colors, palettes and text scale. Color/Colour aliases SHALL behave identically. Writes SHALL clip rather than wrap automatically.
+The monitor SHALL implement the complete terminal-method subset documented in `api/monitor.d.lua`, including cursor/blink, write, clear, scrolling, blit, colors, palettes and text scale. Color/Colour aliases SHALL behave identically. Writes SHALL clip rather than wrap automatically. These methods SHALL be available in terminal mode; graphics mode refuses them as documented by `monitor-graphics`.
 
 #### Scenario: Write beyond the right edge
 - **WHEN** a program writes text extending past the last column
@@ -36,8 +36,12 @@ The monitor SHALL implement the complete terminal-method subset documented in `a
 - **WHEN** text and color strings have different lengths or contain invalid color digits
 - **THEN** the operation fails without changing cells, cursor or display revision.
 
+#### Scenario: Terminal method in graphics mode
+- **WHEN** a program calls `blit` on a graphics-mode monitor
+- **THEN** the call fails with `E_UNSUPPORTED` and neither the graphics objects nor the stored terminal state change.
+
 ### Requirement: Scale and resize semantics
-Text scale SHALL support half-step values from 0.5 through 5. A change in physical group geometry or text scale SHALL recompute terminal dimensions. When character dimensions change, the display SHALL clear and notify accessible registered computers with `monitor_resize`.
+Text scale SHALL support half-step values from 0.5 through 5. A change in physical group geometry or text scale SHALL recompute terminal dimensions. When character dimensions change, the display SHALL clear and notify accessible registered computers with `monitor_resize`. In graphics mode, every geometry change and every mode change SHALL clear the display and notify with dimensions in the units of each mode.
 
 #### Scenario: Larger array changes dimensions
 - **WHEN** adding tiles increases the display's character dimensions
@@ -46,6 +50,10 @@ Text scale SHALL support half-step values from 0.5 through 5. A change in physic
 #### Scenario: Invalid scale
 - **WHEN** a scale is outside the allowed range or not a half-step
 - **THEN** the monitor remains unchanged and the program receives an E_RANGE error.
+
+#### Scenario: Mode change notification
+- **WHEN** a 2×2 terminal-mode monitor at scale 1 switches to graphics mode
+- **THEN** `monitor_resize` reports reason `mode`, mode `graphics`, old size 20×13 cells and new size 124×124 pixels.
 
 ### Requirement: Character-cell touch events
 A valid world interaction with a valid display SHALL map to a 1-based character cell and emit `monitor_touch` to registered authorized computers. Border/outside clicks, GUI-hover input and unauthorized interaction MUST NOT create touch events.
@@ -84,6 +92,11 @@ The companion Lua contract SHALL state supported glyphs, byte/cell indexing, geo
 - **WHEN** a string contains a byte outside the supported glyph repertoire
 - **THEN** the documented replacement-glyph rule is applied consistently without corrupting blit alignment or interpreting text as Factorio rich text.
 
+#### Scenario: Rich-text syntax in guest text
+- **WHEN** a program writes bytes such as `[color=red]`, `[img=item/iron-plate]` or `[/color]`
+- **THEN** every byte is displayed as its own literal glyph cell
+- **AND** no colour, icon or other rich-text effect appears, even though rows are presented as native text.
+
 ### Requirement: Visible native deconstruction feedback
 Each monitor tile marked for deconstruction SHALL visibly show the native red deconstruction marker above its displayed content and decoration. Marking MUST NOT be represented only by a custom fault symbol, a hidden helper state or a console message. Feedback SHALL work on idle and actively redrawing displays, with or without electrical coverage.
 
@@ -118,7 +131,7 @@ Monitor content and decorative/status artwork SHALL not obscure native selection
 - **THEN** the event retains the existing logical-display identity and correct 1-based combined-screen coordinates.
 
 ### Requirement: Bounded sparse animation presentation
-The presenter SHALL retain bounded dirty-cell metadata and MAY reuse unchanged native cells without preparing or retiring every grid cell. Damage acknowledgement SHALL NOT consume later writes, coalesced pending changes or a newer full-invalidation epoch. Full clear, scroll, palette, geometry and untracked legacy state SHALL retain a conservative full-frame path. Existing snapshot coherence, synchronous model visibility, admission, ownership, retirement and aggregate caps remain binding.
+The presenter SHALL retain bounded dirty-row metadata and MAY reuse unchanged native rows without preparing or retiring every grid row. Damage acknowledgement SHALL NOT consume later writes, coalesced pending changes or a newer full-invalidation epoch. Full clear, scroll, palette, geometry and untracked legacy state SHALL retain a conservative full-frame path. Existing snapshot coherence, synchronous model visibility, admission, ownership, retirement and aggregate caps remain binding.
 
 #### Scenario: Complete bounded chart frames at two-tick cadence
 - **WHEN** the maintained smooth-sine-chart example updates all four selected screens every two actual simulation ticks within the documented scale-2 6×6 or mixed-layout test envelope and configured default guest budgets
@@ -128,7 +141,7 @@ The presenter SHALL retain bounded dirty-cell metadata and MAY reuse unchanged n
 
 #### Scenario: A large old frame has accumulated later writes
 - **WHEN** more model writes occur after a large snapshot is sealed and before it publishes
-- **THEN** its prepaid acknowledgement consumes only matching cells from the same invalidation epoch and retains later changes for the next frame
+- **THEN** its prepaid acknowledgement consumes only matching rows from the same invalidation epoch and retains later changes for the next frame
 - **AND** the presenter does not increase native-object, preparation-cell, commit or maintenance caps to conceal the cost.
 
 ### Requirement: Complete rectangular displays up to six tiles per axis
@@ -181,9 +194,9 @@ Each published image SHALL contain cells, palette, cursor, scale and geometry fr
 - **THEN** no partially populated new frame becomes visible before publication.
 
 #### Scenario: Changed cells reuse their visible objects
-- **WHEN** a prepared frame changes the glyph or colors of a cell that already shows a valid object
-- **THEN** that object takes the new glyph or color in the publication tick, together with all other changes of the frame
-- **AND** a frame that is deferred, cancelled or refused before publication changes no visible object.
+- **WHEN** a prepared frame changes the glyph or colours of a cell whose row already shows valid native objects
+- **THEN** those objects take the new text, colours and background runs in the publication tick, together with all other changes of the frame
+- **AND** a frame that is deferred, cancelled or refused before publication changes no visible object and owns no native object.
 
 ### Requirement: Synchronized group update rounds
 An explicitly selected monitor group SHALL wait for a successful mutating terminal operation on every member after registration or the preceding snapshot seal. Once all members participate, their current models SHALL be captured at one post-dispatch boundary. All prepared members SHALL publish in the same simulation tick with one group sequence. Waiting SHALL NOT time out into partial publication.
@@ -291,7 +304,7 @@ Opening any member tile SHALL inspect its current logical display and show the s
 - **THEN** the inspector labels the logical identity/dimensions as pending and does not offer an obsolete name as current for copying.
 
 ### Requirement: Tile and terminal dimensions with explicit units
-The monitor inspector SHALL show display-local tile width × height, total connected tiles, terminal columns × rows and current text scale. Character dimensions SHALL agree with the existing terminal size contract. Cells SHALL be labelled as columns/rows, not pixels. Inspecting size SHALL NOT change scale, geometry, buffers or presentation state.
+The monitor inspector SHALL show display-local tile width × height, total connected tiles, terminal columns × rows and current text scale. Character dimensions SHALL agree with the existing terminal size contract. Cells SHALL be labelled as columns/rows, not pixels. Inspecting size SHALL NOT change scale, geometry, buffers or presentation state. A graphics-mode monitor SHALL show its mode, pixel size and object count instead of columns, rows and scale.
 
 #### Scenario: Single and merged displays
 - **WHEN** a player inspects a single tile or a valid merged rectangular display
@@ -304,6 +317,10 @@ The monitor inspector SHALL show display-local tile width × height, total conne
 #### Scenario: Text scale changes
 - **WHEN** an authorized program changes text scale while the inspector is open
 - **THEN** the next successful refresh shows the new scale and terminal dimensions while the physical tile dimensions/count remain unchanged.
+
+#### Scenario: Mode changes while inspected
+- **WHEN** an authorized program switches the inspected monitor to graphics mode
+- **THEN** the next successful refresh shows the mode, the pixel size and the object count, and the tile dimensions stay unchanged.
 
 ### Requirement: Safe monitor inspector updates
 The inspector SHALL follow the originally selected physical tile while revalidating its logical-group mapping. Split or merge changes SHALL refresh the displayed name and dimensions together after commit. Removal or replacement of the selected tile SHALL invalidate the session. Monitors outside electrical coverage SHALL retain inspectable committed geometry without modifying their saved display model.
@@ -441,3 +458,45 @@ Monitor grouping SHALL run only for pending topology work. Resize/touch delivery
 #### Scenario: Late physical invalidation
 - **WHEN** a silent physical change is discovered by bounded observation or a fresh operation proof
 - **THEN** stale touch mapping or staged geometry cannot publish, necessary cleanup remains pending through deferral/reload and unchanged unrelated monitors stay asleep.
+
+### Requirement: Row text presentation
+A visible terminal row SHALL be drawn with at most one native glyph-text object and one native background-text object. The glyph object SHALL use the mod's 6×9 terminal font, with each guest byte mapped to its own private-use code point. Unchanged rows SHALL keep their objects without native writes. Object count SHALL grow with rows, not with cells or colour runs.
+
+#### Scenario: Maximum grid with few colour runs
+- **WHEN** a 6×6 display at scale 0.5 shows a 126×84 chart whose rows each hold three or fewer foreground and background runs
+- **THEN** its visible front holds at most 84 glyph-text objects, 84 background-text objects, one panel and one cursor
+- **AND** the cell content, colours and cursor match the model exactly.
+
+#### Scenario: One cell changes
+- **WHEN** a program changes one cell and the frame publishes
+- **THEN** only that cell's row receives native writes
+- **AND** every other row keeps its objects and makes no native call.
+
+### Requirement: Pixel-faithful row text
+Row text SHALL reproduce the existing 6×9 glyph pixels at every supported text scale and cardinal orientation. Glyphs and their backgrounds SHALL stay aligned with each other at every zoom level. The native deconstruction marker SHALL remain visible on a marked display. Selection boxes and wires MAY draw below row text inside the content area.
+
+#### Scenario: Compare with the sprite presentation
+- **WHEN** the same model is captured with the full client at zoom 0.5, 1, 2 and 4, in base and Space Age, in all four orientations
+- **THEN** glyph and background pixels align with each other within one screen pixel at every zoom
+- **AND** the background is drawn as text so both layers share the engine's text offset, and the remaining offset against the bezel (about 6 screen pixels down at every zoom) is documented.
+
+#### Scenario: Mark a row-text display for deconstruction
+- **WHEN** the player marks a populated row-text monitor for deconstruction
+- **THEN** its row text is hidden while any of its tiles is marked, and the native red deconstruction marker is visible
+- **AND** cancelling the mark shows the same content again without guest code, and the model and its revision are unchanged.
+
+#### Scenario: Non-English locale
+- **WHEN** the client locale is `ru`, `ja` or `zh-CN`
+- **THEN** the terminal font loads and the monitor shows the same glyph pixels as in `en`.
+
+### Requirement: Row model upgrade
+A save that holds per-cell monitor models or per-cell fronts SHALL upgrade in synchronized work after configuration change. The upgrade SHALL preserve cells, colours, palette, cursor, scale, identity and geometry, run no guest code and leave no old native objects behind.
+
+#### Scenario: Upgrade a populated wall
+- **WHEN** a save from the previous release contains a populated 6×6 display, a front and a pending frame
+- **THEN** after the upgrade the display shows the same content as row text
+- **AND** every old per-cell sprite is destroyed, the pending changes still publish, and the next settled ticks do no presentation work.
+
+#### Scenario: Unsupported retained shape
+- **WHEN** a saved monitor model has neither the old cell shape nor the new row shape
+- **THEN** the display stays inert with a diagnostic instead of being treated as blank.

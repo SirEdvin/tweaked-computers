@@ -1,8 +1,9 @@
-## Purpose
+# monitor-graphics Specification
 
+## Purpose
 Lets programs draw native Factorio graphics (lines, shapes, text, icons and lights) inside a monitor's content area, as retained objects addressed by monitor pixel coordinates.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Monitor display modes
 Each logical monitor SHALL have the mode `terminal` or `graphics`, with `terminal` as the default. `setMode(mode)` SHALL change it and `getMode()` SHALL read it. A change to another mode SHALL clear all terminal and graphics content and queue `monitor_resize` with reason `mode`. Setting the current mode SHALL change nothing and SHALL count as a successful mutating call.
@@ -30,6 +31,13 @@ In graphics mode, positions and sizes SHALL be monitor pixels at 64 per tile. Th
 #### Scenario: Size of a merged display
 - **WHEN** a 3×2 tile display is in graphics mode
 - **THEN** `getSize()` returns `188, 124`.
+
+### Requirement: Graphics touch coordinates
+In graphics mode, `monitor_touch` SHALL report 0-based integer pixel coordinates in the content area instead of a character cell. Each `monitor_touch` event SHALL state the mode of its coordinates. Border, outside, GUI-hover and unauthorized input MUST NOT create touch events in either mode.
+
+#### Scenario: Touch on a graphics display
+- **WHEN** a player activates the point 1.5 tiles right of and 0.25 tiles below the content origin of a graphics-mode display
+- **THEN** the event reports mode `graphics`, x 96 and y 16, in the display's own axes for every orientation.
 
 ### Requirement: Retained graphics objects
 Each draw method SHALL create one native object and return a positive integer id. The id SHALL be unique for that logical display and SHALL never be reused, also after `clear()`. `set(id, props)` SHALL change the given properties, and `destroy(id)` SHALL remove the object. `get(id)` SHALL return a copy of its type and properties, or nil when the id does not exist. `set`, `destroy`, `bringToFront` and `moveToBack` SHALL fail with `E_NOT_FOUND` for an unknown id.

@@ -30,26 +30,6 @@ Text scale SHALL support half-step values from 0.5 through 5. A change in physic
 - **WHEN** a 2×2 terminal-mode monitor at scale 1 switches to graphics mode
 - **THEN** `monitor_resize` reports reason `mode`, mode `graphics`, old size 20×13 cells and new size 124×124 pixels.
 
-### Requirement: Character-cell touch events
-A valid world interaction with a valid display SHALL map to a 1-based character cell and emit `monitor_touch` to registered authorized computers. Border/outside clicks, GUI-hover input and unauthorized interaction MUST NOT create touch events. In graphics mode, the event SHALL instead report 0-based integer pixel coordinates in the content area. Each touch event SHALL state the mode of its coordinates.
-
-The shared Ctrl-click input SHALL pass through native game actions and SHALL NOT
-block reuse of held modifiers. Lua context rejection MUST NOT prevent native
-inventory transfers or subsequent Ctrl shortcuts before Ctrl is released.
-
-#### Scenario: Native Ctrl behavior remains available
-- **WHEN** a player Ctrl-clicks vanilla containers or inventory slots, repeats the gesture while holding Ctrl, or uses another Ctrl shortcut before releasing it
-- **THEN** the native actions remain available without opening a mod workspace or creating a monitor touch.
-
-#### Scenario: Touch on a merged display
-- **WHEN** a player activates a cell on a non-anchor tile
-- **THEN** the event identifies the logical display, the correct combined-screen coordinates, player and channel
-- **AND** duplicated physical wiring does not duplicate that subscription's event.
-
-#### Scenario: Touch on a graphics display
-- **WHEN** a player activates the point 1.5 tiles right of and 0.25 tiles below the content origin of a graphics-mode display
-- **THEN** the event reports mode `graphics`, x 96 and y 16, in the display's own axes for every orientation.
-
 ### Requirement: Tile and terminal dimensions with explicit units
 The monitor inspector SHALL show display-local tile width × height, total connected tiles, terminal columns × rows and current text scale. Character dimensions SHALL agree with the existing terminal size contract. Cells SHALL be labelled as columns/rows, not pixels. Inspecting size SHALL NOT change scale, geometry, buffers or presentation state. A graphics-mode monitor SHALL show its mode, pixel size and object count instead of columns, rows and scale.
 

@@ -26,9 +26,9 @@ Each task names its verification. Run packaged engine checks with the headless 2
 
 ## 5. Visual and performance acceptance
 
-- [ ] 5.1 Capture the final package in the base and Space Age clients (zoom 0.5/1/2/4, four directions, a marked display). Compare decoded pixels with the gate baseline. Store the captures in the artifacts bundle.
-- [ ] 5.2 Add `--workload dense` (6×6 wall, scale 0.5, chart without the 32×22 cap) to `tools/monitor_performance.py`, with a test in `tools/test_monitor_performance.py`. Record matched baseline/candidate/baseline runs for the single wall, the four walls and the dense workload. Report mean, median, p95 and maximum without thresholds.
-- [ ] 5.3 Update `docs/monitor.md`, `docs/monitor-performance.md` and `docs/player/monitor-animation.md` (row presentation, font, measured numbers, known appearance differences). Then run the smoke inventory with `--mode both` and `tools/test_build.py`. Verify that every fixture passes, and record `Reviewed-source` with `tools/player_docs.py --check --change monitor-row-text-presentation`.
+- [x] 5.1 Capture the final package in the base and Space Age clients (zoom 0.5/1/2/4, four directions, a marked display). Compare decoded pixels with the gate baseline. Store the captures in the artifacts bundle.
+- [x] 5.2 Add `--workload dense` (6×6 wall, scale 0.5, chart without the 32×22 cap) to `tools/monitor_performance.py`, with a test in `tools/test_monitor_performance.py`. Record matched baseline/candidate/baseline runs for the single wall, the four walls and the dense workload. Report mean, median, p95 and maximum without thresholds.
+- [x] 5.3 Update `docs/monitor.md`, `docs/monitor-performance.md` and `docs/player/monitor-animation.md` (row presentation, font, measured numbers, known appearance differences). Then run the smoke inventory with `--mode both` and `tools/test_build.py`. Verify that every fixture passes, and record `Reviewed-source` with `tools/player_docs.py --check --change monitor-row-text-presentation`.
 
 ## Workflow follow-up
 
