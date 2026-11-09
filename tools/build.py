@@ -59,8 +59,14 @@ def build(destination):
             source = ROOT / record['path']
             if hashlib.sha256(source.read_bytes()).hexdigest() != record['sha256']:
                 raise ValueError(f'stale asset or notice: {source}')
-    outputs = {ROOT / r['path'] for r in art['outputs']}
+    # Fonts derive from the glyph atlas through tools/terminal_font.py; a changed input is stale.
+    for record in art.get('fonts', []):
+        for source in [record, *record['inputs']]:
+            if hashlib.sha256((ROOT / source['path']).read_bytes()).hexdigest() != source['sha256']:
+                raise ValueError(f"stale terminal font input: {source['path']}; run tools/terminal_font.py")
+    outputs = {ROOT / r['path'] for r in art['outputs'] + art.get('fonts', [])}
     actual = {p for folder in ('sprites', 'icons', 'glyphs') for p in (ROOT / 'assets' / folder).glob('*.png')}
+    actual |= set((ROOT / 'assets/fonts').glob('*'))
     if outputs != actual:
         raise ValueError('unlisted or missing derived artwork')
     for name in TOP:

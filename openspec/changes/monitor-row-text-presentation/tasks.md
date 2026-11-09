@@ -4,8 +4,8 @@ Each task names its verification. Run packaged engine checks with the headless 2
 
 ## 1. Font and visual gate
 
-- [ ] 1.1 Add `tools/terminal_font.py` (atlas → `assets/fonts/tc-term.ttf`, U+E000+byte, plus a full-block glyph at U+E100). Register the font in `assets/manifest.json` and extend the derived-output check in `tools/build.py` to `assets/fonts`. Verify that `tools/test_build.py` passes and that a changed atlas makes the build fail as stale.
-- [ ] 1.2 Add the `font` entry to `locale/en/info.json` and the `tc-term` FontPrototype in `prototypes/monitor.lua`. Verify that headless `--create` loads without errors.
+- [x] 1.1 Add `tools/terminal_font.py` (atlas → `assets/fonts/tc-term.ttf`, U+E000+byte, plus a full-block glyph at U+E100). Register the font in `assets/manifest.json` and extend the derived-output check in `tools/build.py` to `assets/fonts`. Verify that `tools/test_build.py` passes and that a changed atlas makes the build fail as stale.
+- [x] 1.2 Add the `font` entry to `locale/en/info.json` and the `tc-term` FontPrototype in `prototypes/monitor.lua`. Verify that headless `--create` loads without errors.
 - [ ] 1.3 Run gate D6 with a test-only scene in the base and Space Age clients. Cover zoom 0.5/1/2/4, all four directions, font metrics/`vertical_alignment`/offset variants, the selection box, wires and the deconstruction marker above the text, cloud shadows, and the `ru`/`ja`/`zh-CN` locales. Record the pixel diffs against the sprite baseline in `/home/siredvin/artifacts/tweaked-computers/`. Then select rectangle or text backgrounds (D3) in `design.md`. Stop for review if text draws above native feedback.
 
 ## 2. Row model

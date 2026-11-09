@@ -16,3 +16,5 @@ for byte=0,255 do
   sprites[#sprites+1]=sprite
 end
 data:extend(sprites)
+-- Row text and graphics text: 6x9 pixels per byte, scale = 0.125 * text scale.
+data:extend{{type='font',name='tc-term',from='tc-term',size=36,filtered=false}}

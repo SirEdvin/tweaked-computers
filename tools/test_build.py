@@ -389,6 +389,8 @@ getLimits()''',
                 pngs={n[len(prefix):] for n in package.namelist() if n.startswith(prefix+'assets/') and n.endswith('.png') and '/upstream/' not in n}
                 self.assertEqual(pngs,{r['path'] for r in art['outputs']})
                 self.assertEqual(json.loads(package.read(prefix+'assets/manifest.json')),art)
+                for record in art['fonts']:
+                    self.assertEqual(package.read(prefix+record['path']),(build.ROOT/record['path']).read_bytes())
                 self.assertEqual(package.read(prefix+'assets/socket-layout.json'),(build.ROOT/'assets/socket-layout.json').read_bytes())
                 self.assertEqual(art['selection']['candidate'],'B-service-rack')
                 for name in ('tc-circuit-computers','tc-recipe-searcher'):
@@ -396,6 +398,23 @@ getLimits()''',
                     self.assertEqual(technology['icon_size'],256)
                     self.assertEqual(package.read(prefix+'assets/'+technology['icon']),
                                      (build.ROOT/'assets'/technology['icon']).read_bytes())
+
+    def test_changed_glyph_atlas_makes_terminal_font_stale(self):
+        # A regenerated atlas with an updated art record but an unchanged font must fail the build.
+        import hashlib
+        import json
+        atlas, manifest = build.ROOT / 'assets/glyphs/atlas.png', build.ROOT / 'assets/manifest.json'
+        read_bytes, read_text = Path.read_bytes, Path.read_text
+        changed = read_bytes(atlas) + b'\0'
+        art = json.loads(read_text(manifest))
+        for record in art['outputs']:
+            if record['path'] == 'assets/glyphs/atlas.png':
+                record['sha256'] = hashlib.sha256(changed).hexdigest()
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as output, \
+             patch.object(Path, 'read_bytes', lambda p: changed if p == atlas else read_bytes(p)), \
+             patch.object(Path, 'read_text', lambda p, *a, **k: json.dumps(art) if p == manifest else read_text(p, *a, **k)):
+            with self.assertRaisesRegex(ValueError, 'stale terminal font input: assets/glyphs/atlas.png'):
+                build.build(output)
 
     def test_explicit_inventory_rejects_prohibited_suffixes(self):
         # Synthetic inventory entries test rejection before payload access; no
