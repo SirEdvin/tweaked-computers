@@ -75,21 +75,23 @@ The amounts change once per second, and the item names stay the same. The termin
 program writes six rows with `blit` at text scale 2. The graphics program draws the
 names once as static text and updates six amount objects with `set`. Both use the
 same glyph size and colours. Runs used `--program FILE --scene one --ticks 7200`,
-serial and in the order terminal, graphics, terminal, graphics (ms):
+serial and in the order terminal, graphics, terminal, graphics, on a quiet host
+(4 cores, load average 0.2–1.3). Values are ms:
 
-| Option | Mean per tick | Update-tick median | Update-tick p95 | Extra per second (median) | Native objects |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Terminal, run 1 | 0.60 | 17.8 | 57.9 | 20.7 | 304 |
-| Graphics, run 1 | 0.57 | 17.5 | 52.1 | 19.6 | 289 |
-| Terminal, run 2 | 0.66 | 21.2 | 60.5 | 24.5 | 304 |
-| Graphics, run 2 | 0.53 | 12.2 | 43.9 | 17.2 | 289 |
+| Option | Mean per tick | Update tick mean | Update tick median | Update tick p95 | Update tick max | Native objects |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Terminal, run 1 | 0.385 | 13.0 | 15.0 | 26.7 | 29.5 | 304 |
+| Graphics, run 1 | 0.366 | 11.9 | 15.1 | 23.5 | 27.2 | 289 |
+| Terminal, run 2 | 0.392 | 13.4 | 16.4 | 27.2 | 31.4 | 304 |
+| Graphics, run 2 | 0.373 | 12.1 | 15.8 | 24.5 | 28.1 | 289 |
 
-The idle median was 0.18–0.19 ms in all runs. The graphics option costs slightly
-less than the terminal option, but most of the update cost is the same for both.
-The same terminal program costs about 2 ms per callback when it runs every
-2 ticks, and one changed line instead of six costs a median of 11.9 ms. Thus a
-callback after a 60-tick wait has a large fixed cost that does not come from the
-monitor. The host had 4 cores at load average 7–9, so absolute values are high.
+The idle median was 0.16 ms in all runs. The graphics option costs about 5% less
+per tick and about 9% less per update tick, but most of the update cost is the
+same for both. One changed line instead of six gives a mean update tick of 11.6 ms.
+The same terminal program costs a median of 1.9 ms per callback when it runs every
+2 ticks. Thus a callback after a 60-tick wait has a fixed cost of about 11 ms that
+does not come from the monitor. An earlier run on a loaded host gave the same order
+with higher values; it is kept in the evidence.
 Evidence: `/home/siredvin/artifacts/tweaked-computers/monitor-stock-benchmark-2026-11-09/`.
 
 ## Bottlenecks and changes
