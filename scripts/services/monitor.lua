@@ -130,10 +130,10 @@ function M.available(g,spend,proofs)
     local r=registry.record(id)
     if not r
       or r.force_index~=g.force_index or r.surface_index~=g.surface_index or r.direction~=g.direction
-      or not lifecycle.available(r)
-      or not lifecycle.connector(r,'network','red') then return false end
-    -- connector just proved live body position/direction/scope equal to this
-    -- record. Re-reading them creates native proxy/position garbage per tile.
+      or not lifecycle.available(r) then return false end
+    -- available() already proved the network connectors, so live body
+    -- position/direction/scope equal this record. Re-reading them creates
+    -- native proxy/position garbage per tile.
     local at=r.position
     if at.x<g.left or at.x>=g.left+g.world_width or at.y<g.top or at.y>=g.top+g.world_height then return false end
   end

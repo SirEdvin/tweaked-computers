@@ -206,9 +206,10 @@ function M.connector(rec,role,color)
   if port_at.x~=expected.x or port_at.y~=expected.y or (port==body and direction or port.direction)~=rec.direction then return nil end
   local owner,bound_role=registry.by_entity(port)
   local expected_role=rec.layout_version==2 and role=='network' and 'body' or role
-  if owner~=rec or bound_role~=expected_role or body.force.index~=rec.force_index
-    or body.surface.index~=rec.surface_index then return nil end
-  if port~=body and (port.force.index~=rec.force_index or port.surface.index~=rec.surface_index) then return nil end
+  -- Index reads avoid creating LuaForce/LuaSurface wrappers on this hot path.
+  if owner~=rec or bound_role~=expected_role or body.force_index~=rec.force_index
+    or body.surface_index~=rec.surface_index then return nil end
+  if port~=body and (port.force_index~=rec.force_index or port.surface_index~=rec.surface_index) then return nil end
   return port.get_wire_connector(defines.wire_connector_id['circuit_'..color],false)
 end
 function M.rotate(rec,previous_direction)

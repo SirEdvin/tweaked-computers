@@ -78,26 +78,28 @@ function M.run()
   local a=g.render.cells[1]; local background=a.background; local glyph=a.glyph
   write(g,'B'); settle()
   assert(g.render.cells[1].background==background and background.valid,'glyph change rebuilt an unchanged background')
-  assert(not glyph.valid and g.render.cells[1].glyph.sprite=='tc-glyph-66')
-  glyph=g.render.cells[1].glyph
+  -- A changed glyph or color updates the visible object in place at commit.
+  assert(g.render.cells[1].glyph==glyph and glyph.valid and glyph.sprite=='tc-glyph-66','glyph change rebuilt its object')
+  local function same(a,b) return math.abs(a.r-b[1])<1e-6 and math.abs(a.g-b[2])<1e-6 and math.abs(a.b-b[3])<1e-6 end
   write(g,'B','0','1'); settle()
   assert(g.render.cells[1].glyph==glyph and glyph.valid,'background change rebuilt an unchanged glyph')
-  assert(not background.valid)
-  background=g.render.cells[1].background
+  assert(g.render.cells[1].background==background and same(background.color,g.model.palette[2]),'background color not updated in place')
   write(g,'C','0','1'); local job=defer(g)
   local staged=job.frames[1].cells[1]
   assert(staged.background==background and background.visible and staged.shared_background)
-  assert(staged.glyph.valid and not staged.glyph.visible and glyph.visible)
+  -- Prepared but uncommitted: the front still shows B.
+  assert(staged.glyph==glyph and staged.shared_glyph and glyph.visible and glyph.sprite=='tc-glyph-66')
   tile.physical_error='injected temporary physical unavailability'; renderer.tick(game.tick,nop)
   assert(not background.visible and not glyph.visible and not staged.glyph.visible)
   renderer.changed(g)
   -- Cancelled staging must never destroy borrowed objects. Cancelled guest
   -- content remains authoritative; restore the old image before a new seal.
   write(g,'B','0','1'); settle()
-  assert(background.valid and glyph.valid and not staged.glyph.valid and not background.visible)
+  -- The cancelled C was never applied to the borrowed object.
+  assert(background.valid and glyph.valid and glyph.sprite=='tc-glyph-66' and not background.visible)
   tile.physical_error=nil; settle()
   assert(background.valid and glyph.valid and g.render.cells[1].background==background and g.render.cells[1].glyph==glyph)
-  assert(not staged.glyph.valid)
+  assert(glyph.visible and glyph.sprite=='tc-glyph-66')
   write(g,' ' ,'4','1'); settle()
   assert(g.render.cells[1].background==background and not g.render.cells[1].glyph and not glyph.valid)
   write(g,' ' ,'5','1'); settle()
@@ -105,11 +107,9 @@ function M.run()
   write(g,'D','0','1'); settle()
   glyph=g.render.cells[1].glyph
   model.calls.setPaletteColor(g.model,nop,1,0x123456); renderer.participate(g); settle()
-  assert(g.render.cells[1].background==background and not glyph.valid)
-  glyph=g.render.cells[1].glyph
+  assert(g.render.cells[1].background==background and g.render.cells[1].glyph==glyph and same(glyph.color,g.model.palette[1]))
   model.calls.setPaletteColor(g.model,nop,2,0x223344); renderer.participate(g); settle()
-  assert(g.render.cells[1].glyph==glyph and not background.valid)
-  background=g.render.cells[1].background
+  assert(g.render.cells[1].glyph==glyph and g.render.cells[1].background==background and same(background.color,g.model.palette[2]))
   write(g,'E','0','1'); job=defer(g)
   storage.tc_components={phase='armed',group=g,tile=tile.id,job=job,front=g.render,background=background,glyph=glyph}
   log('TC_COMPONENTS_OK independent-glyph-background-reuse cancellation palette blank-foreground')
@@ -125,11 +125,12 @@ function M.on_tick(event)
   assert(g.render==x.front and p.jobs[1]==x.job and x.job.ready)
   assert(x.background.valid and x.background.visible and x.glyph.valid and x.glyph.visible)
   local staged=x.job.frames[1].cells[1]
-  assert(staged.background==x.background and not staged.glyph.visible)
+  -- The saved, ready job still holds its in-place change until commit.
+  assert(staged.background==x.background and staged.glyph==x.glyph and x.glyph.sprite=='tc-glyph-68')
   assert(lifecycle.available(registry.record(x.tile)))
   settle()
   assert(g.render.cells[1].background==x.background and x.background.valid and x.background.visible)
-  assert(not x.glyph.valid and g.render.cells[1].glyph.sprite=='tc-glyph-69')
+  assert(g.render.cells[1].glyph==x.glyph and x.glyph.valid and x.glyph.visible and x.glyph.sprite=='tc-glyph-69')
   local final_glyph=g.render.cells[1].glyph
   lifecycle.remove(x.tile,'component-fixture-cleanup',true); settle()
   assert(not x.background.valid and not final_glyph.valid)
