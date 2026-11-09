@@ -272,6 +272,7 @@ function M.on_configuration_changed(event)
   -- The synchronized initializer already converted the model and cancelled the legacy job.
   local g=monitor.resolve(registry.record(x.wall[1]))
   assert(model.shape(g.model)=='rows' and not g.model.cells and same_image(image(g.model),x.expected))
+  assert(g.model.mode==nil and not g.graphics,'an upgraded monitor must start in terminal mode')
   assert(x.job.cancelled and g.render==x.legacy_front and g.model.damage_full)
   x.phase='rows-upgrading'; loaded=false
   log('TC_MONITOR_ROW_CONFIGURATION old='..change.old_version..' new='..change.new_version)

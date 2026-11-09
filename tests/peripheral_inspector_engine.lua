@@ -9,6 +9,7 @@ local logic=require('scripts.services.logic')
 local configurator=require('scripts.services.configurator')
 local targets=require('scripts.configuration.targets')
 local monitor=require('scripts.services.monitor')
+local graphics=require('scripts.monitor-graphics')
 local model=require('scripts.ui.peripheral-inspector-model')
 local contracts=require('tests.peripheral_inspector_contract')
 local M={}; local loaded=false
@@ -119,6 +120,16 @@ local function verify(tick)
   local g=monitor.resolve(rec('monitor')); local revision=g.model.revision
   assert(model.read(rec('monitor'),tick,nop).name==g.id and g.model.revision==revision)
   report('logical-nonanchor-name-and-coherent-tile-cell-geometry-no-revision-change')
+  -- Graphics mode shows the mode, the pixel size and the object count instead of cells and scale.
+  assert(first.mode=='terminal' and first.scale==1)
+  monitor.switch_mode(g,'graphics',nop)
+  for i=1,12 do graphics.calls.drawLine(g,nop,{from={1,i},to={9,i},color={1,1,1}}) end
+  local info=monitor.inspect(registry.record(state().tiles[1]),tick,nop); local mode_revision=g.model.revision
+  assert(info.mode=='graphics' and info.pixel_width==124 and info.pixel_height==124 and info.objects==12)
+  assert(not info.columns and not info.rows and not info.scale and info.width_tiles==2 and info.tiles==4)
+  assert(g.model.revision==mode_revision and graphics.object_count(g)==12,'inspection changed the display')
+  monitor.switch_mode(g,'terminal',nop); assert(graphics.object_count(g)==0)
+  report('graphics-mode-pixel-size-object-count-without-change')
   for _,id in pairs(state().ids) do
     local r=registry.record(id); local cb=r.body.get_control_behavior()
     assert(r.body.operable==(r.kind~='computer') and not cb.enabled and cb.sections_count==0)

@@ -7,6 +7,7 @@ local lifecycle=require('scripts.lifecycle')
 local errors=require('scripts.runtime.errors')
 local data=require('scripts.runtime.data')
 local principal=require('scripts.runtime.principal')
+local graphics=require('scripts.monitor-graphics')
 local M={}; local backend; local authority
 local L=model.limits
 function M.install(b) assert(not backend); backend=b end
@@ -122,6 +123,7 @@ function M.select(c,tick,spend,input,execution)
     local g,path=authority.lookup(c,ref.name,ref.wire,spend)
     if not g then errors.raise('E_UNREACHABLE','monitor reference unreachable') end
     if g.kind~='monitor' then errors.raise('E_WRONGTYPE','monitor required') end
+    if g.model.mode=='graphics' then errors.raise('E_UNSUPPORTED','graphics-mode monitors publish at call time and cannot join a synchronization group') end
     if not authority.available(g,spend) then errors.raise('E_UNREACHABLE','selected monitor is physically unavailable') end
     if not refs[g.id] then count=count+1; total=total+g.model.width*g.model.height end
     if not refs[g.id] or ref.wire=='red' then refs[g.id]={name=g.id,wire=ref.wire,generation=g.generation,path=path} end
@@ -188,6 +190,22 @@ function M.changed(g)
   local lane=owner_of(p,g.id) or p.lanes[g.id]
   if lane then cancel(p,lane); lane.participation={}; lane.last=nil; lane.last_epoch=nil; wake(p,lane) end
 end
+-- A member that enters graphics mode leaves its synchronization group; the others continue.
+function M.leave_group(g)
+  local s=registry.get().monitors; local p=s and s.presentation
+  if not p or not M.supported(p) then return end
+  local lane=owner_of(p,g.id); if not lane or not lane.owner then return end
+  for i,ref in ipairs(lane.members) do if ref.name==g.id then table.remove(lane.members,i); break end end
+  local c=registry.record(lane.owner); local execution={kind=lane.owner_kind or 'program',id=lane.run_id}
+  local owner=c and principal.selection(c,execution); local selection=owner and owner.monitor_sync
+  if selection and selection.key==lane.key and selection.members~=lane.members then
+    for i,ref in ipairs(selection.members) do if ref.name==g.id then table.remove(selection.members,i); break end end
+  end
+  if p.demand_version==1 then p.members[g.id]=nil end
+  cancel(p,lane); lane.participation={}; lane.last=nil; lane.last_epoch=nil
+  if #lane.members==0 and c then release(c,nil,execution) end
+  p.layout_dirty=true; wake(p,lane)
+end
 function M.regroup(s,groups)
   local p=s.presentation; if not p or not M.supported(p) then return end
   p.layout_dirty=true
@@ -212,6 +230,8 @@ local function set_visible(r)
   local shown=not r.hidden; local text=shown and not r.marked
   if r.panel and r.panel.valid then r.panel.visible=shown end
   content(r,function(o) if o.valid then o.visible=text end end)
+  local g=r.is_front and r.context and r.context.group
+  if g and g.render==r then graphics.show(g,text) end
 end
 local function visible(r,value,spend)
   spend(count(r)*3+8)
@@ -370,7 +390,7 @@ end
 local function prepare(job,spend,remaining)
   while job.member<=#job.frames and remaining>0 do
     local r=job.frames[job.member]; local c=job.captures[job.member]
-    local count=r.indices and #r.indices or r.height
+    local count=r.graphics and 0 or r.indices and #r.indices or r.height
     while job.cell<=count and remaining>0 do
       local y=r.indices and r.indices[job.cell] or job.cell
       spend(48+r.width); backend.row(c,r,y); job.cell=job.cell+1; remaining=remaining-1
@@ -419,12 +439,14 @@ local function commit(s,p,job,tick,spend,proofs)
   for _,r in ipairs(job.frames) do
     local old=r.context.group.render
     if r.indices and r.front~=old then job.invalid=true; return false end
-    operations=operations+2*#r.data+3+(old and not old.row_version and count(old) or 0)
+    operations=operations+(r.graphics and 2*r.height or 2*#r.data)+3+(old and not old.row_version and count(old) or 0)
     damage=damage+model.acknowledge_cost(r.context.group.model,r.snapshot)
   end
   local work=operations*3+damage+#job.frames*16+#p.jobs+8
   if work>L.render_commit_work then blocked(lane,'E_CAPACITY','publication work limit'); return false end
   if operations>L.render_commit_objects then return false end
+  -- Shared aggregate object limit (D6): defer instead of exceeding it.
+  if (s.native_objects or 0)+operations>graphics.limit() then return false end
   for _,r in ipairs(job.frames) do
     local old=r.context.group.render
     if old and old.row_version and not backend.valid(old,r) then job.invalid=true; return false end
@@ -595,6 +617,22 @@ registry.register_initializer('monitor-rows',function(r)
   if type(p)=='table' and M.supported(p) and p.row_version~=1 then
     for _,lane in pairs(p.lanes) do cancel(p,lane); lane.participation={}; lane.last=nil; lane.last_epoch=nil end
     p.layout_dirty=true; p.row_version=1
+  end
+  -- Shared object count (D6), computed once from every retained monitor object.
+  if s.native_objects==nil then
+    local seen,n={},0
+    local function add(o) if o and o.valid and not seen[o.id] then seen[o.id]=true; n=n+1 end end
+    local function frame(r) if r then add(r.panel); content(r,add) end end
+    for _,g in pairs(s.groups) do
+      frame(g.render)
+      if g.graphics then for _,o in pairs(g.graphics.objects) do add(o.native) end end
+    end
+    if type(p)=='table' and M.supported(p) then
+      for _,r in ipairs(p.orphans) do frame(r) end
+      for _,r in ipairs(p.retired) do frame(r) end
+      for _,job in ipairs(p.jobs) do for _,r in ipairs(job.frames) do if r then frame(r) end end end
+    end
+    s.native_objects=n
   end
 end)
 registry.register_initializer('monitor-selected-owners',function(r)

@@ -9,20 +9,20 @@ Each task names its verification. This change builds on `monitor-row-text-presen
 
 ## 2. Mode and pixel geometry
 
-- [ ] 2.1 Add `mode` to the monitor model, `getMode`/`setMode` with the D8 switch sequence, pixel `getSize`, and `E_UNSUPPORTED` dispatch rules in `scripts/services/monitor.lua`. Add `tests/monitor_graphics_contract.lua`, covering mode switch clearing, the no-op same mode, `E_RANGE`/`E_ARGUMENT` modes, method availability in both modes and resize payloads with reason `mode`. Verify with `--mode both --cold`.
-- [ ] 2.2 Implement pixel touch and `mode` fields on touch and resize events, and graphics clearing on tile reconciliation. Extend the existing touch/resize fixtures for a rotated non-square graphics display (spec scenarios: Touch on a graphics display, Add a tile). Verify that `monitor_engine` and the touch fixtures pass in both modes.
-- [ ] 2.3 Refuse graphics members in `peripheral.setMonitorSyncGroup` and remove a member that switches to graphics. Verify with a sync-group fixture: the refusal keeps the previous selection, and the remaining members keep publishing rounds.
+- [x] 2.1 Add `mode` to the monitor model, `getMode`/`setMode` with the D8 switch sequence, pixel `getSize`, and `E_UNSUPPORTED` dispatch rules in `scripts/services/monitor.lua`. Add `tests/monitor_graphics_contract.lua`, covering mode switch clearing, the no-op same mode, `E_RANGE`/`E_ARGUMENT` modes, method availability in both modes and resize payloads with reason `mode`. Verify with `--mode both --cold`.
+- [x] 2.2 Implement pixel touch and `mode` fields on touch and resize events, and graphics clearing on tile reconciliation. Extend the existing touch/resize fixtures for a rotated non-square graphics display (spec scenarios: Touch on a graphics display, Add a tile). Verify that `monitor_engine` and the touch fixtures pass in both modes.
+- [x] 2.3 Refuse graphics members in `peripheral.setMonitorSyncGroup` and remove a member that switches to graphics. Verify with a sync-group fixture: the refusal keeps the previous selection, and the remaining members keep publishing rounds.
 
 ## 3. Graphics objects
 
-- [ ] 3.1 Add `scripts/monitor-graphics.lua` with the store (D1), the property validation per type, the colour and point forms, and the exact bounds (D3). Add a table-driven pure-Lua test for every type, including exact fit, the rotated text and sprite, the arc sector near an edge and the partial `set` outside. Verify it under the headless engine contract runner.
-- [ ] 3.2 Implement the draw methods, `set`, `get`, `getObjects`, `destroy`, `bringToFront`, `moveToBack` and graphics `clear` with the native projection (D2), the calibrated constants and the work charges (D7). Verify with an engine fixture that compares stored props and native object properties, id monotonicity across `clear`, draw order and the same-tick visibility of a callback that later fails.
-- [ ] 3.3 Add the native-object count and `E_CAPACITY` checks (D6), shared with the row presenter. Verify with a fixture that lowers only the fixture's view of the limit, fills it with graphics objects, gets `E_CAPACITY` with nothing changed, then succeeds after `destroy`, and that a terminal commit defers instead of exceeding.
+- [x] 3.1 Add `scripts/monitor-graphics.lua` with the store (D1), the property validation per type, the colour and point forms, and the exact bounds (D3). Add a table-driven pure-Lua test for every type, including exact fit, the rotated text and sprite, the arc sector near an edge and the partial `set` outside. Verify it under the headless engine contract runner.
+- [x] 3.2 Implement the draw methods, `set`, `get`, `getObjects`, `destroy`, `bringToFront`, `moveToBack` and graphics `clear` with the native projection (D2), the calibrated constants and the work charges (D7). Verify with an engine fixture that compares stored props and native object properties, id monotonicity across `clear`, draw order and the same-tick visibility of a callback that later fails.
+- [x] 3.3 Add the native-object count and `E_CAPACITY` checks (D6), shared with the row presenter. Verify with a fixture that lowers only the fixture's view of the limit, fills it with graphics objects, gets `E_CAPACITY` with nothing changed, then succeeds after `destroy`, and that a terminal commit defers instead of exceeding.
 
 ## 4. Persistence and transfer
 
-- [ ] 4.1 Add version-2 monitor settings with `mode` in `scripts/lifecycle-data.lua` (paste, blueprint, item tags). Import version 1 as terminal mode. Inherit the mode in merge and split. Verify with lifecycle fixtures: paste graphics onto terminal, blueprint round trip, and split and merge of a graphics wall.
-- [ ] 4.2 Add a cold fixture with 500 objects of all types. Verify that after a separate-process load the ids, order, props and native objects are identical and the next id continues. Remove the display and verify zero leftover objects. Load a save from the previous release and verify that all monitors are in terminal mode with unchanged content.
+- [x] 4.1 Add version-2 monitor settings with `mode` in `scripts/lifecycle-data.lua` (paste, blueprint, item tags). Import version 1 as terminal mode. Inherit the mode in merge and split. Verify with lifecycle fixtures: paste graphics onto terminal, blueprint round trip, and split and merge of a graphics wall.
+- [x] 4.2 Add a cold fixture with 500 objects of all types. Verify that after a separate-process load the ids, order, props and native objects are identical and the next id continues. Remove the display and verify zero leftover objects. Load a save from the previous release and verify that all monitors are in terminal mode with unchanged content.
 
 ## 5. Inspector, docs and examples
 

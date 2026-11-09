@@ -165,7 +165,7 @@ function M.new(kind)
   -- The scheduler's private refusal path, not a swallowed arbitrary exception,
   -- exhausts the unchanged ledger. This is resource-pressure evidence, not CPU.
   scheduler.register_phase('render','00-monitor-state-pressure',function(tick,spend)
-    local x=f(); if not x or not (x.hold or x.retire_hold or x.hold_prepare) then return end
+    local x=f(); if not x or not (x.hold or x.retire_hold or x.hold_prepare or x.hold_retire) then return end
     local c=registry.record(x.computer)
     renderer.tick(tick,function(n)
       local l=c and lane(c)
@@ -173,7 +173,8 @@ function M.new(kind)
       -- Row preparation finishes in one tick; hold_prepare keeps a partially prepared frame across ticks.
       if x.hold and l and l.job and l.job.ready or x.retire_hold and p and p.retired_cells==10584
         or x.hold_prepare and l and l.job and not l.job.ready and l.job.cell>1
-          and l.job.frames[l.job.member] and n==48+l.job.frames[l.job.member].width then -- only the row charge
+          and l.job.frames[l.job.member] and n==48+l.job.frames[l.job.member].width -- only the row charge
+        or x.hold_retire and p and p.retired[1] and (p.retired[1].cleanup_cursor or 1)>1 and n==8 then -- only the retirement step
         local root=registry.get(); local remaining=200000-root.scheduler.maintenance_spent
         if remaining>0 then spend(remaining) end
         x.refused=true
@@ -213,7 +214,7 @@ function M.new(kind)
       local future=graph({root})
       renderer.tick(x.tick+1,nop); monitor.reconcile(x.tick+1,nop); unchanged(future)
       p.version=1
-      x.saved=nil; x.hold=nil; x.hold_prepare=nil; x.phase='resuming'; x.changed=e.tick; loaded=false
+      x.saved=nil; x.hold=nil; x.hold_prepare=nil; x.hold_retire=nil; x.phase='resuming'; x.changed=e.tick; loaded=false
       log('TC_MONITOR_STATE_COLD_RETAINED '..kind)
     end
     fuel(); scheduler.tick(e.tick); x.steps=x.steps+1
@@ -225,11 +226,14 @@ function M.new(kind)
       select_group(c); paint(c,'A'); x.phase='first'
     elseif x.phase=='first' and idle() and l.presented_sequence>0 then
       selection_contract(c)
-      x.hold=kind=='ready'; x.hold_prepare=kind=='preparing' or kind=='pending' or nil; x.phase='capture'; x.sequence=lane(c).presented_sequence
+      x.hold=kind=='ready'; x.hold_prepare=kind=='preparing' or kind=='pending' or nil; x.hold_retire=kind=='retiring' or nil; x.phase='capture'; x.sequence=lane(c).presented_sequence
       if kind=='idle' then paint(c,'A')
       elseif kind=='waiting' then
         local ref=c.monitor_sync.members[1]
         guest(c,"peripheral.call("..string.format('%q',ref.name)..",'red','setCursorPos',2,1)")
+      elseif kind=='retiring' then
+        -- Row fronts update in place; a geometry change retires a complete front.
+        guest(c,"peripheral.call("..string.format('%q',c.monitor_sync.members[1].name)..",'red','setTextScale',2)"); paint(c,'B')
       else paint(c,'B') end
     elseif x.phase=='capture' then
       if kind=='pending' and l.job and not l.job.ready and not x.pending_write then

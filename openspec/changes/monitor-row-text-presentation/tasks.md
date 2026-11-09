@@ -11,18 +11,18 @@ Each task names its verification. Run packaged engine checks with the headless 2
 ## 2. Row model
 
 - [x] 2.1 Replace cell tables with row strings and row damage in `scripts/monitor-model.lua` (write, blit, clear, clearLine, scroll, capture, acknowledge, resize, settings inherit). Add `model.cell(m,x,y)`. Verify with `tests/monitor_snapshot_contract.lua` and `tests/monitor_optimization_contract.lua`. Their work charges, refusal points and read-after-write results must be identical.
-- [ ] 2.2 Migrate every fixture that reads `model.cells` (`grep -rln "\.cells" tests`) to `model.cell` without removing assertions. Update the shape validation in `scripts/services/monitor.lua`. Verify that `monitor_engine` and `monitor_state_*` pass with `--mode both`.
+- [x] 2.2 Migrate every fixture that reads `model.cells` (`grep -rln "\.cells" tests`) to `model.cell` without removing assertions. Update the shape validation in `scripts/services/monitor.lua`. Verify that `monitor_engine` and `monitor_state_*` pass with `--mode both`.
 
 ## 3. Row presenter
 
-- [ ] 3.1 Rewrite `scripts/rendering.lua` for D2–D4: prepare builds row data; commit sets texts and background runs and creates or destroys only the difference. Adapt the loop unit in `scripts/monitor-presentation.lua` to rows, and keep cell-denominated admission. Verify with `tests/monitor_component_contract.lua` (`--cold`): a changed row keeps its object identities, a cancelled frame owns no objects, a saved ready frame publishes after cold reload, and a palette change updates the rows in place.
-- [ ] 3.2 Add a rich-text injection regression: guest text `[color=red]x[/color][img=item/iron-plate]` shows literal glyph cells. Add an object-count assertion for a 126×84 three-run chart (spec: Row text presentation). Verify with `monitor_engine --mode both`.
-- [ ] 3.3 Rerun `monitor_buffer_engine` (`--cold`), `monitor_feedback_engine` (`--cold --production-context`), `monitor_presentation_engine`, `monitor_budget_engine` and `monitor_demand_engine`, and both `tools/monitor_animation.py` layouts. Rewrite assertions that expect destroyed cell sprites to the row-identity contract. Verify that all pass in both modes.
-- [ ] 3.4 Hide the row text of a display while any member tile is marked for deconstruction, and restore it on cancel (D8). Verify with an engine fixture: mark one tile of a published wall, check every row object is hidden and the model revision is unchanged, publish a new frame while marked and check it stays hidden, cancel and check the new content is visible.
+- [x] 3.1 Rewrite `scripts/rendering.lua` for D2–D4: prepare builds row data; commit sets texts and background runs and creates or destroys only the difference. Adapt the loop unit in `scripts/monitor-presentation.lua` to rows, and keep cell-denominated admission. Verify with `tests/monitor_component_contract.lua` (`--cold`): a changed row keeps its object identities, a cancelled frame owns no objects, a saved ready frame publishes after cold reload, and a palette change updates the rows in place.
+- [x] 3.2 Add a rich-text injection regression: guest text `[color=red]x[/color][img=item/iron-plate]` shows literal glyph cells. Add an object-count assertion for a 126×84 three-run chart (spec: Row text presentation). Verify with `monitor_engine --mode both`.
+- [x] 3.3 Rerun `monitor_buffer_engine` (`--cold`), `monitor_feedback_engine` (`--cold --production-context`), `monitor_presentation_engine`, `monitor_budget_engine` and `monitor_demand_engine`, and both `tools/monitor_animation.py` layouts. Rewrite assertions that expect destroyed cell sprites to the row-identity contract. Verify that all pass in both modes.
+- [x] 3.4 Hide the row text of a display while any member tile is marked for deconstruction, and restore it on cancel (D8). Verify with an engine fixture: mark one tile of a published wall, check every row object is hidden and the model revision is unchanged, publish a new frame while marked and check it stays hidden, cancel and check the new content is visible.
 
 ## 4. Upgrade
 
-- [ ] 4.1 Extend synchronized enrolment for D7 (cell model → rows, legacy cell front retired at the first row commit, unknown shapes fail closed). Extend `tests/monitor_upgrade_engine.lua` with a save from the previous release that holds a populated 6×6 display, a front and a pending frame. Verify the same content, zero leftover cell sprites and quiescent settled ticks after the upgrade.
+- [x] 4.1 Extend synchronized enrolment for D7 (cell model → rows, legacy cell front retired at the first row commit, unknown shapes fail closed). Extend `tests/monitor_upgrade_engine.lua` with a save from the previous release that holds a populated 6×6 display, a front and a pending frame. Verify the same content, zero leftover cell sprites and quiescent settled ticks after the upgrade.
 
 ## 5. Visual and performance acceptance
 

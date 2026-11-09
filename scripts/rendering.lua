@@ -3,6 +3,7 @@
 local scheduler=require('scripts.scheduler')
 local model=require('scripts.monitor-model')
 local buffered=require('scripts.monitor-presentation')
+local graphics=require('scripts.monitor-graphics')
 local M={}
 local char,sub,find,gsub,rep,concat=string.char,string.sub,string.find,string.gsub,string.rep,table.concat
 -- Sprites draw below every text object, so only the panel stays a sprite.
@@ -13,7 +14,8 @@ local BLOCK,CURSOR=char(0xEE,0x84,0x80),char(0xEE,0x84,0x81) -- Font-only U+E100
 local NOT={} -- Digit to the pattern of any other digit.
 for i=0,15 do local d=model.DIGIT[i]; NOT[d]='[^'..d..']' end
 scheduler.reserve_render_work(60000)
-local function destroy(o) if o and o.valid then o.destroy() end end
+-- Every monitor-owned native object is counted against render_object_limit (D6).
+local function destroy(o) if o and o.valid then o.destroy(); graphics.count(-1) end end
 local function clear_cell(c,staged) -- Legacy per-cell fronts and staging only.
   if c then
     if not staged or not c.shared_background then destroy(c.background) end
@@ -48,11 +50,12 @@ local function row(c,r,y)
 end
 local function cursor(c,r)
   local s=r.snapshot
-  r.cursor_key=s.blink and s.x>=1 and s.x<=s.width and s.y>=1 and s.y<=s.height
+  r.cursor_key=not r.graphics and s.blink and s.x>=1 and s.x<=s.width and s.y>=1 and s.y<=s.height
     and string.format('%d,%d,%s',s.x,s.y,r.tags[model.DIGIT[s.fg]]) or false
 end
 local function text(c,y,x,s,visible,rich)
   local cw,ch,ox,oy=model.geometry(c); local wx,wy=model.world(c,ox+(x-1)*cw,oy+(y-1)*ch)
+  graphics.count(1)
   return rendering.draw_text{surface=c.surface_index,text=s,font='tc-term',color={1,1,1,1},target={wx,wy},
     scale=0.125*c.model.scale,alignment='left',vertical_alignment='top',orientation=c.direction/16,
     use_rich_text=rich,visible=visible}
@@ -61,6 +64,7 @@ local function new_front(c,visible)
   local m=c.model
   local a,b={model.world(c,2/64,2/64)},{model.world(c,c.width_tiles-2/64,c.height_tiles-2/64)}
   local l,t,rr,bb=math.min(a[1],b[1]),math.min(a[2],b[2]),math.max(a[1],b[1]),math.max(a[2],b[2])
+  graphics.count(1)
   local panel=rendering.draw_sprite{surface=c.surface_index,sprite='tc-monitor-fill',target={(l+rr)/2,(t+bb)/2},
     x_scale=(rr-l)*32,y_scale=(bb-t)*32,tint={0,0,0,1},render_layer=PANEL,visible=visible}
   return {version=1,row_version=1,context=c,snapshot=m,slots=m.width*m.height,width=m.width,height=m.height,
@@ -69,6 +73,9 @@ end
 -- Native writes of one prepared frame; the caller prepaid them and proved validity.
 local function apply(F,r,visible)
   local c=r.context; local created=false
+  if r.graphics then -- A graphics display keeps only its panel; graphics objects live outside the front.
+    for y,o in pairs(F.rows) do destroy(o.bg); destroy(o.glyph); F.rows[y]=nil end
+  end
   for _,d in ipairs(r.data) do
     local y,glyph,background=d[1],d[2],d[3]
     local o=F.rows[y]; if not o then o={}; F.rows[y]=o end
@@ -108,7 +115,8 @@ buffered.install{clear_cell=clear_cell,destroy=destroy,row=row,cursor=cursor,new
     local r={version=1,row_version=1,context=c,snapshot=m,slots=m.width*m.height,width=m.width,height=m.height,
       scale=m.scale,front=front,data={},tags=tags(m)}
     -- A matching row front takes only the damaged rows; anything else rebuilds all rows.
-    if front and front.row_version==1 and not m.damage_full and m.damage then r.indices=m.damage end
+    if m.mode=='graphics' then r.graphics=true
+    elseif front and front.row_version==1 and not m.damage_full and m.damage then r.indices=m.damage end
     return r
   end}
 M.tick=buffered.tick
@@ -122,6 +130,7 @@ M.release=buffered.release
 M.changed=buffered.changed
 M.regroup=buffered.regroup
 M.marked=buffered.marked
+M.leave_group=buffered.leave_group
 scheduler.register_phase('render','monitor-world',M.tick,function(r)
   local s=r.monitors
   if s==nil then return false end

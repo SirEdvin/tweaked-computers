@@ -74,7 +74,7 @@ function M.convert(m)
 end
 function M.capture(m,spend)
   spend(80+(m.damage_count or 0)*2)
-  local s={}; for _,k in ipairs({'x','y','blink','fg','bg','scale','revision','width','height'}) do s[k]=m[k] end
+  local s={}; for _,k in ipairs({'x','y','blink','fg','bg','scale','revision','width','height','mode'}) do s[k]=m[k] end
   s.palette={}; for i,p in ipairs(m.palette) do s.palette[i]=p end
   s.damage={}; for i in pairs(m.damage or {}) do s.damage[#s.damage+1]=i end
   s.damage_full=m.damage_full or not m.damage; s.damage_generation=m.damage_generation
@@ -100,7 +100,7 @@ end
 function M.new(w,h,inherit)
   local m={x=1,y=1,blink=false,fg=0,bg=15,scale=1,palette={},revision=1}
   if inherit then
-    for _,k in ipairs({'x','y','blink','fg','bg','scale'}) do m[k]=inherit[k] end
+    for _,k in ipairs({'x','y','blink','fg','bg','scale','mode'}) do m[k]=inherit[k] end
     for i=1,16 do local p=inherit.palette[i]; m.palette[i]={p[1],p[2],p[3]} end
   else
     for i,p in ipairs(palette) do m.palette[i]={math.floor(p/65536)/255,math.floor(p/256)%256/255,p%256/255} end
@@ -237,8 +237,16 @@ function M.local_position(g,x,y)
   if g.direction==0 then return x,y elseif g.direction==4 then return y,g.world_width-x
   elseif g.direction==8 then return g.world_width-x,g.world_height-y else return g.world_height-y,x end
 end
+-- Graphics touch: 0-based content pixels inside the bezel, along the display axes.
+local function pixel_touch(g,u,v)
+  local x,y=math.floor((u-2/64)*64),math.floor((v-2/64)*64)
+  if x<0 or y<0 or x>=64*g.width_tiles-4 or y>=64*g.height_tiles-4 then return nil end
+  return x,y
+end
 function M.touch(g,x,y)
-  local u,v=M.local_position(g,x,y); local cw,ch,ox,oy=M.geometry(g)
+  local u,v=M.local_position(g,x,y)
+  if g.model.mode=='graphics' then return pixel_touch(g,u,v) end
+  local cw,ch,ox,oy=M.geometry(g)
   if u<ox or v<oy or u>=ox+g.model.width*cw or v>=oy+g.model.height*ch then return nil end
   return math.floor((u-ox)/cw)+1,math.floor((v-oy)/ch)+1
 end

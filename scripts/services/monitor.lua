@@ -9,6 +9,7 @@ local errors=require('scripts.runtime.errors')
 local data=require('scripts.runtime.data')
 local model=require('scripts.monitor-model')
 local presentation=require('scripts.rendering')
+local graphics=require('scripts.monitor-graphics')
 local M={}
 local function root() local r=registry.get(); return r and r.monitors end
 local function key(x,y) return string.format('%.17g,%.17g',x,y) end
@@ -118,8 +119,13 @@ function M.inspect(tile,tick,spend)
     errors.raise('E_UNSUPPORTED','monitor geometry unsupported; data preserved')
   end
   spend(#g.members+16)
-  return {tick=tick,name=g.id,width_tiles=g.width_tiles,height_tiles=g.height_tiles,
-    tiles=#g.members,columns=g.model.width,rows=g.model.height,scale=g.model.scale}
+  local info={tick=tick,name=g.id,width_tiles=g.width_tiles,height_tiles=g.height_tiles,
+    tiles=#g.members,columns=g.model.width,rows=g.model.height,scale=g.model.scale,mode=g.model.mode or 'terminal'}
+  if info.mode=='graphics' then
+    info.pixel_width,info.pixel_height=graphics.size(g); info.objects=graphics.object_count(g)
+    info.columns=nil; info.rows=nil; info.scale=nil
+  end
+  return info
 end
 function M.available(g,spend,proofs)
   spend(#g.members*16+1)
@@ -229,13 +235,21 @@ local function same_members(a,b)
   if #a~=#b then return false end
   for i=1,#a do if a[i]~=b[i] then return false end end; return true
 end
+-- Units follow the mode: character cells in terminal mode, content pixels in graphics mode.
+local function display_size(g)
+  if g.model.mode=='graphics' then return graphics.size(g) end
+  return g.model.width,g.model.height
+end
+M.display_size=display_size
 local function resize_payload(g,w,h,reason)
-  return {peripheral=g.id,old_width=w,old_height=h,width=g.model.width,height=g.model.height,reason=reason}
+  local width,height=display_size(g)
+  return {peripheral=g.id,old_width=w,old_height=h,width=width,height=height,reason=reason,mode=g.model.mode or 'terminal'}
 end
 local function queue_resize(g,w,h,reason,receivers)
   local state=root(); local pending=state.resizes[g.id]
   if pending then
-    pending.payload.width=g.model.width; pending.payload.height=g.model.height; pending.payload.reason=reason
+    pending.payload.width,pending.payload.height=display_size(g); pending.payload.reason=reason
+    pending.payload.mode=g.model.mode or 'terminal'
     -- Restart only recipient iteration; already queued callbacks observe latest
     -- state, while bounded notification publication preserves the new revision.
     pending.cursor=1
@@ -256,7 +270,7 @@ function M.reconcile(tick,spend)
   if state and state.version~=1 then return end
   if state and (not presentation.supported(state.presentation) or state.topology_version~=nil and state.topology_version~=1) then return end
   if state and not notification_supported(state) then return end
-  if not state then state={version=1,groups={},membership={},resizes={},resize_order={},notification_version=1,touches={},signature='',order={}}; r.monitors=state end
+  if not state then state={version=1,groups={},membership={},resizes={},resize_order={},notification_version=1,touches={},signature='',order={},native_objects=0}; r.monitors=state end
   local sig=state.job and state.job.signature or state.signature
   local tiles
   if r.monitor_topology_dirty or not state.topology_version then
@@ -307,7 +321,9 @@ function M.reconcile(tick,spend)
           g.model=model.new(g.width_tiles,g.height_tiles,settings)
           if survivor then
             g.model.revision=survivor.model.revision+1
-            if w~=survivor.model.width or h~=survivor.model.height then
+            if survivor.model.mode=='graphics' then -- Every graphics geometry change clears and notifies in pixels.
+              local ow,oh=graphics.size(survivor); job.resizes[g.id]={old_width=ow,old_height=oh}
+            elseif w~=survivor.model.width or h~=survivor.model.height then
               job.resizes[g.id]={old_width=survivor.model.width,old_height=survivor.model.height}
             end
           end
@@ -322,7 +338,7 @@ function M.reconcile(tick,spend)
         local receivers=recipients('monitor_resize')
         presentation.regroup(state,job.groups)
         for id,g in pairs(state.groups) do
-          if job.groups[id]~=g then presentation.retire(state,g.render) end
+          if job.groups[id]~=g then presentation.retire(state,g.render); graphics.destroy_all(g) end
         end
         state.groups=job.groups; state.membership=job.membership; state.signature=job.signature
         state.order=job.order; state.job=nil
@@ -351,15 +367,62 @@ function M.reconcile(tick,spend)
   end
 end
 local methods={}
+-- Mode-specific dispatch: terminal methods refuse in graphics mode and the reverse.
+local BOTH={getSize=true,clear=true,isColor=true,isColour=true}
+local function terminal_only(g) if g.model.mode=='graphics' then errors.raise('E_UNSUPPORTED','terminal method in graphics mode') end end
 for name,fn in pairs(model.calls) do
   local call=fn
   local mutation=name:sub(1,3)~='get' and name:sub(1,2)~='is'
   methods[name]=function(c,g,wire,tick,spend,...)
+    if not BOTH[name] then terminal_only(g) end
     if not mutation then return call(g.model,spend,...) end
     call(g.model,spend,...); presentation.participate(g)
   end
 end
+methods.getSize=function(c,g,wire,tick,spend,...)
+  if g.model.mode~='graphics' then return model.calls.getSize(g.model,spend,...) end
+  if select('#',...)~=0 then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end
+  spend(1); return graphics.size(g)
+end
+methods.clear=function(c,g,wire,tick,spend,...)
+  if g.model.mode~='graphics' then model.calls.clear(g.model,spend,...); presentation.participate(g); return end
+  if select('#',...)~=0 then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end
+  spend(1); graphics.clear(g,spend)
+end
+for name,fn in pairs(graphics.calls) do
+  methods[name]=function(c,g,wire,tick,spend,...)
+    if g.model.mode~='graphics' then errors.raise('E_UNSUPPORTED','graphics method in terminal mode') end
+    return fn(g,spend,...)
+  end
+end
+methods.getMode=function(c,g,wire,tick,spend,...)
+  if select('#',...)~=0 then errors.raise('E_ARGUMENT','unexpected argument count; use dot calls') end
+  spend(1); return g.model.mode or 'terminal'
+end
+-- Mode switch (design D8). Also used by trusted settings transfer.
+function M.switch_mode(g,mode,spend,receivers)
+  local m=g.model
+  if (m.mode or 'terminal')==mode then return false end
+  local ow,oh=display_size(g)
+  spend(m.width*m.height*3+graphics.object_count(g)*2+5)
+  model.calls.clear(m,function() end); graphics.destroy_all(g)
+  m.mode=mode=='graphics' and 'graphics' or nil; m.revision=m.revision+1
+  presentation.changed(g)
+  if mode=='graphics' then presentation.leave_group(g) end
+  queue_resize(g,ow,oh,'mode',receivers or recipients('monitor_resize'))
+  return true
+end
+methods.setMode=function(c,g,wire,tick,spend,...)
+  if select('#',...)~=1 then errors.raise('E_ARGUMENT','setMode expects one argument') end
+  local mode=...
+  if type(mode)~='string' then errors.raise('E_ARGUMENT','mode must be a string') end
+  if mode~='terminal' and mode~='graphics' then errors.raise('E_RANGE','mode must be terminal or graphics') end
+  spend(recipient_cost('monitor_resize')+#root().resize_order*4+1)
+  M.switch_mode(g,mode,spend)
+  presentation.participate(g)
+end
 methods.setTextScale=function(c,g,wire,tick,spend,...)
+  terminal_only(g)
   if select('#',...)~=1 then errors.raise('E_ARGUMENT','setTextScale expects one argument') end
   spend(recipient_cost('monitor_resize')+#root().resize_order*4+1)
   local scale=g.model.scale
@@ -499,7 +562,7 @@ function M.activate_for_player(event,player)
   if #state.touches>=64 then player.print({'tc-monitor.touch-busy'}); return false end
   -- Engine custom input is one synchronized activation; no linked build/mining
   -- action and no per-path/tile fanout. Two players remain separate interactions.
-  state.touches[#state.touches+1]={cursor=1,payload={name='monitor_touch',peripheral=selected.id,x=x,y=y,
+  state.touches[#state.touches+1]={cursor=1,payload={name='monitor_touch',peripheral=selected.id,x=x,y=y,mode=selected.model.mode or 'terminal',
     player_index=player.index,sample_tick=event.tick},recipients=recipients('monitor_touch')}
   return true
 end
@@ -515,7 +578,7 @@ function M.activate(event)
 end
 function M.refresh_resize(event)
   local state=root(); local g=state and state.version==1 and state.groups[event.peripheral]
-  if g then event.width=g.model.width; event.height=g.model.height end
+  if g then event.width,event.height=display_size(g); event.mode=g.model.mode or 'terminal' end
 end
 scheduler.register_monitor_refresh(M.refresh_resize)
 -- Readiness mirrors reconcile/notifications early returns; unknown shapes run the hook.
