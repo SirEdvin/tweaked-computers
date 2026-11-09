@@ -55,18 +55,22 @@ One function computes the covered local box for every type, from the complete ob
 
 The box must lie within `[0, W] × [0, H]`. Floating-point comparisons use an epsilon of 1e-9 px, so exact fits (spec scenario) pass. This function is pure Lua and gets a table-driven contract test per type, including the scenarios of the spec.
 
-### D4. Sizes that need calibration
-Two native sizes are measured once in the pinned client and recorded as constants with their evidence:
-- icon sprites: the native scale for a 64-px icon box;
-- the default light texture (`utility/light_medium`): the scale for which its glow is visibly contained in the radius.
+### D4. Calibrated sizes
+Measured once in the pinned client (base and Space Age, normal and low graphics gave identical results; evidence `/home/siredvin/artifacts/tweaked-computers/row-text-gate-d6-2026-11-09/cases/c-*`, `c2-*`, `c3-*`):
+- Icon sprites at native scale 1 fit one tile (64 content pixels) for item, fluid, entity, recipe, virtual-signal, tile, quality, equipment, space-location and asteroid-chunk paths. Technology icons cover 4 tiles and item-group icons 2 tiles. The native scale is therefore `x_scale`, `/4` for technology and `/2` for item-group. Icons with a non-standard prototype `icon_size` can differ; the API states the vanilla size.
+- The default light texture (`utility/light_medium`) glows to `3.55 × scale + 0.07` tiles (measured scale 0.1..0.4, threshold 2/255 at night). The native scale is `radius_tiles / 4.25`, which keeps the glow inside the radius at every measured scale.
+- Strokes: a native width `w` covers `2w` content pixels, so a guest width `W` maps to native `W/2` (D2). Lines do not extend along their length; rectangle and circle outlines extend `W/2` content pixels on each side of the edge. The D3 bounds formula holds unchanged.
+- `draw_sprite` raises a Lua error for an unknown prototype name, so `helpers.is_valid_sprite_path` must pass before the native call.
 
-The API is defined by those pixel results ("scale 1 = 64×64 px", "radius"), not by engine scale numbers. A later engine change therefore needs only a recalibration.
+### D5. Layer and order (decided after gate 1.2)
+The gate (2026-11-09, `/home/siredvin/artifacts/tweaked-computers/row-text-gate-d6-2026-11-09/`) showed that no sprite render layer interleaves with shapes and text: sprites at every layer up to `cursor` draw below every line, polygon, rectangle, circle, arc and text, also when created later. Shapes and text also draw above the selection box, the deconstruction marker and wires.
 
-### D5. Layer and order
-Sprites and lights get the render layer that the calibration gate (task 1.2) shows to sit together with shapes and text, above the panel and below native feedback.
-- Draw order follows creation and `bring_to_front`/`move_to_back`, mirrored in `order`.
-- If the gate shows that no sprite layer interleaves with shape objects, the spec's cross-type order cannot hold. The change then stops for a design decision; it does not silently weaken the requirement.
-- The same gate checks native feedback above shapes. If shapes draw above the deconstruction marker, the fallback is presentation-only suppression: while any member tile is marked, the display's objects are set `visible=false` and restored on cancel. The spec allows this, and ids are unchanged.
+Approved resolution:
+- Two draw layers. Sprites and lights form the lower layer, the other types the upper one. The store keeps `order` per layer (`under`, `over`). `getObjects` returns `under` then `over`. `bringToFront` and `moveToBack` move inside `over` and call the native `bring_to_front`/`move_to_back` (verified: rectangles reorder).
+- Sprites in one render layer are sorted by position (a lower sprite draws on top; at equal y the later or right one), and native `bring_to_front`/`move_to_back` has no visible effect on them (`c3-base-normal/.../reorder-z4.png`). Approved: `bringToFront`/`moveToBack` raise `E_UNSUPPORTED` for sprites and lights; `under` keeps creation order.
+- Sprites use render layer `higher-object-above`, above the panel.
+- Native feedback: while any member tile of the display is marked for deconstruction, every graphics object is set `visible=false` (the shared hide-while-marked mechanism of `monitor-row-text-presentation` D8). The stored `visible` property is unchanged; cancel restores `visible` from the stored props. Selection boxes and wires may draw below monitor content.
+- Text bounds use the 6x9xscale covered rectangle. The engine's ~6 screen pixel text offset is documented, not included.
 
 ### D6. Capacity
 `s.native_objects` counts every native object that monitors own: terminal fronts, rows, backgrounds, panels, cursors, and graphics objects.

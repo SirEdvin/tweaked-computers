@@ -17,16 +17,20 @@ function M.run()
   local initial=model.capture(m,nop); assert(initial.damage_full)
   model.acknowledge(m,initial); assert(not m.damage_full and m.damage_count==0)
   model.calls.write(m,nop,'A'); local first=model.capture(m,nop); local frozen=copy(first)
-  model.calls.write(m,nop,'B'); assert(equal(first,frozen) and m.damage_count==2)
+  model.calls.setCursorPos(m,nop,1,2); model.calls.write(m,nop,'B'); assert(equal(first,frozen) and m.damage_count==2)
   model.acknowledge(m,first)
-  assert(m.damage_count==1 and m.damage[2] and not m.damage[1],'acknowledgement consumed a later cell write')
-  model.calls.setCursorPos(m,nop,2,1); model.calls.write(m,nop,'C')
+  assert(m.damage_count==1 and m.damage[2] and not m.damage[1],'acknowledgement consumed a later row write')
+  model.calls.setCursorPos(m,nop,2,1); model.calls.write(m,nop,'b'); local same=model.capture(m,nop)
+  model.calls.setCursorPos(m,nop,3,1); model.calls.write(m,nop,'c'); model.acknowledge(m,same)
+  assert(m.damage[1],'acknowledgement consumed a later write to the same row')
+  model.acknowledge(m,model.capture(m,nop))
+  model.calls.setCursorPos(m,nop,1,2); model.calls.write(m,nop,'C')
   local second=model.capture(m,nop)
-  model.calls.setCursorPos(m,nop,2,1); model.calls.write(m,nop,'D')
+  model.calls.setCursorPos(m,nop,1,2); model.calls.write(m,nop,'D')
   model.acknowledge(m,second); assert(m.damage_count==1 and m.damage[2],'acknowledgement consumed a later same-cell write')
   local latest=model.capture(m,nop); model.acknowledge(m,latest)
   assert(m.damage_count==0)
-  model.calls.setCursorPos(m,nop,2,1); model.calls.write(m,nop,'D')
+  model.calls.setCursorPos(m,nop,1,2); model.calls.write(m,nop,'D')
   assert(m.damage_count==0,'identical write dirtied an unchanged cell')
   model.calls.clear(m,nop); local cleared=model.capture(m,nop)
   model.calls.setPaletteColor(m,nop,1,0x123456); model.acknowledge(m,cleared)
@@ -39,18 +43,19 @@ function M.run()
   local cases=0
   for w=1,6 do for h=1,6 do for step=1,10 do for _,direction in ipairs({0,4,8,12}) do
     local m=model.new(w,h); model.scale(m,w,h,nop,step/2)
-    local x,y=model.size(w,h,step/2); assert(m.width==x and m.height==y and #m.cells==x*y and #m.cells<=10584)
+    local x,y=model.size(w,h,step/2); assert(m.width==x and m.height==y and #m.rows==y and #m.rows[y][1]==x and x*y<=10584)
     local g={left=0,top=0,width_tiles=w,height_tiles=h,world_width=(direction==4 or direction==12) and h or w,
       world_height=(direction==4 or direction==12) and w or h,direction=direction,model=m}
     local cw,ch,ox,oy=model.geometry(g); local wx,wy=model.world(g,ox+cw/2,oy+ch/2)
     local a,b=model.touch(g,wx,wy); assert(a==1 and b==1)
     model.calls.write(m,nop,'A'); local snap=model.capture(m,nop)
-    local root=m.cells; local revision=m.revision; local cursor=m.x
+    local root=m.rows; local revision=m.revision; local cursor=m.x
     local budget=1; local ok=pcall(model.calls.write,m,function(n) budget=budget-n; if budget<0 then error('refused') end end,'B')
-    assert(not ok and m.cells==root and m.revision==revision and m.x==cursor and m.cells_shared)
-    model.calls.write(m,nop,'B'); assert(m.cells~=root and snap.cells[1][1]==65)
+    assert(not ok and m.rows==root and m.revision==revision and m.x==cursor and m.rows_shared)
+    model.calls.write(m,nop,'B'); assert(m.rows~=root and model.cell(snap,1,1)[1]==65)
+    if x>1 then assert(model.cell(m,2,1)[1]==66) end
     model.calls.setPaletteColor(m,nop,1,0x123456); assert(snap.palette[1]~=m.palette[1])
-    model.calls.clear(m,nop); assert(snap.cells[1][1]==65)
+    model.calls.clear(m,nop); assert(model.cell(snap,1,1)[1]==65)
     cases=cases+1
   end end end end
   assert(cases==1440)
@@ -64,7 +69,7 @@ function M.run()
     local m=model.new(shape[1],shape[2]); model.calls.write(m,nop,'KEEP')
     model.calls.setCursorPos(m,nop,1,1)
     local snapshot=model.capture(m,nop); local captured=copy(snapshot)
-    local before=copy(m); local cells,palette=m.cells,m.palette
+    local before=copy(m); local rows,palette=m.rows,m.palette
     local function invoke(spend)
       if op[1]=='setTextScale' then return model.scale(m,shape[1],shape[2],spend,op[2]) end
       return model.calls[op[1]](m,spend,table.unpack(op,2))
@@ -72,10 +77,10 @@ function M.run()
     local cost=0; invoke(function(n) cost=cost+n end)
     assert(equal(snapshot,captured),'successful mutation changed captured snapshot: '..op[1])
     m=model.new(shape[1],shape[2]); model.calls.write(m,nop,'KEEP'); model.calls.setCursorPos(m,nop,1,1)
-    snapshot=model.capture(m,nop); captured=copy(snapshot); before=copy(m); cells,palette=m.cells,m.palette
+    snapshot=model.capture(m,nop); captured=copy(snapshot); before=copy(m); rows,palette=m.rows,m.palette
     local available=cost-1
     assert(not pcall(invoke,function(n) if n>available then error('one-short',0) end; available=available-n end))
-    assert(equal(m,before) and m.cells==cells and m.palette==palette and equal(snapshot,captured),
+    assert(equal(m,before) and m.rows==rows and m.palette==palette and equal(snapshot,captured),
       'refused mutation changed model/snapshot bookkeeping: '..op[1])
     checked=checked+1
   end end

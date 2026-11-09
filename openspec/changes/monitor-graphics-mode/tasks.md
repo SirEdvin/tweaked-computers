@@ -5,7 +5,7 @@ Each task names its verification. This change builds on `monitor-row-text-presen
 ## 1. Calibration gate
 
 - [ ] 1.1 Promote the three change-scoped declarations to canonical `api/` and regenerate both references. Verify that `python tools/player_docs.py --check --change monitor-graphics-mode` passes and that `tools/test_player_docs.py` passes.
-- [ ] 1.2 Run a test-only full-client scene (base and Space Age, normal and low graphics, zoom 1/2/4, four directions). Measure the icon sprite scale for a 64-px box, the default light scale for a contained radius, the stroke extents at widths 1/2/8, and which sprite render layer interleaves with shapes and text above the panel. Check that the selection box, wires and the deconstruction marker draw above shapes. Record the results and captures in `/home/siredvin/artifacts/tweaked-computers/`, and write the constants into `design.md` D4/D5. Stop for review if the cross-type order or native feedback cannot be met.
+- [x] 1.2 Run a test-only full-client scene (base and Space Age, normal and low graphics, zoom 1/2/4, four directions). Measure the icon sprite scale for a 64-px box, the default light scale for a contained radius, the stroke extents at widths 1/2/8, and which sprite render layer interleaves with shapes and text above the panel. Check that the selection box, wires and the deconstruction marker draw above shapes. Record the results and captures in `/home/siredvin/artifacts/tweaked-computers/`, and write the constants into `design.md` D4/D5. Stop for review if the cross-type order or native feedback cannot be met.
 
 ## 2. Mode and pixel geometry
 

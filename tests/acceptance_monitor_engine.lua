@@ -150,11 +150,11 @@ function M.on_tick(event)
     for i,wall in ipairs(x.walls) do
       local g=assert(monitor.resolve(registry.record(wall[1]))); local r=g.render
       if r and r.presented_revision~=x.observed[i] then
-        local mark=r.snapshot.cells[1][1]
+        local mark=model.cell(r.snapshot,1,1)[1]
         if mark==65 or mark==66 then
-          for _,cell in ipairs(r.snapshot.cells) do assert(cell[1]==mark,'mixed dense frame') end
+          for _,row in ipairs(r.snapshot.rows) do assert(row[1]==string.rep(string.char(mark),r.snapshot.width),'mixed dense frame') end
           x.observed[i]=r.presented_revision
-          log('TC_ACCEPTANCE_VISIBLE wall='..i..' step='..x.steps..' glyph='..mark..' cells='..#r.snapshot.cells)
+          log('TC_ACCEPTANCE_VISIBLE wall='..i..' step='..x.steps..' glyph='..mark..' cells='..r.snapshot.width*r.snapshot.height)
         end
       end
     end
@@ -164,7 +164,7 @@ function M.on_tick(event)
     end
     local function public_image(m)
       return helpers.table_to_json{width=m.width,height=m.height,scale=m.scale,x=m.x,y=m.y,
-        blink=m.blink,fg=m.fg,bg=m.bg,palette=m.palette,cells=m.cells}
+        blink=m.blink,fg=m.fg,bg=m.bg,palette=m.palette,rows=m.rows}
     end
     if not x.power_cut and x.steps>=500 and quiescent then
       x.power_cut=x.steps
@@ -186,7 +186,7 @@ function M.on_tick(event)
       for i=1,5 do
         assert(x.observed[i],'no dense publication wall '..i)
         local r=monitor.resolve(registry.record(x.walls[i][1])).render
-        assert(r and r.snapshot.cells[1][1]==66,'final dense B frame missing wall '..i)
+        assert(r and model.cell(r.snapshot,1,1)[1]==66,'final dense B frame missing wall '..i)
       end
       log('TC_ACCEPTANCE_MONITORS_DONE steps='..x.steps..' walls=5')
     end
@@ -208,7 +208,7 @@ function M.on_tick(event)
           left=g.left,top=g.top,direction=g.direction,world_width=g.world_width,world_height=g.world_height,
           width_tiles=g.width_tiles,height_tiles=g.height_tiles,scale=g.model.scale,marked=marked,tiles=tiles,
           presented_tick=r and r.presented_tick,sequence=r and r.presented_sequence,
-          cells=r and r.snapshot.cells,palette=r and r.snapshot.palette,
+          rows=r and r.snapshot.rows,palette=r and r.snapshot.palette,
           cursor=r and {x=r.snapshot.x,y=r.snapshot.y,blink=r.snapshot.blink}}
       end
       local presentation=registry.get().monitors.presentation; view.presentation={}

@@ -1,4 +1,4 @@
--- Plain byte-cell terminal state; no rendering objects or guest references.
+-- Plain row-string terminal state; no rendering objects or guest references.
 local errors=require('scripts.runtime.errors')
 local M={limits={width_tiles=6,height_tiles=6,cells=10584,write_bytes=16384,
   render_latency_ticks=256,tiles=256,aggregate_cells=80000,render_cells_per_tick=1024,
@@ -10,14 +10,11 @@ local M={limits={width_tiles=6,height_tiles=6,cells=10584,write_bytes=16384,
 local MAX=9007199254740991
 local palette={0xF0F0F0,0xF2B233,0xE57FD8,0x99B2F2,0xDEDE6C,0x7FCC19,0xF2B2CC,0x4C4C4C,
   0x999999,0x4C99B2,0xB266E5,0x3366CC,0x7F664C,0x57A64E,0xCC4C4C,0x111111}
-local byte=string.byte
+local byte,sub,rep=string.byte,string.sub,string.rep
 local HEX={} -- Byte to colour index for validated lowercase hex digits.
-for i=0,15 do HEX[string.byte(string.format('%x',i))]=i end
-local function digit(byte)
-  if byte>=48 and byte<=57 then return byte-48 end
-  if byte>=97 and byte<=102 then return byte-87 end
-  return nil
-end
+local DIGIT={} -- Colour index to the hex digit stored in row colour strings.
+for i=0,15 do DIGIT[i]=string.format('%x',i); HEX[byte(DIGIT[i])]=i end
+M.HEX=HEX; M.DIGIT=DIGIT
 local function integer(n)
   if type(n)~='number' then errors.raise('E_ARGUMENT','number required') end
   if not errors.integer(n,-MAX,MAX) then errors.raise('E_RANGE','safe integer required') end; return n
@@ -33,28 +30,47 @@ end
 function M.size(w,h,scale)
   return math.max(1,math.floor((64*w-4)/(6*scale))),math.max(1,math.floor((64*h-4)/(9*scale)))
 end
-local function blank(m) return {32,m.fg,m.bg} end
+-- Row records {text, fg digits, bg digits} are immutable: every change installs a new record.
+local function blank(m) return {rep(' ',m.width),rep(DIGIT[m.fg],m.width),rep(DIGIT[m.bg],m.width)} end
 local function full_damage(m)
   m.damage={}; m.damage_count=0; m.damage_full=true
   m.damage_generation=(m.damage_generation or 0)+1
 end
 M.invalidate=full_damage -- Trusted settings-paste/import paths also replace palettes.
-local function damaged(m,i)
+local function damaged(m,y)
   -- Older saves have no damage baseline: conservatively rebuild once.
   if not m.damage then full_damage(m) end
-  if not m.damage[i] then m.damage[i]=true; m.damage_count=m.damage_count+1 end
+  if not m.damage[y] then m.damage[y]=true; m.damage_count=m.damage_count+1 end
 end
 local function clear(m)
-  local cells={}; for i=1,m.width*m.height do cells[i]=blank(m) end; m.cells=cells; m.cells_shared=nil
+  local row=blank(m); local rows={}; for y=1,m.height do rows[y]=row end; m.rows=rows; m.rows_shared=nil
   full_damage(m)
 end
--- Cell records and palette triples are immutable. Only the flat root is copied
--- on the first admitted in-place write after a snapshot, not on every write.
-local function copy_cost(m) return m.cells_shared and m.width*m.height or 0 end
+-- Only the row root is copied on the first admitted in-place write after a
+-- snapshot. The charge keeps the former cell-root copy price.
+local function copy_cost(m) return m.rows_shared and m.width*m.height or 0 end
 local function own(m)
-  if m.cells_shared then
-    m.cells={table.unpack(m.cells,1,#m.cells)}; m.cells_shared=nil
+  if m.rows_shared then m.rows={table.unpack(m.rows,1,m.height)}; m.rows_shared=nil end
+end
+function M.cell(m,x,y)
+  local r=m.rows[y]; return {byte(r[1],x),HEX[byte(r[2],x)],HEX[byte(r[3],x)]}
+end
+-- Retained shape: 'rows' (current), 'cells' (before row presentation) or nil (unsupported).
+function M.shape(m)
+  if type(m)~='table' or not errors.integer(m.width,1,M.limits.cells) or not errors.integer(m.height,1,M.limits.cells) then return nil end
+  if type(m.rows)=='table' and m.cells==nil then return 'rows' end
+  if type(m.cells)=='table' and m.rows==nil then return 'cells' end
+end
+-- Legacy {byte,fg,bg} cells to rows; the caller charges width*height.
+function M.convert(m)
+  local cells,w=m.cells,m.width; local rows={}
+  local t,f,b={},{},{}
+  for y=1,m.height do
+    for x=1,w do local c=cells[(y-1)*w+x]; t[x]=string.char(c[1]); f[x]=DIGIT[c[2]]; b[x]=DIGIT[c[3]] end
+    rows[y]={table.concat(t,'',1,w),table.concat(f,'',1,w),table.concat(b,'',1,w)}
   end
+  m.rows=rows; m.cells=nil; m.cells_shared=nil; m.rows_shared=nil
+  full_damage(m)
 end
 function M.capture(m,spend)
   spend(80+(m.damage_count or 0)*2)
@@ -62,23 +78,22 @@ function M.capture(m,spend)
   s.palette={}; for i,p in ipairs(m.palette) do s.palette[i]=p end
   s.damage={}; for i in pairs(m.damage or {}) do s.damage[#s.damage+1]=i end
   s.damage_full=m.damage_full or not m.damage; s.damage_generation=m.damage_generation
-  s.cells=m.cells; m.cells_shared=true; return s
+  s.rows=m.rows; m.rows_shared=true; return s
 end
 -- The publisher prepays this bounded acknowledgement before changing visibility.
 -- Never consume later writes, a later clear/palette epoch, or coalesced damage.
 function M.acknowledge_cost(m,s)
   if not s.damage or m.damage_generation~=s.damage_generation or not m.damage then return 0 end
-  if m.cells==s.cells then return 1 end
+  if m.rows==s.rows then return 1 end
   return #s.damage
 end
 function M.acknowledge(m,s)
   if not s.damage or m.damage_generation~=s.damage_generation or not m.damage then return end
-  if m.cells==s.cells then
+  if m.rows==s.rows then
     m.damage={}; m.damage_count=0; m.damage_full=nil; return
   end
-
-  for _,i in ipairs(s.damage) do
-    if m.damage[i] and m.cells[i]==s.cells[i] then m.damage[i]=nil; m.damage_count=m.damage_count-1 end
+  for _,y in ipairs(s.damage) do
+    if m.damage[y] and m.rows[y]==s.rows[y] then m.damage[y]=nil; m.damage_count=m.damage_count-1 end
   end
   if s.damage_full then m.damage_full=nil end
 end
@@ -91,8 +106,8 @@ function M.new(w,h,inherit)
     for i,p in ipairs(palette) do m.palette[i]={math.floor(p/65536)/255,math.floor(p/256)%256/255,p%256/255} end
   end
   m.width,m.height=M.size(w,h,m.scale)
-  if inherit and inherit.width==m.width and inherit.height==m.height then
-    m.cells={}; for i,c in ipairs(inherit.cells) do m.cells[i]={c[1],c[2],c[3]} end
+  if inherit and inherit.rows and inherit.width==m.width and inherit.height==m.height then
+    m.rows={table.unpack(inherit.rows,1,m.height)} -- Immutable records may be shared.
     full_damage(m)
   else clear(m) end
   return m
@@ -137,19 +152,18 @@ local function write(m,spend,text,fg,bg)
   local first,last=math.max(1,2-m.x),math.min(#text,m.width-m.x+1)
   local visible=m.y>=1 and m.y<=m.height and math.max(0,last-first+1) or 0
   spend(#text+visible*8+1)
-  if m.y>=1 and m.y<=m.height then
-    local cells,base,df,db=m.cells,(m.y-1)*m.width+m.x-1,m.fg,m.bg
-    for i=first,last do
-      local f,b=df,db
-      if fg then f=HEX[byte(fg,i)]; b=HEX[byte(bg,i)] end
-      local index=base+i; local ch=byte(text,i); local old=cells[index]
-      if old[1]~=ch or old[2]~=f or old[3]~=b then
-        if m.cells_shared then -- Before the first cell mutation only.
-          spend(copy_cost(m))
-          own(m); cells=m.cells -- Identical full-row blits must not allocate a grid-sized copy.
-        end
-        cells[index]={ch,f,b}; damaged(m,index)
-      end
+  if visible>0 then
+    -- Text byte i lands in column m.x-1+i; splice the visible slice into the row.
+    local row,a,z=m.rows[m.y],m.x-1+first,m.x-1+last
+    local t=sub(text,first,last)
+    local f=fg and sub(fg,first,last) or rep(DIGIT[m.fg],visible)
+    local b=bg and sub(bg,first,last) or rep(DIGIT[m.bg],visible)
+    local rt,rf,rb=row[1],row[2],row[3]
+    -- Identical blits must not allocate a grid-sized copy.
+    if sub(rt,a,z)~=t or sub(rf,a,z)~=f or sub(rb,a,z)~=b then
+      if m.rows_shared then spend(copy_cost(m)); own(m) end
+      m.rows[m.y]={sub(rt,1,a-1)..t..sub(rt,z+1),sub(rf,1,a-1)..f..sub(rf,z+1),sub(rb,1,a-1)..b..sub(rb,z+1)}
+      damaged(m,m.y)
     end
   end
   m.x=m.x+#text; m.revision=m.revision+1
@@ -160,27 +174,22 @@ method('clear',0,function(m,s) s(m.width*m.height*3+5); clear(m); m.revision=m.r
 method('clearLine',0,function(m,s)
   s(m.width*7+1)
   if m.y>=1 and m.y<=m.height then
-    for x=1,m.width do
-      local i=(m.y-1)*m.width+x; local c=m.cells[i]
-      if c[1]~=32 or c[2]~=m.fg or c[3]~=m.bg then
-        if m.cells_shared then s(copy_cost(m)) end
-        own(m); m.cells[i]=blank(m); damaged(m,i)
-      end
+    local row,new=m.rows[m.y],blank(m)
+    if row[1]~=new[1] or row[2]~=new[2] or row[3]~=new[3] then
+      if m.rows_shared then s(copy_cost(m)) end
+      own(m); m.rows[m.y]=new; damaged(m,m.y)
     end
     m.revision=m.revision+1
   end
 end)
 method('scroll',1,function(m,s,lines)
   integer(lines); s(m.width*m.height*3+5)
-  local cells={}
+  local rows,row={},blank(m)
   for y=1,m.height do
     local source=y+lines
-    for x=1,m.width do
-      local i=(y-1)*m.width+x
-      cells[i]=source>=1 and source<=m.height and m.cells[(source-1)*m.width+x] or blank(m)
-    end
+    rows[y]=source>=1 and source<=m.height and m.rows[source] or row
   end
-  m.cells=cells; m.cells_shared=nil; m.revision=m.revision+1
+  m.rows=rows; m.rows_shared=nil; m.revision=m.revision+1
   full_damage(m)
 end)
 method('getPaletteColor',1,function(m,s,c) c=color(c); local p=m.palette[c+1]; return p[1],p[2],p[3] end)

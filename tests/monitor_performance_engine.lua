@@ -7,6 +7,7 @@ local registry=require('scripts.registry')
 local lifecycle=require('scripts.lifecycle')
 local scheduler=require('scripts.scheduler')
 local model=require('scripts.monitor-model')
+local rows=require('tests.monitor_rows')
 local runtime=require('scripts.runtime.computer')
 local scene=config.scene or 'all'
 assert(scene=='zero' or scene=='idle' or scene=='one' or scene=='all')
@@ -22,11 +23,7 @@ local function audit(x)
   assert(#objects<=model.limits.render_object_limit)
   local owned={}
   local function object(o) if o and o.valid then owned[o.id]=true end end
-  local function frame(r)
-    if not r then return end
-    object(r.panel); object(r.cursor)
-    for _,cell in ipairs(r.cells) do if cell then object(cell.background); object(cell.glyph) end end
-  end
+  local function frame(r) rows.objects(r,object) end
   for _,g in pairs(s.groups) do frame(g.render) end
   for _,job in ipairs(p.jobs) do for _,r in ipairs(job.frames) do frame(r) end end
   for _,r in ipairs(p.retired) do frame(r) end
@@ -36,14 +33,7 @@ local function audit(x)
   end
   local count=0; for _ in pairs(owned) do count=count+1 end
   assert(count==#objects,'native render objects escaped all retained ownership roots')
-  for _,g in pairs(s.groups) do local r=g.render; if r then
-    for i,c in ipairs(r.cells) do
-      local v=r.snapshot.cells[i]
-      assert(c.value[1]==v[1] and c.value[2]==v[2] and c.value[3]==v[3])
-      assert(c.background.valid and c.background.visible)
-      if v[1]~=32 then assert(c.glyph and c.glyph.valid and c.glyph.visible and c.glyph.sprite=='tc-glyph-'..v[1]) end
-    end
-  end end
+  for _,g in pairs(s.groups) do local r=g.render; if r then rows.verify(r,true) end end
 end
 function M.run()
   setup.run()
@@ -101,11 +91,15 @@ function M.on_tick(event)
       for _,ref in ipairs(lane.members) do
         local r=root.monitors.groups[ref.name].render; local previous=x.previous[ref.name]
         if previous then
-          for i,v in ipairs(r.snapshot.cells) do local old=previous[i]
-            if old[1]~=v[1] or old[3]~=v[3] or v[1]~=32 and old[2]~=v[2] then changed=true; break end
+          for y,v in ipairs(r.snapshot.rows) do local old=previous[y]
+            if old[1]~=v[1] or old[3]~=v[3] then changed=true; break end
+            if old[2]~=v[2] then -- A foreground change is visible only under a non-space glyph.
+              for x=1,#v[1] do if v[1]:byte(x)~=32 and old[2]:byte(x)~=v[2]:byte(x) then changed=true; break end end
+              if changed then break end
+            end
           end
         else changed=true end
-        x.previous[ref.name]=r.snapshot.cells
+        x.previous[ref.name]=r.snapshot.rows
       end
       x.publications=x.publications+1
       if changed then x.visible_changes=x.visible_changes+1 end

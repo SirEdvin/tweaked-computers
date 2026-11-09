@@ -52774,7 +52774,7 @@ kind]=] ]=[=[
 prose]=],
 [ [=[
 text]=] ]=[=[
-Cell allowance for presentation preparation. Default: 1024.]=]
+Row allowance per tick for presentation preparation and retirement. The name is historical. Default: 1024.]=]
 },
 {
 [ [=[
@@ -53239,7 +53239,7 @@ integer
 
 render_cells_per_tick
 
-Cell allowance for presentation preparation. Default: 1024.
+Row allowance per tick for presentation preparation and retirement. The name is historical. Default: 1024.
 
 integer
 

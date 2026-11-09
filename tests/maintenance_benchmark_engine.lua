@@ -9,6 +9,7 @@ local runtime=require('scripts.runtime.computer')
 local editor=require('scripts.ui.editor-model')
 local monitor=require('scripts.services.monitor')
 local model=require('scripts.monitor-model')
+local rows=require('tests.monitor_rows')
 local limits=require('scripts.runtime.limits')
 local defs=require('scripts.device-definitions')
 local M={}; local loaded=false
@@ -129,11 +130,7 @@ local function audit()
     assert(#rendering.get_all_objects()<=model.limits.render_object_limit)
     for _,g in pairs(root.monitors.groups) do if g.render then
       local r=g.render
-      for i,cell in ipairs(r.cells) do local value=r.snapshot.cells[i]
-        assert(cell.value[1]==value[1] and cell.value[2]==value[2] and cell.value[3]==value[3])
-        assert(cell.background.valid and cell.background.visible)
-        if value[1]~=32 then assert(cell.glyph and cell.glyph.valid and cell.glyph.visible) end
-      end
+      rows.verify(r,true)
     end end
   end
   for _,id in ipairs(f().computers) do local c=registry.computer(id)
@@ -223,9 +220,7 @@ function M.on_tick(event)
     local published=0
     for name,g in pairs(root.monitors.groups) do local r=g.render
       if r and r.presented_tick~=x.publications[name] then
-        local row={}
-        for i=1,r.snapshot.width do local cell=r.snapshot.cells[i]; row[#row+1]=cell[1]..':'..cell[2]..':'..cell[3] end
-        local signature=table.concat(row,','); x.images=x.images or {}
+        local signature=table.concat(r.snapshot.rows[1],':'); x.images=x.images or {}
         emit('PUBLICATION',{name=name,tick=event.tick,gap=x.publications[name] and r.presented_tick-x.publications[name] or 0,
           latency=r.snapshot.sealed_tick and event.tick-r.snapshot.sealed_tick or -1,revision=r.presented_revision,
           first_row_changed=x.images[name]~=signature})

@@ -89,7 +89,7 @@ function M.on_load() loaded=true end
 local function healthy(c) assert(c.status=='running',serpent.line(c.diagnostic)) end
 local function row(screen,y)
   local g=assert(monitor.resolve(registry.record(screen)));local out={}
-  for column=1,g.model.width do out[#out+1]=string.char(g.model.cells[(y-1)*g.model.width+column][1]) end
+  out[#out+1]=g.model.rows[y][1]
   return table.concat(out)
 end
 local function inventory(x,tick)

@@ -20,6 +20,10 @@
 ---In terminal mode, the draw methods, set, get, getObjects, destroy, bringToFront and moveToBack raise E_UNSUPPORTED.
 ---getMode, setMode, getSize, clear, isColor and getLimits work in both modes.
 ---Monitor synchronization groups accept only terminal-mode monitors.
+---Graphics objects use two draw layers. Sprites and lights always draw below lines, polygons, rectangles, circles, arcs and text.
+---In the upper layer, draw order follows creation, bringToFront and moveToBack.
+---In the lower layer, the engine draws overlapping sprites by position: a sprite lower on the display draws on top. bringToFront and moveToBack raise E_UNSUPPORTED for sprites and lights.
+---While a tile of the display is marked for deconstruction, the monitor content is hidden. Ids, order, properties and the terminal model stay unchanged.
 ---
 ---### Cells, palette and geometry
 ---Text uses byte/cell indexes, not Unicode.
@@ -347,6 +351,7 @@ function Monitor.setMode(mode) end
 ---Text uses only the monitor terminal font. Each byte is one 6x9 glyph times scale, with the terminal glyph repertoire and replacement rule.
 ---Rich text is never parsed; bytes such as [ and ] are literal glyphs. There is no font option.
 ---The covered rectangle is (#text*6*scale) by (9*scale) pixels, placed by alignment and vertical_alignment, then rotated around target.
+---The bounds check uses this rectangle. The engine draws text about 6 screen pixels lower than this rectangle, at every zoom.
 ---@class TC.GraphicsText: TC.GraphicsCommon
 ---@field text string Literal bytes, bounded by write_bytes. An empty string is accepted.
 ---@field target TC.GraphicsPoint Anchor point.
@@ -381,7 +386,7 @@ function Monitor.setMode(mode) end
 ---@field type 'line'|'polygon'|'rectangle'|'circle'|'arc'|'text'|'sprite'|'light' Object type. It cannot be changed.
 
 ---Graphics draw methods share these rules:
----each creates one native object in front of all others and returns its new id;
+---each creates one native object in front of all others of its draw layer and returns its new id;
 ---properties are validated completely before any change (E_ARGUMENT for shape/type, E_RANGE for domain or bounds);
 ---a payload above the per-call byte or entry allowance causes E_LIMIT;
 ---an object that would raise all monitor presentation objects above render_object_limit causes E_CAPACITY;
@@ -442,7 +447,7 @@ function Monitor.set(id, props) end
 ---@return TC.GraphicsObject|nil object Fresh copy of the type and properties, or nil.
 function Monitor.get(id) end
 
----List every object id from back to front.
+---List every object id: first the sprites and lights in creation order, then the other objects from back to front.
 ---@return TC.GraphicsObjectId[] ids Fresh dense array in draw order. Empty when there are no objects.
 function Monitor.getObjects() end
 
@@ -452,14 +457,14 @@ function Monitor.getObjects() end
 ---@param id TC.GraphicsObjectId Existing object id.
 function Monitor.destroy(id) end
 
----Move one object to the front of the draw order.
----An unknown id causes E_NOT_FOUND.
+---Move one line, polygon, rectangle, circle, arc or text object to the front of its draw layer.
+---An unknown id causes E_NOT_FOUND. A sprite or light causes E_UNSUPPORTED.
 ---The method returns zero values.
 ---@param id TC.GraphicsObjectId Existing object id.
 function Monitor.bringToFront(id) end
 
----Move one object to the back of the draw order.
----An unknown id causes E_NOT_FOUND.
+---Move one line, polygon, rectangle, circle, arc or text object to the back of its draw layer.
+---An unknown id causes E_NOT_FOUND. A sprite or light causes E_UNSUPPORTED.
 ---The method returns zero values.
 ---@param id TC.GraphicsObjectId Existing object id.
 function Monitor.moveToBack(id) end

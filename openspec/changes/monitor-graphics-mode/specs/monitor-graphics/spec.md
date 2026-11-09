@@ -74,7 +74,7 @@ Graphics mode SHALL provide line, polygon, rectangle, circle, arc, text, sprite 
 - **THEN** the call fails with `E_RANGE` or `E_ARGUMENT` respectively.
 
 ### Requirement: Terminal-font graphics text
-Graphics text SHALL use only the mod terminal font, with an exact size of `6*scale` by `9*scale` pixels per byte. Each byte SHALL appear as its own glyph, as on the terminal. Rich text SHALL NOT be parsed. Alignment, vertical alignment and orientation SHALL be included in the bounds check.
+Graphics text SHALL use only the mod terminal font, with an exact size of `6*scale` by `9*scale` pixels per byte. Each byte SHALL appear as its own glyph, as on the terminal. Rich text SHALL NOT be parsed. Alignment, vertical alignment and orientation SHALL be included in the bounds check. The bounds check SHALL use this covered rectangle; the documented engine offset (about 6 screen pixels down) is not part of it.
 
 #### Scenario: Rich-text syntax
 - **WHEN** a program draws the text `[item=iron-plate]`
@@ -100,11 +100,19 @@ Sprites SHALL accept only game icon paths of the types `item`, `fluid`, `entity`
 - **THEN** the light is accepted and its visible glow stays inside the 80×80-pixel square around its centre.
 
 ### Requirement: Graphics draw order
-Objects SHALL be drawn back to front in creation order. `bringToFront(id)` and `moveToBack(id)` SHALL move one object to the end or start of that order. `getObjects()` SHALL return all ids back to front. The order SHALL apply across all object types.
+Sprites and lights SHALL always be drawn below lines, polygons, rectangles, circles, arcs and text. The upper layer SHALL draw back to front in creation order, which `bringToFront(id)` and `moveToBack(id)` change. Overlapping sprites SHALL draw by position, and both methods SHALL fail with `E_UNSUPPORTED` for sprites and lights. `getObjects()` SHALL list sprites and lights in creation order, then the other ids back to front.
 
 #### Scenario: Overlapping shapes
-- **WHEN** a program draws a filled rectangle, then an icon sprite over it, then calls `moveToBack` on the sprite
+- **WHEN** a program draws a filled rectangle, then an icon sprite over it
 - **THEN** the rectangle hides the overlapping part of the sprite, and `getObjects()` lists the sprite first.
+
+#### Scenario: Reorder a sprite
+- **WHEN** a program calls `bringToFront` with the id of a sprite
+- **THEN** the call fails with `E_UNSUPPORTED` and the order is unchanged.
+
+#### Scenario: Reorder inside a layer
+- **WHEN** a program draws two overlapping rectangles and calls `moveToBack` on the second
+- **THEN** the first rectangle hides the overlapping part of the second, and `getObjects()` lists the second first.
 
 ### Requirement: Immediate graphics publication
 A successful graphics call SHALL change the native object during the call. All changes made in one tick SHALL become visible together. A later failure SHALL NOT undo earlier successful calls. A graphics-mode monitor SHALL NOT join a monitor synchronization group.
@@ -171,12 +179,12 @@ Merge, split, settings paste and blueprints SHALL carry the mode in the same way
 - **THEN** every monitor is in terminal mode with its content unchanged.
 
 ### Requirement: Native feedback above graphics
-Selection boxes, wires and the native deconstruction marker SHALL remain visible above graphics objects. Marking or cancelling deconstruction SHALL NOT remove graphics objects or change their ids.
+The native deconstruction marker SHALL remain visible on a marked graphics display: while any of its tiles is marked, its graphics objects SHALL be hidden. Selection boxes and wires MAY draw below graphics objects inside the content area. Marking or cancelling deconstruction SHALL NOT remove graphics objects or change their ids, properties or order.
 
 #### Scenario: Mark a busy graphics display
 - **WHEN** a player marks a graphics-mode display that shows filled shapes, text and sprites
-- **THEN** the red deconstruction marker is visible above them
-- **AND** after the mark is cancelled, `getObjects()` returns the same ids.
+- **THEN** its objects are hidden and the red deconstruction marker is visible
+- **AND** after the mark is cancelled, the objects are visible again and `getObjects()` returns the same ids.
 
 ### Requirement: Graphics display inspection
 The monitor inspector SHALL show the mode. In graphics mode it SHALL show the pixel size and the number of graphics objects instead of columns, rows and text scale. Inspection SHALL NOT change the display.

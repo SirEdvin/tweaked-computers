@@ -58,7 +58,7 @@ DESCRIPTIONS = {
     'render_latency_ticks': 'Published tick bound for presentation. This is not a measured client FPS guarantee.',
     'tiles': 'Maximum retained physical monitor tiles.',
     'aggregate_cells': 'Maximum authoritative cells across logical monitors.',
-    'render_cells_per_tick': 'Cell allowance for presentation preparation.',
+    'render_cells_per_tick': 'Row allowance per tick for presentation preparation and retirement. The name is historical.',
     'render_snapshot_cells': 'Maximum cells retained by immutable presentation snapshots.',
     'render_staging_cells': 'Maximum cells reserved for staged presentation.',
     'render_retired_cells': 'Maximum cells awaiting removal from host presentation.',

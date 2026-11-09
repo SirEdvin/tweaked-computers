@@ -142,10 +142,10 @@ function M.on_tick(event)
       assert(c.state.starts==1 and db.database.entries['stock:iron'].deadline>event.tick)
       assert(observer.state.shared_count=='5' and observer.state.private_status=='absent')
       assert(registry.record(x.private).database.entries.observer.value=='private' and db.database.entries.observer.value==observer.id)
-      local g=monitor.resolve(registry.record(x.tiles[1])); assert(#g.members==4 and g.model.cells[1][1]==73)
+      local g=monitor.resolve(registry.record(x.tiles[1])); assert(#g.members==4 and model.cell(g.model,1,1)[1]==73)
       assert(g.render and g.render.presented_revision==g.model.revision,'merged model not presented')
       assert(c.status_art.name:find('blinking',1,true))
-      log('TC_MEASURE '..serpent.line{first_factory_and_shared_observation_tick=event.tick,boot_origin=x.start,active_computers=6,display_cells=#g.model.cells})
+      log('TC_MEASURE '..serpent.line{first_factory_and_shared_observation_tick=event.tick,boot_origin=x.start,active_computers=6,display_cells=g.model.width*g.model.height})
       report('saved-factory-source-native-config-inserter-transfer-shared-and-independent-db-world-render')
       x.stock.insert{name='iron-plate',count=115}; x.phase='high'; x.since=event.tick
     end

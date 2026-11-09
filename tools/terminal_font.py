@@ -2,7 +2,7 @@
 """Generate the 6x9 terminal TTF from the glyph atlas and register it in assets/manifest.json.
 
 Byte b maps to U+E000+b, so guest bytes can never form a rich-text tag. U+E100 is a
-font-only full block for text-drawn backgrounds. Development-only: needs fontTools
+font-only full block for text-drawn backgrounds and U+E101 the one-pixel cursor bar. Development-only: needs fontTools
 (4.68) and Pillow; the build checks only the recorded hashes.
 """
 import argparse
@@ -16,7 +16,7 @@ ATLAS = 'assets/glyphs/atlas.png'
 FONT = 'assets/fonts/tc-term.ttf'
 TOOL = 'tools/terminal_font.py'
 U = 128  # font units per glyph pixel
-BLOCK = 0xE100
+BLOCK, CURSOR = 0xE100, 0xE101
 
 
 def digest(data):
@@ -53,6 +53,8 @@ def font_bytes(atlas):
         glyphs[name] = outline(lambda i, j: image.getpixel((ox + i, oy + j))[3] > 127)
     order.append('block'); cmap[BLOCK] = 'block'; metrics['block'] = (6 * U, 0)
     glyphs['block'] = outline(lambda i, j: True)
+    order.append('cursor'); cmap[CURSOR] = 'cursor'; metrics['cursor'] = (6 * U, 0)
+    glyphs['cursor'] = outline(lambda i, j: j == 8)
     builder = FontBuilder(9 * U, isTTF=True)
     builder.setupGlyphOrder(order)
     builder.setupCharacterMap(cmap)
@@ -70,7 +72,7 @@ def font_bytes(atlas):
 
 def record(font):
     return {'path': FONT, 'sha256': digest(font), 'license': 'MIT', 'notices': ['assets/notices/Tweaked-Computers-MIT.txt'],
-            'codepoints': {'bytes': [0xE000, 0xE0FF], 'full_block': BLOCK},
+            'codepoints': {'bytes': [0xE000, 0xE0FF], 'full_block': BLOCK, 'cursor': CURSOR},
             'inputs': [{'path': p, 'sha256': digest((ROOT / p).read_bytes())} for p in (ATLAS, TOOL)]}
 
 

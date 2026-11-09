@@ -102,7 +102,9 @@ function M.resolve(tile)
   end
   if state and not notification_supported(state) then errors.raise('E_UNSUPPORTED','unsupported monitor notifications; data preserved') end
   if state and state.job then errors.raise('E_NETWORK_PENDING','monitor regrouping is not yet committed') end
-  return state and state.groups[state.membership[tile.id]] or nil
+  local g=state and state.groups[state.membership[tile.id]]
+  if g and model.shape(g.model)~='rows' then errors.raise('E_UNSUPPORTED','unsupported retained monitor model; data preserved') end
+  return g
 end
 function M.inspect(tile,tick,spend)
   spend(32)
@@ -111,8 +113,7 @@ function M.inspect(tile,tick,spend)
   if type(g.id)~='string' or #g.id>limits.identifier_bytes or type(g.members)~='table'
     or not errors.integer(g.width_tiles,1,model.limits.width_tiles)
     or not errors.integer(g.height_tiles,1,model.limits.height_tiles)
-    or type(g.model)~='table' or not errors.integer(g.model.width,1,model.limits.cells)
-    or not errors.integer(g.model.height,1,model.limits.cells)
+    or model.shape(g.model)~='rows'
     or type(g.model.scale)~='number' or not errors.integer(g.model.scale*2,1,10) then
     errors.raise('E_UNSUPPORTED','monitor geometry unsupported; data preserved')
   end

@@ -10,6 +10,7 @@ local admission=require('scripts.runtime.admission')
 local limits=require('scripts.runtime.limits')
 local defs=require('scripts.device-definitions')
 local model=require('scripts.monitor-model')
+local rows=require('tests.monitor_rows')
 local snapshots=require('scripts.lifecycle-data')
 local monitor=require('scripts.services.monitor')
 local interaction=require('scripts.ui.interaction')
@@ -17,6 +18,10 @@ local editor_contract=require('tests.editor_contract')
 local renderer=require('scripts.rendering')
 local example_source=require('examples.monitor-program')
 local M={}; local loaded=false
+-- Row model and row-text front accessors (linear cell index as in the former cell table).
+local function cell(m,i) return model.cell(m,(i-1)%m.width+1,math.floor((i-1)/m.width)+1) end
+local function glyphs(text) return (string.gsub(text,'.',function(c) local b=c:byte(); return string.char(0xEE,0x80+math.floor(b/64),0x80+b%64) end)) end
+local function tag(v) return string.format('[color=%.5f',v) end
 local function nop() end
 local function f() return storage.tc09_fixture end
 local function report(s) f().groups=f().groups+1; log('TC_CONTRACT '..s) end
@@ -78,11 +83,11 @@ function M.run()
   assert(call('getCursorBlink')==false and call('isColor') and call('isColour'))
   assert(call('getTextColor')==1 and call('getBackgroundColor')==32768 and call('getTextScale')==1)
   local x,y=call('getCursorPos'); assert(x==1 and y==1)
-  call('setCursorPos',-2,1); call('write','abcdef'); assert(m.x==4 and m.cells[1][1]==100 and m.cells[3][1]==102)
+  call('setCursorPos',-2,1); call('write','abcdef'); assert(m.x==4 and cell(m,1)[1]==100 and cell(m,3)[1]==102)
   call('setCursorBlink',true); call('setTextColour',8192); assert(call('getTextColour')==8192)
   call('setBackgroundColour',2); assert(call('getBackgroundColour')==2)
   call('setTextColor',1); call('setBackgroundColor',32768); call('clear'); call('setCursorPos',1,1)
-  call('blit','[font=x]', '01234567','fedcba98'); assert(m.cells[1][1]==91 and m.cells[8][3]==8)
+  call('blit','[font=x]', '01234567','fedcba98'); assert(cell(m,1)[1]==91 and cell(m,8)[3]==8)
   atomic(m,'E_ARGUMENT',function() call('blit','abc','01','123') end)
   atomic(m,'E_ARGUMENT',function() call('blit','ab','0F','00') end)
   atomic(m,'E_RANGE',function() call('setTextColor',3) end)
@@ -92,10 +97,10 @@ function M.run()
   call('setCursorPos',9007199254740991,1)
   atomic(m,'E_RANGE',function() call('write','a') end)
   call('setCursorPos',0,0); call('write','\0\n'); assert(m.x==2)
-  call('setCursorPos',1,2); call('write','ROW2'); call('scroll',1); assert(m.cells[1][1]==82)
-  call('scroll',-1); assert(m.cells[1][1]==32 and m.cells[11][1]==82)
-  call('scroll',9007199254740991); for _,c in ipairs(m.cells) do assert(c[1]==32) end
-  call('setCursorPos',1,1); call('write','X'); call('clearLine'); assert(m.cells[1][1]==32)
+  call('setCursorPos',1,2); call('write','ROW2'); call('scroll',1); assert(cell(m,1)[1]==82)
+  call('scroll',-1); assert(cell(m,1)[1]==32 and cell(m,11)[1]==82)
+  call('scroll',9007199254740991); for y=1,m.height do assert(m.rows[y][1]==string.rep(' ',m.width)) end
+  call('setCursorPos',1,1); call('write','X'); call('clearLine'); assert(cell(m,1)[1]==32)
   call('setPaletteColor',1,0x123456); local r,g,b=call('getPaletteColour',1)
   assert(r==0x12/255 and g==0x34/255 and b==0x56/255)
   call('setPaletteColour',2,0.2,0.3,0.4); r,g,b=call('getPaletteColor',2); assert(r==0.2 and g==0.3 and b==0.4)
@@ -140,7 +145,7 @@ function M.run()
   c.status='running'; c.run_id=c.id..'/fixture'; c.active={source='function start(e) end',revision=1,api_version=1,
     compiler_version=limits.compiler_version,storage_version=limits.storage_version,handlers={start=true}}
   guest(c,"local m=peripheral.find('monitor','red'); assert(m); local w,h=m.getSize(); assert(w==20 and h==6); m.write('NATIVE'); local limits=m.getLimits(); limits.cells=0; assert(m.getLimits().cells==10584); local p=m.getPaletteColour(colors.white); assert(p>0)")
-  assert(display.model.cells[1][1]==78)
+  assert(cell(display.model,1)[1]==78)
   local before=copy(display.model)
   guest(c,"local m=peripheral.find('monitor','red'); local ok,e=pcall(m.blit,'x','F','0'); assert(not ok and e.code=='E_ARGUMENT'); ok,e=pcall(m.setCursorPos,{},1); assert(not ok and e.code=='E_ARGUMENT'); local size=m.getLimits(); size.cells=1; assert(m.getLimits().cells==10584); assert(type(m.getPaletteColor(colors.white))=='number')")
   assert(value_equal(before,display.model))
@@ -165,8 +170,8 @@ function M.run()
   display=group(b0); model.calls.setCursorPos(display.model,nop,1,1)
   model.calls.setPaletteColor(display.model,nop,1,0xABCDEF); model.calls.write(display.model,nop,'PALETTE')
   renderer.participate(display); renderer.tick(game.tick,nop); assert(display.render.presented_revision==display.model.revision)
-  local object=display.render.cells[1].glyph; assert(object and object.valid and object.sprite=='tc-glyph-80')
-  assert(math.abs(object.color.r-0xAB/255)<0.01)
+  local object=display.render.rows[1].glyph; assert(object and object.valid and object.text:find(glyphs('PALETTE'),1,true))
+  assert(object.text:find(tag(0xAB/255),1,true),'palette colour missing from the row tag')
   model.calls.write(display.model,nop,'LATEST'); renderer.participate(display); renderer.tick(game.tick,nop)
   assert(display.render.presented_revision==display.model.revision)
   local root=registry.get(); root.scheduler.maintenance_tick=game.tick; root.scheduler.maintenance_spent=limits.maintenance_work_per_tick-60000
@@ -176,10 +181,10 @@ function M.run()
   assert(display.render.presented_revision==display.model.revision)
   root.scheduler.maintenance_spent=0 -- Isolated fixture, not a production clock reset.
   b0.powered=false; registry.monitor_changed(b0,false); monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
-  assert(not display.render.hidden and object.visible and display.model.cells[1][1]==80)
+  assert(not display.render.hidden and object.visible and cell(display.model,1)[1]==80)
   guest(c,"local m=peripheral.find('monitor','red'); assert(peripheral.describe(peripheral.getName(m),'red').powered); m.write('NOPOWER')")
   b0.powered=true; registry.monitor_changed(b0,false); monitor.reconcile(game.tick,nop); renderer.tick(game.tick,nop)
-  assert(not display.render.hidden and object.visible and display.model.cells[1][1]==80)
+  assert(not display.render.hidden and object.visible and cell(display.model,1)[1]==80)
   local retained_model=display.model
   b0.physical_error='fixture-owned-port-fault'
   registry.monitor_changed(b0,false)
@@ -194,7 +199,7 @@ function M.run()
   snapshots.apply_settings(b0,pasted)
   assert(display.model.damage_full,'settings paste failed to invalidate unchanged cells')
   renderer.tick(game.tick,nop)
-  assert(math.abs(display.render.cells[1].glyph.color.r-0.2)<0.01,'pasted palette did not reach unchanged native glyph')
+  assert(display.render.rows[1].glyph.text:find(tag(0.2),1,true),'pasted palette did not reach unchanged native glyph')
   report('settings-paste-palette-invalidates-sparse-native-front')
   local previous_active,previous_subscriptions=c.active,c.subscriptions
   local ctx=admission.context(admission.new(),c.id,0)
@@ -202,7 +207,7 @@ function M.run()
   c.active={source=example_source,revision=1,api_version=1,compiler_version=limits.compiler_version,
     storage_version=limits.storage_version,handlers=plan.handlers}; c.subscriptions={}
   local ok,diagnostic=compiler.run(plan,'start',{name='start'},function(g) return runtime.services(c,game.tick,g) end,ctx)
-  assert(ok,serpent.line(diagnostic)); assert(display.model.cells[1][1]==82 and display.model.fg==5)
+  assert(ok,serpent.line(diagnostic)); assert(cell(display.model,1)[1]==82 and display.model.fg==5)
   for id in pairs(c.subscriptions) do runtime.unsubscribe(c,id,nop) end
   c.active=previous_active; c.subscriptions=previous_subscriptions
   -- Authentic event subscriptions, physical red/green proofs and mocked headless
@@ -279,18 +284,48 @@ function M.run()
     local bytes={}; for byte=row*64,row*64+63 do bytes[#bytes+1]=string.char(byte) end
     model.calls.setCursorPos(maxg.model,nop,1,row+1); model.calls.write(maxg.model,nop,table.concat(bytes))
   end
-  renderer.participate(maxg); renderer.tick(game.tick,nop); assert(not maxg.render or maxg.render.presented_revision~=maxg.model.revision)
+  renderer.participate(maxg); renderer.tick(game.tick,nop)
+  -- Rows prepare a maximum grid in one tick; a front that claims the revision must show it exactly.
+  assert(not maxg.render or maxg.render.presented_revision~=maxg.model.revision
+    or rows.verify(maxg.render) and maxg.render.snapshot.rows[4]==maxg.model.rows[4])
   model.calls.setPaletteColor(maxg.model,nop,1,0x112233)
   renderer.participate(maxg)
   local count=0
   repeat count=count+1; renderer.tick(game.tick,nop) until maxg.render and maxg.render.presented_revision==maxg.model.revision or count>30
   assert(count<=30)
-  for byte=0,255 do
-    local i=math.floor(byte/64)*maxg.model.width+byte%64+1; local cell=maxg.render.cells[i]
-    assert(cell.value[1]==byte)
-    if byte~=32 then assert(cell.glyph.valid and cell.glyph.sprite=='tc-glyph-'..byte) end
+  for row=0,3 do
+    local bytes={}; for byte=row*64,row*64+63 do bytes[#bytes+1]=string.char(byte) end
+    local o=maxg.render.rows[row+1]; assert(o.glyph.valid and o.glyph.text:find(glyphs(table.concat(bytes)),1,true))
+    for byte=row*64,row*64+63 do assert(cell(maxg.model,row*maxg.model.width+byte%64+1)[1]==byte) end
   end
-  local retired_object=maxg.render.cells[1].background
+  -- Guest rich-text syntax stays literal glyph cells: only host [color] tags reach the parser.
+  local injection='[color=red]x[/color][img=item/iron-plate]'
+  model.calls.setCursorPos(maxg.model,nop,1,5); model.calls.write(maxg.model,nop,injection)
+  -- A three-run chart on every other row of the 126x84 grid (spec: Maximum grid with few colour runs).
+  local third=maxg.model.width/3
+  for y=6,maxg.model.height do
+    model.calls.setCursorPos(maxg.model,nop,1,y)
+    model.calls.blit(maxg.model,nop,string.rep(string.char(128+y%32),maxg.model.width),
+      string.rep('0',third)..string.rep('5',third)..string.rep('e',third),string.rep('f',third)..string.rep('7',third)..string.rep('b',third))
+  end
+  renderer.participate(maxg); count=0
+  repeat count=count+1; renderer.tick(game.tick,nop) until maxg.render.presented_revision==maxg.model.revision or count>30
+  rows.verify(maxg.render)
+  local o=maxg.render.rows[5].glyph
+  assert(o.text:find(glyphs(injection),1,true) and not o.text:find('[img',1,true) and not o.text:find('[color=red',1,true),'guest bytes reached the rich-text parser')
+  local _,tags=o.text:gsub('%[color=',''); assert(tags==1,'injection created a colour run')
+  local objects=rows.count(maxg.render)
+  assert(objects<=2*maxg.model.height+2,'row presentation object count grew with cells or runs: '..objects)
+  log('TC_ROW_TEXT_OK injection-literal objects='..objects..' grid='..maxg.model.width..'x'..maxg.model.height)
+  -- An unknown retained model shape fails closed and keeps its data and front.
+  local kept,front=maxg.model.rows,maxg.render; maxg.model.rows=nil
+  local ok,e=pcall(monitor.resolve,maximum[1]); assert(not ok and e.code=='E_UNSUPPORTED')
+  renderer.participate(maxg); renderer.tick(game.tick,nop)
+  local lane=registry.get().monitors.presentation.lanes[maxg.id]
+  assert(lane.diagnostic and lane.diagnostic.code=='E_UNSUPPORTED' and maxg.render==front and not maxg.model.rows)
+  maxg.model.rows=kept; renderer.changed(maxg)
+  log('TC_ROW_SHAPE_FAIL_CLOSED_OK')
+  local retired_object=maxg.render.rows[1].bg
   for _,r0 in ipairs(maximum) do lifecycle.remove(r0.id,'fixture',true) end; settle()
   assert(not retired_object.valid)
   report('maximum-rectangle-byte-atlas-and-no-falsely-current-mixed-sweep')
@@ -305,7 +340,7 @@ function M.run()
 end
 local function snapshot()
   local r=registry.get(); local c=registry.computer(f().c); local g=r.monitors.groups[f().display]
-  return {model=g.model,render=g.render,revision=g.model.revision,cells=copy(g.model.cells),palette=copy(g.model.palette),
+  return {model=g.model,render=g.render,revision=g.model.revision,rows=copy(g.model.rows),palette=copy(g.model.palette),
     id=g.id,anchor=g.anchor,body=g.body.unit_number,boots=c.state.boots,run_id=c.run_id,
     total=r.ledger.total,tick=r.ledger.tick,machine=r.ledger.machines[c.id],work=r.ledger.machines[c.id].work,
     maintenance=r.scheduler.maintenance_spent,sequence=r.next_sequence,source=c.active.source,
@@ -318,10 +353,10 @@ local function unchanged()
     'recipients','resize_order','resize_job','resize_cursor','resize_count'}) do
     assert(a[k]==b[k],'cold load changed '..k)
   end
-  assert(value_equal(a.cells,b.cells) and value_equal(a.palette,b.palette))
+  assert(value_equal(a.rows,b.rows) and value_equal(a.palette,b.palette))
   local r=b.render
   assert(r.presented_revision==a.presented_revision and r.sweep_revision==a.sweep_revision and r.sweep_cursor==a.sweep_cursor)
-  assert(b.model.cells[1][1]==67 and b.model.scale==2)
+  assert(cell(b.model,1)[1]==67 and b.model.scale==2)
 end
 function M.on_load()
   loaded=true
@@ -363,12 +398,12 @@ function M.on_tick(event)
     fixture.snapshot.sweep_cursor=g.render.sweep_cursor
     game.server_save('tc03-snapshot'); log('TC_COLD_SNAPSHOT_REQUESTED')
   elseif fixture.phase=='resuming' and c.state.checked and g.render.presented_revision==g.model.revision then
-    assert(c.state.boots==1 and g.id==fixture.snapshot.id and g.model.cells[1][1]==67)
+    assert(c.state.boots==1 and g.id==fixture.snapshot.id and cell(g.model,1)[1]==67)
     if not c.state.resize then return end
     assert(c.state.resize_count==fixture.snapshot.resize_count+1,'cold resize was lost or replayed')
     assert(not next(registry.get().monitors.resizes) and #registry.get().monitors.resize_order==0)
     log('TC_MONITOR_NOTIFICATIONS_COLD_OK exact-membership-pending-cursor-coalesced-once')
-    assert(g.model.cells[g.model.width+1][1]==82); fixture.phase='done'; log('TC_COLD_OK')
+    assert(cell(g.model,g.model.width+1)[1]==82); fixture.phase='done'; log('TC_COLD_OK')
   end
 end
 return M

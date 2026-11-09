@@ -46,11 +46,11 @@ Each published image SHALL contain cells, palette, cursor, scale and geometry fr
 ## ADDED Requirements
 
 ### Requirement: Row text presentation
-A visible terminal row SHALL be drawn with at most one native glyph-text object and its background objects. The glyph object SHALL use the mod's 6×9 terminal font, with each guest byte mapped to its own private-use code point. Unchanged rows SHALL keep their objects without native writes. Object count SHALL grow with rows and colour runs, not with cells.
+A visible terminal row SHALL be drawn with at most one native glyph-text object and one native background-text object. The glyph object SHALL use the mod's 6×9 terminal font, with each guest byte mapped to its own private-use code point. Unchanged rows SHALL keep their objects without native writes. Object count SHALL grow with rows, not with cells or colour runs.
 
 #### Scenario: Maximum grid with few colour runs
 - **WHEN** a 6×6 display at scale 0.5 shows a 126×84 chart whose rows each hold three or fewer foreground and background runs
-- **THEN** its visible front holds at most 84 glyph-text objects, its background objects, one panel and one cursor
+- **THEN** its visible front holds at most 84 glyph-text objects, 84 background-text objects, one panel and one cursor
 - **AND** the cell content, colours and cursor match the model exactly.
 
 #### Scenario: One cell changes
@@ -59,16 +59,17 @@ A visible terminal row SHALL be drawn with at most one native glyph-text object 
 - **AND** every other row keeps its objects and makes no native call.
 
 ### Requirement: Pixel-faithful row text
-Row text SHALL reproduce the existing 6×9 glyph pixels at every supported text scale and cardinal orientation. Glyphs and their backgrounds SHALL stay aligned with each other at every zoom level. Native selection, wire, deconstruction and cursor feedback SHALL remain visible above monitor content.
+Row text SHALL reproduce the existing 6×9 glyph pixels at every supported text scale and cardinal orientation. Glyphs and their backgrounds SHALL stay aligned with each other at every zoom level. The native deconstruction marker SHALL remain visible on a marked display. Selection boxes and wires MAY draw below row text inside the content area.
 
 #### Scenario: Compare with the sprite presentation
 - **WHEN** the same model is captured with the full client at zoom 0.5, 1, 2 and 4, in base and Space Age, in all four orientations
 - **THEN** glyph and background pixels align with each other within one screen pixel at every zoom
-- **AND** the image differs from the previous sprite presentation by at most one screen pixel of offset; otherwise the background is also drawn as text so both layers share one offset, and the remaining offset against the bezel is measured per zoom and documented.
+- **AND** the background is drawn as text so both layers share the engine's text offset, and the remaining offset against the bezel (about 6 screen pixels down at every zoom) is documented.
 
 #### Scenario: Mark a row-text display for deconstruction
-- **WHEN** the player hovers, wires or marks a populated row-text monitor
-- **THEN** the selection box, wires and native red deconstruction marker remain drawn above the monitor text.
+- **WHEN** the player marks a populated row-text monitor for deconstruction
+- **THEN** its row text is hidden while any of its tiles is marked, and the native red deconstruction marker is visible
+- **AND** cancelling the mark shows the same content again without guest code, and the model and its revision are unchanged.
 
 #### Scenario: Non-English locale
 - **WHEN** the client locale is `ru`, `ja` or `zh-CN`

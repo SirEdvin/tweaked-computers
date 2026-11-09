@@ -15,7 +15,9 @@ from smoke import cold_phase
 ROOT = Path(__file__).resolve().parents[1]
 LEGACY_SHA256 = '11d2bd0c1f5eb6c52bff3755f6ff66e3b1a235a2959e58e71d11774e485b0d08'
 BASELINES = {'0.1.4': ('2.0.77', LEGACY_SHA256),
-             '0.1.16': ('2.1.23', 'f7941bfcb8380222060112f1c8120d29efaf271085bb164cc96cc513340bd23d')}
+             '0.1.16': ('2.1.23', 'f7941bfcb8380222060112f1c8120d29efaf271085bb164cc96cc513340bd23d'),
+             # Published alpha-0.1.21 asset (SHA256SUMS): per-cell sprite fronts before row text.
+             '0.1.21': ('2.1.23', 'e29190ac6d134156bbafd46c4f49e8800f30092d7f02d0ce14cfae4979cdb0cd')}
 
 
 def digest(path):

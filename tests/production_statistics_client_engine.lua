@@ -157,7 +157,7 @@ function M.on_tick(event)
       and game.get_player(1).opened_gui_type==defines.gui_type.production then
       local display=registry.record(x.dashboard)
       assert(display.status=='running' and display.state.statistics_monitor,serpent.line(display.diagnostic))
-      local group=assert(monitor.resolve(registry.record(x.screen))); assert(group.model.cells[1][1]==string.byte('I'))
+      local group=assert(monitor.resolve(registry.record(x.screen))); assert(group.model.rows[1][1]:byte(1)==string.byte('I'))
       log('TC_STAT_CLIENT_MAINTAINED_DASHBOARD_OK')
       game.take_screenshot{surface=game.surfaces[1],position={3.5,-3.5},resolution={640,480},zoom=4,
         show_gui=false,show_entity_info=false,force_render=true,path='stat-dashboard.png'}

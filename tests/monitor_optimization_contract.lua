@@ -50,32 +50,33 @@ function M.run()
 
   local m=model.new(6,6); model.scale(m,6,6,nop,2)
   local blank=model.capture(m,nop); model.acknowledge(m,blank)
-  local cells=m.cells
+  local rows=m.rows
+  local function at(root,x) return model.cell({rows=root},x,1)[1] end
   local work=0; local function charge(n) work=work+n end
   model.calls.blit(m,charge,string.rep(' ',m.width),string.rep('0',m.width),string.rep('f',m.width))
   assert(work==m.width*12+3,'identical row paid for an unnecessary root copy')
-  assert(m.cells==cells and m.cells_shared and m.damage_count==0,'identical blit copied the flat cell root')
+  assert(m.rows==rows and m.rows_shared and m.damage_count==0,'identical blit copied the row root')
   model.calls.setCursorPos(m,nop,1,1); work=0; model.calls.clearLine(m,charge)
   assert(work==m.width*7+2,'identical clearLine paid for an unnecessary root copy')
-  assert(m.cells==cells and m.damage_count==0,'identical clearLine copied the flat cell root')
+  assert(m.rows==rows and m.damage_count==0,'identical clearLine copied the row root')
   local refused={}
   local function reject_copy() return function(n) if n==m.width*m.height then error(refused,0) end end end
   local revision=m.revision
   local ok,problem=pcall(model.calls.write,m,reject_copy(),string.rep(' ',m.width-1)..'X')
   assert(not ok and problem==refused,'copy reservation was not refused')
-  assert(m.cells==cells and m.cells_shared and m.damage_count==0 and m.revision==revision and m.x==1)
-  assert(cells[m.width][1]==32,'refused copy changed the frozen image')
+  assert(m.rows==rows and m.rows_shared and m.damage_count==0 and m.revision==revision and m.x==1)
+  assert(at(rows,m.width)==32,'refused copy changed the frozen image')
   model.calls.setCursorPos(m,nop,m.width,1); model.calls.write(m,nop,'X')
-  assert(m.cells~=cells and cells[m.width][1]==32 and m.cells[m.width][1]==88)
-  assert(m.damage_count==1 and m.damage[m.width])
+  assert(m.rows~=rows and at(rows,m.width)==32 and at(m.rows,m.width)==88)
+  assert(m.damage_count==1 and m.damage[1])
   local frozen=model.capture(m,nop)
-  model.calls.setCursorPos(m,nop,1,1); revision=m.revision; cells=m.cells
+  model.calls.setCursorPos(m,nop,1,1); revision=m.revision; rows=m.rows
   ok,problem=pcall(model.calls.clearLine,m,reject_copy())
   assert(not ok and problem==refused)
-  assert(m.cells==cells and m.cells_shared and m.damage_count==1 and m.revision==revision and m.x==1)
-  assert(cells[m.width][1]==88,'refused clearLine changed the frozen image')
+  assert(m.rows==rows and m.rows_shared and m.damage_count==1 and m.revision==revision and m.x==1)
+  assert(at(rows,m.width)==88,'refused clearLine changed the frozen image')
   model.calls.clearLine(m,nop)
-  assert(frozen.cells[m.width][1]==88 and m.cells[m.width][1]==32)
+  assert(at(frozen.rows,m.width)==88 and at(m.rows,m.width)==32)
   log('TC_MODEL_NOOP_OK lazy-copy immutable-first-change refused-copy-atomic')
 end
 return M

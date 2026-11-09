@@ -378,7 +378,7 @@ function M.run()
   model.scale(g.model,1,1,nop,2); model.calls.setPaletteColor(g.model,nop,1,0x123456)
   local mi=mine(m); local m2=replace(mi,m.position.x,m.position.y); mi.destroy(); f().monitor=m2.id
   monitor.reconcile(game.tick,nop); local fresh=assert(monitor.resolve(m2))
-  assert(fresh.id~=g.id and fresh.model.scale==2 and fresh.model.cells[1][1]==32 and fresh.model.palette[1][1]==0x12/255)
+  assert(fresh.id~=g.id and fresh.model.scale==2 and model.cell(fresh.model,1,1)[1]==32 and fresh.model.palette[1][1]==0x12/255)
   f().monitor_group=fresh.id; model.calls.write(fresh.model,nop,'COLD')
   group('monitor-mining-preserves-settings-not-obsolete-buffer-or-logical-identity')
   local db=registry.record(f().kv)
@@ -432,7 +432,7 @@ local function cold_check()
   assert(r.saved_source==saved.saved_source and r.active.source==x.expected_active and r.state_bytes==65536 and r.body.unit_number==saved.unit)
   assert(root.ledger.tick==saved.tick and root.ledger.total==saved.total and root.scheduler.maintenance_spent==saved.maintenance)
   local db=registry.record(x.kv); assert(db.database==x.database_alias and db.database.entries.secret.deadline==x.deadline)
-  local g=monitor.resolve(registry.record(x.monitor)); assert(g.id==x.monitor_group and g.model==x.monitor_alias and g.model.cells[1][1]==67)
+  local g=monitor.resolve(registry.record(x.monitor)); assert(g.id==x.monitor_group and g.model==x.monitor_alias and model.cell(g.model,1,1)[1]==67)
   assert(root.player_drafts[1].documents[x.original_id].source=='unsaved recoverable draft')
 end
 function M.on_load() loaded=true; if f().phase=='frozen' then cold_check(); log('TC_COLD_ON_LOAD_UNCHANGED') end end

@@ -39,22 +39,22 @@ For each changed row, the presenter walks the foreground runs with `string.find(
 
 Alternative: one plain text object per (row, colour). Rejected: the spike measured 7.3 ms/frame against 5.3 at 126×84, and that variant needs more objects.
 
-### D3. Backgrounds as reused filled rectangles, with a text fallback
-Each background run is a `draw_rectangle{filled=true}`. A changed row reuses its rectangles in order: it sets `left_top`, `right_bottom` and `color` in place, then creates or destroys only the difference in run count.
+### D3. Backgrounds as text in a font-only block glyph (selected by gate D6)
+Each row has a second rich-text object, drawn before its glyph object. It holds one `[color=...]` run of U+E100 full-block glyphs per run of equal background colour. Both objects share the engine's text offset, so glyphs and backgrounds stay aligned at every zoom. A row therefore has at most two native objects, whatever its run count. Changed rows set the `.text` of both objects in place.
 
-The fallback depends on gate D6. If the text offset cannot be removed, backgrounds become a second rich-text object per row. It uses a full-block glyph that only the font contains, at code point U+E100 (the atlas has no full block: byte 159 lights five of six mosaic cells). Then both layers share the engine's text offset. With the fallback, the object count is two per row whatever the run count.
+Gate D6 rejected filled rectangles: text sits a constant ~6 screen pixels below its target at every zoom, so a rectangle and its glyphs cannot stay aligned within one screen pixel (the atlas has no full block: byte 159 lights five of six mosaic cells, so U+E100 is a font-only glyph).
 
 ### D4. Prepare builds data, commit applies it
 - Preparation produces, for each damaged row, `{y, text_string, runs}`. It is plain Lua data, charged as work and saved with the job, and it creates no native objects.
 - Commit prepays the bounded number of native writes, using the existing `render_commit_objects` and `render_commit_work` ceilings. In one tick it then sets texts, updates rectangles, creates missing row objects and destroys surplus ones.
 - A frame that is deferred, refused or cancelled therefore has nothing to retire. Old-format fronts still go through the existing bounded retirement queue.
 
-Alternative: keep hidden staging objects. Rejected, because they double the object churn and the retirement work. With rows, a full frame is at most `height × (1 + runs)` objects, which fits the existing commit ceilings. The worst case is a 126-run checkerboard, about 10.7k rectangles. That is below today's up to about 21k visibility writes per full-frame swap.
+Alternative: keep hidden staging objects. Rejected, because they double the object churn and the retirement work. With rows, a full frame is at most `2 × height` text objects, which fits the existing commit ceilings. That is far below today's up to about 21k visibility writes per full-frame swap.
 
-The existing cell-denominated admission (`render_staging_cells`, `aggregate_cells`, `render_snapshot_cells`) is kept unchanged, as safety envelopes counted in cells. Only the loop unit becomes rows.
+The existing cell-denominated admission (`render_staging_cells`, `aggregate_cells`, `render_snapshot_cells`) is kept unchanged, as safety envelopes counted in cells. Only the loop unit becomes rows. `render_cells_per_tick` keeps its name and value but now counts the loop unit: rows prepared and retired per tick. A row is prepared with native string operations, so a cell quota would cut the four-wall chart cadence; its generated description is updated.
 
 ### D5. Font asset and geometry
-`tools/terminal_font.py` generates `assets/fonts/tc-term.ttf` from `assets/glyphs/atlas.png`. It uses fontTools, a development-only dependency. The generated TTF is committed.
+`tools/terminal_font.py` generates `assets/fonts/tc-term.ttf` from `assets/glyphs/atlas.png`, plus the font-only full block U+E100 and cursor bar U+E101. It uses fontTools, a development-only dependency. The generated TTF is committed.
 - 128 units per pixel, em = 9 px, advance = 6 px;
 - one contour for each horizontal pixel run.
 
@@ -64,7 +64,7 @@ The font is registered in `assets/manifest.json` as a derived output of the atla
 - target = the row's top-left in world coordinates through `model.world`;
 - `orientation = direction/16`, as glyph sprites use today.
 
-The panel and the cursor stay fill sprites with their current render layers.
+The panel stays a fill sprite at its current render layer. The cursor becomes a text object with the font-only bar glyph U+E101 in the foreground colour: every sprite layer draws below text (graphics gate), and text shares the engine's offset.
 
 ### D6. Spike gate before presenter work
 A full-client capture (base and Space Age, zoom 0.5/1/2/4, all four directions) compares row text with the current sprites. It covers:
@@ -76,6 +76,15 @@ If no combination stays within one screen pixel at every zoom, D3's text fallbac
 - that text draws below the selection box, wires and the deconstruction marker;
 - how cloud shadows affect text compared with sprites;
 - loading in the `ja` and `zh-CN` locales.
+
+Result (2026-11-09, base and Space Age, `/home/siredvin/artifacts/tweaked-computers/row-text-gate-d6-2026-11-09/`):
+- Text is drawn ~6 screen pixels below its target at zoom 1, 2 and 4, in every direction. Vertical alignment middle/baseline/bottom and font sizes 18/36/72 do not remove it (size changes the offset to 4/6/12 px). The text-background fallback (D3) is selected; the whole content then sits ~6 screen pixels low against the bezel.
+- Text draws above the selection box, the deconstruction marker and wires. D8 hides the content of a marked display; the selection box and wires stay below monitor content (approved spec change).
+- Cloud shadows do not dim text; sprites are dimmed. Known appearance difference.
+- The font loads in `ru`, `ja` and `zh-CN` with pixels identical to `en`.
+
+### D8. Hide content while marked for deconstruction
+While any member tile of a display is marked for deconstruction, the row text objects of its front are set `visible=false`. Cancelling the last mark restores them. The panel is a sprite below native feedback and stays visible; the cursor is text and is hidden with the rows. The flag is presentation state only: the model, ids, damage and publication are unchanged, and a frame published while marked stays hidden until the mark is cancelled.
 
 ### D7. Upgrade
 The existing synchronized enrolment step in `monitor-presentation.lua` is extended:
