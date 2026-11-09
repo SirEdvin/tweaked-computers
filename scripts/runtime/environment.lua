@@ -11,13 +11,16 @@ for i,name in ipairs({'white','orange','magenta','lightBlue','yellow','lime','pi
 colors.grey=colors.gray; colors.lightGrey=colors.lightGray
 
 -- All exits restore the caller's string scope, including nested host entry.
+-- Varargs pass results through without packing them into a table.
+local function leave(previous,ok,...)
+  string_meta.__index=previous
+  if not ok then error((...),0) end
+  return ...
+end
 local function scoped(index,handler,fn,...)
   local previous=string_meta.__index
   string_meta.__index=index
-  local result=table.pack(xpcall(fn,handler,...))
-  string_meta.__index=previous
-  if not result[1] then error(result[2],0) end
-  return table.unpack(result,2,result.n)
+  return leave(previous,xpcall(fn,handler,...))
 end
 
 
@@ -30,7 +33,7 @@ function M.new(context,services,shell)
   local protected,labels=setmetatable({},{__mode='k'}),setmetatable({},{__mode='k'})
   local bindings,host_errors={},{}
   local handle_arguments,stable_services,input_rules={},{},{}
-  local service_frames={}
+  local service_frames,frame_pool={},{}
   local restore_binding,output,output_flush,guest_index
   local exports,constructing
   local poison,closed,line=nil,false,1
@@ -74,7 +77,7 @@ function M.new(context,services,shell)
   end
   function E.stop_requested() return poison=='stopped' end
   function E.spend(n)
-    E.check()
+    if poison or closed then E.check() end -- raises; inlined for the per-charge hot path
     if not reserve_work(n or 1) then fatal() end
   end
   function E.replay_work(charges)
@@ -149,6 +152,19 @@ function M.new(context,services,shell)
     seen[value]=nil
     return result
   end
+  -- copy() of one scalar: one node at depth 0, so only these checks can fail.
+  assert(limits.data_nodes>=1 and limits.data_depth>=0)
+  local function snapshot_scalar(value)
+    if value==nil then return end
+    E.spend(1)
+    local kind=type(value); local bytes
+    if kind=='number' then
+      if not errors.finite(value) then fail('Data number must be finite') end
+      bytes=8
+    elseif kind=='boolean' then bytes=1
+    else string_value(value); E.spend(#value); bytes=#value end
+    if bytes>limits.peripheral_call_bytes then fail('Data snapshot byte limit exceeded','E_LIMIT') end
+  end
   function E.snapshot(value)
     if value==nil then return nil end
     local stats={nodes=0,bytes=0}
@@ -163,6 +179,16 @@ function M.new(context,services,shell)
     protected[proxy]=true
     for _,value in pairs(entries) do if type(value)=='function' then labels[value]=label or 'API function' end end
     return proxy
+  end
+  -- Same charge and protection as namespace, but each entry is built on first
+  -- use: make(key) returns the function or nil. pairs/rawget see no entries either way.
+  function E.lazy_namespace(make,label)
+    local entries=setmetatable({},{__index=function(t,key)
+      local value=make(key)
+      if value~=nil then labels[value]=label or 'API function'; rawset(t,key,value) end
+      return value
+    end})
+    return E.namespace(entries,label)
   end
   -- A flushing sink buffers program output and admits bytes plus entry with one charge.
   function E.bind_output(fn,flush) assert(not output and type(fn)=='function'); output,output_flush=fn,flush end
@@ -181,10 +207,50 @@ function M.new(context,services,shell)
     return value
   end
   function E.service(fn,native_input,stable)
+    -- Result checks for the scalar path; any other result falls back to a packed copy.
+    local function results(frame,ok,...)
+      service_frames[#service_frames]=nil
+      local detached=frame.detached; frame.detached=nil
+      E.check()
+      if not ok then error((...),0) end
+      local n=select('#',...)
+      for i=1,n do
+        local value=select(i,...); local kind=type(value)
+        if kind=='string' then string_value(value)
+        elseif kind=='number' then if not errors.finite(value) then fail('Data number must be finite') end
+        elseif kind~='nil' and kind~='boolean' and not protected[value] and value~=detached then
+          local result=table.pack(...)
+          for j=i,n do
+            value=result[j]; kind=type(value)
+            if kind=='string' then string_value(value)
+            elseif kind=='number' then if not errors.finite(value) then fail('Data number must be finite') end
+            elseif kind~='nil' and kind~='boolean' and not protected[value] and value~=detached then result[j]=E.snapshot(value) end
+          end
+          return table.unpack(result,1,n)
+        end
+      end
+      return ...
+    end
     -- One body per service, not a fresh closure per call.
     local function body(...)
         E.spend(1)
         if E.invalidate_authority and not (stable or stable_services[fn]) then E.invalidate_authority() end
+        -- Scalar arguments need no copy: charge and check them exactly like a
+        -- snapshot, then call without packing.
+        local n=select('#',...); local simple=true
+        for i=1,n do
+          local kind=type((select(i,...)))
+          if kind~='nil' and kind~='boolean' and kind~='number' and kind~='string' then simple=false; break end
+        end
+        if simple then
+          if not (native_input or input_rules[fn] and input_rules[fn](...)) then
+            for i=1,n do snapshot_scalar((select(i,...))) end
+          end
+          local depth=#service_frames+1
+          local frame=frame_pool[depth]; if not frame then frame={}; frame_pool[depth]=frame end
+          service_frames[depth]=frame
+          return results(frame,pcall(fn,...))
+        end
         local args=table.pack(...)
         local direct=native_input or input_rules[fn] and input_rules[fn](...)
         for i=1,args.n do

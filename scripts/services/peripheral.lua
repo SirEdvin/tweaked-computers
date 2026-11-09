@@ -168,12 +168,18 @@ function M.services(computer,tick,guard,execution)
   end
   local function facade(rec,wire)
     local name,generation=rec.id,rec.generation; local methods={}
-    for method in pairs(bindings[rec.kind].methods) do
-      local key=method
-      methods[key]=guard.service(function(...) return invoke(name,wire,generation,key,...) end,rec.kind=='logic',true)
-
+    local kind_methods,native=bindings[rec.kind].methods,rec.kind=='logic'
+    local function make(key)
+      if type(key)~='string' or not kind_methods[key] then return nil end
+      return guard.service(function(...) return invoke(name,wire,generation,key,...) end,native,true)
     end
-    local proxy=guard.namespace(methods,'peripheral method')
+    local proxy
+    -- Programs use few of a peripheral's methods per callback; build each on first use.
+    if guard.lazy_namespace and not guard.shell_enabled then proxy=guard.lazy_namespace(make,'peripheral method')
+    else
+      for method in pairs(kind_methods) do methods[method]=make(method) end
+      proxy=guard.namespace(methods,'peripheral method')
+    end
     if guard.shell_enabled then
       for key,fn in pairs(methods) do
         guard.spend(#name+#key+64)

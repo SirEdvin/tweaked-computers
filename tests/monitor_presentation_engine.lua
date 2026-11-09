@@ -186,7 +186,7 @@ local function audit(s)
  for _,lane in pairs(p.lanes) do if lane.pending then pending=pending+lane.pending.slots end end
  assert(staged==p.staging_cells and retired==p.retired_cells and pending==p.pending_cells and #p.jobs<=256)
  for _,job in ipairs(p.jobs) do if not job.cancelled and not job.complete then for _,r in ipairs(job.frames) do if r then
-  for i,cell in ipairs(r.cells) do if cell and not r.reused[i] then
+  for i,cell in ipairs(r.cells) do local reused=r.reused[i]; if reused==nil then reused=r.reused_all end; if cell and not reused then
    assert(cell.background.valid and cell.background.visible==not not cell.shared_background)
    if cell.glyph then assert(cell.glyph.valid and cell.glyph.visible==not not cell.shared_glyph) end
   end end
