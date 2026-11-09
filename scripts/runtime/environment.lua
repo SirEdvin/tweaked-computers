@@ -181,9 +181,8 @@ function M.new(context,services,shell)
     return value
   end
   function E.service(fn,native_input,stable)
-    return function(...)
-      E.check()
-      return scoped(host_index,host_failure,function(...)
+    -- One body per service, not a fresh closure per call.
+    local function body(...)
         E.spend(1)
         if E.invalidate_authority and not (stable or stable_services[fn]) then E.invalidate_authority() end
         local args=table.pack(...)
@@ -209,7 +208,10 @@ function M.new(context,services,shell)
           end
         end
         return table.unpack(result,2,result.n)
-      end,...)
+    end
+    return function(...)
+      E.check()
+      return scoped(host_index,host_failure,body,...)
     end
   end
   local function safe_error(problem,allow_handle)

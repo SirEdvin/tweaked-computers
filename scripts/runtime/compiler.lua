@@ -11,7 +11,9 @@ local M = {}
 -- Host-only, bounded, exact-source validation cache. No caller-owned plan or
 -- executable closure is trusted. Replay every original charge, in order, so
 -- warm/cold peers retain identical admission and partial-refusal behavior.
-local cache,order={},{}
+-- Keyed by mode, then by the source string itself: building a mode-prefixed copy of
+-- a multi-kilobyte source on every dispatch only creates garbage.
+local cache,order={program={},shell={}},{}
 local function plan_copy(p)
   local names={}; for k,v in pairs(p.handlers) do names[k]=v end
   return {compiler_version=p.compiler_version,api_version=p.api_version,source=p.source,
@@ -194,8 +196,8 @@ function M.compile(source, context, mode)
   if mode~=nil and mode~='shell' then return nil,errors.new('E_ARGUMENT','unknown compiler mode') end
   if type(source) ~= 'string' then return nil, errors.new('E_ARGUMENT','source must be a string') end
   if #source > limits.source_bytes then return nil, errors.new('E_LIMIT','source byte limit exceeded') end
-  local cache_key=(mode or 'program')..'\0'..source
-  local retained=cache[cache_key]; local charges=not retained and {} or nil
+  local entries=cache[mode or 'program']
+  local retained=entries[source]; local charges=not retained and {} or nil
   local expression_source=false
   parsing.begin(context,charges)
   local ok, plan = pcall(function()
@@ -253,8 +255,8 @@ function M.compile(source, context, mode)
     return nil,plan
   end
   if charges and not charges.overflow then
-    if #order>=8 then cache[table.remove(order,1)]=nil end
-    cache[cache_key]={plan=plan_copy(plan),charges=charges}; order[#order+1]=cache_key
+    if #order>=8 then local old=table.remove(order,1); old[1][old[2]]=nil end
+    entries[source]={plan=plan_copy(plan),charges=charges}; order[#order+1]={entries,source}
   end
   return plan
 end

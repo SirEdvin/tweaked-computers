@@ -47,6 +47,16 @@ local function render_cell(g,r,i)
   local shared_background=c and c.background.valid and c.bg[1]==pbg[1] and c.bg[2]==pbg[2] and c.bg[3]==pbg[3]
   local shared_glyph=c and c.glyph and c.glyph.valid and old[1]==value[1]
     and c.fg[1]==pfg[1] and c.fg[2]==pfg[2] and c.fg[3]==pfg[3]
+  -- A changed color or glyph reuses the visible front object; commit applies the
+  -- change in the same tick as the swap, so no partial image is ever drawn.
+  -- Jobs staged by an older version have no mutation list and keep the old path.
+  local mutations=r.mutations
+  if mutations and c and not shared_background and c.background.valid then
+    mutations[#mutations+1]={c.background,nil,color(pbg)}; shared_background=true
+  end
+  if mutations and c and value[1]~=32 and not shared_glyph and c.glyph and c.glyph.valid then
+    mutations[#mutations+1]={c.glyph,old[1]~=value[1] and 'tc-glyph-'..value[1] or nil,color(pfg)}; shared_glyph=true
+  end
   local background=shared_background and c.background or fill(g,ox+x*cw,oy+y*ch,cw,ch,color(pbg),layers.background)
   local glyph=shared_glyph and c.glyph or nil
   if value[1]~=32 and not glyph then
@@ -82,7 +92,7 @@ buffered.install{clear_cell=clear_cell,destroy=destroy,cell=render_cell,cursor=c
   frame=function(c,front)
     local m=c.model
     local r={version=1,layer_version=3,delta_version=1,context=c,snapshot=m,slots=m.width*m.height,
-      cells={},reused={},width=m.width,height=m.height,scale=m.scale,front=front,
+      cells={},reused={},mutations={},width=m.width,height=m.height,scale=m.scale,front=front,
       shared_panel=front~=nil,panel=front and front.panel or fill(c,2/64,2/64,
         c.width_tiles-4/64,c.height_tiles-4/64,{0,0,0,1},layers.panel)}
     if delta(c,front) then

@@ -429,8 +429,23 @@ local function commit(s,p,job,tick,spend,proofs)
     if not old or old.panel~=r.panel or old.hidden then if not add(r.panel,true) then return false end end
     if not old or old.cursor~=r.cursor or old.hidden then if not add(r.cursor,true) then return false end end
   end
-  if #operations>L.render_commit_objects then return false end
+  local mutated=0
+  for _,r in ipairs(job.frames) do
+    if r.mutations and #r.mutations>0 then
+      -- Mutations target the objects of the front this frame was prepared from.
+      if r.front~=r.context.group.render then job.invalid=true; return false end
+      for _,m in ipairs(r.mutations) do if not m[1].valid then job.invalid=true; return false end end
+      mutated=mutated+#r.mutations
+    end
+  end
+  if #operations+mutated>L.render_commit_objects then return false end
   for i,o in ipairs(operations) do o.visible=values[i] end
+  for _,r in ipairs(job.frames) do
+    if r.mutations then
+      for _,m in ipairs(r.mutations) do if m[2] then m[1].sprite=m[2] end; m[1].color=m[3] end
+      r.mutations=nil
+    end
+  end
   for i,r in ipairs(job.frames) do
     local g=job.captures[i].group; local old=g.render
     if old then

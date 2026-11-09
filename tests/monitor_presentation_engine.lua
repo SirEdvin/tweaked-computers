@@ -262,7 +262,10 @@ function M.on_tick(event)
    renderer.participate(g)
   end
  elseif x.phase=='dense' and settled(s,c) then
-  assert(event.tick-x.changed_at<=256 and not x.before_dense.valid and x.pressured)
+  assert(event.tick-x.changed_at<=256 and x.pressured)
+  -- A changed glyph is updated in place when its cell already had one.
+  local dense=s.groups[x.ids[1]].render.cells[2].glyph
+  assert(dense.valid and dense.sprite=='tc-glyph-88' and (dense==x.before_dense or not x.before_dense.valid))
   for _,id in ipairs(x.ids) do for _,cell in ipairs(s.groups[id].render.cells) do assert(cell.value[1]==88) end end
   log('TC_PRESENT_DENSE_GROUP_OK')
   for _,ref in ipairs(c.monitor_sync.members) do guest(c,"peripheral.call("..string.format('%q',ref.name)..",'red','setTextScale',0.5)") end

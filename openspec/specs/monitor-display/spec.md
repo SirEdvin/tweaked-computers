@@ -180,6 +180,11 @@ Each published image SHALL contain cells, palette, cursor, scale and geometry fr
 - **WHEN** a new maximum-resolution screen requires several ticks of preparation
 - **THEN** no partially populated new frame becomes visible before publication.
 
+#### Scenario: Changed cells reuse their visible objects
+- **WHEN** a prepared frame changes the glyph or colors of a cell that already shows a valid object
+- **THEN** that object takes the new glyph or color in the publication tick, together with all other changes of the frame
+- **AND** a frame that is deferred, cancelled or refused before publication changes no visible object.
+
 ### Requirement: Synchronized group update rounds
 An explicitly selected monitor group SHALL wait for a successful mutating terminal operation on every member after registration or the preceding snapshot seal. Once all members participate, their current models SHALL be captured at one post-dispatch boundary. All prepared members SHALL publish in the same simulation tick with one group sequence. Waiting SHALL NOT time out into partial publication.
 
