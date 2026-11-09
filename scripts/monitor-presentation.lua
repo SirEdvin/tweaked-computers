@@ -221,7 +221,9 @@ local function cleanup(p,spend,remaining)
     while i<=count and remaining>0 do
       local index=r.cleanup_indices and r.cleanup_indices[i] or i
       spend(8)
-      if r.is_front or not r.reused or not r.reused[index] then backend.clear_cell(r.cells[index],not r.is_front) end
+      local reused=r.reused and r.reused[index]
+      if reused==nil then reused=r.reused_all end
+      if r.is_front or not reused then backend.clear_cell(r.cells[index],not r.is_front) end
       r.cells[index]=false; i=i+1; r.cleanup_cursor=i; remaining=remaining-1
     end
     if i>count then
@@ -463,7 +465,7 @@ local function commit(s,p,job,tick,spend,proofs)
       if old.cursor==r.cursor then old.cursor=nil end
       enqueue(p,old,'front')
     end
-    r.is_front=true; r.front=nil; r.reused=nil; r.hidden=nil; r.cleanup_indices=nil
+    r.is_front=true; r.front=nil; r.reused=nil; r.reused_all=nil; r.hidden=nil; r.cleanup_indices=nil
     r.presented_revision=r.snapshot.revision; r.presented_tick=tick; r.presented_sequence=job.sequence
     model.acknowledge(g.model,r.snapshot)
     r.accounted='front'; g.render=r

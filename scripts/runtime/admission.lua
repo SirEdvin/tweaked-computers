@@ -92,11 +92,16 @@ end
 function M.bind(ctx)
   current(ctx)
   local ledger,machine,tick,id=ctx.ledger,ctx.machine,ctx.tick,ctx.id
+  -- Hot path (every guest charge): the same checks as errors.integer/host_ceiling, inlined.
   return function(n)
-    if n~=1 then assert(errors.integer(n,0,1000000000),'invalid work reservation') end
-    assert(ledger.version==2 and tick==ledger.tick and ledger.machines[id]==machine,'stale admission context')
+    if n~=1 and not (type(n)=='number' and n%1==0 and n>=0 and n<=1000000000) then error('invalid work reservation',0) end
+    if ledger.version~=2 or tick~=ledger.tick or ledger.machines[id]~=machine then error('stale admission context',0) end
     local total=ledger.total+n
-    if total>M.host_ceiling(ledger,tick) then return refused(ctx,'work',n) end
+    local s=ledger.maintenance
+    local floor=s and s.maintenance_tick==tick and s.maintenance_spent or 0
+    if floor<limits.maintenance_work_per_tick then floor=limits.maintenance_work_per_tick end
+    local ceiling=limits.host_work_per_tick-floor
+    if total>ceiling and total>0 then return refused(ctx,'work',n) end
     machine.work,ledger.total=machine.work+n,total
     return true
   end

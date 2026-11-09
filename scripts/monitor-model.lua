@@ -10,6 +10,9 @@ local M={limits={width_tiles=6,height_tiles=6,cells=10584,write_bytes=16384,
 local MAX=9007199254740991
 local palette={0xF0F0F0,0xF2B233,0xE57FD8,0x99B2F2,0xDEDE6C,0x7FCC19,0xF2B2CC,0x4C4C4C,
   0x999999,0x4C99B2,0xB266E5,0x3366CC,0x7F664C,0x57A64E,0xCC4C4C,0x111111}
+local byte=string.byte
+local HEX={} -- Byte to colour index for validated lowercase hex digits.
+for i=0,15 do HEX[string.byte(string.format('%x',i))]=i end
 local function digit(byte)
   if byte>=48 and byte<=57 then return byte-48 end
   if byte>=97 and byte<=102 then return byte-87 end
@@ -50,8 +53,7 @@ end
 local function copy_cost(m) return m.cells_shared and m.width*m.height or 0 end
 local function own(m)
   if m.cells_shared then
-    local cells={}; for i,c in ipairs(m.cells) do cells[i]=c end
-    m.cells=cells; m.cells_shared=nil
+    m.cells={table.unpack(m.cells,1,#m.cells)}; m.cells_shared=nil
   end
 end
 function M.capture(m,spend)
@@ -129,22 +131,24 @@ local function write(m,spend,text,fg,bg)
     string_arg(fg); string_arg(bg)
     if #fg~=#text or #bg~=#text then errors.raise('E_ARGUMENT','blit strings must have equal lengths') end
     spend(#text*3+1)
-    for i=1,#text do
-      if not digit(fg:byte(i)) or not digit(bg:byte(i)) then errors.raise('E_ARGUMENT','lowercase hexadecimal blit colors required') end
-    end
+    -- One native scan per string instead of a Lua loop per character.
+    if string.find(fg,'[^0-9a-f]') or string.find(bg,'[^0-9a-f]') then errors.raise('E_ARGUMENT','lowercase hexadecimal blit colors required') end
   end
   local first,last=math.max(1,2-m.x),math.min(#text,m.width-m.x+1)
   local visible=m.y>=1 and m.y<=m.height and math.max(0,last-first+1) or 0
   spend(#text+visible*8+1)
   if m.y>=1 and m.y<=m.height then
+    local cells,base,df,db=m.cells,(m.y-1)*m.width+m.x-1,m.fg,m.bg
     for i=first,last do
-      local f,b=m.fg,m.bg
-      if fg then f=digit(fg:byte(i)); b=digit(bg:byte(i)) end
-      local index=(m.y-1)*m.width+m.x+i-1; local byte=text:byte(i); local old=m.cells[index]
-      if old[1]~=byte or old[2]~=f or old[3]~=b then
-        if m.cells_shared then spend(copy_cost(m)) end -- Before the first cell mutation only.
-        own(m) -- Identical full-row blits must not allocate a grid-sized copy.
-        m.cells[index]={byte,f,b}; damaged(m,index)
+      local f,b=df,db
+      if fg then f=HEX[byte(fg,i)]; b=HEX[byte(bg,i)] end
+      local index=base+i; local ch=byte(text,i); local old=cells[index]
+      if old[1]~=ch or old[2]~=f or old[3]~=b then
+        if m.cells_shared then -- Before the first cell mutation only.
+          spend(copy_cost(m))
+          own(m); cells=m.cells -- Identical full-row blits must not allocate a grid-sized copy.
+        end
+        cells[index]={ch,f,b}; damaged(m,index)
       end
     end
   end

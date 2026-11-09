@@ -9,6 +9,8 @@ local wires=require('scripts.physical-wires')
 local radar=require('scripts.radar')
 local speaker=require('scripts.speaker')
 local M={}
+local RED,GREEN=defines.wire_connector_id.circuit_red,defines.wire_connector_id.circuit_green
+local checked_port -- Defined with connector(); shared by available().
 local function physical_supported(rec)
   return rec and rec.schema_version==1 and rec.physical_version==1
     and (rec.layout_version==nil or rec.layout_version==2)
@@ -85,8 +87,11 @@ function M.available(rec)
   if rec.native_carrier=='radar' then return radar.available(rec) end
   if rec.native_carrier=='speaker' then return speaker.available(rec) end
   if not defs.devices[rec.kind] or rec.availability_version~=1 then return false end
+  if rec.physical_version~=1 or rec.physical_error then return false end
+  -- One placement proof per role, then both color connectors (as connector() twice).
   for _,role in ipairs(defs.devices[rec.kind].roles) do
-    if not M.connector(rec,role,'red') or not M.connector(rec,role,'green') then return false end
+    local port=checked_port(rec,role)
+    if not port or not port.get_wire_connector(RED,false) or not port.get_wire_connector(GREEN,false) then return false end
   end
   return true
 end
@@ -190,27 +195,40 @@ function M.connector(rec,role,color)
     if color~='red' and color~='green' then errors.raise('E_ARGUMENT','red or green connector required') end
     return speaker.connector(rec,role,color)
   end
+  if color~='red' and color~='green' then
+    -- Same order as before: a moved body still returns nil before the color check.
+    local body=rec.body; local at=body.position
+    if body.direction~=rec.direction or at.x~=rec.position.x or at.y~=rec.position.y then return nil end
+    errors.raise('E_ARGUMENT','red or green connector required')
+  end
+  local port=checked_port(rec,role)
+  return port and port.get_wire_connector(color=='red' and RED or GREEN,false)
+end
+-- Live body/port placement, ownership and scope proof shared by both colors.
+function checked_port(rec,role)
   local body=rec.body; local direction=body.direction; local at=body.position
   if direction~=rec.direction or at.x~=rec.position.x or at.y~=rec.position.y then return nil end
-  if color~='red' and color~='green' then errors.raise('E_ARGUMENT','red or green connector required') end
+  -- endpoint() returns the body itself exactly for a layout-2 network role; knowing
+  -- that avoids native validity/equality reads that the body checks already cover.
+  local is_body=rec.layout_version==2 and role=='network'
   local port=M.endpoint(rec,role)
-  if not port or not port.valid then return nil end
+  if not port or not is_body and not port.valid then return nil end
   local index
   for i,r in ipairs(defs.devices[rec.kind].roles) do if r==role then index=i; break end end
   if not index then return nil end
   local expected=rec.position
-  if rec.layout_version~=2 or role~='network' then
+  if not is_body then
     local x,y=defs.offset(rec.kind,index,rec.direction); expected={x=at.x+x,y=at.y+y}
   end
-  local port_at=port==body and at or port.position
-  if port_at.x~=expected.x or port_at.y~=expected.y or (port==body and direction or port.direction)~=rec.direction then return nil end
+  local port_at=is_body and at or port.position
+  if port_at.x~=expected.x or port_at.y~=expected.y or (is_body and direction or port.direction)~=rec.direction then return nil end
   local owner,bound_role=registry.by_entity(port)
-  local expected_role=rec.layout_version==2 and role=='network' and 'body' or role
+  local expected_role=is_body and 'body' or role
   -- Index reads avoid creating LuaForce/LuaSurface wrappers on this hot path.
   if owner~=rec or bound_role~=expected_role or body.force_index~=rec.force_index
     or body.surface_index~=rec.surface_index then return nil end
-  if port~=body and (port.force_index~=rec.force_index or port.surface_index~=rec.surface_index) then return nil end
-  return port.get_wire_connector(defines.wire_connector_id['circuit_'..color],false)
+  if not is_body and (port.force_index~=rec.force_index or port.surface_index~=rec.surface_index) then return nil end
+  return port
 end
 function M.rotate(rec,previous_direction)
   registry.art_changed(rec)

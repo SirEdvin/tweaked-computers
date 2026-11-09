@@ -34,27 +34,29 @@ local function render_cell(g,r,i)
   local m=g.model; local value=m.cells[i]; local c=r.front and r.front.cells[i]
   local pfg,pbg=m.palette[value[2]+1],m.palette[value[3]+1]
   local old=c and c.value
+  -- Read each native validity flag once per cell.
+  local bvalid=c and c.background.valid
+  local gvalid=c and c.glyph and c.glyph.valid
+  local same_bg=bvalid and c.bg[1]==pbg[1] and c.bg[2]==pbg[2] and c.bg[3]==pbg[3]
+  local same_fg=c and c.fg[1]==pfg[1] and c.fg[2]==pfg[2] and c.fg[3]==pfg[3]
   local matches=old and old[1]==value[1] and old[2]==value[2] and old[3]==value[3]
-    and c.fg[1]==pfg[1] and c.fg[2]==pfg[2] and c.fg[3]==pfg[3]
-    and c.bg[1]==pbg[1] and c.bg[2]==pbg[2] and c.bg[3]==pbg[3]
-    and c.background.valid and (value[1]==32 or c.glyph and c.glyph.valid)
+    and same_fg and same_bg and (value[1]==32 or gvalid)
   if matches then r.cells[i]=c; r.reused[i]=true; return end
-  r.reused[i]=nil
+  r.reused[i]=false
   local cw,ch,ox,oy=model.geometry(g); local x=(i-1)%m.width; local y=math.floor((i-1)/m.width)
   -- Borrow unchanged components, not just complete cells. A moving plot glyph
   -- must not destroy/recreate its static background. Ownership transfers only
   -- at the admitted barrier; cancelled staging destroys only its own objects.
-  local shared_background=c and c.background.valid and c.bg[1]==pbg[1] and c.bg[2]==pbg[2] and c.bg[3]==pbg[3]
-  local shared_glyph=c and c.glyph and c.glyph.valid and old[1]==value[1]
-    and c.fg[1]==pfg[1] and c.fg[2]==pfg[2] and c.fg[3]==pfg[3]
+  local shared_background=same_bg
+  local shared_glyph=gvalid and old[1]==value[1] and same_fg
   -- A changed color or glyph reuses the visible front object; commit applies the
   -- change in the same tick as the swap, so no partial image is ever drawn.
   -- Jobs staged by an older version have no mutation list and keep the old path.
   local mutations=r.mutations
-  if mutations and c and not shared_background and c.background.valid then
+  if mutations and bvalid and not shared_background then
     mutations[#mutations+1]={c.background,nil,color(pbg)}; shared_background=true
   end
-  if mutations and c and value[1]~=32 and not shared_glyph and c.glyph and c.glyph.valid then
+  if mutations and gvalid and value[1]~=32 and not shared_glyph then
     mutations[#mutations+1]={c.glyph,old[1]~=value[1] and 'tc-glyph-'..value[1] or nil,color(pfg)}; shared_glyph=true
   end
   local background=shared_background and c.background or fill(g,ox+x*cw,oy+y*ch,cw,ch,color(pbg),layers.background)
@@ -97,7 +99,8 @@ buffered.install{clear_cell=clear_cell,destroy=destroy,cell=render_cell,cursor=c
         c.width_tiles-4/64,c.height_tiles-4/64,{0,0,0,1},layers.panel)}
     if delta(c,front) then
       -- Prepaid reference-root copy, not cell comparison/native reconstruction.
-      for i,cell in ipairs(front.cells) do r.cells[i]=cell; r.reused[i]=true end
+      -- One presized copy; every cell starts reused (render_cell marks changed ones false).
+      r.cells={table.unpack(front.cells,1,#front.cells)}; r.reused_all=true
       r.indices=m.damage; r.cleanup_indices=r.indices
     end
     return r
