@@ -11,10 +11,10 @@ calls, not a catalogue GUI. No item/fluid input is needed.
 1. Back up the save and its mod configuration. Keep that backup outside the active
    save slot. Device removal or destruction is not a backup strategy.
 2. In Factorio's Mods screen, find **Tweaked Computers** (`tweaked-computers`) on
-   the Mod Portal. Select **0.1.21 ALPHA**. Enable it. Restart when prompted.
+   the Mod Portal. Select **0.1.22 ALPHA**. Enable it. Restart when prompted.
    This version accepts all Factorio 2.1 patches. Stay on 0.1.14 for Factorio 2.0.77.
-3. For manual installation, download `tweaked-computers_0.1.21.zip` from the
-   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.21)
+3. For manual installation, download `tweaked-computers_0.1.22.zip` from the
+   [alpha release](https://github.com/SirEdvin/tweaked-computers/releases/tag/alpha-0.1.22)
    page. Put it in your Factorio
    user-data `mods` directory without unpacking it. Remove conflicting duplicate
    versions. Enable the mod. Restart Factorio. The ZIP's internal folder must match its
@@ -25,7 +25,7 @@ calls, not a catalogue GUI. No item/fluid input is needed.
    names require their corresponding installed prototypes. This guide does not
    claim other Factorio 2.1 patches or arbitrary mod combinations are verified.
 
-Published 0.1.21 runs trusted native Lua. It has different execution and migration rules from 0.1.20.
+Since 0.1.21, the mod runs trusted native Lua. It has different execution and migration rules from 0.1.20.
 Read [the upgrade warning](lifecycle.md#upgrading-to-trusted-native-lua) before you upgrade a save.
 Since 0.1.20, the website and in-game Reference come from one public typed Lua library.
 

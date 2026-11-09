@@ -8,6 +8,11 @@ Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. The mod has no interpreter,
 OS, gameplay filesystem or dynamic guest loader. There is no command history.
 
+Version **0.1.22 ALPHA** adds a monitor [graphics mode](docs/player/api/monitor.md) with retained
+lines, shapes, text, game icons and lights in monitor pixels. Terminal rows now draw as text in a
+mod-supplied font, which needs far fewer native objects. Monitor and guarded-call host work is lower.
+Saves from 0.1.21 upgrade automatically. See [0.1.22 release notes](docs/release-0.1.22.md).
+
 Version **0.1.21 ALPHA** runs saved programs and Console as trusted native Lua.
 It removes mod execution and temporary-memory quotas, and it reduces idle and per-callback host overhead.
 Run only trusted code. An infinite loop can stop the game. Temporary values can use all available memory.

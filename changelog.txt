@@ -1,4 +1,21 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.22
+Date: 2026-11-09
+  Features:
+    - Monitors have a graphics mode. m.setMode("graphics") gives retained lines, polygons, rectangles, circles, arcs, text, game icons and lights in content pixels (64 per tile). set, get, getObjects, destroy, bringToFront and moveToBack manage the objects.
+    - An object that leaves the content area is refused with E_RANGE. Graphics objects count against the existing render_object_limit. Graphics-mode monitors cannot join sync groups.
+  Changes:
+    - Terminal rows draw as text in a mod-supplied 6x9 font: one background object and one glyph object for each row, not one sprite for each cell. A 126x84 dense wall needs about 570 native objects instead of about 43000.
+    - Saves from 0.1.21 upgrade their monitor content in synchronized work. Text, colours, palette, cursor and text scale stay.
+  Optimizations:
+    - A changed monitor cell or row keeps its native object. Monitor availability proves each connector one time.
+    - Guarded calls with scalar arguments do not copy them. Peripheral facades build each method on first use.
+    - Graphics calls check and charge their property tables without copying them. A set that changes only the text or colour of left-aligned text writes only that property.
+  Info:
+    - No terminal API, work charge, limit or refusal code changes. The new graphics methods are additions.
+    - ALPHA for Factorio 2.1; verified on 2.1.23 with base and Space Age, not every patch or modpack. Headless measurements only; no GPU or connected-multiplayer timing.
+    - Back up the complete save and matching mod set before upgrading. Restore both for rollback; never downgrade an upgraded save in place.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.21
 Date: 2026-11-07
   Changes:
