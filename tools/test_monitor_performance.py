@@ -14,7 +14,7 @@ import monitor_performance
 
 
 class PerformanceInvocationTests(unittest.TestCase):
-    def invoke(self, scene='all', modes=('base', 'space-age'), samples=600, markers=1):
+    def invoke(self, scene='all', modes=('base', 'space-age'), samples=600, markers=1, extra=(), check=None):
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
             root = Path(directory)
             archive = build.build(root / 'package')
@@ -34,7 +34,7 @@ class PerformanceInvocationTests(unittest.TestCase):
 
             argv = ['monitor_performance.py', '--factorio', str(root / 'unused-engine'),
                     '--archive', str(archive), '--output', str(output), '--mode', 'both',
-                    '--scene', scene, '--ticks', '600']
+                    '--scene', scene, '--ticks', '600', *extra]
             with patch('sys.argv', argv), patch.object(monitor_performance.subprocess, 'run', side_effect=simulate):
                 with self.assertRaises(SystemExit) as stopped:
                     monitor_performance.main()
@@ -52,14 +52,29 @@ class PerformanceInvocationTests(unittest.TestCase):
                     self.assertEqual(hashlib.sha256(tested.read(prefix + name)).hexdigest(), digest)
                 guest = tested.read(prefix + 'tests/monitor_animation_source.lua').decode()
                 self.assertIn(scene, tested.read(prefix + 'tests/monitor_performance_config.lua').decode())
-                if scene == 'one':
+                if scene == 'one' and '--example' not in extra:
                     self.assertIn('refs = {refs[1]}', guest)
+                if check:
+                    check(guest, tested.read(prefix + 'tests/monitor_performance_config.lua').decode())
             return stopped.exception.code
 
     def test_each_scene_preserves_nonfixture_payloads(self):
         for scene in ('zero', 'idle', 'one', 'all'):
             with self.subTest(scene=scene):
                 self.assertEqual(self.invoke(scene), 0)
+
+    def test_dense_workload_and_graphics_example(self):
+        def dense(guest, config):
+            self.assertIn('local scale = 0.5', guest)
+            self.assertNotIn('w > 32', guest)
+            self.assertIn('refs = {refs[1]}', guest)
+        self.assertEqual(self.invoke('one', extra=('--workload', 'dense'), check=dense), 0)
+
+        def graphics(guest, config):
+            self.assertIn('m.setMode("graphics")', guest)
+            self.assertIn('#views < 1', guest)
+            self.assertIn('example="graphics"', config)
+        self.assertEqual(self.invoke('one', extra=('--example', 'graphics'), check=graphics), 0)
 
     def test_exact_receipt_inventory(self):
         for modes, samples, markers in ((('base',), 600, 1), (('base', 'unexpected'), 600, 1),

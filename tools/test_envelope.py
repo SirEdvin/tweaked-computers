@@ -15,13 +15,13 @@ class EnvelopeReceiptTests(unittest.TestCase):
         with zipfile.ZipFile(data) as package:
             replacements = envelope.combined_replacements(package, 'test/')
         instrumented = replacements['scripts/monitor-presentation.lua']
-        for probe in (b'envelope_observer.prepare()', b'envelope_observer.cleanup()', b'envelope_observer.commit(#operations,work)'):
+        for probe in (b'envelope_observer.prepare()', b'envelope_observer.cleanup()', b'envelope_observer.commit(operations,work)'):
             self.assertEqual(instrumented.count(probe), 1)
         self.assertIn(b'native=false', replacements['tests/envelope_config.lua'])
         altered = io.BytesIO()
         with zipfile.ZipFile(altered, 'w') as package:
             package.writestr('test/scripts/monitor-presentation.lua',
-                             source.replace(b'spend(48); backend.cell(c,r,index);', b'changed preparation path'))
+                             source.replace(b'spend(48+r.width); backend.row(c,r,y);', b'changed preparation path'))
         with zipfile.ZipFile(altered) as package, self.assertRaises(AssertionError):
             envelope.combined_replacements(package, 'test/')
 

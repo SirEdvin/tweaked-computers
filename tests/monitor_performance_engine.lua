@@ -24,7 +24,10 @@ local function audit(x)
   local owned={}
   local function object(o) if o and o.valid then owned[o.id]=true end end
   local function frame(r) rows.objects(r,object) end
-  for _,g in pairs(s.groups) do frame(g.render) end
+  for _,g in pairs(s.groups) do
+    frame(g.render)
+    if g.graphics then for _,o in pairs(g.graphics.objects) do object(o.native) end end
+  end
   for _,job in ipairs(p.jobs) do for _,r in ipairs(job.frames) do frame(r) end end
   for _,r in ipairs(p.retired) do frame(r) end
   for _,r in ipairs(p.orphans) do frame(r) end
@@ -86,7 +89,23 @@ function M.on_tick(event)
     log({'','TC_PERF_CPU tick=',event.tick,' ',profiler})
     local selection=c.monitor_sync; local p=root.monitors.presentation
     local lane=selection and p.lanes[selection.key]
-    if lane and lane.presented_tick~=x.last_publication then
+    if config.example=='graphics' then
+      -- Graphics publish at call time: count ticks in which a curve polygon received new vertices.
+      local changed=false
+      for _,g in pairs(root.monitors.groups) do if g.graphics then
+        for id,o in pairs(g.graphics.objects) do
+          if o.type=='polygon' then
+            local key=g.id..'/'..id
+            if x.previous[key]~=o.props then changed=true end; x.previous[key]=o.props
+          end
+        end
+      end end
+      if changed then
+        x.publications=x.publications+1; x.visible_changes=x.visible_changes+1
+        if x.last_publication then x.max_gap=math.max(x.max_gap,event.tick-x.last_publication) end
+        x.last_publication=event.tick
+      end
+    elseif lane and lane.presented_tick~=x.last_publication then
       local changed=false
       for _,ref in ipairs(lane.members) do
         local r=root.monitors.groups[ref.name].render; local previous=x.previous[ref.name]

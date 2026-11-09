@@ -846,7 +846,7 @@ end
 
 ## graphics-sine-chart
 
-Connect at most four monitors on red or green. They do not need electricity. Use a 2×2 display or a larger one. The program changes each display to graphics mode. It draws gray axes, the title SINE / LIVE, an iron plate icon and one green polygon curve. Every two ticks, one set call moves the curve vertices. Narrow displays omit the title or the icon. Without a reachable monitor, setup fails. Paste the complete source. Select Validate. Select Save. Select Run. See [graphics mode](../monitor.md#graphics-mode).
+Connect at most four monitors on red or green. They do not need electricity. Use a 2×2 display or a larger one. The program changes each display to graphics mode. It draws gray axes, the title SINE / LIVE, an iron plate icon and one green polygon curve. Every two ticks, one set call moves the curve vertices. Narrow displays omit the title or the icon. Without a reachable monitor, setup fails. Paste the complete source. Select Validate. Select Save. Select Run. See the [monitor API](api/monitor.md).
 
 ```lua
 

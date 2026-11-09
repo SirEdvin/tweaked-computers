@@ -99,7 +99,7 @@
     "tools/luals-docs.json": "dbb131cb34bbd8fb301dbb9a488bdc555b3178d34a5ab352ffe6d9b8d6728c77",
     "tools/luals-export.lua": "3285c1453c41456328cb0daf2eb7c375460e6772f639413510d71da8e09c5c2b",
     "tools/luals-lock.json": "6e57708cfcbc1a560ebcd060f9695632d6bbd3671304c1a29762df2a19087960",
-    "tools/player_docs.py": "66733f307f6a3226edd6829bf02df4b27c250c58cf0d374a373e49e8dc7250ec"
+    "tools/player_docs.py": "a270075f8b7e6fa9a9d47f62018cd10606e440bdc515507efa85d6fae5c6e6be"
   },
   "outputs": {
     "docs/api-migration.md": "035ea2204d2bdcb68fa339c7cbb78a52b093b156fbe32db16e132485238dd82c",
@@ -380,7 +380,7 @@
     "docs/player/api/types/TC.Tuple.md": "7949e80b099c905bbc0da4b8f0223fa72e79c09b2fc0b1943f01e8d64b99a228",
     "docs/player/api/types/TC.Wire.md": "b95420893ad449159e1765555416669dd2ebcbf53419441bf1f9afa96ceaa267",
     "docs/player/api/types/TC.WireConnectorId.md": "4c32fb1d717323f93e557eae9ece9e4780aa9b2484f5d27cfce08c1775ddc309",
-    "docs/player/examples.md": "c1cd333b86b2b492719eefbf8b620160729245642307437b2c8060fce1782765",
+    "docs/player/examples.md": "ed1c2e493853afe98817a389b09a860543ece21644c30380c06e3caa84a82aaf",
     "mkdocs.yml": "897467211c48754b986fa41415118c556ab95337a0b8589a8837fcd09cfe7375",
     "scripts/ui/api-reference.lua": "081a63de1e39d5f7a48c2543963c16ce2680b6b4392244679fc46dc7be6dca38"
   },

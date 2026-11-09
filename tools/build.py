@@ -22,6 +22,7 @@ CONTRACT_FILES = (
     'openspec/specs/lua-api-documentation/spec.md',
     'openspec/specs/lua-api-workflow/spec.md',
     'openspec/specs/monitor-display/spec.md',
+    'openspec/specs/monitor-graphics/spec.md',
     'openspec/specs/peripheral-network/spec.md',
     'openspec/specs/program-editor/spec.md',
     'openspec/specs/recipe-searcher/spec.md',

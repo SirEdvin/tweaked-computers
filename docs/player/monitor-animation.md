@@ -34,30 +34,32 @@ size and only resubmits changed rows. A cheap cursor setter participates even
 when rounding leaves a screen unchanged. Row caches assume this example is the
 writer of the screen content. Monitor synchronization itself is not a write lock.
 
-The model tracks actual changed cells, not merely writes or cursor revisions.
-In 0.1.7, identical row writes also avoid copying
-the complete cell root. A needed copy is admitted before the first changed cell.
-Snapshots freeze a bounded copy of the dirty-index set. Publication consumes
-only matching changes. Later writes and palette/clear epochs remain pending.
-Acknowledgement uses a constant-time reset for an unchanged root or a prepaid
-dirty-index pass for a stale root, retaining only later, unconsumed damage.
+The model stores each row as three strings: text, foreground and background
+digits. It tracks changed rows, not merely writes or cursor revisions. Identical
+row writes copy nothing. A needed root copy is admitted before the first change.
+Snapshots share the immutable row records and freeze a bounded copy of the dirty-row
+set. Publication consumes only matching rows. Later writes and palette/clear epochs
+remain pending.
 
-After an initial full image, sparse frames copy prepaid flat reference roots,
-prepare only damaged cells and transfer unchanged native-object ownership.
-Retirement scans only superseded damaged cells. Full clear, scroll, palette,
-geometry and legacy/untracked state use the conservative full preparation path.
-The 0.1.7 presenter additionally shares unchanged backgrounds and glyphs
-independently. Changed components are still prepared hidden. Borrowed components
-stay owned by the old front until the admitted publication. Cancellation and
-retirement must not destroy borrowed components.
-These reference-root copies still cost work proportional to the grid. This is
-not an unbounded O(dirty-cells)-only renderer or a general GPU framebuffer.
+Each visible row is two native text objects in the mod font `tc-term`: one for the
+background runs and one for the glyphs. Preparation builds only plain row strings,
+so a deferred or cancelled frame owns no native object. The publication tick writes
+the new text of every changed row into its existing objects. Unchanged rows make no
+native call. Full clear, scroll and palette changes rewrite every row of the same
+objects. Geometry changes and saves from earlier releases create a new front, and
+bounded retirement destroys the old one.
 
-The 1024 preparation/retirement cell-check allowance, 160000 commit cap, object
-limits and retained-cell capacities are unchanged. The maintenance default is
-still 200000. Its shared allowance is now a live [Map setting](api/limits.md#live-mod-settings).
+The 1024 preparation/retirement allowance now counts rows (`render_cells_per_tick`
+keeps its name). The 160000 commit cap, object limits and retained-cell capacities
+are unchanged. The maintenance default is still 200000. Its shared allowance is a
+live [Map setting](api/limits.md#live-mod-settings).
 Snapshots remain immutable, old frames remain visible until one fully admitted
 publication, and no flush or new guest frame API is required.
+
+Row text cuts the native objects of a 126×84 grid from about 21,000 to at most 170.
+On one 6×6 wall at scale 0.5, the measured whole-scheduler mean fell from about
+16–18 ms to 8 ms per tick. Small grids gain less. See the matched runs in the
+[monitor performance investigation](https://github.com/SirEdvin/tweaked-computers/blob/main/docs/monitor-performance.md).
 
 ## Runtime costs
 
@@ -176,9 +178,9 @@ instrumented wrapper. Host instrumentation guards are tested by
 | `full_proofs` | Availability proofs after the operation-local positive-reuse check |
 | `presentation_proof_requests` | Presenter requests, including safe operation-local reuse |
 | `connector`, `available` | Monitor endpoint/physical-availability checks, including necessary network/service work |
-| `capture`, `frame`, `cell`, `cursor` | Immutable capture and renderer preparation entry points |
-| `native_create`, `native_retire`, `visibility` | Monitor sprite allocation, actual backend retirement and native visibility assignments |
-| `clear_cell`, `art_create` | Retirement-cell visits and separately classified status-art allocation |
+| `capture`, `frame`, `row`, `cursor` | Immutable capture and renderer preparation entry points |
+| `native_create`, `native_retire`, `visibility` | Monitor object allocation, actual backend retirement and native visibility assignments |
+| `clear_cell`, `art_create` | Retirement visits of cell fronts from earlier saves and separately classified status-art allocation |
 
 The fixture checks settled/stopped, ordinary cold idle, outage/restoration, one
 independent updating screen and four updating screens on actual scheduler ticks.

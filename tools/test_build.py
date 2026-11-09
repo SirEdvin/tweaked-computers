@@ -81,7 +81,7 @@ class PackageInventoryTests(unittest.TestCase):
         tutorials = (build.ROOT / 'scripts/ui/tutorials.lua').read_text()
         bindings = re.findall(r"source='([^']+)',code=require\('examples\.([^']+)'\)", tutorials)
         self.assertEqual({name for name, _ in bindings}, {
-            'reference-speaker', 'logic-controller', 'reference-recipe', 'reference-factory', 'shared-telemetry', 'production-statistics-program', 'dashboard-program', 'dashboard-charts'})
+            'reference-speaker', 'logic-controller', 'reference-recipe', 'reference-factory', 'shared-telemetry', 'production-statistics-program', 'dashboard-program', 'dashboard-charts', 'graphics-sine-chart'})
         for name, module in bindings:
             self.assertEqual(name, module)
         self.assertIn("prelude=require('examples.reference-writer')", tutorials)
@@ -274,6 +274,7 @@ getLimits()''',
         # allowlist cannot detect an accidental removal from that allowlist.
         contracts = {
             'openspec/specs/monitor-display/spec.md',
+            'openspec/specs/monitor-graphics/spec.md',
             'api/monitor.d.lua',
             'openspec/specs/peripheral-network/spec.md',
         }
@@ -284,7 +285,8 @@ getLimits()''',
             self.assertEqual(first.read_bytes(), second.read_bytes())
             with zipfile.ZipFile(first) as package:
                 prefix = next(n[:-len('info.json')] for n in package.namelist() if n.endswith('/info.json'))
-                for relative in (*contracts, 'examples/monitor-plot-program.lua',
+                for relative in (*contracts, 'examples/monitor-plot-program.lua', 'examples/graphics-sine-chart.lua',
+                                 'scripts/monitor-graphics.lua', 'assets/fonts/tc-term.ttf', 'locale/en/info.json',
                                  'tests/monitor_state_engine.lua',
                                  *(f'tests/monitor_state_{phase}.lua' for phase in
                                    ('waiting', 'preparing', 'ready', 'retiring'))):
@@ -353,7 +355,7 @@ getLimits()''',
                     self.assertEqual(package.read(prefix + relative), (build.ROOT / relative).read_bytes())
                 planning = [name[len(prefix):] for name in names if '/openspec/' in name]
                 self.assertEqual(set(planning), set(build.CONTRACT_FILES))
-                self.assertEqual(len(build.CONTRACT_FILES), 20)
+                self.assertEqual(len(build.CONTRACT_FILES), 21)
                 self.assertFalse(any(name.startswith('openspec/changes/') for name in planning))
                 for relative in ('openspec/specs/program-source/spec.md',
                                  'docs/player/api/language.md'):
@@ -440,7 +442,9 @@ class CanonicalContractTests(unittest.TestCase):
                         '2026-11-07-reduce-report-callback-overhead',
                         '2026-11-07-charge-compile-once-per-run',
                         '2026-11-07-reduce-report-host-overhead',
-                        '2026-11-09-reduce-monitor-redraw-overhead')
+                        '2026-11-09-reduce-monitor-redraw-overhead',
+                        '2026-11-09-monitor-row-text-presentation',
+                        '2026-11-09-monitor-graphics-mode')
 
     def archived_replacement(self, capability, name, canonical):
         import re

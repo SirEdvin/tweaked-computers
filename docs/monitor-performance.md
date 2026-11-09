@@ -35,6 +35,39 @@ the provided full 2.0.77 base/Space Age clients, pixel comparisons and a sustain
 graphical run. Functional checks passed, but software rendering and unrelated
 host CPU contention prevent a clean graphical performance claim.
 
+## Row text and graphics mode (2026-11-09)
+
+Row text draws each terminal row as two native text objects in the mod font,
+instead of one background and one glyph sprite for each cell. Changed rows are
+updated in place in the publication tick. Graphics mode gives programs retained
+native objects in monitor pixels. These runs compare the unchanged `main` build
+(7d79ce1) with the candidate. Each run is serial, 3,600 measured ticks, Factorio
+2.1.23 headless, base mode, whole-scheduler `LuaProfiler` time per tick (ms):
+
+| Workload | Build | Mean | Median | p95 | Max | Peak objects |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| One 6×6 wall, scale 2 (31×21) | baseline 1 | 2.70 | 2.64 | 9.47 | 60.6 | 2,862 |
+| | candidate | 2.43 | 2.29 | 10.01 | 45.7 | 256 |
+| | baseline 2 | 2.58 | 2.55 | 8.02 | 42.8 | 2,862 |
+| Four 6×6 walls, scale 2 | baseline 1 | 7.20 | 7.57 | 21.98 | 77.8 | 3,183 |
+| | candidate | 6.51 | 6.31 | 21.10 | 50.3 | 319 |
+| | baseline 2 | 7.45 | 7.59 | 23.03 | 67.5 | 3,183 |
+| One 6×6 wall, scale 0.5 (126×84, `--workload dense`) | baseline 1 | 15.73 | 12.18 | 42.20 | 183.7 | 42,910 |
+| | candidate | 8.00 | 8.12 | 25.84 | 131.1 | 571 |
+| | baseline 2 | 18.20 | 13.06 | 58.77 | 234.9 | 42,910 |
+| One 6×6 wall, `--example graphics` | candidate | 2.98 | 3.43 | 9.74 | 93.3 | 282 |
+
+All runs published every two ticks (1,800 publications, maximum gap 2).
+Peak objects count the whole scene, including the idle walls of the four-wall layout.
+The graphics example sends one polygon of 184 vertices every two ticks. Graphics mode
+ignores the text scale, so the same run compares with both the single and the dense terminal wall. The host
+had unrelated IntelliJ and Gradle processes (load average 3–7), so the
+baseline–candidate–baseline order is necessary to read the drift. These are not
+thresholds or real-time UPS claims. Evidence:
+`/home/siredvin/artifacts/tweaked-computers/monitor-row-graphics-perf-2026-11-09/`.
+
+Reproduce one case with `--scene one --workload dense` or `--scene one --example graphics`.
+
 ## Bottlenecks and changes
 
 1. **Repeated native physical proofs.** The same monitor members were inspected

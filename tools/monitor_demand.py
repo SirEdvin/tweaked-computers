@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def visibility_source(source):
-    for assignment in ('o.visible=value ', 'o.visible=values[i] '):
+    for assignment in ('r.panel.visible=shown ', 'o.visible=text '):
         if source.count(assignment) != 1:
             raise ValueError('review structural visibility instrumentation against changed presenter')
         source = source.replace(assignment, 'demand_observer.visibility(); ' + assignment)

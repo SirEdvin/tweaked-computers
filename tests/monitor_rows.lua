@@ -16,6 +16,9 @@ function M.count(r) local n=0; M.objects(r,function(o) if o.valid then n=n+1 end
 function M.verify(r,visible)
   assert(r and r.row_version==1,'row-text front required')
   local s=r.snapshot
+  if s.mode=='graphics' then -- A graphics display keeps only its panel.
+    assert(next(r.rows)==nil and not r.cursor,'graphics front kept terminal rows'); return true
+  end
   for y=1,s.height do
     local glyph,background=renderer.row_strings(s,y); local o=r.rows[y]
     assert(o and o.bg and o.bg.valid and o.bg.text==background,'row background differs from its snapshot')
