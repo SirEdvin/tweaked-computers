@@ -494,7 +494,7 @@ class CanonicalContractTests(unittest.TestCase):
         import re
         if self.archived_replacement(capability, name, canonical):
             return True
-        delta = build.ROOT / 'openspec/changes/demand-driven-device-scheduling/specs' / capability / 'spec.md'
+        delta = build.ROOT / 'openspec/changes/archive/2026-11-09-demand-driven-device-scheduling/specs' / capability / 'spec.md'
         if not delta.is_file():
             return False
         pattern = r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|^## |\Z)'
@@ -542,7 +542,7 @@ class CanonicalContractTests(unittest.TestCase):
     def test_scheduling_union_checks_complete_replacements(self):
         import re
         pattern = r'^### Requirement: ([^\n]+)\n(.*?)(?=^### Requirement:|^## |\Z)'
-        for delta in (build.ROOT / 'openspec/changes/demand-driven-device-scheduling/specs').glob('*/spec.md'):
+        for delta in (build.ROOT / 'openspec/changes/archive/2026-11-09-demand-driven-device-scheduling/specs').glob('*/spec.md'):
             canonical = dict(re.findall(pattern, (build.ROOT / 'openspec/specs' / delta.parent.name / 'spec.md').read_text(), re.M | re.S))
             for name, _ in re.findall(pattern, delta.read_text(), re.M | re.S):
                 with self.subTest(capability=delta.parent.name, requirement=name):
