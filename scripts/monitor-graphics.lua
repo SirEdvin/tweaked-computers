@@ -110,7 +110,7 @@ local function validate(kind,input,base)
   for k,spec in pairs(schema) do
     local v=input[k]
     if v==nil then
-      if base then p[k]=clone(base[k])
+      if base then p[k]=base[k] -- stored props are never mutated in place
       elseif spec[2]==nil then fail('E_ARGUMENT',kind..' requires '..k)
       else p[k]=clone(spec[2]) end
     else p[k]=CHECK[spec[1]](v,k) end
@@ -225,6 +225,14 @@ end
 local function update(g,o,kind,p,shown)
   for k,v in pairs(native(g,kind,p,shown)) do o[k]=v end
 end
+-- Text and colour of left-aligned text map to one native property each; other changes rebuild all.
+local function update_text(o,input,p)
+  for k in pairs(input) do if k~='text' and k~='color' then return false end end
+  if input.text~=nil and p.alignment~='left' then return false end
+  if input.text~=nil then o.text=(p.text:gsub('.',MAP)) end
+  if input.color~=nil then o.color=native_color(p.color) end
+  return true
+end
 
 -- Store (design D1) and the shared native-object count (design D6).
 function M.store(g)
@@ -257,13 +265,14 @@ end
 local function args(n,...) if select('#',...)~=n then fail('E_ARGUMENT','unexpected argument count; use dot calls') end end
 local function payload(props,spend)
   if type(props)~='table' or getmetatable(props)~=nil then fail('E_ARGUMENT','property table required') end
-  local ok,copy,stats=pcall(data.copy,props,spend,L.peripheral_call_bytes)
+  -- Measure, not copy: validate() reads props once and builds fresh tables.
+  local ok,stats=pcall(data.measure,props,spend,L.peripheral_call_bytes)
   if not ok then
-    if type(copy)=='table' and copy.code=='E_CAPACITY' then fail('E_LIMIT','graphics payload exceeds the per-call byte allowance') end
-    error(copy,0)
+    if type(stats)=='table' and stats.code=='E_CAPACITY' then fail('E_LIMIT','graphics payload exceeds the per-call byte allowance') end
+    error(stats,0)
   end
   if stats.nodes>L.peripheral_call_entries then fail('E_LIMIT','graphics payload exceeds the per-call entry allowance') end
-  return copy
+  return props
 end
 local function id_arg(id)
   if type(id)~='number' then fail('E_ARGUMENT','object id must be a number') end
@@ -299,7 +308,8 @@ function calls.set(g,spend,...)
   local s,o=find(g,id)
   local p=validate(o.type,payload(props,spend),o.props); inside(g,o.type,p)
   spend(16)
-  if not o.native.valid then o.native=create(g,o.type,p,M.shown(g)) else update(g,o.native,o.type,p,M.shown(g)) end
+  if not o.native.valid then o.native=create(g,o.type,p,M.shown(g))
+  elseif not (o.type=='text' and update_text(o.native,props,p)) then update(g,o.native,o.type,p,M.shown(g)) end
   o.props=p
 end
 function calls.get(g,spend,...)

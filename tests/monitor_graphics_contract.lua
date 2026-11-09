@@ -164,6 +164,22 @@ function M.run()
   local before=own_objects()
   guest(c,m.."m.set(computer.getState('ids').line,{to={100,60}})")
   local ty=select(2,model.world(g,(2+100)/64,(2+60)/64)); assert(s.objects[ids.line].native==line and near(line.to.position.y,ty) and own_objects()==before)
+  -- Text/colour-only set writes those native properties alone; other changes still rebuild the projection.
+  local tx,ty0=text.target.position.x,text.target.position.y
+  guest(c,m.."local id=computer.getState('ids').text; m.set(id,{text='AB'}); m.set(id,{color={0,1,0}})")
+  local tc=text.color
+  assert(s.objects[ids.text].native==text and text.text==MAP('AB') and s.objects[ids.text].props.text=='AB' and own_objects()==before)
+  assert(near(text.target.position.x,tx) and near(text.target.position.y,ty0) and tc.r==0 and tc.g==1 and tc.b==0 and tc.a==1)
+  guest(c,m..[==[
+    local id=computer.getState('ids').text
+    local ok,e=pcall(m.set,id,{text=string.rep('W',40)}); assert(not ok and e.code=='E_RANGE'); assert(m.get(id).text=='AB')
+    local centred=m.drawText{text='ABCD',target={62,0},color={1,1,1},alignment='center'}; computer.setState('centred',centred)
+  ]==])
+  assert(text.text==MAP('AB'),'refused text reached the native object')
+  local centred=s.objects[c.state.centred].native; local cx=centred.target.position.x
+  guest(c,m.."m.set(computer.getState('centred'),{text='AB'})")
+  assert(centred.text==MAP('AB') and centred.target.position.x>cx,'centred text kept its old anchor')
+  before=own_objects()
   -- A later failure keeps every earlier successful call of the same callback.
   local ok=run(c,m.."for i=1,20 do m.set(computer.getState('ids').line,{from={2,2+i}}) end; error('fixture failure after twenty moves')")
   assert(not ok and s.objects[ids.line].props.from.y==22 and near(line.from.position.y,select(2,model.world(g,(2+2)/64,(2+22)/64))))

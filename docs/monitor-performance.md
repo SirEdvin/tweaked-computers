@@ -99,12 +99,33 @@ divide the 1.7 ms graphics update as follows:
 | Scheduler and timers outside the callback | 0.15 ms |
 
 Factorio itself is not the cost. One native `text` write takes 0.25 µs, and the
-full nine-property update of one text object takes 1.7 µs. The mod's `set`
-validation and conversion take 19 µs for each call. The guest-to-host call path adds
-about 43 µs. The terminal update also publishes six rows after the callback, which
-costs 0.62 ms. The sine-chart tables above were measured before the harness
-collected garbage outside the measured ticks.
+full nine-property update of one text object takes 1.7 µs. A program that makes 100
+`set` calls in one callback measured 58.8 µs and 6.1 KB for each call. Builds with one
+part removed gave about 33 µs for the graphics host work, 12 µs for the peripheral
+lookup, 8.5 µs for the argument copy and 6 µs for the availability check. The terminal
+update also publishes six rows after the callback, which costs 0.62 ms. The sine-chart
+tables above were measured before the harness collected garbage outside the measured
+ticks.
 Evidence: `/home/siredvin/artifacts/tweaked-computers/monitor-stock-benchmark-2026-11-09/`.
+
+### Graphics call overhead (2026-11-09)
+
+The `reduce-graphics-call-overhead` change keeps the checks, work charges and limits.
+It removes copies and rebuilds that have no effect on the result:
+
+| Step | Time for each `set` | Allocation for each `set` |
+| --- | ---: | ---: |
+| Before | 58.8 µs | 6.1 KB |
+| Graphics props are measured, not copied, and unchanged properties are kept | 52.2 µs | 5.3 KB |
+| Borrowed calls use the pooled service frame | 47.7 µs | 4.6 KB |
+| A `text` or `color` change on left-aligned text writes only that native property | 40.8 µs | 3.8 KB |
+
+`getMode` changed from 13.8 µs to 11.4 µs because each callback resolves a peripheral
+identity one time for each inventory proof. For the six-line stock display, the
+graphics update median changed from 1.68–1.74 ms to 1.60 ms, and its allocation from
+125 KB to 111 KB. The terminal update did not change (2.00 ms). Most of the remaining
+update cost is the wire-network search for `peripheral.wrap`, about 0.7 ms for each
+callback. Evidence: `/home/siredvin/artifacts/tweaked-computers/monitor-graphics-call-candidate-2026-11-09/`.
 
 ## Bottlenecks and changes
 
