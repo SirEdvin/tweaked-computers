@@ -14,6 +14,9 @@ function M.register_subscription_lifecycle(event,fn)
 end
 local shell_lifecycle
 function M.register_shell_lifecycle(fn) assert(not shell_lifecycle); shell_lifecycle=fn end
+-- Reviewed: these methods change no entity, wire, owner or run, so callback-local proofs stay valid.
+local stable={'getID','getLabel','setLabel','getTick','getLimits','getState','setState','deleteState','log',
+  'on','off','after','every','cancelTimer'}
 local general={peripheral_attach=true,peripheral_detach=true,monitor_resize=true,monitor_touch=true,power_restored=true,modem_message=true}
 local MAX=9007199254740991
 local function root() local r=registry.get(); if not registry.supported(r) then errors.raise('E_UNSUPPORTED','unsupported storage; data retained') end; return r end
@@ -421,6 +424,7 @@ function M.services(rec,tick,guard,execution,output_prefix)
     registry.ready_changed(rec); registry.timers_changed(rec)
     return exists
   end)
+  if guard.stable_service then for _,name in ipairs(stable) do guard.stable_service(api[name]) end end
   local map={computer=api,peripheral={}}
   local names={}; for name in pairs(providers) do names[#names+1]=name end; table.sort(names)
   for _,name in ipairs(names) do

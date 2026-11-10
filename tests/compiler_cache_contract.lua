@@ -6,7 +6,7 @@ local M={}
 local source='function start(e) local t={1,2,3}; for i,v in ipairs(t) do assert(i==v) end end'
 local serial=0
 local function evict()
-  for i=1,9 do
+  for i=1,limits.active_computers+1 do
     serial=serial+1
     local text='function start(e) local n='..serial..' end'
     assert(compiler.compile(text,admission.context(admission.new(),'evict',0)))

@@ -67,4 +67,4 @@ None.
 Status: none
 Reason: No guest-visible function, field, argument, result, error, work charge or limit changes. `api/peripheral.d.lua` already states that only operations that can change proof assumptions invalidate a proof.
 Compatibility: Existing programs, Console commands and saves keep working without migration.
-Reviewed-source: 4633482789d89437424b985837b939b04d4385870831c017a5161b2d49f65210
+Reviewed-source: 4a25884e04dfa2360d334ac1999427101809b1c98a54cb33aeb561273224bc91

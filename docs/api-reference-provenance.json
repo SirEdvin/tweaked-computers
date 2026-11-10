@@ -69,7 +69,7 @@
     "examples/speaker-melody.lua": "c94f5059dea8064ef4c4370ffbf0acbd8abfd2195610610daa158e4935fa0844",
     "scripts/monitor-model.lua": "fc846c6a2a4786350b10a1afe2e4ad584701480970ba428236f3fd06c24dee9a",
     "scripts/runtime/budget-settings.lua": "5eb6b406c332d800729234d8c72d4ed5af11b01f6c047dfb0d303341f4c92b14",
-    "scripts/runtime/computer.lua": "3413f193dd82e01b66e1b953569cbeed72f95bc1c85631a612f479fd9caf75b1",
+    "scripts/runtime/computer.lua": "a91ae7d339921984a2e2e6ae9368c077cfea3ccd0b1238e60bfb2ea3eeb968a1",
     "scripts/runtime/environment.lua": "9fb568faa0376012f3eb78bcf686120b8f316646f61a692387f4c4943cb84cf4",
     "scripts/runtime/limits.lua": "cb05eeb256eda662379c8eb7ca0c2ee3bf9e28c2a2ccceb175947938ac1648bf",
     "scripts/services/configurator.lua": "8cee169a68dae146de7f1ef5c0b5054c3220711df33ae13c0607f734ebae0de4",
