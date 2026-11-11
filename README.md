@@ -8,6 +8,11 @@ Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. The mod has no interpreter,
 OS, gameplay filesystem or dynamic guest loader. There is no command history.
 
+Version **0.1.23 ALPHA** decreases host work for callbacks. A run validates its source one time,
+also when more than eight different programs run. A `computer` call no longer makes the next
+peripheral call search the wire network again. No API, limit or save format changes.
+See [0.1.23 release notes](docs/release-0.1.23.md).
+
 Version **0.1.22 ALPHA** adds a monitor [graphics mode](docs/player/api/monitor.md) with retained
 lines, shapes, text, game icons and lights in monitor pixels. Terminal rows now draw as text in a
 mod-supplied font, which needs far fewer native objects. Monitor and guarded-call host work is lower.

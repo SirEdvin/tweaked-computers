@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.23
+Date: 2026-11-11
+  Optimizations:
+    - A later callback of a run does not validate its source again. Before, more than 8 different running programs made each callback validate its source. In a hot-loop measurement with 9 programs of 1.6 KB, the time for each callback changed from 10.3 ms to 0.18 ms.
+    - The shared source cache holds 64 entries instead of 8.
+    - The computer methods getID, getLabel, setLabel, getTick, getLimits, getState, setState, deleteState, log, on, off, after, every and cancelTimer keep the authority proofs of the callback or Console command. The next peripheral call does not search the wire network again.
+    - A six-line monitor program that calls computer.getTick between peripheral.wrap and its monitor calls updates in 1.71-1.75 ms instead of 1.95-1.98 ms (terminal) and in 1.14-1.31 ms instead of 1.58 ms (graphics).
+  Info:
+    - No API, result, error, work charge, limit, setting or save format changes.
+    - ALPHA for Factorio 2.1; verified on 2.1.23 with base and Space Age, not every patch or modpack. Headless measurements only; no GPU or connected-multiplayer timing.
+    - Back up the complete save and matching mod set before upgrading. Restore both for rollback; never downgrade an upgraded save in place.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.22
 Date: 2026-11-09
   Features:
