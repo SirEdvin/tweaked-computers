@@ -155,6 +155,7 @@ These proofs exist only inside one guard. The next callback, command, or cold lo
 | Monitor methods | Model and presentation edits do not move, replace, rotate, or rewire physical members. | Retain target generation, geometry, model, allocation, and publication checks. |
 | Radar channel methods and metadata | Channel state does not change physical identity or wiring. | Check native availability for each active call. Invalidate before `transmit`, which can retire a recipient. |
 | Speaker metadata | Catalogue queries do not change physical state. | Check native availability. Invalidate before `playNote` and `playSound` native submissions. |
+| `computer` methods `getID`, `getLabel`, `setLabel`, `getTick`, `getLimits`, `getState`, `setState`, `deleteState`, `log`, `on`, `off`, `after`, `every`, `cancelTimer` | These methods change record data, saved subscription indexes, and timers only. No entity, wire, owner, or run changes. | Check execution ownership and proof identity for each call. Keep the proofs. |
 | Other methods and providers | No stability assumption. | Invalidate owner, connector, inventory, and availability proofs before entry, even when the operation throws. |
 
 Stop, fault, replacement, and session retirement prevent further use of the admitted identity. Existing output cleanup remains separate from proof reuse.
@@ -205,7 +206,7 @@ queues, deadlines and spent credits retained for recovery.
 Preparation includes validation, environment construction, event copying, and Console graph reconstruction.
 Saved-program callbacks of one run reuse host scaffolding: stdlib wrappers, API namespaces, service closures and the loaded program chunk.
 The cache is process-local and is never saved. Each callback runs the program declarations again and binds new authority proofs and caches.
-The first callback of a run pays compilation work. The saved `compile_paid` field of the computer records this payment. Later callbacks of the run validate the source again without a compilation charge.
+The first callback of a run pays compilation work. The saved `compile_paid` field of the computer records this payment. Later callbacks of the run make no compilation charge. A later callback with reused scaffolding uses the validation result that the scaffolding holds. A callback without that scaffolding validates the source one time.
 A late joiner or a reloaded save without the cache gets the same charges, refusals and effects. Console commands still build a new environment for each command.
 A saved-program callback buffers its `print` and `computer.log` entries and writes them to the Console once, when the callback ends.
 This also occurs when the callback fails or stops, before any fault entry. The retained entries are the same as with immediate appends.

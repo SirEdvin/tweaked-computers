@@ -255,7 +255,7 @@ function M.compile(source, context, mode)
     return nil,plan
   end
   if charges and not charges.overflow then
-    if #order>=8 then local old=table.remove(order,1); old[1][old[2]]=nil end
+    if #order>=limits.active_computers then local old=table.remove(order,1); old[1][old[2]]=nil end
     entries[source]={plan=plan_copy(plan),charges=charges}; order[#order+1]={entries,source}
   end
   return plan
@@ -272,10 +272,13 @@ end
 -- so a peer with a cold cache (late join, reload) observes the same effects and refusals.
 local scaffolds={}
 registry.register_cleanup('runtime-scaffold',function(rec) scaffolds[rec.id]=nil end)
-local function scaffold(owner,plan,services)
+local function reusable(owner,plan)
   local entry=scaffolds[owner.id]
   if entry and entry.rec==owner and entry.run_id==owner.run_id and entry.generation==owner.generation
     and entry.source==plan.source then return entry end
+end
+local function scaffold(owner,plan,services)
+  local entry=reusable(owner,plan); if entry then return entry end
   local frame={}
   return {rec=owner,run_id=owner.run_id,generation=owner.generation,source=plan.source,frame=frame,
     env=environment.new(nil,function(guard) return services(guard,frame) end)}
@@ -291,8 +294,12 @@ function M.run(plan, name, event, services, context, circuit, before, owner)
   end
   -- A run pays compilation once; the saved marker, not process caches, decides, so every peer agrees.
   local paid=owner~=nil and owner.compile_paid==owner.run_id
-  -- Revalidate the exact source every dispatch. Saved/caller-generated text is never executed.
-  local executable,diagnostic = M.compile(plan.source,not paid and context or nil)
+  -- Saved/caller-generated text is never executed. A paid run's scaffold holds the handler set and
+  -- chunk that this process validated for this exact source; every other callback validates here.
+  local held=paid and type(services)=='function' and reusable(owner,plan)
+  local executable,diagnostic
+  if held and held.factory then executable=held
+  else executable,diagnostic = M.compile(plan.source,not paid and context or nil) end
   if not executable then return failure(diagnostic) end
   if plan.storage_version~=nil and not M.same_handlers(plan.handlers,executable.handlers) then
     return failure(errors.new('E_UNSUPPORTED','invalid retained exports; source/data retained'))
@@ -321,7 +328,7 @@ function M.run(plan, name, event, services, context, circuit, before, owner)
       local diagnostic
       factory,diagnostic=load(executable.generated,'@computer','t',env.globals)
       if not factory then errors.raise('E_PROGRAM',diagnostic) end
-      if entry then entry.factory=factory end
+      if entry then entry.factory,entry.handlers=factory,executable.handlers end
     end
     local handlers=env.construct(factory,executable.handlers)
     local input=circuit and event or env.snapshot(event)

@@ -14,6 +14,7 @@ local monitor=require('scripts.services.monitor')
 local presentation=require('scripts.monitor-presentation')
 local logic=require('scripts.services.logic')
 local peripheral=require('scripts.services.peripheral')
+local network=require('scripts.network')
 local kv=require('scripts.services.kv')
 local snapshots=require('scripts.lifecycle-data')
 local configurator=require('scripts.services.configurator')
@@ -232,6 +233,18 @@ function M.run()
       tick=tick+1; execute('assert(rawequal(p,p)); for _,fn in ipairs({rawget,rawset,rawlen}) do local ok,e=pcall(fn,p,"get",true); assert(not ok and e.code=="E_ARGUMENT") end')
       tick=tick+1; execute('assert(peripheral.getName(p)=="'..db.id..'"); assert(get==p.get and put==p.set); assert(get("shell")=="17"); put("shell","18")')
       db.generation=db.generation+1; tick=tick+1; assert(execute('get("shell")',false).code=='E_UNREACHABLE')
+    end)
+    group('computer-method-keeps-callback-proofs',function()
+      local walks=0; local discover=network.discover
+      network.discover=function(...) walks=walks+1; return discover(...) end
+      local function counted(text) walks=0; tick=tick+1; execute(text); return walks end
+      local wrap='local w=peripheral.wrap("'..db.id..'","red"); '
+      local check='assert(peripheral.getType("'..db.id..'","red")=="kv_database")'
+      local plain=counted(wrap..check); local kept=counted(wrap..'computer.getTick(); '..check)
+      local dropped=counted(wrap..'w.get("shell"); '..check)
+      network.discover=discover
+      assert(plain>=1 and kept==plain,'Console computer call discarded the proofs: '..plain..'/'..kept)
+      assert(dropped==plain+1,'unclassified peripheral method kept the Console proofs: '..plain..'/'..dropped)
     end)
     group('monitor-model-and-independent-selection-ownership',function()
       execute('m=peripheral.wrap("'..screen.id..'","red"); m.write("Shell"); peripheral.setMonitorSyncGroup({{name="'..screen.id..'",wire="red"}})')
