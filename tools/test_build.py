@@ -444,7 +444,8 @@ class CanonicalContractTests(unittest.TestCase):
                         '2026-11-07-reduce-report-host-overhead',
                         '2026-11-09-reduce-monitor-redraw-overhead',
                         '2026-11-09-monitor-row-text-presentation',
-                        '2026-11-09-monitor-graphics-mode')
+                        '2026-11-09-monitor-graphics-mode',
+                        '2026-11-11-reduce-callback-validation-and-proof-overhead')
 
     def archived_replacement(self, capability, name, canonical):
         import re
