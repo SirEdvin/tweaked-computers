@@ -394,7 +394,7 @@ getLimits()''',
                 for record in art['fonts']:
                     self.assertEqual(package.read(prefix+record['path']),(build.ROOT/record['path']).read_bytes())
                 self.assertEqual(package.read(prefix+'assets/socket-layout.json'),(build.ROOT/'assets/socket-layout.json').read_bytes())
-                self.assertEqual(art['selection']['candidate'],'B-service-rack')
+                self.assertEqual(art['selection']['candidate'],'D-cc-light-rust')
                 for name in ('tc-circuit-computers','tc-recipe-searcher'):
                     technology=art['technologies'][name]
                     self.assertEqual(technology['icon_size'],256)

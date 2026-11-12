@@ -381,7 +381,7 @@
     "docs/player/api/types/TC.Wire.md": "b95420893ad449159e1765555416669dd2ebcbf53419441bf1f9afa96ceaa267",
     "docs/player/api/types/TC.WireConnectorId.md": "4c32fb1d717323f93e557eae9ece9e4780aa9b2484f5d27cfce08c1775ddc309",
     "docs/player/examples.md": "ed1c2e493853afe98817a389b09a860543ece21644c30380c06e3caa84a82aaf",
-    "mkdocs.yml": "897467211c48754b986fa41415118c556ab95337a0b8589a8837fcd09cfe7375",
+    "mkdocs.yml": "96d2b37b17d251a722bd3d594294c9523576e10c6c26ea2620f0147c780eb441",
     "scripts/ui/api-reference.lua": "081a63de1e39d5f7a48c2543963c16ce2680b6b4392244679fc46dc7be6dca38"
   },
   "tool": {

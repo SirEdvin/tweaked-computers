@@ -1,65 +1,54 @@
-# Service Rack device artwork and independent glyphs
+# CC peripheral device artwork and independent glyphs
 
-Service Rack (AR2 candidate B) is the user-selected family. All 176
-pre-existing generated PNGs match the selected preview byte-for-byte, including
-all status masks, glyphs and flat-monitor shadows. Two new 256×256 technology
-icons depict its computer and Recipe Searcher. Research costs, prerequisites,
-unlocks, recipes and runtime behavior are unchanged.
+The selected family (candidate D, light rust) gives eight devices the look of a
+CC:Tweaked or addon peripheral, with worn, lightly rusted paint in the vanilla
+combinator style. The monitor keeps its Service Rack art byte for byte. Research
+costs, prerequisites, unlocks, recipes and runtime behavior do not change.
 
-## Identify the nine devices
+| Device | Look | Footprint |
+| --- | --- | --- |
+| computer | CC:Tweaked Computer | 1×1 |
+| kv | CC:Tweaked Disk Drive | 1×1 |
+| monitor | Service Rack flat bracketed glass (unchanged) | 1×1 |
+| logic | three CC:Tweaked Redstone Relays | 3×1 |
+| configurator | Advanced Peripherals Inventory Manager and a crate | 2×1 |
+| recipe_searcher | Advanced Peripherals Geo Scanner | 1×1 |
+| factoriopedia_interface | CC:Tweaked Printer | 1×1 |
+| production_statistics | Advanced Peripherals Energy Detector | 1×1 |
+| dashboard | Tom's Peripherals keyboard and screen | 1×1 |
 
-The additive seventh device, **Factoriopedia Interface**, is an upright blue
-catalogue terminal with stepped reference cards and a brass side dial. Its 1×1
-body uses the same ground-projected Network contacts and compact status masks.
-It has its own MIT geometry in `service_rack.py`; no existing PNG is replaced.
-The additive eighth device, **Production Statistics**, is a brass-roller chart
-recorder with ruled paper, a blue trace and a raised twin-gauge head. Its original
-MIT mesh in `service_rack.py` uses the same materials/contacts/status convention;
-it is not a recolored catalogue terminal. No existing PNG is replaced.
-The additive ninth device, **Dashboard**, is a low control console with a blue
-screen and raised brass controls, using the same original MIT mesh pipeline.
-All three additions have a 1×1 footprint. The expanded inventory has 265 PNGs,
-96 contacts and nine distinct silhouettes.
-
-- Computer: folded-steel L desk, recessed display, separate keyboard apron and
-  asymmetric cooling hump.
-- KV database: three offset cartridges with pale handles and a cooling spine.
-- Monitor: flat dark glass with green inset rails and pale corner brackets.
-- Logic handler: long rail instrument, central processing hood and four exposed
-  ceramic terminal banks; separate Input, Network and Output sockets.
-- Configurator: open service caliper/yoke with a round reference dial and narrow
-  tongue; separate Network and Factory targets sockets.
-- Recipe Searcher: low paper-bed scanner sled with broad overhead scan carriage.
-
-The green folded steel, dark iron, ceramic and copper details share fixed
-world-space lighting, deterministic surface grain and geometry-cast shadows.
-Shapes rotate before projection. Footprints remain 1×1, 1×1, 1×1, 3×1, 2×1 and
-1×1 respectively. Selection/collision, power, sockets, touch and every API stay
-unchanged. There is no runtime theme selector.
+Each port of the eight devices is a modelled antenna: ceramic insulators, a
+role-color band, a red ring and a green ring. The native wire points are the
+ring centres. The inventory has 265 PNGs, 96 contacts and nine distinct
+silhouettes.
 
 ## Editable sources, selection and notices
 
-Edit `service_rack.py`, not generated PNGs. It contains only selected B meshes
-and the common depth rasterizer, extracted from AR2 source checkpoint
-`9cbd4ae73c1c62763724735ea93428a3e2d5f5f5`. It reuses `industrial.py`'s contacts
-and status masks and `foundry.py`'s unchanged monitor foundation/shadow. Earlier
-body constructors remain historical helpers, not active alternatives.
+Edit `../art/cc_family.py` (Blender 4.0.2, Cycles), not generated PNGs:
 
-Selected preview SHA256:
-`75f43f0ddadd4ec6c0a880a2169c2bca5e225341b311859299cc5a7411182cb3`.
-The technology icons were not in that preview: both are new transparent 256px
-south-body derivatives, tightly fitted with one-eighth padding. Item icons keep
-the exact selected 64px bytes. `sprites.lua` exports `art.technologies` for the
-two actual technology prototypes; no research ownership or effects are changed.
+    blender -b -P art/cc_family.py -- art/renders [kind ...]
 
-All new geometry and pixels are original project MIT work. Reference study
-techniques (not pixels or meshes) included Nixie's recessed frame/feet/vent
-hierarchy. Exact inspected upstream versions, licenses, notices and hashes are
-retained externally in
-`/home/siredvin/artifacts/tweaked-computers/ar2-three-families-2026-10-19/reference-provenance.json`
-and the sibling `ar1-reference-research-2026-10-19` bundle. Free download is not
-permission to reuse art; restricted and unclear reference art was not copied.
-The production generator needs none of those downloaded references.
+It writes `art/renders/<kind>-<direction>-{body,shadow}.png` at 128 px per tile
+and `art/model-points.json` (antenna rings and status lights, north frame, x
+east, y south, z up, in tiles). Commit both. The renders are the reproducible
+input, because Cycles output can change between Blender versions. `art/` is
+not packaged.
+
+`generate.py` downscales the renders with Pillow Lanczos to 64 px per tile. It
+makes the shadow layer from the shadow-catcher alpha: alpha below 12 becomes 0,
+then alpha × 0.72 in black. Item and technology icons are the north (front)
+views. Status marks keep the existing patterns; their anchor is the projected
+status light of the model. When the antenna points change, copy them to
+`M.antennas` in `scripts/device-definitions.lua` and run `export_layout.py`;
+`generate.py` refuses an exported layout that differs from the model points.
+
+The monitor still comes from `service_rack.py` and `foundry.py` (selected B
+preview, AR2 checkpoint `9cbd4ae73c1c62763724735ea93428a3e2d5f5f5`).
+`industrial.py` keeps the status patterns and the monitor contacts.
+
+All new geometry and pixels are original project MIT work. The models copy the
+look of the CC peripherals; no CC:Tweaked or addon texture, model or font is
+imported.
 
 Historical approved Greg Flavored inputs remain byte-identical under
 `upstream/`: repository `BirbIrl/ComputerCraft-Greg-Flavored`, revision
@@ -70,10 +59,9 @@ sampled. Retain `notices/Greg-Flavored-MIT.txt`, its credits README and
 
 `manifest.json` records source hashes, exact source dependencies per output,
 PNG/RGBA/alpha hashes, dimensions, pivots, projection, materials, encoder and
-Pillow/NumPy versions, required notices and selected-preview identity. It is
-regenerated from actual production sources, not copied from the preview's old
-manifest. Python tooling remains source-repository-only; the Portal gameplay ZIP
-contains images, Lua metadata, manifests, socket layout and notices, not Python
+Pillow/NumPy versions, required notices and the selected family. It is
+regenerated from actual production sources and the committed renders. Python
+tooling remains source-repository-only; the Portal gameplay ZIP contains images, Lua metadata, manifests, socket layout and notices, not Python
 executables. Source dependencies in the manifest may intentionally refer to
 repository files excluded from the gameplay ZIP.
 
@@ -90,19 +78,20 @@ All image paths start `__tweaked-computers__/assets/`.
 
 | Device | Local footprint | Frame / ground pivot (high-resolution pixels) |
 | --- | --- | --- |
-| computer, kv, monitor, recipe_searcher, factoriopedia_interface, production_statistics, dashboard | 1×1 | 160×160 / (80,80) |
+| computer, kv, recipe_searcher, factoriopedia_interface, production_statistics, dashboard | 1×1 | 192×192 / (96,96) |
+| monitor | 1×1 | 160×160 / (80,80) |
 | logic | 3×1 | 320×320 / (160,160) |
 | configurator | 2×1 | 320×320 / (160,160) |
 
 Each device/direction exports body, shadow, states and roles. Choose north,
 east, south or west rather than rotating projected pixels. All sprites keep
-scale 0.5 and shift `{0,0}`. Projection is `(64*x - 48*h, 64*y - 128*h)` in tile
-units. Contact overlays use their actual ground coordinates, not the elevated
-body projection. Network diamond, Input chevron, Output double chevron and
-Factory targets crosshair supplement socket position and color; either wire
+scale 0.5 and shift `{0,0}`. For the CC devices a model point `(x, y, z)` (after
+the direction transform) projects to `(64*x, 64*(y - z/sqrt(2)))` pixels from the
+pivot; the monitor keeps `(64*x - 48*h, 64*y - 128*h)` with ground-level
+contacts. Antenna position and band color tell the roles apart; either wire
 color is permitted per role.
 
-Status sheets remain byte-identical: grey stopped dash, amber unpowered slash,
+Status marks keep their patterns: grey stopped dash, amber unpowered slash,
 green powered beacon, red fault cross and four-frame amber/steel activity.
 Each frame has one to nine opaque pixels, never whole-body flashing. Native
 deconstruction feedback is not replaced. Only a powered running computer
@@ -148,7 +137,7 @@ glyph and monitor-shadow outputs retain RGBA8 filter-0 zlib-level-9 encoding.
 
 Only re-export socket layout when production definitions change. Static checks
 verify 265 outputs, all source/output/decoded hashes, transparent margins,
-96 exact socket pixels, nine distinct silhouettes, full monitor alpha/interior,
+96 contacts (monitor socket pixels, opaque antenna rings), nine distinct silhouettes, full monitor alpha/interior,
 288 compact status frames, all 256 glyphs, both research images, byte-exact
 regeneration and package notices/inventory. Contact sheets are generated asset
 composites with explicitly labelled vanilla footprint outlines, not native
