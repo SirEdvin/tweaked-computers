@@ -42,15 +42,17 @@ The artwork deliverable SHALL include editable sources, reproducible export inst
 - **THEN** the reviewer can inspect all five identities and socket alignments from a complete contact sheet and trace the shipped sprites to their sources without recreating an opaque manual workflow.
 
 ### Requirement: Selected Service Rack six-device family
-The six devices SHALL adopt the selected Service Rack (AR2 candidate B) identity. Recipe Searcher SHALL retain its 1×1 footprint and follow five-device requirements. Cardinal bodies, item icons, shadows and status sheets SHALL match the preview; technology icons SHALL depict the selected computer and scanner. Adoption MUST NOT alter gameplay, research ownership, unlock effects, native-device power, physical contacts/selection or monitor alpha/interior/touch geometry.
+The computer, database, logic handler, configurator, Recipe Searcher, Factoriopedia Interface, Production Statistics and Dashboard SHALL use the selected CC peripheral family: worn, lightly rusted blocks that copy CC:Tweaked and addon peripherals. Each port SHALL show an antenna with red and green rings and a role-color band. The monitor SHALL keep its Service Rack art. Adoption MUST NOT alter gameplay, research, power, footprints, selection or monitor geometry.
 
 #### Scenario: Identify the selected six-device family
-- **WHEN** all six devices appear beside vanilla machinery at ordinary zoom, in inventory and in their research entries
-- **THEN** the folded desk, offset cartridge stack, flat bracketed monitor, rail instrument, open caliper and low scanner sled remain recognizable and share coherent materials and lighting.
+- **WHEN** all devices appear beside vanilla machinery at ordinary zoom, in inventory and in their research entries
+- **THEN** the computer, disk drive, redstone relays, inventory manager with crate, geo scanner, printer, energy detector and keyboard console are recognizable and share coherent materials and lighting
+- **AND** the monitor keeps its flat bracketed Service Rack frame.
 
 #### Scenario: Reproduce the selected artwork
-- **WHEN** the production generator runs with its pinned offline dependencies
-- **THEN** all 176 pre-existing PNGs reproduce the approved B preview exactly, two new 256px technology icons are traceable to its selected bodies, and regenerated manifests record actual sources, output bytes and retained notices without an installed theme selector.
+- **WHEN** the production generator runs with its pinned offline dependencies and the committed renders in `art/renders`
+- **THEN** every sprite, icon and status sheet reproduces byte for byte without Blender
+- **AND** the manifest records the Blender script, every render, the output bytes and the retained notices.
 
 ### Requirement: Native radar visual exception
 Radar modems SHALL retain the native radar visual language rather than adopting Service Rack shells. The ordinary radar SHALL retain its vanilla graphics, footprint, wire contacts, animation and native status presentation. The existing six-device Service Rack artwork and footprint contracts SHALL remain unchanged; radar integration SHALL NOT require authored shell/status sheets for vanilla radar.
