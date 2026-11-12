@@ -59,20 +59,13 @@ python tools/monitor_animation.py --factorio "$HEADLESS" --archive "$ARCHIVE" --
 
 ### Full client, screenshots and animation
 
-Use the complete licensed client and its matching data directory, not the headless executable. The proven host-local monitor runner requires Python, `xvfb-run`, X11/XTest libraries, `ffmpeg` and `ffprobe`. Copy its three helpers into the new scratch directory; never run it in-place in a frozen evidence bundle:
+Use the complete licensed client and its matching data directory, not the headless executable. Rendered runs need `xvfb-run`, X11/XTest libraries, `ffmpeg` and `ffprobe`. No rendered-run harness is kept; write a small scratch runner for the task:
 
-```sh
-E=/home/siredvin/artifacts/tweaked-computers/subpixel-line-2026-10-16
-cp "$E/harness/render_case.py" "$E/harness/monitor_graphics.lua" "$E/harness/x11.py" "$WORK/"
-xvfb-run -a -s '-screen 0 1280x720x24 -nolisten tcp' python "$WORK/render_case.py" --archive "$ARCHIVE" --case base-video --mode base --ticks 600 --capture --record-seconds 8
-```
-
-The runner creates isolated config/mod/write-data/save directories, injects only test fixtures into a copy of the supplied mod ZIP, builds a powered four-monitor scene, then runs the full client with `--benchmark-graphics`, `--benchmark-ticks` and `--output-perf-stats`. It verifies unchanged production payloads. Its repository/client paths and setup-module extraction are host-local assumptions: inspect/adapt the copied helper if the checkout or fixture changes.
-
-- Outputs under `$WORK/base-video/`: `window.png` (actual window), `animation.mp4`, native `write/script-output/chart-{180,210,240}.png`, `client.log`, `render-perf.csv`, `summary.json` and `provenance.json`.
-- Repeat with a fresh case name and `--mode space-age` for the expansion client. Use `--ticks 3600` without `--capture`/`--record-seconds` for a separate sustained run; `--workload full-blit` changes only the test copy's row-submission predicate. Never mix recording overhead into timing comparisons.
-- The fixture calls `game.take_screenshot` at fixed ticks/camera/zoom with `show_gui=false` and `force_render=true`; paths are relative to that case's write-data `script-output/`. These native screenshots differ from actual-window/UI captures.
-- For other saves/UI scenarios, use an isolated config with `read-data` pointing at the chosen distribution's `data` and `write-data` pointing at scratch, plus a separate `--mod-directory`. Start the full client with `--load-game /absolute/copied-save.zip` (or use `--benchmark-graphics` for bounded rendered runs). Inspect the actual window before interacting; do not reuse or overwrite player data.
+- Use isolated configs: `read-data` at the chosen distribution's `data`, `write-data` in scratch, and a separate `--mod-directory` that holds the built ZIP plus any test-only scene mod. Never inject test files into the production ZIP.
+- Create the scene save with the headless executable (`--create`), then run the full client inside `xvfb-run` with `--benchmark-graphics SAVE --benchmark-ticks N` (add `--output-perf-stats` for timing). Run base and Space Age as separate cases in fresh directories.
+- For native screenshots, call `game.take_screenshot` with `show_gui=false` and `force_render=true`; paths are relative to the case's write-data `script-output/`. These differ from actual-window/UI captures.
+- For timing, use long `--benchmark-ticks` runs without capture or recording. Never mix recording overhead into timing comparisons.
+- For other saves/UI scenarios, start the full client with `--load-game /absolute/copied-save.zip`. Inspect the actual window before interacting; do not reuse or overwrite player data.
 
 For manual capture, run these **inside the same private Xvfb session as the live client**; `WORK` must be set there. A second `xvfb-run` creates another display, not a view of the first:
 
@@ -90,4 +83,4 @@ If a later process attaches to the owned display, retain both `DISPLAY` and the 
 - Read the actual renderer in `client.log`. Xvfb/llvmpipe validates appearance, **not representative GPU FPS**. Headless publication cadence and the recording's 30 FPS are not measured client FPS; these isolated runs do not prove connected multiplayer behavior. Keep baseline/candidate timing runs serial with identical workloads/settings and disclose unrelated host contention.
 - Preserve selected evidence under `/home/siredvin/artifacts/tweaked-computers/`, outside git and expiring scratch. Exclude game distributions and display credentials. Keep failed/partial attempts separate from final passes; do not overwrite historical bundles.
 - Let bounded benchmarks exit normally; for manual runs request normal window close or server `/quit`, then verify the owned Factorio/Xvfb/ffmpeg processes exited. Terminate only owned leftovers, never blanket-kill unrelated clients; forced termination is failed acceptance.
-- Further detail: [rendered validation and harness provenance](docs/monitor-render-validation.md), [current chart behavior and headless gates](docs/player/monitor-animation.md). The older rendered report measures the star-marker workload, not the later connected-subpixel chart; its separate local evidence is in `$E` above.
+- Further detail: [rendered validation report](docs/monitor-render-validation.md), [current chart behavior and headless gates](docs/player/monitor-animation.md). The older rendered report measures the star-marker workload, not the later connected-subpixel chart.

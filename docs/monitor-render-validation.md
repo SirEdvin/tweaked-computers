@@ -130,7 +130,7 @@ no production change was needed to fix them.
 
 ## Evidence and reproduction
 
-Durable local evidence directory:
+Former local evidence directory (deleted on 2026-11-12):
 
 `/home/siredvin/artifacts/tweaked-computers/render-validation-2026-10-16`
 
@@ -151,23 +151,9 @@ code was not changed by this validation; later report/documentation edits are
 not represented by those frozen archive hashes. Nothing was committed, pushed
 or published as part of this rendered validation.
 
-The retained runner is a host-local reproduction aid, not a supported portable
-tool. It uses this checkout's provided clients/config template and requires
-Python, Xvfb, X11 libraries and ffmpeg. On this same host, a fresh candidate case
-can be run without rebuilding the production archive:
-
-```sh
-E=/home/siredvin/artifacts/tweaked-computers/render-validation-2026-10-16
-xvfb-run -a -s '-screen 0 1280x720x24 -nolisten tcp' \
-  python "$E/render_case.py" \
-  --archive "$E/archives/candidate/tweaked-computers_0.1.6.zip" \
-  --case candidate-recheck --workload full-blit --ticks 1800
-```
-
-Use a fresh `--case` name; existing output directories are rejected. The raw
-matrix command ledger retains the original scratch paths as historical evidence.
-For another machine, first adapt the runner's repository/engine paths and supply
-licensed matching game data.
+The local evidence directory and its runner were deleted on 2026-11-12. The
+archive hashes above identify the tested snapshots. A new rendered check needs
+a new scratch runner, as `AGENTS.md` describes.
 
 ## Remaining acceptance
 
