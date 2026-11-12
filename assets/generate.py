@@ -10,6 +10,7 @@ approved Greg Flavored inputs/notices remain byte-exact for source continuity.
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 import struct
 import zlib
@@ -135,6 +136,7 @@ def icon(image, size=64):
 
 def generate(output):
     import service_rack as industrial
+    from industrial import rotate
     import PIL
     import numpy
     from PIL import Image
@@ -179,52 +181,90 @@ def generate(output):
             'alpha_sha256':digest(bytes(p[3] for p in image[2])),**metadata})
         INPUT_TRACE.clear()
     devices={}
+    # CC-style devices: committed Blender renders (art/cc_family.py) at 128 px/tile.
+    points=json.loads((ROOT.parent/'art/model-points.json').read_text())
+    cc_inputs={'art/cc_family.py','art/model-points.json','assets/industrial.py','assets/socket-layout.json',
+               'scripts/device-definitions.lua','assets/layout-data.lua','assets/export_layout.py','assets/requirements.txt'}
+    def project(point,d):
+        x,y=rotate(point[0],point[1],d)
+        return x,y-point[2]/math.sqrt(2)
+    for kind,entry in points.items():
+        for d,direction in enumerate(DIRECTIONS):
+            for role,colors in entry['contacts'].items():
+                for color,point in colors.items():
+                    # Factorio's Lua literal parsing can differ from Python by a few ULP.
+                    assert all(abs(a-b)<1e-9 for a,b in zip(project(point,d),layout['devices'][kind]['directions'][direction][role]['contacts'][color])), \
+                        ('wire contact differs from model antenna; update scripts/device-definitions.lua', kind, direction, role, color)
+    def render(kind,direction,layer):
+        path='art/renders/'+kind+'-'+direction+'-'+layer+'.png'
+        INPUT_TRACE.add(path)
+        image=Image.open(ROOT.parent/path).convert('RGBA')
+        if layer=='shadow':
+            # Keep the caster's shadow, drop the catcher's faint ambient tint, draw as black.
+            alpha=image.getchannel('A').point(lambda v: 0 if v<12 else int(v*0.72))
+            image=Image.new('RGBA',image.size,(0,0,0,0)); image.putalpha(alpha)
+        return image
+    def cc_image(image,size):
+        image=image.resize((size,size),Image.LANCZOS)
+        return size,size,list(zip(*[iter(image.tobytes())]*4))
+    def front_view(kind,size,entry):
+        # CC-style icons show the front (north) at render resolution; the monitor keeps its south view.
+        if kind in points: return cc_image(render(kind,'north','body'),size*2)
+        return industrial.body(kind,2,size,entry['directions']['south'])
     for kind,entry in layout['devices'].items():
-        width=entry['width']; size=160 if width==1 else 320
+        width=entry['width']; size=320 if width>1 else 192 if kind in points else 160
         devices[kind]={'footprint':[width,1],'directions':{}}
         for d,direction in enumerate(DIRECTIONS):
             prefix='sprites/'+kind+'-'+direction
             meta={'device':kind,'direction':direction,'frame_width':size,'frame_height':size,
                   'pivot':[size//2,size//2],'scale':0.5,'shift':[0,0]}
             roles=entry['directions'][direction]
+            cc=kind in points
             def emit_device(path,image,**metadata):
-                INPUT_TRACE.update(device_inputs)
+                INPUT_TRACE.update(cc_inputs if cc else device_inputs)
                 emit(path,image,**metadata)
-            emit_device(prefix+'-body.png',industrial.body(kind,d,size,roles),layer='body',**meta)
-            emit_device(prefix+'-shadow.png',industrial.shadow(kind,d,size,width),layer='shadow',draw_as_shadow=True,**meta)
+            if cc:
+                emit_device(prefix+'-body.png',cc_image(render(kind,direction,'body'),size),layer='body',**meta)
+                emit_device(prefix+'-shadow.png',cc_image(render(kind,direction,'shadow'),size),layer='shadow',draw_as_shadow=True,**meta)
+                x,y=project(points[kind]['status'],d); centre=(round(size/2+64*x),round(size/2+64*y))
+            else:
+                emit_device(prefix+'-body.png',industrial.body(kind,d,size,roles),layer='body',**meta)
+                emit_device(prefix+'-shadow.png',industrial.shadow(kind,d,size,width),layer='shadow',draw_as_shadow=True,**meta)
+                centre=None
             state_paths={}
             for state in ('off','unpowered','powered','fault','blinking'):
-                frames=[industrial.status(kind,d,size,state,f) for f in range(4 if state=='blinking' else 1)]
+                frames=[industrial.status(kind,d,size,state,f,centre) for f in range(4 if state=='blinking' else 1)]
                 emit_device(prefix+'-'+state+'.png',sheet(frames),layer='status',state=state,frame_count=len(frames),**meta)
                 state_paths[state]=prefix+'-'+state+'.png'
             devices[kind]['directions'][direction]={'body':prefix+'-body.png','shadow':prefix+'-shadow.png',
                 'states':state_paths,'frame_size':[size,size],'pivot':[size//2,size//2],
                 'roles':roles}
-        INPUT_TRACE.update(device_inputs)
-        emit('icons/'+kind+'.png',icon(industrial.body(kind,2,size,entry['directions']['south'])),device=kind,layer='icon',icon_size=64)
+        INPUT_TRACE.update(cc_inputs if kind in points else device_inputs)
+        emit('icons/'+kind+'.png',icon(front_view(kind,size,entry)),device=kind,layer='icon',icon_size=64)
         devices[kind]['icon']='icons/'+kind+'.png'
     technologies={}
     for name,kind in (('tc-circuit-computers','computer'),('tc-recipe-searcher','recipe_searcher')):
-        entry=layout['devices'][kind]; size=160
+        entry=layout['devices'][kind]; size=192
         path='icons/'+name+'-technology.png'
-        INPUT_TRACE.update(device_inputs)
-        emit(path,icon(industrial.body(kind,2,size,entry['directions']['south']),256),device=kind,layer='technology',icon_size=256)
+        INPUT_TRACE.update(cc_inputs)
+        emit(path,icon(front_view(kind,size,entry),256),device=kind,layer='technology',icon_size=256)
         technologies[name]={'icon':path,'icon_size':256}
     emit('glyphs/atlas.png',glyph_image(),layer='glyph',cell=[6,9],columns=16,rows=16)
     # Opaque authored mask: sprites, unlike runtime rectangles, support layers.
     emit('glyphs/pixel.png',(1,1,[(255,255,255,255)]),layer='display-fill')
-    authored=['assets/generate.py','assets/glyphs.txt',*sorted(device_inputs)]
-    manifest={'format_version':2,'status':'service-rack-selected',
+    renders={'art/renders/'+p.name for p in (ROOT.parent/'art/renders').glob('*.png')}
+    authored=['assets/generate.py','assets/glyphs.txt',*sorted(device_inputs|cc_inputs|renders)]
+    manifest={'format_version':2,'status':'cc-peripheral-selected',
         'repository':audit['greg_flavored']['repository'],'revision':audit['greg_flavored']['revision'],
-        'permission_basis':'Original Service Rack meshes/materials, retained monitor foundation, contacts/statuses and independent glyphs are project MIT. Approved historical Greg Flavored originals/notices retained unchanged; no external pixels or models sampled.',
-        'selection':{'candidate':'B-service-rack','preview_sha256':'75f43f0ddadd4ec6c0a880a2169c2bca5e225341b311859299cc5a7411182cb3','source_commit':'9cbd4ae73c1c62763724735ea93428a3e2d5f5f5','technology_icons':'New 256px derivatives of selected computer and scanner; not part of AR2 preview'},
+        'permission_basis':'Original CC-style Blender models/materials (art/cc_family.py), retained Service Rack monitor and foundation, contacts/statuses and independent glyphs are project MIT. Approved historical Greg Flavored originals/notices retained unchanged; no external pixels or models sampled.',
+        'selection':{'candidate':'D-cc-light-rust','source':'art/cc_family.py','renderer':'Blender 4.0.2 Cycles; committed 128 px/tile renders in art/renders','monitor':'Service Rack B monitor retained unchanged','technology_icons':'256px north views of the computer and Recipe Searcher'},
         'inputs':inputs,'authored_inputs':[{'path':p,'sha256':digest((ROOT.parent/p).read_bytes())} for p in authored],
         'notices':[{'path':'assets/notices/'+p.name,'sha256':digest(p.read_bytes())} for p in sorted((ROOT/'notices').iterdir())],
-        'transform':{'sampling':'3x depth-buffered barycentric rasterization, fixed forward math.fma three-vector reductions, world-fixed normals/light and deterministic grain; Lanczos downsample; nearest-neighbour icon fitting; exact retained monitor foundation',
-            'projection':'64*x - 48*height, 64*z - 128*height; tile units; geometry rotated clockwise before projection; fixed world light',
+        'transform':{'sampling':'CC devices: Blender Cycles renders at 128 px/tile, Pillow Lanczos 2x downsample; monitor: 3x depth-buffered barycentric rasterization with fixed math.fma reductions; nearest-neighbour icon fitting; exact retained monitor foundation',
+            'projection':'CC devices: orthographic 45-degree camera, depth stretched by sqrt(2), screen 64*x, 64*(y - height/sqrt(2)); monitor: 64*x - 48*height, 64*z - 128*height; tile units; fixed world light',
             'monitor':'unchanged 64x64 tile/touch area and 60x60 interior; two-unit inner bezel plus four-unit exterior mechanical skirt; 72x72 chamfered artwork; unchanged ground pivot',
-            'contacts':'socket-layout.json exported from production defs.contact/offset in Factorio '+layout['engine']+'; projected at ground coordinates',
-            'shadow':'geometry projected toward world southeast; alpha 86 before Gaussian blur and Lanczos; monitor retained alpha 85',
+            'contacts':'socket-layout.json exported from production defs.contact/offset in Factorio '+layout['engine']+'; CC devices: modelled antenna rings checked against art/model-points.json; monitor: bezel studs at ground coordinates',
+            'shadow':'CC devices: Cycles shadow catcher, sun from the north-west, alpha below 12 removed, alpha x0.72, Lanczos; monitor retained alpha 85',
             'status':'grey dash stopped; amber slash unpowered; green powered; red fault cross; amber/steel four-frame activity',
             'encoder':'RGBA8 Pillow compress_level=9 for selected bodies/icons/mesh shadows; filter 0 zlib 9 for unchanged glyph/status/monitor shadow','zlib_version':zlib.ZLIB_VERSION,'pillow_version':PIL.__version__,'numpy_version':numpy.__version__},
         'palette':industrial.PALETTE,'devices':devices,'technologies':technologies,'outputs':outputs,

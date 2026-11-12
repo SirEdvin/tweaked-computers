@@ -144,15 +144,15 @@ Queries SHALL not change prototypes, recipes, research, inventories, fluids, nat
 - **THEN** the existing logical-item and helper ownership rules apply, with new entity identities for new devices and no catalogue payload or query session transferred in items.
 
 ### Requirement: Distinct artwork and identity-only inspection
-The interface SHALL have a distinct Service Rack body/icon with readable cardinal views, status and Network contacts, while preserving pre-existing device artwork and geometry. Normal opening SHALL show its authorized identity/status inspector, not a vanilla carrier dialog or catalogue browser. Native Factoriopedia opening and existing item/fluid information SHALL remain unchanged.
+The interface SHALL have a distinct printer body and icon from the CC peripheral family, with readable cardinal views, status and a Network antenna, while preserving the geometry of the other devices. Normal opening SHALL show its authorized identity/status inspector, not a vanilla carrier dialog or catalogue browser. Native Factoriopedia opening and existing item/fluid information SHALL remain unchanged.
 
 #### Scenario: Inspect and identify the new block
 - **WHEN** an authorized player opens an interface with or without electrical coverage without a connected computer
 - **THEN** its exact peripheral name is copyable and status is meaningful, without performing a catalogue scan or starting a program.
 
 #### Scenario: View beside existing devices
-- **WHEN** the interface is rendered beside Recipe Searcher and the other Service Rack devices in each cardinal direction
-- **THEN** its silhouette and icon are distinguishable and both wire colors attach to their depicted contacts, with unrelated device pixels unchanged.
+- **WHEN** the interface is rendered beside Recipe Searcher and the other devices of the family in each cardinal direction
+- **THEN** its silhouette and icon are distinguishable and both wire colors attach to its depicted antenna rings.
 
 ### Requirement: Supported engine and honest acceptance
 The feature SHALL operate on the repository's pinned Factorio 2.1.23 in base-only and optional Space Age configurations without expansion-only crafting prerequisites. Validation SHALL separately identify packaged engine, cold-load/upgrade, actual client appearance/tooltip and connected multiplayer evidence. Documentation or headless success SHALL not be presented as client or multiplayer acceptance.

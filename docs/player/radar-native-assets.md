@@ -30,4 +30,4 @@ acceptance ledger. Until that evidence is complete, do not interpret prototype
 loading as visual acceptance. Do not interpret llvmpipe captures as representative GPU FPS.
 
 See the [modem reference](api/modem.md) for research, recipe, power and platform
-routing, and [Service Rack artwork](artwork.md) for the unchanged authored devices.
+routing, and [device artwork](artwork.md) for the authored devices.

@@ -132,7 +132,7 @@ Ordinary saves SHALL preserve complete live state, data, deadlines and ownership
 - **THEN** identities, data, current display, timers and active source remain consistent without duplicate startup effects.
 
 ### Requirement: Attributable adapted artwork
-The six Service Rack devices SHALL retain the Factorio-industrial visual family defined by `device-visual-identity`. Radar modems SHALL use its native-radar exception rather than replacing vanilla artwork. Original authored assets and native Factorio asset references are preferred; retained approved Greg Flavored inputs SHALL retain pinned provenance and MIT notices. Runtime sprites SHALL match perspective, geometry and connectors. Unresolved provenance SHALL block only affected assets.
+The custom devices SHALL retain the Factorio-industrial visual family defined by `device-visual-identity`. Radar modems SHALL use its native-radar exception. Original authored assets, committed renders of authored models and native Factorio asset references are preferred; retained Greg Flavored inputs SHALL keep pinned provenance and MIT notices. Runtime sprites SHALL match perspective, geometry and connectors. Unresolved provenance SHALL block only affected assets.
 
 #### Scenario: Asset release audit
 - **WHEN** a distributable archive is built

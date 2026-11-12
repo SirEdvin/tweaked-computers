@@ -394,7 +394,7 @@ getLimits()''',
                 for record in art['fonts']:
                     self.assertEqual(package.read(prefix+record['path']),(build.ROOT/record['path']).read_bytes())
                 self.assertEqual(package.read(prefix+'assets/socket-layout.json'),(build.ROOT/'assets/socket-layout.json').read_bytes())
-                self.assertEqual(art['selection']['candidate'],'B-service-rack')
+                self.assertEqual(art['selection']['candidate'],'D-cc-light-rust')
                 for name in ('tc-circuit-computers','tc-recipe-searcher'):
                     technology=art['technologies'][name]
                     self.assertEqual(technology['icon_size'],256)
@@ -445,7 +445,8 @@ class CanonicalContractTests(unittest.TestCase):
                         '2026-11-09-reduce-monitor-redraw-overhead',
                         '2026-11-09-monitor-row-text-presentation',
                         '2026-11-09-monitor-graphics-mode',
-                        '2026-11-11-reduce-callback-validation-and-proof-overhead')
+                        '2026-11-11-reduce-callback-validation-and-proof-overhead',
+                        '2026-11-12-cc-peripheral-artwork')
 
     def archived_replacement(self, capability, name, canonical):
         import re

@@ -19,12 +19,12 @@ def check(output):
     records = manifest['outputs']
     paths = [r['path'] for r in records]
     assert len(paths) == len(set(paths)) == 265
-    # Frozen independent digest from every original selected-preview PNG,
-    # including untouched statuses/glyphs/shadows, not from the new manifest.
-    preview_paths=sorted(r['path'] for r in records if r['layer']!='technology' and r.get('device') not in ('factoriopedia_interface','production_statistics','dashboard'))
-    assert len(preview_paths)==176
+    # Frozen independent digest of every selected PNG (CC family plus the retained
+    # Service Rack monitor), not taken from the new manifest.
+    preview_paths=sorted(r['path'] for r in records if r['layer']!='technology')
+    assert len(preview_paths)==263
     preview_inventory=''.join(p+' '+digest((ROOT.parent/p).read_bytes())+'\n' for p in preview_paths)
-    assert digest(preview_inventory.encode())=='84f730ba63f28fd7aa6e451dafd1bbc2bf0c99a3ce446aded2650fb889dee29c', 'selected B PNG bytes changed'
+    assert digest(preview_inventory.encode())=='af115f5edf1b8152c7a18994d4616c4c88b12c6ea15011d05ad106cea2011e11', 'selected PNG bytes changed'
     for record in manifest['inputs']:
         assert digest((ROOT.parent / record['path']).read_bytes()) == record['sha256']
         if record['path'].endswith('.png'):
@@ -63,7 +63,7 @@ def check(output):
         if record['layer'] in ('glyph','display-fill','status') or record.get('device')=='monitor':
             assert set(alpha) <= {0, 85, 255}
         elif record['layer']=='shadow':
-            assert max(alpha)<=100, 'bounded antialiased mesh shadow'
+            assert max(alpha)<=210, 'bounded shadow (catcher alpha x0.72 plus Lanczos overshoot)'
         if record['layer'] in ('body','shadow','icon','status'):
             assert alpha[0] and (any(a>0 for a in alpha) if record['layer'] == 'shadow' else alpha[255])
         if record['layer'] == 'shadow':
@@ -79,8 +79,11 @@ def check(output):
             for role,entry in view['roles'].items():
                 for color,(x,y) in entry['contacts'].items():
                     px,py=round(w/2+x*64),round(h/2+y*64)
-                    expected=(221,120,103,255) if color=='red' else (147,186,120,255)
-                    assert pixels[py*w+px]==(expected if kind=='monitor' else (234,216,162,255)), (kind,direction,role,color)
+                    if kind=='monitor':
+                        expected=(221,120,103,255) if color=='red' else (147,186,120,255)
+                        assert pixels[py*w+px]==expected, (kind,direction,role,color)
+                    else:  # the wire ends on the drawn antenna ring
+                        assert pixels[py*w+px][3]>=128, (kind,direction,role,color)
                     contacts+=1
             if direction=='north':
                 silhouettes[kind]=tuple(p[3] for p in pixels)

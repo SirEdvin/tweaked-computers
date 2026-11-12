@@ -147,19 +147,19 @@ Keep the pre-upgrade save and matching 0.1.13 ZIP. Do not downgrade the upgraded
 
 ## Research and craft
 
-Use these shapes to identify devices in 0.1.10's [Service Rack family](artwork.md):
+Use these shapes to identify devices in the 0.1.24 [CC peripheral family](artwork.md):
 
-- Computer: green folded desk
-- Database: offset cartridges
+- Computer: CC:Tweaked computer with a black screen
+- Database: disk drive with a floppy disk
 - Monitor: bracketed flat glass
-- Logic: long ceramic-terminal rail
-- Configurator: open caliper with a dial
-- Recipe Searcher: low scanner sled.
+- Logic: three redstone relays
+- Configurator: inventory manager joined to a crate
+- Recipe Searcher: geo scanner with a radar dish.
 
-Item icons match these bodies. Native circuit computers research shows the desk. Recipe Searcher
-research shows the scanner. This is an artwork-only change. Footprints, wire
-targets, costs and unlocks below are unchanged. Historical 0.1.9 archives keep
-their original artwork and remain immutable.
+Item icons match these bodies. Native circuit computers research shows the computer. Recipe
+Searcher research shows the geo scanner. Wires attach to the antenna rings of each device.
+Footprints, ports, costs and unlocks below do not change. Older archives keep their original
+artwork and remain immutable.
 
 Research **Native circuit computers** (`tc-circuit-computers`) after
 `circuit-network` and `advanced-circuit`. It costs 100 automation + logistic

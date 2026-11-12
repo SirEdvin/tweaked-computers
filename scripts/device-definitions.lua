@@ -57,12 +57,30 @@ end
 function M.power_kind(name)
   for _,kind in ipairs(M.order) do if name==M.devices[kind].power_name then return kind end end
 end
--- Contact centers in tile units, relative to the body; RD2 consumes this same
--- metadata. Each role's studs sit toward its north face, not its selection center.
+-- Antenna ring centres of the CC-style models (art/model-points.json): north frame,
+-- x east, y south, z up, in tiles. assets/generate.py rejects drift from the models.
+M.antennas={computer={network={green={-0.445,-0.18,1.075},red={-0.445,-0.18,1.035}}},
+  configurator={network={green={-0.955,-0.18,1.015},red={-0.955,-0.18,0.975}},targets={green={0.945,-0.18,0.935},red={0.945,-0.18,0.895}}},
+  dashboard={network={green={-0.445,-0.15,0.795},red={-0.445,-0.15,0.755}}},
+  factoriopedia_interface={network={green={-0.435,-0.18,0.935},red={-0.435,-0.18,0.895}}},
+  kv={network={green={-0.435,-0.18,1.015},red={-0.435,-0.18,0.975}}},
+  logic={input={green={-1.445,-0.18,0.795},red={-1.445,-0.18,0.755}},network={green={0.0,-0.2,0.825},red={0.0,-0.2,0.785}},output={green={1.445,-0.18,0.795},red={1.445,-0.18,0.755}}},
+  production_statistics={network={green={-0.435,-0.22,0.975},red={-0.435,-0.22,0.935}}},
+  recipe_searcher={network={green={-0.435,-0.2,0.875},red={-0.435,-0.2,0.835}}}}
+local function ring(kind,role,color,direction)
+  local p=M.antennas[kind] and M.antennas[kind][role][color]
+  if not p then return nil end
+  local x,y=M.transform(p[1],p[2],direction)
+  return x,y,p[3]
+end
+-- Contact centers in tile units, relative to the body: the drawn antenna ring
+-- (ground point raised by its height), or the monitor's bezel studs.
 function M.contact(kind,role,color,direction)
   local def=assert(M.devices[kind]); local index
   for i,r in ipairs(def.roles) do if r==role then index=i end end
   assert(index and (color=='red' or color=='green'),'invalid device contact')
+  local x,y,z=ring(kind,role,color,direction)
+  if x then return x,y-z/math.sqrt(2) end
   return M.transform(index-(def.width+1)/2+(color=='red' and -0.07 or 0.07),kind=='monitor' and -0.48 or -0.1,direction)
 end
 function M.points(kind,role,pad)
@@ -71,11 +89,15 @@ function M.points(kind,role,pad)
     local point={wire={},shadow={}}
     for _,c in ipairs({'red','green'}) do
       local x,y=M.contact(kind,role,c,d)
+      -- The fixed sun casts a raised ring's shadow south-east of its ground point.
+      local _,_,z=ring(kind,role,c,d)
+      local sx,sy=x+0.15,y+0.1
+      if z then sx,sy=x+z/math.sqrt(2),y+z/math.sqrt(2)+z/2 end
       if pad then
         local index; for i,r in ipairs(M.devices[kind].roles) do if r==role then index=i end end
-        local px,py=M.offset(kind,index,d); x=x-px; y=y-py
+        local px,py=M.offset(kind,index,d); x=x-px; y=y-py; sx=sx-px; sy=sy-py
       end
-      point.wire[c]={x,y}; point.shadow[c]={x+0.15,y+0.1}
+      point.wire[c]={x,y}; point.shadow[c]={sx,sy}
     end
     out[#out+1]=point
   end

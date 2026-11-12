@@ -21,7 +21,7 @@ for _,kind in ipairs(defs.order) do
     local image=device[direction]; local d=(i-1)*4
     assert(equal(shell.sprites[direction].layers,{image.shadow,image.body}))
     assert(image.body.scale==0.5 and equal(image.body.shift,{0,0}))
-    assert(image.body.width==(def.width==1 and 160 or 320) and image.body.height==image.body.width)
+    assert(image.body.width==(def.width>1 and 320 or kind=='monitor' and 160 or 192) and image.body.height==image.body.width)
     for index,role in ipairs(def.roles) do
       local entry=image.roles[role]; local x,y=defs.offset(kind,index,d)
       assert(equal(entry.center,{x,y}) and equal(entry.color,defs.colors[role]))
@@ -32,7 +32,9 @@ for _,kind in ipairs(defs.order) do
       end
       for _,color in ipairs({'red','green'}) do
         local cx,cy=defs.contact(kind,role,color,d)
-        assert(equal(entry.contacts[color],{cx,cy}),'artwork/native contact drift')
+        -- Factorio's Lua number parser can differ from the exported %.17g text by a few ULP.
+        local got=entry.contacts[color]
+        assert(math.abs(got[1]-cx)<1e-9 and math.abs(got[2]-cy)<1e-9,'artwork/native contact drift')
         if kind=='monitor' then assert(math.max(math.abs(cx),math.abs(cy))==0.48) end
         contacts=contacts+1
       end
