@@ -8,6 +8,11 @@ Version 0.1.8 adds a [live single-line Console](docs/player/console.md) with
 save-backed scratch bindings, independent of the saved program. The mod has no interpreter,
 OS, gameplay filesystem or dynamic guest loader. There is no command history.
 
+Version **0.1.24 ALPHA** gives the devices new art. Each device copies the look of a CC:Tweaked or
+addon peripheral, with worn and lightly rusted paint. Wires attach to antenna rings. No API, limit
+or save format changes. See [0.1.24 release notes](docs/release-0.1.24.md) and the
+[artwork guide](docs/player/artwork.md).
+
 Version **0.1.23 ALPHA** decreases host work for callbacks. A run validates its source one time,
 also when more than eight different programs run. A `computer` call no longer makes the next
 peripheral call search the wire network again. No API, limit or save format changes.

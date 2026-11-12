@@ -1,4 +1,15 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.24
+Date: 2026-11-12
+  Graphics:
+    - New device art: each device copies the look of a CC:Tweaked or addon peripheral (Computer, Disk Drive, three Redstone Relays, Inventory Manager with a crate, Geo Scanner, Printer, Energy Detector, keyboard console), with worn and lightly rusted paint. The monitor art does not change.
+    - Each port has an antenna with red and green rings and a band in the port color. Wires attach to the rings.
+    - Status marks are on a light on the front of each device. Item and research icons show the front of the new devices.
+  Info:
+    - No API, limit, setting, recipe, research, footprint or save format changes. Existing wires stay connected; only the drawn wire end moves.
+    - ALPHA for Factorio 2.1; verified on 2.1.23 with base and Space Age, not every patch or modpack.
+    - Back up the complete save and matching mod set before upgrading. Restore both for rollback; never downgrade an upgraded save in place.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.23
 Date: 2026-11-11
   Optimizations:

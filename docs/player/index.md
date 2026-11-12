@@ -16,9 +16,10 @@ See [runtime upgrade and rollback](lifecycle.md#upgrading-to-trusted-native-lua)
 
 ## Start here
 
-Published **0.1.23 ALPHA** accepts all **Factorio 2.1** patches, base alone or optional Space
-Age. Verification remains on 2.1.23, not every patch. It decreases host work for callbacks
-and changes no API. Since 0.1.22, monitors have a graphics mode and
+Published **0.1.24 ALPHA** accepts all **Factorio 2.1** patches, base alone or optional Space
+Age. Verification remains on 2.1.23, not every patch. It gives the devices new
+[CC peripheral art](artwork.md) and changes no API. Since 0.1.23, callbacks use less host
+work. Since 0.1.22, monitors have a graphics mode and
 draw terminal rows as text. Since 0.1.21, it runs trusted native Lua without the execution
 and temporary-memory settings. Since 0.1.20, the website and in-game
 Reference share one public typed Lua API library, including complete nested types and overloads.
